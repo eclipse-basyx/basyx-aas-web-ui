@@ -3,6 +3,7 @@
     <v-list-item class="px-1 pb-1 pt-0">
       <v-list-item-title class="text-title-small mt-2">{{ 'Path: ' }}</v-list-item-title>
     </v-list-item>
+
     <v-card v-if="fileObject" color="elevatedCard">
       <!-- Path (Value) of the File Element -->
       <v-list class="bg-elevatedCard pt-0" nav>
@@ -10,6 +11,7 @@
           <!-- mimeType -->
           <v-list-item-title>
             <span class="text-body-small">{{ 'Mime Type: ' }}</span>
+
             <v-chip border color="primary" label size="x-small">{{
               fileObject.contentType ? fileObject.contentType : 'no-mime'
             }}</v-chip>
@@ -57,6 +59,7 @@
             </v-text-field>
           </v-list-item-title>
         </v-list-item>
+
         <v-divider v-if="!fileObject.value" />
         <!-- Alerts when File was not found/empty -->
         <v-list-item v-if="!fileObject.value">
@@ -70,6 +73,7 @@
           </v-list-item-title>
         </v-list-item>
       </v-list>
+
       <v-divider />
       <!-- Action Button to upload a File -->
       <v-list v-if="isEditable" class="bg-elevatedCard pa-0" nav>

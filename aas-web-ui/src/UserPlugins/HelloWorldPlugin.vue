@@ -6,6 +6,7 @@
         <div class="text-body-large">{{ nameToDisplay(submodelElementData) }}</div>
       </v-card-title>
     </v-card>
+
     <v-card>
       <v-card-text class="pt-1">
         <GenericDataVisu :submodel-element-data="submodelElementData.submodelElements" />

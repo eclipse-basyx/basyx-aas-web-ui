@@ -7,6 +7,7 @@
           {{ nameToDisplay(submodelElementData, 'en', 'Time Series Data') }}
         </div>
       </v-card-title>
+
       <v-card-text v-if="descriptionToDisplay(submodelElementData)" class="pt-0">
         {{ descriptionToDisplay(submodelElementData) }}
       </v-card-text>
@@ -52,6 +53,7 @@
               @update:model-value="emitTimeValue"
             />
           </v-col>
+
           <v-col cols="12" md="6">
             <v-select
               v-model="yVariables"
@@ -79,7 +81,9 @@
           variant="outlined"
         />
       </v-card-text>
+
       <v-divider />
+
       <v-list class="pr-2 pt-0" nav>
         <v-list-item>
           <template #append>
@@ -90,6 +94,7 @@
               size="small"
               @click="fetchLinkedData()"
             >Fetch Data</v-btn>
+
             <v-btn
               v-if="segmentType == 'InternalSegment'"
               class="text-buttonText"
@@ -97,6 +102,7 @@
               size="small"
               @click="fetchInternalData()"
             >Fetch Data</v-btn>
+
             <v-btn
               v-if="segmentType == 'ExternalSegment'"
               class="text-buttonText"
@@ -118,6 +124,7 @@
           </template>
         </v-list-item>
       </v-list>
+
       <v-card-text class="pt-1">
         <!-- Chart Type Selection -->
         <v-select
@@ -141,6 +148,7 @@
           :y-variables="yVariables"
           @chart-options="getChartOptions"
         />
+
         <AreaChart
           v-if="selectedChartType && selectedChartType.id == 2"
           :chart-data="timeSeriesValues"
@@ -149,6 +157,7 @@
           :y-variables="yVariables"
           @chart-options="getChartOptions"
         />
+
         <ScatterChart
           v-if="selectedChartType && selectedChartType.id == 3"
           :chart-data="timeSeriesValues"
@@ -157,6 +166,7 @@
           :y-variables="yVariables"
           @chart-options="getChartOptions"
         />
+
         <Histogram
           v-if="selectedChartType && selectedChartType.id == 4"
           :chart-data="timeSeriesValues"
@@ -165,6 +175,7 @@
           :y-variables="yVariables"
           @chart-options="getChartOptions"
         />
+
         <Gauge
           v-if="selectedChartType && selectedChartType.id == 5"
           :chart-data="timeSeriesValues"
@@ -173,6 +184,7 @@
           :y-variables="yVariables"
           @chart-options="getChartOptions"
         />
+
         <DisplayField
           v-if="selectedChartType && selectedChartType.id == 6"
           :chart-data="timeSeriesValues"
@@ -621,7 +633,11 @@
 
       if (columns[1] === 'result') {
         headerLine = line
-        return
+        continue
+      }
+
+      if (!headerLine || columns.length < 3) {
+        continue
       }
 
       const table = columns[2]
@@ -710,7 +726,7 @@
     }
 
     // Build series
-    const series = datasetLines.slice(1).map((line: string) => {
+    const series = datasetLines.map((line: string) => {
       const cols = line.split(',')
       return { time: cols[idxTime], value: Number.parseFloat(cols[idxValue]) }
     })

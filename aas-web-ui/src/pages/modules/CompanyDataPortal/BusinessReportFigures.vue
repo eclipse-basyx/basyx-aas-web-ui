@@ -115,6 +115,7 @@
             <v-expansion-panels class="mb-2" variant="accordion">
               <v-expansion-panel v-for="(customer, i) in form.customers" :key="i">
                 <v-expansion-panel-title>Reference Customer {{ (i as number) + 1 }}</v-expansion-panel-title>
+
                 <v-expansion-panel-text>
                   <FormField label="Customer Website" tip="Customer’s website">
                     <v-text-field
@@ -126,6 +127,7 @@
                       variant="outlined"
                     />
                   </FormField>
+
                   <FormField label="Reference to Customer" tip="AAS reference">
                     <v-text-field
                       v-model="customer.referenceToCustomer"
@@ -170,6 +172,7 @@
               @click="props.prev"
             >Previous</v-btn>
           </v-col>
+
           <v-col cols="auto">
             <v-btn class="text-buttonText" color="green" type="submit">Next</v-btn>
           </v-col>

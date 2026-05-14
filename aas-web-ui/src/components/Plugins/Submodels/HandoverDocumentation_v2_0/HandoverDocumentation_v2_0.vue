@@ -5,6 +5,7 @@
     <v-card v-if="isLoading" class="mb-4">
       <v-skeleton-loader :height="144" type="list-item-avatar, divider, list-item-avatar" />
     </v-card>
+
     <template v-else>
       <v-expansion-panels v-if="documents.length > 0" v-model="panel">
         <v-expansion-panel v-for="(document, i) in documents" :key="document.idShort ?? i">
@@ -46,7 +47,9 @@
                     {{ nameToDisplay(versionSmc) }}
                   </v-tab>
                 </v-tabs>
+
                 <v-divider class="mt-2" />
+
                 <v-window class="mt-3" :model-value="getVersionTab(document)">
                   <v-window-item
                     v-for="(versionSmc, v) in document.documentVersionInfo ?? []"

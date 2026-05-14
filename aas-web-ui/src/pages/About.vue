@@ -5,6 +5,7 @@
     <br><br>
 
     <h2>Involved Organizations and Companies</h2>
+
     <v-row align="center" class="mt-5" justify="center">
       <v-col
         v-for="(company, index) in companies"
@@ -55,6 +56,7 @@
 
     <h2>Important Links</h2>
     <br>
+
     <v-list class="bg-background">
       <v-list-item>
         <template #prepend>
@@ -62,20 +64,25 @@
             <v-icon>mdi-web</v-icon>
           </v-avatar>
         </template>
+
         <v-list-item-title>The BaSyx Developers - Website ↗</v-list-item-title>
+
         <v-list-item-subtitle>
           <a href="https://www.eclipse.org/basyx/" rel="noopener noreferrer" target="_blank">
             https://www.eclipse.org/basyx/
           </a>
         </v-list-item-subtitle>
       </v-list-item>
+
       <v-list-item>
         <template #prepend>
           <v-avatar>
             <v-icon>mdi-mail</v-icon>
           </v-avatar>
         </template>
+
         <v-list-item-title>Send email to The BaSyx Developers</v-list-item-title>
+
         <v-list-item-subtitle>
           <a href="mailto:basyx-dev@eclipse.org">basyx-dev@eclipse.org</a>
         </v-list-item-subtitle>
@@ -85,6 +92,7 @@
     <br><br>
 
     <h2>Contributors</h2>
+
     <v-list class="bg-background" item-props lines="three">
       <template v-for="(contributor, index) in contributors" :key="index">
         <v-list-item>
@@ -93,6 +101,7 @@
               <v-img :alt="contributor.name" :src="contributor.image" />
             </v-avatar>
           </template>
+
           <template #append>
             <a
               v-if="contributor.github_link"
@@ -102,6 +111,7 @@
             >
               <v-icon>mdi-github</v-icon>
             </a>
+
             <v-icon v-else>mdi-blank</v-icon>
                         &nbsp;
             <a
@@ -112,14 +122,18 @@
             >
               <v-icon>mdi-linkedin</v-icon>
             </a>
+
             <v-icon v-else>mdi-blank</v-icon>
           </template>
+
           <v-list-item-title>{{ contributor.name }}</v-list-item-title>
+
           <v-list-item-subtitle>
             {{ contributor.company }} &mdash;
             <a :href="'mailto:' + contributor.email">{{ contributor.email }}</a>
           </v-list-item-subtitle>
         </v-list-item>
+
         <v-divider v-if="index < contributors.length - 1" inset />
       </template>
     </v-list>
@@ -128,12 +142,14 @@
 
     <h2>License</h2>
     <br>
+
     <v-card variant="outlined">
       <v-card-text>
         <p>MIT License</p>
         <br>
         <p>Copyright (c) {{ new Date().getFullYear() }} Eclipse BaSyx™</p>
         <br>
+
         <p>
           Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
           associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -141,12 +157,16 @@
           sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
           furnished to do so, subject to the following conditions:
         </p>
+
         <br>
+
         <p>
           The above copyright notice and this permission notice shall be included in all copies or substantial
           portions of the Software.
         </p>
+
         <br>
+
         <p>
           THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
           NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND

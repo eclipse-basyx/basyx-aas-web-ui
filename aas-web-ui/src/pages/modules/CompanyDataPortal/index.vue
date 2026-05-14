@@ -16,6 +16,7 @@
                 <v-icon class="mr-4">mdi-account-group</v-icon>Company Data Portal
               </div>
             </v-sheet>
+
             <v-list
               active-class="border-thin border-primary border-opacity-25"
               bg-color="transparent"
@@ -56,14 +57,17 @@
                     <v-icon>mdi-arrow-left</v-icon>
                   </v-btn>
                 </v-col>
+
                 <v-col class="d-flex justify-center align-center" cols="4">
                   <div>
                     <div class="text-h6 font-weight-bold">{{ settings[model].title }}</div>
+
                     <div class="text-body-medium opacity-60">
                       {{ settings[model].subtitle }}
                     </div>
                   </div>
                 </v-col>
+
                 <v-col class="d-flex justify-end align-center" cols="4">
                   <v-btn
                     v-if="settings[model].addBtn"
@@ -83,6 +87,7 @@
               :next="() => model++"
               :prev="() => model--"
             />
+
             <BankAccounts
               v-show="model === 1"
               ref="bankAccountsRef"
@@ -90,12 +95,14 @@
               :next="() => model++"
               :prev="() => model--"
             />
+
             <DigitalInterfaces
               v-show="model === 2"
               :is-active-component="model === 2"
               :next="() => model++"
               :prev="() => model--"
             />
+
             <BusinessReportFigures
               v-show="model === 3"
               ref="businessReportFiguresRef"
@@ -103,6 +110,7 @@
               :next="() => model++"
               :prev="() => model--"
             />
+
             <CompanyGovernance
               v-show="model === 4"
               :is-active-component="model === 4"
@@ -113,6 +121,7 @@
       </v-row>
     </v-card>
   </v-container>
+
   <v-btn
     icon="mdi-arrow-up"
     style="position: fixed; bottom: 64px; right: 16px; z-index: 999999999"

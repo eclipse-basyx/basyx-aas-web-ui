@@ -22,14 +22,17 @@
                 <v-icon size="small">mdi-home-outline</v-icon>
               </v-btn>
             </template>
+
             <div class="d-flex flex-column align-center">
               <div class="d-flex align-center mb-1">
                 <v-hotkey class="mr-2" :keys="homeCombo" variant="elevated" />
                 <span>Home</span>
               </div>
+
               <span>Clears the current query parameters</span>
             </div>
           </v-tooltip>
+
           <v-divider inset vertical />
           <!-- Menu Toggle (Desktop) -->
           <v-menu v-model="mainMenu" :close-on-content-click="false" :offset="8">
@@ -46,7 +49,9 @@
             <!-- Main Menu Component -->
             <MainMenu @close-menu="mainMenu = false" />
           </v-menu>
+
           <v-divider inset vertical />
+
           <v-tooltip location="bottom" open-delay="600">
             <template #activator="{ props }">
               <v-btn
@@ -59,12 +64,14 @@
                 <v-icon size="small">mdi-console-line</v-icon>
               </v-btn>
             </template>
+
             <span>
               <v-hotkey class="mr-2" :keys="commandPaletteCombo" variant="elevated" />
               Command Palette
             </span>
           </v-tooltip>
         </v-btn-group>
+
         <v-spacer />
         <!-- Settings (Desktop) -->
         <v-btn-group v-if="!isMobile" border class="mr-3" density="compact">
@@ -87,10 +94,12 @@
           <template #activator="{ props }">
             <v-btn icon="mdi-cog" v-bind="props" variant="text" />
           </template>
+
           <v-card color="card">
             <v-toolbar class="mb-3" color="appBar" elevation="3">
               <v-toolbar-title>Settings</v-toolbar-title>
               <v-spacer />
+
               <v-toolbar-items>
                 <v-btn class="mr-3" icon="mdi-close" @click="mainMenu = false" />
               </v-toolbar-items>
@@ -100,12 +109,15 @@
               <v-col class="text-center px-5" cols="12">
                 <ThemeSwitch />
                 <v-divider class="mt-2" />
+
                 <InfrastructureSelector
                   v-if="endpointConfigAvailable"
                   @open-manage="openInfrastructureManagement"
                 />
+
                 <v-divider v-if="endpointConfigAvailable" class="mt-2" />
               </v-col>
+
               <v-col class="text-center" cols="12">
                 <!-- IDTA Logo -->
                 <v-img class="mx-auto" max-width="120px" src="@/assets/IDTA_Logo_Blue_Web_S.svg" />
@@ -127,11 +139,13 @@
     <!-- App Footer -->
     <v-footer app class="bg-appBar text-center d-flex py-0">
       <v-spacer />
+
       <v-list-item class="px-1">
         <v-list-item-title>
           <div>{{ new Date().getFullYear() }} — <strong>Eclipse BaSyx™ ©</strong></div>
         </v-list-item-title>
       </v-list-item>
+
       <v-spacer />
       <!-- IDTA Logo -->
       <a href="https://industrialdigitaltwin.org/" rel="noopener" target="_blank">
@@ -150,6 +164,7 @@
     >
       <AASList />
     </v-navigation-drawer>
+
     <v-btn
       v-if="showAASList && !isMobile && !drawerVisibility"
       icon="mdi-chevron-double-right"
@@ -173,6 +188,7 @@
           style="position: fixed; bottom: 50px; right: 10px; z-index: 9990"
         />
       </template>
+
       <div class="mr-1 mb-6">
         <!-- Modules -->
         <v-row
@@ -193,6 +209,7 @@
               "
             >{{ moduleRoute.name }}</v-card>
           </v-col>
+
           <v-col class="py-1" cols="auto">
             <v-btn
               :active="isActiveModuleRoute(moduleRoute.path)"
@@ -220,6 +237,7 @@
               to="/aaslist"
             >AAS Viewer</v-card>
           </v-col>
+
           <v-col class="py-1" cols="auto">
             <v-btn
               :active="route.path === '/aaslist'"
@@ -243,6 +261,7 @@
               to="/about"
             >About</v-card>
           </v-col>
+
           <v-col class="py-1" cols="auto">
             <v-btn
               :active="route.path === '/about'"

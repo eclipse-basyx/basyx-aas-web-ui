@@ -9,6 +9,7 @@
         :src="imageUrl"
         @error="errorLoadingImage = true"
       />
+
       <v-img
         v-else
         contain

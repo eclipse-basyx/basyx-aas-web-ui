@@ -12,7 +12,9 @@
               variant="plain"
               @click="backToAASList()"
             />
+
             <span v-if="!selectedAAS || Object.keys(selectedAAS).length === 0">Submodel List </span>
+
             <template v-else-if="submodelListUnfiltered.length > 10">
               <v-col>
                 <v-text-field
@@ -25,20 +27,25 @@
                 />
               </v-col>
             </template>
+
             <template v-else>
               <v-icon class="ml-2" color="primary" icon="custom:aasIcon" size="small" />
+
               <span class="text-truncate ml-2">
                 {{ nameToDisplay(selectedAAS) }}
               </span>
             </template>
           </div>
         </v-card-title>
+
         <v-divider />
       </template>
+
       <v-card-text class="pt-2 pb-0 px-2" style="overflow-y: auto; height: calc(100svh - 170px)">
         <div v-if="listLoading">
           <v-skeleton-loader type="list-item@6" />
         </div>
+
         <template v-else>
           <template v-if="selectedAAS && Object.keys(selectedAAS).length > 0">
             <!-- List of Submodels -->
@@ -78,6 +85,7 @@
                         {{ item.kind && item.kind === 'Template' ? 'SMT' : 'SM' }}
                       </v-chip>
                     </template>
+
                     <v-tooltip
                       v-if="!isMobile"
                       activator="parent"
@@ -100,6 +108,7 @@
                         <span class="font-weight-bold"> {{ 'semanticId: ' }}</span>
                         {{ item.semanticId.keys[0].value }}
                       </div>
+
                       <v-divider v-if="item.administration?.version" class="my-1" />
                       <!-- Submodel administrative information -->
                       <div v-if="item.administration?.version" class="text-body-small">
@@ -111,6 +120,7 @@
                               : '')
                         }}
                       </div>
+
                       <v-divider
                         v-if="
                           item?.semanticId?.keys[0]?.value &&
@@ -176,11 +186,13 @@
                         }}
                       </div>
                     </v-tooltip>
+
                     <v-list-item-title
                       :class="isSelected(item) ? 'text-primary' : 'text-listItemText'"
                     >
                       {{ smTitleToDisplay(item) }}
                     </v-list-item-title>
+
                     <template v-if="smVersionToDisplay(item)" #append>
                       <v-chip size="x-small"> v{{ smVersionToDisplay(item) }} </v-chip>
                     </template>
@@ -188,6 +200,7 @@
                 </template>
               </v-virtual-scroll>
             </v-list>
+
             <v-empty-state
               v-else
               class="text-divider"
@@ -195,6 +208,7 @@
               title="No existing Submodels"
             />
           </template>
+
           <template v-else>
             <v-empty-state
               class="text-divider"

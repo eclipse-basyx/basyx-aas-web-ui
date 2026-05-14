@@ -8,14 +8,18 @@
         size="small"
         @click="modelValue!--"
       />
+
       <v-divider class="ml-3 mr-6 hidden-sm-and-down" inset vertical />
       <span class="hidden-md-and-down">Material Selection for:</span>
+
       <v-list-item>
         <v-list-item-title class="text-primary">{{ nameToDisplay(shell) }}</v-list-item-title>
         <v-list-item-subtitle>{{ shell.assetInformation.globalAssetId }}</v-list-item-subtitle>
       </v-list-item>
     </v-card-title>
+
     <v-divider />
+
     <v-card-text style="height: calc(100vh - 249px); overflow-y: auto">
       <v-list>
         <v-list-item v-for="(material, index) in selectedMaterials" :key="index" class="px-0">
@@ -35,7 +39,9 @@
               variant="outlined"
               @update:model-value="fetchSubmodelsForMaterial"
             />
+
             <span class="text-h6 mx-6 mb-5">X</span>
+
             <v-number-input
               v-model="material.amount"
               control-variant="stacked"
@@ -49,7 +55,9 @@
               variant="outlined"
               @update:model-value="calculateFootprint(material)"
             />
+
             <span class="text-h6 mx-6 mb-6">=</span>
+
             <v-text-field
               v-model="material.footprint"
               density="compact"
@@ -59,6 +67,7 @@
               variant="outlined"
               :width="200"
             />
+
             <v-btn
               class="mb-6"
               color="error"
@@ -126,6 +135,7 @@
             <v-divider v-if="index < selectedMaterials.length - 1" class="my-2" />
           </div>
         </v-list-item>
+
         <v-list-item class="px-0" :class="mdAndDown ? 'mt-3' : ''">
           <v-btn
             :block="mdAndDown"
@@ -137,11 +147,14 @@
             @click="addMaterial"
           />
         </v-list-item>
+
         <v-divider class="mb-2 mt-3" />
+
         <v-list-item class="px-0">
           <!-- Desktop Layout -->
           <div class="d-none d-md-flex justify-end align-center" style="max-width: 840px; width: 100%">
             <span class="subtitle-1 mr-4">Total Carbon Footprint:</span>
+
             <v-text-field
               v-model="totalCarbonFootprint"
               density="compact"
@@ -152,12 +165,14 @@
               variant="outlined"
               :width="200"
             />
+
             <div style="width: 40px" />
           </div>
 
           <!-- Mobile Layout -->
           <div class="d-flex d-md-none flex-column" style="width: 100%">
             <span class="subtitle-1 mb-2">Total Carbon Footprint:</span>
+
             <v-text-field
               v-model="totalCarbonFootprint"
               density="compact"
@@ -170,9 +185,12 @@
         </v-list-item>
       </v-list>
     </v-card-text>
+
     <v-divider />
+
     <v-card-actions :class="{ 'justify-center': smAndDown }">
       <v-spacer v-if="!smAndDown" />
+
       <v-btn
         class="text-buttonText"
         color="success"
@@ -182,6 +200,7 @@
         variant="flat"
         @click="complete"
       />
+
       <v-spacer v-if="!smAndDown" />
     </v-card-actions>
   </v-card>

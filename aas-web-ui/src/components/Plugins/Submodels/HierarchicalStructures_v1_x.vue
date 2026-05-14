@@ -12,6 +12,7 @@
         <v-list-item>
           <v-list-item-title>
             <span class="text-title-small mr-2">Archetype:</span>
+
             <v-chip
               border
               :class="{ 'cursor-pointer': editorMode }"
@@ -27,6 +28,7 @@
         </v-list-item>
         <!-- <v-btn color="primary" size="small" @click="exportToXML">Export to XML</v-btn> -->
         <v-spacer />
+
         <v-tooltip location="left" :text="editorMode ? 'Exit edit mode' : 'Enter edit mode'">
           <template #activator="{ props: tooltipProps }">
             <v-btn
@@ -39,7 +41,9 @@
           </template>
         </v-tooltip>
       </v-toolbar>
+
       <v-divider />
+
       <v-card-text class="pa-0">
         <!-- Export Button -->
         <div class="rounded-b" style="height: 600px">
@@ -70,18 +74,21 @@
                 </marker>
               </defs>
             </template>
+
             <Background :gap="16" pattern-color="#aaa" />
             <Controls />
           </VueFlow>
         </div>
       </v-card-text>
     </v-card>
+
     <EntityForm
       v-model="entityDialog"
       :entity="submodelElementToEdit"
       :new-entity="newEntity"
       :parent-element="elementToAddSME"
       :path="submodelElementPath"
+      :select-created-entity="false"
       @update:model-value="onDialogClosed"
     />
     <!-- Dialog for deleting SM/SME -->
@@ -96,7 +103,9 @@
         <v-card-title class="text-body-large">{{
           existingRelationship ? 'Edit Relationship Element' : 'Add Relationship Element'
         }}</v-card-title>
+
         <v-divider />
+
         <v-card-text>
           <p class="text-body-medium mb-4">
             {{ existingRelationship ? 'Edit the' : 'Create a' }} relationship between
@@ -104,6 +113,7 @@
             and
             <v-chip class="mx-1" label size="small">{{ selectedEdge?.targetNode }}</v-chip>
           </p>
+
           <v-select
             v-model="selectedRelationshipType"
             density="compact"
@@ -123,10 +133,13 @@
             </template>
           </v-select>
         </v-card-text>
+
         <v-divider />
+
         <v-card-actions>
           <v-spacer />
           <v-btn @click="closeRelationshipDialog">Cancel</v-btn>
+
           <v-btn color="primary" :disabled="!selectedRelationshipType" @click="saveRelationship">{{
             existingRelationship ? 'Save' : 'Create'
           }}</v-btn>
@@ -138,8 +151,10 @@
       <v-card>
         <v-card-title class="text-body-large">Edit Archetype</v-card-title>
         <v-divider />
+
         <v-card-text>
           <p class="text-body-medium mb-4">Select the archetype for this hierarchical structure.</p>
+
           <v-select
             v-model="selectedArchetype"
             density="compact"
@@ -159,7 +174,9 @@
             </template>
           </v-select>
         </v-card-text>
+
         <v-divider />
+
         <v-card-actions>
           <v-spacer />
           <v-btn @click="closeArchetypeDialog">Cancel</v-btn>
@@ -177,16 +194,20 @@
         <v-list class="py-0" density="compact">
           <v-list-item slim @click="addChildEntity">
             <v-list-item-title>Add Child Entity</v-list-item-title>
+
             <template #prepend>
               <v-icon size="small">mdi-plus</v-icon>
             </template>
           </v-list-item>
+
           <v-list-item slim @click="editEntity">
             <v-list-item-title>Edit Entity</v-list-item-title>
+
             <template #prepend>
               <v-icon size="small">mdi-pencil</v-icon>
             </template>
           </v-list-item>
+
           <v-list-item
             v-if="
               contextMenu.node && contextMenu.node.data && contextMenu.node.data.modelElement != entryNode
@@ -195,6 +216,7 @@
             @click="deleteEntity"
           >
             <v-list-item-title>Delete Entity</v-list-item-title>
+
             <template #prepend>
               <v-icon size="small">mdi-delete</v-icon>
             </template>
@@ -211,7 +233,7 @@
   import { Background } from '@vue-flow/background'
   import { Controls } from '@vue-flow/controls'
   import { MarkerType, useVueFlow, VueFlow } from '@vue-flow/core'
-  import { computed, h, onMounted, ref, watch } from 'vue'
+  import { computed, h, nextTick, onMounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
@@ -282,6 +304,7 @@
   const nodeMap = ref<Map<string, unknown>>(new Map())
   const hasSelfLoopEdges = ref(false)
   const entryNode = ref<Record<string, unknown> | undefined>(undefined)
+  let visualizationUpdateId = 0
 
   const entityDialog = ref(false)
   const newEntity = ref(false)
@@ -431,19 +454,26 @@
   })
 
   async function initializeVisualization (): Promise<void> {
+    const updateId = ++visualizationUpdateId
     isLoading.value = true
 
-    if (hasNoSubmodelData()) {
-      resetVisualization()
-      isLoading.value = false
-      return
+    try {
+      if (hasNoSubmodelData()) {
+        resetVisualization()
+        return
+      }
+
+      const nextBomData = await setData({ ...props.submodelElementData }, props.submodelElementData.path)
+      if (updateId !== visualizationUpdateId) return
+
+      bomData.value = nextBomData
+      archetype.value = getArchetype(bomData.value)
+      await buildFlowGraph(bomData.value, updateId)
+    } finally {
+      if (updateId === visualizationUpdateId) {
+        isLoading.value = false
+      }
     }
-
-    bomData.value = await setData({ ...props.submodelElementData }, props.submodelElementData.path)
-    archetype.value = getArchetype(bomData.value)
-    buildFlowGraph(bomData.value)
-
-    isLoading.value = false
   }
 
   function hasNoSubmodelData (): boolean {
@@ -452,11 +482,14 @@
 
   function resetVisualization (): void {
     bomData.value = {}
+    entryNode.value = undefined
+    nodeMap.value.clear()
+    hasSelfLoopEdges.value = false
     nodes.value = []
     edges.value = []
   }
 
-  function buildFlowGraph (bomData: Record<string, unknown>): void {
+  async function buildFlowGraph (bomData: Record<string, unknown>, updateId: number): Promise<void> {
     entryNode.value = findEntryNode(bomData)
 
     if (!canBuildGraph(entryNode.value)) {
@@ -474,7 +507,18 @@
     // Check if there are self-loop edges
     hasSelfLoopEdges.value = tempEdges.some(e => e.type === 'selfloop')
 
+    await publishFlowGraph(tempNodes, tempEdges, updateId)
+  }
+
+  async function publishFlowGraph (tempNodes: Node[], tempEdges: Edge[], updateId: number): Promise<void> {
+    // Vue Flow validates edges against its internal node lookup as soon as edges change.
+    // Publish nodes one tick earlier so first render has all edge endpoints available.
+    edges.value = []
     nodes.value = tempNodes
+
+    await nextTick()
+    if (updateId !== visualizationUpdateId) return
+
     edges.value = tempEdges
   }
 

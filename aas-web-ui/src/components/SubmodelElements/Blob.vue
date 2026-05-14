@@ -3,6 +3,7 @@
     <v-list-item class="px-1 pb-1 pt-0">
       <v-list-item-title class="text-title-small mt-2">{{ 'Value: ' }}</v-list-item-title>
     </v-list-item>
+
     <v-card v-if="props.blobObject" color="elevatedCard">
       <!-- Path (Value) of the File Element -->
       <v-list class="bg-elevatedCard pt-0" nav>
@@ -10,6 +11,7 @@
           <!-- mimeType -->
           <v-list-item-title>
             <span class="text-body-small">{{ 'Content Type: ' }}</span>
+
             <v-chip border color="primary" label size="x-small">{{
               props.blobObject.contentType ? props.blobObject.contentType : 'no-mime'
             }}</v-chip>

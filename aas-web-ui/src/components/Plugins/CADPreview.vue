@@ -4,6 +4,7 @@
       <!-- CAD File Preview -->
       <div ref="viewerContainer" style="width: 100%; height: 600px" />
     </v-card>
+
     <v-container
       v-show="!showViewer"
       class="pa-0 ma-0 d-flex justify-center align-center"

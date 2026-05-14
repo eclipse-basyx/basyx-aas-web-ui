@@ -10,6 +10,7 @@
             <th class="text-right">Actions</th>
           </tr>
         </thead>
+
         <tbody>
           <tr
             v-for="infra in infrastructures"
@@ -19,6 +20,7 @@
             <td style="width: 80px">
               <v-radio :value="infra.id" />
             </td>
+
             <td>
               <div class="d-flex align-center">
                 {{ infra.name }}
@@ -30,9 +32,11 @@
                 >Default</v-chip>
               </div>
             </td>
+
             <td>
               <span class="text-body-small opacity-60">{{ getInfrastructureSummary(infra) }}</span>
             </td>
+
             <td style="width: 120px">
               <div class="d-flex justify-end">
                 <v-btn
@@ -41,6 +45,7 @@
                   variant="plain"
                   @click.stop="$emit('edit', infra)"
                 />
+
                 <v-btn
                   class="ml-n2 mr-n2"
                   :disabled="infrastructures.length === 1 || infra.isDefault"

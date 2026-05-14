@@ -22,6 +22,7 @@
           >
             <pre>{{ jsonString }}</pre>
           </v-card>
+
           <v-card v-else class="pa-0 ma-0">
             <v-textarea
               v-model="jsonString"
@@ -33,20 +34,24 @@
             />
           </v-card>
         </v-list-item>
+
         <v-divider v-if="!localIsOperationVariable" class="mt-3" />
         <!-- Info listing all available SubmodelElements -->
         <v-list-item v-if="!localIsOperationVariable" class="px-3 py-0">
           <v-list-item-subtitle class="pt-2">{{
             'The selected SubmodelElement is either non existend or not yet implemented.'
           }}</v-list-item-subtitle>
+
           <template #append>
             <!-- Tooltip showing all available SubmodelElements -->
             <v-tooltip open-delay="600" transition="slide-x-transition">
               <template #activator="{ props: invalidElementProps }">
                 <v-icon v-bind="invalidElementProps">mdi-information-outline</v-icon>
               </template>
+
               <div>
                 <span class="font-weight-bold">Available SubmodelElements:</span>
+
                 <ul class="px-3">
                   <li v-for="(submodelElement, i) in submodelElements" :key="i">
                     {{ submodelElement }}

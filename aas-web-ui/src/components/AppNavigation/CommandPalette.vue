@@ -13,6 +13,7 @@
         @keydown.enter.prevent="activateSelected"
         @keydown.up.prevent="selectPrevious"
       />
+
       <v-card-text class="pa-0" style="max-height: 400px; overflow-y: auto">
         <!-- List of route search results -->
         <v-list v-if="search?.trim() && filteredRoutes.length > 0" density="compact" nav slim>
@@ -41,6 +42,7 @@
             <v-list-subheader v-if="command.isHeader" class="mt-2">
               {{ command.category }}
             </v-list-subheader>
+
             <v-list-item
               v-else
               link
@@ -56,6 +58,7 @@
                   size="small"
                 />
               </template>
+
               <template #append>
                 <v-hotkey v-if="command.shortcut" class="text-body-small" :keys="command.shortcut" />
               </template>
@@ -63,9 +66,12 @@
           </template>
         </v-list>
       </v-card-text>
+
       <v-divider />
+
       <v-card-actions>
         <v-spacer />
+
         <div class="pe-4 text-body-small">
           <v-kbd>Esc</v-kbd>
           to close

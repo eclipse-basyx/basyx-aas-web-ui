@@ -1,4 +1,4 @@
-import type { Part } from 'aasx-package-ts'
+import type { Part } from 'aas-package3-typescript'
 import { describe, expect, it } from 'vitest'
 import {
   buildAttachmentSmePath,

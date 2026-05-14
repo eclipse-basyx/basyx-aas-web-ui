@@ -45,16 +45,20 @@
             v-if="(item as FileElement).contentType === 'application/pdf'"
             color="red"
           >mdi-file-pdf-box</v-icon>
+
           <v-icon
             v-else-if="checkContentType((item as FileElement).contentType) === 'image'"
             color="blue-darken-2"
           >mdi-image</v-icon>
+
           <v-icon
             v-else-if="checkContentType((item as FileElement).contentType) === 'video'"
             color="orange-darken-1"
           >mdi-video</v-icon>
+
           <v-icon v-else color="grey">mdi-file</v-icon>
         </template>
+
         <v-list-item-title class="text-title-small">{{ item.idShort }}</v-list-item-title>
       </v-list-item>
 
@@ -72,6 +76,7 @@
         <template #prepend>
           <v-icon color="yellow darken-2">mdi-folder</v-icon>
         </template>
+
         <v-list-item-title class="text-title-small">
           {{ getFolderDisplayName(item) }}
           <span class="text-body-small opacity-60 ml-2">({{ getFolderElementCount(item) }})</span>
@@ -89,6 +94,7 @@
         <template #prepend>
           <v-icon color="yellow darken-2">mdi-folder</v-icon>
         </template>
+
         <v-list-item-title class="text-title-small">...</v-list-item-title>
       </v-list-item>
     </template>
@@ -110,6 +116,7 @@
           size="small"
           @click.stop="handleMoveUp(item)"
         />
+
         <v-icon
           v-if="item.modelType === 'SubmodelElementCollection'"
           color="medium-emphasis"
@@ -118,6 +125,7 @@
           size="small"
           @click.stop="handleEditFolder(item)"
         />
+
         <v-icon
           v-if="item.modelType === 'File'"
           color="medium-emphasis"
@@ -126,6 +134,7 @@
           size="small"
           @click.stop="handleDownload(item)"
         />
+
         <v-icon
           v-if="item.modelType !== 'NavigationElement'"
           color="medium-emphasis"

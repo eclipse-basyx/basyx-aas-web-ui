@@ -25,6 +25,7 @@
           </template>
         </v-text-field>
       </v-col>
+
       <v-col class="px-0" cols="auto">
         <HelpInfoButton help-type="globalAssetId" />
       </v-col>
@@ -33,11 +34,13 @@
     <!-- Specific Asset IDs -->
     <template v-if="showSpecificAssetIds">
       <v-divider v-if="showGlobalAssetId" class="mt-2" />
+
       <v-list-item v-if="showGlobalAssetId" class="pl-0 pt-0">
         <template #title>
           <div class="text-title-small">{{ 'Specific Asset Ids' }}</div>
         </template>
       </v-list-item>
+
       <v-row align="center">
         <v-col>
           <v-list-item v-for="(assetId, i) in specificAssetIdsValue" :key="i" class="pa-0">
@@ -52,6 +55,7 @@
                 :width="300"
               />
             </template>
+
             <v-text-field
               v-model="assetId.value"
               append-icon="mdi-delete"
@@ -75,6 +79,7 @@
               </template>
             </v-text-field>
           </v-list-item>
+
           <v-btn
             class="mt-2"
             color="primary"
@@ -84,6 +89,7 @@
             @click="addSpecificAssetId"
           />
         </v-col>
+
         <v-col class="px-0 mt-n4" cols="auto">
           <HelpInfoButton help-type="specificAssetIds" />
         </v-col>

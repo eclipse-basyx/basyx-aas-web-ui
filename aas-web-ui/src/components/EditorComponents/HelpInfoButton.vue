@@ -10,6 +10,7 @@
         @click="openHelpLink"
       />
     </template>
+
     <span style="white-space: pre-line">{{ tooltipContent }}</span>
   </v-tooltip>
 </template>

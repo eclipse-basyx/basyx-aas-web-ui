@@ -24,6 +24,7 @@
             label
             size="x-small"
           >{{ numberValue.value }}</v-chip>
+
           <v-divider
             v-if="(isFocused || numberValue.value != newNumberValue) && !isOperationVariable"
             class="ml-3 mr-1"
@@ -31,6 +32,7 @@
             style="margin-top: 8px"
             vertical
           />
+
           <v-chip
             v-if="isOperationVariable"
             border
@@ -44,6 +46,7 @@
         <!-- Update Value Button -->
         <template #append-inner>
           <span class="text-subtitleText">{{ unitSuffix(numberValue) }}</span>
+
           <v-btn
             v-if="(isFocused || numberValue.value != newNumberValue) && !isOperationVariable && isEditable"
             class="text-buttonText"

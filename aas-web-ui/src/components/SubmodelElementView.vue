@@ -25,12 +25,14 @@
             "
             class="mt-2"
           />
+
           <AdministrativeInformationElement
             v-if="submodelElementData.administration"
             :administrative-information-object="submodelElementData.administration"
             :administrative-information-title="'Administrative Information'"
             :small="false"
           />
+
           <v-divider
             v-if="submodelElementData.displayName && submodelElementData.displayName.length > 0"
             class="mt-2"
@@ -42,6 +44,7 @@
             :display-name-title="'Display Name'"
             :small="false"
           />
+
           <v-divider
             v-if="submodelElementData.description && submodelElementData.description.length > 0"
             class="mt-2"
@@ -53,6 +56,7 @@
             :description-title="'Description'"
             :small="false"
           />
+
           <v-divider
             v-if="
               submodelElementData.semanticId &&
@@ -72,6 +76,7 @@
             :semantic-title="'Semantic ID'"
             :small="false"
           />
+
           <v-divider
             v-if="
               submodelElementData.supplementalSemanticIds &&
@@ -88,10 +93,12 @@
             :supplemental-semantic-ids-array="submodelElementData.supplementalSemanticIds"
             :supplemental-semantic-ids-title="'Supplemental Semantic ID'"
           />
+
           <v-divider
             v-if="submodelElementData.qualifiers && submodelElementData.qualifiers.length > 0"
             class="mt-2"
           />
+
           <QualifierElement
             v-if="submodelElementData.qualifiers && submodelElementData.qualifiers.length > 0"
             :qualifier-array="submodelElementData.qualifiers"
@@ -99,75 +106,91 @@
             :small="false"
           />
         </v-list>
+
         <v-divider />
+
         <v-list class="px-4 pt-0 pb-5" nav>
           <!-- SubmodelELement Representation for different modelTypes -->
           <Submodel
             v-if="submodelElementData.modelType === 'Submodel'"
             :submodel-object="submodelElementData"
           />
+
           <SubmodelElementCollection
             v-else-if="submodelElementData.modelType === 'SubmodelElementCollection'"
             :submodel-element-collection-object="submodelElementData"
           />
+
           <SubmodelElementList
             v-else-if="submodelElementData.modelType === 'SubmodelElementList'"
             :submodel-element-list-object="submodelElementData"
           />
+
           <Property
             v-else-if="submodelElementData.modelType === 'Property'"
             :is-editable="editorMode"
             :property-object="submodelElementData"
           />
+
           <MultiLanguageProperty
             v-else-if="submodelElementData.modelType === 'MultiLanguageProperty'"
             :key="submodelElementData.path"
             :is-editable="editorMode"
             :multi-language-property-object="submodelElementData"
           />
+
           <Operation
             v-else-if="submodelElementData.modelType === 'Operation'"
             :is-editable="editorMode"
             :operation-object="submodelElementData"
           />
+
           <File
             v-else-if="submodelElementData.modelType === 'File'"
             :file-object="submodelElementData"
             :is-editable="editorMode"
           />
+
           <Blob
             v-else-if="submodelElementData.modelType === 'Blob'"
             :blob-object="submodelElementData"
             :is-editable="editorMode"
           />
+
           <ReferenceElement
             v-else-if="submodelElementData.modelType === 'ReferenceElement'"
             :is-editable="editorMode"
             :reference-element-object="submodelElementData"
           />
+
           <Range
             v-else-if="submodelElementData.modelType === 'Range'"
             :range-object="submodelElementData"
           />
+
           <Entity
             v-else-if="submodelElementData.modelType === 'Entity'"
             :entity-object="submodelElementData"
           />
+
           <RelationshipElement
             v-else-if="submodelElementData.modelType === 'RelationshipElement'"
             :relationship-element-object="submodelElementData"
           />
+
           <AnnotatedRelationshipElement
             v-else-if="submodelElementData.modelType === 'AnnotatedRelationshipElement'"
             :annotated-relationship-element-object="submodelElementData"
             :is-editable="editorMode"
           />
+
           <InvalidElement v-else :invalid-element-object="submodelElementData" />
         </v-list>
         <!-- Last Sync -->
         <v-divider />
         <LastSync :timestamp="submodelElementData.timestamp" />
       </v-card>
+
       <v-expansion-panels
         v-if="Array.isArray(conceptDescriptions) && conceptDescriptions.length > 0"
         v-model="expandedCdIndex"
@@ -184,6 +207,7 @@
                   conceptDescription.modelType
                 }}</v-chip>
               </template>
+
               <v-list-item-title>
                 <div class="text-primary text-body-large">
                   {{ nameToDisplay(conceptDescription) }}
@@ -191,7 +215,9 @@
               </v-list-item-title>
             </v-list-item>
           </v-expansion-panel-title>
+
           <v-divider v-if="expandedCdIndex === index" />
+
           <v-expansion-panel-text class="pa-0 ma-0">
             <ConceptDescription :concept-description-object="conceptDescription" />
           </v-expansion-panel-text>

@@ -7,12 +7,15 @@
             <v-icon class="mr-2" size="small">mdi-lock</v-icon>
             Security Configuration
           </v-col>
+
           <v-col class="text-grey" cols="8">
             <v-fade-transition leave-absolute>
               <span v-if="expanded">Applies to all components</span>
+
               <span v-else class="d-flex flex-row align-center">
                 <div class="d-flex flex-row align-center">
                   <span class="mr-2">Type:</span>
+
                   <v-chip
                     border
                     color="primary"
@@ -23,7 +26,9 @@
                     auth.securityType || 'No Authentication'
                   }}</v-chip>
                 </div>
+
                 <v-spacer />
+
                 <template v-if="auth.securityType === 'OAuth2'">
                   <span class="mr-3">{{
                     authFlowOptions.find((opt) => opt.value === oAuth2AuthFlow)?.text
@@ -34,6 +39,7 @@
           </v-col>
         </v-row>
       </v-expansion-panel-title>
+
       <v-expansion-panel-text>
         <!-- Authentication Type Selection -->
         <v-select
@@ -56,6 +62,7 @@
             variant="outlined"
             @update:model-value="$emit('update:basicAuthUsername', $event)"
           />
+
           <v-text-field
             class="mb-2"
             density="compact"
@@ -93,6 +100,7 @@
             variant="outlined"
             @update:model-value="$emit('update:oAuth2AuthFlow', $event)"
           />
+
           <v-alert
             v-if="oAuth2AuthFlow === 'client-credentials'"
             class="mb-2"
@@ -107,6 +115,7 @@
             <strong>only be used for development/testing</strong>. For production, use Authorization Code
             flow or implement a backend service.
           </v-alert>
+
           <v-text-field
             class="mb-2"
             density="compact"
@@ -116,6 +125,7 @@
             variant="outlined"
             @update:model-value="$emit('update:oauth2Host', $event)"
           />
+
           <v-text-field
             class="mb-2"
             density="compact"
@@ -124,6 +134,7 @@
             variant="outlined"
             @update:model-value="$emit('update:oauth2ClientId', $event)"
           />
+
           <v-text-field
             v-if="oAuth2AuthFlow === 'client-credentials'"
             class="mb-2"
@@ -134,6 +145,7 @@
             variant="outlined"
             @update:model-value="$emit('update:oauth2ClientSecret', $event)"
           />
+
           <v-text-field
             v-if="oAuth2AuthFlow === 'password'"
             class="mb-2"
@@ -143,6 +155,7 @@
             variant="outlined"
             @update:model-value="$emit('update:oauth2Username', $event)"
           />
+
           <v-text-field
             v-if="oAuth2AuthFlow === 'password'"
             class="mb-2"
@@ -153,6 +166,7 @@
             variant="outlined"
             @update:model-value="$emit('update:oauth2Password', $event)"
           />
+
           <v-text-field
             class="mb-2"
             density="compact"
@@ -161,6 +175,7 @@
             variant="outlined"
             @update:model-value="$emit('update:oauth2Scope', $event)"
           />
+
           <v-row v-if="oAuth2AuthFlow === 'client-credentials'" class="mb-2">
             <v-col>
               <v-btn
@@ -173,6 +188,7 @@
               >
                 Authenticate
               </v-btn>
+
               <v-btn
                 v-else
                 block
@@ -185,6 +201,7 @@
               </v-btn>
             </v-col>
           </v-row>
+
           <v-row v-if="oAuth2AuthFlow === 'auth-code'" class="mb-2">
             <v-col>
               <v-btn

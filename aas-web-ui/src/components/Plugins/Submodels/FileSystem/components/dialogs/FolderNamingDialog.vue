@@ -4,6 +4,7 @@
       <v-sheet border rounded="lg">
         <v-card-title class="bg-cardHeader">Name Folder</v-card-title>
         <v-divider />
+
         <v-card-text>
           <v-form v-model="isFormValid" @submit.prevent>
             <v-text-field
@@ -16,10 +17,13 @@
             />
           </v-form>
         </v-card-text>
+
         <v-divider />
+
         <v-card-actions>
           <v-spacer />
           <v-btn rounded="lg" text="Cancel" @click="handleCancel" />
+
           <v-btn
             class="text-buttonText"
             color="primary"

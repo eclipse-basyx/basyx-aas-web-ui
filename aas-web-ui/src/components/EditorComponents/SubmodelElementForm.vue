@@ -4,7 +4,9 @@
       <v-card-title>
         <span class="text-body-large">Create new Submodel Element</span>
       </v-card-title>
+
       <v-divider />
+
       <v-combobox
         v-model="selectedSME"
         auto-select-first
@@ -17,7 +19,9 @@
         :return-object="false"
         variant="outlined"
       />
+
       <v-divider />
+
       <v-card-actions>
         <v-spacer />
         <v-btn @click="closeDialog">Cancel</v-btn>

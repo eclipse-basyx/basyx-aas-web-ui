@@ -15,12 +15,14 @@
       <!-- Asset Specific Properties -->
       <v-skeleton-loader type="heading, table-heading@2" />
     </v-card>
+
     <template v-else-if="Object.keys(digitalNameplateData).length > 0">
       <!-- Product properties-->
       <v-card v-if="productProperties.length > 0" class="mb-4">
         <v-card-title>
           <div class="text-body-large">{{ 'Product' }}</div>
         </v-card-title>
+
         <v-card-text>
           <v-sheet border rounded>
             <v-table>
@@ -39,6 +41,7 @@
                         <DescriptionTooltip :description-array="productProperty?.description" />
                       </div>
                     </td>
+
                     <td>
                       <!-- URIOfTheProduct -->
                       <template v-if="checkIdShort(productProperty, 'URIOfTheProduct')">
@@ -50,6 +53,7 @@
                         >
                           {{ valueToDisplay(productProperty) }}
                         </a>
+
                         <span v-else class="text-body-small">
                           {{ valueToDisplay(productProperty) }}
                         </span>
@@ -64,6 +68,7 @@
                             valueToDisplay(productProperty)
                           }})
                         </div>
+
                         <div v-else class="text-body-small">
                           {{ valueToDisplay(productProperty) }}
                         </div>
@@ -137,6 +142,7 @@
         <v-card-title>
           <div class="text-body-large">{{ 'Manufacturer' }}</div>
         </v-card-title>
+
         <v-card-text class="pb-0">
           <v-sheet border rounded>
             <v-table>
@@ -152,11 +158,13 @@
                     <td>
                       <div class="text-subtitleText text-body-small">
                         <span>{{ nameToDisplay(manufacturerProperty) }}</span>
+
                         <DescriptionTooltip
                           :description-array="manufacturerProperty?.description"
                         />
                       </div>
                     </td>
+
                     <td>
                       <!-- Address of Additional Link -->
                       <template
@@ -170,6 +178,7 @@
                         >
                           {{ valueToDisplay(manufacturerProperty) }}
                         </a>
+
                         <span v-else class="text-body-small">
                           {{ valueToDisplay(manufacturerProperty) }}
                         </span>
@@ -210,6 +219,7 @@
                         >
                           {{ manufacturerProperty.typeOfValue }}
                         </v-chip>
+
                         <template
                           v-if="
                             checkIdShort(manufacturerProperty, 'TelephoneNumber') &&
@@ -223,6 +233,7 @@
                             {{ valueToDisplay(manufacturerProperty) }}
                           </a>
                         </template>
+
                         <template v-else-if="checkIdShort(manufacturerProperty, 'Email')">
                           <a
                             class="text-body-small text-primary"
@@ -231,6 +242,7 @@
                             {{ valueToDisplay(manufacturerProperty) }}
                           </a>
                         </template>
+
                         <template v-else>
                           {{ valueToDisplay(manufacturerProperty) }}
                         </template>
@@ -268,8 +280,10 @@
             </v-table>
           </v-sheet>
         </v-card-text>
+
         <v-card-actions v-if="vCardString && vCardString.trim() !== ''" class="py-4 pr-4">
           <v-spacer />
+
           <v-btn
             class="text-buttonText"
             color="primary"
@@ -302,6 +316,7 @@
             <DescriptionTooltip :description-array="markingsSMC?.description" />
           </div>
         </v-card-title>
+
         <v-card-text>
           <v-row class="text-body-small mb-2" justify="start">
             <v-col v-for="marking in markings" :key="marking.idShort" class="pb-0" cols="auto">
@@ -327,6 +342,7 @@
             <DescriptionTooltip :description-array="assetSpecificPropertiesSMC?.description" />
           </div>
         </v-card-title>
+
         <v-card-text>
           <GenericDataVisu :submodel-element-data="assetSpecificPropertiesSMC.value" />
         </v-card-text>

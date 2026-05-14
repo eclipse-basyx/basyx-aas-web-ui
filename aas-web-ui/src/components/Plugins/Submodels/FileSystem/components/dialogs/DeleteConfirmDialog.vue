@@ -12,11 +12,13 @@
           {{ singleElement.modelType === 'SubmodelElementCollection' ? 'Folder' : 'File' }}
           <b>{{ displayName }}?</b>
         </v-card-title>
+
         <v-divider />
 
         <!-- Multi-delete content -->
         <v-card-text v-if="isMultiDelete">
           <div class="mb-2">The following items will be permanently deleted:</div>
+
           <v-list class="pa-0" density="compact" style="max-height: 200px; overflow-y: auto">
             <v-list-item v-for="item in elementsToDelete" :key="item.idShort" class="px-0">
               <template #prepend>
@@ -25,23 +27,28 @@
                   color="yellow-darken-2"
                   size="small"
                 >mdi-folder</v-icon>
+
                 <v-icon
                   v-else-if="getContentType(item) === 'application/pdf'"
                   color="red"
                   size="small"
                 >mdi-file-pdf-box</v-icon>
+
                 <v-icon
                   v-else-if="checkContentType(getContentType(item)) === 'image'"
                   color="blue-darken-2"
                   size="small"
                 >mdi-image</v-icon>
+
                 <v-icon
                   v-else-if="checkContentType(getContentType(item)) === 'video'"
                   color="orange-darken-1"
                   size="small"
                 >mdi-video</v-icon>
+
                 <v-icon v-else color="grey" size="small">mdi-file</v-icon>
               </template>
+
               <v-list-item-title class="text-body-medium">
                 {{ getItemDisplayName(item) }}
               </v-list-item-title>
@@ -58,9 +65,11 @@
         <v-card-text v-else> The file will be permanently deleted. </v-card-text>
 
         <v-divider />
+
         <v-card-actions>
           <v-spacer />
           <v-btn rounded="lg" text="Cancel" @click="handleCancel" />
+
           <v-btn
             class="text-buttonText"
             color="error"

@@ -26,6 +26,7 @@
                     SubmodelElement.modelType
                   }}</v-chip>
                 </template>
+
                 <template #append>
                   <v-badge
                     :content="SubmodelElement.value ? SubmodelElement.value.length : 0"
@@ -46,6 +47,7 @@
                     SubmodelElement.modelType
                   }}</v-chip>
                 </template>
+
                 <template #append>
                   <v-badge
                     :content="SubmodelElement.value ? SubmodelElement.value.length : 0"
@@ -66,6 +68,7 @@
                     SubmodelElement.modelType
                   }}</v-chip>
                 </template>
+
                 <template #append>
                   <v-badge
                     :content="SubmodelElement.statements ? SubmodelElement.statements.length : 0"
@@ -89,6 +92,7 @@
                     SubmodelElement.valueType
                   }}</v-chip>
                 </template>
+
                 <template #append-inner>
                   <span class="text-subtitleText">{{ unitSuffix(SubmodelElement) }}</span>
                 </template>
@@ -101,11 +105,13 @@
                       {{ nameToDisplay(SubmodelElement) + ':' }}
                     </div>
                   </template>
+
                   <v-list-item-subtitle v-for="(value, valueIndex) in SubmodelElement.value" :key="valueIndex">
                     <div class="pt-2">
                       <v-chip border class="mr-2" label size="x-small">{{
                         value.language ? value.language : 'no-lang'
                       }}</v-chip>
+
                       <span>{{ value.text }}</span>
                     </div>
                   </v-list-item-subtitle>
@@ -124,6 +130,7 @@
                     SubmodelElement.modelType
                   }}</v-chip>
                 </template>
+
                 <template #append>
                   <v-icon style="margin-right: 5px">mdi-lightning-bolt-circle</v-icon>
                 </template>
@@ -160,6 +167,7 @@
                     SubmodelElement.modelType
                   }}</v-chip>
                 </template>
+
                 <template v-if="SubmodelElement.contentType" #append-inner>
                   <v-chip color="grey-lighten-3" density="compact" size="x-small">{{
                     SubmodelElement.contentType
@@ -174,9 +182,11 @@
                     <div class="text-title-small">{{ nameToDisplay(SubmodelElement) }}</div>
                   </template>
                 </v-list-item>
+
                 <v-chip border class="mr-2" label size="x-small">{{
                   referenceKeyTypeToDisplay(SubmodelElement.value?.keys)
                 }}</v-chip>
+
                 <span>{{ referenceKeyValueToDisplay(SubmodelElement.value?.keys) }}</span>
               </div>
               <!-- Range -->
@@ -187,6 +197,7 @@
                     <div class="text-title-small">{{ nameToDisplay(SubmodelElement) }}</div>
                   </template>
                 </v-list-item>
+
                 <v-row>
                   <v-col>
                     <v-text-field
@@ -198,6 +209,7 @@
                       variant="outlined"
                     />
                   </v-col>
+
                   <v-col>
                     <v-text-field
                       v-model="SubmodelElement.max"
@@ -218,18 +230,24 @@
                     <div class="text-title-small">{{ nameToDisplay(SubmodelElement) }}</div>
                   </template>
                 </v-list-item>
+
                 <div>
                   <v-chip border class="mr-2" label size="x-small">{{ 'first' }}</v-chip>
+
                   <v-chip border class="mr-2" label size="x-small">{{
                     referenceKeyTypeToDisplay(SubmodelElement.first?.keys)
                   }}</v-chip>
+
                   <span>{{ referenceKeyValueToDisplay(SubmodelElement.first?.keys) }}</span>
                 </div>
+
                 <div class="mt-3">
                   <v-chip border class="mr-2" label size="x-small">{{ 'second' }}</v-chip>
+
                   <v-chip border class="mr-2" label size="x-small">{{
                     referenceKeyTypeToDisplay(SubmodelElement.second?.keys)
                   }}</v-chip>
+
                   <span>{{ referenceKeyValueToDisplay(SubmodelElement.second?.keys) }}</span>
                 </div>
               </div>
@@ -241,22 +259,30 @@
                     <div class="text-title-small">{{ nameToDisplay(SubmodelElement) }}</div>
                   </template>
                 </v-list-item>
+
                 <div>
                   <v-chip border class="mr-2" label size="x-small">{{ 'first' }}</v-chip>
+
                   <v-chip border class="mr-2" label size="x-small">{{
                     referenceKeyTypeToDisplay(SubmodelElement.first?.keys)
                   }}</v-chip>
+
                   <span>{{ referenceKeyValueToDisplay(SubmodelElement.first?.keys) }}</span>
                 </div>
+
                 <div class="mt-3">
                   <v-chip border class="mr-2" label size="x-small">{{ 'second' }}</v-chip>
+
                   <v-chip border class="mr-2" label size="x-small">{{
                     referenceKeyTypeToDisplay(SubmodelElement.second?.keys)
                   }}</v-chip>
+
                   <span>{{ referenceKeyValueToDisplay(SubmodelElement.second?.keys) }}</span>
                 </div>
+
                 <div class="mt-3 ml-3">
                   <span class="text-body-small">{{ 'Annotations: ' }}</span>
+
                   <v-chip border class="mr-2" size="x-small">{{
                     SubmodelElement.annotations.length
                   }}</v-chip>
@@ -272,9 +298,11 @@
               />
             </v-list-item-title>
           </v-list-item>
+
           <v-divider v-if="(i as number) < smeObject[smeLocator].length - 1" class="mt-2 mb-1" />
         </div>
       </v-list>
+
       <v-list v-else class="bg-elevatedCard pt-0" nav>
         <v-list-item>
           <v-list-item-title class="pt-2">

@@ -7,6 +7,7 @@
             <v-icon light size="small">mdi-autorenew</v-icon>
             {{ 'Last sync:' }}
           </span>
+
           <span
             class="text-body-small ml-2"
             :class="timestamp === 'no sync' ? 'text-error' : 'text-subtitleText'"

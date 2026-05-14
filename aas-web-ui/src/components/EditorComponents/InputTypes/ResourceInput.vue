@@ -1,5 +1,6 @@
 <template>
   <v-divider />
+
   <v-list-item class="pl-0 pt-0">
     <template #title>
       <div class="text-title-small">{{ label }}</div>
@@ -17,9 +18,11 @@
     <v-btn value="none">
       <span>None</span>
     </v-btn>
+
     <v-btn value="file">
       <span>File</span>
     </v-btn>
+
     <v-btn value="url">
       <span>URL</span>
     </v-btn>
@@ -37,6 +40,7 @@
         :width="200"
       />
     </template>
+
     <v-text-field
       v-model="resourceValue.path"
       class="mt-2"
@@ -65,6 +69,7 @@
       :src="thumbnailPreviewPath"
       @error="errorLoadingImage = true"
     />
+
     <v-alert
       v-else
       density="compact"
@@ -73,6 +78,7 @@
       variant="outlined"
     />
   </v-sheet>
+
   <v-file-upload v-if="toggle === 'file'" v-model="fileThumbnail" clearable density="default" />
 </template>
 

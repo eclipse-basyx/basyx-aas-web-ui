@@ -2,6 +2,7 @@
   <v-container class="pa-0" fluid>
     <v-sheet>
       <v-divider v-if="!singleAas && !isMobile" />
+
       <v-card-title class="bg-detailsHeader px-1 py-0 d-flex align-center" style="height: 32px">
         <!-- AAS Status -->
         <div
@@ -27,6 +28,7 @@
         <!-- Last Sync -->
         <div class="text-body-small ml-1">
           <v-icon class="text-body-small" size="small">mdi-autorenew</v-icon>
+
           <span
             class="text-body-small ml-1"
             :class="
@@ -38,6 +40,7 @@
             {{ assetAdministrationShellData.timestamp }}
           </span>
         </div>
+
         <v-spacer v-if="isMobile || singleAas" />
         <!-- Jump to Submodel List on mobile -->
         <v-btn
@@ -65,10 +68,13 @@
               @click="openDownloadDialog(assetAdministrationShellData)"
             />
           </template>
+
           <span>Download Asset Administration Shell as .aasx file</span>
         </v-tooltip>
       </v-card-title>
+
       <v-divider />
+
       <v-card-text class="bg-detailsCard pa-0" style="overflow-y: auto" :style="{ height: detailsListHeight }">
         <!-- Asset Information -->
         <!-- 1) AssetInformation is mandatory for an AssetAdministrationShell -->
@@ -77,6 +83,7 @@
           v-if="assetInformation?.assetKind && Object.keys(assetInformation).length > 1"
           :asset-object="assetInformation"
         />
+
         <v-divider
           v-if="assetInformation?.assetKind && Object.keys(assetInformation).length > 1"
           thickness="2"
@@ -92,6 +99,7 @@
           />
           <!-- AAS Administrative Information-->
           <v-divider v-if="assetAdministrationShellData?.administration" />
+
           <AdministrativeInformationElement
             v-if="assetAdministrationShellData.administration"
             :administrative-information-object="assetAdministrationShellData.administration"
@@ -99,6 +107,7 @@
             :background-color="'detailsCard'"
             :small="false"
           />
+
           <v-divider
             v-if="
               assetAdministrationShellData.displayName &&
@@ -116,6 +125,7 @@
             :display-name-title="'DisplayName'"
             :small="false"
           />
+
           <v-divider
             v-if="
               assetAdministrationShellData.description &&

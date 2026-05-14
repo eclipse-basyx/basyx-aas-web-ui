@@ -11,6 +11,7 @@
         type="list-item-avatar, divider, list-item-avatar, divider, list-item-avatar, divider, list-item-avatar"
       />
     </v-card>
+
     <template v-else-if="Object.keys(technicalData).length > 0">
       <v-expansion-panels v-model="panel" multiple>
         <!-- General Information -->
@@ -21,13 +22,16 @@
                 <template #prepend>
                   <v-icon size="small">mdi-file-document-outline</v-icon>
                 </template>
+
                 <v-list-item-title>
                   {{ nameToDisplay(generalInformationSMC, 'en', 'General Information') }}
                   <DescriptionTooltip :description-array="generalInformationSMC?.description" />
                 </v-list-item-title>
               </v-list-item>
             </v-expansion-panel-title>
+
             <v-divider v-if="panel.includes(0)" />
+
             <v-expansion-panel-text class="pt-4 pb-2">
               <v-sheet border rounded>
                 <v-table>
@@ -40,11 +44,13 @@
                       <td>
                         <div class="text-subtitleText text-body-small">
                           <span>{{ nameToDisplay(generalProperty) }}</span>
+
                           <DescriptionTooltip
                             :description-array="generalProperty?.description"
                           />
                         </div>
                       </td>
+
                       <td>
                         <!-- Files -->
                         <v-img
@@ -108,13 +114,16 @@
                 <template #prepend>
                   <v-icon size="small">mdi-package-variant-closed</v-icon>
                 </template>
+
                 <v-list-item-title>
                   {{ nameToDisplay(productClassificationsSMC, 'en', 'Product Classifications') }}
                   <DescriptionTooltip :description-array="productClassificationsSMC?.description" />
                 </v-list-item-title>
               </v-list-item>
             </v-expansion-panel-title>
+
             <v-divider v-if="panel.includes(1)" />
+
             <v-expansion-panel-text class="pb-2">
               <v-card class="mt-3" variant="outlined">
                 <v-table>
@@ -126,6 +135,7 @@
                       >
                         <div class="text-body-small">
                           <span>{{ nameToDisplay(classificationProperty) }}</span>
+
                           <DescriptionTooltip
                             :description-array="classificationProperty?.description"
                           />
@@ -133,6 +143,7 @@
                       </th>
                     </tr>
                   </thead>
+
                   <tbody>
                     <template
                       v-for="(productClassification, index) in productClassifications"
@@ -197,10 +208,12 @@
                 <template #prepend>
                   <v-icon size="small">mdi-cog-outline</v-icon>
                 </template>
+
                 <v-list-item-title>
                   {{ nameToDisplay(technicalPropertiesSMC, 'en', 'Technical Properties') }}
                   <DescriptionTooltip :description-array="technicalPropertiesSMC?.description" />
                 </v-list-item-title>
+
                 <template #append>
                   <v-switch
                     v-if="expanded"
@@ -215,13 +228,16 @@
                 </template>
               </v-list-item>
             </v-expansion-panel-title>
+
             <v-divider v-if="panel.includes(2)" />
+
             <v-expansion-panel-text class="pb-2">
               <GenericDataVisu
                 v-if="!tableView"
                 class="mt-3"
                 :submodel-element-data="technicalProperties"
               />
+
               <template v-else>
                 <v-card border class="mt-3">
                   <v-table density="comfortable" hover>
@@ -233,6 +249,7 @@
                         <th class="text-titleText">Value</th>
                       </tr>
                     </thead>
+
                     <tbody>
                       <GenericDataTableView
                         class="mt-3"
@@ -254,13 +271,16 @@
                 <template #prepend>
                   <v-icon size="small">mdi-information-outline</v-icon>
                 </template>
+
                 <v-list-item-title>
                   {{ nameToDisplay(furtherInformationSMC, 'en', 'Further Information') }}
                   <DescriptionTooltip :description-array="furtherInformationSMC?.description" />
                 </v-list-item-title>
               </v-list-item>
             </v-expansion-panel-title>
+
             <v-divider v-if="panel.includes(3)" />
+
             <v-expansion-panel-text class="pt-4 pb-2">
               <v-sheet border rounded>
                 <v-table v-if="furtherInformation.length > 0">
@@ -276,11 +296,13 @@
                         <td>
                           <div class="text-subtitleText text-body-small">
                             <span>{{ nameToDisplay(furtherInfo) }}</span>
+
                             <DescriptionTooltip
                               :description-array="furtherInfo?.description"
                             />
                           </div>
                         </td>
+
                         <td>
                           <!-- MultiLanguageProperties -->
                           <template v-if="furtherInfo.modelType == 'MultiLanguageProperty'">

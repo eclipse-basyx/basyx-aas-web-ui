@@ -6,6 +6,7 @@
           <span v-if="submodelElement.idShort">{{ nameToDisplay(submodelElement) }}</span>
           <span v-else>{{ 'Element ' + (index + 1) }}</span>
         </v-expansion-panel-title>
+
         <v-expansion-panel-text>
           <DescriptionElement
             v-if="submodelElement.description && submodelElement.description.length > 0"
@@ -13,6 +14,7 @@
             :description-title="'Description'"
             :small="false"
           />
+
           <GenericDataVisu
             v-if="
               Array.isArray(submodelElement.value) &&
@@ -21,6 +23,7 @@
             "
             :submodel-element-data="submodelElement.value"
           />
+
           <v-list v-else class="px-4 pt-0 pb-0" nav>
             <!-- SubmodelELement Representation for different modelTypes -->
             <Property
@@ -28,48 +31,58 @@
               :is-editable="false"
               :property-object="submodelElement"
             />
+
             <MultiLanguageProperty
               v-else-if="submodelElement.modelType === 'MultiLanguageProperty'"
               :is-editable="false"
               :multi-language-property-object="submodelElement"
             />
+
             <Operation
               v-else-if="submodelElement.modelType === 'Operation'"
               :is-editable="false"
               :operation-object="submodelElement"
             />
+
             <File
               v-else-if="submodelElement.modelType === 'File'"
               :file-object="submodelElement"
               :is-editable="false"
             />
+
             <Blob
               v-else-if="submodelElement.modelType === 'Blob'"
               :blob-object="submodelElement"
               :is-editable="false"
             />
+
             <ReferenceElement
               v-else-if="submodelElement.modelType === 'ReferenceElement'"
               :is-editable="false"
               :reference-element-object="submodelElement"
             />
+
             <Range
               v-else-if="submodelElement.modelType === 'Range'"
               :range-object="submodelElement"
             />
+
             <Entity
               v-else-if="submodelElement.modelType === 'Entity'"
               :entity-object="submodelElement"
             />
+
             <RelationshipElement
               v-else-if="submodelElement.modelType === 'RelationshipElement'"
               :relationship-element-object="submodelElement"
             />
+
             <AnnotatedRelationshipElement
               v-else-if="submodelElement.modelType === 'AnnotatedRelationshipElement'"
               :annotated-relationship-element-object="submodelElement"
               :is-editable="false"
             />
+
             <InvalidElement v-else :invalid-element-object="submodelElement" />
           </v-list>
         </v-expansion-panel-text>

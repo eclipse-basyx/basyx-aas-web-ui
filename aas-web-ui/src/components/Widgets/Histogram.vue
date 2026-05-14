@@ -8,6 +8,7 @@
         </template>
       </v-list-item>
     </v-list>
+
     <v-row align="center">
       <v-col cols="auto">
         <v-text-field
@@ -21,6 +22,7 @@
           @keydown.enter="initializeSeries()"
         />
       </v-col>
+
       <v-col cols="auto">
         <v-switch
           v-model="stacked"
@@ -31,6 +33,7 @@
         />
       </v-col>
     </v-row>
+
     <div class="chart-container">
       <div ref="histogramChart" />
     </div>

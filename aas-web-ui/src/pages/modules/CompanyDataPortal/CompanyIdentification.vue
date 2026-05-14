@@ -59,6 +59,7 @@
                         variant="outlined"
                       />
                     </v-col>
+
                     <v-col cols="12" md="9">
                       <v-textarea
                         v-model="entry.text"
@@ -70,6 +71,7 @@
                         variant="outlined"
                       />
                     </v-col>
+
                     <v-col class="mt-1" cols="12">
                       <v-btn
                         color="error"
@@ -115,6 +117,7 @@
                         variant="outlined"
                       />
                     </v-col>
+
                     <v-col cols="12" md="9">
                       <v-text-field
                         v-model="entry.text"
@@ -125,6 +128,7 @@
                         variant="outlined"
                       />
                     </v-col>
+
                     <v-col class="mt-1" cols="12">
                       <v-btn
                         color="error"
@@ -168,6 +172,7 @@
               />
             </FormField>
           </v-col>
+
           <v-col cols="12" md="6">
             <FormField label="Tax Number" tip="Identifier assigned to a company by the tax authority">
               <v-text-field
@@ -178,6 +183,7 @@
               />
             </FormField>
           </v-col>
+
           <v-col cols="12" md="6">
             <FormField
               label="DUNS"
@@ -186,6 +192,7 @@
               <v-text-field v-model="form.DUNS" density="comfortable" hide-details variant="outlined" />
             </FormField>
           </v-col>
+
           <v-col cols="12" md="6">
             <FormField
               label="Commercial Register Number"
@@ -238,6 +245,7 @@
                         variant="outlined"
                       />
                     </v-col>
+
                     <v-col cols="12" md="9">
                       <v-text-field
                         v-model="entry.text"
@@ -247,6 +255,7 @@
                         variant="outlined"
                       />
                     </v-col>
+
                     <v-col class="mt-1" cols="12">
                       <v-btn
                         color="error"
@@ -258,6 +267,7 @@
                   </v-row>
                 </div>
               </v-slide-y-transition>
+
               <v-btn
                 color="primary"
                 size="small"
@@ -286,6 +296,7 @@
                         variant="outlined"
                       />
                     </v-col>
+
                     <v-col cols="12" md="9">
                       <v-text-field
                         v-model="entry.text"
@@ -295,6 +306,7 @@
                         variant="outlined"
                       />
                     </v-col>
+
                     <v-col class="mt-1" cols="12">
                       <v-btn
                         color="error"
@@ -332,6 +344,7 @@
                         variant="outlined"
                       />
                     </v-col>
+
                     <v-col cols="12" md="9">
                       <v-text-field
                         v-model="entry.text"
@@ -341,6 +354,7 @@
                         variant="outlined"
                       />
                     </v-col>
+
                     <v-col class="mt-1" cols="12">
                       <v-btn
                         color="error"
@@ -368,6 +382,7 @@
         <!-- Actions -->
         <v-row align="center" class="pt-4" justify="space-between">
           <v-spacer />
+
           <v-col cols="auto">
             <v-btn class="text-buttonText" color="green" type="submit"> Next </v-btn>
           </v-col>

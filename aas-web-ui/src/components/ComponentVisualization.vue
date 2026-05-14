@@ -8,26 +8,33 @@
             <template v-if="routesToVisualization.has(route.name)">
               <v-btn class="ml-0" icon="mdi-chevron-left" variant="plain" @click="backToAASViewer()" />
               <v-icon class="ml-2" color="primary" icon="custom:aasIcon" size="small" />
+
               <span class="text-truncate ml-2">
                 {{ nameToDisplay(selectedAAS) }}
               </span>
+
               <template v-if="nameToDisplay(selectedNode)">
                 <span class="text-truncate ml-2">|</span>
                 <span class="text-truncate ml-2">{{ nameToDisplay(selectedNode) }}</span>
               </template>
             </template>
+
             <span v-else>Visualization</span>
           </div>
+
           <div v-else class="d-flex align-center">
             <v-btn class="ml-0" icon="mdi-chevron-left" variant="plain" @click="backToSubmodelList()" />
             <v-icon class="ml-2" color="primary" icon="custom:aasIcon" size="small" />
+
             <span class="text-truncate ml-2">
               {{ nameToDisplay(selectedAAS) }}
             </span>
           </div>
         </v-card-title>
+
         <v-divider />
       </template>
+
       <v-card-text
         style="overflow-y: auto"
         :style="

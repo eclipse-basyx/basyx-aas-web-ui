@@ -4,6 +4,7 @@
       <v-list nav>
         <!-- ConceptDescription Identification -->
         <IdentificationElement :identification-object="conceptDescriptionObject" />
+
         <v-divider
           v-if="conceptDescriptionObject.displayName && conceptDescriptionObject.displayName.length > 0"
           class="mt-2"
@@ -15,6 +16,7 @@
           :display-name-title="'Display Name'"
           :small="false"
         />
+
         <v-divider
           v-if="conceptDescriptionObject.description && conceptDescriptionObject.description.length > 0"
           class="mt-2"
@@ -27,12 +29,14 @@
           :small="false"
         />
       </v-list>
+
       <v-divider
         v-if="
           conceptDescriptionObject.embeddedDataSpecifications &&
             conceptDescriptionObject.embeddedDataSpecifications.length > 0
         "
       />
+
       <v-list
         v-if="
           conceptDescriptionObject.embeddedDataSpecifications &&
@@ -60,6 +64,7 @@
               :semantic-title="'Data Specification'"
               :small="false"
             />
+
             <v-divider v-if="embeddedDataSpecification.dataSpecificationContent" class="mt-2" />
             <!-- dataSpecificationContent -->
             <DataSpecificationContent
