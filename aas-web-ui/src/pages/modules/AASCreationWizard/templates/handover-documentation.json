@@ -1,0 +1,2479 @@
+{
+"modelType": "Submodel",
+"kind": "Template",
+"semanticId": {
+"keys": [
+{
+"type": "Submodel",
+"value": "0173-1#01-AHF578#003"
+}
+],
+"type": "ModelReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-01-AHF578-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"administration": {
+"revision": "0",
+"templateId": "https://admin-shell.io/idta-02004-2-0",
+"version": "2"
+},
+"id": "https://admin-shell.io/idta/SubmodelTemplate/HandoverDocumentation/2/0",
+"description": [
+{
+"language": "en",
+"text": "The Submodel defines a set meta data for the handover of documentation from the manufacturer to the operator for industrial equipment"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Handover Documentation"
+}
+],
+"idShort": "HandoverDocumentation",
+"submodelElements": [
+{
+"modelType": "SubmodelElementList",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI500#003"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABI500-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "One",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Information for a document identity"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Documents (handover documentation)"
+},
+{
+"language": "de",
+"text": "Dokumente (Übergabedokumentation)"
+}
+],
+"idShort": "Documents",
+"orderRelevant": true,
+"semanticIdListElement": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI500#003/0173-1#01-AHF579#003"
+}
+],
+"type": "ExternalReference"
+},
+"typeValueListElement": "SubmodelElementCollection",
+"value": [
+{
+"modelType": "SubmodelElementCollection",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI500#003/0173-1#01-AHF579#003"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI500#003~0/0173-1#01-AHF579#003"
+},
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABI500-003/0173-1-01-AHF579-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "OneToMany",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "This SubmodelElementCollection holds the information for a VDI 2770 Document entity"
+}
+],
+"value": [
+{
+"modelType": "SubmodelElementList",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI501#003"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABI501-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "One",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Set of document identifiers for the document. One ID in this collection should be used as a preferred ID"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Document identifyers"
+},
+{
+"language": "de",
+"text": "Dokumentidentifikatoren"
+}
+],
+"idShort": "DocumentIds",
+"orderRelevant": true,
+"semanticIdListElement": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI501#003/0173-1#01-AHF580#003"
+}
+],
+"type": "ExternalReference"
+},
+"typeValueListElement": "SubmodelElementCollection",
+"value": [
+{
+"modelType": "SubmodelElementCollection",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI501#003/0173-1#01-AHF580#003"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI501#003~0/0173-1#01-AHF580#003"
+},
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABI501-003/0173-1-01-AHF580-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "OneToMany",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "This SubmodelElementCollection holds the information for a VDI 2770 Document entity"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Document identificator"
+},
+{
+"language": "de",
+"text": "Dokumentidentifikator"
+}
+],
+"value": [
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABH994#003"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABH994-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"valueType": "xs:string",
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "One",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "ExampleValue",
+"value": "https://domain.com/...",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER",
+"description": [
+{
+"language": "en",
+"text": "Identification of the domain in which the given DocumentId is unique. The domain ID can e.g., be the name or acronym of the providing organisation"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "document domain identificator"
+},
+{
+"language": "de",
+"text": "Document Domain Identifikator"
+}
+],
+"idShort": "DocumentDomainId"
+},
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO099#004"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-AAO099-004"
+}
+],
+"type": "ExternalReference"
+}
+],
+"valueType": "xs:string",
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "One",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "ExampleValue",
+"value": "XF90-884",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER",
+"description": [
+{
+"language": "en",
+"text": "alphanumeric character sequence uniquely identifying a document"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Document Identifyer"
+},
+{
+"language": "de",
+"text": "Dokumentennummer"
+}
+],
+"idShort": "DocumentIdentifier"
+},
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABH995#003"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABH995-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"valueType": "xs:boolean",
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "ExampleValue",
+"value": "true",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER",
+"description": [
+{
+"language": "en",
+"text": "Flag indicating that a DocumentId within a collection of at least two DocumentId`s is the ‘primary’ identifier for the document. This is the preferred ID of the document (commonly from the point of view of the owner of the asset)"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Document is primary"
+},
+{
+"language": "de",
+"text": "Dokument ist primär"
+}
+],
+"idShort": "DocumentIsPrimary"
+}
+]
+}
+]
+},
+{
+"modelType": "SubmodelElementList",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI502#003"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABI502-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "One",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Set of information for describing the classification of the Document according to ClassificationSystems"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Document classifications"
+},
+{
+"language": "de",
+"text": "Dokumentklassifikationen"
+}
+],
+"idShort": "DocumentClassifications",
+"orderRelevant": true,
+"semanticIdListElement": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI502#003/0173-1#01-AHF581#003"
+}
+],
+"type": "ExternalReference"
+},
+"typeValueListElement": "SubmodelElementCollection",
+"value": [
+{
+"modelType": "SubmodelElementCollection",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI502#003/0173-1#01-AHF581#003"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI502#003~0/0173-1#01-AHF581#003"
+},
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABI502-003/0173-1-01-AHF581-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "OneToMany",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Set of information for describing the classification of the Document according to a ClassificationSystem"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Document classification"
+},
+{
+"language": "de",
+"text": "Dokumentklassifikation"
+}
+],
+"value": [
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABH996#003"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABH996-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"valueType": "xs:string",
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "One",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "ExampleValue",
+"value": "03-02",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER",
+"description": [
+{
+"language": "en",
+"text": "Unique ID of the document class within a classficationsystem"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Class identificator"
+},
+{
+"language": "de",
+"text": "Klassenidentifikator"
+}
+],
+"idShort": "ClassId"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABJ219#002"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABJ219-002"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "One",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "ExampleValue",
+"value": "Operation@en",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER",
+"description": [
+{
+"language": "en",
+"text": "Name of the class in the classification system"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Class Name"
+},
+{
+"language": "de",
+"text": "Klassenname"
+}
+],
+"idShort": "ClassName"
+},
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABH997#003"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABH997-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"valueType": "xs:string",
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "One",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "ExampleValue",
+"value": "VDI2770:2020",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER",
+"description": [
+{
+"language": "en",
+"text": "Identification of the classification system"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Classification system"
+},
+{
+"language": "de",
+"text": "Klassifizierungssystem"
+}
+],
+"idShort": "ClassificationSystem"
+}
+]
+}
+]
+},
+{
+"modelType": "SubmodelElementList",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI503#003"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABI503-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "One",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Information elements of individual Document Version entities"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Document versions"
+},
+{
+"language": "de",
+"text": "Dokumentenversionen"
+}
+],
+"idShort": "DocumentVersions",
+"orderRelevant": true,
+"semanticIdListElement": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI503#003/0173-1#01-AHF582#003"
+}
+],
+"type": "ExternalReference"
+},
+"typeValueListElement": "SubmodelElementCollection",
+"value": [
+{
+"modelType": "SubmodelElementCollection",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI503#003/0173-1#01-AHF582#003"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI503#003~0/0173-1#01-AHF582#003"
+},
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABI503-003/0173-1-01-AHF582-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "OneToMany",
+"valueType": "xs:string"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Document version"
+},
+{
+"language": "de",
+"text": "Document version"
+}
+],
+"value": [
+{
+"modelType": "SubmodelElementList",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAN468#008"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-AAN468-008"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "One",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Language style of the document"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Language"
+},
+{
+"language": "de",
+"text": "Sprache"
+}
+],
+"idShort": "Language",
+"orderRelevant": true,
+"typeValueListElement": "Property",
+"value": [
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAN468#008"
+}
+],
+"type": "ExternalReference"
+},
+"value": "en",
+"valueId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#07-AAS045#003"
+}
+],
+"type": "ExternalReference"
+},
+"valueType": "xs:string",
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "OneToMany",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "ExampleValue",
+"value": "en",
+"valueType": "xs:string"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "en (English)"
+},
+{
+"language": "de",
+"text": "en (Englisch)"
+}
+]
+}
+],
+"valueTypeListElement": "xs:string"
+},
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAP003#005"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-AAP003-005"
+}
+],
+"type": "ExternalReference"
+}
+],
+"valueType": "xs:string",
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "One",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "ExampleValue",
+"value": "V1.2",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER",
+"description": [
+{
+"language": "en",
+"text": "Design that partly deviates from the previous"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Document version"
+},
+{
+"language": "de",
+"text": "Dokumentenversion"
+}
+],
+"idShort": "Version"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABG940#003"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABG940-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "One",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "ExampleValue",
+"value": "Examplary title@en",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER",
+"description": [
+{
+"language": "en",
+"text": "Name of the document"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Document title"
+},
+{
+"language": "de",
+"text": "Dokumententitel"
+}
+],
+"idShort": "Title"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABH998#003"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABH998-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "ExampleValue",
+"value": "Examplary subtitle@en",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER",
+"description": [
+{
+"language": "en",
+"text": "List of language-dependent subtitles of the document"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Subtitle"
+},
+{
+"language": "de",
+"text": "Untertitel"
+}
+],
+"idShort": "Subtitle"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAN466#004"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-AAN466-004"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "One",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "ExampleValue",
+"value": "Abstract@en",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER",
+"description": [
+{
+"language": "en",
+"text": "Plain text characterizing the content of the document"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Document description"
+},
+{
+"language": "de",
+"text": "Dokumentenbeschreibung"
+}
+],
+"idShort": "Description"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABH999#003"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABH999-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "ExampleValue",
+"value": "Examplary keywords@en",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER",
+"description": [
+{
+"language": "en",
+"text": "List of language-dependent keywords of the document"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Keywords"
+},
+{
+"language": "de",
+"text": "Stichworte"
+}
+],
+"idShort": "KeyWords"
+},
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI000#003"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABI000-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"valueType": "xs:date",
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "One",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "ExampleValue",
+"value": "2020-02-06",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER",
+"description": [
+{
+"language": "en",
+"text": "Date when the document status was set"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Document status set date"
+},
+{
+"language": "de",
+"text": "Datum der Einstellung des Dokumentenstatus"
+}
+],
+"idShort": "StatusSetDate"
+},
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI001#003"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABI001-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"valueType": "xs:string",
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "One",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "ExampleValue",
+"value": "Released",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER",
+"description": [
+{
+"language": "en",
+"text": "Each document version represents a point in time in the document life cycle. This status value refers to the milestones in the document life cycle. The following two values should be used for the application of this guideline: InReview (under review), Released (released)"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Document status"
+},
+{
+"language": "de",
+"text": "Dokumentstatus"
+}
+],
+"idShort": "StatusValue"
+},
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABI002-003"
+}
+],
+"type": "ExternalReference"
+},
+"valueType": "xs:string",
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "One",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "ExampleValue",
+"value": "Example company",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER",
+"description": [
+{
+"language": "en",
+"text": "Short name of the organization"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Organization short name"
+},
+{
+"language": "de",
+"text": "Kurzname der Organisation"
+}
+],
+"idShort": "OrganizationShortName"
+},
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABI004#003"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABI004-003"
+}
+],
+"type": "ExternalReference"
+}
+],
+"valueType": "xs:string",
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "One",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "ExampleValue",
+"value": "Example company Ltd.",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER",
+"description": [
+{
+"language": "en",
+"text": "Official name of the organization of the author of the document"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Organization official name"
+},
+{
+"language": "de",
+"text": "Offizieller Name der Organisation"
+}
+],
+"idShort": "OrganizationOfficialName"
+},
+{
+"modelType": "SubmodelElementList",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABK288#002"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABK288-002"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Forms a generic refers to-relationship to another document or document version. They have a loose relationship"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Reference to other documents"
+},
+{
+"language": "de",
+"text": "Referenz zu anderen Dokumenten"
+}
+],
+"idShort": "RefersToEntities",
+"orderRelevant": true,
+"typeValueListElement": "ReferenceElement",
+"value": [
+{
+"modelType": "ReferenceElement",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABK288#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "OneToMany",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/AllowedIdShort/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "AllowedIdShort",
+"value": "RefersTo[\\d{2,3}]",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER"
+}
+]
+},
+{
+"modelType": "SubmodelElementList",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABK289#002"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABK289-002"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Forms a based on-relationship to another document or document version. Typically states, that the content of the document bases on another document (e.g. specification requirements). Both have a strong relationship"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Based on other documents"
+},
+{
+"language": "de",
+"text": "Basiert auf anderen Dokumenten"
+}
+],
+"idShort": "BasedOnReferences",
+"orderRelevant": true,
+"typeValueListElement": "ReferenceElement",
+"value": [
+{
+"modelType": "ReferenceElement",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABK289#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "OneToMany",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/AllowedIdShort/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "AllowedIdShort",
+"value": "BasedOn[\\d{2,3}]",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER"
+}
+]
+},
+{
+"modelType": "SubmodelElementList",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABK290#002"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABK290-002"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Forms a translation of-relationship to another document or document version. Both have a strong relationship"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Translation of other documents"
+},
+{
+"language": "de",
+"text": "Übersetzung von anderen Elementen"
+}
+],
+"idShort": "TranslationOfEntities",
+"orderRelevant": true,
+"typeValueListElement": "ReferenceElement",
+"value": [
+{
+"modelType": "ReferenceElement",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABK290#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "OneToMany",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/AllowedIdShort/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "AllowedIdShort",
+"value": "TranslationOf[\\d{2,3}]",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER",
+"displayName": [
+{
+"language": "en",
+"text": "Translation of documents"
+},
+{
+"language": "de",
+"text": "Übersetzung von anderen Elementen"
+}
+]
+}
+]
+},
+{
+"modelType": "SubmodelElementList",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABK126#002"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABK126-002"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "One",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "MIME-Type, file name and file contents given by the file SubmodelElement"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Digital files"
+},
+{
+"language": "de",
+"text": "Digitale Dateien"
+}
+],
+"idShort": "DigitalFiles",
+"orderRelevant": true,
+"typeValueListElement": "File",
+"value": [
+{
+"modelType": "File",
+"contentType": "application/pdf",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABK126#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "OneToMany",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "ExampleValue",
+"value": "docu_cecc_fullmanual_DE.PDF",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/AllowedIdShort/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "AllowedIdShort",
+"value": "DigitalFile[\\d{2,3}]",
+"valueType": "xs:string"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Name of the specific digital file@en"
+},
+{
+"language": "de",
+"text": "Name der spezifischen digitalen Datei@de"
+}
+]
+}
+]
+},
+{
+"modelType": "File",
+"contentType": "image/jpeg",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-ABK127#002"
+}
+],
+"type": "ExternalReference"
+},
+"supplementalSemanticIds": [
+{
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://api.eclass-cdp.com/0173-1-02-ABK127-002"
+}
+],
+"type": "ExternalReference"
+}
+],
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/ExampleValue/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "ExampleValue",
+"value": "docu_cecc_fullmanual_DE.jpg",
+"valueType": "xs:string"
+},
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/AllowedIdShort/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "AllowedIdShort",
+"value": "PreviewFile[\\d{2,3}]",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER",
+"description": [
+{
+"language": "en",
+"text": "Provides a preview image of the Document Version, e.g. first page, in a commonly used image format and low resolution"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Preview file"
+},
+{
+"language": "de",
+"text": "Vorschaudatei"
+}
+],
+"idShort": "PreviewFile"
+}
+]
+}
+]
+},
+{
+"modelType": "SubmodelElementList",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/vdi/2770/1/0/Document/DocumentedEntities"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Documented Entities"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Documented Entities"
+}
+],
+"idShort": "DocumentedEntities",
+"orderRelevant": true,
+"typeValueListElement": "ReferenceElement",
+"value": [
+{
+"modelType": "ReferenceElement",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/vdi/2770/1/0/Document/DocumentedEntity"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "OneToMany",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER"
+}
+]
+}
+]
+}
+]
+},
+{
+"modelType": "SubmodelElementList",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/vdi/2770/1/0/EntitiesForDocumentation"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Entities for documentation"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Entities"
+}
+],
+"idShort": "Entities",
+"orderRelevant": true,
+"typeValueListElement": "Entity",
+"value": [
+{
+"modelType": "Entity",
+"entityType": "CoManagedEntity",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/vdi/2770/1/0/EntityForDocumentation"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/SubmodelTemplates/Cardinality/1/0"
+}
+],
+"type": "ExternalReference"
+},
+"kind": "ConceptQualifier",
+"type": "SMT/Cardinality",
+"value": "OneToMany",
+"valueType": "xs:string"
+}
+],
+"category": "PARAMETER"
+}
+]
+}
+]
+}
