@@ -169,6 +169,7 @@ async function generateModuleRoutes (): Promise<Array<RouteRecordRaw>> {
     const isVisibleModule = moduleComponent.default?.isVisibleModule ?? true // Modules are per default visible
     const isOnlyVisibleWithSelectedAas = moduleComponent.default?.isOnlyVisibleWithSelectedAas ?? false
     const isOnlyVisibleWithSelectedNode = moduleComponent.default?.isOnlyVisibleWithSelectedNode ?? false
+    const routeModule = moduleComponent.default?.routeModule ?? []
     let preserveRouteQuery = moduleComponent.default?.preserveRouteQuery ?? false
 
     // Overwrite preserveRouteQuery
@@ -185,6 +186,7 @@ async function generateModuleRoutes (): Promise<Array<RouteRecordRaw>> {
       isVisibleModule,
       isOnlyVisibleWithSelectedAas,
       isOnlyVisibleWithSelectedNode,
+      routeModule,
       preserveRouteQuery,
     }
 
