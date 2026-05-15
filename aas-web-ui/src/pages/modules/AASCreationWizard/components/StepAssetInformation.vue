@@ -7,7 +7,7 @@
           <v-col cols="12" md="6">
             <FormField
               label="AAS ID *"
-              tip="Legally valid name under which a company or organization is registered and conducts business"
+              tip="Identifier of the asset, the Asset Administration Shell is representing"
             >
               <v-text-field
                 v-model="form.aasId"

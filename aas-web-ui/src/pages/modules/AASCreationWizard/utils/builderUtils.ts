@@ -1,5 +1,5 @@
 export function stripRuntimeMetadata<T extends Record<string, unknown>> (element: T): T {
-  const { _cardinality, ...rest } = element
+  const { _cardinality, qualifiers: _qualifiers, ...rest } = element
   return rest as T
 }
 

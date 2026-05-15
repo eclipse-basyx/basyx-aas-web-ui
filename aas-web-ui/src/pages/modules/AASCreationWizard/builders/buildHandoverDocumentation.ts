@@ -11,6 +11,7 @@ import type {
 } from '../types/template'
 import { useIDUtils } from '@/composables/IDUtils'
 import template from '../templates/handover-documentation.json'
+import { stripRuntimeMetadata } from '../utils/builderUtils'
 import { isRepeatableElement } from '../utils/cardinalityUtils'
 import {
   asFile,
@@ -31,11 +32,6 @@ const rawTemplate = template as HandoverDocumentationTemplate
 const templateData = normalizeHandoverDocumentationTemplate(rawTemplate)
 
 const { generateIri } = useIDUtils()
-
-function stripRuntimeMetadata<T extends Record<string, unknown>> (element: T): T {
-  const { _cardinality, ...rest } = element
-  return rest as T
-}
 
 function formatIndexedIdShort (baseIdShort: string, index: number): string {
   const indexedPattern = /__\d{2}__$/

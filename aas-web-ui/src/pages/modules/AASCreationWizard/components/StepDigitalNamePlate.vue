@@ -77,6 +77,7 @@
     const initialState = createInitialFormState(templateData)
     console.log('initial digital nameplate form state:', initialState)
   })
+
   // Function to save form values from UI into central store
   async function saveAndNext (): Promise<void> {
     console.log('saveAndNext clicked')
@@ -115,6 +116,7 @@
     formValues.value = value
     updateValidationIssues()
   }
+
   function deepCopyFormState<T> (value: T): T {
     if (value === null || typeof value !== 'object') {
       return value
