@@ -15,7 +15,19 @@
                 hide-details="auto"
                 :rules="aasIdRules"
                 variant="outlined"
-              />
+              >
+                <template #append-inner>
+                  <v-btn
+                    border
+                    color="primary"
+                    size="small"
+                    slim
+                    text="Generate IRI"
+                    variant="text"
+                    @click.stop="form.aasId=generateIri('AssetAdministrationShell')"
+                  />
+                </template>
+              </v-text-field>
             </FormField>
           </v-col>
 
@@ -64,7 +76,19 @@
                 hide-details="auto"
                 :rules="globalAssetIdRules"
                 variant="outlined"
-              />
+              >
+                <template #append-inner>
+                  <v-btn
+                    border
+                    color="primary"
+                    size="small"
+                    slim
+                    text="Generate IRI"
+                    variant="text"
+                    @click.stop="form.globalAssetId=generateIri('GlobalAssetId')"
+                  />
+                </template>
+              </v-text-field>
             </FormField>
           </v-col>
 
@@ -93,6 +117,7 @@
 
 <script lang="ts" setup>
   import { onMounted, reactive, ref } from 'vue'
+  import { useIDUtils } from '@/composables/IDUtils'
   import { type AssetDataForm, useAASCreationStore } from '../stores/aasCreationForm'
   import FormField from './FormField.vue'
 
@@ -104,6 +129,7 @@
 
   const store = useAASCreationStore()
   const formRef = ref()
+  const { generateIri } = useIDUtils()
 
   const form = reactive<AssetDataForm>({
     aasId: '',
