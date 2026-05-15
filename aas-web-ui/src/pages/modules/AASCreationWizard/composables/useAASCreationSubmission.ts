@@ -121,7 +121,6 @@ export function useAASCreationSubmission () {
     }
     // post the aas with submodels
     const builtAas = buildAssetAdministrationShell(assetData, digitalNameplate, technicalData, handoverDocumentation)
-    console.log('builtAas', builtAas)
 
     try {
       const aasParseResult = jsonization.assetAdministrationShellFromJsonable(builtAas as any)
@@ -133,21 +132,16 @@ export function useAASCreationSubmission () {
 
       const success = await postAas(aasInstance)
 
-      console.log('aas post was a success', success)
-
       if (!success) {
-        console.log('AAS post failed')
         return { success: false }
       }
 
-      console.log('AAS post succeeded')
       return {
         success: true,
         aasId: builtAas.id,
         submodelIdToOpen: handoverDocumentationId,
       }
     } catch (error) {
-      console.log('unexpected aas submission error', error)
       window.alert(`There was an error creating aas: ${String(error)}`)
       return { success: false }
     }

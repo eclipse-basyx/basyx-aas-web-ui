@@ -72,16 +72,12 @@
   const validationIssues = ref<ValidationIssue[]>([])
 
   onMounted(() => {
-    console.log('templatedata is', templateData)
-    console.log('formvalues is', formValues)
     const initialState = createInitialFormState(templateData)
     console.log('initial digital nameplate form state:', initialState)
   })
 
   // Function to save form values from UI into central store
   async function saveAndNext (): Promise<void> {
-    console.log('saveAndNext clicked')
-
     if (!props.isActiveComponent) {
       return
     }
@@ -92,13 +88,10 @@
       templateData.submodelElements,
       formValues.value,
     )
-    if (validationResult.isValid) {
-      console.log('validation passed successfully')
-    }
+    if (validationResult.isValid) {}
 
     if (!validationResult.isValid) {
       validationIssues.value = validationResult.issues
-      console.log('Digital Nameplate validation failed:', validationResult.issues)
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
@@ -107,7 +100,6 @@
     store.saveDigitalNameplateFormState(savedFormState)
 
     const builtDigitalNameplate = buildDigitalNameplate(rawFormState)
-    console.log('builtDigitalNameplate', builtDigitalNameplate)
     store.saveDigitalNameplateData(builtDigitalNameplate)
     props.next()
   }

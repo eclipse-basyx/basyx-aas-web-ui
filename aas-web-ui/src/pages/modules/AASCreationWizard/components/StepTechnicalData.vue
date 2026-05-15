@@ -208,16 +208,9 @@
     if (store.specificDescriptions.length > 0) {
       specificDescriptions.value = deepCopyFormState(store.specificDescriptions)
     }
-    console.log('Technical Data templatedata is', templateData)
-    console.log('Technical Data formvalues is', formValues)
-    const initialState = createInitialFormState(templateData)
-    console.log('initial technical data form state:', initialState)
   })
 
   function saveAndNext (): void {
-    console.log('technical data fixed formValues', formValues.value)
-    console.log('technical property areas', technicalPropertyAreas.value)
-
     if (!props.isActiveComponent) {
       return
     }
@@ -228,7 +221,6 @@
     )
     if (!validationResult.isValid) {
       validationIssues.value = validationResult.issues
-      console.log('Technical Data validation failed:', validationResult.issues)
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
@@ -251,26 +243,6 @@
 
     const builtTechnicalData = buildTechnicalData(rawFormState, rawTechnicalPropertyAreas, rawSpecificDescriptions)
     console.log('builtTechnicalData', builtTechnicalData)
-
-    // const technicalDataParseResult = jsonization.submodelFromJsonable(builtTechnicalData as any)
-
-    // if (technicalDataParseResult.error !== null) {
-    //   console.error('Error parsing Technical Data submodel:', technicalDataParseResult.error)
-    //   window.alert('Technical Data submodel could not be parsed. Check console.')
-    //   return
-    // }
-
-    // const technicalDataSubmodelInstance = technicalDataParseResult.mustValue()
-    // console.log('Technical Data parse success:', technicalDataSubmodelInstance)
-
-    // const postSuccess = await postSubmodel(technicalDataSubmodelInstance)
-
-    // console.log('Technical Data post success:', postSuccess)
-
-    // if (!postSuccess) {
-    //   window.alert('Technical Data submodel post failed. Check console.')
-    //   return
-    // }
 
     store.saveTechnicalDataData(builtTechnicalData)
 

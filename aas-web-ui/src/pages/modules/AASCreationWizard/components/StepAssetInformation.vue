@@ -184,7 +184,6 @@
       globalAssetId: form.globalAssetId.trim(),
       thumbnailFile: form.thumbnailFile,
     })
-    console.log('form', form)
     props.next()
   }
 </script>

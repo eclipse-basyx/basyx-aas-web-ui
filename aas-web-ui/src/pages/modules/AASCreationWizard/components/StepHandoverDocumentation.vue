@@ -103,18 +103,9 @@
       cardinality: element._cardinality,
     })))
 
-    const freshInitialState = createInitialFormState(templateData)
-    console.log('fresh handover initial state:', freshInitialState)
-
-    console.log('stored handover form state:', store.handoverDocumentationFormState)
     if (store.handoverDocumentationFormState) {
       formValues.value = deepCopyFormState(store.handoverDocumentationFormState)
     }
-    console.log('actual handover formValues after restore:', formValues.value)
-    console.log('Handover Documentation Data templatedata is', templateData)
-    console.log('Handover Documentation formvalues is', formValues)
-    const initialState = createInitialFormState(templateData)
-    console.log('initial digital nameplate form state:', initialState)
   })
   function withTrailingSlash (url: string): string {
     return url.endsWith('/') ? url : `${url}/`
@@ -136,7 +127,6 @@
 
     if (!validationResult.isValid) {
       validationIssues.value = validationResult.issues
-      console.log('Handover Documentation validation failed:', validationResult.issues)
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
@@ -146,31 +136,21 @@
     const rawFormState = deepCopyFormState(formValues.value)
 
     const builtHandoverDocumentation = buildHandoverDocumentation(rawFormState)
-    console.log('builtHandoverDocumentation', builtHandoverDocumentation)
 
     const handoverParseResult = jsonization.submodelFromJsonable(
       builtHandoverDocumentation as any,
     )
 
     if (handoverParseResult.error !== null) {
-      console.error('Error parsing Handover Documentation submodel:', handoverParseResult.error)
-      window.alert('Handover Documentation submodel could not be parsed. Check console.')
       return
     }
-
-    console.log('Handover Documentation parse success:', handoverParseResult.mustValue())
 
     store.saveHandoverDocumentationFormState(rawFormState)
     store.saveHandoverDocumentationData(builtHandoverDocumentation)
 
     // store.saveHandoverDocumentationFormState(rawFormState)
 
-    console.log('Handover Documentation validation passed')
-    console.log('raw handover form state:', rawFormState)
-    console.log('builtHandoverDocumentation:', builtHandoverDocumentation)
-
     isSubmitting.value = true
-    console.log('must now call the submitAll()')
     try {
       const result = await submitAll()
       if (!result.success) {
@@ -192,7 +172,6 @@
   function onFormStateUpdate (value: FormStateObject): void {
     formValues.value = value
     updateValidationIssues()
-    console.log('handover documents updated:', value.Documents)
   }
   function updateValidationIssues (): void {
     if (!hasAttemptedSubmit.value) {
