@@ -21,7 +21,6 @@
         <v-stepper-window-item :value="1">
           <StepAssetInformation
             :key="`asset-${resetForm}`"
-            color="primary"
             :is-active-component="step === 1"
             :next="goNext"
             :prev="goPrev"
@@ -31,7 +30,6 @@
         <v-stepper-window-item :value="2">
           <StepDigitalNamePlate
             :key="`nameplate-${resetForm}`"
-            color="primary"
             :is-active-component="step === 2"
             :next="goNext"
             :prev="goPrev"
@@ -41,7 +39,6 @@
         <v-stepper-window-item :value="3">
           <StepTechnicalData
             :key="`technical-${resetForm}`"
-            color="primary"
             :is-active-component="step === 3"
             :next="goNext"
             :prev="goPrev"
