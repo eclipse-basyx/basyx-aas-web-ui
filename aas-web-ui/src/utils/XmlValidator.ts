@@ -1,60 +1,57 @@
 // src/utils/XmlValidator.ts
 interface ValidatorResult {
-  ok: boolean;
-  doc?: Document | null;
+  ok: boolean
+  doc?: Document | null
 }
 
-let file: File | null = null;
-let errorMessage = "";
-let resultMessage = "";
+let errorMessage = ''
 
-const allowedKblRoots: string[] = [
-  "KBL_container",
-  "KBLContainer",
-  "KBL_Container",
-  "KBLContainer_Old",
-].flatMap((str) => [str, str.toLowerCase()]);
+const allowedKblRoots = new Set([
+  'KBL_container',
+  'KBLContainer',
+  'KBL_Container',
+  'KBLContainer_Old',
+].flatMap(str => [str, str.toLowerCase()]))
 
-const allowedVecRoots: string[] = [
-  "VecContent",
-  "VecContentV2",
-  "VecContent_Base",
-].flatMap((str) => [str, str.toLowerCase()]);
+const allowedVecRoots = new Set([
+  'VecContent',
+  'VecContentV2',
+  'VecContent_Base',
+].flatMap(str => [str, str.toLowerCase()]))
 
-const ioddNamespace = "http://www.io-link.com/IODD/2010/10";
+const ioddNamespace = 'http://www.io-link.com/IODD/2010/10'
 
 /* =========================
    XML base validation
 ========================= */
 
-async function validateWellFormedXML(f: File): Promise<ValidatorResult> {
-  errorMessage = "";
-  resultMessage = "";
+async function validateWellFormedXML (f: File): Promise<ValidatorResult> {
+  errorMessage = ''
 
   try {
-    const text = await f.text();
+    const text = await f.text()
 
-    if (!text.trim().startsWith("<?xml")) {
-      errorMessage = "XML header is missing.";
-      return { ok: false, doc: null };
+    if (!text.trim().startsWith('<?xml')) {
+      errorMessage = 'XML header is missing.'
+      return { ok: false, doc: null }
     }
 
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(text, "text/xml");
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(text, 'text/xml')
 
-    const parserError =
-      doc.querySelector("parsererror") ||
-      doc.querySelector('parsererror[name="parsererror"]');
+    const parserError
+      = doc.querySelector('parsererror')
+        || doc.querySelector('parsererror[name="parsererror"]')
 
     if (parserError) {
-      errorMessage = "XML is not well-formed.";
-      return { ok: false, doc: null };
+      errorMessage = 'XML is not well-formed.'
+      return { ok: false, doc: null }
     }
 
-    return { ok: true, doc };
-  } catch (e) {
-    errorMessage = "Error while parsing the XML file.";
-    return { ok: false, doc: null };
+    return { ok: true, doc }
+  } catch {
+    errorMessage = 'Error while parsing the XML file.'
+    return { ok: false, doc: null }
   }
 }
 
@@ -62,205 +59,213 @@ async function validateWellFormedXML(f: File): Promise<ValidatorResult> {
    Generic XML helpers
 ========================= */
 
-function hasElement(doc: Document, tagName: string): boolean {
-  return doc.getElementsByTagNameNS("*", tagName).length > 0;
+function hasElement (doc: Document, tagName: string): boolean {
+  return doc.getElementsByTagNameNS('*', tagName).length > 0
 }
 
-function getFirstElement(doc: Document, tagName: string): Element | null {
-  return doc.getElementsByTagNameNS("*", tagName)[0] || null;
+function getFirstElement (doc: Document, tagName: string): Element | null {
+  return doc.getElementsByTagNameNS('*', tagName)[0] || null
 }
 
-function hasDirectChildElement(parent: Element | null, tagName: string): boolean {
-  if (!parent) return false;
+function hasDirectChildElement (parent: Element | null, tagName: string): boolean {
+  if (!parent) {
+    return false
+  }
 
   return Array.from(parent.children).some(
-    (child) => child.localName === tagName
-  );
+    child => child.localName === tagName,
+  )
 }
 
 /* =========================
    IODD detection
 ========================= */
 
-function isIoddDoc(doc: Document): boolean {
-  const root = doc.documentElement;
-  if (!root) return false;
+function isIoddDoc (doc: Document): boolean {
+  const root = doc.documentElement
+  if (!root) {
+    return false
+  }
 
-  const ns = root.namespaceURI || "";
-  return ns === ioddNamespace;
+  const ns = root.namespaceURI || ''
+  return ns === ioddNamespace
 }
 
 /* =========================
    IODD detail checks
 ========================= */
 
-function hasDeviceNameOrVariantProductName(doc: Document): boolean {
-  const deviceIdentity = getFirstElement(doc, "DeviceIdentity");
-  const deviceVariant = getFirstElement(doc, "DeviceVariant");
+function hasDeviceNameOrVariantProductName (doc: Document): boolean {
+  const deviceIdentity = getFirstElement(doc, 'DeviceIdentity')
+  const deviceVariant = getFirstElement(doc, 'DeviceVariant')
 
-  const hasDeviceName = hasDirectChildElement(deviceIdentity, "DeviceName");
-  const hasVariantProductName = hasDirectChildElement(deviceVariant, "ProductName");
+  const hasDeviceName = hasDirectChildElement(deviceIdentity, 'DeviceName')
+  const hasVariantProductName = hasDirectChildElement(deviceVariant, 'ProductName')
 
-  return hasDeviceName || hasVariantProductName;
+  return hasDeviceName || hasVariantProductName
 }
 
-function hasPrimaryLanguageInExternalTextCollection(doc: Document): boolean {
-  const collections = doc.getElementsByTagNameNS("*", "ExternalTextCollection");
+function hasPrimaryLanguageInExternalTextCollection (doc: Document): boolean {
+  const collections = doc.getElementsByTagNameNS('*', 'ExternalTextCollection')
 
-  if (collections.length === 0) return false;
+  if (collections.length === 0) {
+    return false
+  }
 
   for (const collection of Array.from(collections)) {
     const hasPrimaryLanguage = Array.from(collection.children).some(
-      (child) => child.localName === "PrimaryLanguage"
-    );
+      child => child.localName === 'PrimaryLanguage',
+    )
 
     if (hasPrimaryLanguage) {
-      return true;
+      return true
     }
   }
 
-  return false;
+  return false
 }
 
-function validateIoddCore(doc: Document): boolean {
-  if (!hasElement(doc, "DeviceIdentity")) {
-    errorMessage = "IODD element 'DeviceIdentity' is missing.";
-    resultMessage = "";
-    return false;
+function validateIoddCore (doc: Document): boolean {
+  if (!hasElement(doc, 'DeviceIdentity')) {
+    errorMessage = 'IODD element \'DeviceIdentity\' is missing.'
+
+    return false
   }
 
-  if (!hasElement(doc, "DeviceFunction")) {
-    errorMessage = "IODD element 'DeviceFunction' is missing.";
-    resultMessage = "";
-    return false;
+  if (!hasElement(doc, 'DeviceFunction')) {
+    errorMessage = 'IODD element \'DeviceFunction\' is missing.'
+
+    return false
   }
 
   if (!hasDeviceNameOrVariantProductName(doc)) {
-    errorMessage =
-      "IODD element 'DeviceIdentity/DeviceName' is missing, and fallback 'DeviceVariant/ProductName' is also missing.";
-    resultMessage = "";
-    return false;
+    errorMessage
+      = 'IODD element \'DeviceIdentity/DeviceName\' is missing, and fallback \'DeviceVariant/ProductName\' is also missing.'
+
+    return false
   }
 
-  const hasExternalTextCollection = hasElement(doc, "ExternalTextCollection");
+  const hasExternalTextCollection = hasElement(doc, 'ExternalTextCollection')
   if (
-    hasExternalTextCollection &&
-    !hasPrimaryLanguageInExternalTextCollection(doc)
+    hasExternalTextCollection
+    && !hasPrimaryLanguageInExternalTextCollection(doc)
   ) {
-    errorMessage =
-      "IODD element 'ExternalTextCollection' exists, but 'PrimaryLanguage' is missing.";
-    resultMessage = "";
-    return false;
+    errorMessage
+      = 'IODD element \'ExternalTextCollection\' exists, but \'PrimaryLanguage\' is missing.'
+
+    return false
   }
 
-  errorMessage = "";
-  resultMessage = "Valid IODD file (basic structure detected).";
-  return true;
+  errorMessage = ''
+
+  return true
 }
 
 /* =========================
    Format-specific validators
 ========================= */
 
-async function validateVecFile(f: File): Promise<boolean> {
-  if (!f.name.toLowerCase().endsWith(".vec")) {
-    errorMessage = "Only .vec files are allowed.";
-    resultMessage = "";
-    return false;
+async function validateVecFile (f: File): Promise<boolean> {
+  if (!f.name.toLowerCase().endsWith('.vec')) {
+    errorMessage = 'Only .vec files are allowed.'
+
+    return false
   }
 
-  const { ok, doc } = await validateWellFormedXML(f);
-  if (!ok || !doc) return false;
+  const { ok, doc } = await validateWellFormedXML(f)
+  if (!ok || !doc) {
+    return false
+  }
 
-  const root = doc.documentElement;
+  const root = doc.documentElement
   if (!root) {
-    errorMessage = "No root element found.";
-    resultMessage = "";
-    return false;
+    errorMessage = 'No root element found.'
+
+    return false
   }
 
-  const localName = root.localName;
-  if (!allowedVecRoots.includes(localName)) {
-    errorMessage = `${localName} is not a valid root element for .vec files.`;
-    resultMessage = "";
-    return false;
+  const localName = root.localName
+  if (!allowedVecRoots.has(localName)) {
+    errorMessage = `${localName} is not a valid root element for .vec files.`
+
+    return false
   }
 
-  errorMessage = "";
-  resultMessage = `Valid VEC file (root: ${localName}).`;
-  return true;
+  errorMessage = ''
+
+  return true
 }
 
-async function validateKBLFile(f: File): Promise<boolean> {
-  if (!f.name.toLowerCase().endsWith(".kbl")) {
-    errorMessage = "Only .kbl files are allowed.";
-    resultMessage = "";
-    return false;
+async function validateKBLFile (f: File): Promise<boolean> {
+  if (!f.name.toLowerCase().endsWith('.kbl')) {
+    errorMessage = 'Only .kbl files are allowed.'
+
+    return false
   }
 
-  const { ok, doc } = await validateWellFormedXML(f);
-  if (!ok || !doc) return false;
+  const { ok, doc } = await validateWellFormedXML(f)
+  if (!ok || !doc) {
+    return false
+  }
 
-  const root = doc.documentElement;
+  const root = doc.documentElement
   if (!root) {
-    errorMessage = "No root element found.";
-    resultMessage = "";
-    return false;
+    errorMessage = 'No root element found.'
+
+    return false
   }
 
-  const localName = root.localName;
-  if (!allowedKblRoots.includes(localName)) {
-    errorMessage = `${localName} is not a valid root element for .kbl files.`;
-    resultMessage = "";
-    return false;
+  const localName = root.localName
+  if (!allowedKblRoots.has(localName)) {
+    errorMessage = `${localName} is not a valid root element for .kbl files.`
+
+    return false
   }
 
-  errorMessage = "";
-  resultMessage = `Valid KBL file (root: ${localName}).`;
-  return true;
+  errorMessage = ''
+
+  return true
 }
 
-async function validateXmlFile(f: File): Promise<boolean> {
-  const { ok, doc } = await validateWellFormedXML(f);
-  if (!ok || !doc) return false;
+async function validateXmlFile (f: File): Promise<boolean> {
+  const { ok, doc } = await validateWellFormedXML(f)
+  if (!ok || !doc) {
+    return false
+  }
 
   if (isIoddDoc(doc)) {
-    return validateIoddCore(doc);
+    return validateIoddCore(doc)
   }
 
-  errorMessage = "";
-  resultMessage = "Valid XML file (well-formed, no IODD namespace detected).";
-  return true;
+  errorMessage = ''
+
+  return true
 }
 
 /* =========================
    Public entry point
 ========================= */
 
-export async function uploadHandler(fileInput: any | null): Promise<string> {
+export async function uploadHandler (fileInput: any | null): Promise<string> {
   if (!fileInput) {
-    errorMessage = "No file selected.";
-    resultMessage = "";
-    return errorMessage;
+    errorMessage = 'No file selected.'
+
+    return errorMessage
   }
 
-  const f = fileInput;
-  file = f;
+  const f = fileInput
 
-  let ok = false;
-  const lowerName = f.name.toLowerCase();
+  const lowerName = f.name.toLowerCase()
 
-  if (lowerName.endsWith(".vec")) {
-    ok = await validateVecFile(f);
-  } else if (lowerName.endsWith(".kbl")) {
-    ok = await validateKBLFile(f);
-  } else if (lowerName.endsWith(".xml")) {
-    ok = await validateXmlFile(f);
+  if (lowerName.endsWith('.vec')) {
+    await validateVecFile(f)
+  } else if (lowerName.endsWith('.kbl')) {
+    await validateKBLFile(f)
+  } else if (lowerName.endsWith('.xml')) {
+    await validateXmlFile(f)
   } else {
-    errorMessage = "";
-    resultMessage = "";
-    ok = false;
+    errorMessage = ''
   }
 
-  return errorMessage;
+  return errorMessage
 }

@@ -75,38 +75,38 @@
                           <v-icon size="small">mdi-upload</v-icon>
                         </template>
                         <span>Upload AAS File to Environment</span>
-                      </v-tooltip>
-                      <v-divider />
-                      <v-tooltip :disabled="isMobile" :location="editMode ? 'end' : 'bottom'" open-delay="600">
-                        <template #activator="{ props }">
-                          <v-list-item prepend-icon="mdi-file-cog-outline" slim v-bind="props" @click="uploadAASKblVecDialog = true">
-                            <template #prepend>
-                              <v-icon size="small">mdi-file-cog-outline</v-icon>
-                            </template>
-                            Create AAS from KBL/VEC
-                          </v-list-item>
-                        </template>
-                        <span>Create AAS from KBL/VEC file</span>
-                      </v-tooltip>
-                      <v-divider />
+                      </v-list-item>
                     </template>
-
                     <span>Upload AAS File to Environment</span>
                   </v-tooltip>
 
                   <v-divider />
+
+                  <v-tooltip :disabled="isMobile" :location="editorMode ? 'end' : 'bottom'" open-delay="600">
+                    <template #activator="{ props }">
+                      <v-list-item prepend-icon="mdi-file-cog-outline" slim v-bind="props" @click="uploadAASKblVecDialog = true">
+                        <template #prepend>
+                          <v-icon size="small">mdi-file-cog-outline</v-icon>
+                        </template>
+                        <span>Create AAS from KBL/VEC</span>
+                      </v-list-item>
+                    </template>
+                    <span>Create AAS from KBL/VEC file</span>
+                  </v-tooltip>
+
+                  <v-divider />
                 </template>
+
                 <!-- Open AAS create dialog -->
-                <v-tooltip location="end" open-delay="600">
+                <v-tooltip :disabled="isMobile" location="end" open-delay="600">
                   <template #activator="{ props }">
                     <v-list-item slim v-bind="props" @click="openEditDialog(true)">
                       <template #prepend>
                         <v-icon size="small">mdi-plus</v-icon>
                       </template>
-                      Create AAS
+                      <span>Create AAS</span>
                     </v-list-item>
                   </template>
-
                   <span>Create a new AAS</span>
                 </v-tooltip>
               </v-list>

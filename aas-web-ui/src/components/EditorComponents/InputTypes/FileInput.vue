@@ -72,9 +72,15 @@
       variant="outlined"
     />
   </v-sheet>
-  <v-file-upload v-if="toggle === 'file'" :class="{'input-error': error}" v-model="file" clearable density="default" />
+  <v-file-upload
+    v-if="toggle === 'file'"
+    v-model="file"
+    :class="{'input-error': error}"
+    clearable
+    density="default"
+  />
   <div v-if="error && errormessages" class="error-message">
-      {{ errormessages }}
+    {{ errormessages }}
   </div>
 </template>
 
@@ -87,8 +93,8 @@
     contentType: string
     newFile: boolean
     smePath?: string
-    error?: boolean;
-    errormessages?: string;
+    error?: boolean
+    errormessages?: string
   }>()
 
   const emit = defineEmits<{
