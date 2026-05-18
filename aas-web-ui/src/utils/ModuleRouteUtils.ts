@@ -10,7 +10,7 @@ export type ModuleRouteMeta = {
   isVisibleModule?: boolean
   isOnlyVisibleWithSelectedAas?: boolean
   isOnlyVisibleWithSelectedNode?: boolean
-  routeModule?: Array<string>
+  visibleOnRoutes?: Array<string>
   preserveRouteQuery?: boolean
 }
 

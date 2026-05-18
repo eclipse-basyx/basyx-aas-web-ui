@@ -17,7 +17,7 @@
 
   defineOptions({
     inheritAttrs: false,
-    routeModule: ['AASEditor', 'SMEditor'],
+    visibleOnRoutes: ['AASEditor', 'SMEditor'],
   })
 
   const moduleName = ref('TestVisibleForRoutes')

@@ -248,7 +248,7 @@
   const smViewerEditor = computed(() => envStore.getSmViewerEditor) // Check the current environment allows showing the SM Viewer/Editor
   const selectedNode = computed(() => aasStore.getSelectedNode) // get selected AAS from Store
 
-  const filteredAndOrderedModuleRoutes = determineFilteredAndOrderedModuleRoutes()
+  const filteredAndOrderedModuleRoutes = computed(() => determineFilteredAndOrderedModuleRoutes())
 
   onMounted(async () => {
     scrollToSelectedModule()
@@ -266,7 +266,7 @@
   // Function to scroll to the active module
   function scrollToSelectedModule (): void {
     // Find the index of the selected item
-    const index = filteredAndOrderedModuleRoutes.findIndex((moduleRoute: RouteRecordRaw) =>
+    const index = filteredAndOrderedModuleRoutes.value.findIndex((moduleRoute: RouteRecordRaw) =>
       isActiveRoutePath(moduleRoute.path),
     )
 

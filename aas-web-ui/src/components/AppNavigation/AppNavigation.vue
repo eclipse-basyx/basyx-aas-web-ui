@@ -377,7 +377,7 @@
     ].includes(route.name as string)
   })
 
-  const filteredAndOrderedModuleRoutes = determineFilteredAndOrderedModuleRoutes()
+  const filteredAndOrderedModuleRoutes = computed(() => determineFilteredAndOrderedModuleRoutes())
 
   watch(
     () => drawerState.value,

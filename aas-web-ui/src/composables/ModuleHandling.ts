@@ -21,7 +21,7 @@ export function useModuleHandling (): ModuleHandling {
   const isMobile = computed(() => navigationStore.getIsMobile)
   const moduleRoutes = computed(() => navigationStore.getModuleRoutes) // get the module routes
   const selectedAas = computed(() => aasStore.getSelectedAAS) // get selected AAS from Store
-  const selectedNode = computed(() => aasStore.getSelectedNode) // get selected AAS from Store
+  const selectedNode = computed(() => aasStore.getSelectedNode) // get selected node from Store
 
   function determineFilteredAndOrderedModuleRoutes () {
     const filteredModuleRoutes = moduleRoutes.value.filter(
@@ -45,12 +45,10 @@ export function useModuleHandling (): ModuleHandling {
           return false
         }
         if (
-          moduleRoute?.meta?.routeModule
-          && Array.isArray(moduleRoute.meta.routeModule)
-          && moduleRoute.meta.routeModule.length > 0
-          && !moduleRoute.meta.routeModule
-            .map(item => item)
-            .includes(route.name)
+          moduleRoute?.meta?.visibleOnRoutes
+          && Array.isArray(moduleRoute.meta.visibleOnRoutes)
+          && moduleRoute.meta.visibleOnRoutes.length > 0
+          && !moduleRoute.meta.visibleOnRoutes.includes(route.name)
         ) {
           return false
         }
