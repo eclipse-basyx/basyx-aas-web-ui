@@ -1,10 +1,16 @@
 <template>
-  <v-dialog v-model="dialogOpen" max-width="900px" persistent scrollable>
-    <v-sheet border rounded="lg">
+  <v-dialog
+    v-model="dialogOpen"
+    :fullscreen="isMobile"
+    :max-width="isMobile ? undefined : '900px'"
+    persistent
+    :scrollable="!isMobile"
+  >
+    <v-sheet border :rounded="isMobile ? undefined : 'lg'">
       <v-card-title class="bg-cardHeader">Manage Infrastructures</v-card-title>
       <v-divider />
 
-      <v-card-text style="max-height: 600px">
+      <v-card-text :style="{ maxHeight: isMobile ? 'calc(100vh - 200px)' : '600px' }">
         <InfrastructureListTable
           v-model:default-infrastructure-id="defaultInfrastructure"
           :infrastructures="infrastructures"
@@ -34,8 +40,13 @@
     </v-sheet>
 
     <!-- Edit/Add Infrastructure Dialog -->
-    <v-dialog v-model="editDialogOpen" max-width="1200px" persistent>
-      <v-sheet border rounded="lg">
+    <v-dialog
+      v-model="editDialogOpen"
+      :fullscreen="isMobile"
+      :max-width="isMobile ? undefined : '1200px'"
+      persistent
+    >
+      <v-sheet border :rounded="isMobile ? undefined : 'lg'">
         <v-card-title class="bg-cardHeader">{{ editMode === 'add' ? 'Add' : 'Edit' }} Infrastructure</v-card-title>
         <v-divider />
 
@@ -178,6 +189,7 @@
   import { useOAuth2Form } from '@/composables/Auth/useOAuth2Form'
   import { useComponentConnectionTesting } from '@/composables/Infrastructure/useComponentConnectionTesting'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
+  import { useNavigationStore } from '@/store/NavigationStore'
   import { requiredRule } from '@/utils/InfrastructureUtils'
 
   // Props
@@ -192,8 +204,10 @@
 
   // Stores
   const infrastructureStore = useInfrastructureStore()
+  const navigationStore = useNavigationStore()
 
   // Computed Properties
+  const isMobile = computed(() => navigationStore.getIsMobile)
   const infrastructures = computed(() => infrastructureStore.getInfrastructures)
   const selectedInfrastructureId = computed(() => infrastructureStore.getSelectedInfrastructureId)
 

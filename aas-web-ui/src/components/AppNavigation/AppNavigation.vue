@@ -277,6 +277,8 @@
         </v-row>
       </div>
     </v-menu>
+
+    <InfrastructureManagement v-model:open="infrastructureManagementDialog" />
   </v-container>
 </template>
 
