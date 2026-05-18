@@ -65,6 +65,7 @@
       <v-card-subtitle v-if="searchResults.length > 0" class="d-flex align-center">
         <span>{{ searchResults.length }} results found</span>
         <v-spacer />
+
         <v-btn-group density="comfortable" variant="outlined">
           <v-btn
             :disabled="currentSearchIndex <= 0"
@@ -74,6 +75,7 @@
           >
             <v-icon>mdi-chevron-up</v-icon>
           </v-btn>
+
           <v-btn
             :disabled="currentSearchIndex >= searchResults.length - 1"
             size="small"
@@ -83,6 +85,7 @@
             <v-icon>mdi-chevron-down</v-icon>
           </v-btn>
         </v-btn-group>
+
         <span class="ml-2">{{ currentSearchIndex + 1 }} of {{ searchResults.length }}</span>
       </v-card-subtitle>
 
@@ -124,6 +127,7 @@
                 </template>
               </v-treeview>
             </div>
+
             <div class="tree-resize-handle" @mousedown="startResize" />
           </div>
 

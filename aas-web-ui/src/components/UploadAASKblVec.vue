@@ -3,6 +3,7 @@
     <v-sheet border :loading="loading" rounded="lg">
       <v-card-title class="bg-cardHeader">Create AAS from KBL/VEC</v-card-title>
       <v-divider />
+
       <v-card-text class="overflow-y-auto" style="max-height: calc(100vh - 296px)">
         <v-file-upload
           v-model="selectedFile"
@@ -27,12 +28,15 @@
 
         <template v-if="isStructuredXmlFile && hasFile">
           <v-label class="mt-5 d-block">Required AAS Fields</v-label>
+
           <div class="text-caption text-medium-emphasis mt-1">
             Values are auto-filled from KBL/VEC when possible and can be edited manually.
           </div>
+
           <v-alert v-if="missingRequiredFieldLabels.length > 0" class="mt-2" density="compact" type="warning">
             Please provide: {{ missingRequiredFieldLabels.join(', ') }}
           </v-alert>
+
           <v-row class="mt-1" dense>
             <v-col cols="12" md="6">
               <v-text-field
@@ -43,6 +47,7 @@
                 :rules="[requiredFieldRule]"
               />
             </v-col>
+
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="requiredFieldValues.aasId"
@@ -65,6 +70,7 @@
                 </template>
               </v-text-field>
             </v-col>
+
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="requiredFieldValues.assetId"
@@ -87,6 +93,7 @@
                 </template>
               </v-text-field>
             </v-col>
+
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="requiredFieldValues.aasName"
@@ -96,6 +103,7 @@
                 :rules="[requiredFieldRule]"
               />
             </v-col>
+
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="requiredFieldValues.aasDescription"
@@ -105,6 +113,7 @@
                 :rules="[requiredFieldRule]"
               />
             </v-col>
+
             <v-col cols="12" md="6">
               <v-combobox
                 v-model="requiredFieldValues.assetKind"
@@ -120,13 +129,17 @@
           <v-alert v-if="extractionError !== ''" class="mt-3" density="compact" type="error">
             {{ extractionError }}
           </v-alert>
+
           <template v-else>
             <v-label class="mt-5 d-block">KBL/VEC Data Points</v-label>
+
             <div class="d-flex align-center mt-2">
               <div class="text-caption text-medium-emphasis">
                 {{ selectedDataPointCount }} / {{ selectableDataPointCount }} selected
               </div>
+
               <v-spacer />
+
               <v-btn
                 :disabled="extractedDataPoints.length === 0"
                 size="small"
@@ -135,6 +148,7 @@
               >
                 Select all
               </v-btn>
+
               <v-btn
                 :disabled="extractedDataPoints.length === 0"
                 size="small"
@@ -144,6 +158,7 @@
                 Clear
               </v-btn>
             </div>
+
             <v-text-field
               v-model="dataPointSearch"
               class="mt-2"
@@ -152,9 +167,11 @@
               hide-details
               label="Search data points"
             />
+
             <div v-if="extractionInProgress" class="text-caption text-medium-emphasis mt-2">
               {{ extractionProgressText }}
             </div>
+
             <v-progress-linear
               v-if="extractionInProgress"
               class="mt-1"
@@ -162,6 +179,7 @@
               indeterminate
               rounded
             />
+
             <v-sheet border class="mt-2" rounded="lg">
               <v-list class="py-0" density="compact">
                 <v-virtual-scroll height="320" :item-height="72" :items="visibleDataPointRows">
@@ -177,7 +195,9 @@
                         >
                           <v-icon :icon="expandedRowKeys.has(item.key) ? 'mdi-chevron-down' : 'mdi-chevron-right'" />
                         </v-btn>
+
                         <v-icon class="mr-1" :icon="item.icon" />
+
                         <v-checkbox-btn
                           v-if="item.selectable || item.hasChildren"
                           :indeterminate="isRowPartiallySelected(selectedDataPointKeys, getSelectableKeysForRow(item))"
@@ -185,12 +205,14 @@
                           @click.stop="selectedDataPointKeys = toggleRowSelection(selectedDataPointKeys, getSelectableKeysForRow(item))"
                         />
                       </template>
+
                       <v-list-item-title
                         class="text-body-2"
                         :style="{ paddingLeft: `${item.depth * 16}px` }"
                       >
                         {{ item.displayLabel }}
                       </v-list-item-title>
+
                       <v-list-item-subtitle class="text-caption">
                         {{ item.kindLabel }}
                         <span v-if="item.value !== ''"> | {{ item.value }}</span>
@@ -199,6 +221,7 @@
                     </v-list-item>
                   </template>
                 </v-virtual-scroll>
+
                 <v-list-item v-if="visibleDataPointRows.length === 0" class="px-2">
                   <v-list-item-title class="text-caption text-medium-emphasis">No matching data points</v-list-item-title>
                 </v-list-item>
@@ -237,10 +260,13 @@
           rounded
         />
       </v-card-text>
+
       <v-divider />
+
       <v-card-actions>
         <v-spacer />
         <v-btn :disabled="loading" rounded="lg" text="Cancel" @click="dialog = false" />
+
         <v-btn
           class="text-buttonText"
           color="primary"

@@ -74,9 +74,11 @@
                         <template #prepend>
                           <v-icon size="small">mdi-upload</v-icon>
                         </template>
+
                         <span>Upload AAS File to Environment</span>
                       </v-list-item>
                     </template>
+
                     <span>Upload AAS File to Environment</span>
                   </v-tooltip>
 
@@ -88,9 +90,11 @@
                         <template #prepend>
                           <v-icon size="small">mdi-file-cog-outline</v-icon>
                         </template>
+
                         <span>Create AAS from KBL/VEC</span>
                       </v-list-item>
                     </template>
+
                     <span>Create AAS from KBL/VEC file</span>
                   </v-tooltip>
 
@@ -104,9 +108,11 @@
                       <template #prepend>
                         <v-icon size="small">mdi-plus</v-icon>
                       </template>
+
                       <span>Create AAS</span>
                     </v-list-item>
                   </template>
+
                   <span>Create a new AAS</span>
                 </v-tooltip>
               </v-list>
