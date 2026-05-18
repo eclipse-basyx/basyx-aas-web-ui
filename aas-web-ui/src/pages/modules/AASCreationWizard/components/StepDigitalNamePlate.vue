@@ -46,7 +46,7 @@
   import type { FormStateObject } from '../types/form'
   import type { DigitalNameplateTemplate } from '../types/template'
   import type { ValidationIssue } from '../types/validation'
-  import { onMounted, ref, toRaw } from 'vue'
+  import { ref, toRaw } from 'vue'
   import { buildDigitalNameplate } from '../builders/buildDigitalNameplate'
   import { useAASCreationStore } from '../stores/aasCreationForm'
   import template from '../templates/digital-nameplate.json'
@@ -70,11 +70,6 @@
   const templateData = normalizeDigitalNameplateTemplate(rawTemplate)
   const formValues = ref<FormStateObject>(createInitialFormState(templateData))
   const validationIssues = ref<ValidationIssue[]>([])
-
-  onMounted(() => {
-    const initialState = createInitialFormState(templateData)
-    console.log('initial digital nameplate form state:', initialState)
-  })
 
   // Function to save form values from UI into central store
   async function saveAndNext (): Promise<void> {

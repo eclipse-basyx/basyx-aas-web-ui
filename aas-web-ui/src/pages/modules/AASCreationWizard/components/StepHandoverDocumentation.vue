@@ -97,12 +97,6 @@
   const createdSubmodelIdToOpen = ref<string | null>(null)
 
   onMounted(() => {
-    console.log('handover template root elements:', templateData.submodelElements.map(element => ({
-      idShort: element.idShort,
-      modelType: element.modelType,
-      cardinality: element._cardinality,
-    })))
-
     if (store.handoverDocumentationFormState) {
       formValues.value = deepCopyFormState(store.handoverDocumentationFormState)
     }
@@ -221,7 +215,7 @@
       open: true,
       type: 'error',
       title: 'Submission failed',
-      message: 'The submission could not be completed. Please check the console for details and try again.',
+      message: 'The submission could not be completed.',
       confirmText: 'OK',
     }
   }

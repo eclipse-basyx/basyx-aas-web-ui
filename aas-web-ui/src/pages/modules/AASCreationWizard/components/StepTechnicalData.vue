@@ -162,7 +162,7 @@
   import type { ValidationIssue } from '../types/validation'
   // import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { computed, onMounted, ref } from 'vue'
-  import { buildSpecificDescriptions, buildTechnicalData, buildTechnicalPropertyAreas } from '../builders/buildTechnicalData'
+  import { buildTechnicalData } from '../builders/buildTechnicalData'
   import { useAASCreationStore } from '../stores/aasCreationForm'
   import template from '../templates/technical-data.json'
   import { createInitialFormState } from '../utils/createInitialFormState'
@@ -235,14 +235,7 @@
     store.saveTechnicalPropertyAreas(rawTechnicalPropertyAreas)
     store.saveSpecificDescriptions(rawSpecificDescriptions)
 
-    const builtTechnicalPropertyAreas = buildTechnicalPropertyAreas(rawTechnicalPropertyAreas)
-    console.log('built technical property areas', builtTechnicalPropertyAreas)
-
-    const builtSpecificDescriptions = buildSpecificDescriptions(rawSpecificDescriptions)
-    console.log('built technical property areas', builtSpecificDescriptions)
-
     const builtTechnicalData = buildTechnicalData(rawFormState, rawTechnicalPropertyAreas, rawSpecificDescriptions)
-    console.log('builtTechnicalData', builtTechnicalData)
 
     store.saveTechnicalDataData(builtTechnicalData)
 
