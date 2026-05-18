@@ -1,5 +1,6 @@
 import type { AssetDataForm } from '../stores/aasCreationForm'
 import type { DigitalNameplateTemplate, HandoverDocumentationTemplate, TechnicalDataTemplate } from '../types/template'
+import { labelToIdShort } from '../utils/idShortUtils'
 
 type SubmodelWithId = {
   id?: string
@@ -39,7 +40,7 @@ export function buildAssetAdministrationShell (
   const aas: any = {
     modelType: 'AssetAdministrationShell',
     id: assetData.aasId,
-    idShort: assetData.displayName.trim() || 'AAS',
+    idShort: labelToIdShort(assetData.displayName, 'AAS'),
     assetInformation: {
       assetKind: assetData.assetKind,
       globalAssetId: assetData.globalAssetId,
