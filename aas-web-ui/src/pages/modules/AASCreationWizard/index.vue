@@ -72,7 +72,7 @@
   import StepDigitalNamePlate from './components/StepDigitalNamePlate.vue'
   import StepHandoverDocumentation from './components/StepHandoverDocumentation.vue'
   import StepTechnicalData from './components/StepTechnicalData.vue'
-  
+
   defineOptions({
     inheritAttrs: false,
     moduleTitle: 'AAS Creation Wizard',
