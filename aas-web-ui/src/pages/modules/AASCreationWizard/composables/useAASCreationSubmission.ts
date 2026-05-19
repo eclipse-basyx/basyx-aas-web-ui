@@ -29,7 +29,7 @@ function getSubmodelId (submodelData: unknown): string | null {
 }
 
 export function useAASCreationSubmission () {
-  const { postAas } = useAASRepositoryClient()
+  const { postAas, putThumbnail } = useAASRepositoryClient()
   const { postSubmodel } = useSMRepositoryClient()
   const store = useAASCreationStore()
 
@@ -116,6 +116,14 @@ export function useAASCreationSubmission () {
 
       if (!success) {
         return { success: false }
+      }
+      if (assetData.thumbnailFile) {
+        const thumbnailSuccess = await putThumbnail(assetData.thumbnailFile, builtAas.id)
+
+        if (!thumbnailSuccess) {
+          console.error('Thumbnail upload failed')
+          return { success: false }
+        }
       }
 
       return {
