@@ -1,8 +1,34 @@
+import type { FormStateObject } from '../types/form'
+import type {
+  DigitalNameplateTemplate,
+  HandoverDocumentationTemplate,
+  TechnicalDataTemplate,
+  TemplateElement } from '../types/template'
 import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
 import { buildAssetAdministrationShell } from '../builders/buildAssetAdministrationShell'
 import { useAASCreationStore } from '../stores/aasCreationForm'
+import digitalNameplateTemplate from '../templates/digital-nameplate.json'
+import handoverDocumentationTemplate from '../templates/handover-documentation.json'
+import technicalDataTemplate from '../templates/technical-data.json'
+import {
+  normalizeDigitalNameplateTemplate,
+  normalizeHandoverDocumentationTemplate,
+  normalizeTechnicalDataTemplate,
+} from '../utils/normalizeTemplate'
+import { collectSubmodelFileUploadTasks } from '../utils/submodelFileUploadUtils'
 import { useSMRepositoryClient } from './../../../../composables/Client/SMRepositoryClient'
+
+const digitalNameplateTemplateData = normalizeDigitalNameplateTemplate(
+  digitalNameplateTemplate as DigitalNameplateTemplate,
+)
+const technicalDataTemplateData = normalizeTechnicalDataTemplate(
+  technicalDataTemplate as TechnicalDataTemplate,
+)
+
+const handoverDocumentationTemplateData = normalizeHandoverDocumentationTemplate(
+  handoverDocumentationTemplate as HandoverDocumentationTemplate,
+)
 
 interface AASCreationSubmissionSuccess {
   success: true
@@ -30,7 +56,7 @@ function getSubmodelId (submodelData: unknown): string | null {
 
 export function useAASCreationSubmission () {
   const { postAas, putThumbnail } = useAASRepositoryClient()
-  const { postSubmodel } = useSMRepositoryClient()
+  const { postSubmodel, getSmEndpointById, putAttachmentFile } = useSMRepositoryClient()
   const store = useAASCreationStore()
 
   async function postBuiltSubmodel (
@@ -87,11 +113,30 @@ export function useAASCreationSubmission () {
     if (!digitalNameplateSuccess) {
       return { success: false }
     }
+    const digitalNameplateFilesSuccess = await uploadFilesForSubmodel(
+      digitalNameplateId,
+      digitalNameplateTemplateData.submodelElements,
+      store.digitalNameplateFormState,
+    )
+
+    if (!digitalNameplateFilesSuccess) {
+      return { success: false }
+    }
     // build technical data
     const technicalDataSuccess = await postBuiltSubmodel(
       technicalData,
     )
     if (!technicalDataSuccess) {
+      return { success: false }
+    }
+
+    const technicalDataFilesSuccess = await uploadFilesForSubmodel(
+      technicalDataId,
+      technicalDataTemplateData.submodelElements,
+      store.technicalDataFormState,
+    )
+
+    if (!technicalDataFilesSuccess) {
       return { success: false }
     }
 
@@ -102,6 +147,16 @@ export function useAASCreationSubmission () {
     if (!handoverDocumentationSuccess) {
       return { success: false }
     }
+    const handoverDocumentationFilesSuccess = await uploadFilesForSubmodel(
+      handoverDocumentationId,
+      handoverDocumentationTemplateData.submodelElements,
+      store.handoverDocumentationFormState,
+    )
+
+    if (!handoverDocumentationFilesSuccess) {
+      return { success: false }
+    }
+
     // post the aas with submodels
     const builtAas = buildAssetAdministrationShell(assetData, digitalNameplate, technicalData, handoverDocumentation)
 
@@ -121,7 +176,6 @@ export function useAASCreationSubmission () {
         const thumbnailSuccess = await putThumbnail(assetData.thumbnailFile, builtAas.id)
 
         if (!thumbnailSuccess) {
-          console.error('Thumbnail upload failed')
           return { success: false }
         }
       }
@@ -136,6 +190,29 @@ export function useAASCreationSubmission () {
       return { success: false }
     }
   }
+
+  async function uploadFilesForSubmodel (
+    submodelId: string,
+    elements: TemplateElement[],
+    formState: FormStateObject | null,
+  ): Promise<boolean> {
+    const fileTasks = collectSubmodelFileUploadTasks(
+      submodelId,
+      elements,
+      formState,
+      getSmEndpointById,
+    )
+
+    for (const task of fileTasks) {
+      const uploadSuccess = await putAttachmentFile(task.file, task.path)
+
+      if (!uploadSuccess) {
+        return false
+      }
+    }
+    return true
+  }
+
   return {
     submitAll,
   }
