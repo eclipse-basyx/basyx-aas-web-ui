@@ -1,5 +1,6 @@
 allowBuilds:
   '@parcel/watcher': true
   'vue-demi': true
+minimumReleaseAge: 1440
 packages:
     - '.'
