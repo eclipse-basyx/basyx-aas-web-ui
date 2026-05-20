@@ -1,5 +1,7 @@
 import type { FormStateObject } from '../types/form'
 import type {
+  AnnotatedRelationshipElementElement,
+  EntityElement,
   SubmodelElementCollectionElement,
   SubmodelElementListElement,
   TemplateElement,
@@ -106,6 +108,40 @@ function collectFileUploadTasksFromElements (
           ),
         )
       }
+    }
+    if (element.modelType === 'AnnotatedRelationshipElement') {
+      const nestedState = asFormStateObject(value)
+      const annotatedRelationship = element as AnnotatedRelationshipElementElement
+      const collectionPath = joinPath(parentIdShortPath, annotatedRelationship.idShort)
+
+      if (Array.isArray(annotatedRelationship.annotations)) {
+        tasks.push(
+          ...collectFileUploadTasksFromElements(
+            annotatedRelationship.annotations,
+            nestedState,
+            collectionPath,
+            submodelEndpoint,
+          ),
+        )
+      }
+      continue
+    }
+    if (element.modelType === 'Entity') {
+      const nestedState = asFormStateObject(value)
+      const entity = element as EntityElement
+      const collectionPath = joinPath(parentIdShortPath, entity.idShort)
+
+      if (Array.isArray(entity.statements)) {
+        tasks.push(
+          ...collectFileUploadTasksFromElements(
+            entity.statements,
+            nestedState,
+            collectionPath,
+            submodelEndpoint,
+          ),
+        )
+      }
+      continue
     }
   }
 

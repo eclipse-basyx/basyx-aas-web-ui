@@ -156,6 +156,12 @@ function buildElement (element: TemplateElement, value: FormStateValue): Templat
     case 'Range': {
       return [] // unused in digitalNameplate
     }
+    case 'AnnotatedRelationshipElement':{
+      return [] // unused in digitalNameplate
+    }
+    case 'Entity':{
+      return [] // unused in digitalNameplate
+    }
   }
 }
 

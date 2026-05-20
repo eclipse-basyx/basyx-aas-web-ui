@@ -20,6 +20,8 @@ export type ModelType
     | 'SubmodelElementList'
     | 'ReferenceElement'
     | 'Range'
+    | 'Entity'
+    | 'AnnotatedRelationshipElement'
 
 export type BaseTemplateElement = {
   [key: string]: unknown
@@ -71,6 +73,8 @@ export type TemplateElement
     | SubmodelElementListElement
     | ReferenceElement
     | RangeElement
+    | EntityElement
+    | AnnotatedRelationshipElementElement
 
 export type SubmodelElementCollectionElement = BaseTemplateElement & {
   modelType: 'SubmodelElementCollection'
@@ -80,6 +84,16 @@ export type SubmodelElementCollectionElement = BaseTemplateElement & {
 export type SubmodelElementListElement = BaseTemplateElement & {
   modelType: 'SubmodelElementList'
   value: TemplateElement[]
+}
+
+export type AnnotatedRelationshipElementElement = BaseTemplateElement & {
+  modelType: 'AnnotatedRelationshipElement'
+  annotations?: TemplateElement[]
+}
+
+export type EntityElement = BaseTemplateElement & {
+  modelType: 'Entity'
+  statements?: TemplateElement[]
 }
 
 export type SubmodelTemplate = {

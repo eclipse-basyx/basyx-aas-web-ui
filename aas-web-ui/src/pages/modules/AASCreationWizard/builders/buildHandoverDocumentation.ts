@@ -75,6 +75,12 @@ function buildElement (
     case 'ReferenceElement': {
       return []
     }
+    case 'AnnotatedRelationshipElement':{
+      return []
+    }
+    case 'Entity':{
+      return []
+    }
   }
 }
 
