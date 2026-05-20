@@ -66,14 +66,14 @@
     "@tsconfig/node22": "^22.0.5",
     "@types/leaflet": "^1.9.21",
     "@types/md5": "^2.3.6",
-    "@types/node": "^25.8.0",
+    "@types/node": "^25.9.0",
     "@types/prismjs": "^1.26.6",
     "@types/qrcode": "^1.5.6",
     "@types/three": "^0.184.1",
     "@vitejs/plugin-basic-ssl": "^2.1.4",
     "@vitejs/plugin-vue": "^6.0.7",
-    "@vitest/coverage-istanbul": "4.1.5",
-    "@vitest/ui": "^4.1.5",
+    "@vitest/coverage-istanbul": "^4.1.6",
+    "@vitest/ui": "^4.1.6",
     "@vue/test-utils": "^2.4.10",
     "@vue/tsconfig": "^0.9.1",
     "eslint": "^10.4.0",
@@ -81,7 +81,7 @@
     "eslint-plugin-jsdoc": "^62.9.0",
     "eslint-plugin-vue": "^10.9.1",
     "jsdom": "^29.1.1",
-    "npm-run-all2": "^8.0.4",
+    "npm-run-all2": "^9.0.0",
     "sass-embedded": "^1.99.0",
     "typescript": "^6.0.3",
     "unplugin-auto-import": "^21.0.0",
@@ -89,7 +89,8 @@
     "unplugin-vue-components": "^32.0.0",
     "vite": "^8.0.13",
     "vite-plugin-vuetify": "^2.1.3",
-    "vitest": "^4.1.5",
-    "vue-tsc": "^3.2.9"
-  }
+    "vitest": "^4.1.6",
+    "vue-tsc": "^3.3.0"
+  },
+  "packageManager": "pnpm@11.1.3+sha512.c85357fe17ca12dd23dd7071822666dfd7e3cb76fe214e3370b5ea2fb34f2a231185509b63e717f3cd0acb38dd3f8d82bcd5e8172400ae678b70ea4fbed0896d"
 }
