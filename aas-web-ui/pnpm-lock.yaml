@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@aas-core-works/aas-core3.1-typescript':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.0.1
+        version: 1.0.1
       '@fontsource/roboto':
         specifier: ^5.2.10
         version: 5.2.10
@@ -52,7 +52,7 @@ importers:
         version: 5.12.0
       basyx-typescript-sdk:
         specifier: ^2.2.4
-        version: 2.2.4(@aas-core-works/aas-core3.1-typescript@1.0.0)
+        version: 2.2.4(@aas-core-works/aas-core3.1-typescript@1.0.1)
       html5-qrcode:
         specifier: ^2.3.8
         version: 2.3.8
@@ -198,8 +198,8 @@ importers:
 
 packages:
 
-  '@aas-core-works/aas-core3.1-typescript@1.0.0':
-    resolution: {integrity: sha512-7Ou6nJg4jHXOyEbegQFsOmkKhp/v73hUZB8TTe50ZGtaWzFxURkWTU/sxWeyqgd4X19dNIZkLANzffDvp45OQg==}
+  '@aas-core-works/aas-core3.1-typescript@1.0.1':
+    resolution: {integrity: sha512-77GX4Y8pFP+Rv9o3ZDECDBm4HDHdZOhw0AhNTfzSlm3fWIOIb4KNh7Bt5s9UsqDADPPAi4EF7/nT3JDVtl6SaQ==}
 
   '@apidevtools/json-schema-ref-parser@14.2.1':
     resolution: {integrity: sha512-HmdFw9CDYqM6B25pqGBpNeLCKvGPlIx1EbLrVL0zPvj50CJQUHyBNBw45Muk0kEIkogo1VZvOKHajdMuAzSxRg==}
@@ -3216,7 +3216,9 @@ packages:
 
 snapshots:
 
-  '@aas-core-works/aas-core3.1-typescript@1.0.0': {}
+  '@aas-core-works/aas-core3.1-typescript@1.0.1':
+    dependencies:
+      xmlsax-typescript: 1.0.0-rc.2
 
   '@apidevtools/json-schema-ref-parser@14.2.1(@types/json-schema@7.0.15)':
     dependencies:
@@ -4332,9 +4334,9 @@ snapshots:
 
   baseline-browser-mapping@2.10.20: {}
 
-  basyx-typescript-sdk@2.2.4(@aas-core-works/aas-core3.1-typescript@1.0.0):
+  basyx-typescript-sdk@2.2.4(@aas-core-works/aas-core3.1-typescript@1.0.1):
     dependencies:
-      '@aas-core-works/aas-core3.1-typescript': 1.0.0
+      '@aas-core-works/aas-core3.1-typescript': 1.0.1
       xmlsax-typescript: 1.0.0-rc.2
 
   bidi-js@1.0.3:
