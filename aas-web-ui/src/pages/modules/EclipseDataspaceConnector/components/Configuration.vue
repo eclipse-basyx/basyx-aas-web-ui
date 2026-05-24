@@ -1,8 +1,8 @@
 <template>
   <v-container fluid>
-    <v-row>
+    <v-row class="mt-2">
       <v-col cols="2">
-        <v-list-subheader>EDC </v-list-subheader>
+        <v-list-item-title>EDC</v-list-item-title>
       </v-col>
 
       <v-col cols="4">
@@ -54,8 +54,12 @@
     </v-row>
 
     <v-row>
+      <v-divider />
+    </v-row>
+
+    <v-row>
       <v-col cols="2">
-        <v-list-subheader>EDC Controlplane </v-list-subheader>
+        <v-list-item-title>EDC Controlplane </v-list-item-title>
       </v-col>
 
       <v-col cols="10">
@@ -235,6 +239,93 @@
 
     </v-row>
 
+    <v-row>
+      <v-divider />
+    </v-row>
+
+    <v-row>
+      <v-col cols="2">
+        <v-list-item-title>Business Partners</v-list-item-title>
+
+        <div class="mt-2 d-flex justify-start">
+          <v-btn
+            color="gray"
+            density="compact"
+            prepend-icon="mdi-plus"
+            variant="tonal"
+            @click="createBusinessPartner()"
+          >
+            Create Business Partner
+          </v-btn>
+        </div>
+      </v-col>
+
+      <v-col cols="10">
+
+        <template v-if="businessPartners.length > 0">
+          <template
+            v-for="(partner, index) in businessPartners"
+            :key="index"
+          >
+            <v-row>
+              <v-col cols="3">
+                <v-text-field
+                  v-model="partner.name"
+                  clearable
+                  hide-details="auto"
+                  label="Name"
+                  prepend-inner-icon="mdi-account"
+                  variant="solo"
+                >
+                  <template #prepend>
+                    <v-btn
+                      color="gray"
+                      density="compact"
+                      icon
+                      size="small"
+                      variant="text"
+                      @click="deleteBusinessPartner(index)"
+                    >
+                      <v-icon>mdi-delete</v-icon>
+                      <v-tooltip activator="parent" location="bottom">Delete Business Partner</v-tooltip>
+                    </v-btn>
+                  </template>
+                </v-text-field>
+              </v-col>
+
+              <v-col cols="3">
+                <v-text-field
+                  v-model="partner.bpn"
+                  clearable
+                  hide-details="auto"
+                  label="BPN"
+                  prepend-inner-icon="mdi-identifier"
+                  variant="solo"
+                />
+              </v-col>
+
+              <v-col cols="6">
+                <v-text-field
+                  v-model="partner.dsp"
+                  clearable
+                  hide-details="auto"
+                  label="DSP Endpoint"
+                  prepend-inner-icon="mdi-web"
+                  variant="solo"
+                />
+              </v-col>
+            </v-row>
+          </template>
+        </template>
+
+        <v-empty-state
+          v-else
+          text="No business partners configured"
+          title="Business Partners"
+        />
+      </v-col>
+    </v-row>
+
   </v-container>
 </template>
 
@@ -252,6 +343,7 @@
   const { checkControlplaneHealth, checkControlplaneLiveness, checkControlplaneReadiness, checkControlplaneStartup } = useEdcClient()
 
   // Data
+  const businessPartners = ref<Array<any>>([])
   const edcType = ref<null | (typeof EDC_TYPES)[number]>(
     EDC_TYPES.includes(edcStore.getEdcType as (typeof EDC_TYPES)[number])
       ? (edcStore.getEdcType as (typeof EDC_TYPES)[number])
@@ -279,9 +371,27 @@
     if (edcControlplaneApiEndpoint.value) {
       testControlplaneConnection()
     }
+    loadBusinessPartners()
   })
 
   // Methods
+  function loadBusinessPartners (): void {
+    const config = edcStore.getEdcConfig
+    businessPartners.value = config?.businessPartners ?? []
+  }
+
+  function createBusinessPartner (): void {
+    businessPartners.value.push({
+      name: '',
+      bpn: '',
+      dsp: '',
+    })
+  }
+
+  function deleteBusinessPartner (index: number): void {
+    businessPartners.value.splice(index, 1)
+  }
+
   async function testControlplaneConnection (): Promise<void> {
     const endpoint = edcControlplaneApiEndpoint.value
 
@@ -404,6 +514,9 @@
     value => {
       edcStore.setControlplaneEndpoint(value)
       edcControlplaneApiEndpointIsHealthy.value = null
+      if (value) {
+        testControlplaneConnection()
+      }
     },
   )
 
@@ -441,7 +554,12 @@
       edcStore.setSecurityConfigClientSecret(value)
     },
   )
-
+  watch(
+    () => edcStore.getEdcConfig,
+    () => {
+      loadBusinessPartners()
+    },
+  )
   const edcEndpointRule = [
     (value: string) => !!value || 'Endpoint required.',
     (value: string) => (value && (value.startsWith('http://') || value.startsWith('https://'))) || 'Endpoint should be start with http://... or https://...',

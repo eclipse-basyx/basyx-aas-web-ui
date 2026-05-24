@@ -7,6 +7,12 @@ export interface EdcControlPlaneConfig {
   managementEndpoint: string
 }
 
+export interface BusinessPartner {
+  name: string
+  bpn: string
+  dsp: string
+}
+
 export interface YamlEdcSecurityConfig {
   type: string
   config?: Record<string, string>
@@ -14,9 +20,10 @@ export interface YamlEdcSecurityConfig {
 
 export interface YamlEdcConfig {
   edc: {
-    type: EdcType
-    controlplane: EdcControlPlaneConfig
-    security: YamlEdcSecurityConfig
+    'type': EdcType
+    'controlplane': EdcControlPlaneConfig
+    'security': YamlEdcSecurityConfig
+    'business-partners'?: BusinessPartner[]
   }
 }
 
@@ -29,4 +36,5 @@ export interface EdcConfig {
   type: EdcType
   controlplane: EdcControlPlaneConfig
   security: EdcSecurityConfig
+  businessPartners?: BusinessPartner[]
 }

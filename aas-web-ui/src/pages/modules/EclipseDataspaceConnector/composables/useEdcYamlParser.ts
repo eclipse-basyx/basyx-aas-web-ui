@@ -26,6 +26,21 @@ export function useEdcYamlParser (): {
     }
   }
 
+  function parseBusinessPartnersConfig (yamlBusinessPartners?: unknown): EdcConfig['businessPartners'] {
+    if (!yamlBusinessPartners || !Array.isArray(yamlBusinessPartners)) {
+      return []
+    }
+
+    return yamlBusinessPartners.map(partner => {
+      const partnerObj = partner as Record<string, unknown>
+      return {
+        name: String(partnerObj.name || ''),
+        bpn: String(partnerObj.bpn || ''),
+        dsp: String(partnerObj.dsp || ''),
+      }
+    })
+  }
+
   function parseYamlConfig (yamlConfig: YamlEdcConfig): EdcConfig {
     return {
       type: yamlConfig.edc.type,
@@ -34,6 +49,7 @@ export function useEdcYamlParser (): {
         managementEndpoint: yamlConfig.edc.controlplane.managementEndpoint.trim(),
       },
       security: parseSecurityConfig(yamlConfig.edc.security),
+      businessPartners: parseBusinessPartnersConfig(yamlConfig.edc['business-partners']),
     }
   }
 
@@ -88,6 +104,36 @@ export function useEdcYamlParser (): {
     if (securityObj.config !== undefined && (typeof securityObj.config !== 'object' || securityObj.config === null)) {
       console.error('Invalid EDC YAML configuration: invalid security.config')
       return false
+    }
+
+    // Validate business-partners if present
+    const businessPartners = edcObj['business-partners']
+    if (businessPartners !== undefined) {
+      if (!Array.isArray(businessPartners)) {
+        console.error('Invalid EDC YAML configuration: business-partners must be an array')
+        return false
+      }
+
+      for (const partner of businessPartners) {
+        if (typeof partner !== 'object' || partner === null) {
+          console.error('Invalid EDC YAML configuration: business-partner entry is not an object')
+          return false
+        }
+
+        const partnerObj = partner as Record<string, unknown>
+        if (!partnerObj.name || typeof partnerObj.name !== 'string') {
+          console.error('Invalid EDC YAML configuration: missing or invalid business-partner.name')
+          return false
+        }
+        if (!partnerObj.bpn || typeof partnerObj.bpn !== 'string') {
+          console.error('Invalid EDC YAML configuration: missing or invalid business-partner.bpn')
+          return false
+        }
+        if (!partnerObj.dsp || typeof partnerObj.dsp !== 'string') {
+          console.error('Invalid EDC YAML configuration: missing or invalid business-partner.dsp')
+          return false
+        }
+      }
     }
 
     return true

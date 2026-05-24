@@ -77,7 +77,7 @@
     <v-row class="mb-4">
       <v-col cols="12" md="6">
         <!-- Configuration Status Card -->
-        <v-card border class="fill-height" rounded="lg">
+        <v-card border class="fill-height d-flex flex-column" rounded="lg">
           <v-card-title class="d-flex align-center pt-4 px-4 pb-2">
             <v-icon class="mr-2" color="primary" size="20">mdi-cog-sync</v-icon>
             Configuration Status
@@ -85,7 +85,7 @@
 
           <v-divider />
 
-          <v-card-text class="pa-4">
+          <v-card-text class="pa-4 flex-grow-1">
             <v-list class="pa-0" lines="two">
               <v-list-item
                 v-for="statusItem in configurationStatus"
@@ -104,9 +104,11 @@
               </v-list-item>
             </v-list>
 
+          </v-card-text>
+
+          <v-card-actions>
             <v-btn
               block
-              class="mt-2"
               color="gray"
               prepend-icon="mdi-cog"
               :to="configRoute"
@@ -114,7 +116,8 @@
             >
               Configure Connector
             </v-btn>
-          </v-card-text>
+          </v-card-actions>
+
         </v-card>
       </v-col>
 
@@ -267,6 +270,7 @@
     'Dataspace Protocol (DSP) compliant contract negotiation',
     'Policy and Asset Management',
     'Policy-based access control',
+    'Business Partner Management',
     'Tractus-X EDC v0.9 & v0.11.2 support',
     'API key & OAuth2 token authentication',
   ]
