@@ -6,19 +6,33 @@
 # - Production (Docker): Mount to /edc.yml
 
 # EDC example Configuration
-# controlplane-key:
-#   url: "http://localhost:8081"
-# security:
-#   type: Key
-#   config:
-#     key: "xApiKey"
+# edc:
+#   type: '...'
+#   controlplane:
+#     endpoint: "http://localhost:8080"
+#     managementEndpoint: "http://localhost:8081"
+#   security:
+#     type: Key
+#     config:
+#       key: "xApiKey"
+#   business-partners:
+#     - name: "BP Name"
+#       bpn: "BPN"
+#       dsp: "BP DSP"
 
 # EDC example Configuration
-# controlplane-token:
-#   url: "http://localhost:8081"
-# security:
-#   type: "Token"
-#   config:
-#     url: "http://localhost:5432"
-#     clientId: "clientId"
-#     clientSecret: "clientSecret"
+# edc:
+#   type: '...'
+#   controlplane:
+#     endpoint: "http://localhost:8080"
+#     managementEndpoint: "http://localhost:8081"
+#   security:
+#     type: Token
+#     config:
+#       url: "http://localhost:5432"
+#       clientId: "clientId"
+#       clientSecret: "clientSecret"
+#   business-partners:
+#     - name: "BP Name"
+#       bpn: "BPN"
+#       dsp: "BP DSP"
