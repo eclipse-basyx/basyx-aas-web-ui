@@ -8,7 +8,7 @@ export function useEdcClient () {
   const edcStore = useEdcStore()
 
   // Composables
-  const { getRequest, postRequest, deleteRequest } = useRequestHandling()
+  const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling()
 
   const defaultControlplaneEndpointPath = '/api'
   const defaultControlplaneMgmtEndpointPath = '/api/management/v3'
@@ -218,6 +218,39 @@ export function useEdcClient () {
   }
 
   /**
+   * Retrieves a policy definition by its ID
+   * Based on OpenAPI spec: GET /v3/policydefinitions/{id}
+   * @param policyId The ID of the policy definition to retrieve
+   * @param endpoint Optional custom endpoint. If not provided, uses configured controlplane endpoint
+   * @returns PolicyDefinition object, or null if retrieval fails
+   */
+  async function getPolicyDefinition (policyId: string, endpoint?: string): Promise<PolicyDefinition | null> {
+    const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
+    if (baseUrl === '' || !policyId) {
+      return null
+    }
+
+    const path = `${baseUrl}${defaultPolicyDefinitionsPath}/${policyId}`
+    const context = 'retrieving EDC policy definition'
+    const disableMessage = false
+    const headers = new Headers()
+    headers.append('Content-Type', 'application/json')
+    const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
+    headers.append(authKey, authValue)
+
+    try {
+      const response = await getRequest(path, context, disableMessage, headers)
+      if (response.success && response.data) {
+        return response.data as PolicyDefinition
+      }
+    } catch (error) {
+      console.warn('Get policy definition failed:', error)
+    }
+
+    return null
+  }
+
+  /**
    * Creates a new policy definition
    * Based on OpenAPI spec: POST /v3/policydefinitions
    * @param policyDefinition The policy definition to create
@@ -226,7 +259,7 @@ export function useEdcClient () {
    */
   async function createPolicyDefinition (policyDefinition: PolicyDefinitionInput, endpoint?: string): Promise<IdResponse | null> {
     const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
-    if (baseUrl === '') {
+    if (baseUrl === '' || !policyDefinition) {
       return null
     }
 
@@ -249,6 +282,41 @@ export function useEdcClient () {
     }
 
     return null
+  }
+
+  /**
+   * Updates an existing policy definition
+   * Based on OpenAPI spec: PUT /v3/policydefinitions/{id}
+   * @param policyId The ID of the policy definition to update
+   * @param policyDefinition The updated policy definition data
+   * @param endpoint Optional custom endpoint. If not provided, uses configured controlplane endpoint
+   * @returns true if update was successful, false otherwise
+   */
+  async function updatePolicyDefinition (policyId: string, policyDefinition: PolicyDefinitionInput, endpoint?: string): Promise<boolean> {
+    const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
+    if (baseUrl === '' || !policyId || !policyDefinition) {
+      return false
+    }
+
+    const path = `${baseUrl}${defaultPolicyDefinitionsPath}/${policyId}`
+    const context = 'updating EDC policy definition'
+    const disableMessage = false
+    const headers = new Headers()
+    headers.append('Content-Type', 'application/json')
+    const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
+    headers.append(authKey, authValue)
+    const body = JSON.stringify(policyDefinition)
+
+    try {
+      const response = await putRequest(path, body, headers, context, disableMessage)
+      if (response.success) {
+        return true
+      }
+    } catch (error) {
+      console.warn('Update policy definition failed:', error)
+    }
+
+    return false
   }
 
   /**
@@ -292,7 +360,9 @@ export function useEdcClient () {
     checkControlplaneReadiness,
     checkControlplaneStartup,
     queryPolicyDefinitions,
+    getPolicyDefinition,
     createPolicyDefinition,
+    updatePolicyDefinition,
     deletePolicyDefinition,
   }
 }
