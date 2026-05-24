@@ -1,0 +1,21 @@
+[
+  {
+    "id": "Tractus-X EDC v0.9",
+    "github_url": "https://github.com/eclipse-tractusx/tractusx-edc/tree/release/0.9.0",
+    "edc_original": "EDC v0.11.1",
+    "dataspace_protocol": {
+      "version": "v0.8",
+      "github_url": "https://github.com/International-Data-Spaces-Association/ids-specification/tree/v0.8"
+    }
+  },
+  {
+    "id": "Tractus-X EDC v0.11.2",
+    "github_url": "https://github.com/eclipse-tractusx/tractusx-edc/tree/release/0.11.2",
+    "edc_original": "EDC v0.14.0",
+    "dataspace_protocol": {
+      "version": "2025-01",
+      "url": "https://eclipse-dataspace-protocol-base.github.io/DataspaceProtocol/2025-1-err1/",
+      "github_url": "https://github.com/eclipse-dataspace-protocol-base/DataspaceProtocol/tree/2025-1-err1"
+    }
+  }
+]
