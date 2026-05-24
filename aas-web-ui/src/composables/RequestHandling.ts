@@ -453,8 +453,9 @@ export function useRequestHandling () {
       .catch(error => handleRequestError(error, disableMessage))
   }
 
-  function deleteRequest (path: string, context: string, disableMessage: boolean): any {
-    return fetch(path, { method: 'DELETE', headers: addAuthorizationHeader(new Headers()) })
+  function deleteRequest (path: string, headers: Headers, context: string, disableMessage: boolean): any {
+    headers = addAuthorizationHeader(headers) // Add the Authorization header
+    return fetch(path, { method: 'DELETE', headers })
       .then(response => {
         // Check if the Server responded with content
         if (
