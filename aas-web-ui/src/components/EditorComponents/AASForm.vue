@@ -1,8 +1,8 @@
 <template>
   <v-dialog v-model="editAASDialog" persistent width="860">
     <v-card>
-      <v-card-title>
-        <span class="text-body-large">{{ newShell ? 'Create a new AAS' : 'Edit AAS' }}</span>
+      <v-card-title class="bg-cardHeader">
+        {{ newShell ? 'Create a new AAS' : 'Edit AAS' }}
       </v-card-title>
 
       <v-divider />
