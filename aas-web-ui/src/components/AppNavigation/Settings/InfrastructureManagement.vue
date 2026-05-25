@@ -1,10 +1,24 @@
 <template>
-  <v-dialog v-model="dialogOpen" max-width="900px" persistent scrollable>
-    <v-sheet border rounded="lg">
+  <v-dialog
+    v-model="dialogOpen"
+    :fullscreen="isMobile"
+    :max-width="isMobile ? undefined : '900px'"
+    persistent
+    :scrollable="!isMobile"
+  >
+    <v-sheet
+      border
+      class="d-flex flex-column"
+      :rounded="isMobile ? undefined : 'lg'"
+      :style="isMobile ? { height: '100vh' } : undefined"
+    >
       <v-card-title class="bg-cardHeader">Manage Infrastructures</v-card-title>
       <v-divider />
 
-      <v-card-text style="max-height: 600px">
+      <v-card-text
+        class="overflow-y-auto"
+        :style="isMobile ? { flex: '1 1 auto', minHeight: '0' } : { maxHeight: '600px' }"
+      >
         <InfrastructureListTable
           v-model:default-infrastructure-id="defaultInfrastructure"
           :infrastructures="infrastructures"
@@ -34,12 +48,25 @@
     </v-sheet>
 
     <!-- Edit/Add Infrastructure Dialog -->
-    <v-dialog v-model="editDialogOpen" max-width="1200px" persistent>
-      <v-sheet border rounded="lg">
+    <v-dialog
+      v-model="editDialogOpen"
+      :fullscreen="isMobile"
+      :max-width="isMobile ? undefined : '1200px'"
+      persistent
+    >
+      <v-sheet
+        border
+        class="d-flex flex-column"
+        :rounded="isMobile ? undefined : 'lg'"
+        :style="isMobile ? { height: '100vh' } : undefined"
+      >
         <v-card-title class="bg-cardHeader">{{ editMode === 'add' ? 'Add' : 'Edit' }} Infrastructure</v-card-title>
         <v-divider />
 
-        <v-card-text class="pt-1" style="max-height: calc(100vh - 200px); overflow-y: auto">
+        <v-card-text
+          class="pt-1 overflow-y-auto"
+          :style="isMobile ? { flex: '1 1 auto', minHeight: '0' } : { maxHeight: 'calc(100vh - 200px)' }"
+        >
           <v-form ref="formRef">
             <!-- Infrastructure Name -->
             <v-list-subheader class="mb-1">Infrastructure Name</v-list-subheader>
@@ -133,37 +160,59 @@
 
     <!-- Delete Confirmation Dialog -->
     <v-dialog v-model="deleteDialogOpen" max-width="400px">
-      <v-card>
-        <v-card-title>Confirm Delete</v-card-title>
+      <v-sheet border :rounded="isMobile ? undefined : 'lg'">
+        <v-card-title class="bg-cardHeader">Confirm Delete</v-card-title>
+        <v-divider />
 
         <v-card-text>
           Are you sure you want to delete the infrastructure "{{ infrastructureToDelete?.name }}"?
         </v-card-text>
 
+        <v-divider />
+
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="deleteDialogOpen = false">Cancel</v-btn>
-          <v-btn color="error" @click="confirmDelete">Delete</v-btn>
+          <v-btn rounded="lg" text="Cancel" @click="deleteDialogOpen = false" />
+
+          <v-btn
+            class="text-buttonText"
+            color="error"
+            rounded="lg"
+            text="Delete"
+            variant="flat"
+            @click="confirmDelete"
+          />
         </v-card-actions>
-      </v-card>
+      </v-sheet>
     </v-dialog>
 
     <!-- Reset Confirmation Dialog -->
     <v-dialog v-model="resetDialogOpen" max-width="400px">
-      <v-card>
-        <v-card-title>Confirm Reset to Defaults</v-card-title>
+      <v-sheet border :rounded="isMobile ? undefined : 'lg'">
+        <v-card-title class="bg-cardHeader">Confirm Reset to Defaults</v-card-title>
+        <v-divider />
 
         <v-card-text>
           Are you sure you want to reset all infrastructures to their default settings? This action cannot be
           undone.
         </v-card-text>
 
+        <v-divider />
+
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="resetDialogOpen = false">Cancel</v-btn>
-          <v-btn color="error" @click="confirmReset">Reset</v-btn>
+          <v-btn rounded="lg" text="Cancel" @click="resetDialogOpen = false" />
+
+          <v-btn
+            class="text-buttonText"
+            color="error"
+            rounded="lg"
+            text="Reset"
+            variant="flat"
+            @click="confirmReset"
+          />
         </v-card-actions>
-      </v-card>
+      </v-sheet>
     </v-dialog>
   </v-dialog>
 </template>
@@ -178,6 +227,7 @@
   import { useOAuth2Form } from '@/composables/Auth/useOAuth2Form'
   import { useComponentConnectionTesting } from '@/composables/Infrastructure/useComponentConnectionTesting'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
+  import { useNavigationStore } from '@/store/NavigationStore'
   import { requiredRule } from '@/utils/InfrastructureUtils'
 
   // Props
@@ -192,8 +242,10 @@
 
   // Stores
   const infrastructureStore = useInfrastructureStore()
+  const navigationStore = useNavigationStore()
 
   // Computed Properties
+  const isMobile = computed(() => navigationStore.getIsMobile)
   const infrastructures = computed(() => infrastructureStore.getInfrastructures)
   const selectedInfrastructureId = computed(() => infrastructureStore.getSelectedInfrastructureId)
 

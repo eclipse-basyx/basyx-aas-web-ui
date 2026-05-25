@@ -53,7 +53,7 @@
           <template v-else-if="!['SMViewer', 'SMEditor'].includes(route.name as string) && !singleAas">
             <v-icon class="" color="primary" icon="custom:aasIcon" size="small" />
 
-            <span class="text-truncate ml-2">
+            <span class="text-truncate ma-2">
               {{ nameToDisplay(selectedAAS) }}
             </span>
           </template>
@@ -66,7 +66,7 @@
                   Object.keys(selectedAAS).length > 0)
             "
           >
-            <v-col class="pl-2 pr-0 py-0">
+            <v-col>
               <v-text-field
                 clearable
                 density="compact"
@@ -84,7 +84,6 @@
               <template #activator="{ props }">
                 <v-btn
                   v-bind="props"
-                  class="ml-1"
                   :disabled="!selectedNode || Object.keys(selectedNode).length === 0"
                   icon="mdi-expand-all"
                   variant="plain"
@@ -112,7 +111,7 @@
 
             <v-menu v-if="editorMode">
               <template #activator="{ props }">
-                <v-btn v-bind="props" class="mr-2" icon="mdi-dots-vertical" variant="plain" />
+                <v-btn v-bind="props" class="mr-0" icon="mdi-dots-vertical" variant="plain" />
               </template>
 
               <v-sheet border>
