@@ -8,89 +8,101 @@
         :width="336"
       >
         <v-card color="rgba(0,0,0,0)" elevation="0">
-          <v-card-title class="py-3">
+          <v-card-title
+            class="px-0 py-2 d-flex align-center"
+          >
 
-            <v-col>
-              <v-text-field
-                clearable
-                density="compact"
-                hide-details
-                label="Search for Policy ..."
-                variant="outlined"
-                @update:model-value="filterPolicyList"
-              >
-                <template #prepend>
+            <v-tooltip location="bottom" open-delay="600">
+              <template #activator="{ props }">
+                <v-btn
+                  class="ma-0"
+                  icon="mdi-reload"
+                  v-bind="props"
+                  :loading="listLoading"
+                  variant="plain"
+                  @click="initialize()"
+                />
+              </template>
+
+              <span>Reload Policy List</span>
+            </v-tooltip>
+
+            <v-text-field
+              clearable
+              density="compact"
+              hide-details
+              label="Search for Policy ..."
+              variant="outlined"
+              @update:model-value="filterPolicyList"
+            />
+
+            <!-- Menu -->
+            <v-menu>
+              <template #activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  class="mx-0"
+                  icon="mdi-dots-vertical"
+                  variant="plain"
+                />
+              </template>
+
+              <v-sheet border>
+                <v-list class="py-0" density="compact">
+                  <!-- Create Policy Dialog -->
                   <v-tooltip location="bottom" open-delay="600">
                     <template #activator="{ props }">
-                      <v-icon
-                        aria-label="Reload Policy List"
-                        v-bind="props"
-                        icon="mdi-reload"
-                        :loading="listLoading"
-                        @click="initialize()"
-                      />
+                      <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="createPolicyDialog = true">
+                        <template #prepend>
+                          <v-icon size="small">mdi-plus</v-icon>
+                        </template>
+                        Create Policy
+                      </v-list-item>
                     </template>
 
-                    <span>Reload Policy List</span>
+                    <span>Create a new Policy</span>
                   </v-tooltip>
-                </template>
 
-                <template #append>
-                  <!-- Menu -->
-                  <v-menu>
-                    <template #activator="{ props }">
-                      <v-icon icon="mdi-dots-vertical" variant="plain" v-bind="props" />
-                    </template>
-
-                    <v-sheet border>
-                      <v-list class="py-0" density="compact">
-                        <!-- Create Policy Dialog -->
-                        <v-tooltip location="bottom" open-delay="600">
-                          <template #activator="{ props }">
-                            <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="createPolicyDialog = true">
-                              <template #prepend>
-                                <v-icon size="small">mdi-plus</v-icon>
-                              </template>
-                              Create Policy
-                            </v-list-item>
-                          </template>
-
-                          <span>Create a new Policy</span>
-                        </v-tooltip>
-
-                      </v-list>
-                    </v-sheet>
-                  </v-menu>
-
-                </template></v-text-field>
-            </v-col>
+                </v-list>
+              </v-sheet>
+            </v-menu>
 
           </v-card-title>
 
           <v-divider />
 
-          <v-card-text class="pt-2 pb-0 px-2" style="overflow-y: auto; height: calc(100svh - 64px - 48px - 40px - 64px - 3px)">
+          <v-card-text class="pt-0 pb-0 px-2" style="overflow-y: auto; height: calc(100svh - 64px - 48px - 40px - 64px - 3px)">
+
             <div v-if="listLoading">
               <v-skeleton-loader type="list-item@6" />
             </div>
 
             <template v-else>
+
               <!-- List of Policys -->
-              <v-list v-if="policyList.length > 0" class="pa-0" density="compact" nav>
+              <v-list
+                v-if="policyList.length > 0"
+                class="pa-0"
+                density="compact"
+                nav
+              >
                 <v-virtual-scroll
                   ref="virtualScrollRef"
-                  class="bg-card"
+                  class="bg-card mb-2"
                   :item-height="56"
                   :items="policyList"
                 >
+
                   <template #default="{ item }">
+                    <!-- Single Policy -->
                     <v-list-item
                       :key="item['@id']"
                       :active="isSelected(item)"
                       base-color="listItem"
-                      class="mb-2"
+                      :border="isSelected(item) ? 'primary' : 'listItem thin'"
+                      class="mt-2 mx-0"
                       color="primarySurface"
-                      style="border-width: 1px"
+                      style="border-top: solid; border-right: solid; border-bottom: solid; border-width: 1px"
                       :style="{
                         'border-color': isSelected(item)
                           ? primaryColor + ' !important'
@@ -103,8 +115,7 @@
                     >
                       <template #prepend>
                         <v-chip
-                          border
-                          class="mr-3"
+                          class="mr-2"
                           color="primary"
                           label
                           size="x-small"
@@ -130,13 +141,21 @@
                           {{ new Date(item['createdAt']).toISOString() }}
                         </div>
 
+                        <!-- Type -->
+                        <div v-if="getPolicyType(item)" class="text-body-small mt-1">
+                          <span class="font-weight-bold">{{ 'Type: ' }}</span>
+                          {{ getPolicyType(item) + ' Policy' }}
+                        </div>
+
                       </v-tooltip>
 
-                      <v-list-item-title
-                        :class="isSelected(item) ? 'text-primary' : 'text-listItemText'"
-                      >
+                      <v-list-item-title class="text-primary">
                         {{ item['@id'] }}
                       </v-list-item-title>
+
+                      <v-list-item-subtitle class="text-listItemText font-italic">
+                        {{ getPolicyType(item) }}
+                      </v-list-item-subtitle>
 
                       <template #append>
                         <v-badge
@@ -198,6 +217,7 @@
 
                     </v-list-item>
                   </template>
+
                 </v-virtual-scroll>
               </v-list>
 
@@ -214,9 +234,9 @@
       <v-main>
         <v-container fluid>
 
-          <div v-if="!selectedPolicy || Object.keys(selectedPolicy).length === 0" class="d-flex align-center justify-center" :style="{'height': fullHeightCode}">
-            <v-empty-state
+          <div v-if="!selectedPolicy || Object.keys(selectedPolicy).length === 0" class="d-flex align-center justify-center" :style="{'height': fullHeightMain}">
 
+            <v-empty-state
               icon="mdi-gesture-tap"
               text="Please select a Policy to view"
               title="Select Policy"
@@ -227,7 +247,7 @@
             </v-empty-state>
           </div>
 
-          <pre v-else class="json-content bg-surface rounded border" :style="{'height': fullHeightCode}">
+          <pre v-else class="json-content bg-surface rounded border" :style="{'height': fullHeightMain}">
             <code v-html="selectedPolicyJsonFormatted" />
           </pre>
 
@@ -246,7 +266,7 @@
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { formatJSON } from '@/utils/JsonUtils'
   import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
-  import { useEdcClient } from '../composables/Client/EdcClient'
+  import { type PolicyDefinition, useEdcClient } from '../composables/Client/EdcClient'
   import { useEdcStore } from '../store/EdcStore'
   import CreatePolicyDialog from './Dialogs/CreatePolicyDialog.vue'
   import DeletePolicyDialog from './Dialogs/DeletePolicyDialog.vue'
@@ -268,7 +288,7 @@
 
   // Data
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Full height - header - tabs - footer - border
-  const fullHeightCode = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
+  const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
   const policyList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Policy data
   const policyListUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Policy data before filtering
   const listLoading = ref(false) // Variable to store if the AAS List is loading
@@ -426,6 +446,26 @@
         }
       }, 50)
     }
+  }
+
+  function getPolicyType (policyDefinition: PolicyDefinition): string {
+    if (!policyDefinition?.policy
+      || !policyDefinition?.policy['odrl:permission']
+      || !policyDefinition?.policy['odrl:permission']['odrl:action']
+      || !policyDefinition?.policy['odrl:permission']['odrl:action']['@id']
+    )
+      return ''
+
+    switch (policyDefinition?.policy['odrl:permission']['odrl:action']['@id']) {
+      case 'odrl:use': {
+        return 'Usage'
+      }
+      case 'odrl:access': {
+        return 'Access'
+      }
+    }
+
+    return ''
   }
 
 </script>

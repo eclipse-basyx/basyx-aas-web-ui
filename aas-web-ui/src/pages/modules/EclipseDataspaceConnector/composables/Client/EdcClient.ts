@@ -257,7 +257,7 @@ export function useEdcClient () {
    * @param endpoint Optional custom endpoint. If not provided, uses configured controlplane endpoint
    * @returns IdResponse with the created policy definition id and createdAt timestamp, or null if creation fails
    */
-  async function createPolicyDefinition (policyDefinition: PolicyDefinitionInput, endpoint?: string): Promise<IdResponse | null> {
+  async function createPolicyDefinition (policyDefinition: PolicyDefinition, endpoint?: string): Promise<IdResponse | null> {
     const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
     if (baseUrl === '' || !policyDefinition) {
       return null
@@ -292,7 +292,7 @@ export function useEdcClient () {
    * @param endpoint Optional custom endpoint. If not provided, uses configured controlplane endpoint
    * @returns true if update was successful, false otherwise
    */
-  async function updatePolicyDefinition (policyId: string, policyDefinition: PolicyDefinitionInput, endpoint?: string): Promise<boolean> {
+  async function updatePolicyDefinition (policyId: string, policyDefinition: PolicyDefinition, endpoint?: string): Promise<boolean> {
     const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
     if (baseUrl === '' || !policyId || !policyDefinition) {
       return false
@@ -394,19 +394,48 @@ export interface QuerySpec {
   'filterExpression'?: Array<Record<string, unknown>>
 }
 
+export interface OdrlAction {
+  '@id'?: string
+}
+
+export interface OdrlOperant {
+  '@id'?: string
+}
+
+export interface OdrlOperator {
+  '@id'?: string
+}
+
+export interface OdrlConstraint {
+  'odrl:leftOperand': OdrlOperant
+  'odrl:operator': OdrlOperator
+  'odrl:rightOperand': string
+}
+
+export interface OdrlPermission {
+  'odrl:action'?: OdrlAction
+  'odrl:constraint'?: OdrlConstraint
+}
+
+export interface OdrlProhibition {
+}
+
+export interface OdrlObligation {
+}
+
+export interface Policy {
+  '@id'?: string
+  'odrl:permission'?: OdrlPermission
+  'odrl:prohibition'?: OdrlProhibition
+  'odlr:obligation'?: OdrlObligation
+}
+
 export interface PolicyDefinition {
   '@id'?: string
   '@type'?: string
   '@context'?: Record<string, unknown>
-  'policy'?: Record<string, unknown>
+  'policy'?: Policy
   'createdAt'?: number
-}
-
-export interface PolicyDefinitionInput {
-  '@context': Record<string, unknown>
-  '@id': string
-  '@type'?: string
-  'policy': Record<string, unknown>
 }
 
 export interface IdResponse {
