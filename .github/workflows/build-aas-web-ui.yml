@@ -6,6 +6,17 @@ on:
     paths:
       - "aas-web-ui/**"
       - "examples/TimeSeriesData/**"
+      - ".github/workflows/build-aas-web-ui.yml"
+      - ".github/workflows/docker-prerelease-ui.yml"
+      - ".github/workflows/docker-release-ui.yml"
+  push:
+    branches: [main]
+    paths:
+      - "aas-web-ui/**"
+      - "examples/TimeSeriesData/**"
+      - ".github/workflows/build-aas-web-ui.yml"
+      - ".github/workflows/docker-prerelease-ui.yml"
+      - ".github/workflows/docker-release-ui.yml"
 
 permissions:
   contents: read

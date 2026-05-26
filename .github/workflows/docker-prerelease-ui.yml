@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - "aas-web-ui/**"
+      - ".github/workflows/docker-prerelease-ui.yml"
+      - ".github/workflows/docker-release-ui.yml"
 
 jobs:
   guard:
