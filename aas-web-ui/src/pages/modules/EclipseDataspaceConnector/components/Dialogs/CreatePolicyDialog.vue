@@ -92,12 +92,12 @@
 
 <script lang="ts" setup>
   import Prism from 'prismjs'
+  import { type PolicyDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
+  import AccessBpnPolicy from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_bpn_policy.json'
+  import AccessPolicy from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_policy.json'
+  import UsagePolicy from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy.json'
   import { formatJSON } from '@/utils/JsonUtils'
   import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
-  import { type PolicyDefinitionInput, useEdcClient } from '../../composables/Client/EdcClient'
-  import AccessBpnPolicy from '../../data/policies/access_bpn_policy.json'
-  import AccessPolicy from '../../data/policies/access_policy.json'
-  import UsagePolicy from '../../data/policies/usage_policy.json'
 
   const props = defineProps<{
     modelValue: boolean
@@ -267,7 +267,7 @@
       let policyJson = JSON.stringify(template.policy)
       policyJson = replacePlaceholders(policyJson)
 
-      const finalPolicy = JSON.parse(policyJson) as PolicyDefinitionInput
+      const finalPolicy = JSON.parse(policyJson) as PolicyDefinition
 
       // Create the policy via EDC API
       const response = await createPolicyDefinition(finalPolicy)

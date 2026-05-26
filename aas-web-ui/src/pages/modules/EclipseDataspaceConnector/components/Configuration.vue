@@ -331,10 +331,10 @@
 
 <script lang="ts" setup>
   import { computed, onMounted, ref, watch } from 'vue'
-  import { useEdcClient } from '../composables/Client/EdcClient'
-  import edcData from '../data/edc.json'
-  import { useEdcStore } from '../store/EdcStore'
-  import { EDC_TYPES } from '../types/Edc'
+  import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
+  import edcData from '@/pages/modules/EclipseDataspaceConnector/data/edc.json'
+  import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
+  import { EDC_TYPES } from '@/pages/modules/EclipseDataspaceConnector/types/Edc'
 
   // Stores
   const edcStore = useEdcStore()

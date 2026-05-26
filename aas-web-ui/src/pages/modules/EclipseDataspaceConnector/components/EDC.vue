@@ -183,8 +183,8 @@
 
 <script lang="ts" setup>
   import { computed } from 'vue'
-  import edcData from '../data/edc.json'
-  import { useEdcStore } from '../store/EdcStore'
+  import edcData from '@/pages/modules/EclipseDataspaceConnector/data/edc.json'
+  import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
 
   // Store
   const edcStore = useEdcStore()

@@ -39,7 +39,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { useEdcClient } from '../../composables/Client/EdcClient'
+  import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
 
   const props = defineProps<{
     modelValue: boolean
