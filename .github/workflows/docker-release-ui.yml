@@ -4,6 +4,12 @@ on:
   release:
     types: [published]
 
+concurrency:
+  group: docker-release-ui-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions: {}
+
 jobs:
   guard:
     runs-on: ubuntu-latest
@@ -24,74 +30,239 @@ jobs:
     needs: guard
     if: ${{ needs.guard.outputs.should-run == 'true' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      image_digest_ref: ${{ steps.refs.outputs.image_digest_ref }}
+      version: ${{ steps.meta.outputs.version }}
 
     env:
       IMAGE_NAME: eclipsebasyx/aas-gui
-      SBOM_FILE: sbom.json
 
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
 
-      # Step 2: Set up Docker Buildx
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+        uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4
         with:
           platforms: linux/amd64,linux/arm64,linux/arm/v7
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
 
-      # Step 3: Log in to Docker Hub
       - name: Log in to Docker Hub
-        uses: docker/login-action@v4
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
         with:
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      # Step 4: Extract Release Tag as Date
-      - name: Extract Release Tag
-        id: extract_tag
-        run: |
-          # Assuming the release tag is in yymmdd format
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          cosign-release: v2.4.1
 
-      # Step 5: Build and Push Docker Images
+      - name: Install Syft
+        run: |
+          set -euo pipefail
+          SYFT_VERSION=1.29.1
+          ARCHIVE="syft_${SYFT_VERSION}_linux_amd64.tar.gz"
+          curl -fsSLO "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/${ARCHIVE}"
+          curl -fsSLO "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_checksums.txt"
+          grep " ${ARCHIVE}$" "syft_${SYFT_VERSION}_checksums.txt" | sha256sum -c -
+          tar -xzf "${ARCHIVE}" syft
+          sudo install -m 0755 syft /usr/local/bin/syft
+          syft version
+
+      - name: Extract Release Tag
+        id: meta
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "TAG_NAME=${VERSION}" >> "$GITHUB_ENV"
+
       - name: Build and Push Docker Images
-        uses: docker/build-push-action@v7
+        id: build
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
         with:
           context: ./aas-web-ui
           file: ./aas-web-ui/Dockerfile
+          pull: true
           push: true
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           build-args: |
-            VITE_APP_VERSION=${{ env.TAG_NAME }}
+            VITE_APP_VERSION=${{ steps.meta.outputs.version }}
             VITE_APP_COMMIT_SHA=${{ github.sha }}
-            VITE_APP_BUILD_DATE=${{ github.run_started_at }}
+            VITE_APP_BUILD_DATE=${{ github.event.release.published_at }}
+          provenance: mode=max
+          sbom: true
           tags: |
-            ${{ env.IMAGE_NAME }}:${{ env.TAG_NAME }}
+            ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
             ${{ env.IMAGE_NAME }}:latest
-      
-      # Step 9: Generate SBOM with Syft
-      - name: Install Syft
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          labels: |
+            org.opencontainers.image.title=BaSyx AAS Web UI
+            org.opencontainers.image.description=Eclipse BaSyx Asset Administration Shell Web UI
+            org.opencontainers.image.version=${{ steps.meta.outputs.version }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.created=${{ github.event.release.published_at }}
+            org.opencontainers.image.licenses=MIT
 
-      - name: Generate SBOM
+      - name: Compute image references
+        id: refs
         run: |
-          syft ${{ env.IMAGE_NAME }}:${{ env.TAG_NAME }} -o json > ${{ env.SBOM_FILE }}
+          set -euo pipefail
+          echo "image_digest_ref=${IMAGE_NAME}@${{ steps.build.outputs.digest }}" >> "$GITHUB_OUTPUT"
 
-      # Step 10: Upload SBOM as an Artifact
-      - name: Upload SBOM
-        uses: actions/upload-artifact@v7
+      - name: Sign image digest (keyless)
+        env:
+          IMAGE_DIGEST_REF: ${{ steps.refs.outputs.image_digest_ref }}
+        run: |
+          set -euo pipefail
+          cosign sign --yes "${IMAGE_DIGEST_REF}"
+
+      - name: Verify image signature
+        env:
+          IMAGE_DIGEST_REF: ${{ steps.refs.outputs.image_digest_ref }}
+          COSIGN_CERT_IDENTITY: https://github.com/${{ github.repository }}/.github/workflows/docker-release-ui.yml@refs/tags/${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          cosign verify \
+            --certificate-identity "${COSIGN_CERT_IDENTITY}" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "${IMAGE_DIGEST_REF}"
+
+      - name: Verify BuildKit OCI attestations are attached
+        env:
+          IMAGE_DIGEST_REF: ${{ steps.refs.outputs.image_digest_ref }}
+        run: |
+          set -euo pipefail
+          mkdir -p attestations
+
+          docker buildx imagetools inspect "${IMAGE_DIGEST_REF}" --raw > attestations/image-index.raw.json
+          jq -e '.manifests | map(select(.annotations["vnd.docker.reference.type"] == "attestation-manifest")) | length > 0' attestations/image-index.raw.json >/dev/null
+
+          if ! docker buildx imagetools inspect "${IMAGE_DIGEST_REF}" --format '{{ json (index .Provenance "linux/amd64").SLSA }}' > attestations/provenance.buildkit.json 2>/dev/null; then
+            docker buildx imagetools inspect "${IMAGE_DIGEST_REF}" --format '{{ json .Provenance.SLSA }}' > attestations/provenance.buildkit.json
+          fi
+
+          if ! docker buildx imagetools inspect "${IMAGE_DIGEST_REF}" --format '{{ json (index .SBOM "linux/amd64").SPDX }}' > attestations/sbom.buildkit.spdx.json 2>/dev/null; then
+            docker buildx imagetools inspect "${IMAGE_DIGEST_REF}" --format '{{ json .SBOM.SPDX }}' > attestations/sbom.buildkit.spdx.json
+          fi
+
+          jq -e 'type == "object" and length > 0' attestations/provenance.buildkit.json >/dev/null
+          jq -e 'type == "object" and length > 0' attestations/sbom.buildkit.spdx.json >/dev/null
+
+      - name: Export SPDX and CycloneDX SBOM files
+        env:
+          IMAGE_DIGEST_REF: ${{ steps.refs.outputs.image_digest_ref }}
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          syft "${IMAGE_DIGEST_REF}" -o "spdx-json=release-assets/aas-gui-${{ steps.meta.outputs.version }}.spdx.json"
+          syft "${IMAGE_DIGEST_REF}" -o "cyclonedx-json=release-assets/aas-gui-${{ steps.meta.outputs.version }}.cdx.json"
+
+      - name: Write release metadata
+        run: |
+          set -euo pipefail
+          jq -n \
+            --arg image "${{ env.IMAGE_NAME }}" \
+            --arg version "${{ steps.meta.outputs.version }}" \
+            --arg digest "${{ steps.build.outputs.digest }}" \
+            --arg imageDigestRef "${{ steps.refs.outputs.image_digest_ref }}" \
+            --arg signatureIdentity "https://github.com/${{ github.repository }}/.github/workflows/docker-release-ui.yml@refs/tags/${{ github.ref_name }}" \
+            --arg spdx "aas-gui-${{ steps.meta.outputs.version }}.spdx.json" \
+            --arg cyclonedx "aas-gui-${{ steps.meta.outputs.version }}.cdx.json" \
+            '{
+              image: $image,
+              version: $version,
+              digest: $digest,
+              imageDigestRef: $imageDigestRef,
+              signatureIdentity: $signatureIdentity,
+              buildkitAttestations: {
+                provenance: true,
+                sbom: true
+              },
+              sbomFiles: {
+                spdxJson: $spdx,
+                cyclonedxJson: $cyclonedx
+              }
+            }' > release-assets/release-image-metadata.json
+
+      - name: Upload SBOM artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: sbom
-          path: ${{ env.SBOM_FILE }}
+          name: release-sbom
+          path: release-assets/*
+          retention-days: 30
 
-      # Step 11: Verify the Push
       - name: Verify Docker Images
         run: |
-          docker pull ${{ env.IMAGE_NAME }}:${{ env.TAG_NAME }}
+          set -euo pipefail
+          docker pull ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
           docker pull ${{ env.IMAGE_NAME }}:latest
+
+  vulnerability-scan:
+    needs: [guard, build-and-push-release]
+    if: ${{ needs.guard.outputs.should-run == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Run Trivy vulnerability scan (report only)
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          image-ref: ${{ needs.build-and-push-release.outputs.image_digest_ref }}
+          format: sarif
+          output: trivy-results.sarif
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "0"
+
+      - name: Upload Trivy SARIF artifact
+        if: ${{ hashFiles('trivy-results.sarif') != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: trivy-sarif-${{ needs.build-and-push-release.outputs.version }}
+          path: trivy-results.sarif
+          retention-days: 14
+
+      - name: Upload Trivy SARIF to GitHub code scanning
+        if: ${{ hashFiles('trivy-results.sarif') != '' }}
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@f52b05f4acaaa234e44466e66d29050e135ea9ef # v4.36.0
+        with:
+          sarif_file: trivy-results.sarif
+
+  attach-release-assets:
+    needs: [guard, build-and-push-release]
+    if: ${{ needs.guard.outputs.should-run == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download release SBOM artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-sbom
+          path: release-assets
+
+      - name: Attach SBOM assets to GitHub Release
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
+        with:
+          files: |
+            release-assets/*.spdx.json
+            release-assets/*.cdx.json
+            release-assets/release-image-metadata.json

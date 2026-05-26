@@ -24,6 +24,9 @@ A modern Vue.js web application for visualizing, managing, and interacting with 
 
 Comprehensive documentation is available in the **[BaSyx Wiki](https://wiki.basyx.org/en/latest/content/user_documentation/basyx_components/web_ui/index.html)**.
 
+- **[Supply Chain Security & Verification](Docs/SUPPLY_CHAIN_SECURITY.md)** - Image signing, BuildKit provenance/SBOM attestations, and SBOM retrieval
+- **[Security Policy](https://github.com/eclipse-basyx/.github/blob/main/SECURITY.md)** - Vulnerability reporting process
+
 ## 🚀 Quick Start
 
 ### For End Users (Deployment)
