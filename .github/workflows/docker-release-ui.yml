@@ -79,7 +79,7 @@ jobs:
           cosign verify-blob \
             --certificate "syft_${SYFT_VERSION}_checksums.txt.pem" \
             --signature "syft_${SYFT_VERSION}_checksums.txt.sig" \
-            --certificate-identity-regexp '^https://github\.com/anchore/syft/\.github/workflows/.*@refs/tags/v.*$' \
+            --certificate-identity-regexp '^https://github\.com/anchore/syft/\.github/workflows/release\.ya?ml@refs/(heads/main|tags/v.*)$' \
             --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
             "syft_${SYFT_VERSION}_checksums.txt"
 
