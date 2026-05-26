@@ -2,7 +2,7 @@
 
 This repository's release pipeline for `eclipsebasyx/aas-gui` follows open supply-chain standards and produces verifiable artifacts.
 
-For vulnerability reporting and disclosure policy, use the Eclipse BaSyx global security policy: https://github.com/eclipse-basyx/.github/blob/main/SECURITY.md.
+For vulnerability reporting and disclosure policy, use the Eclipse BaSyx global security policy: [eclipse-basyx/.github SECURITY.md](https://github.com/eclipse-basyx/.github/blob/main/SECURITY.md).
 
 ## What the Release Workflow Produces
 
@@ -16,13 +16,20 @@ For each published release:
   - provenance (`provenance: mode=max`)
   - SBOM (`sbom: true`)
 - Sigstore Cosign keyless signature on the immutable digest (`image@sha256:...`)
+- Cosign-signed provenance attestation from BuildKit provenance predicate
+- Cosign-signed SBOM attestation (`https://spdx.dev/Document`)
 - Exported SBOM files generated with Syft:
   - SPDX JSON: `aas-gui-<version>.spdx.json`
   - CycloneDX JSON: `aas-gui-<version>.cdx.json`
 - SBOM uploads in two places:
   - GitHub Actions artifact (build-time evidence)
   - GitHub Release assets (versioned downloadable evidence)
-- Optional report-only Trivy vulnerability scan with SARIF upload
+
+Vulnerability scanning is handled in a dedicated workflow:
+
+- `.github/workflows/container-vuln-scan.yml`
+- Trivy filesystem scan in report-only mode
+- SARIF upload to GitHub code scanning where permitted
 
 ## Trust Model
 
@@ -31,6 +38,10 @@ Images are signed by GitHub Actions OIDC identity for this repository.
 Expected certificate identity for releases:
 
 - `https://github.com/eclipse-basyx/basyx-aas-web-ui/.github/workflows/docker-release-ui.yml@refs/tags/<tag>`
+
+Expected certificate identity for snapshots:
+
+- `https://github.com/eclipse-basyx/basyx-aas-web-ui/.github/workflows/docker-prerelease-ui.yml@refs/heads/main`
 
 Expected OIDC issuer:
 
@@ -45,6 +56,39 @@ IMAGE="eclipsebasyx/aas-gui@sha256:<digest>"
 IDENTITY="https://github.com/eclipse-basyx/basyx-aas-web-ui/.github/workflows/docker-release-ui.yml@refs/tags/<tag>"
 
 cosign verify \
+  --certificate-identity "$IDENTITY" \
+  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+  "$IMAGE"
+```
+
+For snapshots, use the snapshot workflow identity.
+
+## Verify Provenance Attestations
+
+The workflows create explicit Cosign provenance attestations from BuildKit provenance data.
+
+Use the provenance predicate type detected from BuildKit output (commonly `https://slsa.dev/provenance/v1` or `https://slsa.dev/provenance/v0.2`).
+
+```bash
+IMAGE="eclipsebasyx/aas-gui@sha256:<digest>"
+IDENTITY="https://github.com/eclipse-basyx/basyx-aas-web-ui/.github/workflows/docker-release-ui.yml@refs/tags/<tag>"
+PROVENANCE_TYPE="https://slsa.dev/provenance/v1"
+
+cosign verify-attestation \
+  --type "$PROVENANCE_TYPE" \
+  --certificate-identity "$IDENTITY" \
+  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+  "$IMAGE"
+```
+
+## Verify SBOM Attestations
+
+```bash
+IMAGE="eclipsebasyx/aas-gui@sha256:<digest>"
+IDENTITY="https://github.com/eclipse-basyx/basyx-aas-web-ui/.github/workflows/docker-release-ui.yml@refs/tags/<tag>"
+
+cosign verify-attestation \
+  --type "https://spdx.dev/Document" \
   --certificate-identity "$IDENTITY" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
   "$IMAGE"
@@ -103,14 +147,13 @@ These can be downloaded from the GitHub Release page for that tag.
 - GitHub Release SBOM assets:
   - Versioned SBOM exports intended for downstream consumers and compliance records.
 
-## Important Note About Attestation Verification
+## Attestation Verification Model
 
-This workflow verifies:
+Workflows verify:
 
 - Cosign image signatures
-- Presence and readability of BuildKit OCI provenance/SBOM attestations
-
-It does not currently generate explicit Cosign attestations (`cosign attest`) for provenance or SBOM. Therefore, `cosign verify-attestation` is not the primary verification path for this repository at this time.
+- BuildKit OCI attestation presence and readability
+- Cosign provenance and SBOM attestations via `cosign verify-attestation`
 
 ## Future Hardening Candidates
 

@@ -1,0 +1,66 @@
+name: Container Vulnerability Scan
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "aas-web-ui/**"
+      - ".github/workflows/container-vuln-scan.yml"
+      - ".github/workflows/docker-release-ui.yml"
+      - ".github/workflows/docker-prerelease-ui.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "aas-web-ui/**"
+      - ".github/workflows/container-vuln-scan.yml"
+      - ".github/workflows/docker-release-ui.yml"
+      - ".github/workflows/docker-prerelease-ui.yml"
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: vuln-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  trivy-report:
+    name: Trivy report (non-blocking)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-results.sarif
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "0"
+
+      - name: Upload SARIF report
+        if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@f52b05f4acaaa234e44466e66d29050e135ea9ef # v4.36.0
+        with:
+          sarif_file: trivy-results.sarif
+
+      - name: Upload scan artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: trivy-sarif-${{ github.run_id }}
+          path: trivy-results.sarif
+          retention-days: 30
