@@ -1,8 +1,8 @@
 # BaSyx AAS Web UI
 
 ![Docker Pulls](https://img.shields.io/docker/pulls/eclipsebasyx/aas-gui)
-![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/eclipsebasyx/aas-gui)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/eclipse-basyx/basyx-aas-web-ui)
+[![Release Security Pipeline](https://github.com/eclipse-basyx/basyx-aas-web-ui/actions/workflows/docker-release-ui.yml/badge.svg)](https://github.com/eclipse-basyx/basyx-aas-web-ui/actions/workflows/docker-release-ui.yml)
+[![Vulnerability Scan](https://github.com/eclipse-basyx/basyx-aas-web-ui/actions/workflows/vuln-scan.yml/badge.svg)](https://github.com/eclipse-basyx/basyx-aas-web-ui/actions/workflows/vuln-scan.yml)
 ![Metamodel](https://img.shields.io/badge/Metamodel-v3.X-yellow)
 ![API](https://img.shields.io/badge/API-v3.X-yellow)
 
@@ -23,6 +23,9 @@ A modern Vue.js web application for visualizing, managing, and interacting with 
 ## 📚 Documentation
 
 Comprehensive documentation is available in the **[BaSyx Wiki](https://wiki.basyx.org/en/latest/content/user_documentation/basyx_components/web_ui/index.html)**.
+
+- **[Supply Chain Security & Verification](Docs/SUPPLY_CHAIN_SECURITY.md)** - Image signing, BuildKit provenance/SBOM attestations, and SBOM retrieval
+- **[Security Policy](https://github.com/eclipse-basyx/.github/blob/main/SECURITY.md)** - Vulnerability reporting process
 
 ## 🚀 Quick Start
 
