@@ -78,6 +78,16 @@ jobs:
           ARCHIVE="syft_${SYFT_VERSION}_linux_amd64.tar.gz"
           curl -fsSLO "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/${ARCHIVE}"
           curl -fsSLO "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_checksums.txt"
+          curl -fsSLO "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_checksums.txt.sig"
+          curl -fsSLO "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_checksums.txt.pem"
+
+          cosign verify-blob \
+            --certificate "syft_${SYFT_VERSION}_checksums.txt.pem" \
+            --signature "syft_${SYFT_VERSION}_checksums.txt.sig" \
+            --certificate-identity-regexp '^https://github\.com/anchore/syft/\.github/workflows/.*@refs/tags/v.*$' \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "syft_${SYFT_VERSION}_checksums.txt"
+
           grep " ${ARCHIVE}$" "syft_${SYFT_VERSION}_checksums.txt" | sha256sum -c -
           tar -xzf "${ARCHIVE}" syft
           sudo install -m 0755 syft /usr/local/bin/syft

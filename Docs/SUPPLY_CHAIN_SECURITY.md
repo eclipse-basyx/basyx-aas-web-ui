@@ -21,14 +21,16 @@ For each published release:
 - Exported SBOM files generated with Syft:
   - SPDX JSON: `aas-gui-<version>.spdx.json`
   - CycloneDX JSON: `aas-gui-<version>.cdx.json`
+- Syft bootstrap is verified using a signed checksums file and certificate identity constraints before archive hash verification
 - SBOM uploads in two places:
   - GitHub Actions artifact (build-time evidence)
   - GitHub Release assets (versioned downloadable evidence)
 
 Vulnerability scanning is handled in a dedicated workflow:
 
-- `.github/workflows/container-vuln-scan.yml`
-- Trivy filesystem scan in report-only mode
+- `.github/workflows/vuln-scan.yml`
+- Trivy repository filesystem scan (PR/push/schedule/manual) in report-only mode
+- Trivy container image scan (push/schedule/manual) in report-only mode
 - SARIF upload to GitHub code scanning where permitted
 
 ## Trust Model

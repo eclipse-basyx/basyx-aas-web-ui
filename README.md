@@ -1,8 +1,8 @@
 # BaSyx AAS Web UI
 
 ![Docker Pulls](https://img.shields.io/docker/pulls/eclipsebasyx/aas-gui)
-![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/eclipsebasyx/aas-gui)
-![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/eclipse-basyx/basyx-aas-web-ui)
+[![Release Security Pipeline](https://github.com/eclipse-basyx/basyx-aas-web-ui/actions/workflows/docker-release-ui.yml/badge.svg)](https://github.com/eclipse-basyx/basyx-aas-web-ui/actions/workflows/docker-release-ui.yml)
+[![Vulnerability Scan](https://github.com/eclipse-basyx/basyx-aas-web-ui/actions/workflows/vuln-scan.yml/badge.svg)](https://github.com/eclipse-basyx/basyx-aas-web-ui/actions/workflows/vuln-scan.yml)
 ![Metamodel](https://img.shields.io/badge/Metamodel-v3.X-yellow)
 ![API](https://img.shields.io/badge/API-v3.X-yellow)
 
