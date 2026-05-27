@@ -1,346 +1,369 @@
 <template>
-  <v-container fluid>
-    <v-row class="mt-2">
-      <v-col cols="2">
-        <v-list-item-title>EDC</v-list-item-title>
-      </v-col>
+  <v-container class="pa-4" fluid style="overflow-y: auto;" :style="{ 'height': fullHeight}">
+    <!-- General Settings -->
+    <v-card class="mb-6" elevation="2" rounded="lg">
+      <v-card-item prepend-icon="mdi-cog-outline">
+        <v-card-title>General Settings</v-card-title>
+      </v-card-item>
 
-      <v-col cols="4">
-        <v-select
-          v-model="edcType"
-          hide-details="auto"
-          :items="edcTypeItems"
-          label="EDC Type"
-          variant="solo"
-        >
-          <template v-if="selectedEdcMeta" #append-inner>
-            <v-btn
-              density="compact"
-              :href="selectedEdcMeta.github_url"
-              icon
-              size="small"
-              target="_blank"
-              variant="text"
+      <v-divider />
+
+      <v-card-text>
+        <v-row align="center">
+          <v-col cols="12" md="5">
+            <v-select
+              v-model="edcType"
+              flat
+              hide-details="auto"
+              :items="edcTypeItems"
+              label="EDC Type"
+              variant="solo-filled"
             >
-              <v-icon>mdi-github</v-icon>
-
-              <v-tooltip activator="parent" location="bottom">{{ selectedEdcMeta.id }} on GitHub</v-tooltip>
-            </v-btn>
-          </template>
-        </v-select>
-      </v-col>
-
-      <v-col v-if="selectedEdcMeta" cols="4" offset="2">
-        <v-card density="compact" rounded="lg">
-          <v-list density="compact" lines="one">
-            <v-list-item
-              prepend-icon="mdi-origin"
-              subtitle="Original EDC"
-              :title="selectedEdcMeta.edc_original.id"
-            >
-              <template #append>
+              <template v-if="selectedEdcMeta" #append-inner>
                 <v-btn
                   density="compact"
-                  :href="selectedEdcMeta.edc_original.github_url"
+                  :href="selectedEdcMeta.github_url"
                   icon
                   size="small"
                   target="_blank"
                   variant="text"
                 >
                   <v-icon>mdi-github</v-icon>
-
-                  <v-tooltip activator="parent" location="bottom">{{ selectedEdcMeta.edc_original.id }} on GitHub</v-tooltip>
+                  <v-tooltip activator="parent" location="bottom">{{ selectedEdcMeta.id }} on GitHub</v-tooltip>
                 </v-btn>
               </template>
-            </v-list-item>
+            </v-select>
+          </v-col>
 
-            <v-divider />
+          <v-col v-if="selectedEdcMeta" cols="12" md="6" offset="1">
+            <v-card class="bg-grey-lighten-4" flat rounded="lg">
+              <v-list bg-color="transparent" density="compact" lines="one">
+                <v-list-item
+                  prepend-icon="mdi-origin"
+                  subtitle="Original EDC"
+                  :title="selectedEdcMeta.edc_original.id"
+                >
+                  <template #append>
+                    <v-btn
+                      density="compact"
+                      :href="selectedEdcMeta.edc_original.github_url"
+                      icon
+                      size="small"
+                      target="_blank"
+                      variant="text"
+                    >
+                      <v-icon>mdi-github</v-icon>
+                      <v-tooltip activator="parent" location="bottom">{{ selectedEdcMeta.edc_original.id }} on GitHub</v-tooltip>
+                    </v-btn>
+                  </template>
+                </v-list-item>
 
-            <v-divider />
+                <v-divider />
 
-            <v-list-item
-              prepend-icon="mdi-protocol"
-              subtitle="Dataspace Protocol"
-              :title="'DSP ' + selectedEdcMeta.dataspace_protocol.version"
-            />
-          </v-list>
-        </v-card>
-      </v-col>
-    </v-row>
+                <v-list-item
+                  prepend-icon="mdi-protocol"
+                  subtitle="Dataspace Protocol"
+                  :title="'DSP ' + selectedEdcMeta.dataspace_protocol.version"
+                />
+              </v-list>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
 
-    <v-row>
+    <!-- Controlplane Settings -->
+    <v-card class="mb-6" elevation="2" rounded="lg">
+      <v-card-item prepend-icon="mdi-server-network">
+        <v-card-title>Controlplane Settings</v-card-title>
+      </v-card-item>
+
       <v-divider />
-    </v-row>
 
-    <v-row>
-      <v-col cols="2">
-        <v-list-item-title>EDC Controlplane </v-list-item-title>
-      </v-col>
-
-      <v-col cols="10">
-        <v-text-field
-          v-model="edcControlplaneApiEndpoint"
-          clearable
-          hide-details="auto"
-          hint="e.g. https://.../api"
-          label="API Endpoint"
-          prepend-inner-icon="mdi-web"
-          :rules="edcEndpointRule"
-          variant="solo"
-        >
-          <template #prepend-inner>
-            <v-icon
-              :color="
-                edcControlplaneApiEndpointIsHealthy === true
-                  ? 'success'
-                  : edcControlplaneApiEndpointIsHealthy === false
-                    ? 'error'
-                    : edcControlplaneApiEndpoint
-                      ? 'grey'
-                      : 'grey'
-              "
-              size="small"
+      <v-card-text>
+        <v-row>
+          <v-col cols="12" md="5">
+            <v-text-field
+              v-model="edcControlplaneApiEndpoint"
+              clearable
+              flat
+              hide-details="auto"
+              hint="e.g. https://.../api"
+              label="API Endpoint"
+              prepend-inner-icon="mdi-web"
+              :rules="edcEndpointRule"
+              variant="solo-filled"
             >
-              {{
-                edcControlplaneApiEndpointIsHealthy === true
-                  ? 'mdi-check-circle'
-                  : edcControlplaneApiEndpointIsHealthy === false
-                    ? 'mdi-alert-circle'
-                    : edcControlplaneApiEndpoint
-                      ? 'mdi-help-circle'
-                      : 'mdi-circle-outline'
-              }}
-            </v-icon>
-          </template>
+              <template #prepend-inner>
+                <v-icon
+                  class="mr-2"
+                  :color="
+                    edcControlplaneApiEndpointIsHealthy === true
+                      ? 'success'
+                      : edcControlplaneApiEndpointIsHealthy === false
+                        ? 'error'
+                        : edcControlplaneApiEndpoint
+                          ? 'grey'
+                          : 'grey'
+                  "
+                  size="small"
+                >
+                  {{
+                    edcControlplaneApiEndpointIsHealthy === true
+                      ? 'mdi-check-circle'
+                      : edcControlplaneApiEndpointIsHealthy === false
+                        ? 'mdi-alert-circle'
+                        : edcControlplaneApiEndpoint
+                          ? 'mdi-help-circle'
+                          : 'mdi-circle-outline'
+                  }}
+                </v-icon>
+              </template>
 
-          <template #append-inner>
-            <v-btn
-              :disabled="!edcControlplaneApiEndpoint"
-              icon
-              :loading="testingEdcControlApiEndpointHealth"
-              size="x-small"
-              variant="text"
-              @click.stop="testControlplaneConnection()"
-            >
-              <v-icon>mdi-connection</v-icon>
-              <v-tooltip activator="parent" location="bottom">Test Connection</v-tooltip>
-            </v-btn>
-          </template>
-        </v-text-field>
+              <template #append-inner>
+                <v-btn
+                  :disabled="!edcControlplaneApiEndpoint"
+                  icon
+                  :loading="testingEdcControlApiEndpointHealth"
+                  size="x-small"
+                  variant="text"
+                  @click.stop="testControlplaneConnection()"
+                >
+                  <v-icon>mdi-connection</v-icon>
+                  <v-tooltip activator="parent" location="bottom">Test Connection</v-tooltip>
+                </v-btn>
+              </template>
+            </v-text-field>
 
-        <template v-if="edcControlplaneApiEndpointIsHealthy === false">
-
-          <v-alert
-            border="start"
-            class="mt-2"
-            closable
-            density="compact"
-            text="Ensure proper CORS config of EDC Controlplane !"
-            type="warning"
-            variant="flat"
-          >
-            <template #prepend>
-              <v-btn
-                href="https://github.com/eclipse-edc/Connector/blob/main/extensions/common/http/jersey-core/README.md"
-                icon
-                size="x-small"
-                target="_blank"
-                variant="text"
-              >
-                <v-icon size="small">mdi-link-variant</v-icon>
-                <v-tooltip activator="parent" location="top">View EDC CORS Configuration</v-tooltip>
-              </v-btn>
-            </template>
-          </v-alert>
-
-          <v-alert
-            v-if="edcControlplaneApiEndpointUnhealthyComponents?.length"
-            border="start"
-            class="mt-2"
-            closable
-            density="compact"
-            type="warning"
-            variant="flat"
-          >
-            <div>Unhealthy EDC components:</div>
-
-            <v-list-item-title
-              v-for="(component, index) in edcControlplaneApiEndpointUnhealthyComponents"
-              :key="index"
-              class="text-body-small pl-2"
-            >
-              - {{ component.component || 'unknown' }} <template v-if="component.failure">({{ component.failure }})</template>
-            </v-list-item-title>
-          </v-alert>
-
-        </template>
-
-      </v-col>
-    </v-row>
-
-    <v-row>
-      <v-col cols="10" offset="2">
-        <v-text-field
-          v-model="edcControlplaneManagementApiEndpoint"
-          clearable
-          hide-details="auto"
-          hint="e.g. https://.../api/management/v3"
-          label="Management API Endpoint"
-          prepend-inner-icon="mdi-web"
-          :rules="edcEndpointRule"
-          variant="solo"
-        />
-      </v-col>
-    </v-row>
-
-    <v-row>
-      <v-col cols="4" offset="2">
-
-        <v-list-subheader>API Key</v-list-subheader>
-
-        <v-text-field
-          v-model="edcControlplaneManagementApiAuthKey"
-          :append-inner-icon="showEdcControlplaneManagementApiAuthKey ? 'mdi-eye-off' : 'mdi-eye'"
-          clearable
-          hide-details="auto"
-          label="X-Api-Key"
-          prepend-inner-icon="mdi-key-variant"
-          :type="showEdcControlplaneManagementApiAuthKey ? 'text' : 'password'"
-          variant="solo"
-          @click:append-inner="showEdcControlplaneManagementApiAuthKey = !showEdcControlplaneManagementApiAuthKey"
-        />
-      </v-col>
-
-      <v-col class="d-flex justify-center align-start" cols="1">
-        <v-list-subheader class="text-center">or</v-list-subheader>
-      </v-col>
-
-      <v-col cols="5">
-
-        <v-list-subheader>Token Server</v-list-subheader>
-
-        <v-text-field
-          v-model="edcControlplaneTokenServerEndpoint"
-          clearable
-          hide-details="auto"
-          label="Token Endpoint"
-          prepend-inner-icon="mdi-web"
-          variant="solo"
-        />
-
-        <v-text-field
-          v-model="edcControlplaneTokenClientId"
-          class="my-4"
-          clearable
-          hide-details="auto"
-          label="Client ID"
-          prepend-inner-icon="mdi-identifier"
-          variant="solo"
-        />
-
-        <v-text-field
-          v-model="edcControlplaneTokenClientSecret"
-          :append-inner-icon="showEdcControlplaneTokenClientSecret ? 'mdi-eye-off' : 'mdi-eye'"
-          clearable
-          hide-details="auto"
-          label="Client Secret"
-          prepend-inner-icon="mdi-key"
-          :type="showEdcControlplaneTokenClientSecret ? 'text' : 'password'"
-          variant="solo"
-          @click:append-inner="showEdcControlplaneTokenClientSecret = !showEdcControlplaneTokenClientSecret"
-        />
-
-      </v-col>
-
-    </v-row>
-
-    <v-row>
-      <v-divider />
-    </v-row>
-
-    <v-row>
-      <v-col cols="2">
-        <v-list-item-title>Business Partners</v-list-item-title>
-
-        <div class="mt-2 d-flex justify-start">
-          <v-btn
-            color="gray"
-            density="compact"
-            prepend-icon="mdi-plus"
-            variant="tonal"
-            @click="createBusinessPartner()"
-          >
-            Create Business Partner
-          </v-btn>
-        </div>
-      </v-col>
-
-      <v-col cols="10">
-
-        <template v-if="businessPartners.length > 0">
-          <template
-            v-for="(partner, index) in businessPartners"
-            :key="index"
-          >
-            <v-row>
-              <v-col cols="3">
-                <v-text-field
-                  v-model="partner.name"
-                  clearable
-                  hide-details="auto"
-                  label="Name"
-                  prepend-inner-icon="mdi-account"
-                  variant="solo"
+            <v-expand-transition>
+              <div v-if="edcControlplaneApiEndpointIsHealthy === false">
+                <v-alert
+                  border="start"
+                  class="mt-3"
+                  closable
+                  density="compact"
+                  text="Ensure proper CORS config of EDC Controlplane!"
+                  type="warning"
+                  variant="tonal"
                 >
                   <template #prepend>
                     <v-btn
-                      color="gray"
-                      density="compact"
+                      href="https://github.com/eclipse-edc/Connector/blob/main/extensions/common/http/jersey-core/README.md"
                       icon
-                      size="small"
+                      size="x-small"
+                      target="_blank"
                       variant="text"
-                      @click="deleteBusinessPartner(index)"
                     >
-                      <v-icon>mdi-delete</v-icon>
-                      <v-tooltip activator="parent" location="bottom">Delete Business Partner</v-tooltip>
+                      <v-icon size="small">mdi-link-variant</v-icon>
+                      <v-tooltip activator="parent" location="top">View EDC CORS Configuration</v-tooltip>
                     </v-btn>
                   </template>
-                </v-text-field>
-              </v-col>
+                </v-alert>
 
-              <v-col cols="3">
+                <v-alert
+                  v-if="edcControlplaneApiEndpointUnhealthyComponents?.length"
+                  border="start"
+                  class="mt-2"
+                  closable
+                  density="compact"
+                  type="warning"
+                  variant="tonal"
+                >
+                  <div class="font-weight-bold mb-1">Unhealthy EDC components:</div>
+
+                  <div
+                    v-for="(component, index) in edcControlplaneApiEndpointUnhealthyComponents"
+                    :key="index"
+                    class="text-caption pl-2"
+                  >
+                    • {{ component.component || 'unknown' }} <span v-if="component.failure" class="text-grey">({{ component.failure }})</span>
+                  </div>
+                </v-alert>
+              </div>
+            </v-expand-transition>
+          </v-col>
+
+          <v-col cols="12" md="6" offset="1">
+            <v-text-field
+              v-model="edcControlplaneManagementApiEndpoint"
+              clearable
+              flat
+              hide-details="auto"
+              hint="e.g. https://.../api/management/v3"
+              label="Management API Endpoint"
+              prepend-inner-icon="mdi-web"
+              :rules="edcEndpointRule"
+              variant="solo-filled"
+            />
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+
+    <!-- Security Settings -->
+    <v-card class="mb-6" elevation="2" rounded="lg">
+      <v-card-item prepend-icon="mdi-shield-lock-outline">
+        <v-card-title>Security Settings</v-card-title>
+      </v-card-item>
+
+      <v-divider />
+
+      <v-card-text>
+        <v-row>
+          <v-col cols="12" md="5">
+            <div class="text-subtitle-2 mb-2 text-grey-darken-1">Authentication via API Key</div>
+
+            <v-text-field
+              v-model="edcControlplaneManagementApiAuthKey"
+              :append-inner-icon="showEdcControlplaneManagementApiAuthKey ? 'mdi-eye-off' : 'mdi-eye'"
+              clearable
+              flat
+              hide-details="auto"
+              label="X-Api-Key"
+              prepend-inner-icon="mdi-key-variant"
+              :type="showEdcControlplaneManagementApiAuthKey ? 'text' : 'password'"
+              variant="solo-filled"
+              @click:append-inner="showEdcControlplaneManagementApiAuthKey = !showEdcControlplaneManagementApiAuthKey"
+            />
+          </v-col>
+
+          <v-col class="d-flex align-center justify-center" cols="12" md="1">
+            <div class="d-flex align-center w-100">
+              <v-divider class="flex-grow-1" />
+              <span class="mx-4 text-overline text-grey">OR</span>
+              <v-divider class="flex-grow-1" />
+            </div>
+          </v-col>
+
+          <v-col cols="12" md="6">
+            <div class="text-subtitle-2 mb-2 text-grey-darken-1">Authentication via Token Server</div>
+
+            <v-text-field
+              v-model="edcControlplaneTokenServerEndpoint"
+              class="mb-4"
+              clearable
+              flat
+              hide-details="auto"
+              label="Token Endpoint"
+              prepend-inner-icon="mdi-web"
+              variant="solo-filled"
+            />
+
+            <v-row density="comfortable">
+              <v-col cols="6">
                 <v-text-field
-                  v-model="partner.bpn"
+                  v-model="edcControlplaneTokenClientId"
                   clearable
+                  flat
                   hide-details="auto"
-                  label="BPN"
+                  label="Client ID"
                   prepend-inner-icon="mdi-identifier"
-                  variant="solo"
+                  variant="solo-filled"
                 />
               </v-col>
 
               <v-col cols="6">
                 <v-text-field
-                  v-model="partner.dsp"
+                  v-model="edcControlplaneTokenClientSecret"
+                  :append-inner-icon="showEdcControlplaneTokenClientSecret ? 'mdi-eye-off' : 'mdi-eye'"
                   clearable
+                  flat
                   hide-details="auto"
-                  label="DSP Endpoint"
-                  prepend-inner-icon="mdi-web"
-                  variant="solo"
+                  label="Client Secret"
+                  prepend-inner-icon="mdi-key"
+                  :type="showEdcControlplaneTokenClientSecret ? 'text' : 'password'"
+                  variant="solo-filled"
+                  @click:append-inner="showEdcControlplaneTokenClientSecret = !showEdcControlplaneTokenClientSecret"
                 />
               </v-col>
             </v-row>
-          </template>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+
+    <!-- Business Partners -->
+    <v-card elevation="2" rounded="lg">
+      <v-card-item prepend-icon="mdi-account-multiple">
+        <v-card-title>Business Partners</v-card-title>
+
+        <template #append>
+          <v-btn
+            color="primary"
+            prepend-icon="mdi-plus"
+            size="small"
+            variant="flat"
+            @click="createBusinessPartner()"
+          >
+            Add Partner
+          </v-btn>
+        </template>
+      </v-card-item>
+
+      <v-divider />
+
+      <v-card-text>
+        <template v-if="businessPartners.length > 0">
+          <v-row v-for="(partner, index) in businessPartners" :key="index" class="mb-2 align-center">
+            <v-col cols="12" md="3">
+              <v-text-field
+                v-model="partner.name"
+                clearable
+                flat
+                hide-details="auto"
+                label="Name"
+                prepend-inner-icon="mdi-account"
+                variant="solo-filled"
+              >
+                <template #prepend>
+                  <v-btn
+                    color="error"
+                    density="compact"
+                    icon
+                    variant="text"
+                    @click="deleteBusinessPartner(index)"
+                  >
+                    <v-icon size="20">mdi-delete</v-icon>
+                    <v-tooltip activator="parent" location="bottom">Delete Business Partner</v-tooltip>
+                  </v-btn>
+                </template>
+              </v-text-field>
+            </v-col>
+
+            <v-col cols="12" sm="3">
+              <v-text-field
+                v-model="partner.bpn"
+                clearable
+                flat
+                hide-details="auto"
+                label="BPN"
+                prepend-inner-icon="mdi-identifier"
+                variant="solo-filled"
+              />
+            </v-col>
+
+            <v-col cols="12" sm="6">
+              <v-text-field
+                v-model="partner.dsp"
+                clearable
+                flat
+                hide-details="auto"
+                label="DSP Endpoint"
+                prepend-inner-icon="mdi-web"
+                variant="solo-filled"
+              />
+            </v-col>
+          </v-row>
         </template>
 
         <v-empty-state
           v-else
-          text="No business partners configured"
-          title="Business Partners"
+          icon="mdi-account-group-outline"
+          text="No business partners configured yet. Add one to start exchanging data."
+          title="No Partners Found"
         />
-      </v-col>
-    </v-row>
-
+      </v-card-text>
+    </v-card>
   </v-container>
 </template>
 
@@ -358,6 +381,8 @@
   const { checkControlplaneHealth, checkControlplaneLiveness, checkControlplaneReadiness, checkControlplaneStartup } = useEdcClient()
 
   // Data
+  const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Full height - header - tabs - footer - border
+
   const businessPartners = ref<Array<any>>([])
   const edcType = ref<null | (typeof EDC_TYPES)[number]>(
     EDC_TYPES.includes(edcStore.getEdcType as (typeof EDC_TYPES)[number])
