@@ -261,7 +261,7 @@
 </template>
 
 <script lang="ts" setup>
-  import Prism from 'prismjs'
+  import * as Prism from 'prismjs'
   import { useTheme } from 'vuetify'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import CreatePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/CreatePolicyDialog.vue'

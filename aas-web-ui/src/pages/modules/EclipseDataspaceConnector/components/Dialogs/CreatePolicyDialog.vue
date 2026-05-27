@@ -91,7 +91,7 @@
 </template>
 
 <script lang="ts" setup>
-  import Prism from 'prismjs'
+  import * as Prism from 'prismjs'
   import { type PolicyDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import AccessBpnPolicy from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_bpn_policy.json'
   import AccessPolicy from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_policy.json'

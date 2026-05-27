@@ -51,7 +51,7 @@
   }>()
 
   // Composables
-  const { deletePolicyDefinition } = useEdcClient()
+  const { deletePolicyDefinition: deletePolicyDefinitionFromEdc } = useEdcClient()
 
   // Data
   const deletePolicyDialog = ref(false)
@@ -78,7 +78,7 @@
 
     try {
       // Create the policy via EDC API
-      const response = await deletePolicyDefinition(props.policy['@id'])
+      const response = await deletePolicyDefinitionFromEdc(props.policy['@id'])
       if (response) {
         emit('policy-deleted', true)
         deletePolicyDialog.value = false

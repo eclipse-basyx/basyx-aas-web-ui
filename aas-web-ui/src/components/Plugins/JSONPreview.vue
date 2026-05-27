@@ -128,7 +128,7 @@
 </template>
 
 <script lang="ts" setup>
-  import Prism from 'prismjs'
+  import * as Prism from 'prismjs'
   import { computed, nextTick, onMounted, ref, watch } from 'vue'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { formatJSON } from '@/utils/JsonUtils'
