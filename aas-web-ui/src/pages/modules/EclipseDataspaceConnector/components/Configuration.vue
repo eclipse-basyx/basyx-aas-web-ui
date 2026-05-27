@@ -36,8 +36,23 @@
             <v-list-item
               prepend-icon="mdi-origin"
               subtitle="Original EDC"
-              :title="selectedEdcMeta.edc_original"
-            />
+              :title="selectedEdcMeta.edc_original.id"
+            >
+              <template #append>
+                <v-btn
+                  density="compact"
+                  :href="selectedEdcMeta.edc_original.github_url"
+                  icon
+                  size="small"
+                  target="_blank"
+                  variant="text"
+                >
+                  <v-icon>mdi-github</v-icon>
+
+                  <v-tooltip activator="parent" location="bottom">{{ selectedEdcMeta.edc_original.id }} on GitHub</v-tooltip>
+                </v-btn>
+              </template>
+            </v-list-item>
 
             <v-divider />
 
