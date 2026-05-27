@@ -158,7 +158,7 @@
     </v-row>
 
     <!-- Getting Started Banner -->
-    <v-row>
+    <v-row v-if="!edcStore.getControlplaneEndpoint || !edcStore.getControlplaneMgmtEndpoint" class="mt-2 mb-2">
       <v-col cols="12">
         <v-alert
           border="start"
@@ -173,6 +173,25 @@
             Start by configuring your EDC Controlplane endpoint and security settings in the
             <strong>Configuration</strong> tab. Once connected, explore available
             <strong>Assets</strong> and manage access <strong>Policies</strong>.
+          </span>
+        </v-alert>
+      </v-col>
+    </v-row>
+
+    <!-- CORS Note Banner -->
+    <v-row class="mt-2">
+      <v-col cols="12">
+        <v-alert
+          border="start"
+          color="warning"
+          icon="mdi-exclamation-thick"
+          rounded="lg"
+          variant="tonal"
+        >
+          <v-alert-title class="font-weight-bold mb-1">CORS Configuration</v-alert-title>
+
+          <span class="text-body-2">
+            Please make sure that <strong>CORS</strong> is configured correctly.
           </span>
         </v-alert>
       </v-col>
