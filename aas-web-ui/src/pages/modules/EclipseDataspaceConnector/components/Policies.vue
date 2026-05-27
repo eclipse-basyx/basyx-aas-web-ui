@@ -114,14 +114,17 @@
                       @click="selectPolicy(item)"
                     >
                       <template #prepend>
-                        <v-chip
-                          class="mr-2"
+                        <v-btn
+                          class="ml-n1"
                           color="primary"
-                          label
+                          icon="mdi-shield-check-outline"
+                          rel="noopener noreferrer"
                           size="x-small"
-                        >
-                          POLICY
-                        </v-chip>
+                          style="z-index: 9000"
+                          target="_blank"
+                          variant="plain"
+                          @click.stop
+                        />
                       </template>
 
                       <v-tooltip
