@@ -11,5 +11,4 @@ Please note that this list is not exhaustive and may be subject to re-prioritisa
 ## Improvements
 
 - Better type support for the AAS (AAS Core Works) (Q2/2026)
-- Usage of the BaSyx TYpeScript SDK for API interactions (Q2/2026)
-- Improved quality management through testing via Vitest (Q3/2025)
+- Usage of the BaSyx TypeScript SDK for API interactions (Q2/2026)
