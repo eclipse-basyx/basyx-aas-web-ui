@@ -1,8 +1,8 @@
 <template>
-  <v-dialog v-model="createPolicyDialog" max-height="90%" :width="800">
+  <v-dialog v-model="createAssetDialog" max-height="90%" :width="800">
     <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">
       <v-card-title class="bg-cardHeader">
-        Create Policy
+        Create Asset
       </v-card-title>
 
       <v-divider />
@@ -16,15 +16,15 @@
             dense
             item-title="name"
             item-value="value"
-            :items="policyTemplates"
-            label="Select Policy Template"
+            :items="assetTemplates"
+            label="Select Asset Template"
             required
             variant="outlined"
           >
             <template #item="{ props: itemProps, item }">
               <v-list-item v-bind="itemProps">
                 <template #prepend>
-                  <v-icon class="mr-n5">mdi-shield-check-outline</v-icon>
+                  <v-icon class="mr-n5">mdi-code-json</v-icon>
                 </template>
 
                 <template #title>
@@ -56,10 +56,10 @@
             />
           </div>
 
-          <!-- Policy Preview -->
+          <!-- EDC Asset Preview -->
           <div v-if="selectedTemplate">
             <p class="text-caption text-medium-emphasis font-weight-bold mb-2">
-              Policy Preview:
+              EDC Asset Preview:
             </p>
 
             <pre class="json-content bg-surface rounded border overflow-x-auto" style="max-height: 500px; overflow-y: auto">
@@ -75,17 +75,17 @@
         <v-btn
           rounded="lg"
           text="Cancel"
-          @click="createPolicyDialog = false"
+          @click="createAssetDialog = false"
         />
 
         <v-btn
           class="text-buttonText"
           color="primary"
-          :disabled="!selectedTemplate || !allPlaceholdersFilled()"
+          :disabled="!allPlaceholdersFilled()"
           rounded="lg"
           text="Create"
           variant="flat"
-          @click="createPolicy"
+          @click="createAsset"
         />
       </v-card-actions>
     </v-sheet>
@@ -94,10 +94,9 @@
 
 <script lang="ts" setup>
   import * as Prism from 'prismjs'
-  import { type PolicyDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
-  import AccessBpnPolicy from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_bpn_policy___tractus-x_edc_v0.9.json'
-  import AccessPolicy from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_policy___tractus-x_edc_v0.9.json'
-  import UsagePolicy from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy___tractus-x_edc_v0.9.json'
+  import { type Asset, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
+  import AssetTemplateDefault from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.9.json'
+  import AssetTemplateRailwayXPush from '@/pages/modules/EclipseDataspaceConnector/data/assets/templates/railway-x_push_asset___tractus-x_edc_v0.9.json'
   import { formatJSON } from '@/utils/JsonUtils'
   import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
 
@@ -107,37 +106,31 @@
 
   const emit = defineEmits<{
     (event: 'update:modelValue', value: boolean): void
-    (event: 'policy-created', policyId: string): void
+    (event: 'asset-created', assetId: string): void
   }>()
 
   // Composables
-  const { createPolicyDefinition: createPolicyDefinitionInEdc } = useEdcClient()
+  const { createAsset: createAssetInEdc } = useEdcClient()
 
   // Data
-  const createPolicyDialog = ref(false)
-  const selectedTemplate = ref<'access' | 'usage' | 'bpn' | ''>('')
+  const createAssetDialog = ref(false)
+  const selectedTemplate = ref<'default' | 'railwayXPush' | ''>('')
   const form = ref<any>(null)
   const placeholderValues = ref<Record<string, string>>({})
 
-  // Policy Templates
-  const policyTemplates = [
+  // Asset Templates
+  const assetTemplates = [
     {
-      value: 'access',
-      name: 'Access Policy',
-      description: 'Basic policy allowing usage with unrestricted access',
-      policy: AccessPolicy,
+      value: 'default',
+      name: 'Default Asset',
+      description: '',
+      asset: AssetTemplateDefault,
     },
     {
-      value: 'usage',
-      name: 'Usage Policy',
-      description: 'Policy with permissions, prohibitions, and obligations for complex usage scenarios',
-      policy: UsagePolicy,
-    },
-    {
-      value: 'bpn',
-      name: 'Access BPN Policy',
-      description: 'Policy restricting access based on Business Partner Number (BPN) constraint',
-      policy: AccessBpnPolicy,
+      value: 'railwayXPush',
+      name: 'Railway-X Push Asset',
+      description: 'Allows other participants to push data to this endpoint',
+      asset: AssetTemplateRailwayXPush,
     },
   ]
 
@@ -145,10 +138,10 @@
   const placeholders = computed(() => {
     if (!selectedTemplate.value) return []
 
-    const template = policyTemplates.find(t => t.value === selectedTemplate.value)
+    const template = assetTemplates.find(t => t.value === selectedTemplate.value)
     if (!template) return []
 
-    const policyStr = JSON.stringify(template.policy)
+    const policyStr = JSON.stringify(template.asset)
     const matches = policyStr.match(/\{\{([^}]+)\}\}/g) || []
 
     const placeholderList = matches.map(match => {
@@ -174,11 +167,11 @@
   const previewJsonFormatted = computed(() => {
     if (!selectedTemplate.value) return ''
 
-    const template = policyTemplates.find(t => t.value === selectedTemplate.value)
+    const template = assetTemplates.find(t => t.value === selectedTemplate.value)
     if (!template) return ''
 
     try {
-      let policyJson = JSON.stringify(template.policy)
+      let policyJson = JSON.stringify(template.asset)
       policyJson = replacePlaceholders(policyJson)
 
       const policy = JSON.parse(policyJson)
@@ -190,7 +183,7 @@
       return formatted
     } catch (error_) {
       console.error('Error highlighting JSON:', error_)
-      return JSON.stringify(template.policy, null, 2)
+      return JSON.stringify(template.asset, null, 2)
     }
   })
 
@@ -198,7 +191,7 @@
   watch(
     () => props.modelValue,
     value => {
-      createPolicyDialog.value = value
+      createAssetDialog.value = value
       if (!value) {
         resetForm()
       }
@@ -206,7 +199,7 @@
   )
 
   watch(
-    () => createPolicyDialog.value,
+    () => createAssetDialog.value,
     value => {
       emit('update:modelValue', value)
     },
@@ -253,35 +246,35 @@
     return result
   }
 
-  async function createPolicy (): Promise<void> {
+  async function createAsset (): Promise<void> {
     if (!selectedTemplate.value || !allPlaceholdersFilled()) {
       console.warn('Template not selected or placeholders not filled')
       return
     }
 
-    const template = policyTemplates.find(t => t.value === selectedTemplate.value)
+    const template = assetTemplates.find(t => t.value === selectedTemplate.value)
     if (!template) {
       console.warn('Template not found')
       return
     }
 
     try {
-      let policyJson = JSON.stringify(template.policy)
-      policyJson = replacePlaceholders(policyJson)
+      let assetJson = JSON.stringify(template.asset)
+      assetJson = replacePlaceholders(assetJson)
 
-      const finalPolicy = JSON.parse(policyJson) as PolicyDefinition
+      const finalAsset = JSON.parse(assetJson) as Asset
 
-      // Create the policy via EDC API
-      const response = await createPolicyDefinitionInEdc(finalPolicy)
-      if (response) {
-        emit('policy-created', response['@id'])
-        createPolicyDialog.value = false
+      // Create the asset via EDC API
+      const response = await createAssetInEdc(finalAsset)
+      if (response.success && response.data) {
+        emit('asset-created', response.data['@id'])
+        createAssetDialog.value = false
         resetForm()
       } else {
-        console.error('Failed to create policy')
+        console.error('Failed to create asset:', response.errorMessage)
       }
     } catch (error_) {
-      console.error('Error creating policy:', error_)
+      console.error('Error creating asset:', error_)
     }
   }
 

@@ -248,9 +248,14 @@
                 <v-icon size="64" />
               </template>
             </v-empty-state>
+
           </div>
 
-          <pre v-else class="json-content bg-surface rounded border" :style="{'height': fullHeightMain}">
+          <pre
+            v-else
+            class="json-content bg-surface rounded border"
+            :style="{'height': fullHeightMain}"
+          >
             <code v-html="selectedPolicyJsonFormatted" />
           </pre>
 

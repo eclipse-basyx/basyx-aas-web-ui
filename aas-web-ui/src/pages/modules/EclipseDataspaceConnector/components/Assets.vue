@@ -71,11 +71,25 @@
                         <template #prepend>
                           <v-icon size="small">mdi-plus</v-icon>
                         </template>
-                        Create Asset from AAS/SMs
+                        Create Assets from AAS/SMs
                       </v-list-item>
                     </template>
 
-                    <span>Create a new asset from an AAS and its SMs</span>
+                    <span>Create a new assets from an AAS and its SMs</span>
+                  </v-tooltip>
+
+                  <!-- Create Asset from Template Dialog -->
+                  <v-tooltip location="bottom" open-delay="600">
+                    <template #activator="{ props }">
+                      <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="createAssetFromTemplateDialog = true">
+                        <template #prepend>
+                          <v-icon size="small">mdi-plus</v-icon>
+                        </template>
+                        Create Asset from Template
+                      </v-list-item>
+                    </template>
+
+                    <span>Create a new asset from Template</span>
                   </v-tooltip>
 
                 </v-list>
@@ -270,6 +284,7 @@
 
   <CreateAssetDialog v-model="createAssetDialog" @assets-created="onAssetsCreated" />
   <CreateAssetsAasSmsDialog v-model="createAssetsAasSmsDialog" @assets-created="onAssetsCreated" />
+  <CreateAssetFromTemplateDialog v-model="createAssetFromTemplateDialog" @assets-created="onAssetsCreated" />
 
   <DeleteAssetDialog v-model="deleteAssetDialog" :asset="assetToDelete" @asset-deleted="onAssetDeleted" />
 </template>
@@ -279,6 +294,7 @@
   import { useTheme } from 'vuetify'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import CreateAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/CreateAssetDialog.vue'
+  import CreateAssetFromTemplateDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/CreateAssetFromTemplateDialog.vue'
   import CreateAssetsAasSmsDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/CreateAssetsAasSmsDialog.vue'
   import DeleteAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/DeleteAssetDialog.vue'
   import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
@@ -313,6 +329,7 @@
   const selectedAssetJsonFormatted = ref<string>('')
   const createAssetDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
   const createAssetsAasSmsDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
+  const createAssetFromTemplateDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
   const deleteAssetDialog = ref(false) // Variable to store if the Delete Asset Dialog should be shown
   const assetToDelete = ref({}) // Variable to store the asset to be deleted
   const copyIcon = ref<string>('mdi-clipboard-file-outline')

@@ -458,13 +458,14 @@
           </v-navigation-drawer>
 
           <v-main class="py-0">
+
             <v-container class="ma-0 pa-0" fluid style="overflow-y: auto;" :style="{'height': fullHeightMain}">
 
               <div v-if="!selectedAAS || Object.keys(selectedAAS).length === 0" class="d-flex align-center justify-center" :style="{'height': fullHeightMain}">
 
                 <v-empty-state
                   icon="mdi-gesture-tap"
-                  style="margin-top: 86px"
+                  style="padding-top: 86px"
                   text="Please select an AAS to register as EDC Asset."
                   title="Select AAS"
                 >
@@ -472,6 +473,7 @@
                     <v-icon size="64" />
                   </template>
                 </v-empty-state>
+
               </div>
 
               <template v-else>
@@ -484,8 +486,8 @@
                   class="json-content mt-0 mx-4 mb-5 bg-surface rounded border"
                   style="height: 275px; min-height: 63px"
                 >
-              <code class="mx-5" v-html="aasEdcAssetJsonFormatted" />
-            </pre>
+                  <code class="mx-5" v-html="aasEdcAssetJsonFormatted" />
+                </pre>
 
                 <v-divider class="mt-4" />
 
@@ -498,8 +500,8 @@
                   style="min-height: 63px"
                   :style="{'max-height': heightSmJson}"
                 >
-              <code class="mx-5" v-html="smEdcAssetsJsonFormatted" />
-            </pre>
+                  <code class="mx-5" v-html="smEdcAssetsJsonFormatted" />
+                </pre>
 
               </template>
 
@@ -544,7 +546,7 @@
   import { useAASListPagination } from '@/composables/AAS/AASListPagination'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
-  import assetTemplate from '@/pages/modules/EclipseDataspaceConnector/data/asset___tractus-x_edc_v0.9.json'
+  import assetTemplate from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.9.json'
   import { useAASStore } from '@/store/AASDataStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { extractVersionRevision } from '@/utils/AAS/SemanticIdUtils'
