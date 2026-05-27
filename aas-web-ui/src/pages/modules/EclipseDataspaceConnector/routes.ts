@@ -10,21 +10,30 @@ export default {
       },
     },
     {
-      path: 'policies',
-      name: 'Policies',
-      component: () => import('@/pages/modules/EclipseDataspaceConnector/components/Policies.vue'),
-      meta: {
-        title: 'Policies',
-        icon: 'mdi-file-sign',
-      },
-    },
-    {
       path: 'assets',
       name: 'Assets',
       component: () => import('@/pages/modules/EclipseDataspaceConnector/components/Assets.vue'),
       meta: {
         title: 'Assets',
         icon: 'mdi-code-json',
+      },
+    },
+    {
+      path: 'policies',
+      name: 'Policies',
+      component: () => import('@/pages/modules/EclipseDataspaceConnector/components/Policies.vue'),
+      meta: {
+        title: 'Policies',
+        icon: 'mdi-shield-check-outline',
+      },
+    },
+    {
+      path: 'contracts',
+      name: 'Contracts',
+      component: () => import('@/pages/modules/EclipseDataspaceConnector/components/Contracts.vue'),
+      meta: {
+        title: 'Contracts',
+        icon: 'mdi-file-sign',
       },
     },
     {

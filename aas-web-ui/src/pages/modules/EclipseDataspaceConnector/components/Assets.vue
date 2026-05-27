@@ -1,828 +1,447 @@
 <template>
-  <v-container fluid>
-    <v-card border="0" class="flex-grow-1">
+  <v-container class="pa-0 ma-0" fluid :style="{ 'height': fullHeight}">
 
-      <v-card-text
-        class="pa-0"
-        :class="mdAndDown ? 'd-flex flex-column' : 'd-flex'"
-        :style="mdAndDown ? { height: listHeight } : {}"
+    <v-layout :style="{ 'height': fullHeight}">
+      <v-navigation-drawer
+        class="leftMenu"
+        color="appNavigation"
+        :width="336"
       >
-        <v-sheet
-          :class="mdAndDown ? '' : 'border-e-thin rounded-s-lg'"
-          :style="mdAndDown ? { height: '50%', display: 'flex', 'flex-direction': 'column' } : {}"
-          :width="mdAndDown ? '100%' : 340"
-        >
-          <v-list-item class="pl-3">
-            <v-list-item-title class="text-body-large">Select AAS to register as EDC Asset</v-list-item-title>
-          </v-list-item>
+        <v-card color="rgba(0,0,0,0)" elevation="0">
+          <v-card-title
+            class="px-0 py-2 d-flex align-center"
+          >
 
-          <v-divider />
+            <v-tooltip location="bottom" open-delay="600">
+              <template #activator="{ props }">
+                <v-btn
+                  class="ma-0"
+                  icon="mdi-reload"
+                  v-bind="props"
+                  :loading="listLoading"
+                  variant="plain"
+                  @click="initialize()"
+                />
+              </template>
 
-          <v-card-title class="py-3">
+              <span>Reload Asset List</span>
+            </v-tooltip>
+
             <v-text-field
               clearable
               density="compact"
               hide-details
-              label="Search for AAS..."
-              :model-value="aasSearchValue"
-              persistent-placeholder
-              :placeholder="aasList.length.toString() + ' Shells'"
+              label="Search for Asset ..."
               variant="outlined"
-              @update:model-value="debouncedFilterAasList"
+              @update:model-value="filterAssetList"
             />
-          </v-card-title>
 
-          <!-- AAS List -->
-          <v-list
-            bg-color="card"
-            class="pa-0"
-            nav
-            :style="{
-              display: 'flex',
-              'flex-direction': 'column',
-              height: listHeight,
-            }"
-          >
-            <template v-if="aasListLoading">
-              <v-list-item
-                v-for="i in 6"
-                :key="i"
-                class="px-0 py-3"
-                density="compact"
-                :height="48"
-                nav
-              >
-                <v-list-item-title>
-                  <v-skeleton-loader type="list-item" :width="300" />
-                </v-list-item-title>
+            <!-- Menu -->
+            <v-menu>
+              <template #activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  class="mx-0"
+                  icon="mdi-dots-vertical"
+                  variant="plain"
+                />
+              </template>
 
-                <template #append>
-                  <v-skeleton-loader type="list-item" :width="50" />
-                </template>
-              </v-list-item>
-            </template>
+              <v-sheet border>
+                <v-list class="py-0" density="compact">
 
-            <template v-else>
-              <v-virtual-scroll
-                ref="virtualScrollRef"
-                class="pb-2 bg-card"
-                :item-height="itemHeight"
-                :items="aasList"
-              >
-                <template #default="{ item }">
-                  <!-- Single AAS -->
-                  <v-list-item
-                    v-if="item && Object.keys(item).length > 0"
-                    :active="aasIsSelected(item)"
-                    base-color="listItem"
-                    :border="aasIsSelected(item) ? 'primary' : 'listItem thin'"
-                    class="mt-2 mx-2"
-                    color="primarySurface"
-                    style="border-top: solid; border-right: solid; border-bottom: solid; border-width: 1px"
-                    :style="{
-                      'border-color': aasIsSelected(item)
-                        ? primaryColor + ' !important'
-                        : isDark
-                          ? '#686868 !important'
-                          : '#ABABAB !important',
-                    }"
-                    variant="tonal"
-                    @click="selectAAS(item)"
-                  >
-
-                    <template #prepend>
-                      <v-btn
-                        color="primary"
-                        icon="custom:aasIcon"
-                        rel="noopener noreferrer"
-                        size="x-small"
-                        style="z-index: 9000; margin-left: -4px"
-                        target="_blank"
-                        variant="plain"
-                        @click.stop
-                      />
-                    </template>
-                    <!-- Tooltip with idShort and id -->
-                    <v-tooltip
-                      v-if="!isMobile"
-                      activator="parent"
-                      :disabled="isMobile"
-                      open-delay="600"
-                      transition="slide-x-transition"
-                    >
-                      <!-- AAS ID -->
-                      <div v-if="item.id" class="text-body-small">
-                        <span class="font-weight-bold">{{ 'ID: ' }}</span>
-                        {{ item.id }}
-                      </div>
-                      <!-- AAS idShort -->
-                      <div v-if="item.idShort" class="text-body-small">
-                        <span class="font-weight-bold"> {{ 'idShort: ' }}</span>
-                        {{ item.idShort }}
-                      </div>
-
-                      <v-divider v-if="item.administration?.version" class="my-1" />
-                      <!-- AAS administrative information -->
-                      <div v-if="item.administration?.version" class="text-body-small">
-                        <span class="font-weight-bold">{{ 'Version: ' }}</span>
-                        {{
-                          item.administration.version +
-                            (item.administration.revision ? '.' + item.administration.revision : '')
-                        }}
-                      </div>
-                    </v-tooltip>
-
-                    <v-list-item-title class="text-primary" style="z-index: 9999">
-                      {{ nameToDisplay(item) }}
-                    </v-list-item-title>
-
-                    <v-list-item-subtitle class="text-listItemText">{{ item.id }}</v-list-item-subtitle>
-
-                  </v-list-item>
-                </template>
-              </v-virtual-scroll>
-
-              <v-list-item
-                v-if="isSearchLimited"
-                class="px-4 py-1"
-                density="compact"
-              >
-                <v-list-item-subtitle class="text-listItemText">
-                  Searching loaded shells only. Scroll down to load more.
-                </v-list-item-subtitle>
-              </v-list-item>
-
-              <v-list-item
-                v-if="pageLoading && !aasListLoading"
-                class="px-4 py-0"
-                density="compact"
-              >
-                <template #prepend>
-                  <v-progress-circular class="mr-2" indeterminate size="16" width="2" />
-                </template>
-
-                <v-list-item-subtitle class="text-listItemText ml-1">Loading more shells...</v-list-item-subtitle>
-              </v-list-item>
-            </template>
-          </v-list>
-
-        </v-sheet>
-
-        <div
-          class="d-flex flex-column"
-          :class="mdAndDown ? 'border-t-thin' : 'flex-grow-1'"
-          :style="mdAndDown ? { height: '50%', 'overflow-y': 'auto' } : {}"
-        >
-          <v-empty-state
-            v-if="!selectedAAS || Object.keys(selectedAAS).length === 0"
-            :class="mdAndDown ? 'py-8' : ''"
-            icon="mdi-gesture-tap"
-            text="Please select an AAS to register as EDC Asset."
-            title="Select AAS"
-          >
-            <template #media>
-              <v-icon size="64" />
-            </template>
-          </v-empty-state>
-
-          <template v-else>
-            <v-list-item class="pl-3">
-              <v-list-item-title class="text-body-large">EDC Asset (of AAS)</v-list-item-title>
-            </v-list-item>
-
-            <v-list-item class="px-3 pb-3">
-              <pre class="json-content"><code v-html="aasEdcAssetJsonFormatted" /></pre>
-            </v-list-item>
-
-            <v-divider />
-
-            <v-card-text
-              class="pa-0"
-              :class="mdAndDown ? 'd-flex flex-column' : 'd-flex'"
-              :style="mdAndDown ? { height: listHeight } : {}"
-            >
-
-              <v-sheet
-                :class="mdAndDown ? '' : 'border-e-thin rounded-s-lg'"
-                :style="mdAndDown ? { height: '50%', display: 'flex', 'flex-direction': 'column' } : {}"
-                :width="mdAndDown ? '100%' : 680"
-              >
-
-                <v-list-item class="pl-3">
-                  <v-list-item-title class="text-body-large">
-                    Select SMs to register as EDC Asset (together with AAS)
-                    <v-tooltip
-                      location="bottom"
-                      open-delay="600"
-                    >
-                      <template #activator="{ props }">
-                        <v-btn
-                          icon="mdi-checkbox-multiple-outline"
-                          variant="plain"
-                          v-bind="props"
-                          @click="selectAllSMs()"
-                        />
-                      </template>
-
-                      <span>Select all Submodels</span>
-                    </v-tooltip>
-
-                    <v-tooltip
-                      location="bottom"
-                      open-delay="600"
-                    >
-                      <template #activator="{ props }">
-                        <v-btn
-                          icon="mdi-checkbox-multiple-blank-outline"
-                          variant="plain"
-                          v-bind="props"
-                          @click="deselectAllSMs()"
-                        />
-                      </template>
-
-                      <span>Deselect all Submodels</span>
-                    </v-tooltip>
-                  </v-list-item-title>
-                </v-list-item>
-
-                <v-divider />
-
-                <!-- SM List -->
-                <v-list
-                  v-if="
-                    submodelList.length
-                      > 0"
-                  v-model:selected="selectedSmIds"
-                  bg-color="card"
-                  class="pa-0"
-                  nav
-                  select-strategy="leaf"
-                  :style="{
-                    display: 'flex',
-                    'flex-direction': 'column',
-                    height: listHeight,
-                  }"
-                >
-                  <v-virtual-scroll
-                    ref="smVirtualScrollRef"
-                    class="pb-2 bg-card"
-                    :item-height="itemHeight"
-                    :items="submodelList"
-                  >
-                    <template #default="{ item }">
-                      <!-- Single SM -->
-                      <v-list-item
-                        v-if="item && Object.keys(item).length > 0"
-                        :key="item.id"
-                        :active="smIsSelected(item)"
-                        base-color="listItem"
-                        :border="smIsSelected(item) ? 'primary' : 'listItem thin'"
-                        class="mt-2 mx-2"
-                        color="primarySurface"
-                        style="border-width: 1px"
-                        :style="{
-                          'border-color': smIsSelected(item)
-                            ? primaryColor + ' !important'
-                            : isDark
-                              ? '#686868 !important'
-                              : '#ABABAB !important',
-                        }"
-                        :value="item.id"
-                        variant="tonal"
-                      >
-                        <template #prepend="{ isSelected, select }">
-                          <v-list-item-action start>
-                            <v-checkbox-btn :model-value="isSelected" @update:model-value="select" />
-                          </v-list-item-action>
+                  <!-- Create Asset Dialog -->
+                  <v-tooltip location="bottom" open-delay="600">
+                    <template #activator="{ props }">
+                      <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="createAssetDialog = true">
+                        <template #prepend>
+                          <v-icon size="small">mdi-plus</v-icon>
                         </template>
-
-                        <!-- <template #prepend>
-                          <v-chip
-                            border
-                            class="mr-3"
-                            color="primary"
-                            label
-                            size="x-small"
-                          >
-                            {{ item.kind && item.kind === 'Template' ? 'SMT' : 'SM' }}
-                          </v-chip>
-                        </template> -->
-
-                        <v-tooltip
-                          v-if="!isMobile"
-                          activator="parent"
-                          :disabled="isMobile"
-                          open-delay="600"
-                          transition="slide-x-transition"
-                        >
-                          <!-- Submodel ID -->
-                          <div v-if="item.id" class="text-body-small">
-                            <span class="font-weight-bold">{{ 'ID: ' }}</span>
-                            {{ item.id }}
-                          </div>
-                          <!-- Submodel idShort -->
-                          <div v-if="item.idShort" class="text-body-small">
-                            <span class="font-weight-bold"> {{ 'idShort: ' }}</span>
-                            {{ item.idShort }}
-                          </div>
-                          <!-- Submodel semanticId -->
-                          <div v-if="item?.semanticId?.keys[0]?.value" class="text-body-small">
-                            <span class="font-weight-bold"> {{ 'semanticId: ' }}</span>
-                            {{ item.semanticId.keys[0].value }}
-                          </div>
-
-                          <v-divider v-if="item.administration?.version" class="my-1" />
-                          <!-- Submodel administrative information -->
-                          <div v-if="item.administration?.version" class="text-body-small">
-                            <span class="font-weight-bold">{{ 'Version: ' }}</span>
-                            {{
-                              item.administration.version +
-                                (item.administration.revision
-                                  ? '.' + item.administration.revision
-                                  : '')
-                            }}
-                          </div>
-
-                          <v-divider
-                            v-if="
-                              item?.semanticId?.keys[0]?.value &&
-                                (smts.some(
-                                  (smt: any) => item.semanticId.keys[0].value === smt.semanticId
-                                ) ||
-                                  extractVersionRevision(item.semanticId.keys[0].value).version)
-                            "
-                            class="my-1"
-                          />
-                          <!-- Submodel Template name -->
-                          <div
-                            v-if="
-                              smts.some(
-                                (smt: any) =>
-                                  item?.semanticId?.keys[0]?.value === smt.semanticId
-                              )
-                            "
-                            class="text-body-small"
-                          >
-                            <span class="font-weight-bold">{{ 'SMT: ' }}</span>
-                            {{
-                              smts.find(
-                                (smt: any) =>
-                                  item?.semanticId?.keys[0]?.value === smt.semanticId
-                              )?.name
-                            }}
-                          </div>
-                          <!-- Submodel Template version -->
-                          <div
-                            v-if="
-                              smts.some(
-                                (smt: any) =>
-                                  item?.semanticId?.keys[0]?.value === smt.semanticId
-                              )
-                            "
-                            class="text-body-small"
-                          >
-                            <span class="font-weight-bold">{{ 'SMT Version: ' }}</span>
-                            {{
-                              smts.find(
-                                (smt: any) =>
-                                  item?.semanticId?.keys[0]?.value === smt.semanticId
-                              )?.version
-                            }}
-                          </div>
-                          <!-- Submodel Template version extracted from semanticId -->
-                          <div
-                            v-else-if="
-                              item?.semanticId?.keys[0]?.value &&
-                                extractVersionRevision(item?.semanticId?.keys[0]?.value).version
-                            "
-                            class="text-body-small"
-                          >
-                            <span class="font-weight-bold">{{ 'SMT Version: ' }}</span>
-                            {{
-                              extractVersionRevision(item?.semanticId?.keys[0]?.value).version +
-                                (extractVersionRevision(item?.semanticId?.keys[0]?.value).revision
-                                  ? '.' +
-                                    extractVersionRevision(item?.semanticId?.keys[0]?.value)
-                                      .revision
-                                  : '')
-                            }}
-                          </div>
-                        </v-tooltip>
-
-                        <v-list-item-title class="text-primary" style="z-index: 9999">
-                          {{ smTitleToDisplay(item) }}
-                        </v-list-item-title>
-
-                        <v-list-item-subtitle class="text-listItemText">{{ item.id }}</v-list-item-subtitle>
-
-                        <template v-if="smVersionToDisplay(item)" #append>
-                          <v-chip size="x-small"> v{{ smVersionToDisplay(item) }} </v-chip>
-                        </template>
+                        Create Asset
                       </v-list-item>
                     </template>
-                  </v-virtual-scroll>
+
+                    <span>Create a new asset from an AAS and its SMs</span>
+                  </v-tooltip>
+
+                  <!-- Create Asset AAS/SMs Dialog -->
+                  <v-tooltip location="bottom" open-delay="600">
+                    <template #activator="{ props }">
+                      <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="createAssetsAasSmsDialog = true">
+                        <template #prepend>
+                          <v-icon size="small">mdi-plus</v-icon>
+                        </template>
+                        Create Asset from AAS/SMs
+                      </v-list-item>
+                    </template>
+
+                    <span>Create a new asset from an AAS and its SMs</span>
+                  </v-tooltip>
+
                 </v-list>
-
               </v-sheet>
+            </v-menu>
 
-              <div
-                class="d-flex flex-column"
-                :class="mdAndDown ? 'border-t-thin' : 'flex-grow-1'"
-                :style="mdAndDown ? { height: '50%', 'overflow-y': 'auto' } : {}"
+          </v-card-title>
+
+          <v-divider />
+
+          <v-card-text class="pt-0 pb-0 px-2" style="overflow-y: auto; height: calc(100svh - 64px - 48px - 40px - 64px - 3px)">
+
+            <div v-if="listLoading">
+              <v-skeleton-loader type="list-item@6" />
+            </div>
+
+            <template v-else>
+
+              <!-- List of Assets -->
+              <v-list
+                v-if="assetList.length > 0"
+                class="pa-0"
+                density="compact"
+                nav
               >
-                <v-list-item class="pl-3">
-                  <v-list-item-title class="text-body-large">EDC Assets (of SMs)</v-list-item-title>
-                </v-list-item>
+                <v-virtual-scroll
+                  ref="virtualScrollRef"
+                  class="bg-card mb-2"
+                  :item-height="56"
+                  :items="assetList"
+                >
 
-                <v-list-item class="px-3 pb-3">
-                  <pre class="json-content"><code v-html="smEdcAssetsJsonFormatted" /></pre>
-                </v-list-item>
-              </div>
+                  <template #default="{ item }">
+                    <!-- Single Asset -->
+                    <v-list-item
+                      :key="item['@id']"
+                      :active="isSelected(item)"
+                      base-color="listItem"
+                      :border="isSelected(item) ? 'primary' : 'listItem thin'"
+                      class="mt-2 mx-0"
+                      color="primarySurface"
+                      style="border-top: solid; border-right: solid; border-bottom: solid; border-width: 1px"
+                      :style="{
+                        'border-color': isSelected(item)
+                          ? primaryColor + ' !important'
+                          : isDark
+                            ? '#686868 !important'
+                            : '#ABABAB !important',
+                      }"
+                      variant="tonal"
+                      @click="selectAsset(item)"
+                    >
+                      <template #prepend>
+                        <v-btn
+                          class="ml-n1"
+                          color="primary"
+                          icon="mdi-code-json"
+                          rel="noopener noreferrer"
+                          size="x-small"
+                          style="z-index: 9000"
+                          target="_blank"
+                          variant="plain"
+                          @click.stop
+                        />
+                      </template>
 
-            </v-card-text>
-          </template>
-        </div>
-      </v-card-text>
+                      <v-tooltip
+                        activator="parent"
+                        open-delay="600"
+                        transition="slide-x-transition"
+                      >
+                        <!-- Asset ID -->
+                        <div v-if="item['@id']" class="text-body-small">
+                          <span class="font-weight-bold">{{ 'ID: ' }}</span>
+                          {{ item['@id'] }}
+                        </div>
 
-      <v-divider />
+                        <!-- Created At -->
+                        <div v-if="item['createdAt']" class="text-body-small mt-1">
+                          <span class="font-weight-bold">{{ 'Created: ' }}</span>
+                          {{ new Date(item['createdAt']).toISOString() }}
+                        </div>
 
-      <v-card-actions :class="mdAndDown ? 'justify-center' : ''">
-        <div v-if="!mdAndDown" style="width: 340px" />
-        <v-spacer v-if="!mdAndDown" />
+                      </v-tooltip>
 
-        <v-btn
-          class="text-buttonText"
-          color="success"
-          :disabled="!selectedAAS || Object.keys(selectedAAS).length === 0"
-          text="Register"
-          variant="flat"
-          @click="null"
-        />
+                      <v-list-item-title class="text-primary">
+                        {{ item?.properties?.name || item?.properties?.description }}
+                      </v-list-item-title>
 
-        <v-spacer v-if="!mdAndDown" />
-      </v-card-actions>
+                      <v-list-item-subtitle class="text-listItemText">
+                        {{ item['@id'] }}
+                      </v-list-item-subtitle>
 
-    </v-card>
+                      <template #append>
+                        <v-badge
+                          color="error"
+                          icon="mdi-network-strength-4-alert"
+                          inline
+                          :model-value="
+                            item.status && item.status.trim() !== '' && item.status === 'offline'
+                              ? true
+                              : false
+                          "
+                          text-color="buttonText"
+                        />
+
+                        <v-menu>
+                          <template #activator="{ props }">
+                            <v-btn
+                              color="listItemText"
+                              icon
+                              size="x-small"
+                              variant="plain"
+                              v-bind="props"
+                              @click.prevent
+                            >
+                              <v-icon size="x-small">mdi-dots-vertical</v-icon>
+                            </v-btn>
+                          </template>
+
+                          <v-sheet border>
+                            <v-list class="py-0" dense density="compact" slim>
+
+                              <!-- Delete Asset -->
+                              <v-list-item @click="openDeleteDialog(item)">
+                                <template #prepend>
+                                  <v-icon size="x-small">mdi-delete</v-icon>
+                                </template>
+
+                                <v-list-item-subtitle>Delete Asset</v-list-item-subtitle>
+                              </v-list-item>
+
+                              <v-divider />
+                              <!-- Copy Asset ID to clipboard -->
+                              <v-list-item
+                                @click.stop="
+                                  copyToClipboard(item['@id'], 'AssetId', copyIconAsRef)
+                                "
+                              >
+                                <template #prepend>
+                                  <v-icon size="x-small">{{ copyIcon }} </v-icon>
+                                </template>
+
+                                <v-list-item-subtitle>Copy Asset ID</v-list-item-subtitle>
+                              </v-list-item>
+                            </v-list>
+                          </v-sheet>
+                        </v-menu>
+
+                      </template>
+
+                    </v-list-item>
+                  </template>
+
+                </v-virtual-scroll>
+              </v-list>
+
+              <v-empty-state
+                v-else
+                class="text-divider"
+                title="No existing Assets"
+              />
+            </template>
+          </v-card-text>
+        </v-card>
+      </v-navigation-drawer>
+
+      <v-main>
+        <v-container fluid>
+
+          <div v-if="!selectedAsset || Object.keys(selectedAsset).length === 0" class="d-flex align-center justify-center" :style="{'height': fullHeightMain}">
+
+            <v-empty-state
+              icon="mdi-gesture-tap"
+              text="Please select a Asset to view"
+              title="Select Asset"
+            >
+              <template #media>
+                <v-icon size="64" />
+              </template>
+            </v-empty-state>
+          </div>
+
+          <pre v-else class="json-content bg-surface rounded border" :style="{'height': fullHeightMain}">
+            <code v-html="selectedAssetJsonFormatted" />
+          </pre>
+
+        </v-container>
+      </v-main>
+    </v-layout>
   </v-container>
+
+  <CreateAssetDialog v-model="createAssetDialog" @assets-created="onAssetsCreated" />
+  <CreateAssetsAasSmsDialog v-model="createAssetsAasSmsDialog" @assets-created="onAssetsCreated" />
+
+  <DeleteAssetDialog v-model="deleteAssetDialog" :asset="assetToDelete" @asset-deleted="onAssetDeleted" />
 </template>
 
 <script lang="ts" setup>
-  import Prism from 'prismjs'
-  import { computed, onMounted, ref } from 'vue'
-  import { useRoute, useRouter } from 'vue-router'
-  import { useDisplay, useTheme } from 'vuetify'
-  import { useAASHandling } from '@/composables/AAS/AASHandling'
-  import { appendOrMergeSortedAasById, compareAasById } from '@/composables/AAS/AASListAccumulation'
-  import { useAASListPagination } from '@/composables/AAS/AASListPagination'
-  import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
-  import { useSMHandling } from '@/composables/AAS/SMHandling'
-  import { useAASStore } from '@/store/AASDataStore'
-  import { useNavigationStore } from '@/store/NavigationStore'
-  import { extractVersionRevision } from '@/utils/AAS/SemanticIdUtils'
-  import { smts } from '@/utils/AAS/SubmodelTemplateUtils'
-  import { debounce } from '@/utils/generalUtils'
+  import * as Prism from 'prismjs'
+  import { useTheme } from 'vuetify'
+  import { useClipboardUtil } from '@/composables/ClipboardUtil'
+  import CreateAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/CreateAssetDialog.vue'
+  import CreateAssetsAasSmsDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/CreateAssetsAasSmsDialog.vue'
+  import DeleteAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/DeleteAssetDialog.vue'
+  import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
+  import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { formatJSON } from '@/utils/JsonUtils'
   import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
-  import 'prismjs/themes/prism.css'
 
   // Extend the ComponentPublicInstance type to include scrollToIndex
   interface VirtualScrollInstance extends ComponentPublicInstance {
     scrollToIndex: (index: number) => void
   }
 
-  defineOptions({
-    inheritAttrs: false,
-    moduleTitle: 'Eclipse Dataspace Connector GUI',
-    isDesktopModule: true,
-    isMobileModule: false,
-    preserveRouteQuery: true,
-  })
-
-  // Vue Router
-  const route = useRoute()
-  const router = useRouter()
-
   // Stores
-  const navigationStore = useNavigationStore()
-  const aasStore = useAASStore()
+  const edcStore = useEdcStore()
 
   // Composables
-  const { fetchAasShellListPage, fetchAndDispatchAasById, fetchAasSmListById } = useAASHandling()
-  const { fetchSmById } = useSMHandling()
-  const { nameToDisplay, descriptionToDisplay } = useReferableUtils()
+  const { queryAssets } = useEdcClient()
+  const { copyToClipboard } = useClipboardUtil()
 
   // Vuetify
   const theme = useTheme()
-  const display = useDisplay()
 
   // Data
-  const debouncedFilterAasList = debounce(filterAasList, 300) // Debounced function to filter the AAS List
-  const itemHeight = 56
-  const minPageLimit = 100
-  const maxPageLimit = 300
-  const prefetchThresholdInRows = 8
-  const pageSizeMultiplier = 3
-  const scrollLoadDebounceMs = 200
-  const minPageLoadIntervalMs = 350
-
-  const aasList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store currently displayed AAS Data
-  const submodelList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the SM Data
-
-  const allLoadedAas = ref([] as Array<any>) as Ref<Array<any>> // Variable to store all loaded AAS Data
-
-  const aasSearchValue = ref('')
-
-  const aasLoadedIds = ref(new Set<string>())
-  const aasListLoading = computed(() => isLoadingInitialPage.value) // Variable to store if the AAS List is loading
-
+  const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Full height - header - tabs - footer - border
+  const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
+  const assetList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Asset data
+  const assetListUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Asset data before filtering
+  const listLoading = ref(false) // Variable to store if the AAS List is loading
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null) // Reference to the Virtual Scroll Component
-  const smVirtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null) // Reference to the Virtual Scroll Component
+  const selectedAsset = ref({} as any)
+  const selectedAssetJson = ref<string>('')
+  const selectedAssetJsonFormatted = ref<string>('')
+  const createAssetDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
+  const createAssetsAasSmsDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
+  const deleteAssetDialog = ref(false) // Variable to store if the Delete Asset Dialog should be shown
+  const assetToDelete = ref({}) // Variable to store the asset to be deleted
+  const copyIcon = ref<string>('mdi-clipboard-file-outline')
 
-  const jsonLanguage = getPrismJsonLanguage()
+  // Computed properties
+  const isDark = computed(() => theme.global.current.value.dark)
+  const primaryColor = computed(() => theme.current.value.colors.primary)
+  const copyIconAsRef = computed(() => copyIcon)
 
-  const aasEdcAsset = ref({} as any)
-  const aasEdcAssetJson = ref<string>('')
-  const aasEdcAssetJsonFormatted = ref<string>('')
+  // Watchers
+  watch(
+    () => edcStore.getEdcConfig,
+    () => {
+      initialize()
+    },
+  )
 
-  const smEdcAssets = ref([] as any)
-  const smEdcAssetsJson = ref<string>('')
-  const smEdcAssetsJsonFormatted = ref<string>('')
+  watch(
+    () => selectedAsset.value,
+    () => {
+      try {
+        selectedAssetJson.value = JSON.stringify(selectedAsset.value)
+        const formatted = formatJSON(selectedAssetJson.value)
 
-  const selectedSmIds = ref<string[]>([])
-
-  const listHeight = ref('calc(100vh - 288px)')
-
-  const {
-    hasMorePages,
-    isLoadingInitialPage,
-    pageLoading,
-    resetPaginationState: resetPaginationStateInternal,
-    initialize: initializePagination,
-  } = useAASListPagination({
-    virtualScrollRef,
-    itemHeight,
-    minPageLimit,
-    maxPageLimit,
-    pageSizeMultiplier,
-    prefetchThresholdInRows,
-    scrollLoadDebounceMs,
-    minPageLoadIntervalMs,
-    fetchPage: params => fetchAasShellListPage(params),
-    onPageItems: items => {
-      const incomingItems = items
-        .toSorted(compareAasById)
-        .filter(item => {
-          if (!item?.id || aasLoadedIds.value.has(item.id)) {
-            return false
-          }
-          aasLoadedIds.value.add(item.id)
-          return true
-        })
-        .map(item => preprocessListItem(item))
-
-      if (incomingItems.length > 0) {
-        allLoadedAas.value = appendOrMergeSortedAasById(allLoadedAas.value, incomingItems)
-        applyCurrentFilter()
+        // Apply syntax highlighting using Prism
+        if (Prism && Prism.highlight) {
+          selectedAssetJsonFormatted.value = Prism.highlight(formatted, getPrismJsonLanguage(), 'json')
+        } else {
+          selectedAssetJsonFormatted.value = formatted
+          console.warn('Prism highlighting not available')
+        }
+      } catch (error_) {
+        console.error('Error highlighting JSON:', error_)
+        selectedAssetJsonFormatted.value = selectedAssetJson.value || ''
       }
     },
-  })
+    { deep: true },
+  )
 
-  // Computed Properties
-  const isMobile = computed(() => navigationStore.getIsMobile) // Check if the current Device is a Mobile Device
-  const isDark = computed(() => theme.global.current.value.dark) // Check if the current Theme is dark
-  const primaryColor = computed(() => theme.current.value.colors.primary) // returns the primary color of the current theme
-
-  const selectedAAS = computed(() => aasStore.getSelectedAAS) // Get the selected AAS from Store
-
-  const mdAndDown = computed(() => display.mdAndDown.value)
-
-  const isSearchLimited = computed(() => aasSearchValue.value.trim() !== '' && hasMorePages.value)
-
-  onMounted(async () => {
+  onMounted(() => {
     initialize()
   })
 
-  watch(
-    () => aasEdcAsset.value,
-    () => {
-      try {
-        aasEdcAssetJson.value = JSON.stringify(aasEdcAsset.value)
-        const formatted = formatJSON(aasEdcAssetJson.value)
+  onActivated(() => {
+    scrollToSelectedAsset()
+  })
 
-        // Apply syntax highlighting using Prism
-        if (Prism && Prism.highlight) {
-          aasEdcAssetJsonFormatted.value = Prism.highlight(formatted, jsonLanguage, 'json')
-        } else {
-          aasEdcAssetJsonFormatted.value = formatted
-          console.warn('Prism highlighting not available')
-        }
-      } catch (error_) {
-        console.error('Error highlighting JSON:', error_)
-        aasEdcAssetJsonFormatted.value = aasEdcAssetJson.value || ''
-      }
-    },
-    { deep: true },
-  )
-
-  watch(
-    () => selectedSmIds.value,
-    async () => {
-      smEdcAssets.value = []
-
-      for (const smId of selectedSmIds.value) {
-        const sm = await fetchSmById(smId)
-        smEdcAssets.value = [...smEdcAssets.value, createEdcAsset(selectedAAS.value, sm)]
-      }
-    },
-  )
-
-  watch(
-    () => smEdcAssets.value,
-    () => {
-      try {
-        smEdcAssetsJson.value = JSON.stringify(smEdcAssets.value)
-        const formatted = formatJSON(smEdcAssetsJson.value)
-
-        // Apply syntax highlighting using Prism
-        if (Prism && Prism.highlight) {
-          smEdcAssetsJsonFormatted.value = Prism.highlight(formatted, jsonLanguage, 'json')
-        } else {
-          smEdcAssetsJsonFormatted.value = formatted
-          console.warn('Prism highlighting not available')
-        }
-      } catch (error_) {
-        console.error('Error highlighting JSON:', error_)
-        smEdcAssetsJsonFormatted.value = smEdcAssetsJson.value || ''
-      }
-    },
-    { deep: true },
-  )
-
-  function preprocessListItem (item: any): any {
-    return {
-      ...item,
-      idLower: item?.id?.toLowerCase() || '',
-      idShortLower: item?.idShort?.toLowerCase() || '',
-      nameLower: nameToDisplay(item).toLowerCase(),
-      descLower: descriptionToDisplay(item).toLowerCase(),
-    }
-  }
-
-  function applyCurrentFilter (): void {
-    const trimmedSearch = aasSearchValue.value.trim().toLowerCase()
-    const filteredItems = trimmedSearch === ''
-      ? allLoadedAas.value
-      : allLoadedAas.value.filter(
-        aasOrAasDescriptor =>
-          aasOrAasDescriptor.idLower.includes(trimmedSearch)
-          || aasOrAasDescriptor.idShortLower.includes(trimmedSearch)
-          || aasOrAasDescriptor.nameLower.includes(trimmedSearch)
-          || aasOrAasDescriptor.descLower.includes(trimmedSearch),
-      )
-
-    const pinnedSelectedItem = createPinnedSelectedItem()
-    if (pinnedSelectedItem) {
-      aasList.value = [
-        pinnedSelectedItem,
-        ...filteredItems.filter(item => item?.id !== pinnedSelectedItem.id),
-      ]
-      return
-    }
-
-    aasList.value = filteredItems
-  }
-
-  function createPinnedSelectedItem (): any | undefined {
-    if (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0 || !selectedAAS.value.id) {
-      return undefined
-    }
-
-    const selectedId = selectedAAS.value.id
-    const selectedLoadedItem = allLoadedAas.value.find(item => item?.id === selectedId)
-    if (selectedLoadedItem) {
-      return selectedLoadedItem
-    }
-
-    const aasPathFromQuery = typeof route.query.aas === 'string' ? route.query.aas : ''
-    const selectedPath = selectedAAS.value.path || aasPathFromQuery
-    return preprocessListItem({
-      ...selectedAAS.value,
-      path: selectedPath,
-    })
-  }
-
-  function resetAASListState (enablePagination = true): void {
-    aasList.value = []
-    allLoadedAas.value = []
-    aasLoadedIds.value.clear()
-    resetPaginationStateInternal(enablePagination)
-    aasSearchValue.value = ''
-  }
-
-  // Function to get the AAS Data from the Registry Server
   async function initialize (): Promise<void> {
-    resetAASListState(true)
-    await initializePagination(scrollToSelectedAAS)
+    listLoading.value = true
 
-    aasWasSelected()
-  }
+    const policies = await queryAssets()
 
-  async function aasWasSelected (): Promise<void> {
-    const aas = await fetchAndDispatchAasById(selectedAAS.value.id)
-
-    aasEdcAsset.value = createEdcAsset(aas, null)
-
-    fetchAasSmListById(aas.id).then((submodels: Array<any>) => {
-      const submodelsSorted = submodels.toSorted((smA: any, smB: any) => {
-        // Sort SMs with respect to displayed title and version
-        return smTitleToDisplay(smA) + '|' + smVersionToDisplay(smA)
-          > smTitleToDisplay(smB) + '|' + smVersionToDisplay(smB)
+    if (policies && Array.isArray(policies) && policies.length > 0) {
+      const policiesSorted = policies.toSorted((assetA: any, assetB: any) => {
+        // Sort Policies with respect to id
+        return assetA['@id']
+          > assetB['@id']
           ? 1
           : -1
       })
 
-      submodelList.value = [...submodelsSorted]
-    })
+      assetList.value = [...policiesSorted]
+      assetListUnfiltered.value = [...policiesSorted]
 
-    selectedSmIds.value = []
-  }
-
-  function filterAasList (value: string | null): void {
-    aasSearchValue.value = value?.trim() ?? ''
-    applyCurrentFilter()
-    scrollToSelectedAAS()
-  }
-
-  function selectAAS (aas: any): void {
-    if (aasListLoading.value) {
-      navigationStore.dispatchSnackbar({
-        status: true,
-        timeout: 4000,
-        color: 'error',
-        btnColor: 'buttonText',
-        text: 'Please wait for the current Request to finish.',
-      })
-      return
+      scrollToSelectedAsset()
     }
-    if (aasIsSelected(aas)) {
-      // Deselect AAS: remove aas and path url query parameter
-      const query = structuredClone(route.query)
-      if (Object.hasOwn(query, 'aas')) delete query.aas
-      if (Object.hasOwn(query, 'path')) delete query.path
 
-      router.push({ query: query })
+    listLoading.value = false
+  }
+
+  async function onAssetsCreated (): Promise<void> {
+    // Reload the asset list
+    await initialize()
+  }
+
+  function openDeleteDialog (asset: any): void {
+    deleteAssetDialog.value = true
+    assetToDelete.value = asset
+  }
+
+  async function onAssetDeleted (): Promise<void> {
+    // Reload the asset list
+    selectedAsset.value = {}
+    await initialize()
+  }
+
+  function filterAssetList (value: string): void {
+    if (!value || value.trim() === '') {
+      assetList.value = assetListUnfiltered.value
     } else {
-      const query = structuredClone(route.query)
-      query.aas = aas.path
-      if (Object.hasOwn(query, 'path')) delete query.path
-
-      router.push({ query: query })
-
-      // if (scrollToAas) scrollToSelectedAAS();
+      // Filter list of SMs (cf. AASList.vue)
+      const assetListFiltered = assetListUnfiltered.value.filter(
+        (asset: any) =>
+          asset['@id'].toLowerCase().includes(value.toLowerCase()),
+      )
+      assetList.value = assetListFiltered
     }
-    aasWasSelected()
+    scrollToSelectedAsset()
   }
 
-  function selectAllSMs (): void {
-    selectedSmIds.value = []
-    for (const sm of submodelList.value) {
-      selectedSmIds.value = [...selectedSmIds.value, sm.id]
+  function selectAsset (asset: any): void {
+    if (isSelected(asset)) {
+      selectedAsset.value = {}
+    } else {
+      selectedAsset.value = asset
+
+      if (!selectedAsset.value || Object.keys(selectedAsset.value).length === 0) {
+        scrollToSelectedAsset()
+      }
     }
   }
 
-  function deselectAllSMs (): void {
-    selectedSmIds.value = []
-  }
-
-  function aasIsSelected (aasOrAasDescriptor: any): boolean {
+  function isSelected (asset: any): boolean {
     if (
-      !selectedAAS.value
-      || Object.keys(selectedAAS.value).length === 0
-      || !selectedAAS.value.id
-      || !aasOrAasDescriptor
-      || Object.keys(aasOrAasDescriptor).length === 0
-      || !aasOrAasDescriptor.id
+      !selectedAsset.value
+      || Object.keys(selectedAsset.value).length === 0
+      || !selectedAsset.value['@id']
+      || !asset
+      || Object.keys(asset).length === 0
+      || !asset['@id']
     ) {
       return false
     }
-    return selectedAAS.value.id === aasOrAasDescriptor.id
+    return selectedAsset.value['@id'] === asset['@id']
   }
 
-  function smIsSelected (smOrSmDescriptor: any): boolean {
-    if (
-      !smOrSmDescriptor
-      || Object.keys(smOrSmDescriptor).length === 0
-      || !smOrSmDescriptor.id
-    ) {
-      return false
-    }
-    return selectedSmIds.value.includes(smOrSmDescriptor.id)
-  }
-
-  // Function to scroll to the selected AAS
-  function scrollToSelectedAAS (): void {
+  function scrollToSelectedAsset (): void {
     // Find the index of the selected item
-    const index = aasList.value.findIndex((aasOrAasDescriptor: any) => aasIsSelected(aasOrAasDescriptor))
+    const index = assetList.value.findIndex((sm: any) => isSelected(sm))
 
     if (index !== -1) {
       const intervalId = setInterval(() => {
@@ -838,63 +457,6 @@
     }
   }
 
-  function createEdcAsset (aas: any, sm: any): any {
-    let edcAsset = {} as any
-
-    if (!aas || Object.keys(aas).length === 0) return edcAsset
-
-    const identifiable = (aas && Object.keys(aas).length > 0 && sm && Object.keys(sm).length > 0) ? sm : aas
-
-    edcAsset = { '@id': identifiable.id, 'properties': {
-      name: (aas && Object.keys(aas).length > 0 && sm && Object.keys(sm).length > 0) ? nameToDisplay(aas, 'en') + ' - SM ' + nameToDisplay(sm, 'en') : nameToDisplay(identifiable, 'en'),
-      description: descriptionToDisplay(identifiable, 'en'),
-    }, 'dataAddress': {
-      type: 'HttpData',
-      baseUrl: identifiable.path,
-    } }
-
-    return edcAsset
-  }
-
-  function smTitleToDisplay (sm: any): string {
-    // If there is a specified displayName, use it
-    if (sm?.displayName && Array.isArray(sm?.displayName) && sm?.displayName.length > 0) return nameToDisplay(sm)
-
-    // Use name of SMT specification
-    const smt = smts.find((smt: any) => sm?.semanticId?.keys[0]?.value === smt.semanticId)
-    if (smt) return smt.name
-
-    return nameToDisplay(sm)
-  }
-
-  function smVersionToDisplay (sm: any): string {
-    // If there are administrative information use it
-    if (sm.administration?.version)
-      return sm.administration.version + (sm.administration.revision ? '.' + sm.administration.revision : '')
-
-    // Use version of SMT specification
-    if (sm?.semanticId?.keys[0]?.value) {
-      const smt = smts.find((smt: any) => sm.semanticId.keys[0].value === smt.semanticId)
-      if (smt) return smt.version
-    }
-
-    // Use version of from semanticId
-    if (sm?.semanticId?.keys[0]?.value) {
-      const semanticId = sm.semanticId.keys[0].value
-
-      if (semanticId.startsWith('http') && extractVersionRevision(semanticId)) {
-        return (
-          extractVersionRevision(semanticId).version
-          + (extractVersionRevision(semanticId).revision
-            ? '.' + extractVersionRevision(semanticId).revision
-            : '')
-        )
-      }
-    }
-
-    return ''
-  }
-
 </script>
 
 <style scoped>
@@ -908,14 +470,12 @@
 
     .json-content {
         margin: 0;
-        padding: 16px;
+        padding: 0 20px 0 20px;
         word-wrap: normal;
         font-size: 14px;
         line-height: 21px;
         flex-grow: 0;
         overflow: auto;
-        min-height: 42px;
-        max-height: 600px;
         background-color: #f5f5f5;
     }
 
