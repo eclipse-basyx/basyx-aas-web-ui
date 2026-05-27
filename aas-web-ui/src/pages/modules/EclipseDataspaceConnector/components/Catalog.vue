@@ -322,7 +322,7 @@
 
   // Composables
   const {
-    queryCatalogue,
+    queryCatalog,
     initiateContractNegotiation,
     getContractNegotiation,
     getContractNegotiationState,
@@ -444,7 +444,7 @@
         counterPartyAddress: selectedBusinessPartner.value.dsp,
         protocol: 'dataspace-protocol-http',
       }
-      const catalog = await queryCatalogue(catalogRequest)
+      const catalog = await queryCatalog(catalogRequest)
 
       if (catalog && catalog['dcat:dataset']) {
         const datasets = Array.isArray(catalog['dcat:dataset'])

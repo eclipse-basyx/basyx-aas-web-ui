@@ -37,11 +37,11 @@ export default {
       },
     },
     {
-      path: 'catalogue',
-      name: 'Catalogue',
-      component: () => import('@/pages/modules/EclipseDataspaceConnector/components/Catalogue.vue'),
+      path: 'catalog',
+      name: 'Catalog',
+      component: () => import('@/pages/modules/EclipseDataspaceConnector/components/Catalog.vue'),
       meta: {
-        title: 'Catalogue',
+        title: 'Catalog',
         icon: 'mdi-list-box-outline',
       },
     },

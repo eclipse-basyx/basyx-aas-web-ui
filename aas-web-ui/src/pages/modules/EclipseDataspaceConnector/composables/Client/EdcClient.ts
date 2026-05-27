@@ -726,7 +726,7 @@ export function useEdcClient () {
    * @param endpoint Optional custom endpoint. If not provided, uses configured controlplane management endpoint
    * @returns Catalog object, or null if query fails
    */
-  async function queryCatalogue (catalogRequest: CatalogRequest, endpoint?: string): Promise<Catalog | null> {
+  async function queryCatalog (catalogRequest: CatalogRequest, endpoint?: string): Promise<Catalog | null> {
     const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
     if (baseUrl === '' || !catalogRequest) {
       return null
@@ -1037,7 +1037,7 @@ export function useEdcClient () {
     createContractDefinition,
     updateContractDefinition,
     deleteContractDefinition,
-    queryCatalogue,
+    queryCatalog,
     initiateContractNegotiation,
     getContractNegotiation,
     getContractNegotiationState,

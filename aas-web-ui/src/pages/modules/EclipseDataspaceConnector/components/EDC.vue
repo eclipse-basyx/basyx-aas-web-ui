@@ -236,11 +236,11 @@
       route: { path: '/modules/eclipsedataspaceconnector/asset' },
     },
     {
-      title: 'Catalogue',
-      description: 'Browse catalogue from Business Partners',
+      title: 'Catalog',
+      description: 'Browse catalog from Business Partners',
       icon: 'mdi-list-box-outline',
       color: 'orange',
-      route: { path: '/modules/eclipsedataspaceconnector/catalogue' },
+      route: { path: '/modules/eclipsedataspaceconnector/catalog' },
     },
     {
       title: 'Configuration',
