@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="createContractDialog" height="90%" :width="800">
+  <v-dialog v-model="createContractDialog" max-height="90%" :width="800">
     <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">
       <v-card-title class="bg-cardHeader">
         Create Contract
@@ -18,13 +18,14 @@
                 v-model="placeholderValues[placeholder.label]"
                 :class="index > 0 ? 'mt-2': ''"
                 dense
+                :hide-details="placeholder.hint == ''"
                 :hint="placeholder.hint"
                 :item-title="getEdcAssetDisplayName"
                 item-value="@id"
                 :items="availableAssets"
                 :label="placeholder.label"
                 :loading="assetsLoading"
-                persistent-hint
+                :persistent-hint="placeholder.hint !== ''"
                 required
                 variant="outlined"
               />
@@ -34,13 +35,14 @@
                 v-model="placeholderValues[placeholder.label]"
                 :class="index > 0 ? 'mt-2': ''"
                 dense
+                :hide-details="placeholder.hint == ''"
                 :hint="placeholder.hint"
                 :item-title="getEdcPolicyDisplayName"
                 item-value="@id"
                 :items="availablePolicies"
                 :label="placeholder.label"
                 :loading="policiesLoading"
-                persistent-hint
+                :persistent-hint="placeholder.hint !== ''"
                 required
                 variant="outlined"
               />
@@ -50,9 +52,10 @@
                 v-model="placeholderValues[placeholder.label]"
                 :class="index > 0 ? 'mt-2': ''"
                 dense
+                :hide-details="placeholder.hint == ''"
                 :hint="placeholder.hint"
                 :label="placeholder.label"
-                persistent-hint
+                :persistent-hint="placeholder.hint !== ''"
                 :placeholder="placeholder.placeholder"
                 required
                 variant="outlined"
@@ -60,15 +63,15 @@
             </template>
           </div>
 
-          <!-- Template Preview -->
-          <div class="mt-4">
+          <!-- Contract Preview -->
+          <div>
             <p class="text-caption text-medium-emphasis font-weight-bold mb-2">
-              Template Preview:
+              Contract Preview:
             </p>
 
             <pre class="json-content bg-surface rounded border overflow-x-auto" style="max-height: 500px; overflow-y: auto">
-            <code v-html="previewJsonFormatted" />
-          </pre>
+              <code v-html="previewJsonFormatted" />
+            </pre>
           </div>
         </v-form>
       </v-card-text>

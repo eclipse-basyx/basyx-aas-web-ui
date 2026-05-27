@@ -45,24 +45,25 @@
               v-model="placeholderValues[placeholder.label]"
               :class="index > 0 ? 'mt-2': ''"
               dense
+              :hide-details="placeholder.hint == ''"
               :hint="placeholder.hint"
               :label="placeholder.label"
-              persistent-hint
+              :persistent-hint="placeholder.hint !== ''"
               :placeholder="placeholder.placeholder"
               required
               variant="outlined"
             />
           </div>
 
-          <!-- Template Preview -->
-          <div v-if="selectedTemplate" class="mt-4">
+          <!-- Policy Preview -->
+          <div v-if="selectedTemplate">
             <p class="text-caption text-medium-emphasis font-weight-bold mb-2">
-              Template Preview:
+              Policy Preview:
             </p>
 
             <pre class="json-content bg-surface rounded border overflow-x-auto" style="max-height: 500px; overflow-y: auto">
-            <code v-html="previewJsonFormatted" />
-          </pre>
+              <code v-html="previewJsonFormatted" />
+            </pre>
           </div>
         </v-form>
       </v-card-text>

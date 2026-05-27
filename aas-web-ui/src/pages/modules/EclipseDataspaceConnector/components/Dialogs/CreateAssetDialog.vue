@@ -1,13 +1,13 @@
 <template>
-  <v-dialog v-model="createAssetDialog" :width="800">
-    <v-sheet border rounded="lg">
+  <v-dialog v-model="createAssetDialog" max-height="90%" :width="800">
+    <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">
       <v-card-title class="bg-cardHeader">
         Create Asset
       </v-card-title>
 
       <v-divider />
 
-      <v-card-text class="overflow-y-auto" style="max-height: calc(100vh - 296px)">
+      <v-card-text class="flex-grow-1 overflow-y-auto">
         <v-form ref="form" class="d-flex flex-column gap-4">
           <!-- Dynamic Placeholder Fields -->
           <div class="d-flex flex-column gap-3">
@@ -17,24 +17,25 @@
               v-model="placeholderValues[placeholder.label]"
               :class="index > 0 ? 'mt-2': ''"
               dense
+              :hide-details="placeholder.hint == ''"
               :hint="placeholder.hint"
               :label="placeholder.label"
-              persistent-hint
+              :persistent-hint="placeholder.hint !== ''"
               :placeholder="placeholder.placeholder"
               required
               variant="outlined"
             />
           </div>
 
-          <!-- Template Preview -->
-          <div class="mt-4">
+          <!-- EDC Asset Preview -->
+          <div>
             <p class="text-caption text-medium-emphasis font-weight-bold mb-2">
-              Template Preview:
+              EDC Asset Preview:
             </p>
 
             <pre class="json-content bg-surface rounded border overflow-x-auto" style="max-height: 500px; overflow-y: auto">
-            <code v-html="previewJsonFormatted" />
-          </pre>
+              <code v-html="previewJsonFormatted" />
+            </pre>
           </div>
         </v-form>
       </v-card-text>
