@@ -1,13 +1,13 @@
 <template>
-  <v-dialog v-model="createPolicyDialog" :width="800">
-    <v-sheet border rounded="lg">
+  <v-dialog v-model="createPolicyDialog" max-height="90%" :width="800">
+    <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">
       <v-card-title class="bg-cardHeader">
         Create Policy
       </v-card-title>
 
       <v-divider />
 
-      <v-card-text class="overflow-y-auto" style="max-height: calc(100vh - 296px)">
+      <v-card-text class="flex-grow-1 overflow-y-auto">
         <v-form ref="form" class="d-flex flex-column gap-4">
           <!-- Template Selection -->
           <v-select

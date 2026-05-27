@@ -24,16 +24,16 @@
                 />
               </template>
 
-              <span>Reload Policy List</span>
+              <span>Reload Contract List</span>
             </v-tooltip>
 
             <v-text-field
               clearable
               density="compact"
               hide-details
-              label="Search for Policy ..."
+              label="Search for Contract ..."
               variant="outlined"
-              @update:model-value="filterPolicyList"
+              @update:model-value="filterContractList"
             />
 
             <!-- Menu -->
@@ -49,18 +49,18 @@
 
               <v-sheet border>
                 <v-list class="py-0" density="compact">
-                  <!-- Create Policy Dialog -->
+                  <!-- Create Contract Dialog -->
                   <v-tooltip location="bottom" open-delay="600">
                     <template #activator="{ props }">
-                      <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="createPolicyDialog = true">
+                      <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="createContractDialog = true">
                         <template #prepend>
                           <v-icon size="small">mdi-plus</v-icon>
                         </template>
-                        Create Policy
+                        Create Contract
                       </v-list-item>
                     </template>
 
-                    <span>Create a new Policy</span>
+                    <span>Create a new Contract</span>
                   </v-tooltip>
 
                 </v-list>
@@ -79,9 +79,9 @@
 
             <template v-else>
 
-              <!-- List of Policys -->
+              <!-- List of Contracts -->
               <v-list
-                v-if="policyList.length > 0"
+                v-if="contractList.length > 0"
                 class="pa-0"
                 density="compact"
                 nav
@@ -90,11 +90,11 @@
                   ref="virtualScrollRef"
                   class="bg-card mb-2"
                   :item-height="56"
-                  :items="policyList"
+                  :items="contractList"
                 >
 
                   <template #default="{ item }">
-                    <!-- Single Policy -->
+                    <!-- Single Contract -->
                     <v-list-item
                       :key="item['@id']"
                       :active="isSelected(item)"
@@ -111,17 +111,20 @@
                             : '#ABABAB !important',
                       }"
                       variant="tonal"
-                      @click="selectPolicy(item)"
+                      @click="selectContract(item)"
                     >
                       <template #prepend>
-                        <v-chip
-                          class="mr-2"
+                        <v-btn
+                          class="ml-n1"
                           color="primary"
-                          label
+                          icon="mdi-file-sign"
+                          rel="noopener noreferrer"
                           size="x-small"
-                        >
-                          POLICY
-                        </v-chip>
+                          style="z-index: 9000"
+                          target="_blank"
+                          variant="plain"
+                          @click.stop
+                        />
                       </template>
 
                       <v-tooltip
@@ -129,7 +132,7 @@
                         open-delay="600"
                         transition="slide-x-transition"
                       >
-                        <!-- Policy ID -->
+                        <!-- Contract ID -->
                         <div v-if="item['@id']" class="text-body-small">
                           <span class="font-weight-bold">{{ 'ID: ' }}</span>
                           {{ item['@id'] }}
@@ -141,12 +144,6 @@
                           {{ new Date(item['createdAt']).toISOString() }}
                         </div>
 
-                        <!-- Type -->
-                        <div v-if="getPolicyType(item)" class="text-body-small mt-1">
-                          <span class="font-weight-bold">{{ 'Type: ' }}</span>
-                          {{ getPolicyType(item) + ' Policy' }}
-                        </div>
-
                       </v-tooltip>
 
                       <v-list-item-title class="text-primary">
@@ -154,7 +151,7 @@
                       </v-list-item-title>
 
                       <v-list-item-subtitle class="text-listItemText font-italic">
-                        {{ getPolicyType(item) }}
+                        <!-- {{ getContractType(item) }} -->
                       </v-list-item-subtitle>
 
                       <template #append>
@@ -187,27 +184,27 @@
                           <v-sheet border>
                             <v-list class="py-0" dense density="compact" slim>
 
-                              <!-- Delete Policy -->
+                              <!-- Delete Contract -->
                               <v-list-item @click="openDeleteDialog(item)">
                                 <template #prepend>
                                   <v-icon size="x-small">mdi-delete</v-icon>
                                 </template>
 
-                                <v-list-item-subtitle>Delete Policy</v-list-item-subtitle>
+                                <v-list-item-subtitle>Delete Contract</v-list-item-subtitle>
                               </v-list-item>
 
                               <v-divider />
-                              <!-- Copy Policy ID to clipboard -->
+                              <!-- Copy Contract ID to clipboard -->
                               <v-list-item
                                 @click.stop="
-                                  copyToClipboard(item['@id'], 'PolicyId', copyIconAsRef)
+                                  copyToClipboard(item['@id'], 'ContractId', copyIconAsRef)
                                 "
                               >
                                 <template #prepend>
                                   <v-icon size="x-small">{{ copyIcon }} </v-icon>
                                 </template>
 
-                                <v-list-item-subtitle>Copy Policy ID</v-list-item-subtitle>
+                                <v-list-item-subtitle>Copy Contract ID</v-list-item-subtitle>
                               </v-list-item>
                             </v-list>
                           </v-sheet>
@@ -224,7 +221,7 @@
               <v-empty-state
                 v-else
                 class="text-divider"
-                title="No existing Policys"
+                title="No existing Contracts"
               />
             </template>
           </v-card-text>
@@ -234,12 +231,12 @@
       <v-main>
         <v-container fluid>
 
-          <div v-if="!selectedPolicy || Object.keys(selectedPolicy).length === 0" class="d-flex align-center justify-center" :style="{'height': fullHeightMain}">
+          <div v-if="!selectedContract || Object.keys(selectedContract).length === 0" class="d-flex align-center justify-center" :style="{'height': fullHeightMain}">
 
             <v-empty-state
               icon="mdi-gesture-tap"
-              text="Please select a Policy to view"
-              title="Select Policy"
+              text="Please select a Contract to view"
+              title="Select Contract"
             >
               <template #media>
                 <v-icon size="64" />
@@ -248,7 +245,7 @@
           </div>
 
           <pre v-else class="json-content bg-surface rounded border" :style="{'height': fullHeightMain}">
-            <code v-html="selectedPolicyJsonFormatted" />
+            <code v-html="selectedContractJsonFormatted" />
           </pre>
 
         </v-container>
@@ -256,17 +253,17 @@
     </v-layout>
   </v-container>
 
-  <CreatePolicyDialog v-model="createPolicyDialog" @policy-created="onPolicyCreated" />
-  <DeletePolicyDialog v-model="deletePolicyDialog" :policy="policyToDelete" @policy-deleted="onPolicyDeleted" />
+  <CreateContractDialog v-model="createContractDialog" @contract-created="onContractCreated" />
+  <DeleteContractDialog v-model="deleteContractDialog" :contract="contractToDelete" @contract-deleted="onContractDeleted" />
 </template>
 
 <script lang="ts" setup>
   import * as Prism from 'prismjs'
   import { useTheme } from 'vuetify'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
-  import CreatePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/CreatePolicyDialog.vue'
-  import DeletePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/DeletePolicyDialog.vue'
-  import { type PolicyDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
+  import CreateContractDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/CreateContractDialog.vue'
+  import DeleteContractDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/DeleteContractDialog.vue'
+  import { type ContractDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { formatJSON } from '@/utils/JsonUtils'
   import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
@@ -280,7 +277,7 @@
   const edcStore = useEdcStore()
 
   // Composables
-  const { queryPolicyDefinitions } = useEdcClient()
+  const { queryContractDefinitions } = useEdcClient()
   const { copyToClipboard } = useClipboardUtil()
 
   // Vuetify
@@ -289,16 +286,16 @@
   // Data
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Full height - header - tabs - footer - border
   const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
-  const policyList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Policy data
-  const policyListUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Policy data before filtering
+  const contractList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Contract data
+  const contractListUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Contract data before filtering
   const listLoading = ref(false) // Variable to store if the AAS List is loading
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null) // Reference to the Virtual Scroll Component
-  const selectedPolicy = ref({} as any)
-  const selectedPolicyJson = ref<string>('')
-  const selectedPolicyJsonFormatted = ref<string>('')
-  const createPolicyDialog = ref(false) // Variable to store if the Create Policy Dialog should be shown
-  const deletePolicyDialog = ref(false) // Variable to store if the Delete Policy Dialog should be shown
-  const policyToDelete = ref({}) // Variable to store the policy to be deleted
+  const selectedContract = ref({} as any)
+  const selectedContractJson = ref<string>('')
+  const selectedContractJsonFormatted = ref<string>('')
+  const createContractDialog = ref(false) // Variable to store if the Create Contract Dialog should be shown
+  const deleteContractDialog = ref(false) // Variable to store if the Delete Contract Dialog should be shown
+  const contractToDelete = ref({}) // Variable to store the contract to be deleted
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
 
   // Computed properties
@@ -315,22 +312,22 @@
   )
 
   watch(
-    () => selectedPolicy.value,
+    () => selectedContract.value,
     () => {
       try {
-        selectedPolicyJson.value = JSON.stringify(selectedPolicy.value)
-        const formatted = formatJSON(selectedPolicyJson.value)
+        selectedContractJson.value = JSON.stringify(selectedContract.value)
+        const formatted = formatJSON(selectedContractJson.value)
 
         // Apply syntax highlighting using Prism
         if (Prism && Prism.highlight) {
-          selectedPolicyJsonFormatted.value = Prism.highlight(formatted, getPrismJsonLanguage(), 'json')
+          selectedContractJsonFormatted.value = Prism.highlight(formatted, getPrismJsonLanguage(), 'json')
         } else {
-          selectedPolicyJsonFormatted.value = formatted
+          selectedContractJsonFormatted.value = formatted
           console.warn('Prism highlighting not available')
         }
       } catch (error_) {
         console.error('Error highlighting JSON:', error_)
-        selectedPolicyJsonFormatted.value = selectedPolicyJson.value || ''
+        selectedContractJsonFormatted.value = selectedContractJson.value || ''
       }
     },
     { deep: true },
@@ -341,98 +338,98 @@
   })
 
   onActivated(() => {
-    scrollToSelectedPolicy()
+    scrollToSelectedContract()
   })
 
   async function initialize (): Promise<void> {
     listLoading.value = true
 
-    const policies = await queryPolicyDefinitions()
+    const policies = await queryContractDefinitions()
 
     if (policies && Array.isArray(policies) && policies.length > 0) {
-      const policiesSorted = policies.toSorted((policyA: any, policyB: any) => {
+      const policiesSorted = policies.toSorted((contractA: any, contractB: any) => {
         // Sort Policies with respect to id
-        return policyA['@id']
-          > policyB['@id']
+        return contractA['@id']
+          > contractB['@id']
           ? 1
           : -1
       })
 
-      policyList.value = [...policiesSorted]
-      policyListUnfiltered.value = [...policiesSorted]
+      contractList.value = [...policiesSorted]
+      contractListUnfiltered.value = [...policiesSorted]
 
-      scrollToSelectedPolicy()
+      scrollToSelectedContract()
     }
 
     listLoading.value = false
   }
 
-  async function onPolicyCreated (policyId: string): Promise<void> {
-    // Reload the policy list
+  async function onContractCreated (contractId: string): Promise<void> {
+    // Reload the contract list
     await initialize()
 
-    // Find and select the newly created policy
-    const newPolicy = policyList.value.find((policy: any) => policy['@id'] === policyId)
-    if (newPolicy) {
-      selectedPolicy.value = newPolicy
-      scrollToSelectedPolicy()
+    // Find and select the newly created contract
+    const newContract = contractList.value.find((contract: any) => contract['@id'] === contractId)
+    if (newContract) {
+      selectedContract.value = newContract
+      scrollToSelectedContract()
     }
   }
 
-  function openDeleteDialog (policy: any): void {
-    deletePolicyDialog.value = true
-    policyToDelete.value = policy
+  function openDeleteDialog (contract: any): void {
+    deleteContractDialog.value = true
+    contractToDelete.value = contract
   }
 
-  async function onPolicyDeleted (): Promise<void> {
-    // Reload the policy list
-    selectedPolicy.value = {}
+  async function onContractDeleted (): Promise<void> {
+    // Reload the contract list
+    selectedContract.value = {}
     await initialize()
   }
 
-  function filterPolicyList (value: string): void {
+  function filterContractList (value: string): void {
     if (!value || value.trim() === '') {
-      policyList.value = policyListUnfiltered.value
+      contractList.value = contractListUnfiltered.value
     } else {
       // Filter list of SMs (cf. AASList.vue)
-      const policyListFiltered = policyListUnfiltered.value.filter(
-        (policy: any) =>
-          policy['@id'].toLowerCase().includes(value.toLowerCase()),
+      const contractListFiltered = contractListUnfiltered.value.filter(
+        (contract: any) =>
+          contract['@id'].toLowerCase().includes(value.toLowerCase()),
       )
-      policyList.value = policyListFiltered
+      contractList.value = contractListFiltered
     }
-    scrollToSelectedPolicy()
+    scrollToSelectedContract()
   }
 
-  function selectPolicy (policy: any): void {
-    if (isSelected(policy)) {
-      selectedPolicy.value = {}
+  function selectContract (contract: any): void {
+    if (isSelected(contract)) {
+      selectedContract.value = {}
     } else {
-      selectedPolicy.value = policy
+      selectedContract.value = contract
 
-      if (!selectedPolicy.value || Object.keys(selectedPolicy.value).length === 0) {
-        scrollToSelectedPolicy()
+      if (!selectedContract.value || Object.keys(selectedContract.value).length === 0) {
+        scrollToSelectedContract()
       }
     }
   }
 
-  function isSelected (policy: any): boolean {
+  function isSelected (contract: any): boolean {
     if (
-      !selectedPolicy.value
-      || Object.keys(selectedPolicy.value).length === 0
-      || !selectedPolicy.value['@id']
-      || !policy
-      || Object.keys(policy).length === 0
-      || !policy['@id']
+      !selectedContract.value
+      || Object.keys(selectedContract.value).length === 0
+      || !selectedContract.value['@id']
+      || !contract
+      || Object.keys(contract).length === 0
+      || !contract['@id']
     ) {
       return false
     }
-    return selectedPolicy.value['@id'] === policy['@id']
+    return selectedContract.value['@id'] === contract['@id']
   }
 
-  function scrollToSelectedPolicy (): void {
+  function scrollToSelectedContract (): void {
     // Find the index of the selected item
-    const index = policyList.value.findIndex((sm: any) => isSelected(sm))
+    const index = contractList.value.findIndex((sm: any) => isSelected(sm))
 
     if (index !== -1) {
       const intervalId = setInterval(() => {
@@ -446,26 +443,6 @@
         }
       }, 50)
     }
-  }
-
-  function getPolicyType (policyDefinition: PolicyDefinition): string {
-    if (!policyDefinition?.policy
-      || !policyDefinition?.policy['odrl:permission']
-      || !policyDefinition?.policy['odrl:permission']['odrl:action']
-      || !policyDefinition?.policy['odrl:permission']['odrl:action']['@id']
-    )
-      return ''
-
-    switch (policyDefinition?.policy['odrl:permission']['odrl:action']['@id']) {
-      case 'odrl:use': {
-        return 'Usage'
-      }
-      case 'odrl:access': {
-        return 'Access'
-      }
-    }
-
-    return ''
   }
 
 </script>
