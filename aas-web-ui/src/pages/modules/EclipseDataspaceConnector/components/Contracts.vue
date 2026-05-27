@@ -263,7 +263,7 @@
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import CreateContractDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/CreateContractDialog.vue'
   import DeleteContractDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/DeleteContractDialog.vue'
-  import { type ContractDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
+  import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { formatJSON } from '@/utils/JsonUtils'
   import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
