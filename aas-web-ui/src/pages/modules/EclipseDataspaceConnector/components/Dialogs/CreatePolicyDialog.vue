@@ -93,9 +93,9 @@
 <script lang="ts" setup>
   import * as Prism from 'prismjs'
   import { type PolicyDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
-  import AccessBpnPolicy from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_bpn_policy.json'
-  import AccessPolicy from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_policy.json'
-  import UsagePolicy from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy.json'
+  import AccessBpnPolicy from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_bpn_policy___tractus-x_edc_v0.9.json'
+  import AccessPolicy from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_policy___tractus-x_edc_v0.9.json'
+  import UsagePolicy from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy___tractus-x_edc_v0.9.json'
   import { formatJSON } from '@/utils/JsonUtils'
   import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
 
