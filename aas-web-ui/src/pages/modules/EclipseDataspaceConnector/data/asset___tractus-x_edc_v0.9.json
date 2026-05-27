@@ -9,7 +9,7 @@
   },
   "@id": "{{EDC Asset ID|Enter a unique EDC asset identifier, e.g. a UUID|This will be the @id of your EDC asset}}",
   "properties": {
-    "id": "{{Asset ID}}",
+    "id": "{{Asset ID|Enter the unique identifier of the asset|}}",
     "description": "{{Asset Description|Enter a description of the asset|}}"
   },
   "privateProperties": {},
