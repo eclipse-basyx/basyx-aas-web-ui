@@ -19,6 +19,10 @@ export function useEdcClient () {
   const defaultAssetsRequestPath = '/assets/request'
   const defaultContractDefinitionsPath = '/contractdefinitions'
   const defaultContractDefinitionsRequestPath = '/policydefinitions/request'
+  const defaultCatalogRequestPath = '/catalog/request'
+  const defaultContractNegotiationsPath = '/contractnegotiations'
+  const defaultTransferProcessesPath = '/transferprocesses'
+  const defaultEdrsPath = '/edrs'
 
   const defaultControlplaneEndpointHealthPath = '/check/health'
   const defaultControlplaneEndpointLivenessPath = '/check/liveness'
@@ -715,6 +719,302 @@ export function useEdcClient () {
     return false
   }
 
+  /**
+   * Queries the catalog from a specific connector.
+   * Based on OpenAPI spec: POST /v3/catalog/request
+   * @param catalogRequest The catalog request object containing counterPartyAddress and protocol
+   * @param endpoint Optional custom endpoint. If not provided, uses configured controlplane management endpoint
+   * @returns Catalog object, or null if query fails
+   */
+  async function queryCatalogue (catalogRequest: CatalogRequest, endpoint?: string): Promise<Catalog | null> {
+    const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
+    if (baseUrl === '' || !catalogRequest) {
+      return null
+    }
+
+    const path = `${baseUrl}${defaultCatalogRequestPath}`
+    const context = 'querying EDC catalog'
+    const disableMessage = false
+    const headers = new Headers()
+    headers.append('Content-Type', 'application/json')
+    const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
+    headers.append(authKey, authValue)
+
+    // Ensure @context and @type are set if not provided
+    const bodyObj = {
+      '@context': {
+        '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
+      },
+      '@type': 'CatalogRequest',
+      ...catalogRequest,
+    }
+    const body = JSON.stringify(bodyObj)
+
+    try {
+      const response = await postRequest(path, body, headers, context, disableMessage)
+      if (response.success && response.data) {
+        return response.data as Catalog
+      }
+    } catch (error) {
+      console.warn('Query catalog failed:', error)
+    }
+
+    return null
+  }
+
+  /**
+   * Initiates a contract negotiation for a given offer and with the given counter part.
+   * Based on OpenAPI spec: POST /v3/contractnegotiations
+   * @param contractRequest The contract request object containing counterPartyAddress, protocol and policy (offer)
+   * @param endpoint Optional custom endpoint. If not provided, uses configured controlplane management endpoint
+   * @returns IdResponse with the negotiation id and createdAt timestamp, or null if initiation fails
+   */
+  async function initiateContractNegotiation (contractRequest: ContractRequest, endpoint?: string): Promise<IdResponse | null> {
+    const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
+    if (baseUrl === '' || !contractRequest) {
+      return null
+    }
+
+    const path = `${baseUrl}${defaultContractNegotiationsPath}`
+    const context = 'initiating EDC contract negotiation'
+    const disableMessage = false
+    const headers = new Headers()
+    headers.append('Content-Type', 'application/json')
+    const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
+    headers.append(authKey, authValue)
+
+    // Ensure @context and @type are set if not provided
+    const bodyObj = {
+      '@context': [
+        'http://www.w3.org/ns/odrl.jsonld', {
+          '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
+        },
+      ],
+      '@type': 'ContractRequest',
+      ...contractRequest,
+    }
+    const body = JSON.stringify(bodyObj)
+
+    try {
+      const response = await postRequest(path, body, headers, context, disableMessage)
+      if (response.success && response.data) {
+        return response.data as IdResponse
+      }
+    } catch (error) {
+      console.warn('Initiate contract negotiation failed:', error)
+    }
+
+    return null
+  }
+
+  /**
+   * Retrieves a contract negotiation by its ID.
+   * Based on OpenAPI spec: GET /v3/contractnegotiations/{id}
+   * @param negotiationId The ID of the contract negotiation to retrieve
+   * @param endpoint Optional custom endpoint. If not provided, uses configured controlplane management endpoint
+   * @returns ContractNegotiation object, or null if retrieval fails
+   */
+  async function getContractNegotiation (negotiationId: string, endpoint?: string): Promise<ContractNegotiation | null> {
+    const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
+    if (baseUrl === '' || !negotiationId) {
+      return null
+    }
+
+    const path = `${baseUrl}${defaultContractNegotiationsPath}/${negotiationId}`
+    const context = 'retrieving EDC contract negotiation'
+    const disableMessage = false
+    const headers = new Headers()
+    headers.append('Content-Type', 'application/json')
+    const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
+    headers.append(authKey, authValue)
+
+    try {
+      const response = await getRequest(path, context, disableMessage, headers)
+      if (response.success && response.data) {
+        return response.data as ContractNegotiation
+      }
+    } catch (error) {
+      console.warn('Get contract negotiation failed:', error)
+    }
+
+    return null
+  }
+
+  /**
+   * Gets the state of a contract negotiation with the given ID.
+   * Based on OpenAPI spec: GET /v3/contractnegotiations/{id}/state
+   * @param negotiationId The ID of the contract negotiation to retrieve the state for
+   * @param endpoint Optional custom endpoint. If not provided, uses configured controlplane management endpoint
+   * @returns NegotiationState object, or null if retrieval fails
+   */
+  async function getContractNegotiationState (negotiationId: string, endpoint?: string): Promise<NegotiationState | null> {
+    const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
+    if (baseUrl === '' || !negotiationId) {
+      return null
+    }
+
+    const path = `${baseUrl}${defaultContractNegotiationsPath}/${negotiationId}/state`
+    const context = 'retrieving EDC contract negotiation state'
+    const disableMessage = false
+    const headers = new Headers()
+    headers.append('Content-Type', 'application/json')
+    const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
+    headers.append(authKey, authValue)
+
+    try {
+      const response = await getRequest(path, context, disableMessage, headers)
+      if (response.success && response.data) {
+        return response.data as NegotiationState
+      }
+    } catch (error) {
+      console.warn('Get contract negotiation state failed:', error)
+    }
+
+    return null
+  }
+
+  /**
+   * Initiates a data transfer with the given parameters.
+   * Based on OpenAPI spec: POST /v3/transferprocesses
+   * @param transferRequest The transfer request object containing contractId, counterPartyAddress, protocol and transferType
+   * @param endpoint Optional custom endpoint. If not provided, uses configured controlplane management endpoint
+   * @returns IdResponse with the transfer process id and createdAt timestamp, or null if initiation fails
+   */
+  async function initiateTransferProcess (transferRequest: TransferRequest, endpoint?: string): Promise<IdResponse | null> {
+    const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
+    if (baseUrl === '' || !transferRequest) {
+      return null
+    }
+
+    const path = `${baseUrl}${defaultTransferProcessesPath}`
+    const context = 'initiating EDC transfer process'
+    const disableMessage = false
+    const headers = new Headers()
+    headers.append('Content-Type', 'application/json')
+    const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
+    headers.append(authKey, authValue)
+
+    // Ensure @context and @type are set if not provided
+    const bodyObj = {
+      '@context': {
+        '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
+      },
+      '@type': 'TransferRequest',
+      ...transferRequest,
+    }
+    const body = JSON.stringify(bodyObj)
+
+    try {
+      const response = await postRequest(path, body, headers, context, disableMessage)
+      if (response.success && response.data) {
+        return response.data as IdResponse
+      }
+    } catch (error) {
+      console.warn('Initiate transfer process failed:', error)
+    }
+
+    return null
+  }
+
+  /**
+   * Retrieves a transfer process by its ID.
+   * Based on OpenAPI spec: GET /v3/transferprocesses/{id}
+   * @param transferProcessId The ID of the transfer process to retrieve
+   * @param endpoint Optional custom endpoint. If not provided, uses configured controlplane management endpoint
+   * @returns TransferProcess object, or null if retrieval fails
+   */
+  async function getTransferProcess (transferProcessId: string, endpoint?: string): Promise<TransferProcess | null> {
+    const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
+    if (baseUrl === '' || !transferProcessId) {
+      return null
+    }
+
+    const path = `${baseUrl}${defaultTransferProcessesPath}/${transferProcessId}`
+    const context = 'retrieving EDC transfer process'
+    const disableMessage = false
+    const headers = new Headers()
+    headers.append('Content-Type', 'application/json')
+    const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
+    headers.append(authKey, authValue)
+
+    try {
+      const response = await getRequest(path, context, disableMessage, headers)
+      if (response.success && response.data) {
+        return response.data as TransferProcess
+      }
+    } catch (error) {
+      console.warn('Get transfer process failed:', error)
+    }
+
+    return null
+  }
+
+  /**
+   * Gets the state of a transfer process with the given ID.
+   * Based on OpenAPI spec: GET /v3/transferprocesses/{id}/state
+   * @param transferProcessId The ID of the transfer process to retrieve the state for
+   * @param endpoint Optional custom endpoint. If not provided, uses configured controlplane management endpoint
+   * @returns TransferState object, or null if retrieval fails
+   */
+  async function getTransferProcessState (transferProcessId: string, endpoint?: string): Promise<TransferState | null> {
+    const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
+    if (baseUrl === '' || !transferProcessId) {
+      return null
+    }
+
+    const path = `${baseUrl}${defaultTransferProcessesPath}/${transferProcessId}/state`
+    const context = 'retrieving EDC transfer process state'
+    const disableMessage = false
+    const headers = new Headers()
+    headers.append('Content-Type', 'application/json')
+    const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
+    headers.append(authKey, authValue)
+
+    try {
+      const response = await getRequest(path, context, disableMessage, headers)
+      if (response.success && response.data) {
+        return response.data as TransferState
+      }
+    } catch (error) {
+      console.warn('Get transfer process state failed:', error)
+    }
+
+    return null
+  }
+
+  /**
+   * Gets the EDR data address with the given transfer process ID.
+   * Based on OpenAPI spec: GET /v3/edrs/{transferProcessId}/dataaddress
+   * @param transferProcessId The ID of the transfer process to retrieve the data address for
+   * @param endpoint Optional custom endpoint. If not provided, uses configured controlplane management endpoint
+   * @returns AssetDataAddress object, or null if retrieval fails
+   */
+  async function getEdrDataAddress (transferProcessId: string, endpoint?: string): Promise<AssetDataAddress | null> {
+    const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
+    if (baseUrl === '' || !transferProcessId) {
+      return null
+    }
+
+    const path = `${baseUrl}${defaultEdrsPath}/${transferProcessId}/dataaddress`
+    const context = 'retrieving EDC EDR data address'
+    const disableMessage = false
+    const headers = new Headers()
+    headers.append('Content-Type', 'application/json')
+    const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
+    headers.append(authKey, authValue)
+
+    try {
+      const response = await getRequest(path, context, disableMessage, headers)
+      if (response.success && response.data) {
+        return response.data as AssetDataAddress
+      }
+    } catch (error) {
+      console.warn('Get EDR data address failed:', error)
+    }
+
+    return null
+  }
+
   return {
     resolveEdcControlplaneEndpoint,
     resolveEdcControlplaneMgmtEndpoint,
@@ -737,6 +1037,14 @@ export function useEdcClient () {
     createContractDefinition,
     updateContractDefinition,
     deleteContractDefinition,
+    queryCatalogue,
+    initiateContractNegotiation,
+    getContractNegotiation,
+    getContractNegotiationState,
+    initiateTransferProcess,
+    getTransferProcess,
+    getTransferProcessState,
+    getEdrDataAddress,
   }
 }
 
@@ -862,4 +1170,101 @@ export interface ContractDefinition {
   'contractPolicyId': string
   'assetsSelector': Criterion[]
   'createdAt'?: number
+}
+
+export interface CatalogRequest {
+  '@context'?: Record<string, unknown>
+  '@type'?: string
+  'counterPartyAddress': string
+  'counterPartyId'?: string
+  'protocol': string
+  'querySpec'?: QuerySpec
+}
+
+export interface Catalog {
+  '@id'?: string
+  '@type'?: string
+  'dcat:dataset'?: any | any[]
+  'dcat:service'?: any | any[]
+  'dspace:participantId'?: string
+  '@context'?: Record<string, unknown>
+}
+
+export interface Offer {
+  '@id': string
+  '@type'?: string
+  'assigner': string
+  'target': string
+  'permission'?: any[]
+  'prohibition'?: any[]
+  'obligation'?: any[]
+}
+
+export interface ContractRequest {
+  '@context'?: Record<string, unknown>
+  '@type'?: string
+  'counterPartyAddress': string
+  'protocol': string
+  'policy': Offer
+  'callbackAddresses'?: any[]
+}
+
+export interface CallbackAddress {
+  '@type'?: string
+  'authCodeId'?: string
+  'authKey'?: string
+  'events'?: string[]
+  'transactional'?: boolean
+  'uri'?: string
+}
+
+export interface ContractNegotiation {
+  '@id'?: string
+  '@type'?: string
+  'callbackAddresses'?: CallbackAddress[]
+  'contractAgreementId'?: string
+  'counterPartyAddress'?: string
+  'counterPartyId'?: string
+  'errorDetail'?: string
+  'protocol'?: string
+  'state'?: string
+  'type'?: 'CONSUMER' | 'PROVIDER'
+}
+
+export interface TransferRequest {
+  '@context'?: Record<string, unknown>
+  '@type'?: string
+  'assetId'?: string
+  'callbackAddresses'?: CallbackAddress[]
+  'contractId': string
+  'counterPartyAddress': string
+  'dataDestination'?: AssetDataAddress
+  'privateProperties'?: AssetProperties
+  'protocol': string
+  'transferType'?: string
+}
+
+export interface TransferProcess {
+  '@id'?: string
+  '@type'?: string
+  'callbackAddresses'?: CallbackAddress[]
+  'contractAgreementId'?: string
+  'counterPartyAddress'?: string
+  'counterPartyId'?: string
+  'dataDestination'?: AssetDataAddress
+  'errorDetail'?: string
+  'privateProperties'?: AssetProperties
+  'protocol'?: string
+  'state'?: string
+  'type'?: 'CONSUMER' | 'PROVIDER'
+}
+
+export interface NegotiationState {
+  '@type'?: string
+  'state': string
+}
+
+export interface TransferState {
+  '@type'?: string
+  'state': string
 }
