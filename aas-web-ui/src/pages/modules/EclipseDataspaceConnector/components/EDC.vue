@@ -1,201 +1,211 @@
 <template>
-  <v-container class="pa-6" fluid style="max-width: 1200px; margin: 0 auto">
+  <v-container
+    class="pa-4"
+    fluid
+    style="overflow-y: auto;"
+    :style="{ 'height': fullHeight}"
+  >
 
-    <!-- Hero Section -->
-    <v-row align="center" class="mb-8 mt-4" justify="center">
-      <v-col class="text-center" cols="12">
-        <div class="d-flex align-center justify-center mb-4">
-          <v-avatar
-            class="mr-4"
-            color="primary"
-            rounded="lg"
-            size="64"
-          >
-            <v-icon color="white" icon="custom:edcIcon" size="36" />
-          </v-avatar>
+    <v-container
+      class="pa-0"
+    >
 
-          <div class="text-left">
-            <h1 class="text-h4 font-weight-bold mt-2 mb-n2">Eclipse Dataspace Connector</h1>
+      <v-row align="center" class="" justify="center">
+        <v-col class="text-center" cols="12">
+          <div class="d-flex align-center justify-center mb-4">
+            <v-avatar
+              class="mr-4"
+              color="primary"
+              rounded="lg"
+              size="64"
+            >
+              <v-icon color="white" icon="custom:edcIcon" size="36" />
+            </v-avatar>
 
-            <p class="text-body-1 text-medium-emphasis mt-n2">
-              Secure, sovereign data exchange across organizational boundaries
-            </p>
+            <div class="text-left">
+              <h1 class="text-h4 font-weight-bold mt-2 mb-n2">Eclipse Dataspace Connector</h1>
+
+              <p class="text-body-1 text-medium-emphasis mt-n2">
+                Secure, sovereign data exchange across organizational boundaries
+              </p>
+            </div>
           </div>
-        </div>
 
-        <v-chip-group class="justify-center mt-2">
-          <v-chip
-            v-for="tag in tags"
-            :key="tag.label"
-            :color="tag.color"
-            :prepend-icon="tag.icon"
-            size="small"
-            variant="tonal"
-          >
-            {{ tag.label }}
-          </v-chip>
-        </v-chip-group>
-      </v-col>
-    </v-row>
-
-    <!-- Quick Actions -->
-    <v-row class="mb-6" justify="center">
-      <v-col
-        v-for="action in quickActions"
-        :key="action.title"
-        cols="12"
-        md="3"
-        sm="6"
-      >
-        <v-card
-          border
-          class="pa-4 text-center fill-height"
-          hover
-          :prepend-icon="action.icon"
-          rounded="lg"
-          :to="action.route"
-          variant="tonal"
-        >
-          <template #prepend>
-            <v-icon class="mx-n4 my-n3" :color="action.color" size="32">{{ action.icon }}</v-icon>
-          </template>
-
-          <v-card-title class="text-body-1 font-weight-semibold pt-3 pb-1 px-0">
-            {{ action.title }}
-          </v-card-title>
-
-          <v-card-subtitle class="text-caption px-0 text-wrap">
-            {{ action.description }}
-          </v-card-subtitle>
-        </v-card>
-      </v-col>
-    </v-row>
-
-    <v-divider class="mb-6" />
-
-    <!-- Status & Info Section -->
-    <v-row class="mb-4">
-      <v-col cols="12" md="6">
-        <!-- Configuration Status Card -->
-        <v-card border class="fill-height d-flex flex-column" rounded="lg">
-          <v-card-title class="d-flex align-center pt-4 px-4 pb-2">
-            <v-icon class="mr-2" color="primary" size="20">mdi-cog-sync</v-icon>
-            Configuration Status
-          </v-card-title>
-
-          <v-divider />
-
-          <v-card-text class="pa-4 flex-grow-1">
-            <v-list class="pa-0" lines="two">
-              <v-list-item
-                v-for="statusItem in configurationStatus"
-                :key="statusItem.label"
-                border="md"
-                class="rounded-lg mb-2 px-3"
-                :subtitle="statusItem.value === ' ' ? '': (statusItem.value || 'Not configured')"
-                :title="statusItem.label"
-                variant="flat"
-              >
-                <template #prepend>
-                  <v-icon :color="statusItem.value ? 'success' : 'grey'" size="20">
-                    {{ statusItem.value ? 'mdi-check-circle' : 'mdi-circle-outline' }}
-                  </v-icon>
-                </template>
-              </v-list-item>
-            </v-list>
-
-          </v-card-text>
-
-          <v-card-actions>
-            <v-btn
-              block
-              color="gray"
-              prepend-icon="mdi-cog"
-              :to="configRoute"
+          <v-chip-group class="justify-center mt-2">
+            <v-chip
+              v-for="tag in tags"
+              :key="tag.label"
+              :color="tag.color"
+              :prepend-icon="tag.icon"
+              size="small"
               variant="tonal"
             >
-              Configure Connector
-            </v-btn>
-          </v-card-actions>
+              {{ tag.label }}
+            </v-chip>
+          </v-chip-group>
+        </v-col>
+      </v-row>
 
-        </v-card>
-      </v-col>
+      <!-- Quick Actions -->
+      <v-row class="mb-6" justify="center">
+        <v-col
+          v-for="action in quickActions"
+          :key="action.title"
+          cols="12"
+          md="3"
+          sm="6"
+        >
+          <v-card
+            border
+            class="pa-4 text-center fill-height"
+            hover
+            :prepend-icon="action.icon"
+            rounded="lg"
+            :to="action.route"
+            variant="tonal"
+          >
+            <template #prepend>
+              <v-icon class="mx-n4 my-n3" :color="action.color" size="32">{{ action.icon }}</v-icon>
+            </template>
 
-      <v-col cols="12" md="6">
-        <!-- About / Description Card -->
-        <v-card border class="fill-height" rounded="lg">
-          <v-card-title class="d-flex align-center pt-4 px-4 pb-2">
-            <v-icon class="mr-2" color="primary" size="20">mdi-information-outline</v-icon>
-            About this Module
-          </v-card-title>
+            <v-card-title class="text-body-1 font-weight-semibold pt-3 pb-1 px-0">
+              {{ action.title }}
+            </v-card-title>
 
-          <v-divider />
+            <v-card-subtitle class="text-caption px-0 text-wrap">
+              {{ action.description }}
+            </v-card-subtitle>
+          </v-card>
+        </v-col>
+      </v-row>
 
-          <v-card-text class="pa-4">
-            <p class="text-body-2 mb-4">
-              The <strong>Eclipse Dataspace Connector (EDC)</strong> enables secure and sovereign data exchange across
-              organizational boundaries. This module integrates the EDC Tractus-X implementation to manage and
-              negotiate data contracts directly within the AAS Web UI.
-            </p>
+      <v-divider class="mb-6" />
 
-            <v-list class="pa-0" density="compact">
-              <v-list-item
-                v-for="feature in features"
-                :key="feature"
-                class="px-0"
-                density="compact"
+      <!-- Status & Info Section -->
+      <v-row class="">
+        <v-col cols="12" md="6">
+          <!-- Configuration Status Card -->
+          <v-card border class="fill-height d-flex flex-column" rounded="lg">
+            <v-card-title class="d-flex align-center pt-4 px-4 pb-2">
+              <v-icon class="mr-2" color="primary" size="20">mdi-cog-sync</v-icon>
+              Configuration Status
+            </v-card-title>
+
+            <v-divider />
+
+            <v-card-text class="pa-4 flex-grow-1">
+              <v-list class="pa-0" lines="two">
+                <v-list-item
+                  v-for="statusItem in configurationStatus"
+                  :key="statusItem.label"
+                  border="md"
+                  class="rounded-lg mb-2 px-3"
+                  :subtitle="statusItem.value === ' ' ? '': (statusItem.value || 'Not configured')"
+                  :title="statusItem.label"
+                  variant="flat"
+                >
+                  <template #prepend>
+                    <v-icon :color="statusItem.value ? 'success' : 'grey'" size="20">
+                      {{ statusItem.value ? 'mdi-check-circle' : 'mdi-circle-outline' }}
+                    </v-icon>
+                  </template>
+                </v-list-item>
+              </v-list>
+
+            </v-card-text>
+
+            <v-card-actions>
+              <v-btn
+                block
+                color="gray"
+                prepend-icon="mdi-cog"
+                :to="configRoute"
+                variant="tonal"
               >
-                <template #prepend>
-                  <v-icon color="success" size="16">mdi-check</v-icon>
-                </template>
+                Configure Connector
+              </v-btn>
+            </v-card-actions>
 
-                <v-list-item-title class="text-body-2">{{ feature }}</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
+          </v-card>
+        </v-col>
 
-    <!-- Getting Started Banner -->
-    <v-row v-if="!edcStore.getControlplaneEndpoint || !edcStore.getControlplaneMgmtEndpoint" class="mt-2 mb-2">
-      <v-col cols="12">
-        <v-alert
-          border="start"
-          color="primary"
-          icon="mdi-rocket-launch-outline"
-          rounded="lg"
-          variant="tonal"
-        >
-          <v-alert-title class="font-weight-bold mb-1">Getting Started</v-alert-title>
+        <v-col cols="12" md="6">
+          <!-- About / Description Card -->
+          <v-card border class="fill-height" rounded="lg">
+            <v-card-title class="d-flex align-center pt-4 px-4 pb-2">
+              <v-icon class="mr-2" color="primary" size="20">mdi-information-outline</v-icon>
+              About this Module
+            </v-card-title>
 
-          <span class="text-body-2">
-            Start by configuring your EDC Controlplane endpoint and security settings in the
-            <strong>Configuration</strong> tab. Once connected, explore available
-            <strong>Assets</strong> and manage access <strong>Policies</strong>.
-          </span>
-        </v-alert>
-      </v-col>
-    </v-row>
+            <v-divider />
 
-    <!-- CORS Note Banner -->
-    <v-row class="mt-2">
-      <v-col cols="12">
-        <v-alert
-          border="start"
-          color="warning"
-          icon="mdi-exclamation-thick"
-          rounded="lg"
-          variant="tonal"
-        >
-          <v-alert-title class="font-weight-bold mb-1">CORS Configuration</v-alert-title>
+            <v-card-text class="pa-4">
+              <p class="text-body-2 mb-4">
+                The <strong>Eclipse Dataspace Connector (EDC)</strong> enables secure and sovereign data exchange across
+                organizational boundaries. This module integrates the EDC Tractus-X implementation to manage and
+                negotiate data contracts directly within the AAS Web UI.
+              </p>
 
-          <span class="text-body-2">
-            Please make sure that <strong>CORS</strong> is configured correctly.
-          </span>
-        </v-alert>
-      </v-col>
-    </v-row>
+              <v-list class="pa-0" density="compact">
+                <v-list-item
+                  v-for="feature in features"
+                  :key="feature"
+                  class="px-0"
+                  density="compact"
+                >
+                  <template #prepend>
+                    <v-icon color="success" size="16">mdi-check</v-icon>
+                  </template>
+
+                  <v-list-item-title class="text-body-2">{{ feature }}</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <!-- Getting Started Banner -->
+      <v-row v-if="!edcStore.getControlplaneEndpoint || !edcStore.getControlplaneMgmtEndpoint" class="">
+        <v-col cols="12">
+          <v-alert
+            border="start"
+            color="primary"
+            icon="mdi-rocket-launch-outline"
+            rounded="lg"
+            variant="tonal"
+          >
+            <v-alert-title class="font-weight-bold mb-1">Getting Started</v-alert-title>
+
+            <span class="text-body-2">
+              Start by configuring your EDC Controlplane endpoint and security settings in the
+              <strong>Configuration</strong> tab. Once connected, explore available
+              <strong>Assets</strong> and manage access <strong>Policies</strong>.
+            </span>
+          </v-alert>
+        </v-col>
+      </v-row>
+
+      <!-- CORS Note Banner -->
+      <v-row class="">
+        <v-col cols="12">
+          <v-alert
+            border="start"
+            color="warning"
+            icon="mdi-exclamation-thick"
+            rounded="lg"
+            variant="tonal"
+          >
+            <v-alert-title class="font-weight-bold mb-1">CORS Configuration</v-alert-title>
+
+            <span class="text-body-2">
+              Please make sure that <strong>CORS</strong> is configured correctly.
+            </span>
+          </v-alert>
+        </v-col>
+      </v-row>
+
+    </v-container>
 
   </v-container>
 </template>
@@ -208,10 +218,12 @@
   // Store
   const edcStore = useEdcStore()
 
+  // Data
+  const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Full height - header - tabs - footer - border
+
   // Navigation routes (relative to the module base)
   const configRoute = { path: '/modules/eclipsedataspaceconnector/configuration' }
 
-  // Tags displayed in the hero section
   const tags = [
     { label: 'Tractus-X', icon: 'custom:tractusxIcon', color: 'primary' },
     { label: 'IDS Dataspace Protocol', icon: 'mdi-shield-lock-outline', color: 'secondary' },
@@ -261,8 +273,8 @@
   // Configuration status derived from store
   const configurationStatus = computed(() => [
     {
-      label: edcStore.getEdcType + (selectedEdcMeta.value?.dataspace_protocol?.version ? ' (DSP ' + selectedEdcMeta.value?.dataspace_protocol?.version + ')' : ''),
-      value: ' ',
+      label: edcStore.getEdcType + (selectedEdcMeta.value?.dataspace_protocol?.version ? ' (DSP ' + selectedEdcMeta.value?.dataspace_protocol?.version + ')' : 'EDC Type'),
+      value: edcStore.getEdcType ? ' ' : '',
     },
     {
       label: 'Controlplane Endpoint',
