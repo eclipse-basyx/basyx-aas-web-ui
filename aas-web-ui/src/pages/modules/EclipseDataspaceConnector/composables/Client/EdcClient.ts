@@ -18,7 +18,7 @@ export function useEdcClient () {
   const defaultAssetsPath = '/assets'
   const defaultAssetsRequestPath = '/assets/request'
   const defaultContractDefinitionsPath = '/contractdefinitions'
-  const defaultContractDefinitionsRequestPath = '/policydefinitions/request'
+  const defaultContractDefinitionsRequestPath = '/contractdefinitions/request'
   const defaultCatalogRequestPath = '/catalog/request'
   const defaultContractNegotiationsPath = '/contractnegotiations'
   const defaultTransferProcessesPath = '/transferprocesses'
