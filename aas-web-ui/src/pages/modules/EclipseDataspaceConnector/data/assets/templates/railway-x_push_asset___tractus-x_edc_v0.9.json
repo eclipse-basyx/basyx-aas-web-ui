@@ -15,7 +15,12 @@
   },
   "privateProperties": {},
   "dataAddress": {
+    "@type": "DataAddress",
     "type": "HttpData",
-    "baseUrl": "{{Push Endpoint|Enter the push endpoint|}}"
+    "baseUrl": "{{Push Endpoint|Enter the push endpoint|}}",
+    "proxyBody": "true",
+    "proxyMethod": "true",
+    "proxyPath": "true",
+    "proxyQueryParams": "true"
   }
 }
