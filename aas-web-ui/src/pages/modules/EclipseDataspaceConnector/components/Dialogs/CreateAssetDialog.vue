@@ -76,7 +76,7 @@
 
   const emit = defineEmits<{
     (event: 'update:modelValue', value: boolean): void
-    (event: 'asset-created', assetId: string): void
+    (event: 'assets-created', assetId: string): void
   }>()
 
   // Composables
@@ -186,7 +186,7 @@
       // Create the asset via EDC API
       const response = await createAssetInEdc(finalAsset)
       if (response.success && response.data) {
-        emit('asset-created', response.data['@id'])
+        emit('assets-created', response.data['@id'])
         createAssetDialog.value = false
         resetForm()
       } else {
