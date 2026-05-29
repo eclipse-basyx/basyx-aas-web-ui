@@ -985,14 +985,16 @@
 
     const identifiable = (aas && Object.keys(aas).length > 0 && sm && Object.keys(sm).length > 0) ? sm : aas
 
-    const assetDescription = (aas && Object.keys(aas).length > 0 && sm && Object.keys(sm).length > 0)
+    const assetDisplayName = (aas && Object.keys(aas).length > 0 && sm && Object.keys(sm).length > 0)
       ? nameToDisplay(aas, 'en') + ' - SM ' + nameToDisplay(sm, 'en')
-      : descriptionToDisplay(identifiable, 'en')
+      : nameToDisplay(identifiable, 'en')
+    const assetDescription = descriptionToDisplay(identifiable, 'en')
     const assetEndpoint = identifiable.path
 
     let templateStr = JSON.stringify(assetTemplate)
     templateStr = templateStr.replace(/\{\{EDC Asset ID(?:\|[^}]*)?\}\}/g, base64Encode(identifiable.id))
     templateStr = templateStr.replace(/\{\{Asset ID(?:\|[^}]*)?\}\}/g, identifiable.id)
+    templateStr = templateStr.replace(/\{\{Asset Display Name(?:\|[^}]*)?\}\}/g, assetDisplayName)
     templateStr = templateStr.replace(/\{\{Asset Description(?:\|[^}]*)?\}\}/g, assetDescription)
     templateStr = templateStr.replace(/\{\{Asset Endpoint(?:\|[^}]*)?\}\}/g, assetEndpoint)
 

@@ -242,7 +242,7 @@
   function getEdcAssetDisplayName (asset: any): string {
     if (!asset) return ''
     const props = asset.properties || {}
-    return props.name || props.description || asset['@id'] || ''
+    return props.displayName || props.name || props.description || asset['@id'] || ''
   }
 
   function getEdcPolicyDisplayName (policy: any): string {
