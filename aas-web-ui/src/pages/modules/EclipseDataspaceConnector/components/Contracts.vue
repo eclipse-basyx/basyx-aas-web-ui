@@ -344,19 +344,19 @@
   async function initialize (): Promise<void> {
     listLoading.value = true
 
-    const policies = await queryContractDefinitions()
+    const contracts = await queryContractDefinitions()
 
-    if (policies && Array.isArray(policies) && policies.length > 0) {
-      const policiesSorted = policies.toSorted((contractA: any, contractB: any) => {
-        // Sort Policies with respect to id
+    if (contracts && Array.isArray(contracts) && contracts.length > 0) {
+      const contractsSorted = contracts.toSorted((contractA: any, contractB: any) => {
+        // Sort contracts with respect to id
         return contractA['@id']
           > contractB['@id']
           ? 1
           : -1
       })
 
-      contractList.value = [...policiesSorted]
-      contractListUnfiltered.value = [...policiesSorted]
+      contractList.value = [...contractsSorted]
+      contractListUnfiltered.value = [...contractsSorted]
 
       scrollToSelectedContract()
     }
