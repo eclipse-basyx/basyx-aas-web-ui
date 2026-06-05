@@ -95,7 +95,7 @@
   }>()
 
   const emit = defineEmits<{
-    'update:modelValue': [value: boolean]
+    'update:model-value': [value: boolean]
   }>()
 
   const route = useRoute()
@@ -214,7 +214,7 @@
 
   const dialogModel = computed({
     get: () => props.modelValue,
-    set: (value: boolean) => emit('update:modelValue', value),
+    set: (value: boolean) => emit('update:model-value', value),
   })
 
   // Clear search when dialog is closed

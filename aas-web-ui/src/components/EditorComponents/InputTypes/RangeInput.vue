@@ -29,8 +29,8 @@
   }>()
 
   const emit = defineEmits<{
-    'update:minValue': [value: string | null]
-    'update:maxValue': [value: string | null]
+    'update:min-value': [value: string | null]
+    'update:max-value': [value: string | null]
   }>()
 
   const minValue = ref<string | null>(props.minValue)
@@ -38,17 +38,17 @@
 
   watch(minValue, newValue => {
     if (newValue === '') {
-      emit('update:minValue', null)
+      emit('update:min-value', null)
     } else {
-      emit('update:minValue', newValue)
+      emit('update:min-value', newValue)
     }
   })
 
   watch(maxValue, newValue => {
     if (newValue === '') {
-      emit('update:maxValue', null)
+      emit('update:max-value', null)
     } else {
-      emit('update:maxValue', newValue)
+      emit('update:max-value', newValue)
     }
   })
 

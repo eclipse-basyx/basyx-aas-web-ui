@@ -51,7 +51,7 @@
   }>()
 
   const emit = defineEmits<{
-    (e: 'update:formState', value: FormStateObject): void
+    (e: 'update:form-state', value: FormStateObject): void
   }>()
 
   const visibleElements = computed(() => {
@@ -59,7 +59,7 @@
   })
 
   function updateFieldValue (idShort: string, value: FormStateValue): void {
-    emit('update:formState', {
+    emit('update:form-state', {
       ...props.formState,
       [idShort]: value,
     })

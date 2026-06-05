@@ -96,8 +96,8 @@
   }>()
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: aasTypes.Resource | null): void
-    (event: 'update:fileThumbnail', value: File | undefined): void
+    (event: 'update:model-value', value: aasTypes.Resource | null): void
+    (event: 'update:file-thumbnail', value: File | undefined): void
   }>()
 
   // Composables
@@ -124,10 +124,10 @@
 
   watch(resourceValue, newValue => {
     if (toggle.value === 'none') {
-      emit('update:modelValue', null)
+      emit('update:model-value', null)
       return
     }
-    emit('update:modelValue', newValue)
+    emit('update:model-value', newValue)
     updateThumbnailPreview()
   })
 
@@ -135,7 +135,7 @@
     if (newValue === null) {
       return
     }
-    emit('update:fileThumbnail', newValue)
+    emit('update:file-thumbnail', newValue)
   })
 
   watch(
@@ -161,14 +161,14 @@
         case 'none': {
           resourceValue.value = null
           fileThumbnail.value = undefined
-          emit('update:fileThumbnail', undefined)
+          emit('update:file-thumbnail', undefined)
           thumbnailPreviewPath.value = ''
 
           break
         }
         case 'url': {
           fileThumbnail.value = undefined
-          emit('update:fileThumbnail', undefined)
+          emit('update:file-thumbnail', undefined)
           if (resourceValue.value === null) {
             resourceValue.value = new aasTypes.Resource('', '')
           }
@@ -178,7 +178,7 @@
         }
         case 'file': {
           resourceValue.value = null
-          emit('update:modelValue', null)
+          emit('update:model-value', null)
           thumbnailPreviewPath.value = ''
 
           break

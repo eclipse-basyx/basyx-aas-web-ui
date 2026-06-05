@@ -150,7 +150,7 @@
   }>()
 
   const emit = defineEmits<{
-    (e: 'update:modelValue', value: FormStateValue): void
+    (e: 'update:model-value', value: FormStateValue): void
   }>()
 
   const openPanel = ref<number[]>([0])
@@ -160,7 +160,7 @@
   })
 
   function onCollectionUpdate (value: FormStateObject): void {
-    emit('update:modelValue', value)
+    emit('update:model-value', value)
   }
 
   // helpers to check cardinality
@@ -183,13 +183,13 @@
     return Array.isArray(props.element.value) ? createInitialFormState(props.element.value) : {}
   }
   async function onAddCollection (): Promise<void> {
-    emit('update:modelValue', createCollectionInstance())
+    emit('update:model-value', createCollectionInstance())
     await nextTick()
     openPanel.value = [0]
   }
 
   function onRemoveCollection (): void {
-    emit('update:modelValue', null)
+    emit('update:model-value', null)
     openPanel.value = []
   }
   // rendering {0..*} collection items
@@ -197,7 +197,7 @@
     const newItem = createCollectionInstance()
     const updated = appendListItem(repeatableItems.value, newItem)
 
-    emit('update:modelValue', updated)
+    emit('update:model-value', updated)
 
     await nextTick()
     const newIndex = updated.length - 1
@@ -206,14 +206,14 @@
 
   function onRemoveRepeatableCollection (index: number): void {
     const updated = removeListItem(repeatableItems.value, index)
-    emit('update:modelValue', updated)
+    emit('update:model-value', updated)
 
     openPanel.value = removeAndReindexOpenPanels(openPanel.value, index)
   }
 
   function onUpdateRepeatableCollection (index: number, value: FormStateObject): void {
     const updated = updateListItem(repeatableItems.value, index, value)
-    emit('update:modelValue', updated)
+    emit('update:model-value', updated)
   }
 
   function getDisplayLabel (): string {

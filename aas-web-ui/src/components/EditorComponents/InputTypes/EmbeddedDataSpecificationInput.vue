@@ -343,7 +343,7 @@
   }>()
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: Array<aasTypes.EmbeddedDataSpecification> | null): void
+    (event: 'update:model-value', value: Array<aasTypes.EmbeddedDataSpecification> | null): void
   }>()
 
   const embeddedDataSpecificationsValue = ref<Array<aasTypes.EmbeddedDataSpecification> | null>(props.modelValue)
@@ -375,7 +375,7 @@
   watch(
     embeddedDataSpecificationsValue,
     newValue => {
-      emit('update:modelValue', newValue)
+      emit('update:model-value', newValue)
     },
     { deep: true },
   )

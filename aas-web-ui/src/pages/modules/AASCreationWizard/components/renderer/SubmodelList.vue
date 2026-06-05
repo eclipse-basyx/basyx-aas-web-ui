@@ -88,7 +88,7 @@
     }
   })
   const emit = defineEmits<{
-    (e: 'update:modelValue', value: FormStateObject[]): void
+    (e: 'update:model-value', value: FormStateObject[]): void
   }>()
 
   const openPanels = ref<number[]>([])
@@ -110,7 +110,7 @@
   function onAddItem (): void {
     const newItem = createSubmodelListItem(props.element)
     const updated = appendListItem(items.value, newItem)
-    emit('update:modelValue', updated)
+    emit('update:model-value', updated)
 
     const newIndex = updated.length - 1
     openPanels.value = addopenPanelIndex(openPanels.value, newIndex)
@@ -121,14 +121,14 @@
       return
     }
     const updated = removeListItem(items.value, index)
-    emit('update:modelValue', updated)
+    emit('update:model-value', updated)
 
     openPanels.value = removeAndReindexOpenPanels(openPanels.value, index)
   }
 
   function onUpdateItem (index: number, value: FormStateObject): void {
     const updated = updateListItem(items.value, index, value)
-    emit('update:modelValue', updated)
+    emit('update:model-value', updated)
   }
   function getDisplayLabel (): string {
     return formatRepeatedElementBaseLabel(props.element.idShort)

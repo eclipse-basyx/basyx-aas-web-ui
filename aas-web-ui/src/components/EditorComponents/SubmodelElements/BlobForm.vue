@@ -214,7 +214,7 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
   }
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: boolean): void
+    (event: 'update:model-value', value: boolean): void
   }>()
 
   watch(
@@ -230,7 +230,7 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
   watch(
     () => editBlobDialog.value,
     value => {
-      emit('update:modelValue', value)
+      emit('update:model-value', value)
     },
   )
 

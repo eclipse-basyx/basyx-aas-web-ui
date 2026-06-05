@@ -226,7 +226,7 @@
   }>()
 
   const emit = defineEmits<{
-    (e: 'update:modelValue', value: FormStateValue): void
+    (e: 'update:model-value', value: FormStateValue): void
   }>()
 
   const languageOptions = computed(() => {
@@ -283,19 +283,19 @@
   })
 
   function onPropertyInput (value: string | null): void {
-    emit('update:modelValue', value ?? '')
+    emit('update:model-value', value ?? '')
   }
 
   function onAddTranslation (): void {
-    emit('update:modelValue', addLangStringRow(multiLanguageValue.value))
+    emit('update:model-value', addLangStringRow(multiLanguageValue.value))
   }
 
   function onRemoveTranslation (index: number): void {
-    emit('update:modelValue', removeLangStringRow(multiLanguageValue.value, index))
+    emit('update:model-value', removeLangStringRow(multiLanguageValue.value, index))
   }
 
   function onLanguageChange (index: number, value: string | null): void {
-    emit('update:modelValue', updateLangStringLanguage(
+    emit('update:model-value', updateLangStringLanguage(
       multiLanguageValue.value,
       index,
       value ?? '',
@@ -303,16 +303,16 @@
   }
 
   function onTextChange (index: number, value: string | null): void {
-    emit('update:modelValue', updateLangStringText(multiLanguageValue.value, index, value ?? ''))
+    emit('update:model-value', updateLangStringText(multiLanguageValue.value, index, value ?? ''))
   }
 
   function onFileInput (value: File | File[] | null): void {
     if (Array.isArray(value)) {
-      emit('update:modelValue', value[0] ?? null)
+      emit('update:model-value', value[0] ?? null)
       return
     }
 
-    emit('update:modelValue', value ?? null)
+    emit('update:model-value', value ?? null)
   }
 
   const repeatableStringValue = computed<string[]>(() => {
@@ -320,15 +320,15 @@
   })
 
   function onAddPropertyRow (): void {
-    emit('update:modelValue', addStringRow(repeatableStringValue.value))
+    emit('update:model-value', addStringRow(repeatableStringValue.value))
   }
 
   function onRemovePropertyRow (index: number): void {
-    emit('update:modelValue', removeStringRow(repeatableStringValue.value, index))
+    emit('update:model-value', removeStringRow(repeatableStringValue.value, index))
   }
 
   function onRepeatablePropertyInput (index: number, value: string | null): void {
-    emit('update:modelValue', updateStringRow(repeatableStringValue.value, index, value ?? ''))
+    emit('update:model-value', updateStringRow(repeatableStringValue.value, index, value ?? ''))
   }
 
   function getDisplayLabel (): string {
@@ -337,19 +337,19 @@
       : formatLabel(props.element.idShort)
   }
   function onRangeMinInput (value: string | null): void {
-    emit('update:modelValue', {
+    emit('update:model-value', {
       ...rangeValue.value,
       min: value ?? '',
     })
   }
   function onRangeMaxInput (value: string | null): void {
-    emit('update:modelValue', {
+    emit('update:model-value', {
       ...rangeValue.value,
       max: value ?? '',
     })
   }
   function onBooleanInput (value: boolean | null): void {
-    emit('update:modelValue', value ? 'true' : 'false')
+    emit('update:model-value', value ? 'true' : 'false')
   }
   function langFilter (value: string, query: string): boolean {
     if (!query || query === '') {
