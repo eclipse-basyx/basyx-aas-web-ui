@@ -3,7 +3,7 @@
     max-width="460"
     :model-value="modelValue"
     persistent
-    @update:model-value="emit('update:modelValue', $event)"
+    @update:model-value="emit('update:model-value', $event)"
   >
     <v-card class="pa-5" rounded="lg">
       <div class="d-flex align-center ga-3 mb-4">
@@ -45,7 +45,7 @@
   }>()
 
   const emit = defineEmits<{
-    (e: 'update:modelValue', value: boolean): void
+    (e: 'update:model-value', value: boolean): void
     (e: 'confirm'): void
   }>()
 
@@ -64,7 +64,7 @@
   })
 
   function onConfirm (): void {
-    emit('update:modelValue', false)
+    emit('update:model-value', false)
     emit('confirm')
   }
 </script>

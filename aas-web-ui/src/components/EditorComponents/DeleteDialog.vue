@@ -64,7 +64,7 @@
   }>()
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: boolean): void
+    (event: 'update:model-value', value: boolean): void
   }>()
 
   const deleteDialog = ref(false) // Variable to store if the delete dialog is open
@@ -86,7 +86,7 @@
   watch(
     () => deleteDialog.value,
     value => {
-      emit('update:modelValue', value)
+      emit('update:model-value', value)
     },
   )
 

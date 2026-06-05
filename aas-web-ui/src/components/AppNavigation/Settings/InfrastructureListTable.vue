@@ -89,18 +89,18 @@
     'edit': [infrastructure: InfrastructureConfig]
     'delete': [infrastructure: InfrastructureConfig]
     'add': []
-    'update:defaultInfrastructureId': [id: string]
+    'update:default-infrastructure-id': [id: string]
   }>()
 
   // Local state
   const selectedDefault = computed({
     get: () => props.defaultInfrastructureId,
-    set: (value: string) => emit('update:defaultInfrastructureId', value),
+    set: (value: string) => emit('update:default-infrastructure-id', value),
   })
 
   function handleDefaultChange (newDefaultId: string | null): void {
     if (newDefaultId) {
-      emit('update:defaultInfrastructureId', newDefaultId)
+      emit('update:default-infrastructure-id', newDefaultId)
     }
   }
 </script>

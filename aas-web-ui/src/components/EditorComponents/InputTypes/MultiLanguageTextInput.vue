@@ -91,7 +91,7 @@
   const props = defineProps<PropsWithLabel | PropsWithoutLabel>()
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: ValueType<typeof props.type> | null): void
+    (event: 'update:model-value', value: ValueType<typeof props.type> | null): void
   }>()
 
   const langStringValue = ref<ValueType<typeof props.type> | null>(props.modelValue)
@@ -101,7 +101,7 @@
   })
 
   watch(langStringValue, newValue => {
-    emit('update:modelValue', newValue)
+    emit('update:model-value', newValue)
   })
 
   watch(

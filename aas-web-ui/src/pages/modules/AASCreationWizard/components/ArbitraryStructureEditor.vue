@@ -285,7 +285,7 @@
   })
 
   const emit = defineEmits<{
-    (e: 'update:modelValue', value: ArbitraryNode[]): void
+    (e: 'update:model-value', value: ArbitraryNode[]): void
   }>()
 
   const nodes = computed<ArbitraryNode[]>(() => props.modelValue)
@@ -340,16 +340,16 @@
       }
     }
 
-    emit('update:modelValue', [...nodes.value, newNode])
+    emit('update:model-value', [...nodes.value, newNode])
   }
 
   function removeNode (id: string): void {
-    emit('update:modelValue', nodes.value.filter(node => node.id !== id))
+    emit('update:model-value', nodes.value.filter(node => node.id !== id))
   }
 
   function updateNode (id: string, updater: (node: ArbitraryNode) => ArbitraryNode): void {
     emit(
-      'update:modelValue',
+      'update:model-value',
       nodes.value.map(node => (node.id === id ? updater(node) : node)),
     )
   }
