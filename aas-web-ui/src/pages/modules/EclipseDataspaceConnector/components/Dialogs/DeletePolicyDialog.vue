@@ -47,7 +47,7 @@
   }>()
 
   const emit = defineEmits<{
-    (event: 'update:modelValue' | 'policy-deleted', value: boolean): void
+    (event: 'update:model-value' | 'policy-deleted', value: boolean): void
   }>()
 
   // Composables
@@ -67,7 +67,7 @@
   watch(
     () => deletePolicyDialog.value,
     value => {
-      emit('update:modelValue', value)
+      emit('update:model-value', value)
     },
   )
 

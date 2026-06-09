@@ -47,7 +47,7 @@
   }>()
 
   const emit = defineEmits<{
-    (event: 'update:modelValue' | 'asset-deleted', value: boolean): void
+    (event: 'update:model-value' | 'asset-deleted', value: boolean): void
   }>()
 
   // Composables
@@ -67,7 +67,7 @@
   watch(
     () => deleteAssetDialog.value,
     value => {
-      emit('update:modelValue', value)
+      emit('update:model-value', value)
     },
   )
 

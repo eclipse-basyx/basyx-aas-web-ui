@@ -111,7 +111,7 @@
   }>()
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: boolean): void
+    (event: 'update:model-value', value: boolean): void
     (event: 'contract-created', contractId: string): void
   }>()
 
@@ -184,7 +184,7 @@
   watch(
     () => createContractDialog.value,
     value => {
-      emit('update:modelValue', value)
+      emit('update:model-value', value)
       if (value) {
         loadAssets()
         loadPolicies()

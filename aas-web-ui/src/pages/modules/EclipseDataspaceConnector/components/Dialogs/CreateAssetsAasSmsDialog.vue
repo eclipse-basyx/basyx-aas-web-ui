@@ -568,7 +568,7 @@
   }>()
 
   const emit = defineEmits<{
-    (event: 'update:modelValue' | 'assets-created', value: boolean): void
+    (event: 'update:model-value' | 'assets-created', value: boolean): void
   }>()
 
   // Vue Router
@@ -693,7 +693,7 @@
   watch(
     () => createAssetsDialog.value,
     value => {
-      emit('update:modelValue', value)
+      emit('update:model-value', value)
     },
   )
 

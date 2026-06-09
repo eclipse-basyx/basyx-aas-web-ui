@@ -106,7 +106,7 @@
   }>()
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: boolean): void
+    (event: 'update:model-value', value: boolean): void
     (event: 'policy-created', policyId: string): void
   }>()
 
@@ -208,7 +208,7 @@
   watch(
     () => createPolicyDialog.value,
     value => {
-      emit('update:modelValue', value)
+      emit('update:model-value', value)
     },
   )
 
