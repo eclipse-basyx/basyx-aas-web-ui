@@ -7,9 +7,9 @@
     "cx-policy": "https://w3id.org/catenax/policy/",
     "odrl": "http://www.w3.org/ns/odrl/2/"
   },
-  "@id": "{{EDC Push Asset ID|Enter a unique EDC push asset identifier, e.g. a UUID|This will be the @id of your EDC push asset}}",
+  "@id": "{{Push Asset ID|Enter a unique push asset identifier, e.g. a UUID|This will be the @id of your push asset}}",
   "properties": {
-    "id": "{{Asset ID|Enter the unique identifier of the asset|}}",
+    "id": "{{Push Asset ID|Enter a unique push asset identifier, e.g. a UUID|This will be the @id of your push asset}}",
     "name": "Data Receiving Endpoint",
     "description": "Allows other participants to push data to this endpoint"
   },
