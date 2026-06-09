@@ -1,5 +1,9 @@
 <template>
-  <v-dialog v-model="createAssetDialog" max-height="90%" :width="800">
+  <v-dialog
+    v-model="createAssetDialog"
+    height="90%"
+    width="800px"
+  >
     <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">
       <v-card-title class="bg-cardHeader">
         Create Asset

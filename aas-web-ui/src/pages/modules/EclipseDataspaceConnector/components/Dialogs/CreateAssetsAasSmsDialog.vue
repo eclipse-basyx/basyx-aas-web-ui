@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="createAssetsDialog" height="90%" style="width: 90%; max-width: 1440px">
+  <v-dialog v-model="createAssetsDialog" height="90%" style="max-width: 1440px" width="90%">
     <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">
       <v-card-title class="bg-cardHeader">
         Create Assets
@@ -993,7 +993,7 @@
 
     let templateStr = JSON.stringify(assetTemplate)
     templateStr = templateStr.replace(/\{\{EDC Asset ID(?:\|[^}]*)?\}\}/g, base64Encode(identifiable.id))
-    templateStr = templateStr.replace(/\{\{Asset ID(?:\|[^}]*)?\}\}/g, identifiable.id)
+    templateStr = templateStr.replace(/\{\{Asset ID(?:\|[^}]*)?\}\}/g, base64Encode(identifiable.id))
     templateStr = templateStr.replace(/\{\{Asset Display Name(?:\|[^}]*)?\}\}/g, assetDisplayName)
     templateStr = templateStr.replace(/\{\{Asset Description(?:\|[^}]*)?\}\}/g, assetDescription)
     templateStr = templateStr.replace(/\{\{Asset Endpoint(?:\|[^}]*)?\}\}/g, assetEndpoint)
