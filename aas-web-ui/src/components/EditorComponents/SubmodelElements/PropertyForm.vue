@@ -236,7 +236,7 @@
   }
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: boolean): void
+    (event: 'update:model-value', value: boolean): void
   }>()
 
   watch(
@@ -252,7 +252,7 @@
   watch(
     () => editPropertyDialog.value,
     value => {
-      emit('update:modelValue', value)
+      emit('update:model-value', value)
     },
   )
 

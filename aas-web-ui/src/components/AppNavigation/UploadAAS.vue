@@ -133,7 +133,7 @@
   }>()
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: boolean): void
+    (event: 'update:model-value', value: boolean): void
   }>()
 
   const uploadAASDialog = ref(false)
@@ -198,7 +198,7 @@
   watch(
     () => uploadAASDialog.value,
     value => {
-      emit('update:modelValue', value)
+      emit('update:model-value', value)
     },
   )
 

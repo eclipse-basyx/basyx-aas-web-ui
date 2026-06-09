@@ -100,13 +100,13 @@
   }>()
 
   const emit = defineEmits<{
-    'update:modelValue': [value: typeof props.modelValue]
+    'update:model-value': [value: typeof props.modelValue]
   }>()
 
   const formData = computed({
     get: () => props.modelValue,
     set: value => {
-      emit('update:modelValue', { ...value })
+      emit('update:model-value', { ...value })
     },
   })
 </script>

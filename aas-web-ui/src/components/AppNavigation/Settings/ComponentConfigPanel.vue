@@ -94,22 +94,22 @@
   // Emits
   const emit = defineEmits<{
     'test-connection': [componentKey: BaSyxComponentKey]
-    'update:componentUrl': [componentKey: BaSyxComponentKey, url: string]
-    'update:connectionStatus': [componentKey: BaSyxComponentKey, status: boolean | null]
-    'update:registryIntegration': [componentKey: BaSyxComponentKey, enabled: boolean]
-    'update:discoveryIntegration': [componentKey: BaSyxComponentKey, enabled: boolean]
+    'update:component-url': [componentKey: BaSyxComponentKey, url: string]
+    'update:connection-status': [componentKey: BaSyxComponentKey, status: boolean | null]
+    'update:registry-integration': [componentKey: BaSyxComponentKey, enabled: boolean]
+    'update:discovery-integration': [componentKey: BaSyxComponentKey, enabled: boolean]
   }>()
 
   function handleUrlUpdate (componentKey: BaSyxComponentKey, url: string): void {
-    emit('update:componentUrl', componentKey, url)
-    emit('update:connectionStatus', componentKey, null)
+    emit('update:component-url', componentKey, url)
+    emit('update:connection-status', componentKey, null)
   }
 
   function handleRegistryIntegrationUpdate (componentKey: BaSyxComponentKey, value: boolean | null): void {
-    emit('update:registryIntegration', componentKey, Boolean(value))
+    emit('update:registry-integration', componentKey, Boolean(value))
   }
 
   function handleDiscoveryIntegrationUpdate (componentKey: BaSyxComponentKey, value: boolean | null): void {
-    emit('update:discoveryIntegration', componentKey, Boolean(value))
+    emit('update:discovery-integration', componentKey, Boolean(value))
   }
 </script>

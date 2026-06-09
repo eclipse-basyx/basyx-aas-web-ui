@@ -43,7 +43,7 @@
   }>()
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: boolean): void
+    (event: 'update:model-value', value: boolean): void
     (event: 'open-create-sme-dialog', value: string): void
   }>()
 
@@ -102,7 +102,7 @@
   watch(
     () => addSMEDialog.value,
     value => {
-      emit('update:modelValue', value)
+      emit('update:model-value', value)
     },
   )
 

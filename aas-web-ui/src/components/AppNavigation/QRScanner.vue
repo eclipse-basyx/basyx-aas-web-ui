@@ -161,7 +161,7 @@
   }>()
 
   const emit = defineEmits<{
-    'update:modelValue': [value: boolean]
+    'update:model-value': [value: boolean]
     'select-aas': [aasId: string]
   }>()
 
@@ -170,7 +170,7 @@
 
   const dialogModel = computed({
     get: () => props.modelValue,
-    set: (value: boolean) => emit('update:modelValue', value),
+    set: (value: boolean) => emit('update:model-value', value),
   })
 
   const isInitializing = ref(false)

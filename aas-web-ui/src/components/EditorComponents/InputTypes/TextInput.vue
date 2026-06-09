@@ -42,7 +42,7 @@
   const props = defineProps<Props>()
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: string | null): void
+    (event: 'update:model-value', value: string | null): void
     (event: 'click:delete'): void
   }>()
 
@@ -50,10 +50,10 @@
 
   watch(textValue, newValue => {
     if (newValue === '') {
-      emit('update:modelValue', null)
+      emit('update:model-value', null)
       textValue.value = null
     } else {
-      emit('update:modelValue', newValue)
+      emit('update:model-value', newValue)
     }
   })
 

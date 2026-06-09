@@ -1,0 +1,1208 @@
+{
+"modelType": "SubmodelElementCollection",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "OneToMany",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "The SMC “ContactInformation” contains information on how to contact the manufacturer or an authorised service provider, e.g. when a maintenance service is required"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Contact Information"
+}
+],
+"idShort": "ContactInformation",
+"value": [
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO204#003"
+}
+],
+"type": "ExternalReference"
+},
+"valueType": "xs:string",
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "enumeration: 0173-1#07-AAS927#001 (administrativ contact), 0173-1#07-AAS928#001 (commercial contact), 0173-1#07-AAS929#001 (other contact), 0173-1#07-AAS930#001 (hazardous goods contact), 0173-1#07-AAS931#001 (technical contact). the above mentioned ECLASS enumeration should be declared as “open” for further addition. ECLASS enumeration IRDI is preferable. If no IRDI available, custom input as String may also be accepted."
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Role of Contact Person"
+}
+],
+"idShort": "RoleOfContactPerson"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO134#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "country codes defined accord. to ISO 3166-1. Recommendation: property declaration as MLP is required by its semantic definition. As the property value is language independent, users are recommended to provide maximal 1 string in any language of the user’s choice."
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "National Code"
+}
+],
+"idShort": "NationalCode"
+},
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/Language"
+}
+],
+"type": "ExternalReference"
+},
+"valueType": "xs:string",
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToMany",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "language codes defined accord. to ISO 639-1. as per ECLASS definition, Expression and representation of thoughts, information, feelings, ideas through characters."
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Language"
+}
+],
+"idShort": "Language"
+},
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/TimeZone"
+}
+],
+"type": "ExternalReference"
+},
+"valueType": "xs:string",
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Note: notation accord. to ISO 8601 Note: for time in UTC the zone designator “Z” is to be used"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Time Zone"
+}
+],
+"idShort": "TimeZone"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO132#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "town or city"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "City Town"
+}
+],
+"idShort": "CityTown"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAW001#001"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "name of the company"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Company"
+}
+],
+"idShort": "Company"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO127#003"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "administrative section within an organisation where a business partner is located"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Department"
+}
+],
+"idShort": "Department"
+},
+{
+"modelType": "SubmodelElementCollection",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/Phone"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Phone number including type"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Phone"
+}
+],
+"idShort": "Phone",
+"value": [
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO136#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "One",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Recommendation: property declaration as MLP is required by its semantic definition. As the property value is language independent, users are recommended to provide maximal 1 string in any language of the user’s choice."
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Telephone Number"
+}
+],
+"idShort": "TelephoneNumber"
+},
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO137#003"
+}
+],
+"type": "ExternalReference"
+},
+"valueType": "xs:string",
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": " enumeration: 0173-1#07-AAS754#001 (office), 0173-1#07-AAS755#001 (office mobile), 0173-1#07-AAS756#001 (secretary), 0173-1#07-AAS757#001 (substitute), 0173-1#07-AAS758#001 (home), 0173-1#07-AAS759#001 (private mobile)"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Type of Telephone"
+}
+],
+"idShort": "TypeOfTelephone"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/AvailableTime/"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Specification of the available time window"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Available Time"
+}
+],
+"idShort": "AvailableTime"
+}
+]
+},
+{
+"modelType": "SubmodelElementCollection",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAQ834#005"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Fax number including type"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Fax"
+}
+],
+"idShort": "Fax",
+"value": [
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO195#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "One",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Recommendation: property declaration as MLP is required by its semantic definition. As the property value is language independent, users are recommended to provide maximal 1 string in any language of the user’s choice."
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Fax Number"
+}
+],
+"idShort": "FaxNumber"
+},
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO196#003"
+}
+],
+"type": "ExternalReference"
+},
+"valueType": "xs:string",
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "enumeration: 0173-1#07-AAS754#001 (office), 0173-1#07-AAS756#001 (secretary), 0173-1#07-AAS758#001 (home)"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Type of Fax Number"
+}
+],
+"idShort": "TypeOfFaxNumber"
+}
+]
+},
+{
+"modelType": "SubmodelElementCollection",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAQ836#005"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "E-mail address and encryption method"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Email"
+}
+],
+"idShort": "Email",
+"value": [
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO198#002"
+}
+],
+"type": "ExternalReference"
+},
+"valueType": "xs:string",
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "One",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "electronic mail address of a business partner"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Email Address"
+}
+],
+"idShort": "EmailAddress"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO200#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Recommendation: property declaration as MLP is required by its semantic definition. As the property value is language independent, users are recommended to provide maximal 1 string in any language of the user’s choice."
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Public Key"
+}
+],
+"idShort": "PublicKey"
+},
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO199#003"
+}
+],
+"type": "ExternalReference"
+},
+"valueType": "xs:string",
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "enumeration: 0173-1#07-AAS754#001 (office), 0173-1#07-AAS756#001 (secretary), 0173-1#07-AAS757#001 (substitute), 0173-1#07-AAS758#001 (home)"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Type of Email Address"
+}
+],
+"idShort": "TypeOfEmailAddress"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO201#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "characterization of a public key according to its encryption process"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Type of Public Key"
+}
+],
+"idShort": "TypeOfPublicKey"
+}
+]
+},
+{
+"modelType": "SubmodelElementCollection",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/IPCommunication/"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToMany",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Groups related information for IP Communication 00."
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "IP Communication 00"
+}
+],
+"idShort": "IPCommunication__00__",
+"value": [
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAQ326#002"
+}
+],
+"type": "ExternalReference"
+},
+"valueType": "xs:string",
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "One",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "web site address where information about the product or contact is given"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Address of Additional Link"
+}
+],
+"idShort": "AddressOfAdditionalLink"
+},
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/zvei/nameplate/1/0/ ContactInformations/ContactInformation/IPCommunication/TypeOfCommunication"
+}
+],
+"type": "ExternalReference"
+},
+"valueType": "xs:string",
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Specifies Type of Communication."
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Type of Communication"
+}
+],
+"idShort": "TypeOfCommunication"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "https://admin-shell.io/zvei/nameplate/1/0/ContactInformations/ContactInformation/AvailableTime/"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Specification of the available time window"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Available Time"
+}
+],
+"idShort": "AvailableTime"
+}
+]
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO128#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "street name and house number"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Street"
+}
+],
+"idShort": "Street"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO129#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Recommendation: property declaration as MLP is required by its semantic definition. As the property value is language independent, users are recommended to provide maximal 1 string in any language of the user’s choice."
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Zipcode"
+}
+],
+"idShort": "Zipcode"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO130#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "P.O. box number"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "PO Box"
+}
+],
+"idShort": "POBox"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO131#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "Recommendation: property declaration as MLP is required by its semantic definition. As the property value is language independent, users are recommended to provide maximal 1 string in any language of the user’s choice."
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Zip Code of PO Box"
+}
+],
+"idShort": "ZipCodeOfPOBox"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO133#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "federal state a part of a state"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "State County"
+}
+],
+"idShort": "StateCounty"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO205#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "surname of a contact person"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Name of Contact"
+}
+],
+"idShort": "NameOfContact"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO206#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "first name of a contact person"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "First Name"
+}
+],
+"idShort": "FirstName"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO207#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "middle names of contact person"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Middle Names"
+}
+],
+"idShort": "MiddleNames"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO208#003"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "common, formal, religious, or other title preceding a contact person's name"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Title"
+}
+],
+"idShort": "Title"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO209#003"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "academic title preceding a contact person's name"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Academic Title"
+}
+],
+"idShort": "AcademicTitle"
+},
+{
+"modelType": "MultiLanguageProperty",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAO210#002"
+}
+],
+"type": "ExternalReference"
+},
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "additional information of the contact person"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Further Details of Contact"
+}
+],
+"idShort": "FurtherDetailsOfContact"
+},
+{
+"modelType": "Property",
+"semanticId": {
+"keys": [
+{
+"type": "GlobalReference",
+"value": "0173-1#02-AAQ326#002"
+}
+],
+"type": "ExternalReference"
+},
+"valueType": "xs:string",
+"qualifiers": [
+{
+"kind": "ConceptQualifier",
+"type": "Multiplicity",
+"value": "ZeroToOne",
+"valueType": "xs:string"
+}
+],
+"description": [
+{
+"language": "en",
+"text": "web site address where information about the product or contact is given"
+}
+],
+"displayName": [
+{
+"language": "en",
+"text": "Address of Additional Link"
+}
+],
+"idShort": "AddressOfAdditionalLink"
+}
+]
+}

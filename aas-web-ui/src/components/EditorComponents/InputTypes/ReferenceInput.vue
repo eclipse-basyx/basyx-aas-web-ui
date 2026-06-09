@@ -102,7 +102,7 @@
   })
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: aasTypes.Reference | null): void
+    (event: 'update:model-value', value: aasTypes.Reference | null): void
   }>()
 
   const referenceValue = ref<aasTypes.Reference | null>(props.modelValue)
@@ -190,7 +190,7 @@
   watch(
     referenceValue,
     newValue => {
-      emit('update:modelValue', newValue)
+      emit('update:model-value', newValue)
     },
     { deep: true },
   )
