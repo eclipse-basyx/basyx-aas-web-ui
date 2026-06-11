@@ -1,0 +1,26 @@
+{
+    "idShort": "Norgren_B84G_4GK_AP3_RME",
+    "id": "https://www.norgren.com/ids/aas/4DEF2ED7",
+    "num": 0,
+    "Nameplate": {
+        "idShort": "Nameplate",
+        "id": "www.example.com/ids/sm/7002_0231_5022_3368",
+        "semanticId": "https://admin-shell.io/zvei/nameplate/1/0/Nameplate",
+        "ManufacturerName": "Norgren GmbH",
+        "ManufacturerProductFamily": "Excelon Plus",
+        "ManufacturerProductDesignation": "Filterregler, G3/8, 40µm, 0,3-10bar, automatische Entleerung",
+        "OrderCode": "B84G-4GK-AP3-RME",
+        "Address": {
+            "Department": "Kontakt zu Norgren",
+            "Street": "Bruckstr. 93",
+            "ZipCode": "46519",
+            "City_Town": "Alpen",
+            "State_County": "Nordrhein Westfalen",
+            "VATNumber": "DE191308280",
+            "AddressOfAdditionalLink": "www.norgren.com",
+            "Phone": {
+                "TelephoneNumber": "+49 (0) 2802 49 0"
+            }
+        }
+    }
+}
