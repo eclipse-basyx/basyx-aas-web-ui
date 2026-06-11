@@ -92,6 +92,8 @@
                   <FileInput
                     v-model:content-type="contentType"
                     v-model:path="filePath"
+                    :error="hasError('fileInput')"
+                    :errormessages="getError('fileInput')"
                     :new-file="newFile"
                     :sme-path="path"
                     @update:file="handleFile"
@@ -169,6 +171,7 @@
   import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils'
   import { keyDown, keyUp } from '@/utils/EditorUtils'
   import { base64Decode } from '@/utils/EncodeDecodeUtils'
+  import { uploadHandler } from '@/utils/XmlValidator'
 
   const props = defineProps<{
     modelValue: boolean
@@ -339,7 +342,13 @@
     if (props.newFile || fileObject.value === undefined) {
       fileObject.value = new aasTypes.File()
     }
-
+    if (fileElement.value !== undefined) {
+      const errormsg = await uploadHandler(fileElement.value)
+      if (errormsg !== '') {
+        errors.value.set('fileInput', errormsg)
+        return
+      }
+    }
     const normalizedIdShort = fileIdShort.value?.trim() ?? null
     if (normalizedIdShort) {
       fileObject.value.idShort = normalizedIdShort
@@ -553,10 +562,17 @@
   }
 
   function closeDialog (): void {
+    errors.value.clear()
     editFileDialog.value = false
   }
 
   function handleFile (file: File | undefined): void {
+    if (hasError('fileInput')) {
+      errors.value.delete('fileInput')
+    }
     fileElement.value = file
+    if (fileElement.value !== undefined && fileIdShort.value == null) {
+      fileIdShort.value = fileElement.value.name.replace('.', '_')
+    }
   }
 </script>
