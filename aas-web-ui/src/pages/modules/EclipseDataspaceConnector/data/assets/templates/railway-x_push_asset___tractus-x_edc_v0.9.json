@@ -1,0 +1,26 @@
+{
+  "@context": {
+    "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+    "edc": "https://w3id.org/edc/v0.0.1/ns/",
+    "tx": "https://w3id.org/tractusx/v0.0.1/ns/",
+    "tx-auth": "https://w3id.org/tractusx/auth/",
+    "cx-policy": "https://w3id.org/catenax/policy/",
+    "odrl": "http://www.w3.org/ns/odrl/2/"
+  },
+  "@id": "{{Push Asset ID|Enter a unique push asset identifier, e.g. a UUID|This will be the @id of your push asset}}",
+  "properties": {
+    "id": "{{Push Asset ID|Enter a unique push asset identifier, e.g. a UUID|This will be the @id of your push asset}}",
+    "name": "Data Receiving Endpoint",
+    "description": "Allows other participants to push data to this endpoint"
+  },
+  "privateProperties": {},
+  "dataAddress": {
+    "@type": "DataAddress",
+    "type": "HttpData",
+    "baseUrl": "{{Push Endpoint|Enter the push endpoint|}}",
+    "proxyBody": "true",
+    "proxyMethod": "true",
+    "proxyPath": "true",
+    "proxyQueryParams": "true"
+  }
+}

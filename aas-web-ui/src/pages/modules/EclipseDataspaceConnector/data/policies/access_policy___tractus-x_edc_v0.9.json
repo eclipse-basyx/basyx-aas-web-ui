@@ -1,0 +1,18 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/odrl.jsonld",
+    {
+      "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+    }
+  ],
+  "@type": "PolicyDefinition",
+  "@id": "{{Policy ID|Enter a unique policy identifier|This will be the @id of your policy}}",
+  "policy": {
+    "@type": "Set",
+    "permission": [
+      {
+        "action": "use"
+      }
+    ]
+  }
+}

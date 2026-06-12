@@ -259,7 +259,7 @@ export function useSMRegistryClient () {
     const context = 'deleting Submodel Descriptor'
     const disableMessage = false
     const path = smRegistryUrl + '/' + base64Encode(smId)
-    const response = await deleteRequest(path, context, disableMessage)
+    const response = await deleteRequest(path, new Headers(), context, disableMessage)
 
     return response.success
   }

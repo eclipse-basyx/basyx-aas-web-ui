@@ -1,0 +1,38 @@
+# EDC Configuration
+#
+# This file allows system administrators to preconfigure an EDC.
+# Place this file at:
+# - Development: /aas-web-ui/public/config/edc.yml
+# - Production (Docker): Mount to /edc.yml
+
+# EDC example Configuration
+# edc:
+#   type: '...'
+#   controlplane:
+#     endpoint: "http://localhost:8080"
+#     managementEndpoint: "http://localhost:8081"
+#   security:
+#     type: Key
+#     config:
+#       key: "xApiKey"
+#   business-partners:
+#     - name: "BP Name"
+#       bpn: "BPN"
+#       dsp: "BP DSP"
+
+# EDC example Configuration
+# edc:
+#   type: '...'
+#   controlplane:
+#     endpoint: "http://localhost:8080"
+#     managementEndpoint: "http://localhost:8081"
+#   security:
+#     type: Token
+#     config:
+#       url: "http://localhost:5432"
+#       clientId: "clientId"
+#       clientSecret: "clientSecret"
+#   business-partners:
+#     - name: "BP Name"
+#       bpn: "BPN"
+#       dsp: "BP DSP"

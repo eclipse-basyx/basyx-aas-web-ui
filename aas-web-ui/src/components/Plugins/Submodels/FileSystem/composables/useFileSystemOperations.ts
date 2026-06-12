@@ -205,7 +205,7 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
   const deleteElement = async (element: FileSystemElement): Promise<void> => {
     const filePath = getCurrentFilePath()
     const path = buildElementPath(filePath, element.idShort)
-    const response = await deleteRequest(path, 'Deleting File', false)
+    const response = await deleteRequest(path, new Headers(), 'Deleting File', false)
 
     if (response.success) {
       await fetchFiles(filePath)
@@ -220,7 +220,7 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
 
     for (const item of elements) {
       const path = buildElementPath(filePath, item.idShort)
-      await deleteRequest(path, 'Deleting Element', true)
+      await deleteRequest(path, new Headers(), 'Deleting Element', true)
     }
 
     await fetchFiles(filePath)
@@ -372,7 +372,7 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
         }
 
         // Delete from original location
-        await deleteRequest(sourcePath, 'Removing element from original location', true)
+        await deleteRequest(sourcePath, new Headers(), 'Removing element from original location', true)
       }
     } catch (error) {
       console.error('Error moving element:', error)
@@ -452,7 +452,7 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
         }
 
         // Delete from original location
-        await deleteRequest(sourcePath, 'Removing element from original location', true)
+        await deleteRequest(sourcePath, new Headers(), 'Removing element from original location', true)
       }
     } catch (error) {
       console.error('Error moving element up:', error)
@@ -569,7 +569,7 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
 
   const removeReferenceElement = async (reference: ReferenceElement): Promise<void> => {
     const path = submodelElementData().path + '/submodel-elements/PreviewCollection.' + reference.idShort
-    await deleteRequest(path, 'Removing ReferenceElement from PreviewCollection', false)
+    await deleteRequest(path, new Headers(), 'Removing ReferenceElement from PreviewCollection', false)
   }
 
   return {

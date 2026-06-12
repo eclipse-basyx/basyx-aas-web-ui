@@ -401,9 +401,9 @@
     const startX = sourceX
     const endX = sourceX
 
-    const path = `M ${startX} ${sourceY} 
-                      C ${startX} ${sourceY + loopRadius * 2}, 
-                        ${endX} ${sourceY + loopRadius * 2}, 
+    const path = `M ${startX} ${sourceY}
+                      C ${startX} ${sourceY + loopRadius * 2},
+                        ${endX} ${sourceY + loopRadius * 2},
                         ${endX} ${sourceY}`
 
     const labelX = sourceX
@@ -1241,7 +1241,7 @@
             const relationshipPath = relationshipToDelete.path as string
             if (relationshipPath) {
               try {
-                await deleteRequest(relationshipPath, 'removing orphaned RelationshipElement', true)
+                await deleteRequest(relationshipPath, new Headers(), 'removing orphaned RelationshipElement', true)
               } catch (error) {
                 console.error('Error deleting orphaned RelationshipElement:', error)
               }
