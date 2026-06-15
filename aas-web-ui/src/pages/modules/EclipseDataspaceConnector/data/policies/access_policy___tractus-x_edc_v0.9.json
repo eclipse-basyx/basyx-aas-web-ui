@@ -1,12 +1,13 @@
 {
   "@context": [
+    "https://w3id.org/tractusx/policy/v1.0.0",
     "http://www.w3.org/ns/odrl.jsonld",
     {
       "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
     }
   ],
   "@type": "PolicyDefinition",
-  "@id": "{{Policy ID|Enter a unique policy identifier|This will be the @id of your policy}}",
+  "@id": "{{Policy Definition ID|Enter a unique policy definition identifier|This will be the @id of your policy definition}}",
   "policy": {
     "@type": "Set",
     "permission": [
