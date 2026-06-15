@@ -194,32 +194,37 @@
       <v-expansion-panels
         v-if="Array.isArray(conceptDescriptions) && conceptDescriptions.length > 0"
         v-model="expandedCdIndex"
-        class="mt-4"
+        class="mt-3 rounded"
       >
         <v-expansion-panel
           v-for="(conceptDescription, index) in conceptDescriptions"
           :key="conceptDescription.id"
         >
-          <v-expansion-panel-title>
-            <v-list-item class="pa-0">
-              <template #append>
-                <v-chip class="ml-5" color="primary" size="x-small">{{
-                  conceptDescription.modelType
-                }}</v-chip>
-              </template>
+          <v-expansion-panel-title
+            class="bg-cardHeader px-4 py-2"
+            :style="conceptDescriptionPanelTitleStyle"
+          >
+            <div class="d-flex align-center w-100">
+              <v-icon class="mr-2 flex-shrink-0" color="primary" size="small">
+                mdi-book-open-variant
+              </v-icon>
 
-              <v-list-item-title>
-                <div class="text-primary text-body-large">
-                  {{ nameToDisplay(conceptDescription) }}
-                </div>
-              </v-list-item-title>
-            </v-list-item>
+              <div class="text-primary text-body-small text-truncate">
+                {{ nameToDisplay(conceptDescription) }}
+              </div>
+
+              <v-spacer />
+
+              <v-chip class="ml-3 mr-4 flex-shrink-0" color="primary" label size="x-small">
+                {{ conceptDescription.modelType || 'ConceptDescription' }}
+              </v-chip>
+            </div>
           </v-expansion-panel-title>
 
           <v-divider v-if="expandedCdIndex === index" />
 
           <v-expansion-panel-text class="pa-0 ma-0">
-            <ConceptDescription :concept-description-object="conceptDescription" />
+            <ConceptDescription :concept-description-object="conceptDescription" :small="true" />
           </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
@@ -263,6 +268,10 @@
   const selectedNode = computed(() => aasStore.getSelectedNode)
   const autoSync = computed(() => navigationStore.getAutoSync)
   const editorMode = computed(() => ['AASEditor', 'SMEditor'].includes(route.name as string))
+
+  const conceptDescriptionPanelTitleStyle = {
+    minHeight: '40px',
+  }
 
   // Watchers
   watch(
