@@ -244,9 +244,46 @@
             </v-empty-state>
           </div>
 
-          <pre v-else class="json-content bg-surface rounded border" :style="{'height': fullHeightMain}">
-            <code v-html="selectedContractJsonFormatted" />
-          </pre>
+          <template v-else>
+            <!-- View mode tabs -->
+            <div class="d-flex justify-start mb-2">
+              <v-btn-toggle
+                v-model="selectedView"
+                density="compact"
+                mandatory
+                rounded="lg"
+                variant="outlined"
+              >
+                <v-btn value="tree">
+                  <v-icon start>mdi-file-tree-outline</v-icon>
+                  Tree
+                </v-btn>
+
+                <v-btn value="json">
+                  <v-icon start>mdi-code-json</v-icon>
+                  JSON
+                </v-btn>
+              </v-btn-toggle>
+            </div>
+
+            <!-- JSON view -->
+            <pre
+              v-if="selectedView === 'json'"
+              class="json-content bg-surface rounded border"
+              :style="{'height': fullHeightMainWithTabs}"
+            >
+              <code v-html="selectedContractJsonFormatted" />
+            </pre>
+
+            <!-- Tree view -->
+            <div
+              v-else
+              class="rounded border overflow-y-auto pa-4"
+              :style="{'height': fullHeightMainWithTabs, 'background-color': '#f5f5f5'}"
+            >
+              <JsonTreeView :data="selectedContract" />
+            </div>
+          </template>
 
         </v-container>
       </v-main>
@@ -260,6 +297,7 @@
 <script lang="ts" setup>
   import * as Prism from 'prismjs'
   import { useTheme } from 'vuetify'
+  import JsonTreeView from '@/components/UIComponents/JsonTreeView.vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import CreateContractDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/CreateContractDialog.vue'
   import DeleteContractDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/DeleteContractDialog.vue'
@@ -286,6 +324,8 @@
   // Data
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Full height - header - tabs - footer - border
   const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
+  const fullHeightMainWithTabs = ref('calc(100vh - 64px - 48px - 40px - 32px - 44px - 2px)') // Full height - header - tabs - footer - padding - view toggle - border
+  const selectedView = ref<'json' | 'tree'>('tree')
   const contractList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Contract data
   const contractListUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Contract data before filtering
   const listLoading = ref(false) // Variable to store if the AAS List is loading

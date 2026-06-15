@@ -236,18 +236,47 @@
 
           <template v-else>
 
-            <v-list-item class="pl-3 pt-0">
-              <v-list-item-title class="text-body-large">Catalog Dataset</v-list-item-title>
-            </v-list-item>
+            <div class="d-flex justify-space-between align-center mt-4 mx-4 mb-2">
+              <v-btn-toggle
+                v-model="selectedView"
+                density="compact"
+                mandatory
+                rounded="lg"
+                variant="outlined"
+              >
+                <v-btn value="tree">
+                  <v-icon start>mdi-file-tree-outline</v-icon>
+                  Tree
+                </v-btn>
 
+                <v-btn value="json">
+                  <v-icon start>mdi-code-json</v-icon>
+                  JSON
+                </v-btn>
+              </v-btn-toggle>
+
+              <v-list-item-title class="text-body-large pr-2">Catalog Dataset</v-list-item-title>
+            </div>
+
+            <!-- JSON view -->
             <pre
+              v-if="selectedView === 'json'"
               class="json-content mt-0 mx-4 mb-0 bg-surface rounded border"
               style="height: 275px; min-height: 63px"
             >
               <code class="mx-5" v-html="selectedCatalogDatasetJsonFormatted" />
             </pre>
 
-            <v-card-actions class="pa-4">
+            <!-- Tree view -->
+            <div
+              v-else
+              class="rounded border overflow-y-auto mx-4 mb-0 pa-4"
+              style="height: 275px; min-height: 63px; background-color: #f5f5f5"
+            >
+              <JsonTreeView :data="selectedCatalogDataset" />
+            </div>
+
+            <v-card-actions class="mt-0 mb-2 mx-4 pa-0">
               <v-chip
                 v-if="fetchStatus"
                 class="mr-2"
@@ -282,17 +311,47 @@
 
             <v-divider />
 
-            <v-list-item class="pl-3">
-              <v-list-item-title class="text-body-large">Asset</v-list-item-title>
-            </v-list-item>
+            <div class="d-flex justify-space-between align-center mt-4 mx-4 mb-2">
+              <v-btn-toggle
+                v-model="selectedAssetView"
+                density="compact"
+                mandatory
+                rounded="lg"
+                variant="outlined"
+              >
+                <v-btn value="tree">
+                  <v-icon start>mdi-file-tree-outline</v-icon>
+                  Tree
+                </v-btn>
 
+                <v-btn value="json">
+                  <v-icon start>mdi-code-json</v-icon>
+                  JSON
+                </v-btn>
+              </v-btn-toggle>
+
+              <v-list-item-title class="text-body-large pr-2">Asset</v-list-item-title>
+            </div>
+
+            <!-- Asset JSON view -->
             <pre
+              v-if="selectedAssetView === 'json'"
               class="json-content mt-0 mx-4 mb-5 bg-surface rounded border"
               style="min-height: 63px"
               :style="{'max-height': heightAssetJson}"
             >
-                  <code class="mx-5" v-html="assetJsonFormatted" />
-                </pre>
+              <code class="mx-5" v-html="assetJsonFormatted" />
+            </pre>
+
+            <!-- Asset Tree view -->
+            <div
+              v-else
+              class="rounded border overflow-y-auto mx-4 mb-5 pa-4"
+              style="min-height: 63px; background-color: #f5f5f5"
+              :style="{'max-height': heightAssetJson}"
+            >
+              <JsonTreeView :data="assetJsonParsed" />
+            </div>
 
           </template>
 
@@ -306,6 +365,7 @@
   import * as Prism from 'prismjs'
   import { type ComponentPublicInstance, computed, onActivated, onMounted, ref, type Ref, watch } from 'vue'
   import { useTheme } from 'vuetify'
+  import JsonTreeView from '@/components/UIComponents/JsonTreeView.vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { type CatalogRequest, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
@@ -347,11 +407,14 @@
   const catalogListUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Catalog Dataset data before filtering
   const listLoading = ref(false) // Variable to store if the AAS List is loading
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null) // Reference to the Virtual Scroll Component
+  const selectedView = ref<'json' | 'tree'>('tree')
+  const selectedAssetView = ref<'json' | 'tree'>('tree')
   const selectedCatalogDataset = ref({} as any)
   const selectedCatalogDatasetJson = ref<string>('')
   const selectedCatalogDatasetJsonFormatted = ref<string>('')
   const assetJson = ref<string>('')
   const assetJsonFormatted = ref<string>('')
+  const assetJsonParsed = ref<unknown>({})
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
 
   const fetchingAsset = ref(false)
@@ -408,6 +471,7 @@
 
         assetJson.value = ''
         assetJsonFormatted.value = ''
+        assetJsonParsed.value = {}
 
         fetchStatus.value = ''
       } catch (error_) {
@@ -682,6 +746,7 @@
       const response = await fetch(endpoint, { headers })
       const data = await response.json()
       assetJson.value = JSON.stringify(data)
+      assetJsonParsed.value = data
 
       // 7. Format and highlight assetJson
       const formatted = formatJSON(assetJson.value)
