@@ -63,15 +63,19 @@
 
   function initializeDisplay (): void {
     // Reduce each time series to its last element and join with yVariables
-    localChartData.value = props.chartData.map((timeSeries: Array<ChartDataPoint>, index: number) => {
+    localChartData.value = props.chartData.flatMap((timeSeries: Array<ChartDataPoint>, index: number) => {
       const lastDataPoint = timeSeries.at(-1)
+      if (!lastDataPoint) {
+        return []
+      }
+
       const yVariable = props.yVariables[index]
       // Merge the data point with the property metadata, ensuring value is from data point
-      return {
+      return [{
         ...yVariable,
         ...lastDataPoint,
         value: lastDataPoint.value,
-      } as DisplayElement
+      } as DisplayElement]
     })
   }
 

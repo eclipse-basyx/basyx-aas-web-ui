@@ -4,6 +4,14 @@ function isQualifierRecord (value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
+type MultiplicityCardinalityKind = Exclude<CardinalityKind, 'Unknown'>
+
+const cardinalityKinds = ['One', 'ZeroToOne', 'ZeroToMany', 'OneToMany'] satisfies MultiplicityCardinalityKind[]
+
+function isCardinalityKind (value: unknown): value is MultiplicityCardinalityKind {
+  return typeof value === 'string' && cardinalityKinds.includes(value as MultiplicityCardinalityKind)
+}
+
 export function getMultiplicityQualifierValue (element: TemplateElement): CardinalityKind {
   const qualifiers = Array.isArray(element.qualifiers) ? element.qualifiers : []
 
@@ -17,8 +25,7 @@ export function getMultiplicityQualifierValue (element: TemplateElement): Cardin
 
     if (
       ['SMT/Cardinality', 'Multiplicity'].includes(type as string)
-      && typeof value === 'string'
-      && ['One', 'ZeroToOne', 'ZeroToMany', 'OneToMany'].includes(value)
+      && isCardinalityKind(value)
     ) {
       return value
     }
