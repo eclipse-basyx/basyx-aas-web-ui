@@ -255,7 +255,16 @@
                 </v-btn>
               </v-btn-toggle>
 
-              <v-list-item-title class="text-body-large pr-2">Catalog Dataset</v-list-item-title>
+              <v-list-item-title class="text-body-large pr-2 d-flex align-center">
+                <v-icon
+                  class="mr-1"
+                  color="primary"
+                  size="small"
+                >
+                  mdi-database-search-outline
+                </v-icon>
+                Catalog Dataset
+              </v-list-item-title>
             </div>
 
             <!-- JSON view -->
@@ -330,7 +339,39 @@
                 </v-btn>
               </v-btn-toggle>
 
-              <v-list-item-title class="text-body-large pr-2">Asset</v-list-item-title>
+              <v-list-item-title class="text-body-large pr-2 d-flex align-center">
+                <template v-if="isValidAAS">
+                  <v-icon
+                    class="mr-1"
+                    color="primary"
+                    icon="custom:aasIcon"
+                    size="small"
+                  />
+                  Asset Administration Shell
+                </template>
+
+                <template v-else-if="isValidSubmodel">
+                  <v-icon
+                    class="mr-1"
+                    color="primary"
+                    size="small"
+                  >
+                    mdi-folder
+                  </v-icon>
+                  Submodel
+                </template>
+
+                <template v-else>
+                  <v-icon
+                    class="mr-1"
+                    color="primary"
+                    size="small"
+                  >
+                    mdi-cube
+                  </v-icon>
+                  Asset
+                </template>
+              </v-list-item-title>
             </div>
 
             <!-- Asset JSON view -->
@@ -362,6 +403,7 @@
 </template>
 
 <script lang="ts" setup>
+  import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import * as Prism from 'prismjs'
   import { type ComponentPublicInstance, computed, onActivated, onMounted, ref, type Ref, watch } from 'vue'
   import { useTheme } from 'vuetify'
@@ -426,6 +468,20 @@
   const primaryColor = computed(() => theme.current.value.colors.primary)
   const isDark = computed(() => theme.current.value.dark)
   const copyIconAsRef = computed(() => copyIcon)
+
+  const isValidAAS = computed(() => {
+    const parsed = assetJsonParsed.value
+    if (!parsed || typeof parsed !== 'object' || Object.keys(parsed).length === 0) return false
+    const result = jsonization.assetAdministrationShellFromJsonable(parsed as jsonization.JsonValue)
+    return result.error === null
+  })
+
+  const isValidSubmodel = computed(() => {
+    const parsed = assetJsonParsed.value
+    if (!parsed || typeof parsed !== 'object' || Object.keys(parsed).length === 0) return false
+    const result = jsonization.submodelFromJsonable(parsed as jsonization.JsonValue)
+    return result.error === null
+  })
 
   const isHttpDataPull = computed(() => {
     const distributions = selectedCatalogDataset.value?.['dcat:distribution']

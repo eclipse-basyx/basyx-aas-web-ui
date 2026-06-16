@@ -250,7 +250,7 @@
     {
       title: 'Catalog',
       description: 'Browse catalog from Business Partners',
-      icon: 'mdi-list-box-outline',
+      icon: 'mdi-database-outline',
       color: 'orange',
       route: { path: '/modules/eclipsedataspaceconnector/catalog' },
     },

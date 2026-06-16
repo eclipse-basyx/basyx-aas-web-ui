@@ -42,7 +42,7 @@ export default {
       component: () => import('@/pages/modules/EclipseDataspaceConnector/components/Catalog.vue'),
       meta: {
         title: 'Catalog',
-        icon: 'mdi-list-box-outline',
+        icon: 'mdi-database-outline',
       },
     },
     {
