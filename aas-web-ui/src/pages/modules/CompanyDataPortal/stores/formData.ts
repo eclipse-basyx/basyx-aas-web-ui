@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-/* eslint-disable unicorn/no-this-outside-of-class */
+/* eslint-disable unicorn/no-this-outside-of-class -- Pinia option-store actions intentionally use this-bound state. */
 
 export const useFormStore = defineStore('form', {
   state: () => ({
