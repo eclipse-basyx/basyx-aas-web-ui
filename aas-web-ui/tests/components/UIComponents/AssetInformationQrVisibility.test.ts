@@ -68,7 +68,7 @@ describe('AssetInformation.vue QR visibility', () => {
   })
 
   it('hides QR panel for empty global asset ID', () => {
-    const wrapper = mountAssetInformation('   ')
+    const wrapper = mountAssetInformation(' '.repeat(3))
 
     expect(wrapper.find('v-expansion-panels-stub').exists()).toBe(false)
   })

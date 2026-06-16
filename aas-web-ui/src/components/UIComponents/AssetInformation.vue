@@ -149,8 +149,8 @@
   }
 
   function calcThumbnailMaxHeight (): void {
-    const toolbarHeight = document.querySelectorAll('.v-toolbar')[0]?.clientHeight as number
-    const footerHeight = document.querySelectorAll('.v-footer')[0]?.clientHeight as number
+    const toolbarHeight = document.querySelector('.v-toolbar')?.clientHeight as number
+    const footerHeight = document.querySelector('.v-footer')?.clientHeight as number
     const closeSidebarHeight = document.querySelector('#closeAasList')?.clientHeight as number
     const titleAasListHeight = document.querySelector('#titleAasList')?.clientHeight as number
     const assetInformationIdentificationHeight = document.querySelector('#assetInformationIdentification')

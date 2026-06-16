@@ -22,7 +22,7 @@ export function mimeToExtension (mimeType: string): string {
 }
 
 export function checkContentType (contentType: string): string {
-  return contentType.split('/')[0]
+  return contentType.split('/', 1)[0]
 }
 
 export function convertFileNameToIdentifier (fileName: string): string {
@@ -30,7 +30,7 @@ export function convertFileNameToIdentifier (fileName: string): string {
   return id
     .normalize('NFD')
     .replace(/[\u0300-\u036F]/g, '')
-    .replace(/[^a-zA-Z0-9]/g, '_')
+    .replace(/[^a-z0-9]/gi, '_')
 }
 
 export function createThumbnail (blob: Blob, maxDimension: number, callback: (thumbnailUrl: string) => void): void {

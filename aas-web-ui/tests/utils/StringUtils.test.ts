@@ -141,7 +141,7 @@ describe('StringUtils.ts; Tests for \'safeSegment()\'', () => {
     },
     {
       testId: '01b5ed09-3ba3-4cb3-adf4-7f322f91fca2',
-      input: '   ',
+      input: ' '.repeat(3),
       fallback: 'fallback',
       output: 'fallback',
     },

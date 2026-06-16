@@ -49,7 +49,7 @@ describe('GlobalAssetQrCode.vue', () => {
   it('does not render QR for whitespace-only global asset ID', async () => {
     const wrapper = mount(GlobalAssetQrCode, {
       props: {
-        content: '   ',
+        content: ' '.repeat(3),
       },
     })
 
