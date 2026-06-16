@@ -135,6 +135,7 @@ export function debounce<T extends (...args: any[]) => any> (
     if (timeout) {
       clearTimeout(timeout)
     }
+    // eslint-disable-next-line unicorn/no-this-outside-of-class
     timeout = setTimeout(() => func.apply(this, args), wait)
   }
 }

@@ -101,7 +101,7 @@ export function normalizePackagePath (path: string): string {
   try {
     normalized = new URL(normalized).pathname
   } catch {
-    normalized = normalized.split('?')[0]
+    normalized = normalized.split('?', 1)[0]
   }
 
   if (!normalized.startsWith('/')) {

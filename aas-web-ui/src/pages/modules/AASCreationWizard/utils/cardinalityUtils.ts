@@ -15,12 +15,11 @@ export function getMultiplicityQualifierValue (element: TemplateElement): Cardin
     const type = qualifier.type
     const value = qualifier.value
 
-    if ((type === 'SMT/Cardinality' || type === 'Multiplicity') && typeof value === 'string' && (
-      value === 'One'
-      || value === 'ZeroToOne'
-      || value === 'ZeroToMany'
-      || value === 'OneToMany'
-    )) {
+    if (
+      ['SMT/Cardinality', 'Multiplicity'].includes(type as string)
+      && typeof value === 'string'
+      && ['One', 'ZeroToOne', 'ZeroToMany', 'OneToMany'].includes(value)
+    ) {
       return value
     }
   }

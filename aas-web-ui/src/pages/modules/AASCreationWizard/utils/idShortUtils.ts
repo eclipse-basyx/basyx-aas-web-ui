@@ -2,7 +2,7 @@ export function labelToIdShort (
   label: string,
   fallback: string,
 ): string {
-  const words = label.trim().replace(/[^a-zA-Z0-9]+/g, '').split(' ').filter(Boolean)
+  const words = label.trim().replace(/[^a-z0-9]+/gi, '').split(' ').filter(Boolean)
 
   const idShort = words.map(word => capitalizeWord(word)).join('')
 
@@ -10,7 +10,7 @@ export function labelToIdShort (
     return fallback
   }
 
-  if (/^[0-9]/.test(idShort)) {
+  if (/^\d/.test(idShort)) {
     return `${fallback}${idShort}`
   }
 

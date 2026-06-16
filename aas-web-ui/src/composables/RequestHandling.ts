@@ -225,33 +225,33 @@ export function useRequestHandling () {
       .then(async response => {
         // Check if the Server responded with content.
         if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'application/json'
+          response.headers.get('Content-Type')?.split(';', 1)[0] === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await parseJsonIfPresent(response) } // Return the response as JSON
         } else if (
-          response.headers.get('Content-Type')?.split(';')[0]
+          response.headers.get('Content-Type')?.split(';', 1)[0]
           === 'application/asset-administration-shell-package+xml'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await response.blob() } // Return the response as Blob}
         } else if (
-          response.headers.get('Content-Type')?.split(';')[0].includes('image')
+          response.headers.get('Content-Type')?.split(';', 1)[0].includes('image')
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await response.blob() } // Return the response as Blob
         } else if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'text/csv'
+          response.headers.get('Content-Type')?.split(';', 1)[0] === 'text/csv'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await response.text() } // Return the response as text
         } else if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'text/plain'
+          response.headers.get('Content-Type')?.split(';', 1)[0] === 'text/plain'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await response.text() } // Return the response as text
         } else if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'application/pdf'
+          response.headers.get('Content-Type')?.split(';', 1)[0] === 'application/pdf'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await response.blob() } // Return the response as Blob
@@ -309,12 +309,12 @@ export function useRequestHandling () {
       .then(async response => {
         // Check if the Server responded with content
         if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'application/json'
+          response.headers.get('Content-Type')?.split(';', 1)[0] === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await parseJsonIfPresent(response) } // Return the response as JSON
         } else if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'text/csv'
+          response.headers.get('Content-Type')?.split(';', 1)[0] === 'text/csv'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await response.text() } // Return the response as text
@@ -367,7 +367,7 @@ export function useRequestHandling () {
       .then(response => {
         // Check if the Server responded with content
         if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'application/json'
+          response.headers.get('Content-Type')?.split(';', 1)[0] === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return parseJsonIfPresent(response) // Return the response as JSON
@@ -413,7 +413,7 @@ export function useRequestHandling () {
       .then(response => {
         // Check if the Server responded with content
         if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'application/json'
+          response.headers.get('Content-Type')?.split(';', 1)[0] === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return parseJsonIfPresent(response) // Return the response as JSON
@@ -458,7 +458,7 @@ export function useRequestHandling () {
       .then(response => {
         // Check if the Server responded with content
         if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'application/json'
+          response.headers.get('Content-Type')?.split(';', 1)[0] === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return parseJsonIfPresent(response) // Return the response as JSON

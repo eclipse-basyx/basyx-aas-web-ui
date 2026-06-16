@@ -2,17 +2,17 @@
   <v-list-item class="pt-0">
     <v-list-item-title :class="isOperationVariable ? 'pt-2' : ''">
       <v-text-field
-        v-model="newDateTimeStampValue"
+        v-model="newDateTimestampValue"
         :clearable="isEditable"
-        :color="dateTimeStampValue.value == newDateTimeStampValue ? '' : 'warning'"
+        :color="dateTimeStampValue.value == newDateTimestampValue ? '' : 'warning'"
         density="compact"
         :hide-details="isOperationVariable ? true : false"
-        :hint="dateTimeStampValue.value == newDateTimeStampValue ? '' : 'Current value not yet saved.'"
+        :hint="dateTimeStampValue.value == newDateTimestampValue ? '' : 'Current value not yet saved.'"
         :persistent-hint="!isOperationVariable"
         :readonly="!isEditable"
         type="text"
         variant="outlined"
-        @click:clear="clearDateTimeStamp"
+        @click:clear="clearDateTimestamp"
         @keydown.enter="updateValue()"
         @update:focused="setFocus"
       >
@@ -89,11 +89,11 @@
   })
 
   const emit = defineEmits<{
-    (event: 'update-value', updatedDateTimeStampValue: any): void
+    (event: 'update-value', updatedDateTimestampValue: any): void
   }>()
 
   // Data
-  const newDateTimeStampValue = ref<string>('')
+  const newDateTimestampValue = ref<string>('')
   const newDate = ref<any>(new Date())
   const newTime = ref<string>('')
 
@@ -116,8 +116,8 @@
 
   watch(
     () => props.dateTimeStampValue,
-    propsDateTimeStampValue => {
-      if (newDateTimeStampValue.value !== propsDateTimeStampValue.value)
+    propsDateTimestampValue => {
+      if (newDateTimestampValue.value !== propsDateTimestampValue.value)
         initialize(props.dateTimeStampValue.value)
     },
     { deep: true },
@@ -127,12 +127,12 @@
     initialize(props.dateTimeStampValue.value)
   })
 
-  function initialize (dateTimeStampValue: string): void {
-    if (dateTimeStampValue && dateTimeStampValue.trim() !== '') {
-      const dateTimeStampString = dateTimeStampValue.trim()
-      const matches = dateTimeStampString.match(new RegExp(dateTimeRegex))
+  function initialize (dateTimestampValue: string): void {
+    if (dateTimestampValue && dateTimestampValue.trim() !== '') {
+      const dateTimestampString = dateTimestampValue.trim()
+      const matches = dateTimestampString.match(new RegExp(dateTimeRegex))
       if (matches) {
-        newDateTimeStampValue.value = dateTimeStampString
+        newDateTimestampValue.value = dateTimestampString
 
         const numbers = matches ? matches.map(Number) : []
         // const strings = matches ? matches.map(String) : [];
@@ -153,25 +153,25 @@
         ].join(':')
         return
       } else {
-        newDateTimeStampValue.value = dateTimeStampValue
+        newDateTimestampValue.value = dateTimestampValue
         newDate.value = new Date()
         newTime.value = '00:00:00'
         return
       }
     }
-    newDateTimeStampValue.value = ''
+    newDateTimestampValue.value = ''
     newDate.value = new Date()
     newTime.value = '00:00:00'
   }
 
   function updateValue (): void {
     if (isOperationVariable.value) {
-      emit('update-value', newDateTimeStampValue.value)
+      emit('update-value', newDateTimestampValue.value)
       return
     }
 
     const path = `${props.dateTimeStampValue.path}/$value`
-    const content = JSON.stringify(newDateTimeStampValue.value)
+    const content = JSON.stringify(newDateTimestampValue.value)
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
     const context = `updating ${props.dateTimeStampValue.modelType} "${props.dateTimeStampValue.idShort}"`
@@ -184,41 +184,41 @@
     })
   }
 
-  // Function to apply the selected date to the newDateTimeStampValue
+  // Function to apply the selected date to the newDateTimestampValue
   function applyDate (date: any): void {
     if (!date) return
-    // replace the date in the newDateTimeStampValue
+    // replace the date in the newDateTimestampValue
     const year = date.getFullYear()
     const month = (1 + date.getMonth()).toString().padStart(2, '0') // Months are zero indexed, hence the +1. padStart will add a 0 in front if it's a single digit
     const day = date.getDate().toString().padStart(2, '0') // padStart will add a 0 in front if it's a single digit
     const dateString = year + '-' + month + '-' + day
 
-    let tempTimeStampValue = newDateTimeStampValue.value.split('T')[1]
+    let tempTimestampValue = newDateTimestampValue.value.split('T', 2)[1]
 
     // if the time is not set, set it to the current time including the timezone
-    if (!tempTimeStampValue) {
-      const timeString = createXSDDateString().split('T')[1]
-      tempTimeStampValue = timeString
-      newTime.value = timeString.split('.')[0]
+    if (!tempTimestampValue) {
+      const timeString = createXSDDateString().split('T', 2)[1]
+      tempTimestampValue = timeString
+      newTime.value = timeString.split('.', 1)[0]
     }
 
-    newDateTimeStampValue.value = dateString + 'T' + tempTimeStampValue
+    newDateTimestampValue.value = dateString + 'T' + tempTimestampValue
 
     if (isOperationVariable.value) {
       updateValue()
     }
   }
 
-  // Function to apply the selected time to the newDateTimeStampValue
+  // Function to apply the selected time to the newDateTimestampValue
   function applyTime (): void {
-    // replace the time in the newDateTimeStampValue
-    const tempDateValue = newDateTimeStampValue.value.split('T')[0]
-    const tempStampEnd = newDateTimeStampValue.value.split('.')[1]
+    // replace the time in the newDateTimestampValue
+    const tempDateValue = newDateTimestampValue.value.split('T', 1)[0]
+    const tempStampEnd = newDateTimestampValue.value.split('.', 2)[1]
     if (tempStampEnd) {
-      newDateTimeStampValue.value = tempDateValue + 'T' + newTime.value + ':00' + '.' + tempStampEnd
+      newDateTimestampValue.value = tempDateValue + 'T' + newTime.value + ':00' + '.' + tempStampEnd
     } else {
-      newDateTimeStampValue.value = tempDateValue + 'T' + newTime.value + ':00'
-      if (newDateTimeStampValue.value.includes('Z')) newDateTimeStampValue.value += 'Z'
+      newDateTimestampValue.value = tempDateValue + 'T' + newTime.value + ':00'
+      if (newDateTimestampValue.value.includes('Z')) newDateTimestampValue.value += 'Z'
     }
     if (isOperationVariable.value) {
       updateValue()
@@ -226,8 +226,8 @@
   }
 
   // Function to clear the DateTimeStamp
-  function clearDateTimeStamp (): void {
-    newDateTimeStampValue.value = ''
+  function clearDateTimestamp (): void {
+    newDateTimestampValue.value = ''
     newTime.value = ''
   }
 

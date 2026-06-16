@@ -359,7 +359,7 @@
       } else {
         // Extract the submodel ID and the idShortPath from the parentElement path
         const splitted = props.parentElement.path.split('/submodel-elements/')
-        const submodelId = base64Decode(splitted[0].split('/submodels/')[1])
+        const submodelId = base64Decode(splitted[0].split('/submodels/', 2)[1])
         const idShortPath = splitted[1]
 
         // Create the entity on the parent element

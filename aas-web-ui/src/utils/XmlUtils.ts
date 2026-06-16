@@ -15,7 +15,7 @@ function validateDecimal (value: string): XsValidationResult {
     return [true, '']
   }
 
-  if (!/^[+-]?(\d+(\.\d*)?|\.\d+)$/.test(value.trim())) {
+  if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(value.trim())) {
     return [false, invalidValueMessage('Decimal')]
   }
 
@@ -127,7 +127,7 @@ function validateDoubleOrFloat (value: string, valueType: 'Double' | 'Float'): X
     return [true, '']
   }
 
-  if (!/^[+-]?((\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?|INF|NaN)$/.test(value.trim())) {
+  if (!/^[+-]?(?:(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?|INF|NaN)$/.test(value.trim())) {
     return [false, invalidValueMessage(valueType)]
   }
 
@@ -139,7 +139,7 @@ function validateBoolean (value: string): XsValidationResult {
     return [true, '']
   }
 
-  if (!/^(true|false|1|0)$/.test(value.trim())) {
+  if (!/^(?:true|false|1|0)$/.test(value.trim())) {
     return [false, `Invalid 'Boolean' value! [true, false, 0, 1]`]
   }
 
@@ -288,8 +288,8 @@ export function checkXsDataTypeValue (value: string, valueType: string): [valid:
     UnsignedByte: input => validateUnsignedIntegerType(input, 'UnsignedByte'),
     PositiveInteger: input => validatePatternType(input, 'PositiveInteger', /^\+?[1-9]\d*$/),
     NegativeInteger: input => validatePatternType(input, 'NegativeInteger', /^-[1-9]\d*$/),
-    NonPositiveInteger: input => validatePatternType(input, 'NonPositiveInteger', /^(0|-\d+)$/),
-    NonNegativeInteger: input => validatePatternType(input, 'NonNegativeInteger', /^\+?(0|[1-9]\d*)$/),
+    NonPositiveInteger: input => validatePatternType(input, 'NonPositiveInteger', /^(?:0|-\d+)$/),
+    NonNegativeInteger: input => validatePatternType(input, 'NonNegativeInteger', /^\+?(?:0|[1-9]\d*)$/),
     Double: input => validateDoubleOrFloat(input, 'Double'),
     Float: input => validateDoubleOrFloat(input, 'Float'),
     Boolean: validateBoolean,
