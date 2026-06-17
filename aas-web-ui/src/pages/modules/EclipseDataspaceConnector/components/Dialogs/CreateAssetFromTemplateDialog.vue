@@ -100,6 +100,7 @@
   import * as Prism from 'prismjs'
   import { type Asset, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import AssetTemplateDefault from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.9.json'
+  import AssetTemplateRailwayXDTRegistry from '@/pages/modules/EclipseDataspaceConnector/data/assets/templates/railway-x_dt_registry_asset___tractus-x_edc_v0.9.json'
   import AssetTemplateRailwayXPush from '@/pages/modules/EclipseDataspaceConnector/data/assets/templates/railway-x_push_asset___tractus-x_edc_v0.9.json'
   import { formatJSON } from '@/utils/JsonUtils'
   import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
@@ -135,6 +136,12 @@
       name: 'Railway-X Push Asset',
       description: 'Allows other participants to push data to this endpoint',
       asset: AssetTemplateRailwayXPush,
+    },
+    {
+      value: 'railwayxDTRegistry',
+      name: 'Railway-X Digital Twin Registry',
+      description: 'The Digital Twin Registry enables the discovery and access of Digital Twins',
+      asset: AssetTemplateRailwayXDTRegistry,
     },
   ]
 
