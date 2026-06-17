@@ -213,6 +213,15 @@
                           <v-sheet border>
                             <v-list class="py-0" dense density="compact" slim>
 
+                              <!-- Update Asset -->
+                              <v-list-item @click="openUpdateDialog(item)">
+                                <template #prepend>
+                                  <v-icon size="x-small">mdi-pencil</v-icon>
+                                </template>
+
+                                <v-list-item-subtitle>Edit Asset</v-list-item-subtitle>
+                              </v-list-item>
+
                               <!-- Delete Asset -->
                               <v-list-item @click="openDeleteDialog(item)">
                                 <template #prepend>
@@ -323,6 +332,8 @@
   <CreateAssetsAasSmsDialog v-model="createAssetsAasSmsDialog" @assets-created="onAssetsCreated" />
   <CreateAssetFromTemplateDialog v-model="createAssetFromTemplateDialog" @assets-created="onAssetsCreated" />
 
+  <UpdateAssetDialog v-model="updateAssetDialog" :asset="assetToUpdate" @asset-updated="onAssetUpdated" />
+
   <DeleteAssetDialog v-model="deleteAssetDialog" :asset="assetToDelete" @asset-deleted="onAssetDeleted" />
 </template>
 
@@ -335,6 +346,7 @@
   import CreateAssetFromTemplateDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/CreateAssetFromTemplateDialog.vue'
   import CreateAssetsAasSmsDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/CreateAssetsAasSmsDialog.vue'
   import DeleteAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/DeleteAssetDialog.vue'
+  import UpdateAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/UpdateAssetDialog.vue'
   import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { formatJSON } from '@/utils/JsonUtils'
@@ -370,6 +382,8 @@
   const createAssetDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
   const createAssetsAasSmsDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
   const createAssetFromTemplateDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
+  const updateAssetDialog = ref(false) // Variable to store if the Update Asset Dialog should be shown
+  const assetToUpdate = ref({}) // Variable to store the asset to be updated
   const deleteAssetDialog = ref(false) // Variable to store if the Delete Asset Dialog should be shown
   const assetToDelete = ref({}) // Variable to store the asset to be deleted
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
@@ -445,9 +459,19 @@
     await initialize()
   }
 
+  function openUpdateDialog (asset: any): void {
+    assetToUpdate.value = asset
+    updateAssetDialog.value = true
+  }
+
   function openDeleteDialog (asset: any): void {
     deleteAssetDialog.value = true
     assetToDelete.value = asset
+  }
+
+  async function onAssetUpdated (): Promise<void> {
+    // Reload the asset list
+    await initialize()
   }
 
   async function onAssetDeleted (): Promise<void> {

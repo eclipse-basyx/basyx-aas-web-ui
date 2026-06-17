@@ -1,7 +1,7 @@
 <template>
   <v-dialog
     v-model="createAssetDialog"
-    height="90%"
+    style="min-height: 190px; max-height:90%"
     width="800px"
   >
     <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">
