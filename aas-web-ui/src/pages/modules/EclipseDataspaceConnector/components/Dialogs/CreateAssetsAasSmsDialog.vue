@@ -22,7 +22,6 @@
               >
 
                 <v-tooltip
-                  :disabled="isMobile"
                   location="bottom"
                   open-delay="600"
                 >
@@ -114,9 +113,7 @@
                           </template>
                           <!-- Tooltip with idShort and id -->
                           <v-tooltip
-                            v-if="!isMobile"
                             activator="parent"
-                            :disabled="isMobile"
                             open-delay="600"
                             transition="slide-x-transition"
                           >
@@ -310,9 +307,7 @@
 
                           <!-- Tooltip with idShort and id -->
                           <v-tooltip
-                            v-if="!isMobile"
                             activator="parent"
-                            :disabled="isMobile"
                             open-delay="600"
                             transition="slide-x-transition"
                           >
@@ -667,7 +662,6 @@
   })
 
   // Computed Properties
-  const isMobile = computed(() => navigationStore.getIsMobile) // Check if the current Device is a Mobile Device
   const isDark = computed(() => theme.global.current.value.dark) // Check if the current Theme is dark
   const primaryColor = computed(() => theme.current.value.colors.primary) // returns the primary color of the current theme
 
@@ -829,7 +823,7 @@
   async function initialize (): Promise<void> {
     resetAASListState(true)
     await initializePagination(scrollToSelectedAAS)
-    await prepareAasData ()
+    await prepareAasData()
   }
 
   async function prepareAasData () {
