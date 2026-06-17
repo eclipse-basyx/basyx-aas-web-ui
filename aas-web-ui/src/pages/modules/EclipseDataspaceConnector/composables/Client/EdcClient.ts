@@ -488,7 +488,7 @@ export function useEdcClient () {
       return false
     }
 
-    const path = `${baseUrl}${defaultAssetsPath}/${assetId}`
+    const path = `${baseUrl}${defaultAssetsPath}`
     const context = 'updating EDC asset'
     const disableMessage = false
     const headers = new Headers()
@@ -653,7 +653,7 @@ export function useEdcClient () {
 
   /**
    * Updates an existing contract definition
-   * Based on OpenAPI spec: PUT /v3/contractdefinitions/{id}
+   * Based on OpenAPI spec: PUT /v3/contractdefinitions
    * @param contractId The ID of the contract definition to update
    * @param contractDefinition The updated contract definition data
    * @param endpoint Optional custom endpoint. If not provided, uses configured controlplane endpoint
@@ -665,7 +665,7 @@ export function useEdcClient () {
       return false
     }
 
-    const path = `${baseUrl}${defaultPolicyDefinitionsPath}/${contractId}`
+    const path = `${baseUrl}${defaultContractDefinitionsPath}`
     const context = 'updating EDC contract definition'
     const disableMessage = false
     const headers = new Headers()
@@ -786,6 +786,7 @@ export function useEdcClient () {
     // Ensure @context and @type are set if not provided
     const bodyObj = {
       '@context': [
+        // eslint-disable-next-line unicorn/prefer-https -- exact identifier, not fetch URL.
         'http://www.w3.org/ns/odrl.jsonld', {
           '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
         },

@@ -291,8 +291,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
   // Infrastructure Actions
   async function dispatchSelectInfrastructure (infrastructureId: string, connect = true): Promise<void> {
-    const infra = infrastructures.value.find(i => i.id === infrastructureId)
-    if (!infra) {
+    if (!infrastructures.value.some(i => i.id === infrastructureId)) {
       console.error(`[InfrastructureStore] Infrastructure with ID ${infrastructureId} not found`)
       return
     }
@@ -340,8 +339,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         }
       }
 
-      // Use splice to ensure reactivity
-      infrastructures.value.splice(index, 1, infrastructure)
+      infrastructures.value[index] = infrastructure
 
       if (process.env.NODE_ENV === 'development') {
         console.warn('[InfrastructureStore] Updated infrastructure:', {

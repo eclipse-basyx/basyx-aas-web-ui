@@ -63,15 +63,19 @@
 
   function initializeDisplay (): void {
     // Reduce each time series to its last element and join with yVariables
-    localChartData.value = props.chartData.map((timeSeries: Array<ChartDataPoint>, index: number) => {
+    localChartData.value = props.chartData.flatMap((timeSeries: Array<ChartDataPoint>, index: number) => {
       const lastDataPoint = timeSeries.at(-1)
+      if (!lastDataPoint) {
+        return []
+      }
+
       const yVariable = props.yVariables[index]
       // Merge the data point with the property metadata, ensuring value is from data point
-      return {
+      return [{
         ...yVariable,
         ...lastDataPoint,
         value: lastDataPoint.value,
-      } as DisplayElement
+      } as DisplayElement]
     })
   }
 
@@ -82,25 +86,27 @@
     }
 
     // Floating-point types (with decimal places)
-    if (prop.valueType === 6 || prop.valueType === 7 || prop.valueType === 9) {
+    if ([6, 7, 9].includes(prop.valueType)) {
       // Decimal (6), Double (7), Float (9)
       const numberValue = Number.parseFloat(prop.value)
       return numberValue.toFixed(2)
     } else if (
       // Integer types (no decimal places)
-      prop.valueType === 3 // Byte
-      || prop.valueType === 16 // Int
-      || prop.valueType === 17 // Integer
-      || prop.valueType === 18 // Long (moved from floating-point)
-      || prop.valueType === 19 // NegativeInteger
-      || prop.valueType === 20 // NonNegativeInteger
-      || prop.valueType === 21 // NonPositiveInteger
-      || prop.valueType === 22 // PositiveInteger
-      || prop.valueType === 23 // Short
-      || prop.valueType === 26 // UnsignedByte
-      || prop.valueType === 27 // UnsignedInt
-      || prop.valueType === 28 // UnsignedLong
-      || prop.valueType === 29 // UnsignedShort
+      [
+        3, // Byte
+        16, // Int
+        17, // Integer
+        18, // Long (moved from floating-point)
+        19, // NegativeInteger
+        20, // NonNegativeInteger
+        21, // NonPositiveInteger
+        22, // PositiveInteger
+        23, // Short
+        26, // UnsignedByte
+        27, // UnsignedInt
+        28, // UnsignedLong
+        29, // UnsignedShort
+      ].includes(prop.valueType)
     ) {
       const numberValue = Number.parseInt(prop.value, 10)
       return numberValue.toFixed(0)

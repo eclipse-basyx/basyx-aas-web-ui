@@ -45,3 +45,24 @@ export interface RegisteredQueryParamType {
   paramName: string
   semanticId: string // The semanticId of the plugin that registered this param
 }
+
+export interface ModuleNavigationRouteMeta {
+  [key: string]: unknown
+  name?: string
+  moduleTitle?: string
+  title?: string
+  subtitle?: string
+  isDesktopModule?: boolean
+  isMobileModule?: boolean
+  isVisibleModule?: boolean
+  isOnlyVisibleWithSelectedAas?: boolean
+  isOnlyVisibleWithSelectedNode?: boolean
+  visibleOnRoutes?: Array<string>
+  preserveRouteQuery?: boolean
+}
+
+export interface ModuleNavigationRoute {
+  path: string
+  name?: string | symbol
+  meta?: ModuleNavigationRouteMeta
+}

@@ -1,16 +1,33 @@
 import type {
   AutoSyncType,
+  ModuleNavigationRoute,
   PlatformType,
   PluginType,
   RegisteredQueryParamType,
   SnackbarType,
   StatusCheckType,
 } from '@/types/Application'
-import type { LocationQuery, Router, RouteRecordRaw } from 'vue-router'
+import type { LocationQuery } from 'vue-router'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils'
 import { useEnvStore } from './EnvironmentStore'
+
+type RouterNavigationTarget = {
+  name?: string
+  path?: string
+  query?: LocationQuery
+}
+
+type NavigationRouter = {
+  currentRoute: {
+    value: {
+      name: unknown
+      query: LocationQuery
+    }
+  }
+  push: (target: RouterNavigationTarget) => unknown
+}
 
 export const useNavigationStore = defineStore('navigationStore', () => {
   // States
@@ -27,7 +44,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
   const triggerAASListScroll = ref(false)
   const triggerTreeviewReload = ref(false)
   const urlQuery = ref<LocationQuery>({} as LocationQuery)
-  const moduleRoutes = ref<Array<RouteRecordRaw>>([])
+  const moduleRoutes = ref<Array<ModuleNavigationRoute>>([])
 
   // Core query params that are always allowed (UI framework params)
   const coreQueryParams = ['aas', 'path', 'view']
@@ -118,7 +135,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     urlQuery.value = query
   }
 
-  function dispatchModuleRoutes (routes: RouteRecordRaw[]): void {
+  function dispatchModuleRoutes (routes: ModuleNavigationRoute[]): void {
     moduleRoutes.value = routes
   }
 
@@ -217,7 +234,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
   }
 
   // Navigates from Viewer (Either SMViewer of AASViewer) to the corresponding Editor Mode
-  function navigateToEditorMode (router: Router): void {
+  function navigateToEditorMode (router: NavigationRouter): void {
     if (!envStore.getAllowEditing) {
       return
     }
@@ -228,7 +245,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     }
   }
 
-  function navigateToViewerMode (router: Router): void {
+  function navigateToViewerMode (router: NavigationRouter): void {
     if (router.currentRoute.value.name === 'AASEditor') {
       router.push({ name: 'AASViewer', query: router.currentRoute.value.query })
     } else if (router.currentRoute.value.name === 'SMEditor') {

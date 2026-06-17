@@ -1,11 +1,11 @@
-import type { RouteRecordRaw } from 'vue-router'
+import type { ModuleNavigationRoute } from '@/types/Application'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAASStore } from '@/store/AASDataStore'
 import { useNavigationStore } from '@/store/NavigationStore'
 
 interface ModuleHandling {
-  determineFilteredAndOrderedModuleRoutes: () => RouteRecordRaw[]
+  determineFilteredAndOrderedModuleRoutes: () => ModuleNavigationRoute[]
   isActiveModuleRoute: (routePath: string) => boolean
 }
 
@@ -24,8 +24,9 @@ export function useModuleHandling (): ModuleHandling {
   const selectedNode = computed(() => aasStore.getSelectedNode) // get selected node from Store
 
   function determineFilteredAndOrderedModuleRoutes () {
+    const currentRouteName = typeof route.name === 'string' ? route.name : undefined
     const filteredModuleRoutes = moduleRoutes.value.filter(
-      (moduleRoute: RouteRecordRaw) => {
+      (moduleRoute: ModuleNavigationRoute) => {
         if (isMobile.value && !moduleRoute?.meta?.isMobileModule) {
           return false
         }
@@ -48,7 +49,7 @@ export function useModuleHandling (): ModuleHandling {
           moduleRoute?.meta?.visibleOnRoutes
           && Array.isArray(moduleRoute.meta.visibleOnRoutes)
           && moduleRoute.meta.visibleOnRoutes.length > 0
-          && !moduleRoute.meta.visibleOnRoutes.includes(route.name)
+          && (!currentRouteName || !moduleRoute.meta.visibleOnRoutes.includes(currentRouteName))
         ) {
           return false
         }
@@ -60,7 +61,7 @@ export function useModuleHandling (): ModuleHandling {
     )
 
     return filteredModuleRoutes.toSorted(
-      (moduleRouteA: RouteRecordRaw, moduleRouteB: RouteRecordRaw) => {
+      (moduleRouteA: ModuleNavigationRoute, moduleRouteB: ModuleNavigationRoute) => {
         const moduleNameA: string = moduleRouteA?.name?.toString() || ''
         const moduleNameB: string = moduleRouteB?.name?.toString() || ''
         return moduleNameA.localeCompare(moduleNameB)

@@ -210,8 +210,8 @@
 </template>
 
 <script lang="ts" setup>
+  import type { ModuleNavigationRoute } from '@/types/Application'
   import type { ComponentPublicInstance, Ref } from 'vue'
-  import type { RouteRecordRaw } from 'vue-router'
   import { computed, onMounted, ref } from 'vue'
   import { useRoute } from 'vue-router'
   import { useModuleHandling } from '@/composables/ModuleHandling'
@@ -266,7 +266,7 @@
   // Function to scroll to the active module
   function scrollToSelectedModule (): void {
     // Find the index of the selected item
-    const index = filteredAndOrderedModuleRoutes.value.findIndex((moduleRoute: RouteRecordRaw) =>
+    const index = filteredAndOrderedModuleRoutes.value.findIndex((moduleRoute: ModuleNavigationRoute) =>
       isActiveRoutePath(moduleRoute.path),
     )
 

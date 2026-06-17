@@ -190,6 +190,15 @@
                           <v-sheet border>
                             <v-list class="py-0" dense density="compact" slim>
 
+                              <!-- Update Policy -->
+                              <v-list-item @click="openUpdateDialog(item)">
+                                <template #prepend>
+                                  <v-icon size="x-small">mdi-pencil</v-icon>
+                                </template>
+
+                                <v-list-item-subtitle>Edit Policy</v-list-item-subtitle>
+                              </v-list-item>
+
                               <!-- Delete Policy -->
                               <v-list-item @click="openDeleteDialog(item)">
                                 <template #prepend>
@@ -298,6 +307,9 @@
   </v-container>
 
   <CreatePolicyDialog v-model="createPolicyDialog" @policy-created="onPolicyCreated" />
+
+  <UpdatePolicyDialog v-model="updatePolicyDialog" :policy="policyToUpdate" @policy-updated="onPolicyUpdated" />
+
   <DeletePolicyDialog v-model="deletePolicyDialog" :policy="policyToDelete" @policy-deleted="onPolicyDeleted" />
 </template>
 
@@ -308,6 +320,7 @@
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import CreatePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/CreatePolicyDialog.vue'
   import DeletePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/DeletePolicyDialog.vue'
+  import UpdatePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/UpdatePolicyDialog.vue'
   import { type PolicyDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { formatJSON } from '@/utils/JsonUtils'
@@ -341,6 +354,8 @@
   const selectedPolicyJson = ref<string>('')
   const selectedPolicyJsonFormatted = ref<string>('')
   const createPolicyDialog = ref(false) // Variable to store if the Create Policy Dialog should be shown
+  const updatePolicyDialog = ref(false) // Variable to store if the Update Policy Dialog should be shown
+  const policyToUpdate = ref({}) // Variable to store the policy to be updated
   const deletePolicyDialog = ref(false) // Variable to store if the Delete Policy Dialog should be shown
   const policyToDelete = ref({}) // Variable to store the policy to be deleted
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
@@ -423,9 +438,19 @@
     }
   }
 
+  function openUpdateDialog (policy: any): void {
+    policyToUpdate.value = policy
+    updatePolicyDialog.value = true
+  }
+
   function openDeleteDialog (policy: any): void {
     deletePolicyDialog.value = true
     policyToDelete.value = policy
+  }
+
+  async function onPolicyUpdated (): Promise<void> {
+    // Reload the policy list
+    await initialize()
   }
 
   async function onPolicyDeleted (): Promise<void> {

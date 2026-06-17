@@ -337,7 +337,7 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
       const checkResponse = await getRequest(targetFolderPath, 'Checking target folder', true)
       if (checkResponse.success) {
         const existingElements = checkResponse.data.value || []
-        const conflictingElement = existingElements.find(
+        const conflictingElement = existingElements.some(
           (el: FileSystemElement) => el.idShort === elementData.idShort,
         )
         if (conflictingElement) {
@@ -425,7 +425,7 @@ export function useFileSystemOperations (submodelElementData: () => SubmodelElem
       if (checkResponse.success) {
         const parentFolderData = parentPath ? checkResponse.data : { result: checkResponse.data.result }
         const existingElements = parentFolderData.value || parentFolderData.result || []
-        const conflictingElement = existingElements.find(
+        const conflictingElement = existingElements.some(
           (el: FileSystemElement) => el.idShort === elementData.idShort,
         )
         if (conflictingElement) {

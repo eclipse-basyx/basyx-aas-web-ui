@@ -370,7 +370,7 @@ describe('TimeSeries_v1_1.vue fetch behavior', () => {
 
     getRequestMock.mockResolvedValue({
       success: true,
-      data: '   ',
+      data: ' '.repeat(3),
       raw: {
         headers: new Headers({ 'Content-Type': 'text/plain' }),
         redirected: false,

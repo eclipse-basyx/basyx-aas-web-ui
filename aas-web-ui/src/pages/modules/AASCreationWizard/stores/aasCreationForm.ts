@@ -3,6 +3,8 @@ import type { FormStateObject } from '../types/form'
 import type { DigitalNameplateTemplate, HandoverDocumentationTemplate, TechnicalDataTemplate } from '../types/template'
 import { defineStore } from 'pinia'
 
+/* eslint-disable unicorn/no-this-outside-of-class -- Pinia option-store actions intentionally use this-bound state. */
+
 export type LangText = {
   language: string
   text: string

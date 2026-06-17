@@ -184,6 +184,15 @@
                           <v-sheet border>
                             <v-list class="py-0" dense density="compact" slim>
 
+                              <!-- Update Contract -->
+                              <v-list-item @click="openUpdateDialog(item)">
+                                <template #prepend>
+                                  <v-icon size="x-small">mdi-pencil</v-icon>
+                                </template>
+
+                                <v-list-item-subtitle>Edit Contract</v-list-item-subtitle>
+                              </v-list-item>
+
                               <!-- Delete Contract -->
                               <v-list-item @click="openDeleteDialog(item)">
                                 <template #prepend>
@@ -291,6 +300,9 @@
   </v-container>
 
   <CreateContractDialog v-model="createContractDialog" @contract-created="onContractCreated" />
+
+  <UpdateContractDialog v-model="updateContractDialog" :contract="contractToUpdate" @contract-updated="onContractUpdated" />
+
   <DeleteContractDialog v-model="deleteContractDialog" :contract="contractToDelete" @contract-deleted="onContractDeleted" />
 </template>
 
@@ -301,6 +313,7 @@
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import CreateContractDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/CreateContractDialog.vue'
   import DeleteContractDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/DeleteContractDialog.vue'
+  import UpdateContractDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/UpdateContractDialog.vue'
   import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { formatJSON } from '@/utils/JsonUtils'
@@ -334,6 +347,8 @@
   const selectedContractJson = ref<string>('')
   const selectedContractJsonFormatted = ref<string>('')
   const createContractDialog = ref(false) // Variable to store if the Create Contract Dialog should be shown
+  const updateContractDialog = ref(false) // Variable to store if the Update Contract Dialog should be shown
+  const contractToUpdate = ref({}) // Variable to store the contract to be updated
   const deleteContractDialog = ref(false) // Variable to store if the Delete Contract Dialog should be shown
   const contractToDelete = ref({}) // Variable to store the contract to be deleted
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
@@ -416,9 +431,19 @@
     }
   }
 
+  function openUpdateDialog (contract: any): void {
+    contractToUpdate.value = contract
+    updateContractDialog.value = true
+  }
+
   function openDeleteDialog (contract: any): void {
     deleteContractDialog.value = true
     contractToDelete.value = contract
+  }
+
+  async function onContractUpdated (): Promise<void> {
+    // Reload the contract list
+    await initialize()
   }
 
   async function onContractDeleted (): Promise<void> {
