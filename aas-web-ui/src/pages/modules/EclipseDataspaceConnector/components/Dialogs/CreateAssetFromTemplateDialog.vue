@@ -236,7 +236,7 @@
     for (const placeholder of placeholders.value) {
       const value = placeholderValues.value[placeholder.label] || `{{${placeholder.label}}}`
       result = result.replace(
-        new RegExp(String.raw`\{\{[^}]*\}\}`, 'g'),
+        /\{\{[^}]*\}\}/g,
         match => {
           const matchContent = match.slice(2, -2)
           const matchParts = matchContent.split('|')

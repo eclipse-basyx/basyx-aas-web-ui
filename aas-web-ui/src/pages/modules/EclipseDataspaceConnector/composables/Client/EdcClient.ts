@@ -786,6 +786,7 @@ export function useEdcClient () {
     // Ensure @context and @type are set if not provided
     const bodyObj = {
       '@context': [
+        // eslint-disable-next-line unicorn/prefer-https -- exact identifier, not fetch URL.
         'http://www.w3.org/ns/odrl.jsonld', {
           '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
         },
