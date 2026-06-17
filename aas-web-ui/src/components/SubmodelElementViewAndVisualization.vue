@@ -29,6 +29,11 @@
               <v-icon start>mdi-code-block-braces</v-icon>
               <span class="hidden-sm-and-down">JSON</span>
             </v-btn>
+
+            <v-btn class="ma-0" value="UMLView">
+              <v-icon start>mdi-sitemap-outline</v-icon>
+              <span class="hidden-sm-and-down">UML</span>
+            </v-btn>
           </v-btn-toggle>
         </div>
       </v-card-title>
@@ -46,7 +51,8 @@
         >
           <SubmodelElementView v-if="componentToShow === 'SMEView'" />
           <SubmodelElementVisualization v-else-if="componentToShow === 'Visualization'" />
-          <SubmodelElementJSONView v-if="componentToShow === 'JSONView'" />
+          <SubmodelElementJSONView v-else-if="componentToShow === 'JSONView'" />
+          <SubmodelElementUMLView v-else-if="componentToShow === 'UMLView'" />
         </template>
 
         <v-empty-state
@@ -82,7 +88,7 @@
   const aasStore = useAASStore()
 
   // Data
-  const validViews = new Set(['SMEView', 'Visualization', 'JSONView'])
+  const validViews = new Set(['SMEView', 'Visualization', 'JSONView', 'UMLView'])
   const componentToShow = ref(
     validViews.has(route.query.view as string) ? (route.query.view as string) : 'SMEView',
   )

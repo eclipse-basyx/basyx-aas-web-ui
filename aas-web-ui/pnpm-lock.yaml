@@ -17,6 +17,9 @@ importers:
       '@mdi/font':
         specifier: ^7.4.47
         version: 7.4.47
+      '@plantuml/core':
+        specifier: 1.2026.6
+        version: 1.2026.6
       '@thatopen/components':
         specifier: ^3.4.6
         version: 3.4.6(@thatopen/fragments@3.4.5(three@0.184.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.184.0))(three@0.184.0)(web-ifc@0.0.77)
@@ -672,6 +675,9 @@ packages:
   '@pkgr/core@0.3.6':
     resolution: {integrity: sha512-SEeaJLb3qBNF/OaXnaR1NmmBbFYk1zC0ZH/52fATcRPLFg/p791YrcyFFy44Bo9sLaGuSuLp5Q6axbb/O+v/RA==}
     engines: {node: ^14.18.0 || >=16.0.0}
+
+  '@plantuml/core@1.2026.6':
+    resolution: {integrity: sha512-e+s8jtAKT6kb7yvOCXv0exXOp7FvyKYDcpv+aQrThwXUQgdTGP+fb9hPZQr7jbeEMuUHbxjH1HYLwNZZxw3hJg==}
 
   '@playwright/test@1.60.0':
     resolution: {integrity: sha512-O71yZIbAh/PxDMNGns37GHBIfrVkEVyn+AXyIa5dOTfb4/xNvRWV+Vv/NMbNCtODB/pO7vLlF2OTmMVLhmr7Ag==}
@@ -3689,6 +3695,8 @@ snapshots:
     optional: true
 
   '@pkgr/core@0.3.6': {}
+
+  '@plantuml/core@1.2026.6': {}
 
   '@playwright/test@1.60.0':
     dependencies:
