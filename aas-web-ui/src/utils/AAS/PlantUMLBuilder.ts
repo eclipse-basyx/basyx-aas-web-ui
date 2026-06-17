@@ -97,9 +97,11 @@ export function buildPlantUmlForSubmodelElement (
   let truncated = false
 
   if (!isRecord(selectedNode) || Object.keys(selectedNode).length === 0) {
+    warnings.push('No Submodel/SubmodelElement data available for UML export.')
+
     return {
       source: createPlantUmlSource([], [], warnings),
-      warnings: ['No Submodel/SubmodelElement data available for UML export.'],
+      warnings,
       nodeCount,
       truncated,
     }

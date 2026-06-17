@@ -295,13 +295,13 @@
     }
 
     for (const element of documentNode.querySelectorAll('*')) {
-      for (const attribute of element.attributes) {
+      for (const attribute of Array.from(element.attributes)) {
         const attributeName = attribute.name.toLowerCase()
-        const attributeValue = attribute.value.trim().toLowerCase()
+        const attributeValue = attribute.value.trim()
 
         if (
           attributeName.startsWith('on')
-          || (['href', 'xlink:href'].includes(attributeName) && attributeValue.startsWith('javascript:'))
+          || isExternalSvgLinkAttribute(attributeName, attributeValue)
         ) {
           element.removeAttribute(attribute.name)
         }
@@ -324,6 +324,14 @@
     ].join('\n')
 
     documentNode.documentElement.prepend(styleElement)
+  }
+
+  function isExternalSvgLinkAttribute (attributeName: string, attributeValue: string): boolean {
+    if (!['href', 'xlink:href'].includes(attributeName)) {
+      return false
+    }
+
+    return !attributeValue.startsWith('#')
   }
 </script>
 

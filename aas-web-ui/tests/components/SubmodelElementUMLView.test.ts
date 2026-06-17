@@ -110,6 +110,29 @@ describe('SubmodelElementUMLView', () => {
     expect(wrapper.html()).toContain('font-size: 13px')
   })
 
+  it('strips external SVG links and event handlers before rendering', async () => {
+    mocks.renderPlantUmlToSvg.mockResolvedValue(`
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+        <defs>
+          <path id="local-path" d="M 0 0 L 1 1" />
+        </defs>
+        <a href="https://example.test/external" xlink:href="javascript:alert(1)" onclick="alert(1)">
+          <text>External link</text>
+        </a>
+        <use href="#local-path" xlink:href="#local-path" />
+      </svg>
+    `)
+
+    const wrapper = mountComponent()
+    await flushPromises()
+
+    expect(wrapper.html()).toContain('External link')
+    expect(wrapper.html()).not.toContain('https://example.test/external')
+    expect(wrapper.html()).not.toContain('javascript:alert')
+    expect(wrapper.html()).not.toContain('onclick')
+    expect(wrapper.html()).toContain('href="#local-path"')
+  })
+
   it('copies the generated PlantUML source', async () => {
     const wrapper = mountComponent()
     await flushPromises()

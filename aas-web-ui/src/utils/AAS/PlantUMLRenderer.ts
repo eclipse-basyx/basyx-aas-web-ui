@@ -1,7 +1,10 @@
-import type { render as plantUmlRender } from '@plantuml/core'
 import vizGlobalUrl from '@plantuml/core/viz-global.js?url'
 
-type PlantUmlRender = typeof plantUmlRender
+type PlantUmlRender = (
+  lines: string[],
+  targetId: string,
+  options?: { dark?: boolean },
+) => void
 type PlantUmlCore = {
   render: PlantUmlRender
 }

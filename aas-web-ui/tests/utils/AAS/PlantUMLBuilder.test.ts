@@ -2,6 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { buildPlantUmlForSubmodelElement } from '@/utils/AAS/PlantUMLBuilder'
 
 describe('PlantUMLBuilder', () => {
+  it('includes empty-state warnings in the generated PlantUML source', () => {
+    const result = buildPlantUmlForSubmodelElement({})
+
+    expect(result.warnings).toEqual(['No Submodel/SubmodelElement data available for UML export.'])
+    expect(result.source).toContain('\' Warning: No Submodel/SubmodelElement data available for UML export.')
+  })
+
   it('builds a class diagram for a selected Submodel subtree', () => {
     const result = buildPlantUmlForSubmodelElement({
       modelType: 'Submodel',
