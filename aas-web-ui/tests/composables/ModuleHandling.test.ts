@@ -1,6 +1,14 @@
-import type { RouteRecordRaw } from 'vue-router'
+import type { ModuleNavigationRoute } from '@/types/Application'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed, nextTick, reactive, ref } from 'vue'
+
+function createModuleRoute (route: {
+  path: string
+  name: string
+  meta: ModuleNavigationRoute['meta']
+}): ModuleNavigationRoute {
+  return route
+}
 
 const mockState = {
   route: reactive({
@@ -8,7 +16,7 @@ const mockState = {
     name: 'AASEditor',
   }),
   isMobile: ref(false),
-  moduleRoutes: ref<Array<RouteRecordRaw>>([]),
+  moduleRoutes: ref<Array<ModuleNavigationRoute>>([]),
   selectedAas: ref<Record<string, unknown> | null>(null),
   selectedNode: ref<Record<string, unknown> | null>(null),
 }
@@ -57,7 +65,7 @@ describe('ModuleHandling.ts', () => {
     mockState.selectedAas.value = null
     mockState.selectedNode.value = null
     mockState.moduleRoutes.value = [
-      {
+      createModuleRoute({
         path: '/modules/test-module',
         name: 'TestModule',
         meta: {
@@ -65,13 +73,13 @@ describe('ModuleHandling.ts', () => {
           isMobileModule: true,
           isVisibleModule: true,
         },
-      },
+      }),
     ]
   })
 
   it('includes a module when current route is allowed by visibleOnRoutes', async () => {
     mockState.moduleRoutes.value = [
-      {
+      createModuleRoute({
         path: '/modules/allowed',
         name: 'AllowedModule',
         meta: {
@@ -80,7 +88,7 @@ describe('ModuleHandling.ts', () => {
           isVisibleModule: true,
           visibleOnRoutes: ['AASEditor', 'SMEditor'],
         },
-      },
+      }),
     ]
 
     const { useModuleHandling } = await importUseModuleHandling()
@@ -93,7 +101,7 @@ describe('ModuleHandling.ts', () => {
 
   it('excludes a module when current route is not in visibleOnRoutes', async () => {
     mockState.moduleRoutes.value = [
-      {
+      createModuleRoute({
         path: '/modules/restricted',
         name: 'RestrictedModule',
         meta: {
@@ -102,7 +110,7 @@ describe('ModuleHandling.ts', () => {
           isVisibleModule: true,
           visibleOnRoutes: ['SMEditor'],
         },
-      },
+      }),
     ]
 
     const { useModuleHandling } = await importUseModuleHandling()
@@ -114,7 +122,7 @@ describe('ModuleHandling.ts', () => {
 
   it('reacts to route name and store changes when wrapped in computed by callers', async () => {
     mockState.moduleRoutes.value = [
-      {
+      createModuleRoute({
         path: '/modules/reactive',
         name: 'ReactiveModule',
         meta: {
@@ -124,7 +132,7 @@ describe('ModuleHandling.ts', () => {
           isOnlyVisibleWithSelectedAas: true,
           visibleOnRoutes: ['AASEditor'],
         },
-      },
+      }),
     ]
 
     const { useModuleHandling } = await importUseModuleHandling()

@@ -51,7 +51,7 @@
                     "
                   >
                     {{
-                      getPcfLifeCyclePhaseFromId(
+                      getPcfLifecyclePhaseFromId(
                         pcfLifeCyclePhase?.valueId?.keys[0]?.value
                       )?.value.replaceAll(', ', '\n')
                     }}
@@ -443,7 +443,7 @@
   const {
     semanticIdSMCProductCarbonFootprint,
     semanticIdSMCTransportCarbonFootprint,
-    getPcfLifeCyclePhaseFromId,
+    getPcfLifecyclePhaseFromId,
     getTcfProcessesForGreenhouseGasEmissionInATransportServiceFromId,
   } = useCarbonFootprint_v0_9Utils()
   const { determineAddress } = useContactInformation_v1_0Utils()

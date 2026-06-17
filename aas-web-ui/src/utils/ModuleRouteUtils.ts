@@ -30,7 +30,7 @@ function sanitizeChildRouteSegment (pathSegment: string): string {
     .trim()
     .replace(/^\/+|\/+$/g, '')
     .replace(/\//g, '_')
-    .replace(/[^a-zA-Z0-9_-]/g, '_')
+    .replace(/[^\w-]/g, '_')
   return sanitized === '' ? 'Child' : sanitized
 }
 

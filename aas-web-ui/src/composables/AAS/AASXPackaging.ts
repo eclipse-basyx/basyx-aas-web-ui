@@ -702,7 +702,7 @@ export function useAASXPackaging (): {
       throw new Error('Failed to retrieve AAS endpoint.')
     }
 
-    const environmentEndpoint = aasEndpoint.split('/shells')[0]
+    const environmentEndpoint = aasEndpoint.split('/shells', 1)[0]
     const params = new URLSearchParams()
     params.append('aasIds', base64Encode(normalizedAasId))
 

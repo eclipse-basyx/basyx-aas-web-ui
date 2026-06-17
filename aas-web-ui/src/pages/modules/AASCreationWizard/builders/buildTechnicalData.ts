@@ -330,6 +330,10 @@ function buildElement (element: TemplateElement, value: FormStateValue): Templat
     case 'ReferenceElement': {
       return []
     }
+
+    default: {
+      return []
+    }
   }
 }
 function buildRepeatableCollectionItem (

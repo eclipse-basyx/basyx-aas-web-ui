@@ -51,11 +51,11 @@
             >
               <template #opposite>
                 <div
-                  v-for="pcfLifeCyclePhase in getLifeCyclePhases(pcfSMC)"
+                  v-for="pcfLifeCyclePhase in getLifecyclePhases(pcfSMC)"
                   :key="pcfLifeCyclePhase.idShort"
                   class="pr-6"
                 >
-                  <p>{{ formatLifeCyclePhaseLabel(pcfLifeCyclePhase) }}</p>
+                  <p>{{ formatLifecyclePhaseLabel(pcfLifeCyclePhase) }}</p>
                 </div>
               </template>
 
@@ -240,7 +240,7 @@
   const { setData } = useSMHandling()
   const { checkIdShort } = useReferableUtils()
   const { valueToDisplay } = useSME()
-  const { semanticIdSmcProductCarbonFootprint, semanticIdSmlProductCarbonFootprints, getPcfLifeCyclePhaseFromId }
+  const { semanticIdSmcProductCarbonFootprint, semanticIdSmlProductCarbonFootprints, getPcfLifecyclePhaseFromId }
     = useCarbonFootprint_v1_0Utils()
   const { determineAddress } = useContactInformation_v1_0Utils()
 
@@ -404,7 +404,7 @@
       if (Number.isNaN(pcfValue)) return
 
       // Extract lifecycle phases for label
-      const lifeCyclePhasesSml = pcfSMC.value.find(
+      const lifecyclePhasesSml = pcfSMC.value.find(
         (sme: any) =>
           checkIdShort(sme, 'LifeCyclePhases')
           || checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/LifeCyclePhases/1/0'),
@@ -412,20 +412,20 @@
 
       let label = pcfSMC.idShort || 'PCF'
 
-      if (lifeCyclePhasesSml && lifeCyclePhasesSml.value) {
-        const lifeCyclePhases = lifeCyclePhasesSml.value.filter(
+      if (lifecyclePhasesSml && lifecyclePhasesSml.value) {
+        const lifecyclePhases = lifecyclePhasesSml.value.filter(
           (sme: any) => checkIdShort(sme, 'LifeCyclePhase') || checkSemanticId(sme, '0173-1#02-ABG858#003'),
         )
 
-        if (lifeCyclePhases && lifeCyclePhases.length > 0) {
-          const phaseLabels = lifeCyclePhases
+        if (lifecyclePhases && lifecyclePhases.length > 0) {
+          const phaseLabels = lifecyclePhases
             .map((phase: any) => {
               if (
                 phase?.valueId?.keys
                 && Array.isArray(phase?.valueId?.keys)
                 && phase?.valueId?.keys.length > 0
               ) {
-                const phaseInfo = getPcfLifeCyclePhaseFromId(phase.valueId.keys[0].value)
+                const phaseInfo = getPcfLifecyclePhaseFromId(phase.valueId.keys[0].value)
                 return phaseInfo?.identifier || valueToDisplay(phase)
               }
               return valueToDisplay(phase)
@@ -447,34 +447,34 @@
     showPieChart.value = pieChartData.value.length > 0
   }
 
-  function getLifeCyclePhases (pcfSMC: any): Array<any> {
+  function getLifecyclePhases (pcfSMC: any): Array<any> {
     if (!pcfSMC?.value || !Array.isArray(pcfSMC.value)) return []
 
-    const lifeCyclePhasesSml = pcfSMC.value.find(
+    const lifecyclePhasesSml = pcfSMC.value.find(
       (sme: any) =>
         checkIdShort(sme, 'LifeCyclePhases')
         || checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/LifeCyclePhases/1/0'),
     )
 
-    if (!lifeCyclePhasesSml?.value || !Array.isArray(lifeCyclePhasesSml.value)) return []
+    if (!lifecyclePhasesSml?.value || !Array.isArray(lifecyclePhasesSml.value)) return []
 
-    return lifeCyclePhasesSml.value.filter(
+    return lifecyclePhasesSml.value.filter(
       (sme: any) => checkIdShort(sme, 'LifeCyclePhase') || checkSemanticId(sme, '0173-1#02-ABG858#003'),
     )
   }
 
-  function formatLifeCyclePhaseLabel (pcfLifeCyclePhase: any): string {
-    const lifeCyclePhaseIdRaw = pcfLifeCyclePhase?.valueId?.keys?.[0]?.value
+  function formatLifecyclePhaseLabel (pcfLifecyclePhase: any): string {
+    const lifecyclePhaseIdRaw = pcfLifecyclePhase?.valueId?.keys?.[0]?.value
 
-    if (typeof lifeCyclePhaseIdRaw === 'string' && lifeCyclePhaseIdRaw.trim() !== '') {
-      const normalizedLifeCyclePhaseId = lifeCyclePhaseIdRaw.trim()
-      const phaseInfo = getPcfLifeCyclePhaseFromId(normalizedLifeCyclePhaseId)
+    if (typeof lifecyclePhaseIdRaw === 'string' && lifecyclePhaseIdRaw.trim() !== '') {
+      const normalizedLifecyclePhaseId = lifecyclePhaseIdRaw.trim()
+      const phaseInfo = getPcfLifecyclePhaseFromId(normalizedLifecyclePhaseId)
       if (phaseInfo?.value && typeof phaseInfo.value === 'string' && phaseInfo.value.trim() !== '') {
         return phaseInfo.value.replaceAll(', ', '\n')
       }
     }
 
-    const fallbackLabel = valueToDisplay(pcfLifeCyclePhase)
+    const fallbackLabel = valueToDisplay(pcfLifecyclePhase)
     return typeof fallbackLabel === 'string' ? fallbackLabel.replaceAll(', ', '\n') : ''
   }
 </script>

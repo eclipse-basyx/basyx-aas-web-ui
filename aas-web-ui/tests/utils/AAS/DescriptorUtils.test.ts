@@ -10,13 +10,13 @@ const testData = [
         {
           interface: 'AAS-3.0',
           protocolInformation: {
-            href: 'http://example.com/aasEndpoint',
+            href: 'https://example.com/aasEndpoint',
           },
         },
       ],
     },
     interfaceShortName: 'AAS-3.0',
-    result: 'http://example.com/aasEndpoint',
+    result: 'https://example.com/aasEndpoint',
   },
   {
     testId: 'bf24b84b-d1c2-4b4c-94ea-5849344ce003',
@@ -94,13 +94,13 @@ const testData = [
         {
           interface: 'AAS-REPOSITORY-3.0',
           protocolInformation: {
-            href: 'http://example.com/aas-repository',
+            href: 'https://example.com/aas-repository',
           },
         },
       ],
     },
     interfaceShortName: 'AAS-3.0',
-    result: 'http://example.com/aas-repository',
+    result: 'https://example.com/aas-repository',
   },
   // Fallback tests: AAS-3.0.1 not found, but AAS-REPOSITORY-3.0.1 exists (multi-part version)
   {
@@ -110,13 +110,13 @@ const testData = [
         {
           interface: 'AAS-REPOSITORY-3.0.1',
           protocolInformation: {
-            href: 'http://example.com/aas-repository-v3.0.1',
+            href: 'https://example.com/aas-repository-v3.0.1',
           },
         },
       ],
     },
     interfaceShortName: 'AAS-3.0.1',
-    result: 'http://example.com/aas-repository-v3.0.1',
+    result: 'https://example.com/aas-repository-v3.0.1',
   },
   // Fallback tests: SUBMODEL-3.0 not found, but SUBMODEL-REPOSITORY-3.0 exists
   {
@@ -126,13 +126,13 @@ const testData = [
         {
           interface: 'SUBMODEL-REPOSITORY-3.0',
           protocolInformation: {
-            href: 'http://example.com/submodel-repository',
+            href: 'https://example.com/submodel-repository',
           },
         },
       ],
     },
     interfaceShortName: 'SUBMODEL-3.0',
-    result: 'http://example.com/submodel-repository',
+    result: 'https://example.com/submodel-repository',
   },
   // Fallback tests: SUBMODEL-3.0.2 not found, but SUBMODEL-REPOSITORY-3.0.2 exists (multi-part version)
   {
@@ -142,13 +142,13 @@ const testData = [
         {
           interface: 'SUBMODEL-REPOSITORY-3.0.2',
           protocolInformation: {
-            href: 'http://example.com/submodel-repository-v3.0.2',
+            href: 'https://example.com/submodel-repository-v3.0.2',
           },
         },
       ],
     },
     interfaceShortName: 'SUBMODEL-3.0.2',
-    result: 'http://example.com/submodel-repository-v3.0.2',
+    result: 'https://example.com/submodel-repository-v3.0.2',
   },
   // Test that exact match takes priority over fallback
   {
@@ -158,19 +158,19 @@ const testData = [
         {
           interface: 'AAS-3.0',
           protocolInformation: {
-            href: 'http://example.com/aas-exact',
+            href: 'https://example.com/aas-exact',
           },
         },
         {
           interface: 'AAS-REPOSITORY-3.0',
           protocolInformation: {
-            href: 'http://example.com/aas-repository',
+            href: 'https://example.com/aas-repository',
           },
         },
       ],
     },
     interfaceShortName: 'AAS-3.0',
-    result: 'http://example.com/aas-exact',
+    result: 'https://example.com/aas-exact',
   },
   // Test that exact match takes priority over fallback for SUBMODEL
   {
@@ -180,19 +180,19 @@ const testData = [
         {
           interface: 'SUBMODEL-3.0',
           protocolInformation: {
-            href: 'http://example.com/submodel-exact',
+            href: 'https://example.com/submodel-exact',
           },
         },
         {
           interface: 'SUBMODEL-REPOSITORY-3.0',
           protocolInformation: {
-            href: 'http://example.com/submodel-repository',
+            href: 'https://example.com/submodel-repository',
           },
         },
       ],
     },
     interfaceShortName: 'SUBMODEL-3.0',
-    result: 'http://example.com/submodel-exact',
+    result: 'https://example.com/submodel-exact',
   },
 ]
 

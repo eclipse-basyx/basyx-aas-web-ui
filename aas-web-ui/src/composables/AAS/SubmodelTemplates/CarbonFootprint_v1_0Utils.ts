@@ -19,7 +19,7 @@ export function useCarbonFootprint_v1_0Utils () {
   const semanticIdSmcProductCarbonFootprint
     = 'https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/1/0'
 
-  const pcfLifeCyclePhases = [
+  const pcfLifecyclePhases = [
     {
       valueId: '0173-1#07-ABU208#003',
       value: 'A1 - raw material supply (and upstream production)',
@@ -186,7 +186,7 @@ export function useCarbonFootprint_v1_0Utils () {
     pcfco2eq: string
     pcfReferenceValueForCalculation: string
     quantityOfMeasureForCalculation: string
-    pcfLifeCyclePhases: Array<string>
+    pcfLifecyclePhases: Array<string>
     publicationDate: string
     expirationDate: string
   } {
@@ -195,7 +195,7 @@ export function useCarbonFootprint_v1_0Utils () {
       pcfco2eq: '',
       pcfReferenceValueForCalculation: '',
       quantityOfMeasureForCalculation: '',
-      pcfLifeCyclePhases: [],
+      pcfLifecyclePhases: [],
       publicationDate: '',
       expirationDate: '',
     }
@@ -239,14 +239,14 @@ export function useCarbonFootprint_v1_0Utils () {
         checkIdShort(sme, 'QuantityOfMeasureForCalculation') || checkSemanticId(sme, '0173-1#02-ABG857#003'),
     )
 
-    const lifeCyclePhasesSml = productCarbonFootprintSmc.value.find(
+    const lifecyclePhasesSml = productCarbonFootprintSmc.value.find(
       (sme: any) =>
         checkIdShort(sme, 'LifeCyclePhases', true)
         || checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/LifeCyclePhases/1/0'),
     )
 
-    const lifeCyclePhases
-      = lifeCyclePhasesSml?.value?.filter(
+    const lifecyclePhases
+      = lifecyclePhasesSml?.value?.filter(
         (sme: any) =>
           checkIdShort(sme, 'LifeCyclePhase', true) // mistake in specification
           || checkSemanticId(sme, 'https://admin-shell.io/idta/CarbonFootprint/LifeCyclePhase/1/0'),
@@ -289,11 +289,11 @@ export function useCarbonFootprint_v1_0Utils () {
                 && valueToDisplay(quantityOfMeasureForCalculation)
                   ? valueToDisplay(quantityOfMeasureForCalculation)
                   : '',
-      pcfLifeCyclePhases:
-                lifeCyclePhases && Array.isArray(lifeCyclePhases) && lifeCyclePhases.length > 0
-                  ? lifeCyclePhases.map((lifeCyclePhase: any) => {
-                      return lifeCyclePhase && Object.keys(lifeCyclePhase).length > 0
-                        ? valueToDisplay(lifeCyclePhase)
+      pcfLifecyclePhases:
+                lifecyclePhases && Array.isArray(lifecyclePhases) && lifecyclePhases.length > 0
+                  ? lifecyclePhases.map((lifecyclePhase: any) => {
+                      return lifecyclePhase && Object.keys(lifecyclePhase).length > 0
+                        ? valueToDisplay(lifecyclePhase)
                         : ''
                     })
                   : [],
@@ -310,21 +310,21 @@ export function useCarbonFootprint_v1_0Utils () {
     return response
   }
 
-  function getPcfLifeCyclePhaseFromId (pcfLifeCyclePhaseId: string): any {
+  function getPcfLifecyclePhaseFromId (pcfLifecyclePhaseId: string): any {
     const failResponse = {}
 
-    if (!pcfLifeCyclePhaseId || pcfLifeCyclePhaseId.trim() === '') {
+    if (!pcfLifecyclePhaseId || pcfLifecyclePhaseId.trim() === '') {
       return failResponse
     }
 
-    const pcfLifeCyclePhase = pcfLifeCyclePhases.find(
-      (pcfLifeCyclePhase: any) =>
-        pcfLifeCyclePhase.identifier === pcfLifeCyclePhaseId
-        || pcfLifeCyclePhase.valueId === pcfLifeCyclePhaseId,
+    const pcfLifecyclePhase = pcfLifecyclePhases.find(
+      (pcfLifecyclePhase: any) =>
+        pcfLifecyclePhase.identifier === pcfLifecyclePhaseId
+        || pcfLifecyclePhase.valueId === pcfLifecyclePhaseId,
     )
 
-    if (pcfLifeCyclePhase && Object.keys(pcfLifeCyclePhase).length > 0) {
-      return pcfLifeCyclePhase
+    if (pcfLifecyclePhase && Object.keys(pcfLifecyclePhase).length > 0) {
+      return pcfLifecyclePhase
     }
 
     return failResponse
@@ -486,14 +486,14 @@ export function useCarbonFootprint_v1_0Utils () {
       )
 
       // Set LifeCyclePhases
-      const lifeCyclePhasesSml = findPcfElement(
+      const lifecyclePhasesSml = findPcfElement(
         productCarbonFootprintSmc,
         'https://admin-shell.io/idta/CarbonFootprint/LifeCyclePhases/1/0',
         'LifeCyclePhases',
         true,
       )
-      if (lifeCyclePhasesSml) {
-        lifeCyclePhasesSml.value = [
+      if (lifecyclePhasesSml) {
+        lifecyclePhasesSml.value = [
           {
             modelType: 'Property',
             valueType: 'xs:string',
@@ -542,9 +542,9 @@ export function useCarbonFootprint_v1_0Utils () {
     semanticId,
     semanticIdSmlProductCarbonFootprints,
     semanticIdSmcProductCarbonFootprint,
-    pcfLifeCyclePhases,
+    pcfLifecyclePhases,
     getSm,
-    getPcfLifeCyclePhaseFromId,
+    getPcfLifecyclePhaseFromId,
     extractProductCarbonFootprint,
     findPcfElement,
     setPcfElementValue,

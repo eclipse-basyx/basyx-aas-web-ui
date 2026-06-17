@@ -1541,6 +1541,7 @@
   // Options
   defineOptions({
     name: 'HTWFuehrungskomponente',
+    // eslint-disable-next-line unicorn/prefer-https -- Semantic IDs are exact identifiers, not fetch URLs.
     semanticId: 'http://htw-berlin.de/smc_statemachine',
   })
 
@@ -1562,7 +1563,7 @@
   const selectedNode = computed(() => aasStore.getSelectedNode)
   const uniqueId = computed(() => generateUUIDFromString(selectedNode.value.path))
   function getStatePath (stateName: string): HTMLElement | null {
-    return document.querySelector<HTMLElement>(`[id="${stateName}_Border${uniqueId.value}"]`)
+    return document.querySelector<HTMLElement>(`[id="${CSS.escape(stateName)}_Border${CSS.escape(uniqueId.value)}"]`)
   }
 
   const states = ref([

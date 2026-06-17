@@ -2,14 +2,22 @@
   "extends": "@vue/tsconfig/tsconfig.dom.json",
   "include": [
     "env.d.ts",
+    "src/**/*",
+    "src/**/*.vue",
     "tests/**/*.ts",
     "tests/**/*.tsx",
     "tests/**/*.vue"
   ],
   "compilerOptions": {
     "composite": true,
+    "rootDir": ".",
     "noEmit": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "paths": {
       "@/*": [
         "./src/*"
@@ -18,7 +26,10 @@
     "types": [
       "vitest/globals",
       "node",
-      "vite/client"
+      "vite/client",
+      "prismjs",
+      "leaflet",
+      "qrcode"
     ]
   }
 }

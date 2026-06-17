@@ -81,7 +81,7 @@
     const onMouseMove = function (e: any) {
       if (!curCol) return // if no element is selected return
       let screenWidth = document.documentElement.clientWidth // the width of the screen (Window) excluding the scrollbar
-      const navigationDrawer: any = document.querySelectorAll('.leftMenu')[0] // the width of the navigation drawer
+      const navigationDrawer: any = document.querySelector('.leftMenu') // the width of the navigation drawer
       const isDrawerOpen: boolean = navigationDrawer.style.transform == 'translateX(0px)' // checks if the navigation drawer is open
       screenWidth = screenWidth - (isDrawerOpen ? navigationDrawer.clientWidth : 0) // if the navigation drawer is open subtract the width of the navigation drawer from the screen width
       const diffX = Number.parseInt(e.pageX) - pageX // amount the header was dragged (minus - left, plus - right)

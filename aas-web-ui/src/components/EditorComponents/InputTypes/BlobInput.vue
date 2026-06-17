@@ -259,6 +259,6 @@
   }
 
   function isTextContentType (contentType: string): boolean {
-    return /^text\/|application\/(json|xml|javascript|x-javascript)/i.test(contentType)
+    return /^text\/|application\/(?:json|xml|javascript|x-javascript)/i.test(contentType)
   }
 </script>
