@@ -160,8 +160,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1(eslint@10.5.0)(typescript@6.0.3)
       eslint-plugin-jsdoc:
-        specifier: ^63.0.5
-        version: 63.0.5(eslint@10.5.0)
+        specifier: ^63.0.6
+        version: 63.0.6(eslint@10.5.0)
       eslint-plugin-vue:
         specifier: ^10.9.2
         version: 10.9.2(@stylistic/eslint-plugin@5.10.0(eslint@10.5.0))(@typescript-eslint/parser@8.61.0(eslint@10.5.0)(typescript@6.0.3))(eslint@10.5.0)(vue-eslint-parser@10.4.1(eslint@10.5.0))
@@ -1557,8 +1557,8 @@ packages:
     peerDependencies:
       eslint: ^9.0.0 || ^10.0.0
 
-  eslint-plugin-jsdoc@63.0.5:
-    resolution: {integrity: sha512-AzI9bgKhV9li049/mIblX0c41DeWMMfH9qNsRasc+fAxwURRKChIp03Pk57M7UTf+Y6hifTJ89kQyCOoOLtEDw==}
+  eslint-plugin-jsdoc@63.0.6:
+    resolution: {integrity: sha512-qXMUdwQf+igjSLe/DZqyY1baVR0+snEJ3l/+2odJjeoAG43PrcpA0tSaLw2dC1iHvfKzo1YnZLGvgxrvAViyfQ==}
     engines: {node: ^22.13.0 || >=24}
     peerDependencies:
       eslint: ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0
@@ -4588,7 +4588,7 @@ snapshots:
     dependencies:
       eslint: 10.5.0
 
-  eslint-plugin-jsdoc@63.0.5(eslint@10.5.0):
+  eslint-plugin-jsdoc@63.0.6(eslint@10.5.0):
     dependencies:
       '@es-joy/jsdoccomment': 0.87.0
       '@es-joy/resolve.exports': 1.2.0
