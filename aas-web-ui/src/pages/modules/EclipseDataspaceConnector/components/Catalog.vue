@@ -1314,7 +1314,7 @@
 
   const isPushAsset = computed(() => {
     const id: string = selectedCatalogDataset.value?.['@id'] ?? ''
-    return id.includes('push-asset')
+    return id.includes('push-asset') || id.includes('asset-push')
   })
 
   const isHttpDataPull = computed(() => {
