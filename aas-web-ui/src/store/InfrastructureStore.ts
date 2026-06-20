@@ -662,6 +662,12 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
           setValue: 'true',
         },
         {
+          keycloakRole: keycloakFeatureControlRolePrefix + 'multiple-sm',
+          feature: 'SINGLE_SM',
+          setFunction: 'setSingleAas',
+          setValue: 'false',
+        },
+        {
           keycloakRole: keycloakFeatureControlRolePrefix + 'allow-editing',
           feature: 'ALLOW_EDITING',
           setFunction: 'setAllowEditing',
