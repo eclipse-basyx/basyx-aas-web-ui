@@ -101,16 +101,10 @@
 
         <div v-else-if="!jsonContent" class="no-content pa-4 text-center">
           <v-empty-state
-            v-if="!selectedAAS || Object.keys(selectedAAS).length === 0"
+            v-if="(!selectedAAS || Object.keys(selectedAAS).length === 0) && (!selectedNode || Object.keys(selectedNode).length === 0)"
             class="text-divider"
-            title="No selected AAS"
-          />
-
-          <v-empty-state
-            v-else-if="!selectedNode || Object.keys(selectedNode).length === 0"
-            class="text-divider"
-            text="Select a Submodel / Submodel Element to view"
-            title="No selected Submodel / Submodel Element"
+            text="Select AAS / Submodel / Submodel Element to view"
+            title="No selected AAS / Submodel / Submodel Element"
           />
 
           <div v-else>No JSON content available</div>
@@ -234,11 +228,7 @@
     formattedJson.value = ''
 
     try {
-      if (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0) {
-        return
-      }
-
-      if (!selectedNode.value || Object.keys(selectedNode.value).length === 0) {
+      if ((!selectedAAS.value || Object.keys(selectedAAS.value).length === 0) && (!selectedNode.value || Object.keys(selectedNode.value).length === 0)) {
         return
       }
 
