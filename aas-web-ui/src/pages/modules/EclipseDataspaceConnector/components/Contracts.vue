@@ -28,6 +28,7 @@
             </v-tooltip>
 
             <v-text-field
+              v-model="searchQuery"
               clearable
               density="compact"
               hide-details
@@ -335,6 +336,7 @@
   const theme = useTheme()
 
   // Data
+  const searchQuery = ref('')
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Full height - header - tabs - footer - border
   const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
   const fullHeightMainWithTabs = ref('calc(100vh - 64px - 48px - 40px - 32px - 44px - 2px)') // Full height - header - tabs - footer - padding - view toggle - border
@@ -412,6 +414,9 @@
 
       contractList.value = [...contractsSorted]
       contractListUnfiltered.value = [...contractsSorted]
+
+      if (searchQuery.value !== '')
+        filterContractList(searchQuery.value)
 
       scrollToSelectedContract()
     }

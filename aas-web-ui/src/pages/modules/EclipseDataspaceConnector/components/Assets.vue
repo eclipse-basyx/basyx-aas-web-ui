@@ -28,6 +28,7 @@
             </v-tooltip>
 
             <v-text-field
+              v-model="searchQuery"
               clearable
               density="compact"
               hide-details
@@ -368,6 +369,7 @@
   const theme = useTheme()
 
   // Data
+  const searchQuery = ref('')
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Full height - header - tabs - footer - border
   const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
   const fullHeightMainWithTabs = ref('calc(100vh - 64px - 48px - 40px - 32px - 44px - 2px)') // Full height - header - tabs - footer - padding - view toggle - border
@@ -434,19 +436,22 @@
   async function initialize (): Promise<void> {
     listLoading.value = true
 
-    const policies = await queryAssets()
+    const assets = await queryAssets()
 
-    if (policies && Array.isArray(policies) && policies.length > 0) {
-      const policiesSorted = policies.toSorted((assetA: any, assetB: any) => {
-        // Sort Policies with respect to id
+    if (assets && Array.isArray(assets) && assets.length > 0) {
+      const assetsSorted = assets.toSorted((assetA: any, assetB: any) => {
+        // Sort assets with respect to id
         return assetA['@id']
           > assetB['@id']
           ? 1
           : -1
       })
 
-      assetList.value = [...policiesSorted]
-      assetListUnfiltered.value = [...policiesSorted]
+      assetList.value = [...assetsSorted]
+      assetListUnfiltered.value = [...assetsSorted]
+
+      if (searchQuery.value !== '')
+        filterAssetList(searchQuery.value)
 
       scrollToSelectedAsset()
     }
