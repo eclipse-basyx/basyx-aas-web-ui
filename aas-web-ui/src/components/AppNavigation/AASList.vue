@@ -706,8 +706,10 @@
 
   // Function to get the AAS Data from the Registry Server
   async function initialize (): Promise<void> {
-    resetAASListState(true)
-    await initializePagination(scrollToSelectedAAS)
+    if (!singleAas.value) {
+      resetAASListState(true)
+      await initializePagination(scrollToSelectedAAS)
+    }
   }
 
   function filterAasList (value: string | null): void {
