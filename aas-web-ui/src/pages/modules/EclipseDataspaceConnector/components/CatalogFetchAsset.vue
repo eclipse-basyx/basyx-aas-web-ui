@@ -1,5 +1,4 @@
 <template>
-  <!-- Asset view/fetch panel -->
   <div>
     <div class="d-flex justify-space-between align-center mt-4 mx-4 mb-2">
       <v-btn-toggle
@@ -20,26 +19,20 @@
         </v-btn>
       </v-btn-toggle>
 
-      <v-list-item-title class="text-body-large pr-2 d-flex align-center">
-        <template v-if="isValidAAS">
-          <v-icon
-            class="mr-1"
-            color="primary"
-            icon="custom:aasIcon"
-            size="small"
-          />
-          Asset Administration Shell
-        </template>
-
-        <template v-else-if="isValidSubmodel">
-          <v-icon class="mr-1" color="primary" size="small">
-            mdi-folder
-          </v-icon>
-          Submodel
-        </template>
+      <v-list-item-title class="text-body-large d-flex align-center">
+        <v-btn
+          v-if="isValidAAS || isValidSubmodel"
+          class="text-buttonText"
+          :color="dataTranserInProgress ? 'error' : 'primary'"
+          :prepend-icon="dataTranserInProgress ? 'mdi-close' : 'mdi-import'"
+          rounded="lg"
+          :text="dataTranserInProgress ? 'Cancel Push' : 'Import ' + (isValidAAS? 'AAS' : isValidSubmodel ? 'Submodel':'asset') + ' data'"
+          variant="flat"
+          @click="dataTranserInProgress ? cancel() : importAsset()"
+        />
 
         <template v-else>
-          <v-icon class="mr-1" color="primary" size="small">
+          <v-icon class="mr-2" color="primary" size="small">
             mdi-cube
           </v-icon>
           Asset
@@ -97,7 +90,8 @@
   const assetJsonFormatted = ref<string>('')
   const assetJsonParsed = ref<unknown>({})
   const cancelled = ref(false)
-  const selectedAssetView = ref<'json' | 'tree'>('tree')
+  const dataTranserInProgress = ref(false)
+  const selectedAssetView = ref<'json' | 'tree'>('json')
 
   // Composables
   const { resolveEdcEndpoint } = useEdcDataTransfer()
@@ -142,10 +136,7 @@
   )
 
   async function fetchAsset (): Promise<void> {
-    if (
-      !props.selectedBusinessPartner
-      || !props.selectedCatalogDataset
-    )
+    if (!props.selectedBusinessPartner || !props.selectedCatalogDataset)
       return
 
     const { endpoint, headers } = await resolveEdcEndpoint(
@@ -181,57 +172,64 @@
     }
   }
 
+  async function importAsset (): Promise<void> {
+    if (isValidAAS.value) {
+      // TODO Import AAS
+    } else if (isValidSubmodel.value) {
+      // TODO Import SM
+    }
+  }
+
   function cancel (): void {
     cancelled.value = true
   }
 
-  // Expose fetchAsset and cancel so the parent can invoke them via template ref
   defineExpose({ fetchAsset, cancel })
 </script>
 
 <style scoped>
-:deep(.token) {
-  line-height: 21px;
-}
+  :deep(.token) {
+    line-height: 21px;
+  }
 
-:deep(code) {
-  line-height: 21px;
-}
+  :deep(code) {
+    line-height: 21px;
+  }
 
-.json-content {
-  word-wrap: normal;
-  font-size: 14px;
-  line-height: 21px;
-  flex-grow: 0;
-  overflow: auto;
-  background-color: #f5f5f5;
-}
+  .json-content {
+    word-wrap: normal;
+    font-size: 14px;
+    line-height: 21px;
+    flex-grow: 0;
+    overflow: auto;
+    background-color: #f5f5f5;
+  }
 
-.json-content code {
-  display: block;
-}
+  .json-content code {
+    display: block;
+  }
 
-:deep(.token.punctuation) {
-  color: #999;
-}
+  :deep(.token.punctuation) {
+    color: #999;
+  }
 
-:deep(.token.property) {
-  color: #905;
-}
+  :deep(.token.property) {
+    color: #905;
+  }
 
-:deep(.token.string) {
-  color: #690;
-}
+  :deep(.token.string) {
+    color: #690;
+  }
 
-:deep(.token.number) {
-  color: #07a;
-}
+  :deep(.token.number) {
+    color: #07a;
+  }
 
-:deep(.token.boolean) {
-  color: #07a;
-}
+  :deep(.token.boolean) {
+    color: #07a;
+  }
 
-:deep(.token.null) {
-  color: #999;
-}
+  :deep(.token.null) {
+    color: #999;
+  }
 </style>

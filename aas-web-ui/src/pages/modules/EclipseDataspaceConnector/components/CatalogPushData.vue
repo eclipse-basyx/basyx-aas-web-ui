@@ -1,8 +1,7 @@
 <template>
-  <!-- Push-data panel: AAS list | SM list | data preview -->
   <v-layout :style="{ height: fullHeightLists }">
 
-    <!-- ── AAS list ───────────────────────────────────────────────────── -->
+    <!-- AAS list  -->
     <v-navigation-drawer
       class="leftMenu"
       color="appNavigation"
@@ -178,7 +177,7 @@
       </v-card>
     </v-navigation-drawer>
 
-    <!-- ── Submodel list ──────────────────────────────────────────────── -->
+    <!-- Submodel list -->
     <v-navigation-drawer
       class="leftMenu"
       color="appNavigation"
@@ -450,7 +449,7 @@
       </v-card>
     </v-navigation-drawer>
 
-    <!-- ── Data preview ───────────────────────────────────────────────── -->
+    <!-- Data preview -->
     <v-main class="py-0">
       <v-container class="ma-0 pa-0" fluid style="height: 100%; overflow-y: auto">
 
@@ -501,9 +500,9 @@
             />
 
             <v-list-item-title class="text-body-large pr-2 d-flex align-center">
-              <v-icon class="mr-1" color="primary" icon="custom:aasIcon" size="small" />
+              <v-icon class="mr-2" color="primary" icon="custom:aasIcon" size="small" />
               <span class="text-body-2 mx-1">/</span>
-              <v-icon class="mr-1" color="primary" size="small">mdi-folder</v-icon>
+              <v-icon class="mr-2" color="primary" size="small">mdi-folder</v-icon>
               data to push
             </v-list-item-title>
           </div>
@@ -610,7 +609,7 @@
   const allLoadedAas = ref([] as Array<any>) as Ref<Array<any>>
   const cancelled = ref(false)
   const justPushSmData = ref(false)
-  const selectedAasSmDataToPushView = ref<'json' | 'tree'>('tree')
+  const selectedAasSmDataToPushView = ref<'json' | 'tree'>('json')
   const selectedSmIds = ref<string[]>([])
   const selectedSms = ref<any[]>([])
   const smList = ref([] as Array<any>) as Ref<Array<any>>

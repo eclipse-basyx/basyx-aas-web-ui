@@ -2,7 +2,6 @@
   <v-container class="pa-0 ma-0" fluid :style="{ height: fullHeight }">
     <v-layout :style="{ height: fullHeight }">
 
-      <!-- ── Left sidebar: Business Partner selector + Catalog list ──────── -->
       <v-navigation-drawer class="leftMenu" color="appNavigation" :width="336">
         <v-card color="rgba(0,0,0,0)" elevation="0">
           <v-card-title class="py-3">
@@ -148,7 +147,7 @@
                                   <v-icon size="x-small">{{ copyIcon }}</v-icon>
                                 </template>
 
-                                <v-list-item-subtitle>Copy Catalog Dataset ID</v-list-item-subtitle>
+                                <v-list-item-subtitle class="pr-2">Copy Catalog Dataset ID</v-list-item-subtitle>
                               </v-list-item>
                             </v-list>
                           </v-sheet>
@@ -174,7 +173,6 @@
         </v-card>
       </v-navigation-drawer>
 
-      <!-- ── Main content area ─────────────────────────────────────────── -->
       <v-main class="py-0">
         <v-container
           class="ma-0 pa-0"
@@ -226,7 +224,6 @@
 
           <template v-else>
 
-            <!-- ── Catalog Dataset detail card ─────────────────────────── -->
             <div class="d-flex justify-space-between align-center mt-4 mx-4 mb-2">
               <v-btn-toggle
                 v-model="selectedView"
@@ -247,7 +244,7 @@
               </v-btn-toggle>
 
               <v-list-item-title class="text-body-large pr-2 d-flex align-center">
-                <v-icon class="mr-1" color="primary" size="small">
+                <v-icon class="mr-2" color="primary" size="small">
                   mdi-database-search-outline
                 </v-icon>
                 Catalog Dataset
@@ -272,7 +269,6 @@
               <JsonTreeView :data="selectedCatalogDataset" />
             </div>
 
-            <!-- ── Action bar ───────────────────────────────────────────── -->
             <v-card-actions class="mt-0 mb-2 mx-4 pa-0">
               <v-chip
                 v-if="edcStatus"
@@ -300,7 +296,7 @@
 
               <v-spacer />
 
-              <!-- Push Data button (shown when asset ID contains 'push-asset' / 'asset-push') -->
+              <!--Use case 1: Push Data -->
               <template v-if="isPushAsset">
                 <span v-if="!dataTranserInProgress" class="text-body-2 text-medium-emphasis mr-2">
                   Select AAS/SM data below to push
@@ -318,19 +314,33 @@
                 />
               </template>
 
-              <!-- <v-btn
-                v-else-if="isDigitalTwinRegistryAsset"
-                class="text-buttonText"
-                :color="dataTranserInProgress ? 'error' : 'primary'"
-                :disabled="!dataTranserInProgress && aasSmDataToPushIsEmpty"
-                :prepend-icon="dataTranserInProgress ? 'mdi-close' : 'mdi-upload'"
-                rounded="lg"
-                :text="dataTranserInProgress ? 'Cancel Push' : 'Push selected Data'"
-                variant="flat"
-                @click="dataTranserInProgress ? (cancelAssetTransfer = true) : pushDataRef?.pushData()"
-              /> -->
+              <!--Use case 2: Discovery -->
+              <template v-else-if="isDigitalTwinRegistryAsset">
+                <div>
+                  <v-text-field
+                    v-model="discoveryId"
+                    clearable
+                    density="compact"
+                    hide-details
+                    label="Identifier to discover"
+                    variant="outlined"
+                    width="350"
+                  />
+                </div>
 
-              <!-- Fetch Asset button (default) -->
+                <v-btn
+                  class="text-buttonText"
+                  :color="dataTranserInProgress ? 'error' : 'primary'"
+                  :disabled="!dataTranserInProgress && discoveryId == ''"
+                  :prepend-icon="dataTranserInProgress ? 'mdi-close' : 'mdi-magnify'"
+                  rounded="lg"
+                  :text="dataTranserInProgress ? 'Cancel Discovery' : 'Discover ID'"
+                  variant="flat"
+                  @click="dataTranserInProgress ? discoverIdRef?.cancel() : discoverIdRef?.discoverId()"
+                />
+              </template>
+
+              <!--Use case 3: Fetch Asset -->
               <v-btn
                 v-else
                 class="text-buttonText"
@@ -340,13 +350,13 @@
                 rounded="lg"
                 :text="dataTranserInProgress ? 'Cancel Fetch' : 'Fetch Asset'"
                 variant="flat"
-                @click="dataTranserInProgress ? fetchAssetRef?.cancel() : triggerFetchAsset()"
+                @click="dataTranserInProgress ? fetchAssetRef?.cancel() : fetchAssetRef?.fetchAsset()"
               />
             </v-card-actions>
 
             <v-divider />
 
-            <!-- ── Use case 1: Push Data ────────────────────────────────── -->
+            <!--Use case 1: Push Data -->
             <CatalogPushData
               v-if="isPushAsset"
               ref="pushDataRef"
@@ -362,12 +372,25 @@
               @update:selected-sms-count="selectedSmsCount = $event"
             />
 
-            <!-- ── Use case 2: Fetch Asset ──────────────────────────────── -->
+            <!--Use case 2: Discovery -->
+            <CatalogDiscoverId
+              v-else-if="isDigitalTwinRegistryAsset"
+              ref="discoverIdRef"
+              :discovering-id="dataTranserInProgress"
+              :discovery-id="discoveryId"
+              :height-aas-descriptor-json="heightJson"
+              :selected-business-partner="selectedBusinessPartner"
+              :selected-catalog-dataset="selectedCatalogDataset"
+              @update:discovering-id="dataTranserInProgress = $event"
+              @update:edc-status="edcStatus = $event"
+            />
+
+            <!--Use case 3: Fetch Asset -->
             <CatalogFetchAsset
               v-else
               ref="fetchAssetRef"
               :fetching-asset="dataTranserInProgress"
-              :height-asset-json="heightAssetJson"
+              :height-asset-json="heightJson"
               :selected-business-partner="selectedBusinessPartner"
               :selected-catalog-dataset="selectedCatalogDataset"
               @update:edc-status="edcStatus = $event"
@@ -398,6 +421,7 @@
   import { useTheme } from 'vuetify'
   import JsonTreeView from '@/components/UIComponents/JsonTreeView.vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
+  import CatalogDiscoverId from '@/pages/modules/EclipseDataspaceConnector/components/CatalogDiscoverId.vue'
   import CatalogFetchAsset from '@/pages/modules/EclipseDataspaceConnector/components/CatalogFetchAsset.vue'
   import CatalogPushData from '@/pages/modules/EclipseDataspaceConnector/components/CatalogPushData.vue'
   import {
@@ -428,7 +452,7 @@
   // Constants
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)')
   const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 2px)')
-  const heightAssetJson = ref('calc(100vh - 64px - 48px - 40px - 2px - 275px)')
+  const heightJson = ref('calc(100vh - 64px - 48px - 40px - 2px - 275px)')
   const fullHeightLists = ref(
     'calc(100vh - 64px - 48px - 40px - 2px - 275px - 60px - 60px - 1px)',
   )
@@ -445,6 +469,8 @@
   const catalogListUnfiltered = ref([] as Array<any>) as Ref<Array<any>>
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
   const dataTranserInProgress = ref(false)
+  const discoverIdRef = ref<InstanceType<typeof CatalogDiscoverId> | null>(null)
+  const discoveryId = ref<string>('')
   const edcStatus = ref('')
   const fetchAssetRef = ref<InstanceType<typeof CatalogFetchAsset> | null>(null)
   const listLoading = ref(false)
@@ -468,7 +494,7 @@
     const id: string = selectedCatalogDataset.value?.['@id'] ?? ''
     return id.includes('push-asset') || id.includes('asset-push')
   })
-  const _isDigitalTwinRegistryAsset = computed(() => {
+  const isDigitalTwinRegistryAsset = computed(() => {
     const id: string = selectedCatalogDataset.value?.['@id'] ?? ''
     return id.includes('dt-registry') || id.includes('digitaltwin-registry') || id.includes('digital-twin-registry')
   })
@@ -629,10 +655,6 @@
     }, 50)
   }
 
-  /** Delegate fetch to CatalogFetchAsset sub-component. */
-  function triggerFetchAsset (): void {
-    fetchAssetRef.value?.fetchAsset()
-  }
 </script>
 
 <style scoped>
