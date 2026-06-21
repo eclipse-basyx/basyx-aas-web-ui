@@ -11,7 +11,10 @@
   "properties": {
     "id": "{{Digital Twin Registry Asset ID|Enter a unique asset identifier, e.g. a UUID|This will be the @id of your asset}}",
     "name": "Digital Twin Registry",
-    "description": "The Digital Twin Registry enables the discovery and access of Digital Twins"
+    "description": "The Digital Twin Registry enables the discovery and access of Digital Twins",
+    "dct:type": {
+      "@id": "cx-taxo:DigitalTwinRegistry"
+    }
   },
   "privateProperties": {},
   "dataAddress": {
