@@ -103,7 +103,7 @@
     if (!endpoint) return
 
     try {
-      const aasId = await discoverAasId(props.discoveryId, endpoint, headers)
+      const aasId = await discoverAasId_deprecated(props.discoveryId, endpoint, headers)
       console.log('discoverId:aasId', aasId)
       const aasDescriptor = await discoverAasDescriptor((aasId === '' ? props.discoveryId : aasId), endpoint, headers)
 
@@ -147,7 +147,7 @@
     return null
   }
 
-  async function discoverAasId (globalAssetId: string, endpoint: string, headers: Headers): Promise<string> {
+  async function discoverAasId_deprecated (globalAssetId: string, endpoint: string, headers: Headers): Promise<string> {
     if (globalAssetId.trim() === '' || endpoint.trim() === '') return ''
 
     try {
@@ -174,6 +174,37 @@
 
     return ''
   }
+
+  // async function discoverAasId (globalAssetId: string, endpoint: string, headers: Headers): Promise<string> {
+  //   if (globalAssetId.trim() === '' || endpoint.trim() === '') return ''
+
+  //   try {
+  //     // /lookup/shellsByAssetLink
+  //     const assetIdObject = JSON.stringify([{ name: 'globalAssetId', value: globalAssetId }])
+  //     const aasDiscoveryPathLookupShells2Endpoint = `${endpoint}/lookup/shellsByAssetLink`
+
+  //     headers.append('Content-Type', 'application/json')
+
+  //     const responseAasDiscoveryPathLookupShells2Endpoint = await fetch(aasDiscoveryPathLookupShells2Endpoint, {
+  //       method: 'POST',
+  //       headers: headers,
+  //       body: assetIdObject,
+  //     })
+
+  //     if (responseAasDiscoveryPathLookupShells2Endpoint.ok) {
+  //       const jsonResponse = await responseAasDiscoveryPathLookupShells2Endpoint.json()
+  //       if (Array.isArray(jsonResponse?.result) && jsonResponse.result.length > 0) {
+  //         const aasIds = jsonResponse.result
+  //         console.log('discoverAasId:aasId', aasIds[0])
+  //         return aasIds[0]
+  //       }
+  //     }
+  //   } catch {
+  //     return ''
+  //   }
+
+  //   return ''
+  // }
 
   function cancel (): void {
     cancelled.value = true
