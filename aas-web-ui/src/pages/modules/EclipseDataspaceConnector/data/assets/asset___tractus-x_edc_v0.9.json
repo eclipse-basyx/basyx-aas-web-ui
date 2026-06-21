@@ -16,6 +16,10 @@
   "privateProperties": {},
   "dataAddress": {
     "type": "HttpData",
-    "baseUrl": "{{Asset Endpoint|Enter the endpoint of the asset|}}"
+    "baseUrl": "{{Asset Endpoint|Enter the endpoint of the asset|}}",
+    "oauth2:clientId": "{{Endpoint client ID||}}",
+    "oauth2:clientSecretKey": "{{Endpoint client secret key||}}",
+    "oauth2:tokenUrl": "{{Token endpoint||}}",
+    "oauth2:scope": "{{Token scope||}}"
   }
 }

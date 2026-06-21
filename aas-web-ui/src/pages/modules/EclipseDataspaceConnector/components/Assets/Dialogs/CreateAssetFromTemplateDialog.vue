@@ -47,7 +47,7 @@
             <v-text-field
               v-for="(placeholder, index) in placeholders"
               :key="placeholder.label"
-              v-model="placeholderValues[placeholder.label]"
+              v-model="placeholderValues[placeholder.attribute]"
               :class="index > 0 ? 'mt-2': ''"
               dense
               :hide-details="placeholder.hint == ''"
@@ -85,7 +85,7 @@
         <v-btn
           class="text-buttonText"
           color="primary"
-          :disabled="!allPlaceholdersFilled()"
+          :disabled="!mandatoryPlaceholdersFilled()"
           rounded="lg"
           text="Create"
           variant="flat"
@@ -152,17 +152,19 @@
     const template = assetTemplates.find(t => t.value === selectedTemplate.value)
     if (!template) return []
 
-    const policyStr = JSON.stringify(template.asset)
-    const matches = policyStr.match(/\{\{([^}]+)\}\}/g) || []
+    const templateStr = JSON.stringify(template.asset)
+    const matches = [...templateStr.matchAll(/"([^"]+)":\s*"(\{\{[^}]+\}\})"/g)]
 
     const placeholderList = matches.map(match => {
-      const content = match.slice(2, -2) // Remove {{ and }}
+      const attributeName = match[1]
+      const content = match[2].slice(2, -2) // Remove {{ and }}
       const parts = content.split('|')
 
       return {
+        attribute: attributeName,
         label: parts[0].trim(),
-        placeholder: parts[1]?.trim() || parts[0].trim(),
-        hint: parts[2]?.trim() || `Enter ${parts[0].trim()}`,
+        placeholder: parts[1]?.trim() || '',
+        hint: parts[2]?.trim() || '',
       }
     })
 
@@ -182,11 +184,11 @@
     if (!template) return ''
 
     try {
-      let policyJson = JSON.stringify(template.asset)
-      policyJson = replacePlaceholders(policyJson)
+      let assetJson = JSON.stringify(template.asset)
+      assetJson = replacePlaceholders(assetJson)
 
-      const policy = JSON.parse(policyJson)
-      const formatted = formatJSON(JSON.stringify(policy))
+      const asset = JSON.parse(assetJson)
+      const formatted = formatJSON(JSON.stringify(asset))
 
       if (Prism && Prism.highlight) {
         return Prism.highlight(formatted, getPrismJsonLanguage(), 'json')
@@ -233,15 +235,17 @@
     }
   }
 
-  function allPlaceholdersFilled (): boolean {
-    if (!selectedTemplate.value) return false
-    return placeholders.value.every(placeholder => placeholderValues.value[placeholder.label])
+  function mandatoryPlaceholdersFilled (): boolean {
+    const mandatoryAttributes = ['@id', 'baseUrl']
+    return mandatoryAttributes
+      .filter(attr => placeholders.value.some(p => p.attribute === attr))
+      .every(attr => !!placeholderValues.value[attr])
   }
 
-  function replacePlaceholders (policyJson: string): string {
-    let result = policyJson
+  function replacePlaceholders (assetJson: string): string {
+    let result = assetJson
     for (const placeholder of placeholders.value) {
-      const value = placeholderValues.value[placeholder.label] || `{{${placeholder.label}}}`
+      const value = placeholderValues.value[placeholder.attribute] ?? ''
       result = result.replace(
         /\{\{[^}]*\}\}/g,
         match => {
@@ -257,8 +261,39 @@
     return result
   }
 
+  function isEmptyValue (value: unknown): boolean {
+    return value === null
+      || value === undefined
+      || (typeof value === 'string' && value.trim() === '')
+      || (typeof value === 'string' && value === 'unknown')
+      || (typeof value === 'string' && /\{\{[^}]+\}\}/.test(value))
+  }
+
+  function removeUnfilledPlaceholders (obj: any): any {
+    if (typeof obj === 'string') {
+      return obj
+    }
+    if (Array.isArray(obj)) {
+      return obj
+        .map(item => removeUnfilledPlaceholders(item))
+        .filter(item => !isEmptyValue(item))
+    }
+    if (obj !== null && typeof obj === 'object') {
+      const result: Record<string, any> = {}
+      for (const [key, value] of Object.entries(obj as Record<string, any>)) {
+        if (isEmptyValue(value)) {
+          // Skip this key — value is empty, null, unknown or unfilled placeholder
+          continue
+        }
+        result[key] = removeUnfilledPlaceholders(value)
+      }
+      return result
+    }
+    return obj
+  }
+
   async function createAsset (): Promise<void> {
-    if (!selectedTemplate.value || !allPlaceholdersFilled()) {
+    if (!selectedTemplate.value || !mandatoryPlaceholdersFilled()) {
       console.warn('Template not selected or placeholders not filled')
       return
     }
@@ -273,7 +308,7 @@
       let assetJson = JSON.stringify(template.asset)
       assetJson = replacePlaceholders(assetJson)
 
-      const finalAsset = JSON.parse(assetJson) as Asset
+      const finalAsset = removeUnfilledPlaceholders(JSON.parse(assetJson)) as Asset
 
       // Create the asset via EDC API
       const response = await createAssetInEdc(finalAsset)

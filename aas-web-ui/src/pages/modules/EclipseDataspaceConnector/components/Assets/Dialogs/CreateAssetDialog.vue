@@ -56,7 +56,7 @@
         <v-btn
           class="text-buttonText"
           color="primary"
-          :disabled="!allPlaceholdersFilled()"
+          :disabled="!mandatoryPlaceholdersFilled()"
           rounded="lg"
           text="Create"
           variant="flat"
@@ -94,15 +94,17 @@
   // Computed properties
   const placeholders = computed(() => {
     const templateStr = JSON.stringify(AssetTemplate)
-    const matches = templateStr.match(/\{\{([^}]+)\}\}/g) || []
+    const matches = [...templateStr.matchAll(/"([^"]+)":\s*"(\{\{[^}]+\}\})"/g)]
 
     const placeholderList = matches.map(match => {
-      const content = match.slice(2, -2) // Remove {{ and }}
+      const attributeName = match[1]
+      const content = match[2].slice(2, -2) // Remove {{ and }}
       const parts = content.split('|')
 
       return {
+        attribute: attributeName,
         label: parts[0].trim(),
-        placeholder: parts[1]?.trim() || `Enter ${parts[0].trim()}`,
+        placeholder: parts[1]?.trim() || '',
         hint: parts[2]?.trim() || '',
       }
     })
@@ -160,23 +162,65 @@
     }
   }
 
-  function allPlaceholdersFilled (): boolean {
-    return placeholders.value.every(placeholder => placeholderValues.value[placeholder.label] && placeholderValues.value[placeholder.label].trim() !== '')
+  function mandatoryPlaceholdersFilled (): boolean {
+    const mandatoryAttributes = ['@id', 'baseUrl']
+    return mandatoryAttributes
+      .filter(attr => placeholders.value.some(p => p.attribute === attr))
+      .every(attr => !!placeholderValues.value[attr])
   }
 
-  function replacePlaceholders (jsonStr: string): string {
-    let result = jsonStr
+  function replacePlaceholders (assetJson: string): string {
+    let result = assetJson
     for (const placeholder of placeholders.value) {
-      const value = placeholderValues.value[placeholder.label] || `{{${placeholder.label}}}`
-      // Regex matches {{Label|...}} or {{Label}}
-      const regex = new RegExp(String.raw`\{\{${placeholder.label}(?:\|[^}]*)?\}\}`, 'g')
-      result = result.replace(regex, value)
+      const value = placeholderValues.value[placeholder.attribute] ?? ''
+      result = result.replace(
+        /\{\{[^}]*\}\}/g,
+        match => {
+          const matchContent = match.slice(2, -2)
+          const matchParts = matchContent.split('|')
+          if (matchParts[0].trim() === placeholder.label) {
+            return value
+          }
+          return match
+        },
+      )
     }
     return result
   }
 
+  function isEmptyValue (value: unknown): boolean {
+    return value === null
+      || value === undefined
+      || (typeof value === 'string' && value.trim() === '')
+      || (typeof value === 'string' && value === 'unknown')
+      || (typeof value === 'string' && /\{\{[^}]+\}\}/.test(value))
+  }
+
+  function removeUnfilledPlaceholders (obj: any): any {
+    if (typeof obj === 'string') {
+      return obj
+    }
+    if (Array.isArray(obj)) {
+      return obj
+        .map(item => removeUnfilledPlaceholders(item))
+        .filter(item => !isEmptyValue(item))
+    }
+    if (obj !== null && typeof obj === 'object') {
+      const result: Record<string, any> = {}
+      for (const [key, value] of Object.entries(obj as Record<string, any>)) {
+        if (isEmptyValue(value)) {
+          // Skip this key — value is empty, null, unknown or unfilled placeholder
+          continue
+        }
+        result[key] = removeUnfilledPlaceholders(value)
+      }
+      return result
+    }
+    return obj
+  }
+
   async function createAsset (): Promise<void> {
-    if (!allPlaceholdersFilled()) {
+    if (!mandatoryPlaceholdersFilled()) {
       console.warn('Placeholders not filled')
       return
     }
@@ -185,7 +229,7 @@
       let assetJson = JSON.stringify(AssetTemplate)
       assetJson = replacePlaceholders(assetJson)
 
-      const finalAsset = JSON.parse(assetJson) as Asset
+      const finalAsset = removeUnfilledPlaceholders(JSON.parse(assetJson)) as Asset
 
       // Create the asset via EDC API
       const response = await createAssetInEdc(finalAsset)

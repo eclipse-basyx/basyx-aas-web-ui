@@ -5,7 +5,9 @@
     "tx": "https://w3id.org/tractusx/v0.0.1/ns/",
     "tx-auth": "https://w3id.org/tractusx/auth/",
     "cx-policy": "https://w3id.org/catenax/policy/",
-    "odrl": "http://www.w3.org/ns/odrl/2/"
+    "odrl": "http://www.w3.org/ns/odrl/2/",
+    "dct": "https://purl.org/dc/terms/",
+    "cx-taxo": "https://w3id.org/catenax/taxonomy#"
   },
   "@id": "{{Digital Twin Registry Asset ID|Enter a unique asset identifier, e.g. a UUID|This will be the @id of your asset}}",
   "properties": {
@@ -20,10 +22,14 @@
   "dataAddress": {
     "@type": "DataAddress",
     "type": "HttpData",
-    "baseUrl": "{{Digital Twin Registry Endpoint|Enter the endpoint of the Digital Twin Registry|}}",
+    "baseUrl": "{{Digital Twin Registry Endpoint||}}",
     "proxyBody": "true",
     "proxyMethod": "true",
     "proxyPath": "true",
-    "proxyQueryParams": "true"
+    "proxyQueryParams": "true",
+    "oauth2:clientId": "{{Digital Twin Registry client ID||}}",
+    "oauth2:clientSecretKey": "{{Digital Twin Registry client secret key||}}",
+    "oauth2:tokenUrl": "{{Digital Twin Registry token endpoint||}}",
+    "oauth2:scope": "{{Digital Twin Registry Token scope||}}"
   }
 }

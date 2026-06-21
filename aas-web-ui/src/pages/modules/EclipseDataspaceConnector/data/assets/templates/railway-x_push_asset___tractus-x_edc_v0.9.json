@@ -21,6 +21,10 @@
     "proxyBody": "true",
     "proxyMethod": "true",
     "proxyPath": "true",
-    "proxyQueryParams": "true"
+    "proxyQueryParams": "true",
+    "oauth2:clientId": "{{Client ID||}}",
+    "oauth2:clientSecretKey": "{{Client secret key||}}",
+    "oauth2:tokenUrl": "{{Token endpoint||}}",
+    "oauth2:scope": "{{Token scope||}}"
   }
 }
