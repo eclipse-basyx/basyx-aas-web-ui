@@ -19,17 +19,31 @@
         </v-btn>
       </v-btn-toggle>
 
-      <v-list-item-title class="text-body-large d-flex align-center">
-        <v-btn
-          v-if="isValidAAS || isValidSubmodel"
-          class="text-buttonText"
-          :color="dataTranserInProgress ? 'error' : 'primary'"
-          :prepend-icon="dataTranserInProgress ? 'mdi-close' : 'mdi-import'"
-          rounded="lg"
-          :text="dataTranserInProgress ? 'Cancel Push' : 'Import ' + (isValidAAS? 'AAS' : isValidSubmodel ? 'Submodel':'asset') + ' data'"
-          variant="flat"
-          @click="dataTranserInProgress ? cancel() : importAsset()"
-        />
+      <v-list-item-title class="text-body-large pr-2 d-flex align-center">
+        <template v-if="isValidAAS || isValidSubmodel">
+          <v-btn
+            class="text-buttonText mr-2"
+            :color="dataTranserInProgress ? 'error' : 'primary'"
+            :prepend-icon="dataTranserInProgress ? 'mdi-close' : 'mdi-import'"
+            rounded="lg"
+            :text="dataTranserInProgress ? 'Cancel Push' : 'Import ' + (isValidAAS? 'AAS' : isValidSubmodel ? 'Submodel':'asset') + ' data to'"
+            variant="flat"
+            @click="dataTranserInProgress ? cancel() : importAsset()"
+          />
+
+          <div>
+            <v-select
+              v-model="selectedDestinationInfrastructureId"
+              density="compact"
+              hide-details
+              item-title="name"
+              item-value="id"
+              :items="destinationInfrastructureItems"
+              placeholder="Please select..."
+              variant="outlined"
+            />
+          </div>
+        </template>
 
         <template v-else>
           <v-icon class="mr-2" color="primary" size="small">
@@ -67,7 +81,11 @@
   import * as Prism from 'prismjs'
   import { computed, ref, watch } from 'vue'
   import JsonTreeView from '@/components/UIComponents/JsonTreeView.vue'
+  import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
+  import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { useEdcDataTransfer } from '@/pages/modules/EclipseDataspaceConnector/composables/useEdcDataTransfer'
+  import { useInfrastructureStore } from '@/store/InfrastructureStore'
+  import { useNavigationStore } from '@/store/NavigationStore'
   import { formatJSON } from '@/utils/JsonUtils'
   import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
   import 'prismjs/themes/prism.css'
@@ -86,15 +104,24 @@
     'update:edc-status': [value: string]
   }>()
 
+  // Stores
+  const navigationStore = useNavigationStore()
+  const infrastructureStore = useInfrastructureStore()
+
+  const asset = ref<any>(null)
   const assetJson = ref<string>('')
   const assetJsonFormatted = ref<string>('')
   const assetJsonParsed = ref<unknown>({})
   const cancelled = ref(false)
   const dataTranserInProgress = ref(false)
+  const importingInProgress = ref<boolean>(false)
   const selectedAssetView = ref<'json' | 'tree'>('json')
+  const selectedDestinationInfrastructureId = ref<string | null>(infrastructureStore.getSelectedInfrastructureId)
 
   // Composables
   const { resolveEdcEndpoint } = useEdcDataTransfer()
+  const { postAas } = useAASRepositoryClient()
+  const { postSubmodel } = useSMRepositoryClient()
 
   // Computed
   const isValidAAS = computed(() => {
@@ -122,6 +149,21 @@
       parsed as jsonization.JsonValue,
     )
     return result.error === null
+  })
+  const infrastructures = computed(() => infrastructureStore.getInfrastructures)
+  const destinationInfrastructureItems = computed(() =>
+    infrastructures.value.map(infra => ({
+      id: infra.id,
+      name: infra.name + (infra.isDefault ? ' (Default)' : ''),
+    })),
+  )
+  const destinationInfrastructure = computed(() => {
+    if (!selectedDestinationInfrastructureId.value) return null
+    return (
+      infrastructureStore.getInfrastructures.find(
+        infra => infra.id === selectedDestinationInfrastructureId.value,
+      ) || null
+    )
   })
 
   // Watchers
@@ -154,6 +196,7 @@
     try {
       const response = await fetch(endpoint, { headers })
       const data = await response.json()
+      asset.value = data
       assetJson.value = JSON.stringify(data)
       assetJsonParsed.value = data
 
@@ -173,10 +216,73 @@
   }
 
   async function importAsset (): Promise<void> {
-    if (isValidAAS.value) {
-      // TODO Import AAS
-    } else if (isValidSubmodel.value) {
-      // TODO Import SM
+    if (!destinationInfrastructure.value) {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 5000,
+        color: 'error',
+        btnColor: 'buttonText',
+        text: 'Please select a destination infrastructure',
+      })
+      return
+    }
+
+    importingInProgress.value = true
+
+    const originalInfraId = infrastructureStore.getSelectedInfrastructureId
+
+    try {
+      await infrastructureStore.dispatchSelectInfrastructure(destinationInfrastructure.value.id)
+      if (isValidAAS.value) {
+        const destinationAasRepoUrl = destinationInfrastructure.value.components.AASRepo.url.trim()
+        if (destinationAasRepoUrl === '') {
+          throw new Error('Selected destination infrastructure has no AAS Repository configured')
+        }
+
+        const aasInstanceOrError = jsonization.assetAdministrationShellFromJsonable(asset.value)
+        if (aasInstanceOrError.error !== null) {
+          console.error('Converting AAS Failed during Instantiation:', aasInstanceOrError.error)
+        }
+
+        const aas = aasInstanceOrError.mustValue()
+        aas.id = `${aas.id}___${new Date().toISOString()}`
+        aas.submodels = []
+
+        const aasUploaded = await postAas(aas)
+        if (!aasUploaded) {
+          throw new Error('Failed to upload AAS to destination infrastructure')
+        }
+      } else if (isValidSubmodel.value) {
+        const destinationSmRepoUrl = destinationInfrastructure.value.components.SubmodelRepo.url.trim()
+        if (destinationSmRepoUrl === '') {
+          throw new Error('Selected destination infrastructure has no Submodel Repository configured')
+        }
+
+        const smInstanceOrError = jsonization.submodelFromJsonable(asset.value)
+        if (smInstanceOrError.error !== null) {
+          console.error('Converting Submodel Failed during Instantiation:', smInstanceOrError.error)
+        }
+
+        const submodel = smInstanceOrError.mustValue()
+        submodel.id = `${submodel.id}___${new Date().toISOString()}`
+
+        const smUploaded = await postSubmodel(submodel)
+        if (!smUploaded) {
+          throw new Error('Failed to upload AAS to destination infrastructure')
+        }
+      }
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 8000,
+        color: 'success',
+        btnColor: 'buttonText',
+        text: `Successfully imported ${(isValidAAS.value ? 'AAS' : (isValidSubmodel.value ? 'Submodel' : 'asset'))} to ${destinationInfrastructure.value.name}`,
+      })
+    } finally {
+      if (originalInfraId && infrastructureStore.getSelectedInfrastructureId !== originalInfraId) {
+        await infrastructureStore.dispatchSelectInfrastructure(originalInfraId)
+      }
+      importingInProgress.value = false
     }
   }
 
