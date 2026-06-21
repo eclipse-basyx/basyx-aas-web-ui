@@ -24,7 +24,7 @@
                 />
               </template>
 
-              <span>Reload Policy List</span>
+              <span>Reload Asset List</span>
             </v-tooltip>
 
             <v-text-field
@@ -32,9 +32,9 @@
               clearable
               density="compact"
               hide-details
-              label="Search for Policy ..."
+              label="Search for Asset ..."
               variant="outlined"
-              @update:model-value="filterPolicyList"
+              @update:model-value="filterAssetList"
             />
 
             <!-- Menu -->
@@ -50,18 +50,47 @@
 
               <v-sheet border>
                 <v-list class="py-0" density="compact">
-                  <!-- Create Policy Dialog -->
+
+                  <!-- Create Asset Dialog -->
                   <v-tooltip location="bottom" open-delay="600">
                     <template #activator="{ props }">
-                      <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="createPolicyDialog = true">
+                      <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="createAssetDialog = true">
                         <template #prepend>
                           <v-icon size="small">mdi-plus</v-icon>
                         </template>
-                        Create Policy
+                        Create Asset
                       </v-list-item>
                     </template>
 
-                    <span>Create a new Policy</span>
+                    <span>Create a new asset from an AAS and its SMs</span>
+                  </v-tooltip>
+
+                  <!-- Create Asset AAS/SMs Dialog -->
+                  <v-tooltip location="bottom" open-delay="600">
+                    <template #activator="{ props }">
+                      <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="createAssetsAasSmsDialog = true">
+                        <template #prepend>
+                          <v-icon size="small">mdi-plus</v-icon>
+                        </template>
+                        Create Assets from AAS/SMs
+                      </v-list-item>
+                    </template>
+
+                    <span>Create a new assets from an AAS and its SMs</span>
+                  </v-tooltip>
+
+                  <!-- Create Asset from Template Dialog -->
+                  <v-tooltip location="bottom" open-delay="600">
+                    <template #activator="{ props }">
+                      <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="createAssetFromTemplateDialog = true">
+                        <template #prepend>
+                          <v-icon size="small">mdi-plus</v-icon>
+                        </template>
+                        Create Asset from Template
+                      </v-list-item>
+                    </template>
+
+                    <span>Create a new asset from Template</span>
                   </v-tooltip>
 
                 </v-list>
@@ -80,9 +109,9 @@
 
             <template v-else>
 
-              <!-- List of Policys -->
+              <!-- List of Assets -->
               <v-list
-                v-if="policyList.length > 0"
+                v-if="assetList.length > 0"
                 class="pa-0"
                 density="compact"
                 nav
@@ -91,11 +120,11 @@
                   ref="virtualScrollRef"
                   class="bg-card mb-2"
                   :item-height="56"
-                  :items="policyList"
+                  :items="assetList"
                 >
 
                   <template #default="{ item }">
-                    <!-- Single Policy -->
+                    <!-- Single Asset -->
                     <v-list-item
                       :key="item['@id']"
                       :active="isSelected(item)"
@@ -112,13 +141,13 @@
                             : '#ABABAB !important',
                       }"
                       variant="tonal"
-                      @click="selectPolicy(item)"
+                      @click="selectAsset(item)"
                     >
                       <template #prepend>
                         <v-btn
                           class="ml-n1"
                           color="primary"
-                          icon="mdi-shield-check-outline"
+                          icon="mdi-code-json"
                           rel="noopener noreferrer"
                           size="x-small"
                           style="z-index: 9000"
@@ -133,7 +162,7 @@
                         open-delay="600"
                         transition="slide-x-transition"
                       >
-                        <!-- Policy ID -->
+                        <!-- Asset ID -->
                         <div v-if="item['@id']" class="text-body-small">
                           <span class="font-weight-bold">{{ 'ID: ' }}</span>
                           {{ item['@id'] }}
@@ -145,20 +174,14 @@
                           {{ new Date(item['createdAt']).toISOString() }}
                         </div>
 
-                        <!-- Type -->
-                        <div v-if="getPolicyType(item)" class="text-body-small mt-1">
-                          <span class="font-weight-bold">{{ 'Type: ' }}</span>
-                          {{ getPolicyType(item) + ' Policy' }}
-                        </div>
-
                       </v-tooltip>
 
                       <v-list-item-title class="text-primary">
-                        {{ item['@id'] }}
+                        {{ item?.properties?.name || item?.properties?.description }}
                       </v-list-item-title>
 
-                      <v-list-item-subtitle class="text-listItemText font-italic">
-                        {{ getPolicyType(item) }}
+                      <v-list-item-subtitle class="text-listItemText">
+                        {{ item['@id'] }}
                       </v-list-item-subtitle>
 
                       <template #append>
@@ -191,36 +214,36 @@
                           <v-sheet border>
                             <v-list class="py-0" dense density="compact" slim>
 
-                              <!-- Update Policy -->
+                              <!-- Update Asset -->
                               <v-list-item @click="openUpdateDialog(item)">
                                 <template #prepend>
                                   <v-icon size="x-small">mdi-pencil</v-icon>
                                 </template>
 
-                                <v-list-item-subtitle>Edit Policy</v-list-item-subtitle>
+                                <v-list-item-subtitle>Edit Asset</v-list-item-subtitle>
                               </v-list-item>
 
-                              <!-- Delete Policy -->
+                              <!-- Delete Asset -->
                               <v-list-item @click="openDeleteDialog(item)">
                                 <template #prepend>
                                   <v-icon size="x-small">mdi-delete</v-icon>
                                 </template>
 
-                                <v-list-item-subtitle>Delete Policy</v-list-item-subtitle>
+                                <v-list-item-subtitle>Delete Asset</v-list-item-subtitle>
                               </v-list-item>
 
                               <v-divider />
-                              <!-- Copy Policy ID to clipboard -->
+                              <!-- Copy Asset ID to clipboard -->
                               <v-list-item
                                 @click.stop="
-                                  copyToClipboard(item['@id'], 'PolicyId', copyIconAsRef)
+                                  copyToClipboard(item['@id'], 'AssetId', copyIconAsRef)
                                 "
                               >
                                 <template #prepend>
                                   <v-icon size="x-small">{{ copyIcon }} </v-icon>
                                 </template>
 
-                                <v-list-item-subtitle>Copy Policy ID</v-list-item-subtitle>
+                                <v-list-item-subtitle>Copy Asset ID</v-list-item-subtitle>
                               </v-list-item>
                             </v-list>
                           </v-sheet>
@@ -237,7 +260,7 @@
               <v-empty-state
                 v-else
                 class="text-divider"
-                title="No existing Policys"
+                title="No existing Assets"
               />
             </template>
           </v-card-text>
@@ -247,18 +270,17 @@
       <v-main>
         <v-container fluid>
 
-          <div v-if="!selectedPolicy || Object.keys(selectedPolicy).length === 0" class="d-flex align-center justify-center" :style="{'height': fullHeightMain}">
+          <div v-if="!selectedAsset || Object.keys(selectedAsset).length === 0" class="d-flex align-center justify-center" :style="{'height': fullHeightMain}">
 
             <v-empty-state
               icon="mdi-gesture-tap"
-              text="Please select a Policy to view"
-              title="Select Policy"
+              text="Please select a Asset to view"
+              title="Select Asset"
             >
               <template #media>
                 <v-icon size="64" />
               </template>
             </v-empty-state>
-
           </div>
 
           <template v-else>
@@ -289,7 +311,7 @@
               class="json-content bg-surface rounded border"
               :style="{'height': fullHeightMainWithTabs}"
             >
-              <code v-html="selectedPolicyJsonFormatted" />
+              <code v-html="selectedAssetJsonFormatted" />
             </pre>
 
             <!-- Tree view -->
@@ -298,7 +320,7 @@
               class="rounded border overflow-y-auto pa-4"
               :style="{'height': fullHeightMainWithTabs, 'background-color': '#f5f5f5'}"
             >
-              <JsonTreeView :data="selectedPolicy" />
+              <JsonTreeView :data="selectedAsset" />
             </div>
           </template>
 
@@ -307,11 +329,13 @@
     </v-layout>
   </v-container>
 
-  <CreatePolicyDialog v-model="createPolicyDialog" @policy-created="onPolicyCreated" />
+  <CreateAssetDialog v-model="createAssetDialog" @assets-created="onAssetsCreated" />
+  <CreateAssetsAasSmsDialog v-model="createAssetsAasSmsDialog" @assets-created="onAssetsCreated" />
+  <CreateAssetFromTemplateDialog v-model="createAssetFromTemplateDialog" @assets-created="onAssetsCreated" />
 
-  <UpdatePolicyDialog v-model="updatePolicyDialog" :policy="policyToUpdate" @policy-updated="onPolicyUpdated" />
+  <UpdateAssetDialog v-model="updateAssetDialog" :asset="assetToUpdate" @asset-updated="onAssetUpdated" />
 
-  <DeletePolicyDialog v-model="deletePolicyDialog" :policy="policyToDelete" @policy-deleted="onPolicyDeleted" />
+  <DeleteAssetDialog v-model="deleteAssetDialog" :asset="assetToDelete" @asset-deleted="onAssetDeleted" />
 </template>
 
 <script lang="ts" setup>
@@ -319,10 +343,12 @@
   import { useTheme } from 'vuetify'
   import JsonTreeView from '@/components/UIComponents/JsonTreeView.vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
-  import CreatePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/CreatePolicyDialog.vue'
-  import DeletePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/DeletePolicyDialog.vue'
-  import UpdatePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Dialogs/UpdatePolicyDialog.vue'
-  import { type PolicyDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
+  import CreateAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetDialog.vue'
+  import CreateAssetFromTemplateDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetFromTemplateDialog.vue'
+  import CreateAssetsAasSmsDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetsAasSmsDialog.vue'
+  import DeleteAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/DeleteAssetDialog.vue'
+  import UpdateAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/UpdateAssetDialog.vue'
+  import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { formatJSON } from '@/utils/JsonUtils'
   import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
@@ -336,7 +362,7 @@
   const edcStore = useEdcStore()
 
   // Composables
-  const { queryPolicyDefinitions } = useEdcClient()
+  const { queryAssets } = useEdcClient()
   const { copyToClipboard } = useClipboardUtil()
 
   // Vuetify
@@ -348,18 +374,20 @@
   const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
   const fullHeightMainWithTabs = ref('calc(100vh - 64px - 48px - 40px - 32px - 44px - 2px)') // Full height - header - tabs - footer - padding - view toggle - border
   const selectedView = ref<'json' | 'tree'>('tree')
-  const policyList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Policy data
-  const policyListUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Policy data before filtering
+  const assetList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Asset data
+  const assetListUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Asset data before filtering
   const listLoading = ref(false) // Variable to store if the AAS List is loading
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null) // Reference to the Virtual Scroll Component
-  const selectedPolicy = ref({} as any)
-  const selectedPolicyJson = ref<string>('')
-  const selectedPolicyJsonFormatted = ref<string>('')
-  const createPolicyDialog = ref(false) // Variable to store if the Create Policy Dialog should be shown
-  const updatePolicyDialog = ref(false) // Variable to store if the Update Policy Dialog should be shown
-  const policyToUpdate = ref({}) // Variable to store the policy to be updated
-  const deletePolicyDialog = ref(false) // Variable to store if the Delete Policy Dialog should be shown
-  const policyToDelete = ref({}) // Variable to store the policy to be deleted
+  const selectedAsset = ref({} as any)
+  const selectedAssetJson = ref<string>('')
+  const selectedAssetJsonFormatted = ref<string>('')
+  const createAssetDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
+  const createAssetsAasSmsDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
+  const createAssetFromTemplateDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
+  const updateAssetDialog = ref(false) // Variable to store if the Update Asset Dialog should be shown
+  const assetToUpdate = ref({}) // Variable to store the asset to be updated
+  const deleteAssetDialog = ref(false) // Variable to store if the Delete Asset Dialog should be shown
+  const assetToDelete = ref({}) // Variable to store the asset to be deleted
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
 
   // Computed properties
@@ -376,22 +404,22 @@
   )
 
   watch(
-    () => selectedPolicy.value,
+    () => selectedAsset.value,
     () => {
       try {
-        selectedPolicyJson.value = JSON.stringify(selectedPolicy.value)
-        const formatted = formatJSON(selectedPolicyJson.value)
+        selectedAssetJson.value = JSON.stringify(selectedAsset.value)
+        const formatted = formatJSON(selectedAssetJson.value)
 
         // Apply syntax highlighting using Prism
         if (Prism && Prism.highlight) {
-          selectedPolicyJsonFormatted.value = Prism.highlight(formatted, getPrismJsonLanguage(), 'json')
+          selectedAssetJsonFormatted.value = Prism.highlight(formatted, getPrismJsonLanguage(), 'json')
         } else {
-          selectedPolicyJsonFormatted.value = formatted
+          selectedAssetJsonFormatted.value = formatted
           console.warn('Prism highlighting not available')
         }
       } catch (error_) {
         console.error('Error highlighting JSON:', error_)
-        selectedPolicyJsonFormatted.value = selectedPolicyJson.value || ''
+        selectedAssetJsonFormatted.value = selectedAssetJson.value || ''
       }
     },
     { deep: true },
@@ -402,111 +430,104 @@
   })
 
   onActivated(() => {
-    scrollToSelectedPolicy()
+    scrollToSelectedAsset()
   })
 
   async function initialize (): Promise<void> {
     listLoading.value = true
 
-    const policies = await queryPolicyDefinitions()
+    const assets = await queryAssets()
 
-    if (policies && Array.isArray(policies) && policies.length > 0) {
-      const policiesSorted = policies.toSorted((policyA: any, policyB: any) => {
-        // Sort Policies with respect to id
-        return policyA['@id']
-          > policyB['@id']
+    if (assets && Array.isArray(assets) && assets.length > 0) {
+      const assetsSorted = assets.toSorted((assetA: any, assetB: any) => {
+        // Sort assets with respect to id
+        return assetA['@id']
+          > assetB['@id']
           ? 1
           : -1
       })
 
-      policyList.value = [...policiesSorted]
-      policyListUnfiltered.value = [...policiesSorted]
+      assetList.value = [...assetsSorted]
+      assetListUnfiltered.value = [...assetsSorted]
 
       if (searchQuery.value !== '')
-        filterPolicyList(searchQuery.value)
+        filterAssetList(searchQuery.value)
 
-      scrollToSelectedPolicy()
+      scrollToSelectedAsset()
     }
 
     listLoading.value = false
   }
 
-  async function onPolicyCreated (policyId: string): Promise<void> {
-    // Reload the policy list
-    await initialize()
-
-    // Find and select the newly created policy
-    const newPolicy = policyList.value.find((policy: any) => policy['@id'] === policyId)
-    if (newPolicy) {
-      selectedPolicy.value = newPolicy
-      scrollToSelectedPolicy()
-    }
-  }
-
-  function openUpdateDialog (policy: any): void {
-    policyToUpdate.value = policy
-    updatePolicyDialog.value = true
-  }
-
-  function openDeleteDialog (policy: any): void {
-    deletePolicyDialog.value = true
-    policyToDelete.value = policy
-  }
-
-  async function onPolicyUpdated (): Promise<void> {
-    // Reload the policy list
+  async function onAssetsCreated (): Promise<void> {
+    // Reload the asset list
     await initialize()
   }
 
-  async function onPolicyDeleted (): Promise<void> {
-    // Reload the policy list
-    selectedPolicy.value = {}
+  function openUpdateDialog (asset: any): void {
+    assetToUpdate.value = asset
+    updateAssetDialog.value = true
+  }
+
+  function openDeleteDialog (asset: any): void {
+    deleteAssetDialog.value = true
+    assetToDelete.value = asset
+  }
+
+  async function onAssetUpdated (): Promise<void> {
+    // Reload the asset list
     await initialize()
   }
 
-  function filterPolicyList (value: string): void {
+  async function onAssetDeleted (): Promise<void> {
+    // Reload the asset list
+    selectedAsset.value = {}
+    await initialize()
+  }
+
+  function filterAssetList (value: string): void {
     if (!value || value.trim() === '') {
-      policyList.value = policyListUnfiltered.value
+      assetList.value = assetListUnfiltered.value
     } else {
       // Filter list of SMs (cf. AASList.vue)
-      const policyListFiltered = policyListUnfiltered.value.filter(
-        (policy: any) =>
-          policy['@id'].toLowerCase().includes(value.toLowerCase()),
+      const assetListFiltered = assetListUnfiltered.value.filter(
+        (asset: any) =>
+          asset['@id'].toLowerCase().includes(value.toLowerCase()),
       )
-      policyList.value = policyListFiltered
+      assetList.value = assetListFiltered
     }
-    scrollToSelectedPolicy()
+    scrollToSelectedAsset()
   }
 
-  function selectPolicy (policy: any): void {
-    if (isSelected(policy)) {
-      selectedPolicy.value = {}
+  function selectAsset (asset: any): void {
+    if (isSelected(asset)) {
+      selectedAsset.value = {}
     } else {
-      selectedPolicy.value = policy
+      selectedAsset.value = asset
 
-      if (!selectedPolicy.value || Object.keys(selectedPolicy.value).length === 0) {
-        scrollToSelectedPolicy()
+      if (!selectedAsset.value || Object.keys(selectedAsset.value).length === 0) {
+        scrollToSelectedAsset()
       }
     }
   }
 
-  function isSelected (policy: any): boolean {
+  function isSelected (asset: any): boolean {
     if (
-      !selectedPolicy.value
-      || Object.keys(selectedPolicy.value).length === 0
-      || !selectedPolicy.value['@id']
-      || !policy
-      || Object.keys(policy).length === 0
-      || !policy['@id']
+      !selectedAsset.value
+      || Object.keys(selectedAsset.value).length === 0
+      || !selectedAsset.value['@id']
+      || !asset
+      || Object.keys(asset).length === 0
+      || !asset['@id']
     ) {
       return false
     }
-    return selectedPolicy.value['@id'] === policy['@id']
+    return selectedAsset.value['@id'] === asset['@id']
   }
 
-  function scrollToSelectedPolicy (): void {
+  function scrollToSelectedAsset (): void {
     // Find the index of the selected item
-    const index = policyList.value.findIndex((sm: any) => isSelected(sm))
+    const index = assetList.value.findIndex((sm: any) => isSelected(sm))
 
     if (index !== -1) {
       const intervalId = setInterval(() => {
@@ -520,26 +541,6 @@
         }
       }, 50)
     }
-  }
-
-  function getPolicyType (policyDefinition: PolicyDefinition): string {
-    if (!policyDefinition?.policy
-      || !policyDefinition?.policy['odrl:permission']
-      || !policyDefinition?.policy['odrl:permission']['odrl:action']
-      || !policyDefinition?.policy['odrl:permission']['odrl:action']['@id']
-    )
-      return ''
-
-    switch (policyDefinition?.policy['odrl:permission']['odrl:action']['@id']) {
-      case 'odrl:use': {
-        return 'Usage'
-      }
-      case 'odrl:access': {
-        return 'Access'
-      }
-    }
-
-    return ''
   }
 
 </script>

@@ -421,9 +421,9 @@
   import { useTheme } from 'vuetify'
   import JsonTreeView from '@/components/UIComponents/JsonTreeView.vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
-  import CatalogDiscoverId from '@/pages/modules/EclipseDataspaceConnector/components/CatalogDiscoverId.vue'
-  import CatalogFetchAsset from '@/pages/modules/EclipseDataspaceConnector/components/CatalogFetchAsset.vue'
-  import CatalogPushData from '@/pages/modules/EclipseDataspaceConnector/components/CatalogPushData.vue'
+  import CatalogDiscoverId from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/CatalogDiscoverId.vue'
+  import CatalogFetchAsset from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/CatalogFetchAsset.vue'
+  import CatalogPushData from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/CatalogPushData.vue'
   import {
     type CatalogRequest,
     useEdcClient,

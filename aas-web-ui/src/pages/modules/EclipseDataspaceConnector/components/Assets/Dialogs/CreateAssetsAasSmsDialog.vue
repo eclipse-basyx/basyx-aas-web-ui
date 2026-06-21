@@ -541,6 +541,7 @@
   import { useAASListPagination } from '@/composables/AAS/AASListPagination'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
+  import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import assetTemplate from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.9.json'
   import { useAASStore } from '@/store/AASDataStore'
   import { useNavigationStore } from '@/store/NavigationStore'
@@ -550,7 +551,6 @@
   import { debounce } from '@/utils/generalUtils'
   import { formatJSON } from '@/utils/JsonUtils'
   import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
-  import { useEdcClient } from '../../composables/Client/EdcClient'
   import 'prismjs/themes/prism.css'
 
   // Extend the ComponentPublicInstance type to include scrollToIndex

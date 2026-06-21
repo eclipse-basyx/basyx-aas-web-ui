@@ -12,7 +12,7 @@ export default {
     {
       path: 'assets',
       name: 'Assets',
-      component: () => import('@/pages/modules/EclipseDataspaceConnector/components/Assets.vue'),
+      component: () => import('@/pages/modules/EclipseDataspaceConnector/components/Assets/Assets.vue'),
       meta: {
         title: 'Assets',
         icon: 'mdi-code-json',
@@ -21,7 +21,7 @@ export default {
     {
       path: 'policies',
       name: 'Policies',
-      component: () => import('@/pages/modules/EclipseDataspaceConnector/components/Policies.vue'),
+      component: () => import('@/pages/modules/EclipseDataspaceConnector/components/Policies/Policies.vue'),
       meta: {
         title: 'Policies',
         icon: 'mdi-shield-check-outline',
@@ -30,7 +30,7 @@ export default {
     {
       path: 'contracts',
       name: 'Contracts',
-      component: () => import('@/pages/modules/EclipseDataspaceConnector/components/Contracts.vue'),
+      component: () => import('@/pages/modules/EclipseDataspaceConnector/components/Contracts/Contracts.vue'),
       meta: {
         title: 'Contracts',
         icon: 'mdi-file-sign',
@@ -39,7 +39,7 @@ export default {
     {
       path: 'catalog',
       name: 'Catalog',
-      component: () => import('@/pages/modules/EclipseDataspaceConnector/components/Catalog.vue'),
+      component: () => import('@/pages/modules/EclipseDataspaceConnector/components/Catalog/Catalog.vue'),
       meta: {
         title: 'Catalog',
         icon: 'mdi-database-outline',

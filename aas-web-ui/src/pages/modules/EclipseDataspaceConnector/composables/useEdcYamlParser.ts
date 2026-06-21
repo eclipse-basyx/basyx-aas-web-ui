@@ -1,5 +1,5 @@
-import type { EdcConfig, EdcType, YamlEdcConfig, YamlEdcSecurityConfig } from '../types/Edc'
-import { EDC_TYPES } from '../types/Edc'
+import type { EdcConfig, EdcType, YamlEdcConfig, YamlEdcSecurityConfig } from '@/pages/modules/EclipseDataspaceConnector/types/Edc'
+import { EDC_TYPES } from '@/pages/modules/EclipseDataspaceConnector/types/Edc'
 
 export function useEdcYamlParser (): {
   parseYamlConfig: (yamlConfig: YamlEdcConfig) => EdcConfig
