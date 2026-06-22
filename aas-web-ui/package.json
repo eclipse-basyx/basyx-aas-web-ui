@@ -41,7 +41,7 @@
     "@vue-flow/core": "^1.48.2",
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "aas-package3-typescript": "^1.0.0",
-    "apexcharts": "^5.15.0",
+    "apexcharts": "^5.15.2",
     "basyx-typescript-sdk": "^2.2.4",
     "html5-qrcode": "^2.3.8",
     "i18n-iso-countries": "^7.14.0",
