@@ -524,7 +524,7 @@ export async function createAppRouter (): Promise<Router> {
 
     if (
       envStore.getSingleSm
-      && (routesUsingPathUrlQuery.includes(to.name)
+      && (routesUsingOnlyPathUrlQuery.has(to.name)
         || (to.path.includes('/modules/') && to.meta.isOnlyVisibleWithSelectedNode))
       && (!Object.hasOwn(to.query, 'path') || (to.query.path as string).trim() === '')
     ) {
