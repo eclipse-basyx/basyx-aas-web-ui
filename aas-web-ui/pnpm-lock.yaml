@@ -109,8 +109,8 @@ importers:
         version: 0.0.77
     devDependencies:
       '@intellectronica/ruler':
-        specifier: ^0.3.42
-        version: 0.3.42
+        specifier: ^0.3.43
+        version: 0.3.43
       '@playwright/test':
         specifier: ^1.61.0
         version: 1.61.0
@@ -508,8 +508,8 @@ packages:
   '@iconify/types@2.0.0':
     resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
 
-  '@intellectronica/ruler@0.3.42':
-    resolution: {integrity: sha512-TDGqqRL79j+5NrJMJsH/RsC9jf0E8K562ppcOn3c850SQNUA0A10enTo+IQO7A+IYIr1xviAQnpDcCAoa8OWfA==}
+  '@intellectronica/ruler@0.3.43':
+    resolution: {integrity: sha512-/2WHKDN0UsV3yKWUfU7VhD7kR815p+GMeSbue0fMfbpZZv2PqMAwfmTMHA858mTEF2s9ejofNRJCZTenxB11lQ==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=23}
     hasBin: true
 
@@ -1937,10 +1937,6 @@ packages:
 
   js-tokens@9.0.1:
     resolution: {integrity: sha512-mxa9E9ITFOt0ban3j6L5MpjwegGz6lBQmM1IJkWeBZGcMxto50+eWdjC/52xDbS2vy0k7vIMK0Fe2wfL9OQSpQ==}
-
-  js-yaml@4.1.1:
-    resolution: {integrity: sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==}
-    hasBin: true
 
   js-yaml@4.2.0:
     resolution: {integrity: sha512-ePWsvanv0DWuDRsW8dnt+R4jQ31SCRCQ7hhNcPXZPsoBZiemuZNYGf7adZdqX2D86j6rvKp3RpCxVTSb8WQlOw==}
@@ -3552,10 +3548,10 @@ snapshots:
 
   '@iconify/types@2.0.0': {}
 
-  '@intellectronica/ruler@0.3.42':
+  '@intellectronica/ruler@0.3.43':
     dependencies:
       '@iarna/toml': 2.2.5
-      js-yaml: 4.1.1
+      js-yaml: 4.2.0
       yargs: 18.0.0
       zod: 4.4.3
 
@@ -5008,10 +5004,6 @@ snapshots:
   js-tokens@4.0.0: {}
 
   js-tokens@9.0.1: {}
-
-  js-yaml@4.1.1:
-    dependencies:
-      argparse: 2.0.1
 
   js-yaml@4.2.0:
     dependencies:
