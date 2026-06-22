@@ -637,6 +637,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     ) {
       const keycloakFeatureControlRolePrefix = envStore.getKeycloakFeatureControlRolePrefix
       type KeycloakFeatureSetter = 'setSingleAas'
+        | 'setSingleSm'
         | 'setSmViewerEditor'
         | 'setAllowEditing'
         | 'setAllowUploading'
@@ -664,7 +665,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         {
           keycloakRole: keycloakFeatureControlRolePrefix + 'multiple-sm',
           feature: 'SINGLE_SM',
-          setFunction: 'setSingleAas',
+          setFunction: 'setSingleSm',
           setValue: 'false',
         },
         {

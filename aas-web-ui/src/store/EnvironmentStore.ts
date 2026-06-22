@@ -148,6 +148,10 @@ export const useEnvStore = defineStore('envStore', () => {
     singleAas.value = singleAasValue
   }
 
+  function setSingleSm (singleSmValue: string): void {
+    singleSm.value = singleSmValue
+  }
+
   function setSmViewerEditor (smViewerEditorValue: string): void {
     smViewerEditor.value = smViewerEditorValue
   }
@@ -213,6 +217,7 @@ export const useEnvStore = defineStore('envStore', () => {
 
     // Actions
     setSingleAas,
+    setSingleSm,
     setSmViewerEditor,
     setAllowEditing,
     setAllowUploading,
