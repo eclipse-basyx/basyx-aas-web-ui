@@ -163,7 +163,6 @@
   const jsonLanguage = getPrismJsonLanguage()
 
   // Computed Properties
-  const selectedAAS = computed(() => aasStore.getSelectedAAS)
   const selectedNode = computed(() => aasStore.getSelectedNode)
 
   const lineCount = computed(() => {
