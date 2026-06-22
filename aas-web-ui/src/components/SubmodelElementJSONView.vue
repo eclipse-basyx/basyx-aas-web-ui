@@ -228,7 +228,7 @@
     formattedJson.value = ''
 
     try {
-      if ((!selectedAAS.value || Object.keys(selectedAAS.value).length === 0) && (!selectedNode.value || Object.keys(selectedNode.value).length === 0)) {
+      if ((!selectedAAS.value || Object.keys(selectedAAS.value).length === 0) || (!selectedNode.value || Object.keys(selectedNode.value).length === 0)) {
         return
       }
 
