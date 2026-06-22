@@ -5,7 +5,7 @@ import SubmodelElementViewAndVisualization from '@/components/SubmodelElementVie
 const mocks = vi.hoisted(() => ({
   route: {
     name: 'AASSubmodelViewer',
-    query: { view: 'UMLView' } as Record<string, string>,
+    query: { view: 'SMEView' } as Record<string, string>,
   },
   replace: vi.fn(),
   selectedAAS: { id: 'aas-1' } as Record<string, unknown>,
@@ -56,13 +56,13 @@ function mountComponent () {
           template: '<div>{{ title }} {{ text }}</div>',
         },
         'SubmodelElementView': {
-          template: '<div>Element Details Stub</div>',
+          template: '<div>SME View Stub</div>',
         },
         'SubmodelElementVisualization': {
-          template: '<div>Visualization Stub</div>',
+          template: '<div>Visualization View Stub</div>',
         },
         'SubmodelElementJSONView': {
-          template: '<div>JSON Stub</div>',
+          template: '<div>JSON View Stub</div>',
         },
         'SubmodelElementUMLView': {
           template: '<div>UML View Stub</div>',
@@ -73,29 +73,54 @@ function mountComponent () {
 }
 
 describe('SubmodelElementViewAndVisualization', () => {
-  it('renders the UML tab and selected UML view from the query parameter', () => {
-    mocks.route.query = { view: 'UMLView' }
-    mocks.selectedAAS = { id: 'aas-1' }
-    mocks.selectedNode = {
-      modelType: 'Submodel',
-      idShort: 'Nameplate',
-      path: 'https://example.test/submodels/nameplate',
-    }
+  const routeNames = ['AASSubmodelViewer', 'AASViewer', 'AASEditor', 'SMViewer', 'SMEditor']
+  const routeQueryViews = ['SMEView', 'Visualization', 'JSONView', 'UMLView']
 
-    const wrapper = mountComponent()
+  for (const routeName of routeNames) {
+    describe(`route: ${routeName}`, () => {
+      for (const routeQueryView of routeQueryViews) {
+        it(`renders the ${routeQueryView} tab and selected ${routeQueryView} view from the query parameter`, () => {
+          mocks.route.name = routeName
+          mocks.route.query = { view: routeQueryView }
+          mocks.selectedAAS = { id: 'aas-1' }
+          mocks.selectedNode = {
+            modelType: 'Submodel',
+            idShort: 'Nameplate',
+            path: 'https://example.test/submodels/nameplate',
+          }
 
-    expect(wrapper.text()).toContain('UML')
-    expect(wrapper.text()).toContain('UML View Stub')
-    expect(wrapper.text()).not.toContain('JSON Stub')
-  })
+          const wrapper = mountComponent()
 
-  it('keeps the existing empty state when no Submodel/SubmodelElement is selected', () => {
-    mocks.route.query = { view: 'UMLView' }
-    mocks.selectedAAS = { id: 'aas-1' }
-    mocks.selectedNode = {}
+          expect(wrapper.text()).toContain(routeQueryView.replace('View', ''))
+          expect(wrapper.text()).toContain(`${routeQueryView.replace('View', '')} View Stub`)
+        })
 
-    const wrapper = mountComponent()
+        it('keeps the existing empty state when no Submodel/SubmodelElement is selected', () => {
+          mocks.route.name = routeName
+          mocks.route.query = { view: routeQueryView }
+          mocks.selectedAAS = { id: 'aas-1' }
+          mocks.selectedNode = {}
 
-    expect(wrapper.text()).toContain('No selected Submodel / Submodel Element')
-  })
+          const wrapper = mountComponent()
+
+          expect(wrapper.text()).toContain('No selected Submodel / Submodel Element')
+        })
+
+        it('keeps the existing empty state when no AAS is selected', () => {
+          mocks.route.name = routeName
+          mocks.route.query = { view: routeQueryView }
+          mocks.selectedAAS = {}
+          mocks.selectedNode = {}
+
+          const wrapper = mountComponent()
+
+          if (['AASSubmodelViewer', 'AASViewer', 'AASEditor'].includes(routeName)) {
+            expect(wrapper.text()).toContain('No selected AAS')
+          } else {
+            expect(wrapper.text()).toContain('No selected Submodel / Submodel Element')
+          }
+        })
+      }
+    })
+  }
 })

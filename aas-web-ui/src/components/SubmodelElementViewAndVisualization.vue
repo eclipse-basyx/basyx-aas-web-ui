@@ -57,7 +57,7 @@
 
         <v-empty-state
           v-else-if="
-            aasMode &&
+            ['AASViewer', 'AASEditor', 'AASSubmodelViewer'].includes(route.name as string) &&
               (!selectedAAS || Object.keys(selectedAAS).length === 0)
           "
           class="text-divider"
@@ -66,7 +66,7 @@
         />
 
         <v-empty-state
-          v-else-if="(aasMode || smMode) && (!selectedNode || Object.keys(selectedNode).length === 0)"
+          v-else-if="!selectedNode || Object.keys(selectedNode).length === 0"
           class="text-divider"
           text="Select a Submodel / Submodel Element to view"
           title="No selected Submodel / Submodel Element"
@@ -90,8 +90,6 @@
 
   // Data
   const validViews = new Set(['SMEView', 'Visualization', 'JSONView', 'UMLView'])
-  const aasMode = computed(() => ['AASViewer', 'AASEditor'].includes(route.name as string))
-  const smMode = computed(() => ['SMViewer', 'SMEditor'].includes(route.name as string))
   const componentToShow = ref(
     validViews.has(route.query.view as string) ? (route.query.view as string) : 'SMEView',
   )
