@@ -5,11 +5,11 @@
         <v-icon class="mr-2">mdi-xml</v-icon>
         XML Preview
         <v-spacer />
-        <!-- Search input -->
+
         <v-text-field
           v-if="xmlContent"
           v-model="searchQuery"
-          class="mx-2"
+          class="mx-2 "
           clearable
           density="compact"
           hide-details
@@ -18,7 +18,7 @@
           style="max-width: 200px"
           @update:model-value="searchInXml"
         />
-        <!-- Line wrap toggle -->
+
         <v-btn
           v-if="xmlContent"
           icon
@@ -28,7 +28,7 @@
         >
           <v-icon>{{ wordWrapEnabled ? 'mdi-wrap-disabled' : 'mdi-wrap' }}</v-icon>
         </v-btn>
-        <!-- Line numbers toggle -->
+
         <v-btn
           v-if="xmlContent"
           icon
@@ -38,7 +38,7 @@
         >
           <v-icon>mdi-format-list-numbered</v-icon>
         </v-btn>
-        <!-- Download button -->
+
         <v-btn
           v-if="xmlContent"
           icon
@@ -48,7 +48,7 @@
         >
           <v-icon>mdi-download</v-icon>
         </v-btn>
-        <!-- Copy button -->
+
         <v-btn
           v-if="xmlContent"
           icon
@@ -61,7 +61,7 @@
       </v-card-title>
 
       <v-divider />
-      <!-- Search results indicator -->
+
       <v-card-subtitle v-if="searchResults.length > 0" class="d-flex align-center">
         <span>{{ searchResults.length }} results found</span>
         <v-spacer />
@@ -95,32 +95,76 @@
         </div>
 
         <div v-else-if="error" class="error-message pa-4 text-center">
-          <v-icon class="mb-2" color="error" size="28">mdi-alert-circle</v-icon>
+          <v-icon class="mb-2" color="error" size="large">mdi-alert-circle</v-icon>
           <div>{{ error }}</div>
         </div>
 
         <div v-else-if="!xmlContent" class="no-content pa-4 text-center">No XML content available</div>
 
-        <div v-else class="xml-container" :class="{ 'word-wrap-enabled': wordWrapEnabled }">
-          <!-- Line numbers column -->
-          <div v-if="showLineNumbers" ref="lineNumbersContainer" class="line-numbers">
+        <div v-else class="xml-layout" :style="{ gridTemplateColumns: treePanelWidth + 'px minmax(0, 1fr)' }">
+          <div class="xml-tree-panel">
+            <div class="xml-panel-header">Table of Contents</div>
+
+            <div class="xml-tree-body light-scrollbar" :style="treeBodyStyle">
+              <v-treeview
+                v-model:activated="activatedTreeNodes"
+                v-model:opened="openedTreeNodes"
+                activatable
+                class="xml-treeview"
+                color="primary"
+                density="compact"
+                item-children="children"
+                item-title="title"
+                item-value="id"
+                :items="treeItems"
+                open-on-click
+                @update:activated="handleTreeActivation"
+              >
+                <template #title="{ item }">
+                  <span class="tree-item-title" :title="item.title">
+                    {{ item.title }}
+                  </span>
+                </template>
+              </v-treeview>
+            </div>
+
+            <div class="tree-resize-handle" @mousedown="startResize" />
+          </div>
+
+          <div class="xml-viewer-panel">
+            <div class="xml-panel-header">XML Content</div>
+
             <div
-              v-for="n in lineCount"
-              :key="n"
-              :class="{ 'highlighted-line': highlightedLineNumbers.includes(n) }"
+              ref="xmlContainerWrapper"
+              class="xml-container"
+              :class="{ 'word-wrap-enabled': wordWrapEnabled }"
             >
-              {{ n }}
+              <div
+                v-if="showLineNumbers"
+                ref="lineNumbersContainer"
+                class="line-numbers light-scrollbar"
+                :style="{ width: lineNumberColumnWidth }"
+              >
+                <div
+                  v-for="n in lineCount"
+                  :key="n"
+                  :class="{
+                    'highlighted-line': highlightedLineNumbers.includes(n),
+                    'selected-line': selectedLineNumber === n,
+                  }"
+                >
+                  {{ n }}
+                </div>
+              </div>
+
+              <pre
+                ref="xmlContainer"
+                class="xml-content light-scrollbar"
+                :class="{ 'with-line-numbers': showLineNumbers }"
+                @scroll="syncScroll"
+              ><code ref="codeElement" class="language-xml" v-html="formattedXml" /></pre>
             </div>
           </div>
-          <!-- XML content with highlighting -->
-          <pre
-            ref="xmlContainer"
-            class="xml-content"
-            :class="{ 'with-line-numbers': showLineNumbers }"
-            @scroll="syncScroll"
-          >
-                        <code ref="codeElement" class="language-xml" v-html="formattedXml" />
-                    </pre>
         </div>
       </v-card-text>
     </v-card>
@@ -128,10 +172,20 @@
 </template>
 
 <script lang="ts" setup>
+
   import Prism from 'prismjs'
-  import { computed, nextTick, onMounted, ref, watch } from 'vue'
+  import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
+
   import 'prismjs/themes/prism.css'
+  import 'prismjs/components/prism-markup'
+
+  interface XmlTreeItem {
+    id: string
+    title: string
+    lineNumber: number
+    children?: XmlTreeItem[]
+  }
 
   const props = defineProps({
     submodelElementData: {
@@ -142,27 +196,101 @@
 
   const xmlContent = ref<string>('')
   const formattedXml = ref<string>('')
+  const formattedXmlText = ref<string>('')
   const loading = ref<boolean>(false)
   const error = ref<string | null>(null)
   const hasCopied = ref<boolean>(false)
+
   const xmlContainer = ref<HTMLElement | null>(null)
+  const xmlContainerWrapper = ref<HTMLElement | null>(null)
   const codeElement = ref<HTMLElement | null>(null)
+  const lineNumbersContainer = ref<HTMLElement | null>(null)
+  const treeBodyMaxHeight = ref<number | null>(null)
+  let xmlContainerResizeObserver: ResizeObserver | null = null
+
   const wordWrapEnabled = ref<boolean>(true)
   const showLineNumbers = ref<boolean>(true)
+
   const searchQuery = ref<string>('')
   const searchResults = ref<number[]>([])
   const currentSearchIndex = ref<number>(0)
   const highlightedLineNumbers = ref<number[]>([])
-  const lineNumbersContainer = ref<HTMLElement | null>(null)
+  const selectedLineNumber = ref<number | null>(null)
 
-  // Computed properties
+  const treeItems = ref<XmlTreeItem[]>([])
+  const treePanelWidth = ref<number>(320)
+
+  function startResize (event: MouseEvent): void {
+    event.preventDefault()
+    const startX = event.clientX
+    const startWidth = treePanelWidth.value
+
+    function onMouseMove (e: MouseEvent): void {
+      const delta = e.clientX - startX
+      treePanelWidth.value = Math.max(150, startWidth + delta)
+    }
+
+    function onMouseUp (): void {
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+    }
+
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
+  }
+  const openedTreeNodes = ref<string[]>([])
+  const activatedTreeNodes = ref<string[]>([])
+
+  const { fetchAttachmentFile } = useSMRepositoryClient()
+
   const lineCount = computed(() => {
-    if (!formattedXml.value) return 0
-    return formattedXml.value.split('\n').length
+    if (!formattedXmlText.value) return 0
+    return formattedXmlText.value.split('\n').length
   })
 
-  // Composables
-  const { fetchAttachmentFile } = useSMRepositoryClient()
+  const lineNumberDigits = computed(() => String(Math.max(lineCount.value, 1)).length)
+
+  const lineNumberColumnWidth = computed(() => {
+    const digits = Math.max(lineNumberDigits.value, 2)
+    return `${digits + 2.5}ch`
+  })
+
+  const treeBodyStyle = computed(() => {
+    if (!treeBodyMaxHeight.value) {
+      return undefined
+    }
+
+    const height = `${treeBodyMaxHeight.value}px`
+    return {
+      height,
+      minHeight: height,
+      maxHeight: height,
+    }
+  })
+
+  function updateTreeBodyMaxHeight (): void {
+    const height = xmlContainerWrapper.value?.getBoundingClientRect().height
+    treeBodyMaxHeight.value = height ? Math.round(height) : null
+  }
+
+  function bindXmlContainerResizeObserver (): void {
+    if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') {
+      return
+    }
+
+    xmlContainerResizeObserver?.disconnect()
+    xmlContainerResizeObserver = null
+
+    if (!xmlContainerWrapper.value) {
+      return
+    }
+
+    xmlContainerResizeObserver = new ResizeObserver(() => {
+      updateTreeBodyMaxHeight()
+    })
+
+    xmlContainerResizeObserver.observe(xmlContainerWrapper.value)
+  }
 
   onMounted(() => {
     if (typeof window !== 'undefined') {
@@ -170,9 +298,18 @@
     }
 
     initialize()
+
+    nextTick(() => {
+      bindXmlContainerResizeObserver()
+      updateTreeBodyMaxHeight()
+    })
   })
 
-  // Watchers
+  onBeforeUnmount(() => {
+    xmlContainerResizeObserver?.disconnect()
+    xmlContainerResizeObserver = null
+  })
+
   watch(
     () => props.submodelElementData,
     () => {
@@ -180,23 +317,27 @@
     },
   )
 
-  // Apply highlighting whenever xmlContent changes
   watch(xmlContent, () => {
-    highlightXml()
+    buildXmlView()
+    resetSearchState()
+
+    nextTick(() => {
+      bindXmlContainerResizeObserver()
+      updateTreeBodyMaxHeight()
+    })
   })
 
-  // Reset search when XML content changes
-  watch(xmlContent, () => {
-    searchQuery.value = ''
-    searchResults.value = []
-    highlightedLineNumbers.value = []
-  })
-
-  // Watch for search query changes
   watch(searchQuery, () => {
     if (searchQuery.value === '') {
       searchResults.value = []
       highlightedLineNumbers.value = []
+
+      if (activatedTreeNodes.value.length > 0) {
+        const activeNode = findTreeNodeById(treeItems.value, activatedTreeNodes.value[0])
+        selectedLineNumber.value = activeNode?.lineNumber ?? null
+      } else {
+        selectedLineNumber.value = null
+      }
     } else {
       searchInXml()
     }
@@ -204,6 +345,318 @@
 
   function toggleWordWrap (): void {
     wordWrapEnabled.value = !wordWrapEnabled.value
+
+    nextTick(() => {
+      updateTreeBodyMaxHeight()
+    })
+  }
+
+  function resetSearchState (): void {
+    searchQuery.value = ''
+    searchResults.value = []
+    currentSearchIndex.value = 0
+    highlightedLineNumbers.value = []
+  }
+
+  function escapeXml (value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;')
+  }
+
+  function getXmlDeclaration (xml: string): string | null {
+    const match = xml.trim().match(/^<\?xml[\s\S]*?\?>/)
+    return match ? match[0] : null
+  }
+
+  function buildAttributesString (element: Element): string {
+    if (!element.attributes || element.attributes.length === 0) {
+      return ''
+    }
+
+    return Array.from(element.attributes)
+      .map(attr => ` ${attr.name}="${escapeXml(attr.value)}"`)
+      .join('')
+  }
+
+  function getDisplayTitle (element: Element): string {
+    const idValue = element.getAttribute('id') ?? ''
+    if (!idValue) {
+      return element.nodeName
+    }
+
+    const idWithoutName = idValue.includes(element.nodeName)
+      ? idValue.replace(element.nodeName, '')
+      : idValue
+
+    const normalizedId = idWithoutName.startsWith('_') ? idWithoutName.slice(1) : idWithoutName
+
+    return normalizedId ? `${element.nodeName} (${normalizedId})` : element.nodeName
+  }
+
+  function serializeTextNode (node: Text, lines: string[], level: number): void {
+    const value = (node.nodeValue ?? '').trim()
+    if (!value) return
+
+    const indent = '  '.repeat(level)
+    lines.push(`${indent}${escapeXml(value)}`)
+  }
+
+  function serializeCommentNode (node: Comment, lines: string[], level: number): void {
+    const indent = '  '.repeat(level)
+    lines.push(`${indent}<!--${node.nodeValue ?? ''}-->`)
+  }
+
+  function serializeCdataNode (node: CDATASection, lines: string[], level: number): void {
+    const indent = '  '.repeat(level)
+    lines.push(`${indent}<![CDATA[${node.nodeValue ?? ''}]]>`)
+  }
+
+  function serializeElement (
+    element: Element,
+    lines: string[],
+    level: number,
+    idPath = 'node',
+  ): XmlTreeItem {
+    const lineNumber = lines.length + 1
+    const nodeId = `${idPath}-${lineNumber}-${element.nodeName}`
+    const indent = '  '.repeat(level)
+    const openingTag = `<${element.nodeName}${buildAttributesString(element)}>`
+    const closingTag = `</${element.nodeName}>`
+
+    const meaningfulChildren = Array.from(element.childNodes).filter(child => {
+      if (child.nodeType === Node.TEXT_NODE) {
+        return Boolean((child.nodeValue ?? '').trim())
+      }
+
+      return true
+    })
+
+    const childTreeItems: XmlTreeItem[] = []
+
+    const treeNode: XmlTreeItem = {
+      id: nodeId,
+      title: getDisplayTitle(element),
+      lineNumber,
+    }
+
+    if (meaningfulChildren.length === 0) {
+      lines.push(`${indent}<${element.nodeName}${buildAttributesString(element)}></${element.nodeName}>`)
+      return treeNode
+    }
+
+    const hasOnlySingleTextNode
+      = meaningfulChildren.length === 1
+        && meaningfulChildren[0].nodeType === Node.TEXT_NODE
+        && Boolean((meaningfulChildren[0].nodeValue ?? '').trim())
+
+    if (hasOnlySingleTextNode) {
+      const textValue = escapeXml((meaningfulChildren[0].nodeValue ?? '').trim())
+      lines.push(`${indent}${openingTag}${textValue}${closingTag}`)
+      return treeNode
+    }
+
+    lines.push(`${indent}${openingTag}`)
+
+    for (const [index, child] of meaningfulChildren.entries()) {
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        const childTreeNode = serializeElement(
+          child as Element,
+          lines,
+          level + 1,
+          `${nodeId}-${index + 1}`,
+        )
+        childTreeItems.push(childTreeNode)
+        continue
+      }
+
+      if (child.nodeType === Node.TEXT_NODE) {
+        serializeTextNode(child as Text, lines, level + 1)
+        continue
+      }
+
+      if (child.nodeType === Node.COMMENT_NODE) {
+        serializeCommentNode(child as Comment, lines, level + 1)
+        continue
+      }
+
+      if (child.nodeType === Node.CDATA_SECTION_NODE) {
+        serializeCdataNode(child as CDATASection, lines, level + 1)
+      }
+    }
+
+    lines.push(`${indent}${closingTag}`)
+
+    if (childTreeItems.length > 0) {
+      treeNode.children = childTreeItems
+    }
+
+    return treeNode
+  }
+
+  function fallbackFormatXml (xml: string): string {
+    try {
+      if (!xml || typeof xml !== 'string') {
+        return ''
+      }
+
+      const trimmedXml = xml.trim()
+      if (!trimmedXml) {
+        return ''
+      }
+
+      let formatted = ''
+      let indent = ''
+
+      const xmlNodes = trimmedXml.split(/>\s*</)
+      for (const [index, node] of xmlNodes.entries()) {
+        if (/^\/[\w:-]/.test(node)) {
+          indent = indent.slice(2)
+        }
+
+        formatted += index === 0 ? `<${node}>\n` : `${indent}<${node}>\n`
+
+        if (/^<?[\w:-][^>]*[^/]$/.test(node) && !node.startsWith('?') && !node.startsWith('!')) {
+          indent += '  '
+        }
+      }
+
+      return formatted.slice(0, Math.max(0, formatted.length - 1))
+    } catch (formatError) {
+      console.error('Error formatting XML:', formatError)
+      return xml
+    }
+  }
+
+  function buildXmlPresentation (xml: string): { text: string, tree: XmlTreeItem[] } {
+    const trimmedXml = xml.trim()
+    if (!trimmedXml) {
+      return { text: '', tree: [] }
+    }
+
+    const parser = new DOMParser()
+    const documentNode = parser.parseFromString(trimmedXml, 'application/xml')
+    const parseError = documentNode.querySelector('parsererror')
+
+    if (parseError || !documentNode.documentElement) {
+      return {
+        text: fallbackFormatXml(trimmedXml),
+        tree: [],
+      }
+    }
+
+    const lines: string[] = []
+    const xmlDeclaration = getXmlDeclaration(trimmedXml)
+
+    if (xmlDeclaration) {
+      lines.push(xmlDeclaration)
+    }
+
+    const rootTreeNode = serializeElement(documentNode.documentElement, lines, 0, 'root')
+
+    return {
+      text: lines.join('\n'),
+      tree: [rootTreeNode],
+    }
+  }
+
+  function buildXmlView (): void {
+    if (!xmlContent.value) {
+      formattedXml.value = ''
+      formattedXmlText.value = ''
+      treeItems.value = []
+      openedTreeNodes.value = []
+      activatedTreeNodes.value = []
+      selectedLineNumber.value = null
+      return
+    }
+
+    try {
+      const presentation = buildXmlPresentation(xmlContent.value)
+      formattedXmlText.value = presentation.text
+      treeItems.value = presentation.tree
+
+      if (Prism && Prism.highlight) {
+        const highlighted = Prism.highlight(
+          presentation.text,
+          Prism.languages.markup || {},
+          'markup',
+        )
+
+        const lines = highlighted.split('\n')
+
+        formattedXml.value = lines
+          .map(
+            (line, index) =>
+              `<div class="xml-line" data-line-number="${index + 1}">${line || ' '}</div>`,
+          )
+          .join('')
+      } else {
+        formattedXml.value = presentation.text
+      }
+
+      openedTreeNodes.value = collectOpenNodeIds(treeItems.value)
+
+      if (treeItems.value.length > 0) {
+        activatedTreeNodes.value = [treeItems.value[0].id]
+        selectedLineNumber.value = treeItems.value[0].lineNumber
+      }
+    } catch (buildError) {
+      console.error('Error building XML view:', buildError)
+      formattedXmlText.value = xmlContent.value
+      formattedXml.value = xmlContent.value
+      treeItems.value = []
+      openedTreeNodes.value = []
+      activatedTreeNodes.value = []
+      selectedLineNumber.value = null
+    }
+  }
+
+  function collectOpenNodeIds (nodes: XmlTreeItem[], maxOpenDepth = 1): string[] {
+    const ids: string[] = []
+
+    const walk = (node: XmlTreeItem, depth: number): void => {
+      if (node.children && node.children.length > 0 && depth <= maxOpenDepth) {
+        ids.push(node.id)
+        for (const child of node.children) walk(child, depth + 1)
+      }
+    }
+
+    for (const node of nodes) walk(node, 1)
+    return ids
+  }
+
+  function findTreeNodeById (nodes: XmlTreeItem[], id: string): XmlTreeItem | null {
+    for (const node of nodes) {
+      if (node.id === id) {
+        return node
+      }
+
+      if (node.children) {
+        const found = findTreeNodeById(node.children, id)
+        if (found) {
+          return found
+        }
+      }
+    }
+
+    return null
+  }
+
+  function handleTreeActivation (value: string[]): void {
+    activatedTreeNodes.value = value
+
+    if (value.length === 0) return
+
+    const activeNode = findTreeNodeById(treeItems.value, value[0])
+    if (!activeNode) return
+
+    selectedLineNumber.value = activeNode.lineNumber
+    highlightedLineNumbers.value = [activeNode.lineNumber]
+    scrollToLine(activeNode.lineNumber)
   }
 
   function searchInXml (): void {
@@ -211,9 +664,9 @@
     highlightedLineNumbers.value = []
     currentSearchIndex.value = 0
 
-    if (!searchQuery.value || !xmlContent.value) return
+    if (!searchQuery.value || !formattedXmlText.value) return
 
-    const lines = xmlContent.value.split('\n')
+    const lines = formattedXmlText.value.split('\n')
     const query = searchQuery.value.toLowerCase()
 
     for (const [index, line] of lines.entries()) {
@@ -223,8 +676,10 @@
     }
 
     if (searchResults.value.length > 0) {
-      highlightedLineNumbers.value = [searchResults.value[0]]
-      scrollToLine(searchResults.value[0])
+      const firstLine = searchResults.value[0]
+      highlightedLineNumbers.value = [firstLine]
+      selectedLineNumber.value = firstLine
+      scrollToLine(firstLine)
     }
   }
 
@@ -241,6 +696,7 @@
 
     const lineNumber = searchResults.value[currentSearchIndex.value]
     highlightedLineNumbers.value = [lineNumber]
+    selectedLineNumber.value = lineNumber
     scrollToLine(lineNumber)
   }
 
@@ -248,108 +704,62 @@
     nextTick(() => {
       if (!xmlContainer.value) return
 
-      const lineHeight = 21
-      const containerTop = xmlContainer.value.getBoundingClientRect().top
-      const scrollTo = (lineNumber - 1) * lineHeight
+      const lineElement = xmlContainer.value.querySelector(
+        `.xml-line[data-line-number="${lineNumber}"]`,
+      ) as HTMLElement | null
 
-      xmlContainer.value.scrollTop = scrollTo - containerTop - 100
+      if (!lineElement) return
+
+      const container = xmlContainer.value
+
+      const offsetTop = lineElement.offsetTop
+      const containerHeight = container.clientHeight
+
+      container.scrollTop = offsetTop - containerHeight / 2
+
+      if (showLineNumbers.value && lineNumbersContainer.value) {
+        lineNumbersContainer.value.scrollTop = container.scrollTop
+      }
     })
   }
 
-  function formatXML (xml: string): string {
-    try {
-      if (!xml || typeof xml !== 'string') {
-        return ''
-      }
-
-      const trimmedXml = xml.trim()
-
-      if (!trimmedXml) {
-        return ''
-      }
-
-      const hasXmlDeclaration = trimmedXml.startsWith('<?xml')
-
-      let formatted = ''
-      let indent = ''
-
-      const xmlNodes = trimmedXml.split(/>\s*</)
-      for (const [index, node] of xmlNodes.entries()) {
-        if (index === 0 && node.includes('?xml') && !hasXmlDeclaration) {
-          continue
-        }
-
-        if (/^\/\w/.test(node)) {
-          indent = indent.slice(2)
-        }
-
-        formatted += index === 0 ? '<' + node + '>\n' : indent + '<' + node + '>\n'
-
-        if (/^<?\w[^>]*[^/]$/.test(node) && !node.startsWith('?')) {
-          indent += '  '
-        }
-      }
-
-      return formatted.slice(1, -2)
-    } catch (error_) {
-      console.error('Error formatting XML:', error_)
-      return xml
-    }
-  }
-
-  function highlightXml (): void {
-    if (!xmlContent.value) {
-      formattedXml.value = ''
-      return
-    }
-
-    try {
-      const formatted = formatXML(xmlContent.value)
-
-      // Apply syntax highlighting using Prism
-      if (Prism && Prism.highlight) {
-        formattedXml.value = Prism.highlight(formatted, Prism.languages.markup || {}, 'markup').trimStart()
-      } else {
-        formattedXml.value = formatted
-        console.warn('Prism highlighting not available')
-      }
-    } catch (error_) {
-      console.error('Error highlighting XML:', error_)
-      formattedXml.value = xmlContent.value || ''
-    }
-  }
-
   async function copyToClipboard (): Promise<void> {
-    if (xmlContent.value) {
-      try {
-        await navigator.clipboard.writeText(xmlContent.value)
-        hasCopied.value = true
-        setTimeout(() => {
-          hasCopied.value = false
-        }, 2000)
-      } catch (error_) {
-        console.error('Failed to copy XML to clipboard', error_)
-      }
+    if (!xmlContent.value) return
+
+    try {
+      await navigator.clipboard.writeText(xmlContent.value)
+      hasCopied.value = true
+
+      setTimeout(() => {
+        hasCopied.value = false
+      }, 2000)
+    } catch (error_) {
+      console.error('Failed to copy XML to clipboard', error_)
     }
   }
 
   function downloadXml (): void {
-    if (xmlContent.value) {
-      const blob = new Blob([xmlContent.value], { type: 'application/xml' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${props.submodelElementData.idShort || 'download'}.xml`
-      document.body.append(a)
-      a.click()
-      a.remove()
-      URL.revokeObjectURL(url)
-    }
+    if (!xmlContent.value) return
+
+    const blob = new Blob([xmlContent.value], { type: 'application/xml' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+
+    a.href = url
+    a.download = `${props.submodelElementData.idShort || 'download'}.xml`
+
+    document.body.append(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
   }
 
   async function initialize (): Promise<void> {
     if (!props.submodelElementData || !props.submodelElementData.path) {
       xmlContent.value = ''
+      formattedXml.value = ''
+      formattedXmlText.value = ''
+      treeItems.value = []
       error.value = 'No file path provided'
       return
     }
@@ -357,6 +767,12 @@
     loading.value = true
     error.value = null
     xmlContent.value = ''
+    formattedXml.value = ''
+    formattedXmlText.value = ''
+    treeItems.value = []
+    openedTreeNodes.value = []
+    activatedTreeNodes.value = []
+    selectedLineNumber.value = null
 
     try {
       const fileBlob = await fetchAttachmentFile(props.submodelElementData.path)
@@ -366,16 +782,12 @@
         return
       }
 
-      // Convert blob to text
       if (fileBlob instanceof Blob) {
-        // Read the blob as text
-        const text = await fileBlob.text()
-        xmlContent.value = text
+        xmlContent.value = await fileBlob.text()
       } else {
         console.error('Expected a Blob, but received:', fileBlob)
+        error.value = 'Loaded file is not a valid Blob'
       }
-
-      highlightXml()
     } catch (error_) {
       console.error('Error loading XML file:', error_)
       error.value = `Error loading XML file: ${error_ instanceof Error ? error_.message : 'Unknown error'}`
@@ -392,11 +804,74 @@
 </script>
 
 <style scoped>
+    .xml-layout {
+        display: grid;
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    .xml-tree-panel {
+        --xml-panel-header-block-height: 29px;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        position: relative;
+    }
+
+    .xml-viewer-panel {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .tree-resize-handle {
+        position: absolute;
+        top: var(--xml-panel-header-block-height);
+        right: -8px;
+        width: 16px;
+        height: calc(100% - var(--xml-panel-header-block-height));
+        cursor: col-resize;
+        z-index: 10;
+    }
+
+    .tree-resize-handle::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 3px;
+        height: 100%;
+        background: transparent;
+        border-radius: 2px;
+    }
+
+    .xml-panel-header {
+        font-size: 14px;
+        line-height: 21px;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .xml-tree-body {
+        flex: 1;
+        overflow-x: auto;
+        overflow-y: auto;
+        border: 1px solid #d6d6d6;
+        border-radius: 4px;
+        background: #ffffff;
+        padding: 8px;
+        box-sizing: border-box;
+    }
+
     .xml-container {
-        max-height: 600px;
-        height: 600px;
+        flex: 0 0 auto;
+        height: calc(100vh - 330px);
         border-radius: 4px;
         background-color: #f5f5f5;
+        border: 1px solid #d6d6d6;
         display: flex;
         position: relative;
         overflow: hidden;
@@ -404,20 +879,22 @@
     }
 
     .line-numbers {
-        padding: 16px 8px 16px 8px;
+        padding: 16px 8px;
         text-align: right;
         background-color: #e0e0e0;
         border-right: 1px solid #ccc;
         color: #666;
         user-select: none;
-        min-width: 40px;
         font-size: 14px;
-        line-height: 1.5;
+        line-height: 21px;
         overflow-x: hidden;
         overflow-y: hidden;
-        max-height: 600px;
+        max-height: 100%;
         height: 100%;
         box-sizing: border-box;
+        flex: 0 0 auto;
+        font-variant-numeric: tabular-nums;
+        font-family: Consolas, Monaco, 'Courier New', monospace;
     }
 
     .line-numbers > div {
@@ -425,11 +902,60 @@
         line-height: 21px;
         padding: 0;
         margin: 0;
+        white-space: nowrap;
     }
 
     .highlighted-line {
-        background-color: rgba(255, 213, 79, 0.3);
+        background-color: rgba(255, 213, 79, 0.5);
         font-weight: bold;
+    }
+
+    .selected-line {
+        background-color: rgba(255, 214, 79, 0.5);
+        font-weight: bold;
+    }
+
+    .xml-content {
+        margin: 0;
+        padding: 16px;
+        white-space: pre;
+        word-wrap: normal;
+        word-break: normal;
+        overflow-wrap: normal;
+        font-size: 14px;
+        line-height: 21px;
+        flex-grow: 0;
+        overflow: auto;
+        height: auto;
+        max-height: none;
+        box-sizing: border-box;
+        background: #f5f5f5;
+        font-family: Consolas, Monaco, 'Courier New', monospace;
+        tab-size: 2;
+    }
+
+    .word-wrap-enabled .xml-content {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-wrap: anywhere;
+    }
+
+    .xml-content code {
+        display: block;
+        min-width: max-content;
+        width: fit-content;
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        line-height: inherit;
+        font-family: inherit;
+        white-space: inherit;
+        word-break: inherit;
+        overflow-wrap: inherit;
+    }
+
+    .error-message {
+        color: #f44336;
     }
 
     :deep(.token) {
@@ -438,38 +964,6 @@
 
     :deep(code) {
         line-height: 21px;
-    }
-
-    .xml-content {
-        margin: 0;
-        padding: 0px 16px 0px 16px;
-        white-space: pre;
-        word-wrap: normal;
-        font-size: 14px;
-        line-height: 21px;
-        flex-grow: 1;
-        overflow: auto;
-        height: 100%;
-        max-height: 600px;
-        box-sizing: border-box;
-    }
-
-    .word-wrap-enabled .xml-content {
-        white-space: pre-wrap;
-        word-wrap: break-word;
-    }
-
-    .xml-content code {
-        display: block;
-        height: 100%;
-        box-sizing: border-box;
-        margin-top: -6px;
-        padding: 0;
-        line-height: inherit;
-    }
-
-    .error-message {
-        color: #f44336;
     }
 
     :deep(.token.tag) {
@@ -490,5 +984,93 @@
 
     :deep(.token.comment) {
         color: #999;
+    }
+
+    :deep(.xml-search-field .v-field) {
+        background: #fff;
+    }
+
+    :deep(.xml-treeview) {
+        background: transparent;
+        color: black;
+        --v-treeview-indent-size: 12px;
+    }
+
+    :deep(.xml-treeview .v-list-group__items) {
+        --indent-padding: 12px;
+    }
+
+    :deep(.xml-treeview .v-treeview-item__root) {
+        min-height: 28px;
+    }
+
+    :deep(.xml-treeview .v-treeview-item__content) {
+        overflow: visible;
+    }
+
+    :deep(.xml-treeview .v-treeview-item__title) {
+        font-size: 14px;
+    }
+
+    .tree-item-title {
+        display: block;
+        width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    :deep(.xml-treeview .v-list) {
+        background: transparent;
+    }
+
+    :deep(.xml-treeview .v-list-item) {
+        min-height: 28px;
+        padding-inline: 4px;
+        border-radius: 4px;
+    }
+
+    :deep(.xml-treeview .v-list-item--active) {
+        background: rgba(25, 118, 210, 0.12);
+    }
+
+    .light-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #bdbdbd #efefef;
+    }
+
+    .light-scrollbar::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+    }
+
+    .light-scrollbar::-webkit-scrollbar-track {
+        background: #efefef;
+        border-radius: 8px;
+    }
+
+    .light-scrollbar::-webkit-scrollbar-thumb {
+        background: #bdbdbd;
+        border-radius: 8px;
+        border: 2px solid #efefef;
+    }
+
+    .light-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
+    .light-scrollbar::-webkit-scrollbar-corner {
+        background: #efefef;
+    }
+    .xml-line {
+        height: 21px;
+        line-height: 21px;
+        white-space: inherit;
+    }
+
+    @media (max-width: 1100px) {
+        .xml-layout {
+            grid-template-columns: 1fr;
+        }
     }
 </style>

@@ -223,6 +223,10 @@ export function useSMEFile () {
     // Additional formats if needed
     'ply': 'application/ply', // PLY files
     '3mf': 'model/3mf', // 3MF files
+
+    // KBL & VEC files (assuming XML-based)
+    'kbl': 'application/kbl+xml',
+    'vec': 'application/vec+xml',
   }
 
   /**
