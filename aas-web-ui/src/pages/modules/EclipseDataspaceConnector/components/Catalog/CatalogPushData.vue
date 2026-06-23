@@ -507,13 +507,13 @@
             </v-list-item-title>
           </div>
 
-          <!-- JSON view (commented-out formatted version kept for future use) -->
+          <!-- JSON view -->
           <pre
             v-if="selectedAasSmDataToPushView === 'json'"
             class="json-content mt-0 mx-4 mb-4 bg-surface rounded border"
             :style="{ height: fullHeightAasSmsDataToPushJson }"
           >
-            <!-- <code class="mx-5" v-html="aasSmDataToPushJsonFormatted" /> -->
+            <code class="mx-5" v-html="aasSmDataToPushJsonFormatted" />
           </pre>
 
           <!-- Tree view -->
@@ -522,7 +522,7 @@
             class="rounded border overflow-y-auto mx-4 mb-4 pa-4"
             :style="{ height: fullHeightAasSmsDataToPushJson, 'background-color': '#f5f5f5' }"
           >
-            <JsonTreeView :data="aasSmDataToPush" />
+            <JsonTreeView :data="aasSmDataToPushJsonParsed" />
           </div>
         </template>
 
@@ -533,6 +533,7 @@
 </template>
 
 <script lang="ts" setup>
+  import * as Prism from 'prismjs'
   import {
     type ComponentPublicInstance,
     computed,
@@ -557,6 +558,9 @@
   import { extractVersionRevision } from '@/utils/AAS/SemanticIdUtils'
   import { smts } from '@/utils/AAS/SubmodelTemplateUtils'
   import { debounce } from '@/utils/generalUtils'
+  import { formatJSON } from '@/utils/JsonUtils'
+  import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
+  import 'prismjs/themes/prism.css'
 
   // Extend the ComponentPublicInstance type to include scrollToIndex
   interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -593,6 +597,8 @@
   const scrollLoadDebounceMs = 200
   const minPageLoadIntervalMs = 350
 
+  const jsonLanguage = getPrismJsonLanguage()
+
   // Emits
   const emit = defineEmits<{
     'update:aas-sm-data-to-push': [value: any]
@@ -604,12 +610,14 @@
   const aasList = ref([] as Array<any>) as Ref<Array<any>>
   const aasLoadedIds = ref(new Set<string>())
   const aasSearchValue = ref('')
-  const aasSmDataToPush = ref({} as any)
+  const aasSmDataToPushJson = ref<string>('')
+  const aasSmDataToPushJsonParsed = ref({} as any)
+  const aasSmDataToPushJsonFormatted = ref<string>('')
   const aasVirtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null)
   const allLoadedAas = ref([] as Array<any>) as Ref<Array<any>>
   const cancelled = ref(false)
   const justPushSmData = ref(false)
-  const selectedAasSmDataToPushView = ref<'json' | 'tree'>('json')
+  const selectedAasSmDataToPushView = ref<'json' | 'tree'>('tree')
   const selectedSmIds = ref<string[]>([])
   const selectedSms = ref<any[]>([])
   const smList = ref([] as Array<any>) as Ref<Array<any>>
@@ -700,6 +708,31 @@
     () => {
       prepareAasSmDataToPushJson()
     },
+  )
+
+  watch(
+    () => aasSmDataToPushJson.value,
+    () => {
+      try {
+        const formatted = formatJSON(aasSmDataToPushJson.value)
+
+        // Apply syntax highlighting using Prism
+        if (Prism && Prism.highlight) {
+          aasSmDataToPushJsonFormatted.value = Prism.highlight(
+            formatted,
+            jsonLanguage,
+            'json',
+          )
+        } else {
+          aasSmDataToPushJsonFormatted.value = formatted
+          console.warn('Prism highlighting not available')
+        }
+      } catch (error_) {
+        console.error('Error highlighting JSON:', error_)
+        aasSmDataToPushJsonFormatted.value = aasSmDataToPushJson.value || ''
+      }
+    },
+    { deep: true },
   )
 
   function preprocessListItem (item: any): any {
@@ -962,14 +995,17 @@
   }
 
   function prepareAasSmDataToPushJson (): void {
-    aasSmDataToPush.value = justPushSmData.value
+    aasSmDataToPushJsonParsed.value = justPushSmData.value
       ? selectedSms.value[0]
       : {
         assetAdministrationShells: [selectedAAS.value],
         submodels: selectedSms.value,
         conceptDescriptions: [],
       }
-    emit('update:aas-sm-data-to-push', aasSmDataToPush.value)
+
+    aasSmDataToPushJson.value = JSON.stringify(aasSmDataToPushJsonParsed.value, null, 2)
+
+    emit('update:aas-sm-data-to-push', aasSmDataToPushJsonParsed.value)
   }
 
   async function initialize (): Promise<void> {
@@ -997,7 +1033,7 @@
       const response = await fetch(endpoint, {
         method: 'POST',
         headers,
-        body: JSON.stringify(aasSmDataToPush.value),
+        body: JSON.stringify(aasSmDataToPushJsonParsed.value),
       })
 
       if (!response.ok) {
@@ -1017,5 +1053,52 @@
     cancelled.value = true
   }
 
-  defineExpose({ initialize, pushData, cancel, getDataToPush: () => aasSmDataToPush.value })
+  defineExpose({ initialize, pushData, cancel, getDataToPush: () => aasSmDataToPushJsonParsed.value })
 </script>
+
+<style scoped>
+  :deep(.token) {
+    line-height: 21px;
+  }
+
+  :deep(code) {
+    line-height: 21px;
+  }
+
+  .json-content {
+    word-wrap: normal;
+    font-size: 14px;
+    line-height: 21px;
+    flex-grow: 0;
+    overflow: auto;
+    background-color: #f5f5f5;
+  }
+
+  .json-content code {
+    display: block;
+  }
+
+  :deep(.token.punctuation) {
+    color: #999;
+  }
+
+  :deep(.token.property) {
+    color: #905;
+  }
+
+  :deep(.token.string) {
+    color: #690;
+  }
+
+  :deep(.token.number) {
+    color: #07a;
+  }
+
+  :deep(.token.boolean) {
+    color: #07a;
+  }
+
+  :deep(.token.null) {
+    color: #999;
+  }
+</style>
