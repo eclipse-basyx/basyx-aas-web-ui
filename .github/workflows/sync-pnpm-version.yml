@@ -1,0 +1,121 @@
+name: Sync pnpm version in workflows
+
+on:
+  push:
+    branches:
+      - "dependabot/npm_and_yarn/**"
+    paths:
+      - "aas-web-ui/package.json"
+
+permissions:
+  contents: write
+
+jobs:
+  sync-pnpm-version:
+    runs-on: ubuntu-latest
+    # Only run when the push is made by Dependabot
+    if: github.actor == 'dependabot[bot]'
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # Use a token with write access to push back to the Dependabot branch.
+          # The default GITHUB_TOKEN is sufficient for branches in the same repo.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.ref }}
+
+      - name: Extract pnpm version from devDependencies
+        id: pnpm-version
+        run: |
+          VERSION=$(node -e "
+            const pkg = JSON.parse(require('fs').readFileSync('aas-web-ui/package.json', 'utf8'));
+            const raw = pkg.devDependencies?.pnpm;
+            if (!raw) { process.stderr.write('No pnpm devDependency found\n'); process.exit(1); }
+            // Strip leading range specifier (^, ~, >=, etc.)
+            const match = raw.match(/(\d+\.\d+\.\d+)/);
+            if (!match) { process.stderr.write('Cannot parse pnpm version: ' + raw + '\n'); process.exit(1); }
+            process.stdout.write(match[1]);
+          ")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Detected pnpm version: $VERSION"
+
+      - name: Fetch sha512 integrity for new pnpm version
+        id: pnpm-integrity
+        run: |
+          VERSION="${{ steps.pnpm-version.outputs.version }}"
+          INTEGRITY=$(npm view "pnpm@${VERSION}" dist.integrity 2>/dev/null)
+          if [ -z "$INTEGRITY" ]; then
+            echo "Could not fetch integrity for pnpm@${VERSION}" >&2
+            exit 1
+          fi
+          # dist.integrity is in the form sha512-<base64> — strip the "sha512-" prefix
+          HASH="${INTEGRITY#sha512-}"
+          echo "hash=$HASH" >> "$GITHUB_OUTPUT"
+          echo "sha512 hash: $HASH"
+
+      - name: Check what needs updating
+        id: needs-update
+        run: |
+          VERSION="${{ steps.pnpm-version.outputs.version }}"
+          HASH="${{ steps.pnpm-integrity.outputs.hash }}"
+
+          # Check packageManager field
+          CURRENT_PM=$(node -e "
+            const pkg = JSON.parse(require('fs').readFileSync('aas-web-ui/package.json', 'utf8'));
+            process.stdout.write(pkg.packageManager ?? '');
+          ")
+          EXPECTED_PM="pnpm@${VERSION}+sha512.${HASH}"
+          if [ "$CURRENT_PM" != "$EXPECTED_PM" ]; then
+            echo "package-manager-changed=true" >> "$GITHUB_OUTPUT"
+            echo "packageManager needs update: '$CURRENT_PM' → '$EXPECTED_PM'"
+          else
+            echo "package-manager-changed=false" >> "$GITHUB_OUTPUT"
+            echo "packageManager already up to date."
+          fi
+
+          # Check workflow files
+          CURRENT_WF=$(grep -oP 'version: \K[\d.]+' .github/workflows/build-aas-web-ui.yml | head -1 || true)
+          if [ "$CURRENT_WF" != "$VERSION" ]; then
+            echo "workflows-changed=true" >> "$GITHUB_OUTPUT"
+            echo "Workflow files are at pnpm '$CURRENT_WF', will update to '$VERSION'."
+          else
+            echo "workflows-changed=false" >> "$GITHUB_OUTPUT"
+            echo "Workflow files already at pnpm $VERSION."
+          fi
+
+      - name: Update packageManager field in package.json
+        if: steps.needs-update.outputs.package-manager-changed == 'true'
+        run: |
+          VERSION="${{ steps.pnpm-version.outputs.version }}"
+          HASH="${{ steps.pnpm-integrity.outputs.hash }}"
+          node -e "
+            const fs = require('fs');
+            const path = 'aas-web-ui/package.json';
+            const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
+            pkg.packageManager = 'pnpm@${VERSION}+sha512.${HASH}';
+            fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + '\n');
+          "
+          echo "Updated packageManager to pnpm@${VERSION}+sha512.${HASH}"
+
+      - name: Update pnpm version in workflow files
+        if: steps.needs-update.outputs.workflows-changed == 'true'
+        run: |
+          TARGET="${{ steps.pnpm-version.outputs.version }}"
+          for file in .github/workflows/*.yml; do
+            if grep -q 'pnpm/action-setup' "$file"; then
+              echo "Patching $file"
+              # Use perl for reliable multi-line replacement: after pnpm/action-setup,
+              # replace the immediately following `version: X.Y.Z` with the new version.
+              perl -i -0pe "s|(pnpm/action-setup[^\n]*\n\s+with:\n\s+version:) [\d.]+|\$1 ${TARGET}|g" "$file"
+            fi
+          done
+
+      - name: Commit all changes
+        if: steps.needs-update.outputs.package-manager-changed == 'true' || steps.needs-update.outputs.workflows-changed == 'true'
+        run: |
+          TARGET="${{ steps.pnpm-version.outputs.version }}"
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add aas-web-ui/package.json .github/workflows/*.yml
+          git diff --staged --quiet || git commit -m "chore: sync pnpm version to ${TARGET} in packageManager and workflow files"
+          git push
