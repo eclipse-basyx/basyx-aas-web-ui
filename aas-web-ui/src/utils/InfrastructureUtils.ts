@@ -208,6 +208,17 @@ export function isComponentActiveForTemplate (
   return getActiveComponentKeys(templateOrInfra).includes(componentKey)
 }
 
+export function getActiveComponentUrlForTemplate (
+  infrastructure: Pick<InfrastructureConfig, 'components' | 'template'> | null | undefined,
+  componentKey: BaSyxComponentKey,
+): string {
+  if (!infrastructure || !isComponentActiveForTemplate(infrastructure, componentKey)) {
+    return ''
+  }
+
+  return infrastructure.components[componentKey]?.url?.trim() ?? ''
+}
+
 export function getEndpointFieldByKey (
   templateOrInfra: InfrastructureTemplate | Pick<InfrastructureConfig, 'template'> | null | undefined,
   fieldKey: InfrastructureEndpointFieldKey,

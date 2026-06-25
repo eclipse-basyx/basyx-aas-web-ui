@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import {
   BASYX_COMPONENT_KEYS,
   getActiveComponentKeys,
+  getActiveComponentUrlForTemplate,
   getDefaultAasUploadMode,
   getEndpointFieldsForTemplate,
   getEndpointFieldValue,
@@ -93,6 +94,17 @@ describe('InfrastructureUtils.ts', () => {
     expect(getActiveComponentKeys('identifiable')).toEqual(['AASRepo'])
     expect(usesSubmodelSuperpath('identifiable')).toBe(true)
     expect(usesSubmodelSuperpath('full')).toBe(false)
+  })
+
+  it('ignores stale inactive component URLs for a selected template', () => {
+    const infrastructure = createInfrastructure('identifiable')
+    infrastructure.components.AASRepo.url = '  https://aas-repo.example  '
+    infrastructure.components.SubmodelRepo.url = 'https://stale-sm-repo.example'
+    infrastructure.components.AASRegistry.url = 'https://stale-aas-registry.example'
+
+    expect(getActiveComponentUrlForTemplate(infrastructure, 'AASRepo')).toBe('https://aas-repo.example')
+    expect(getActiveComponentUrlForTemplate(infrastructure, 'SubmodelRepo')).toBe('')
+    expect(getActiveComponentUrlForTemplate(infrastructure, 'AASRegistry')).toBe('')
   })
 
   it('defaults server-side upload only for mono templates', () => {
