@@ -3,10 +3,15 @@ import type {
   InfrastructureAuth,
   InfrastructureConfig,
   ParsedInfrastructureConfig,
+  YamlComponentConfig,
   YamlInfrastructureConfig,
   YamlInfrastructuresConfig,
   YamlSecurityConfig,
 } from '@/types/Infrastructure'
+import {
+  getEndpointFieldsForTemplate,
+  normalizeInfrastructureTemplate,
+} from '@/utils/InfrastructureUtils'
 
 /**
  * Composable for parsing YAML infrastructure configuration
@@ -146,9 +151,11 @@ export function useInfrastructureYamlParser (): {
     yamlConfig: YamlInfrastructureConfig,
     isDefault = false,
   ): InfrastructureConfig {
+    const template = normalizeInfrastructureTemplate(yamlConfig.template)
     const infrastructure: InfrastructureConfig = {
       id: generateYamlInfrastructureId(yamlKey),
       name: yamlConfig.name || yamlKey,
+      template,
       isDefault,
       auth: parseSecurityConfig(yamlConfig.security),
       components: {
@@ -161,20 +168,44 @@ export function useInfrastructureYamlParser (): {
       },
     }
 
-    // Map YAML component configurations to internal structure
-    for (const [yamlKey, internalKey] of Object.entries(componentKeyMap)) {
-      const yamlComponent = yamlConfig.components[yamlKey as keyof typeof yamlConfig.components]
-      if (yamlComponent?.baseUrl) {
-        infrastructure.components[internalKey].url = yamlComponent.baseUrl
-        if (yamlComponent.hasRegistryIntegration !== undefined) {
-          infrastructure.components[internalKey].hasRegistryIntegration
+    function applyYamlComponentToKeys (
+      yamlComponent: YamlComponentConfig | undefined,
+      componentKeys: BaSyxComponentKey[],
+    ): void {
+      if (!yamlComponent?.baseUrl) {
+        return
+      }
+
+      for (const componentKey of componentKeys) {
+        infrastructure.components[componentKey].url = yamlComponent.baseUrl
+
+        if (
+          yamlComponent.hasRegistryIntegration !== undefined
+          && (componentKey === 'AASRepo' || componentKey === 'SubmodelRepo')
+        ) {
+          infrastructure.components[componentKey].hasRegistryIntegration
             = yamlComponent.hasRegistryIntegration
         }
-        if (yamlComponent.hasDiscoveryIntegration !== undefined) {
-          infrastructure.components[internalKey].hasDiscoveryIntegration
+
+        if (yamlComponent.hasDiscoveryIntegration !== undefined && componentKey === 'AASRegistry') {
+          infrastructure.components[componentKey].hasDiscoveryIntegration
             = yamlComponent.hasDiscoveryIntegration
         }
       }
+    }
+
+    // Map YAML component configurations to internal structure
+    for (const [yamlKey, internalKey] of Object.entries(componentKeyMap)) {
+      const yamlComponent = yamlConfig.components[yamlKey as keyof typeof yamlConfig.components]
+      applyYamlComponentToKeys(yamlComponent, [internalKey])
+    }
+
+    // Map grouped endpoint configurations for templates such as mono-repo and Catena-X.
+    for (const endpointField of getEndpointFieldsForTemplate(template)) {
+      const yamlComponent = yamlConfig.components[
+        endpointField.yamlKey as keyof typeof yamlConfig.components
+      ]
+      applyYamlComponentToKeys(yamlComponent, endpointField.componentKeys)
     }
 
     return infrastructure

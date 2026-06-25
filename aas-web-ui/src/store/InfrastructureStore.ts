@@ -13,6 +13,7 @@ import { useInfrastructureStorage } from '@/composables/Infrastructure/useInfras
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useNavigationStore } from '@/store/NavigationStore'
+import { getActiveComponentKeys } from '@/utils/InfrastructureUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
 
 export const useInfrastructureStore = defineStore('infrastructureStore', () => {
@@ -351,15 +352,14 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
       saveInfrastructuresToStorage()
 
-      // If this is the selected infrastructure, update the URL refs
-      // if (selectedInfrastructureId.value === infrastructure.id) {
-      //     AASDiscoveryURL.value = infrastructure.components.AASDiscovery.url;
-      //     AASRegistryURL.value = infrastructure.components.AASRegistry.url;
-      //     SubmodelRegistryURL.value = infrastructure.components.SubmodelRegistry.url;
-      //     AASRepoURL.value = infrastructure.components.AASRepo.url;
-      //     SubmodelRepoURL.value = infrastructure.components.SubmodelRepo.url;
-      //     ConceptDescriptionRepoURL.value = infrastructure.components.ConceptDescriptionRepo.url;
-      // }
+      if (selectedInfrastructureId.value === infrastructure.id) {
+        AASDiscoveryURL.value = infrastructure.components.AASDiscovery.url
+        AASRegistryURL.value = infrastructure.components.AASRegistry.url
+        SubmodelRegistryURL.value = infrastructure.components.SubmodelRegistry.url
+        AASRepoURL.value = infrastructure.components.AASRepo.url
+        SubmodelRepoURL.value = infrastructure.components.SubmodelRepo.url
+        ConceptDescriptionRepoURL.value = infrastructure.components.ConceptDescriptionRepo.url
+      }
     }
   }
 
@@ -512,7 +512,15 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       return
     }
 
+    const activeKeys = getActiveComponentKeys(selectedInfra)
+
     for (const repoKey of keys) {
+      if (!activeKeys.includes(repoKey)) {
+        basyxComponents[repoKey].connected = null
+        basyxComponents[repoKey].loading = false
+        continue
+      }
+
       // Use URL from the selected infrastructure
       const infraUrl = selectedInfra.components[repoKey]?.url || ''
 

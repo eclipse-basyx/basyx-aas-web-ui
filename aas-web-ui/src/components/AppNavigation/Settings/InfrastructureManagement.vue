@@ -84,12 +84,41 @@
             />
 
             <v-divider />
+
+            <v-list-subheader class="mb-1">Infrastructure Template</v-list-subheader>
+
+            <v-select
+              v-model="editingInfrastructure.template"
+              bg-color="surface-light"
+              class="mb-2"
+              density="compact"
+              flat
+              item-title="label"
+              item-value="value"
+              :items="infrastructureTemplateOptions"
+              label="Template"
+              :rules="[requiredRule]"
+              variant="outlined"
+              @update:model-value="handleTemplateUpdate"
+            />
+
+            <v-alert
+              class="mb-3"
+              density="compact"
+              type="info"
+              variant="tonal"
+            >
+              {{ selectedTemplateDescription }}
+            </v-alert>
+
+            <v-divider />
             <v-list-subheader class="mb-3">Component Endpoints</v-list-subheader>
             <!-- Component Configurations -->
             <ComponentConfigPanel
               :component-connection-status="componentConnectionStatus"
               :component-testing-loading="componentTestingLoading"
               :components="editingInfrastructure.components"
+              :template="editingInfrastructure.template"
               @test-connection="testComponentConnection"
               @update:component-url="handleComponentUrlUpdate"
               @update:connection-status="handleConnectionStatusUpdate"
@@ -219,7 +248,13 @@
 
 <script lang="ts" setup>
   import type { BaSyxComponentKey } from '@/types/BaSyx'
-  import type { AuthFlowOption, InfrastructureConfig, SecurityType } from '@/types/Infrastructure'
+  import type {
+    AuthFlowOption,
+    InfrastructureConfig,
+    InfrastructureTemplate,
+    SecurityType,
+  } from '@/types/Infrastructure'
+  import type { InfrastructureEndpointFieldKey } from '@/utils/InfrastructureUtils'
   import { computed, ref, toRaw, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import { useAuth } from '@/composables/Auth/useAuth'
@@ -228,7 +263,12 @@
   import { useComponentConnectionTesting } from '@/composables/Infrastructure/useComponentConnectionTesting'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
-  import { requiredRule } from '@/utils/InfrastructureUtils'
+  import {
+    getInfrastructureTemplateDefinition,
+    INFRASTRUCTURE_TEMPLATE_OPTIONS,
+    normalizeInfrastructureTemplate,
+    requiredRule,
+  } from '@/utils/InfrastructureUtils'
 
   // Props
   const props = defineProps<{
@@ -297,6 +337,10 @@
   const componentConnectionStatus = connectionTesting.componentConnectionStatus
   const componentTestingLoading = connectionTesting.componentTestingLoading
   const testingAllConnections = connectionTesting.testingAllConnections
+  const infrastructureTemplateOptions = INFRASTRUCTURE_TEMPLATE_OPTIONS
+  const selectedTemplateDescription = computed(
+    () => getInfrastructureTemplateDefinition(editingInfrastructure.value.template).description,
+  )
 
   const router = useRouter()
 
@@ -401,15 +445,26 @@
     resetDialogOpen.value = false
   }
 
-  // Test individual component connection
-  async function testComponentConnection (componentKey: BaSyxComponentKey): Promise<void> {
-    const url = editingInfrastructure.value.components[componentKey].url
-    await connectionTesting.testComponentConnection(componentKey, url)
+  // Test individual endpoint field connection
+  async function testComponentConnection (fieldKey: InfrastructureEndpointFieldKey): Promise<void> {
+    await connectionTesting.testEndpointField(
+      editingInfrastructure.value.template,
+      fieldKey,
+      editingInfrastructure.value.components,
+    )
   }
 
   // Test all component connections for the currently edited infrastructure
   async function testAllConnections (): Promise<void> {
-    await connectionTesting.testAllConnections(editingInfrastructure.value.components)
+    await connectionTesting.testAllConnections(
+      editingInfrastructure.value.components,
+      editingInfrastructure.value.template,
+    )
+  }
+
+  function handleTemplateUpdate (template: InfrastructureTemplate | string): void {
+    editingInfrastructure.value.template = normalizeInfrastructureTemplate(template)
+    connectionTesting.resetConnectionStatus()
   }
 
   async function authenticateOAuth2 (): Promise<void> {

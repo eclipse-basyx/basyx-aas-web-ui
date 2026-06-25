@@ -1,8 +1,19 @@
 import type { BaSyxComponentKey } from '@/types/BaSyx'
-import type { ComponentConnectionStatus, ComponentTestingLoading } from '@/types/Infrastructure'
+import type {
+  ComponentConnectionStatus,
+  ComponentTestingLoading,
+  InfrastructureConfig,
+  InfrastructureTemplate,
+} from '@/types/Infrastructure'
+import type { InfrastructureEndpointFieldKey } from '@/utils/InfrastructureUtils'
 import { type Ref, ref } from 'vue'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
-import { BASYX_COMPONENT_KEYS } from '@/utils/InfrastructureUtils'
+import {
+  BASYX_COMPONENT_KEYS,
+  getEndpointFieldByKey,
+  getEndpointFieldsForTemplate,
+  getEndpointFieldValue,
+} from '@/utils/InfrastructureUtils'
 
 /**
  * Composable for managing BaSyx component connection testing
@@ -12,7 +23,15 @@ export function useComponentConnectionTesting (): {
   componentTestingLoading: Ref<ComponentTestingLoading>
   testingAllConnections: Ref<boolean>
   testComponentConnection: (componentKey: BaSyxComponentKey, url: string) => Promise<void>
-  testAllConnections: (components: Record<BaSyxComponentKey, { url: string }>) => Promise<void>
+  testEndpointField: (
+    template: InfrastructureTemplate,
+    fieldKey: InfrastructureEndpointFieldKey,
+    components: InfrastructureConfig['components'],
+  ) => Promise<void>
+  testAllConnections: (
+    components: InfrastructureConfig['components'],
+    template: InfrastructureTemplate,
+  ) => Promise<void>
   resetConnectionStatus: () => void
 } {
   const infrastructureStore = useInfrastructureStore()
@@ -58,11 +77,36 @@ export function useComponentConnectionTesting (): {
   }
 
   /**
+   * Test connection to a visible endpoint field. Grouped endpoint fields fan out to
+   * their mapped internal components.
+   */
+  async function testEndpointField (
+    template: InfrastructureTemplate,
+    fieldKey: InfrastructureEndpointFieldKey,
+    components: InfrastructureConfig['components'],
+  ): Promise<void> {
+    const endpointField = getEndpointFieldByKey(template, fieldKey)
+    if (!endpointField) {
+      return
+    }
+
+    const url = getEndpointFieldValue(components, endpointField)
+    const testPromises = endpointField.componentKeys.map(key => testComponentConnection(key, url))
+    await Promise.all(testPromises)
+  }
+
+  /**
    * Test all component connections
    */
-  async function testAllConnections (components: Record<BaSyxComponentKey, { url: string }>): Promise<void> {
+  async function testAllConnections (
+    components: InfrastructureConfig['components'],
+    template: InfrastructureTemplate,
+  ): Promise<void> {
     testingAllConnections.value = true
-    const testPromises = BASYX_COMPONENT_KEYS.map(key => testComponentConnection(key, components[key].url))
+    const testPromises = getEndpointFieldsForTemplate(template).flatMap(endpointField => {
+      const url = getEndpointFieldValue(components, endpointField)
+      return endpointField.componentKeys.map(key => testComponentConnection(key, url))
+    })
     await Promise.all(testPromises)
     testingAllConnections.value = false
   }
@@ -84,6 +128,7 @@ export function useComponentConnectionTesting (): {
     testingAllConnections,
     // Methods
     testComponentConnection,
+    testEndpointField,
     testAllConnections,
     resetConnectionStatus,
   }
