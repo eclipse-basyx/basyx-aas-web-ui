@@ -19,9 +19,7 @@
                 ? 'success'
                 : getFieldConnectionStatus(endpointField) === false
                   ? 'error'
-                  : getEndpointFieldValue(components, endpointField)
-                    ? 'grey'
-                    : 'grey'
+                  : 'grey'
             "
             size="small"
           >

@@ -72,7 +72,7 @@ describe('InfrastructureUtils.ts', () => {
       field => field.key === 'AASEnvironment',
     )
 
-    components.SubmodelRepo.url = 'https://aas-env.example'
+    components.SubmodelRepo.url = '  https://aas-env.example  '
 
     expect(monoRepoField).toBeDefined()
     expect(getEndpointFieldValue(components, monoRepoField!)).toBe('https://aas-env.example')

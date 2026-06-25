@@ -41,22 +41,31 @@ export function useComponentConnectionTesting (): {
   const componentTestingLoading = ref<ComponentTestingLoading>({} as ComponentTestingLoading)
   const testingAllConnections = ref(false)
 
+  function updateGlobalTestingState (): void {
+    infrastructureStore.dispatchIsTestingConnections(Object.values(componentTestingLoading.value).some(Boolean))
+  }
+
+  function setComponentTestingLoading (componentKey: BaSyxComponentKey, loading: boolean): void {
+    componentTestingLoading.value[componentKey] = loading
+    updateGlobalTestingState()
+  }
+
   /**
    * Test connection to a single component
    */
   async function testComponentConnection (componentKey: BaSyxComponentKey, url: string): Promise<void> {
     if (!url || url.trim() === '') {
       componentConnectionStatus.value[componentKey] = false
+      setComponentTestingLoading(componentKey, false)
       return
     }
 
-    componentTestingLoading.value[componentKey] = true
     componentConnectionStatus.value[componentKey] = null
+    const originalUrl = infrastructureStore.getBasyxComponents[componentKey].url
+    setComponentTestingLoading(componentKey, true)
 
     try {
       // Temporarily set the component URL in the store to test it
-      const originalUrl = infrastructureStore.getBasyxComponents[componentKey].url
-      infrastructureStore.dispatchIsTestingConnections(true)
       infrastructureStore.getBasyxComponents[componentKey].url = url
 
       // Test the connection
@@ -65,14 +74,12 @@ export function useComponentConnectionTesting (): {
       // Get the connection result
       const connected = infrastructureStore.getBasyxComponents[componentKey].connected
       componentConnectionStatus.value[componentKey] = connected
-
-      // Restore original URL
-      infrastructureStore.getBasyxComponents[componentKey].url = originalUrl
     } catch {
       componentConnectionStatus.value[componentKey] = false
     } finally {
-      infrastructureStore.dispatchIsTestingConnections(false)
-      componentTestingLoading.value[componentKey] = false
+      // Restore original URL
+      infrastructureStore.getBasyxComponents[componentKey].url = originalUrl
+      setComponentTestingLoading(componentKey, false)
     }
   }
 
@@ -103,12 +110,15 @@ export function useComponentConnectionTesting (): {
     template: InfrastructureTemplate,
   ): Promise<void> {
     testingAllConnections.value = true
-    const testPromises = getEndpointFieldsForTemplate(template).flatMap(endpointField => {
-      const url = getEndpointFieldValue(components, endpointField)
-      return endpointField.componentKeys.map(key => testComponentConnection(key, url))
-    })
-    await Promise.all(testPromises)
-    testingAllConnections.value = false
+    try {
+      const testPromises = getEndpointFieldsForTemplate(template).flatMap(endpointField => {
+        const url = getEndpointFieldValue(components, endpointField)
+        return endpointField.componentKeys.map(key => testComponentConnection(key, url))
+      })
+      await Promise.all(testPromises)
+    } finally {
+      testingAllConnections.value = false
+    }
   }
 
   /**
@@ -119,6 +129,7 @@ export function useComponentConnectionTesting (): {
       componentConnectionStatus.value[key] = null
       componentTestingLoading.value[key] = false
     }
+    updateGlobalTestingState()
   }
 
   return {

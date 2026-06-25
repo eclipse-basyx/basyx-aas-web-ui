@@ -222,10 +222,10 @@ export function getEndpointFieldValue (
   for (const componentKey of field.componentKeys) {
     const url = components[componentKey]?.url?.trim() ?? ''
     if (url !== '') {
-      return components[componentKey].url
+      return url
     }
   }
-  return components[field.componentKeys[0]]?.url ?? ''
+  return components[field.componentKeys[0]]?.url?.trim() ?? ''
 }
 
 export function setEndpointFieldValue (
