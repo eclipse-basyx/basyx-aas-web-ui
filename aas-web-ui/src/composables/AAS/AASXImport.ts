@@ -7,7 +7,7 @@ import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient
 import { useCDRepositoryClient } from '@/composables/Client/CDRepositoryClient'
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
-import { usesSubmodelSuperpath } from '@/utils/InfrastructureUtils'
+import { isComponentActiveForTemplate, usesSubmodelSuperpath } from '@/utils/InfrastructureUtils'
 import { safeSegment } from '@/utils/StringUtils'
 
 type JsonRecord = Record<string, unknown>
@@ -579,7 +579,12 @@ export function useAASXImport (): {
   }
 
   async function importParsedPackage (parsedPackage: ParsedAASX, warnings: string[]): Promise<ClientAASXImportResult> {
-    const useSuperpath = usesSubmodelSuperpath(infrastructureStore.getSelectedInfrastructure)
+    const selectedInfrastructure = infrastructureStore.getSelectedInfrastructure
+    const useSuperpath = usesSubmodelSuperpath(selectedInfrastructure)
+    const conceptDescriptionRepoActive = isComponentActiveForTemplate(
+      selectedInfrastructure,
+      'ConceptDescriptionRepo',
+    )
     const importedAasIds: string[] = []
 
     async function upsertParsedAasEntries (): Promise<void> {
@@ -593,10 +598,12 @@ export function useAASXImport (): {
       }
     }
 
-    for (const { core: conceptDescription, json } of parsedPackage.cdById.values()) {
-      const success = await upsertConceptDescription(conceptDescription)
-      if (!success) {
-        warnings.push(`Failed to create or update Concept Description '${asString(json.id)}'.`)
+    if (conceptDescriptionRepoActive) {
+      for (const { core: conceptDescription, json } of parsedPackage.cdById.values()) {
+        const success = await upsertConceptDescription(conceptDescription)
+        if (!success) {
+          warnings.push(`Failed to create or update Concept Description '${asString(json.id)}'.`)
+        }
       }
     }
 

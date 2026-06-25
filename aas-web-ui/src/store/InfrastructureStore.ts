@@ -13,7 +13,7 @@ import { useInfrastructureStorage } from '@/composables/Infrastructure/useInfras
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useNavigationStore } from '@/store/NavigationStore'
-import { getActiveComponentKeys } from '@/utils/InfrastructureUtils'
+import { getActiveComponentKeys, isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
 
 export const useInfrastructureStore = defineStore('infrastructureStore', () => {
@@ -140,12 +140,24 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     return infrastructures.value.find(infra => infra.id === selectedInfrastructureId.value) || null
   })
   const getOpenInfrastructureEditMode = computed(() => openInfrastructureEditMode.value)
-  const getAASDiscoveryURL = computed(() => AASDiscoveryURL.value)
-  const getAASRegistryURL = computed(() => AASRegistryURL.value)
-  const getSubmodelRegistryURL = computed(() => SubmodelRegistryURL.value)
-  const getAASRepoURL = computed(() => AASRepoURL.value)
-  const getSubmodelRepoURL = computed(() => SubmodelRepoURL.value)
-  const getConceptDescriptionRepoURL = computed(() => ConceptDescriptionRepoURL.value)
+  function getActiveComponentUrl (componentKey: BaSyxComponentKey, url: string): string {
+    const selectedInfra = getSelectedInfrastructure.value
+    if (!selectedInfra) {
+      return url
+    }
+    return isComponentActiveForTemplate(selectedInfra, componentKey) ? url : ''
+  }
+
+  const getAASDiscoveryURL = computed(() => getActiveComponentUrl('AASDiscovery', AASDiscoveryURL.value))
+  const getAASRegistryURL = computed(() => getActiveComponentUrl('AASRegistry', AASRegistryURL.value))
+  const getSubmodelRegistryURL = computed(() =>
+    getActiveComponentUrl('SubmodelRegistry', SubmodelRegistryURL.value),
+  )
+  const getAASRepoURL = computed(() => getActiveComponentUrl('AASRepo', AASRepoURL.value))
+  const getSubmodelRepoURL = computed(() => getActiveComponentUrl('SubmodelRepo', SubmodelRepoURL.value))
+  const getConceptDescriptionRepoURL = computed(() =>
+    getActiveComponentUrl('ConceptDescriptionRepo', ConceptDescriptionRepoURL.value),
+  )
   const getBasyxComponents = computed(() => basyxComponents)
   const getIsAuthenticating = computed(() => isAuthenticating.value)
   const getIsTestingConnections = computed(() => isTestingConnections.value)

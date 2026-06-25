@@ -597,7 +597,7 @@
   watch(
     () => triggerAASListReload.value,
     triggerVal => {
-      if (triggerVal === true) {
+      if (triggerVal > 0) {
         initialize()
       }
     },

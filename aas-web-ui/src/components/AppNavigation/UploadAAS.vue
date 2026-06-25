@@ -179,7 +179,15 @@
   })
 
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
-  const defaultUploadMode = computed(() => getDefaultAasUploadMode(selectedInfrastructure.value))
+  function allSelectedFilesAreAasx (): boolean {
+    return aasFiles.value.length > 0
+      && aasFiles.value.every(file => detectImportFileKind(file.name) === 'aasx')
+  }
+
+  const defaultUploadMode = computed<InfrastructureAasUploadMode>(() => {
+    const infrastructureDefault = getDefaultAasUploadMode(selectedInfrastructure.value)
+    return infrastructureDefault === 'server' && allSelectedFilesAreAasx() ? 'server' : 'client'
+  })
   const aasRegistryActive = computed(() =>
     isComponentActiveForTemplate(selectedInfrastructure.value, 'AASRegistry'),
   )
@@ -224,6 +232,15 @@
     () => uploadAASDialog.value,
     value => {
       emit('update:model-value', value)
+    },
+  )
+
+  watch(
+    () => aasFiles.value.map(file => file.name),
+    () => {
+      if (uploadAASDialog.value && !loadingUpload.value) {
+        uploadMode.value = defaultUploadMode.value
+      }
     },
   )
 

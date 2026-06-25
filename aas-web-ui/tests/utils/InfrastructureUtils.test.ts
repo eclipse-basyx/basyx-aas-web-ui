@@ -6,6 +6,7 @@ import {
   getActiveComponentKeys,
   getDefaultAasUploadMode,
   getEndpointFieldsForTemplate,
+  getEndpointFieldValue,
   getInfrastructureSummary,
   normalizeInfrastructureTemplate,
   setEndpointFieldValue,
@@ -62,6 +63,18 @@ describe('InfrastructureUtils.ts', () => {
     setEndpointFieldValue(components, monoAllField, 'https://aas-env.example')
 
     expect(BASYX_COMPONENT_KEYS.every(key => components[key].url === 'https://aas-env.example')).toBe(true)
+  })
+
+  it('uses the first configured grouped endpoint URL when reading a shared field', () => {
+    const components = createComponents()
+    const monoRepoField = getEndpointFieldsForTemplate('mono-repo').find(
+      field => field.key === 'AASEnvironment',
+    )
+
+    components.SubmodelRepo.url = 'https://aas-env.example'
+
+    expect(monoRepoField).toBeDefined()
+    expect(getEndpointFieldValue(components, monoRepoField!)).toBe('https://aas-env.example')
   })
 
   it('counts configured grouped endpoints in summaries', () => {

@@ -264,10 +264,13 @@
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import {
+    getEndpointFieldsForTemplate,
+    getEndpointFieldValue,
     getInfrastructureTemplateDefinition,
     INFRASTRUCTURE_TEMPLATE_OPTIONS,
     normalizeInfrastructureTemplate,
     requiredRule,
+    setEndpointFieldValue,
   } from '@/utils/InfrastructureUtils'
 
   // Props
@@ -411,6 +414,8 @@
     const { valid } = await formRef.value.validate()
     if (!valid) return
 
+    normalizeGroupedEndpointFields(editingInfrastructure.value)
+
     // Save auth data
     await saveAuthDataToInfrastructure(editingInfrastructure.value)
 
@@ -464,7 +469,22 @@
 
   function handleTemplateUpdate (template: InfrastructureTemplate | string): void {
     editingInfrastructure.value.template = normalizeInfrastructureTemplate(template)
+    normalizeGroupedEndpointFields(editingInfrastructure.value)
     connectionTesting.resetConnectionStatus()
+  }
+
+  function normalizeGroupedEndpointFields (infra: InfrastructureConfig): void {
+    for (const endpointField of getEndpointFieldsForTemplate(infra)) {
+      if (endpointField.componentKeys.length <= 1) {
+        continue
+      }
+
+      setEndpointFieldValue(
+        infra.components,
+        endpointField,
+        getEndpointFieldValue(infra.components, endpointField),
+      )
+    }
   }
 
   async function authenticateOAuth2 (): Promise<void> {
