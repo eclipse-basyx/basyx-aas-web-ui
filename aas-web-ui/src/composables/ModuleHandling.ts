@@ -2,7 +2,9 @@ import type { ModuleNavigationRoute } from '@/types/Application'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAASStore } from '@/store/AASDataStore'
+import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { useNavigationStore } from '@/store/NavigationStore'
+import { supportsInfrastructureTemplate } from '@/utils/InfrastructureUtils'
 
 interface ModuleHandling {
   determineFilteredAndOrderedModuleRoutes: () => ModuleNavigationRoute[]
@@ -16,12 +18,14 @@ export function useModuleHandling (): ModuleHandling {
   // Stores
   const navigationStore = useNavigationStore()
   const aasStore = useAASStore()
+  const infrastructureStore = useInfrastructureStore()
 
   // Computed Properties
   const isMobile = computed(() => navigationStore.getIsMobile)
   const moduleRoutes = computed(() => navigationStore.getModuleRoutes) // get the module routes
   const selectedAas = computed(() => aasStore.getSelectedAAS) // get selected AAS from Store
   const selectedNode = computed(() => aasStore.getSelectedNode) // get selected node from Store
+  const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
 
   function determineFilteredAndOrderedModuleRoutes () {
     const currentRouteName = typeof route.name === 'string' ? route.name : undefined
@@ -31,6 +35,14 @@ export function useModuleHandling (): ModuleHandling {
           return false
         }
         if (!isMobile.value && !moduleRoute?.meta?.isDesktopModule) {
+          return false
+        }
+        if (
+          !supportsInfrastructureTemplate(
+            moduleRoute?.meta?.supportedInfrastructureTemplates,
+            selectedInfrastructure.value,
+          )
+        ) {
           return false
         }
         if (

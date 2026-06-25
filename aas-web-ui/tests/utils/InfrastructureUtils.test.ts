@@ -10,6 +10,7 @@ import {
   getInfrastructureSummary,
   normalizeInfrastructureTemplate,
   setEndpointFieldValue,
+  supportsInfrastructureTemplate,
   usesSubmodelSuperpath,
 } from '@/utils/InfrastructureUtils'
 
@@ -101,5 +102,16 @@ describe('InfrastructureUtils.ts', () => {
     expect(getDefaultAasUploadMode('identifiable')).toBe('client')
     expect(getDefaultAasUploadMode('catena-x')).toBe('client')
     expect(getDefaultAasUploadMode(undefined)).toBe('client')
+  })
+
+  it('defaults module template support to all templates', () => {
+    expect(supportsInfrastructureTemplate(undefined, 'catena-x')).toBe(true)
+    expect(supportsInfrastructureTemplate([], 'catena-x')).toBe(true)
+  })
+
+  it('checks explicit module template support lists', () => {
+    expect(supportsInfrastructureTemplate(['full', 'mono-all'], 'mono-all')).toBe(true)
+    expect(supportsInfrastructureTemplate(['full', 'mono-all'], 'catena-x')).toBe(false)
+    expect(supportsInfrastructureTemplate(['mono-repo'], createInfrastructure('mono-repo'))).toBe(true)
   })
 })

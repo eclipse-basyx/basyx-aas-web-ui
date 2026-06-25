@@ -244,6 +244,22 @@ export function usesSubmodelSuperpath (
   return getInfrastructureTemplateDefinition(templateOrInfra).usesSubmodelSuperpath
 }
 
+export function supportsInfrastructureTemplate (
+  supportedTemplates: unknown,
+  templateOrInfra?: InfrastructureTemplate | string | Pick<InfrastructureConfig, 'template'> | null,
+): boolean {
+  if (!Array.isArray(supportedTemplates) || supportedTemplates.length === 0) {
+    return true
+  }
+
+  const validSupportedTemplates = supportedTemplates.filter(isInfrastructureTemplate)
+  if (validSupportedTemplates.length === 0) {
+    return true
+  }
+
+  return validSupportedTemplates.includes(getInfrastructureTemplate(templateOrInfra))
+}
+
 export function getDefaultAasUploadMode (
   templateOrInfra?: InfrastructureTemplate | Pick<InfrastructureConfig, 'template'> | null,
 ): InfrastructureAasUploadMode {

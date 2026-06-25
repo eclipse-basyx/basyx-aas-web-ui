@@ -203,6 +203,7 @@
   defineOptions({
     inheritAttrs: false,
     moduleTitle: 'AAS Importer',
+    supportedInfrastructureTemplates: ['full', 'identifiable', 'mono-repo', 'mono-all'],
   })
 
   const navigationStore = useNavigationStore()

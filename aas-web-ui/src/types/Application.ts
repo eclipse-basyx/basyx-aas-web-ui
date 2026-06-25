@@ -1,3 +1,5 @@
+import type { InfrastructureTemplate } from '@/types/Infrastructure'
+
 export interface SnackbarType {
   status: boolean
   timeout?: number
@@ -58,6 +60,7 @@ export interface ModuleNavigationRouteMeta {
   isOnlyVisibleWithSelectedAas?: boolean
   isOnlyVisibleWithSelectedNode?: boolean
   visibleOnRoutes?: Array<string>
+  supportedInfrastructureTemplates?: InfrastructureTemplate[]
   preserveRouteQuery?: boolean
 }
 
