@@ -78,6 +78,7 @@
     moduleTitle: 'AAS Creation Wizard',
     isDesktopModule: true,
     isMobileModule: false,
+    supportedInfrastructureTemplates: ['full', 'identifiable', 'mono-repo', 'mono-all'],
   })
 
   const step = ref(1)

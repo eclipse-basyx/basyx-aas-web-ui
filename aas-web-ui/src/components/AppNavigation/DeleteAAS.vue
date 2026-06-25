@@ -62,6 +62,7 @@
   import { useAASStore } from '@/store/AASDataStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
+  import { isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
 
   // Vue Router
   const route = useRoute()
@@ -96,14 +97,30 @@
   const selected = ref<string[]>([]) // Variable to store the selected Submodel Ids
 
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
+  const aasRegistryActive = computed(() =>
+    isComponentActiveForTemplate(selectedInfrastructure.value, 'AASRegistry'),
+  )
+  const submodelRegistryActive = computed(() =>
+    isComponentActiveForTemplate(selectedInfrastructure.value, 'SubmodelRegistry'),
+  )
+  const aasDiscoveryActive = computed(() =>
+    isComponentActiveForTemplate(selectedInfrastructure.value, 'AASDiscovery'),
+  )
   const aasRepoHasRegistryIntegration = computed(
-    () => selectedInfrastructure.value?.components?.AASRepo?.hasRegistryIntegration ?? true,
+    () =>
+      !aasRegistryActive.value
+      || (selectedInfrastructure.value?.components?.AASRepo?.hasRegistryIntegration ?? true),
   )
   const submodelRepoHasRegistryIntegration = computed(
-    () => selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true,
+    () =>
+      !submodelRegistryActive.value
+      || (selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true),
   )
   const aasRegistryHasDiscoveryIntegration = computed(
-    () => selectedInfrastructure.value?.components?.AASRegistry?.hasDiscoveryIntegration ?? true,
+    () =>
+      !aasRegistryActive.value
+      || !aasDiscoveryActive.value
+      || (selectedInfrastructure.value?.components?.AASRegistry?.hasDiscoveryIntegration ?? true),
   )
 
   watch(
@@ -119,7 +136,7 @@
 
         for (const submodelRef of submodelRefs) {
           // TODO: Optimize by only using the metadata endpoint once it is implemented in BaSyx Go
-          const submodel = await fetchSmById(submodelRef.keys[0].value)
+          const submodel = await fetchSmById(submodelRef.keys[0].value, false, false, props.aas.id)
           submodelIds.value.push({ smId: submodelRef.keys[0].value, smIdShort: submodel.idShort, submodel })
           selected.value.push(submodelRef.keys[0].value)
         }
@@ -148,7 +165,7 @@
         const submodelIds = selected.value
         // Remove each submodel
         for (const submodelId of submodelIds) {
-          error = error || !(await deleteSmById(submodelId))
+          error = error || !(await deleteSmById(submodelId, props.aas.id))
           if (!error && !submodelRepoHasRegistryIntegration.value) {
             const descriptorDeleted = await deleteSubmodelDescriptor(submodelId)
             if (!descriptorDeleted) {

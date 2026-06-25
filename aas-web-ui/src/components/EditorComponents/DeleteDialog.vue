@@ -44,6 +44,7 @@
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils'
+  import { isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
 
   const aasStore = useAASStore()
   const infrastructureStore = useInfrastructureStore()
@@ -72,8 +73,17 @@
 
   const selectedAAS = computed(() => aasStore.getSelectedAAS) // get selected AAS from Store
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
+  const submodelRegistryActive = computed(() =>
+    isComponentActiveForTemplate(selectedInfrastructure.value, 'SubmodelRegistry'),
+  )
   const submodelRepoHasRegistryIntegration = computed(
     () => selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true,
+  )
+  const shouldResolveSubmodelWithRegistry = computed(
+    () => submodelRegistryActive.value && submodelRepoHasRegistryIntegration.value,
+  )
+  const manualSubmodelDescriptorSyncRequired = computed(
+    () => submodelRegistryActive.value && !submodelRepoHasRegistryIntegration.value,
   )
 
   watch(
@@ -95,7 +105,7 @@
     let deleteSucceeded = false
     if (props.element.modelType === 'Submodel') {
       let smEndpoint = ''
-      if (submodelRepoHasRegistryIntegration.value) {
+      if (shouldResolveSubmodelWithRegistry.value) {
         const smDescriptor = await fetchSmDescriptor(props.element.id)
         smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0')
         if (!smEndpoint) {
@@ -136,7 +146,7 @@
           return
         }
 
-        if (!submodelRepoHasRegistryIntegration.value) {
+        if (manualSubmodelDescriptorSyncRequired.value) {
           const descriptorDeleted = await deleteSubmodelDescriptor(props.element.id)
           if (!descriptorDeleted) {
             navigationStore.dispatchSnackbar({

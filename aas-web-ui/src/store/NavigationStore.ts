@@ -38,11 +38,11 @@ export const useNavigationStore = defineStore('navigationStore', () => {
   const isMobile = ref(false)
   const platform = ref<PlatformType>({} as PlatformType)
   const plugins = ref<PluginType[]>([])
-  const triggerAASListReload = ref(false)
-  const clearAASList = ref(false)
-  const clearTreeview = ref(false)
-  const triggerAASListScroll = ref(false)
-  const triggerTreeviewReload = ref(false)
+  const triggerAASListReload = ref(0)
+  const clearAASList = ref(0)
+  const clearTreeview = ref(0)
+  const triggerAASListScroll = ref(0)
+  const triggerTreeviewReload = ref(0)
   const urlQuery = ref<LocationQuery>({} as LocationQuery)
   const moduleRoutes = ref<Array<ModuleNavigationRoute>>([])
 
@@ -102,33 +102,23 @@ export const useNavigationStore = defineStore('navigationStore', () => {
   }
 
   function dispatchTriggerAASListReload (): void {
-    triggerAASListReload.value = !triggerAASListReload.value
-
-    setTimeout(() => {
-      // Reset dispatchTriggerAASListReload after 100 ms
-      triggerAASListReload.value = false
-    }, 100)
+    triggerAASListReload.value += 1
   }
 
   function dispatchClearAASList (): void {
-    clearAASList.value = !clearAASList.value
+    clearAASList.value += 1
   }
 
   function dispatchClearTreeview (): void {
-    clearTreeview.value = !clearTreeview.value
+    clearTreeview.value += 1
   }
 
   function dispatchTriggerAASListScroll (): void {
-    triggerAASListScroll.value = !triggerAASListScroll.value
+    triggerAASListScroll.value += 1
   }
 
   function dispatchTriggerTreeviewReload (): void {
-    triggerTreeviewReload.value = !triggerTreeviewReload.value
-
-    setTimeout(() => {
-      // Reset dispatchTriggerTreeviewReload after 100 ms
-      triggerTreeviewReload.value = false
-    }, 100)
+    triggerTreeviewReload.value += 1
   }
 
   function dispatchUrlQuery (query: LocationQuery): void {

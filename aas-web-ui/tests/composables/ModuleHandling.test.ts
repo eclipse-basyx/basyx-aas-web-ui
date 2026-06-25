@@ -19,6 +19,7 @@ const mockState = {
   moduleRoutes: ref<Array<ModuleNavigationRoute>>([]),
   selectedAas: ref<Record<string, unknown> | null>(null),
   selectedNode: ref<Record<string, unknown> | null>(null),
+  selectedInfrastructure: ref<{ template: string } | null>({ template: 'full' }),
 }
 
 async function importUseModuleHandling () {
@@ -52,6 +53,14 @@ async function importUseModuleHandling () {
     }),
   }))
 
+  vi.doMock('@/store/InfrastructureStore', () => ({
+    useInfrastructureStore: () => ({
+      get getSelectedInfrastructure () {
+        return mockState.selectedInfrastructure.value
+      },
+    }),
+  }))
+
   return import('@/composables/ModuleHandling')
 }
 
@@ -64,6 +73,7 @@ describe('ModuleHandling.ts', () => {
     mockState.isMobile.value = false
     mockState.selectedAas.value = null
     mockState.selectedNode.value = null
+    mockState.selectedInfrastructure.value = { template: 'full' }
     mockState.moduleRoutes.value = [
       createModuleRoute({
         path: '/modules/test-module',
@@ -118,6 +128,73 @@ describe('ModuleHandling.ts', () => {
     const filteredRoutes = determineFilteredAndOrderedModuleRoutes()
 
     expect(filteredRoutes).toHaveLength(0)
+  })
+
+  it('includes modules without explicit infrastructure template restrictions', async () => {
+    mockState.selectedInfrastructure.value = { template: 'catena-x' }
+    mockState.moduleRoutes.value = [
+      createModuleRoute({
+        path: '/modules/default-all',
+        name: 'DefaultAllModule',
+        meta: {
+          isDesktopModule: true,
+          isMobileModule: true,
+          isVisibleModule: true,
+        },
+      }),
+    ]
+
+    const { useModuleHandling } = await importUseModuleHandling()
+    const { determineFilteredAndOrderedModuleRoutes } = useModuleHandling()
+    const filteredRoutes = determineFilteredAndOrderedModuleRoutes()
+
+    expect(filteredRoutes).toHaveLength(1)
+    expect(filteredRoutes[0].name).toBe('DefaultAllModule')
+  })
+
+  it('excludes a module when selected infrastructure template is unsupported', async () => {
+    mockState.selectedInfrastructure.value = { template: 'catena-x' }
+    mockState.moduleRoutes.value = [
+      createModuleRoute({
+        path: '/modules/write-heavy',
+        name: 'WriteHeavyModule',
+        meta: {
+          isDesktopModule: true,
+          isMobileModule: true,
+          isVisibleModule: true,
+          supportedInfrastructureTemplates: ['full', 'mono-all'],
+        },
+      }),
+    ]
+
+    const { useModuleHandling } = await importUseModuleHandling()
+    const { determineFilteredAndOrderedModuleRoutes } = useModuleHandling()
+    const filteredRoutes = determineFilteredAndOrderedModuleRoutes()
+
+    expect(filteredRoutes).toHaveLength(0)
+  })
+
+  it('includes a module when selected infrastructure template is supported', async () => {
+    mockState.selectedInfrastructure.value = { template: 'mono-all' }
+    mockState.moduleRoutes.value = [
+      createModuleRoute({
+        path: '/modules/write-heavy',
+        name: 'WriteHeavyModule',
+        meta: {
+          isDesktopModule: true,
+          isMobileModule: true,
+          isVisibleModule: true,
+          supportedInfrastructureTemplates: ['full', 'mono-all'],
+        },
+      }),
+    ]
+
+    const { useModuleHandling } = await importUseModuleHandling()
+    const { determineFilteredAndOrderedModuleRoutes } = useModuleHandling()
+    const filteredRoutes = determineFilteredAndOrderedModuleRoutes()
+
+    expect(filteredRoutes).toHaveLength(1)
+    expect(filteredRoutes[0].name).toBe('WriteHeavyModule')
   })
 
   it('reacts to route name and store changes when wrapped in computed by callers', async () => {

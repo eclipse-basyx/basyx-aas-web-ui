@@ -469,7 +469,7 @@ export function useAASHandling () {
 
       const submodelPromises = submodelRefs.map((submodelRef: any) => {
         const smId = extractIdFromReference(submodelRef, 'Submodel')
-        return fetchSmById(smId, false, true)
+        return fetchSmById(smId, false, true, aasId)
       })
 
       return await Promise.all(submodelPromises)

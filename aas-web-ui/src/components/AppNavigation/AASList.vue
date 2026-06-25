@@ -523,7 +523,8 @@
   const isSearchLimited = computed(() => searchValue.value.trim() !== '' && hasMorePages.value)
 
   // Watchers
-  // Reload when AAS Registry URL or selected infrastructure changes
+  // Reload when AAS Registry URL or selected infrastructure changes.
+  // Use post-flush so infrastructure-switch clear signals reset pagination before the reload starts.
   watch(
     [() => aasRegistryURL.value, () => aasRepoURL.value, () => selectedInfrastructureId.value],
     ([newRegistryUrl, newRepoUrl, newId], [oldRegistryUrl, oldRepoUrl, oldId]) => {
@@ -540,7 +541,7 @@
         initialize()
       }
     },
-    { immediate: true },
+    { immediate: true, flush: 'post' },
   )
 
   watch(
@@ -596,7 +597,7 @@
   watch(
     () => triggerAASListReload.value,
     triggerVal => {
-      if (triggerVal === true) {
+      if (triggerVal > 0) {
         initialize()
       }
     },
@@ -604,12 +605,10 @@
 
   watch(
     () => clearAASList.value,
-    clearAasListValue => {
-      if (clearAasListValue === true) {
-        invalidatePaginationGeneration()
-        resetAASListState(false)
-        unbindVirtualScrollListener()
-      }
+    () => {
+      invalidatePaginationGeneration()
+      resetAASListState(false)
+      unbindVirtualScrollListener()
     },
   )
 

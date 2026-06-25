@@ -3,6 +3,7 @@ infrastructures:
 
   infra1:
     name: Secured BaSyx
+    template: mono-repo
     components:
       aasDiscovery:
         baseUrl: "http://discovery.basyx.localhost"
@@ -10,11 +11,7 @@ infrastructures:
         baseUrl: "http://aasreg.basyx.localhost"
       submodelRegistry:
         baseUrl: "http://smreg.basyx.localhost"
-      aasRepository:
-        baseUrl: "http://aasenv.basyx.localhost"
-      submodelRepository:
-        baseUrl: "http://aasenv.basyx.localhost"
-      conceptDescriptionRepository:
+      aasEnvironment:
         baseUrl: "http://aasenv.basyx.localhost"
     security:
       type: oauth2
@@ -25,6 +22,7 @@ infrastructures:
 
   infra2:
     name: Local BaSyx
+    template: mono-repo
     components:
       aasDiscovery:
         baseUrl: "http://localhost:9084"
@@ -32,11 +30,7 @@ infrastructures:
         baseUrl: "http://localhost:9082"
       submodelRegistry:
         baseUrl: "http://localhost:9083"
-      aasRepository:
-        baseUrl: "http://localhost:9081"
-      submodelRepository:
-        baseUrl: "http://localhost:9081"
-      conceptDescriptionRepository:
+      aasEnvironment:
         baseUrl: "http://localhost:9081"
     security:
-      type: none 
+      type: none
