@@ -48,43 +48,20 @@ jobs:
             echo "Could not fetch integrity for pnpm@${VERSION}" >&2
             exit 1
           fi
-          # dist.integrity is in the form sha512-<base64> — strip the "sha512-" prefix
-          HASH="${INTEGRITY#sha512-}"
+          # Corepack packageManager hashes use hex, while npm dist.integrity is SRI base64.
+          HASH=$(INTEGRITY="$INTEGRITY" node -e '
+            const integrity = process.env.INTEGRITY ?? "";
+            const match = integrity.match(/^sha512-(.+)$/);
+            if (!match) {
+              process.stderr.write(`Unexpected integrity format: ${integrity}\n`);
+              process.exit(1);
+            }
+            process.stdout.write(Buffer.from(match[1], "base64").toString("hex"));
+          ')
           echo "hash=$HASH" >> "$GITHUB_OUTPUT"
           echo "sha512 hash: $HASH"
 
-      - name: Check what needs updating
-        id: needs-update
-        run: |
-          VERSION="${{ steps.pnpm-version.outputs.version }}"
-          HASH="${{ steps.pnpm-integrity.outputs.hash }}"
-
-          # Check packageManager field
-          CURRENT_PM=$(node -e "
-            const pkg = JSON.parse(require('fs').readFileSync('aas-web-ui/package.json', 'utf8'));
-            process.stdout.write(pkg.packageManager ?? '');
-          ")
-          EXPECTED_PM="pnpm@${VERSION}+sha512.${HASH}"
-          if [ "$CURRENT_PM" != "$EXPECTED_PM" ]; then
-            echo "package-manager-changed=true" >> "$GITHUB_OUTPUT"
-            echo "packageManager needs update: '$CURRENT_PM' → '$EXPECTED_PM'"
-          else
-            echo "package-manager-changed=false" >> "$GITHUB_OUTPUT"
-            echo "packageManager already up to date."
-          fi
-
-          # Check workflow files
-          CURRENT_WF=$(grep -oP 'version: \K[\d.]+' .github/workflows/build-aas-web-ui.yml | head -1 || true)
-          if [ "$CURRENT_WF" != "$VERSION" ]; then
-            echo "workflows-changed=true" >> "$GITHUB_OUTPUT"
-            echo "Workflow files are at pnpm '$CURRENT_WF', will update to '$VERSION'."
-          else
-            echo "workflows-changed=false" >> "$GITHUB_OUTPUT"
-            echo "Workflow files already at pnpm $VERSION."
-          fi
-
       - name: Update packageManager field in package.json
-        if: steps.needs-update.outputs.package-manager-changed == 'true'
         run: |
           VERSION="${{ steps.pnpm-version.outputs.version }}"
           HASH="${{ steps.pnpm-integrity.outputs.hash }}"
@@ -98,7 +75,6 @@ jobs:
           echo "Updated packageManager to pnpm@${VERSION}+sha512.${HASH}"
 
       - name: Update pnpm version in workflow files
-        if: steps.needs-update.outputs.workflows-changed == 'true'
         run: |
           TARGET="${{ steps.pnpm-version.outputs.version }}"
           for file in .github/workflows/*.yml; do
@@ -111,11 +87,14 @@ jobs:
           done
 
       - name: Commit all changes
-        if: steps.needs-update.outputs.package-manager-changed == 'true' || steps.needs-update.outputs.workflows-changed == 'true'
         run: |
           TARGET="${{ steps.pnpm-version.outputs.version }}"
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add aas-web-ui/package.json .github/workflows/*.yml
-          git diff --staged --quiet || git commit -m "chore: sync pnpm version to ${TARGET} in packageManager and workflow files"
-          git push
+          if git diff --staged --quiet; then
+            echo "No pnpm sync changes to commit."
+          else
+            git commit -m "chore: sync pnpm version to ${TARGET} in packageManager and workflow files"
+            git push
+          fi
