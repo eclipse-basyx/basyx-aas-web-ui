@@ -1,5 +1,5 @@
 import type { ParsedInfrastructureConfig, YamlInfrastructuresConfig } from '@/types/Infrastructure'
-import yaml from 'js-yaml'
+import { load } from 'js-yaml'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useInfrastructureYamlParser } from './useInfrastructureYamlParser'
 
@@ -46,7 +46,7 @@ export function useInfrastructureConfigLoader (): {
       }
 
       const yamlText = await response.text()
-      const yamlConfig = yaml.load(yamlText) as YamlInfrastructuresConfig
+      const yamlConfig = load(yamlText) as YamlInfrastructuresConfig
 
       // Validate the configuration structure
       if (!validateYamlConfig(yamlConfig)) {
