@@ -101,7 +101,7 @@
 
         <div v-else-if="!jsonContent" class="no-content pa-4 text-center">
 
-          <div>No JSON content available</div>
+          <v-empty-state class="text-divider" title="No JSON content available" />
         </div>
 
         <div v-else class="json-container" :class="{ 'word-wrap-enabled': wordWrapEnabled }">
