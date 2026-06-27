@@ -518,7 +518,7 @@ export async function createAppRouter (): Promise<Router> {
     return null
   }
 
-  const handleSingleAasAndDeviceRouting = (to: any): { name: string, query?: any } | false | null => {
+  const handleSingleAasAndSingleSmRouting = (to: any): { name: string, query?: any } | false | null => {
     if (
       envStore.getSingleAas
       && (routesUsingAasUrlQuery.includes(to.name)
@@ -533,6 +533,24 @@ export async function createAppRouter (): Promise<Router> {
       }
     }
 
+    if (
+      envStore.getSingleSm
+      && (routesUsingOnlyPathUrlQuery.has(to.name)
+        || (to.path.includes('/modules/') && to.meta.isOnlyVisibleWithSelectedNode))
+      && (!Object.hasOwn(to.query, 'path') || (to.query.path as string).trim() === '')
+    ) {
+      if (envStore.getSingleSmRedirect) {
+        window.location.replace(envStore.getSingleSmRedirect)
+        return false
+      } else if (to.name !== 'NotFound404') {
+        return { name: 'NotFound404' }
+      }
+    }
+
+    return null
+  }
+
+  const handleDeviceRouting = (to: any): { name: string, query?: any } | false | null => {
     if (routesToVisualization.has(to.name)) {
       return { name: 'Visualization', query: to.query }
     }
@@ -850,6 +868,11 @@ export async function createAppRouter (): Promise<Router> {
       return cleanedRoute
     }
 
+    const singleRoute = handleSingleAasAndSingleSmRouting(to)
+    if (singleRoute !== null) {
+      return singleRoute
+    }
+
     if (
       !supportsInfrastructureTemplate(
         to.meta?.supportedInfrastructureTemplates,
@@ -859,9 +882,9 @@ export async function createAppRouter (): Promise<Router> {
       return { name: 'AASViewer', replace: true }
     }
 
-    const displayRoute = handleSingleAasAndDeviceRouting(to)
-    if (displayRoute !== null) {
-      return displayRoute
+    const deviceRoute = handleDeviceRouting(to)
+    if (deviceRoute !== null) {
+      return deviceRoute
     }
 
     const aasSmeRoute = await handleAasAndSmeDataLoading(to, from)
