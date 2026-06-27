@@ -1,3 +1,4 @@
+import type { InfrastructureTemplate } from '@/types/Infrastructure'
 import type { RouteRecordRaw, RouteRecordSingleView } from 'vue-router'
 
 export type ModuleRouteMeta = {
@@ -11,6 +12,7 @@ export type ModuleRouteMeta = {
   isOnlyVisibleWithSelectedAas?: boolean
   isOnlyVisibleWithSelectedNode?: boolean
   visibleOnRoutes?: Array<string>
+  supportedInfrastructureTemplates?: InfrastructureTemplate[]
   preserveRouteQuery?: boolean
 }
 
@@ -95,6 +97,10 @@ export function buildValidatedModuleChildRoutes (moduleName: string,
         isVisibleModule: parentMeta.isVisibleModule,
         isOnlyVisibleWithSelectedAas: parentMeta.isOnlyVisibleWithSelectedAas,
         isOnlyVisibleWithSelectedNode: parentMeta.isOnlyVisibleWithSelectedNode,
+        supportedInfrastructureTemplates:
+          childRouteDefinition.meta && Object.hasOwn(childRouteDefinition.meta, 'supportedInfrastructureTemplates')
+            ? childRouteDefinition.meta.supportedInfrastructureTemplates
+            : parentMeta.supportedInfrastructureTemplates,
         preserveRouteQuery:
                     childRouteDefinition.meta && Object.hasOwn(childRouteDefinition.meta, 'preserveRouteQuery')
                       ? childRouteDefinition.meta.preserveRouteQuery

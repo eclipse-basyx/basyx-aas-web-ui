@@ -59,6 +59,7 @@
   import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { onMounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
+  import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { base64Encode } from '@/utils/EncodeDecodeUtils'
   import { buildHandoverDocumentation } from '../builders/buildHandoverDocumentation'
@@ -83,6 +84,7 @@
   const { submitAll } = useAASCreationSubmission()
   const infrastructureStore = useInfrastructureStore()
   const router = useRouter()
+  const { getSmEndpointById } = useSMRepositoryClient()
 
   const isSubmitting = ref(false)
 
@@ -243,7 +245,7 @@
   ): Promise<void> {
     const aasEndpoint = `${withTrailingSlash(infrastructureStore.getAASRepoURL)}shells/${base64Encode(aasId)}`
 
-    const submodelEndpoint = `${withTrailingSlash(infrastructureStore.getSubmodelRepoURL)}submodels/${base64Encode(submodelIdToOpen)}`
+    const submodelEndpoint = getSmEndpointById(submodelIdToOpen, aasId)
 
     await router.push({
       path: '/aassmviewer',

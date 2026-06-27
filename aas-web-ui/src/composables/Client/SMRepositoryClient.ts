@@ -3,13 +3,16 @@ import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
 import { computed } from 'vue'
 import { useIDUtils } from '@/composables/IDUtils'
 import { useRequestHandling } from '@/composables/RequestHandling'
+import { useAASStore } from '@/store/AASDataStore'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
+import { usesSubmodelSuperpath } from '@/utils/InfrastructureUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
 
 export function useSMRepositoryClient () {
   // Stores
   const infrastructureStore = useInfrastructureStore()
+  const aasStore = useAASStore()
 
   // Composables
   const {
@@ -23,6 +26,7 @@ export function useSMRepositoryClient () {
   const { generateUUIDFromString } = useIDUtils()
 
   const endpointPath = '/submodels'
+  const aasEndpointPath = '/shells'
 
   function ensureWriteSuccess (response: any): boolean {
     return response?.success === true
@@ -30,6 +34,81 @@ export function useSMRepositoryClient () {
 
   // Computed Properties
   const submodelRepoUrl = computed(() => infrastructureStore.getSubmodelRepoURL)
+  const aasRepositoryUrl = computed(() => infrastructureStore.getAASRepoURL)
+  const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
+
+  function shouldUseAasSuperpath (): boolean {
+    return usesSubmodelSuperpath(selectedInfrastructure.value)
+  }
+
+  function getAasEndpointById (aasId: string): string {
+    const failResponse = ''
+
+    if (!aasId) {
+      return failResponse
+    }
+
+    aasId = aasId.trim()
+
+    if (aasId === '') {
+      return failResponse
+    }
+
+    let aasRepoUrl = aasRepositoryUrl.value.trim()
+    if (aasRepoUrl === '') {
+      return failResponse
+    }
+    if (aasRepoUrl.endsWith('/')) {
+      aasRepoUrl = stripLastCharacter(aasRepoUrl)
+    }
+    if (!aasRepoUrl.endsWith(aasEndpointPath)) {
+      aasRepoUrl += aasEndpointPath
+    }
+
+    return aasRepoUrl + '/' + base64Encode(aasId)
+  }
+
+  function getAasEndpointForSubmodel (aasId?: string): string {
+    const selectedAas = aasStore.getSelectedAAS
+    const selectedAasId = typeof selectedAas?.id === 'string' ? selectedAas.id.trim() : ''
+    const effectiveAasId = aasId?.trim() || selectedAasId
+
+    if (effectiveAasId === '') {
+      return ''
+    }
+
+    if (
+      selectedAasId === effectiveAasId
+      && typeof selectedAas?.path === 'string'
+      && selectedAas.path.trim() !== ''
+    ) {
+      return selectedAas.path.trim()
+    }
+
+    return getAasEndpointById(effectiveAasId)
+  }
+
+  function getSuperpathSmEndpointById (smId: string, aasId?: string): string {
+    const failResponse = ''
+
+    if (!smId) {
+      return failResponse
+    }
+
+    smId = smId.trim()
+
+    if (smId === '') {
+      return failResponse
+    }
+
+    const aasEndpoint = getAasEndpointForSubmodel(aasId)
+    if (aasEndpoint === '') {
+      return failResponse
+    }
+
+    const normalizedAasEndpoint = aasEndpoint.endsWith('/') ? stripLastCharacter(aasEndpoint) : aasEndpoint
+    return normalizedAasEndpoint + endpointPath + '/' + base64Encode(smId)
+  }
 
   /**
    * Fetches a list of all available Submodels (SMs).
@@ -75,7 +154,7 @@ export function useSMRepositoryClient () {
    * @param {string} smId - The ID of the SM to fetch.
    * @returns {Promise<any>} A promise that resolves to a SM.
    */
-  async function fetchSmById (smId: string): Promise<any> {
+  async function fetchSmById (smId: string, aasId?: string): Promise<any> {
     const failResponse = {} as any
 
     if (!smId) {
@@ -88,7 +167,7 @@ export function useSMRepositoryClient () {
       return failResponse
     }
 
-    const smEndpoint = getSmEndpointById(smId)
+    const smEndpoint = getSmEndpointById(smId, aasId)
 
     if (smEndpoint && smEndpoint.trim() !== '') {
       return fetchSm(smEndpoint.trim())
@@ -351,7 +430,7 @@ export function useSMRepositoryClient () {
    * @param {string} smId - The ID of the SM to retrieve the endpoint for.
    * @returns {string} The SM endpoint.
    */
-  function getSmEndpointById (smId: string): string {
+  function getSmEndpointById (smId: string, aasId?: string): string {
     const failResponse = ''
 
     if (!smId) {
@@ -362,6 +441,10 @@ export function useSMRepositoryClient () {
 
     if (smId === '') {
       return failResponse
+    }
+
+    if (shouldUseAasSuperpath()) {
+      return getSuperpathSmEndpointById(smId, aasId)
     }
 
     let smRepoUrl = submodelRepoUrl.value.trim()
@@ -380,8 +463,29 @@ export function useSMRepositoryClient () {
     return smEndpoint || failResponse
   }
 
-  async function postSubmodel (submodel: aasTypes.Submodel, suppressRequestErrorMessage = false): Promise<boolean> {
+  async function postSubmodel (
+    submodel: aasTypes.Submodel,
+    suppressRequestErrorMessage = false,
+    aasId?: string,
+  ): Promise<boolean> {
     const failResponse = false
+
+    if (shouldUseAasSuperpath()) {
+      const path = getSuperpathSmEndpointById(submodel.id, aasId)
+      if (path === '') {
+        return failResponse
+      }
+
+      const jsonSubmodel = jsonization.toJsonable(submodel)
+      const context = 'creating Submodel via AAS superpath'
+      const disableMessage = suppressRequestErrorMessage
+      const headers = new Headers()
+      headers.append('Content-Type', 'application/json')
+      const body = JSON.stringify(jsonSubmodel)
+
+      const response = await putRequest(path, body, headers, context, disableMessage)
+      return response.success
+    }
 
     let smRepoUrl = submodelRepoUrl.value.trim()
     if (smRepoUrl === '') {
@@ -409,8 +513,29 @@ export function useSMRepositoryClient () {
     return response.success
   }
 
-  async function putSubmodel (submodel: aasTypes.Submodel, suppressRequestErrorMessage = false): Promise<boolean> {
+  async function putSubmodel (
+    submodel: aasTypes.Submodel,
+    suppressRequestErrorMessage = false,
+    aasId?: string,
+  ): Promise<boolean> {
     const failResponse = false
+
+    if (shouldUseAasSuperpath()) {
+      const path = getSuperpathSmEndpointById(submodel.id, aasId)
+      if (path === '') {
+        return failResponse
+      }
+
+      const jsonSubmodel = jsonization.toJsonable(submodel)
+      const context = 'updating Submodel via AAS superpath'
+      const disableMessage = suppressRequestErrorMessage
+      const headers = new Headers()
+      headers.append('Content-Type', 'application/json')
+      const body = JSON.stringify(jsonSubmodel)
+
+      const response = await putRequest(path, body, headers, context, disableMessage)
+      return response.success
+    }
 
     let smRepoUrl = submodelRepoUrl.value.trim()
     if (smRepoUrl === '') {
@@ -445,7 +570,7 @@ export function useSMRepositoryClient () {
    * @param {string} submodelId - The ID of the Submodel to delete.
    * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
    */
-  async function deleteSubmodelById (submodelId: string): Promise<boolean> {
+  async function deleteSubmodelById (submodelId: string, aasId?: string): Promise<boolean> {
     const failResponse = false
 
     if (!submodelId) {
@@ -458,7 +583,7 @@ export function useSMRepositoryClient () {
       return failResponse
     }
 
-    const smEndpoint = getSmEndpointById(submodelId)
+    const smEndpoint = getSmEndpointById(submodelId, aasId)
 
     if (smEndpoint && smEndpoint.trim() !== '') {
       const path = smEndpoint
@@ -503,8 +628,27 @@ export function useSMRepositoryClient () {
     submodelId: string,
     idShortPath?: string,
     suppressRequestErrorMessage = false,
+    aasId?: string,
   ): Promise<boolean> {
     const failResponse = false
+
+    if (shouldUseAasSuperpath()) {
+      const smEndpoint = getSuperpathSmEndpointById(submodelId, aasId)
+      if (smEndpoint === '') {
+        return failResponse
+      }
+
+      const jsonSubmodelElement = jsonization.toJsonable(submodelElement)
+      const context = 'creating Submodel Element via AAS superpath'
+      const disableMessage = suppressRequestErrorMessage
+      const path = smEndpoint + '/submodel-elements' + (idShortPath ? '/' + idShortPath : '')
+      const headers = new Headers()
+      headers.append('Content-Type', 'application/json')
+      const body = JSON.stringify(jsonSubmodelElement)
+
+      const response = await postRequest(path, body, headers, context, disableMessage)
+      return ensureWriteSuccess(response)
+    }
 
     let smRepoUrl = submodelRepoUrl.value.trim()
     if (smRepoUrl === '') {

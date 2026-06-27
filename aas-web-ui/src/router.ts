@@ -18,6 +18,7 @@ import { useAASStore } from '@/store/AASDataStore'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { useNavigationStore } from '@/store/NavigationStore'
+import { supportsInfrastructureTemplate } from '@/utils/InfrastructureUtils'
 import {
   buildValidatedModuleChildRoutes,
   type ModuleRouteManifest,
@@ -170,6 +171,7 @@ async function generateModuleRoutes (): Promise<Array<RouteRecordRaw>> {
     const isOnlyVisibleWithSelectedAas = moduleComponent.default?.isOnlyVisibleWithSelectedAas ?? false
     const isOnlyVisibleWithSelectedNode = moduleComponent.default?.isOnlyVisibleWithSelectedNode ?? false
     const visibleOnRoutes = moduleComponent.default?.visibleOnRoutes ?? []
+    const supportedInfrastructureTemplates = moduleComponent.default?.supportedInfrastructureTemplates ?? []
     let preserveRouteQuery = moduleComponent.default?.preserveRouteQuery ?? false
 
     // Overwrite preserveRouteQuery
@@ -187,6 +189,7 @@ async function generateModuleRoutes (): Promise<Array<RouteRecordRaw>> {
       isOnlyVisibleWithSelectedAas,
       isOnlyVisibleWithSelectedNode,
       visibleOnRoutes,
+      supportedInfrastructureTemplates,
       preserveRouteQuery,
     }
 
@@ -339,6 +342,14 @@ export async function createAppRouter (): Promise<Router> {
     // Module constraints / visibility
     const meta = (record.meta || {}) as Record<string, unknown>
     if (meta.isVisibleModule === false) {
+      return 'AASViewer'
+    }
+    if (
+      !supportsInfrastructureTemplate(
+        meta.supportedInfrastructureTemplates,
+        infrastructureStore.getSelectedInfrastructure,
+      )
+    ) {
       return 'AASViewer'
     }
     if (meta.isOnlyVisibleWithSelectedAas && (!query || !Object.hasOwn(query, 'aas') || !String(query.aas).trim())) {
@@ -860,6 +871,15 @@ export async function createAppRouter (): Promise<Router> {
     const singleRoute = handleSingleAasAndSingleSmRouting(to)
     if (singleRoute !== null) {
       return singleRoute
+    }
+
+    if (
+      !supportsInfrastructureTemplate(
+        to.meta?.supportedInfrastructureTemplates,
+        infrastructureStore.getSelectedInfrastructure,
+      )
+    ) {
+      return { name: 'AASViewer', replace: true }
     }
 
     const deviceRoute = handleDeviceRouting(to)

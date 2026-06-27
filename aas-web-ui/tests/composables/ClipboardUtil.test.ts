@@ -16,6 +16,7 @@ const mockDeps = vi.hoisted(() => ({
   dispatchTriggerTreeviewReload: vi.fn(),
   postSubmodel: vi.fn().mockResolvedValue(true),
   postSubmodelElement: vi.fn().mockResolvedValue(true),
+  getSmEndpointById: vi.fn(),
   putAas: vi.fn().mockResolvedValue(true),
   generateIri: vi.fn(() => 'https://example.com/ids/sm/new-id'),
   dispatchSelectedAAS: vi.fn(),
@@ -56,6 +57,7 @@ vi.mock('@/composables/Client/SMRepositoryClient', () => ({
   useSMRepositoryClient: () => ({
     postSubmodel: mockDeps.postSubmodel,
     postSubmodelElement: mockDeps.postSubmodelElement,
+    getSmEndpointById: mockDeps.getSmEndpointById,
   }),
 }))
 
@@ -81,6 +83,9 @@ describe('ClipboardUtil.ts', () => {
     mockState.selectedAAS = { submodels: [] }
     mockState.submodelRepoUrl = 'https://example.test/submodels'
     mockState.clipboardContent = undefined
+    mockDeps.getSmEndpointById.mockImplementation(
+      (submodelId: string) => `${mockState.submodelRepoUrl}/${base64Encode(submodelId)}`,
+    )
   })
 
   it('cleans tree augmentation fields and restores children structure for submodels/collections/entities', () => {

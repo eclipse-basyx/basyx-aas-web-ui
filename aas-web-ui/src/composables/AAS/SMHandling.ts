@@ -195,6 +195,7 @@ export function useSMHandling () {
     smId: string,
     withConceptDescriptions = false,
     setDataFlag = false,
+    aasId?: string,
   ): Promise<any> {
     const failResponse = {}
 
@@ -208,7 +209,7 @@ export function useSMHandling () {
       return failResponse
     }
 
-    const smEndpoint = await getSmEndpointById(smId)
+    const smEndpoint = await getSmEndpointById(smId, aasId)
 
     return smEndpoint && smEndpoint.trim() !== ''
       ? fetchSm(smEndpoint.trim(), withConceptDescriptions, setDataFlag)
@@ -222,7 +223,7 @@ export function useSMHandling () {
    * @param {string} smId - The ID of the Submodel to delete.
    * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
    */
-  async function deleteSmById (smId: string): Promise<boolean> {
+  async function deleteSmById (smId: string, aasId?: string): Promise<boolean> {
     const failResponse = false
 
     if (!smId) {
@@ -235,7 +236,7 @@ export function useSMHandling () {
       return failResponse
     }
 
-    const smEndpoint = await getSmEndpointById(smId)
+    const smEndpoint = await getSmEndpointById(smId, aasId)
     if (smEndpoint && smEndpoint.trim() !== '') {
       return await deleteSm(smEndpoint.trim())
     }
@@ -277,7 +278,7 @@ export function useSMHandling () {
    * @param {string} smId - The ID of the SM to retrieve the endpoint for.
    * @returns {Promise<string>} A promise that resolves to an SM endpoint.
    */
-  async function getSmEndpointById (smId: string): Promise<string> {
+  async function getSmEndpointById (smId: string, aasId?: string): Promise<string> {
     const failResponse = ''
 
     if (!smId) {
@@ -298,7 +299,7 @@ export function useSMHandling () {
     }
 
     // Second try to determine SM endpoint with the help of the repo
-    smEndpoint = getSmEndpointByIdFromRepo(smId)
+    smEndpoint = getSmEndpointByIdFromRepo(smId, aasId)
 
     return smEndpoint.trim() || failResponse
   }

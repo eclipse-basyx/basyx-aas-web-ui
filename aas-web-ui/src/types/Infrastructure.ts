@@ -6,6 +6,11 @@ import type { BaSyxComponentKey } from '@/types/BaSyx'
 export type SecurityType = 'No Authentication' | 'Basic Authentication' | 'Bearer Token' | 'OAuth2'
 
 /**
+ * Supported infrastructure topology templates
+ */
+export type InfrastructureTemplate = 'full' | 'identifiable' | 'mono-repo' | 'mono-all' | 'catena-x'
+
+/**
  * Basic authentication credentials
  */
 export interface BasicAuthData {
@@ -68,6 +73,7 @@ export interface ComponentConfig {
 export interface InfrastructureConfig {
   id: string
   name: string
+  template: InfrastructureTemplate
   isDefault?: boolean
   auth?: InfrastructureAuth
   token?: TokenData
@@ -183,6 +189,7 @@ export interface YamlSecurityConfig {
  */
 export interface YamlInfrastructureConfig {
   name?: string
+  template?: InfrastructureTemplate | string
   components: {
     aasDiscovery?: YamlComponentConfig
     aasRegistry?: YamlComponentConfig
@@ -190,6 +197,9 @@ export interface YamlInfrastructureConfig {
     aasRepository?: YamlComponentConfig
     submodelRepository?: YamlComponentConfig
     conceptDescriptionRepository?: YamlComponentConfig
+    aasEnvironment?: YamlComponentConfig
+    digitalTwinRegistry?: YamlComponentConfig
+    submodelService?: YamlComponentConfig
   }
   security: YamlSecurityConfig
 }

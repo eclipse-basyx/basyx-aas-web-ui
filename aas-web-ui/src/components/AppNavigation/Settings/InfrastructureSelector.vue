@@ -32,6 +32,7 @@
   import { useRouter } from 'vue-router'
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
+  import { getActiveComponentKeys } from '@/utils/InfrastructureUtils'
 
   // Stores
   const infrastructureStore = useInfrastructureStore()
@@ -47,6 +48,7 @@
   // Computed Properties
   const infrastructures = computed(() => infrastructureStore.getInfrastructures)
   const basyxComponents = computed(() => infrastructureStore.getBasyxComponents)
+  const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
   const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable)
 
   // Local State
@@ -62,7 +64,8 @@
 
   // Compute connection status based on connected components
   const connectionStatus = computed(() => {
-    const components = Object.values(basyxComponents.value)
+    const activeKeys = getActiveComponentKeys(selectedInfrastructure.value)
+    const components = activeKeys.map(key => basyxComponents.value[key])
     const connectedCount = components.filter(comp => comp.connected === true).length
     const hasFailures = components.some(comp => comp.connected === false)
     const hasUnknown = components.some(comp => comp.connected === null)

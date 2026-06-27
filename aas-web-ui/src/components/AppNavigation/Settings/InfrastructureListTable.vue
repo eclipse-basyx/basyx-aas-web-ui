@@ -34,7 +34,10 @@
             </td>
 
             <td>
-              <span class="text-body-small opacity-60">{{ getInfrastructureSummary(infra) }}</span>
+              <div class="d-flex flex-column">
+                <span class="text-body-small">{{ getInfrastructureTemplateDefinition(infra).label }}</span>
+                <span class="text-body-small opacity-60">{{ getInfrastructureSummary(infra) }}</span>
+              </div>
             </td>
 
             <td style="width: 120px">
@@ -75,7 +78,7 @@
 <script lang="ts" setup>
   import type { InfrastructureConfig } from '@/types/Infrastructure'
   import { computed } from 'vue'
-  import { getInfrastructureSummary } from '@/utils/InfrastructureUtils'
+  import { getInfrastructureSummary, getInfrastructureTemplateDefinition } from '@/utils/InfrastructureUtils'
 
   // Props
   const props = defineProps<{

@@ -44,6 +44,7 @@
   import { Endpoint, ProtocolInformation } from '@/types/Descriptors'
   import { getCreatedSubmodelElementPath, isDataElementModelType } from '@/utils/AAS/SubmodelElementPathUtils'
   import { base64Decode } from '@/utils/EncodeDecodeUtils'
+  import { isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
 
   const props = defineProps<{
     modelValue: boolean
@@ -87,8 +88,13 @@
   // Computed Properties
   const selectedAAS = computed(() => aasStore.getSelectedAAS) // Get the selected AAS from Store
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
+  const submodelRegistryActive = computed(() =>
+    isComponentActiveForTemplate(selectedInfrastructure.value, 'SubmodelRegistry'),
+  )
   const submodelRepoHasRegistryIntegration = computed(
-    () => selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true,
+    () =>
+      !submodelRegistryActive.value
+      || (selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true),
   )
 
   watch(
