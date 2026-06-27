@@ -3,4 +3,3 @@
 /// <reference types="leaflet" />
 
 declare module 'qrcode'
-declare module 'js-yaml'
