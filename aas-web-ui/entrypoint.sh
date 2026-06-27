@@ -30,6 +30,8 @@
 : "${SINGLE_AAS:=false}"
 : "${SINGLE_AAS_REDIRECT:=}"
 : "${SM_VIEWER_EDITOR:=true}"
+: "${SINGLE_SM:=false}"
+: "${SINGLE_SM_REDIRECT:=}"
 : "${ALLOW_EDITING:=true}"
 : "${ALLOW_UPLOADING:=true}"
 : "${ALLOW_LOGOUT:=true}"
@@ -58,10 +60,10 @@ if [ -f "$YAML_CONFIG_PATH" ]; then
     echo "Processing infrastructure configuration"
     echo "========================================="
     echo "YAML config found at: $YAML_CONFIG_PATH"
-    
+
     # Create config directory if it doesn't exist
     mkdir -p "$CONFIG_OUTPUT_DIR"
-    
+
     # Copy YAML file to config directory (will be parsed by the application)
     if cp "$YAML_CONFIG_PATH" "$YAML_OUTPUT_PATH"; then
         echo "Successfully copied YAML configuration"
@@ -160,6 +162,8 @@ printf "%-38s %s\n" "Endpoint config available:" "$ENDPOINT_CONFIG_AVAILABLE"
 printf "%-38s %s\n" "Single AAS:" "$SINGLE_AAS"
 printf "%-38s %s\n" "Single AAS redirect:" "$SINGLE_AAS_REDIRECT"
 printf "%-38s %s\n" "SM Viewer/Editor:" "$SM_VIEWER_EDITOR"
+printf "%-38s %s\n" "Single SM:" "$SINGLE_SM"
+printf "%-38s %s\n" "Single SM redirect:" "$SINGLE_SM_REDIRECT"
 printf "%-38s %s\n" "Allow editing:" "$ALLOW_EDITING"
 printf "%-38s %s\n" "Allow uploading:" "$ALLOW_UPLOADING"
 printf "%-38s %s\n" "Allow logout:" "$ALLOW_LOGOUT"
@@ -202,6 +206,8 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__SINGLE_AAS_PLACEHOLDER__/|$SINGLE_AAS|g" \
     -e "s|/__SINGLE_AAS_REDIRECT_PLACEHOLDER__/|$SINGLE_AAS_REDIRECT|g" \
     -e "s|/__SM_VIEWER_EDITOR_PLACEHOLDER__/|$SM_VIEWER_EDITOR|g" \
+    -e "s|/__SINGLE_SM_PLACEHOLDER__/|$SINGLE_SM|g" \
+    -e "s|/__SINGLE_SM_REDIRECT_PLACEHOLDER__/|$SINGLE_SM_REDIRECT|g" \
     -e "s|/__ALLOW_EDITING_PLACEHOLDER__/|$ALLOW_EDITING|g" \
     -e "s|/__ALLOW_UPLOADING_PLACEHOLDER__/|$ALLOW_UPLOADING|g" \
     -e "s|/__ALLOW_LOGOUT_PLACEHOLDER__/|$ALLOW_LOGOUT|g" \

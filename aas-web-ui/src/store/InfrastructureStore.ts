@@ -13,6 +13,7 @@ import { useInfrastructureStorage } from '@/composables/Infrastructure/useInfras
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useNavigationStore } from '@/store/NavigationStore'
+import { getActiveComponentKeys, isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
 
 export const useInfrastructureStore = defineStore('infrastructureStore', () => {
@@ -139,12 +140,24 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     return infrastructures.value.find(infra => infra.id === selectedInfrastructureId.value) || null
   })
   const getOpenInfrastructureEditMode = computed(() => openInfrastructureEditMode.value)
-  const getAASDiscoveryURL = computed(() => AASDiscoveryURL.value)
-  const getAASRegistryURL = computed(() => AASRegistryURL.value)
-  const getSubmodelRegistryURL = computed(() => SubmodelRegistryURL.value)
-  const getAASRepoURL = computed(() => AASRepoURL.value)
-  const getSubmodelRepoURL = computed(() => SubmodelRepoURL.value)
-  const getConceptDescriptionRepoURL = computed(() => ConceptDescriptionRepoURL.value)
+  function getActiveComponentUrl (componentKey: BaSyxComponentKey, url: string): string {
+    const selectedInfra = getSelectedInfrastructure.value
+    if (!selectedInfra) {
+      return url
+    }
+    return isComponentActiveForTemplate(selectedInfra, componentKey) ? url : ''
+  }
+
+  const getAASDiscoveryURL = computed(() => getActiveComponentUrl('AASDiscovery', AASDiscoveryURL.value))
+  const getAASRegistryURL = computed(() => getActiveComponentUrl('AASRegistry', AASRegistryURL.value))
+  const getSubmodelRegistryURL = computed(() =>
+    getActiveComponentUrl('SubmodelRegistry', SubmodelRegistryURL.value),
+  )
+  const getAASRepoURL = computed(() => getActiveComponentUrl('AASRepo', AASRepoURL.value))
+  const getSubmodelRepoURL = computed(() => getActiveComponentUrl('SubmodelRepo', SubmodelRepoURL.value))
+  const getConceptDescriptionRepoURL = computed(() =>
+    getActiveComponentUrl('ConceptDescriptionRepo', ConceptDescriptionRepoURL.value),
+  )
   const getBasyxComponents = computed(() => basyxComponents)
   const getIsAuthenticating = computed(() => isAuthenticating.value)
   const getIsTestingConnections = computed(() => isTestingConnections.value)
@@ -351,15 +364,14 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
       saveInfrastructuresToStorage()
 
-      // If this is the selected infrastructure, update the URL refs
-      // if (selectedInfrastructureId.value === infrastructure.id) {
-      //     AASDiscoveryURL.value = infrastructure.components.AASDiscovery.url;
-      //     AASRegistryURL.value = infrastructure.components.AASRegistry.url;
-      //     SubmodelRegistryURL.value = infrastructure.components.SubmodelRegistry.url;
-      //     AASRepoURL.value = infrastructure.components.AASRepo.url;
-      //     SubmodelRepoURL.value = infrastructure.components.SubmodelRepo.url;
-      //     ConceptDescriptionRepoURL.value = infrastructure.components.ConceptDescriptionRepo.url;
-      // }
+      if (selectedInfrastructureId.value === infrastructure.id) {
+        AASDiscoveryURL.value = infrastructure.components.AASDiscovery.url
+        AASRegistryURL.value = infrastructure.components.AASRegistry.url
+        SubmodelRegistryURL.value = infrastructure.components.SubmodelRegistry.url
+        AASRepoURL.value = infrastructure.components.AASRepo.url
+        SubmodelRepoURL.value = infrastructure.components.SubmodelRepo.url
+        ConceptDescriptionRepoURL.value = infrastructure.components.ConceptDescriptionRepo.url
+      }
     }
   }
 
@@ -512,7 +524,15 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       return
     }
 
+    const activeKeys = getActiveComponentKeys(selectedInfra)
+
     for (const repoKey of keys) {
+      if (!activeKeys.includes(repoKey)) {
+        basyxComponents[repoKey].connected = null
+        basyxComponents[repoKey].loading = false
+        continue
+      }
+
       // Use URL from the selected infrastructure
       const infraUrl = selectedInfra.components[repoKey]?.url || ''
 
@@ -637,6 +657,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     ) {
       const keycloakFeatureControlRolePrefix = envStore.getKeycloakFeatureControlRolePrefix
       type KeycloakFeatureSetter = 'setSingleAas'
+        | 'setSingleSm'
         | 'setSmViewerEditor'
         | 'setAllowEditing'
         | 'setAllowUploading'
@@ -660,6 +681,12 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
           feature: 'SM_VIEWER_EDITOR',
           setFunction: 'setSmViewerEditor',
           setValue: 'true',
+        },
+        {
+          keycloakRole: keycloakFeatureControlRolePrefix + 'multiple-sm',
+          feature: 'SINGLE_SM',
+          setFunction: 'setSingleSm',
+          setValue: 'false',
         },
         {
           keycloakRole: keycloakFeatureControlRolePrefix + 'allow-editing',

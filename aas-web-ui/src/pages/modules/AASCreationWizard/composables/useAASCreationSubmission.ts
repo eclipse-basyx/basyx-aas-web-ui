@@ -6,6 +6,8 @@ import type {
   TemplateElement } from '../types/template'
 import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
+import { useInfrastructureStore } from '@/store/InfrastructureStore'
+import { usesSubmodelSuperpath } from '@/utils/InfrastructureUtils'
 import { buildAssetAdministrationShell } from '../builders/buildAssetAdministrationShell'
 import { useAASCreationStore } from '../stores/aasCreationForm'
 import digitalNameplateTemplate from '../templates/digital-nameplate.json'
@@ -57,10 +59,12 @@ function getSubmodelId (submodelData: unknown): string | null {
 export function useAASCreationSubmission () {
   const { postAas, putThumbnail } = useAASRepositoryClient()
   const { postSubmodel, getSmEndpointById, putAttachmentFile } = useSMRepositoryClient()
+  const infrastructureStore = useInfrastructureStore()
   const store = useAASCreationStore()
 
   async function postBuiltSubmodel (
     submodelData: unknown,
+    aasId?: string,
   ): Promise<boolean> {
     try {
       const submodelParseResult = jsonization.submodelFromJsonable(submodelData as any)
@@ -70,7 +74,7 @@ export function useAASCreationSubmission () {
       }
       const submodelInstance = submodelParseResult.mustValue()
 
-      const submodelSuccess = await postSubmodel(submodelInstance)
+      const submodelSuccess = await postSubmodel(submodelInstance, false, aasId)
 
       if (!submodelSuccess) {
         return false
@@ -78,6 +82,37 @@ export function useAASCreationSubmission () {
       return true
     } catch (error) {
       window.alert(`There was an error creating submodel: ${String(error)}`)
+      return false
+    }
+  }
+
+  async function postBuiltAas (
+    builtAas: ReturnType<typeof buildAssetAdministrationShell>,
+    thumbnailFile?: File | null,
+  ): Promise<boolean> {
+    try {
+      const aasParseResult = jsonization.assetAdministrationShellFromJsonable(builtAas as any)
+      if (aasParseResult.error !== null) {
+        return false
+      }
+      const aasInstance = aasParseResult.mustValue()
+
+      const success = await postAas(aasInstance)
+
+      if (!success) {
+        return false
+      }
+      if (thumbnailFile) {
+        const thumbnailSuccess = await putThumbnail(thumbnailFile, builtAas.id)
+
+        if (!thumbnailSuccess) {
+          return false
+        }
+      }
+
+      return true
+    } catch (error) {
+      window.alert(`There was an error creating aas: ${String(error)}`)
       return false
     }
   }
@@ -106,9 +141,21 @@ export function useAASCreationSubmission () {
       return { success: false }
     }
 
+    const builtAas = buildAssetAdministrationShell(assetData, digitalNameplate, technicalData, handoverDocumentation)
+    const useSuperpath = usesSubmodelSuperpath(infrastructureStore.getSelectedInfrastructure)
+    const aasIdForSubmodelSuperpath = useSuperpath ? builtAas.id : undefined
+
+    if (useSuperpath) {
+      const aasSuccess = await postBuiltAas(builtAas, assetData.thumbnailFile)
+      if (!aasSuccess) {
+        return { success: false }
+      }
+    }
+
     // build digital nameplate
     const digitalNameplateSuccess = await postBuiltSubmodel(
       digitalNameplate,
+      aasIdForSubmodelSuperpath,
     )
     if (!digitalNameplateSuccess) {
       return { success: false }
@@ -117,6 +164,7 @@ export function useAASCreationSubmission () {
       digitalNameplateId,
       digitalNameplateTemplateData.submodelElements,
       store.digitalNameplateFormState,
+      aasIdForSubmodelSuperpath,
     )
 
     if (!digitalNameplateFilesSuccess) {
@@ -125,6 +173,7 @@ export function useAASCreationSubmission () {
     // build technical data
     const technicalDataSuccess = await postBuiltSubmodel(
       technicalData,
+      aasIdForSubmodelSuperpath,
     )
     if (!technicalDataSuccess) {
       return { success: false }
@@ -134,6 +183,7 @@ export function useAASCreationSubmission () {
       technicalDataId,
       technicalDataTemplateData.submodelElements,
       store.technicalDataFormState,
+      aasIdForSubmodelSuperpath,
     )
 
     if (!technicalDataFilesSuccess) {
@@ -143,6 +193,7 @@ export function useAASCreationSubmission () {
     // build handover documentation
     const handoverDocumentationSuccess = await postBuiltSubmodel(
       handoverDocumentation,
+      aasIdForSubmodelSuperpath,
     )
     if (!handoverDocumentationSuccess) {
       return { success: false }
@@ -151,43 +202,24 @@ export function useAASCreationSubmission () {
       handoverDocumentationId,
       handoverDocumentationTemplateData.submodelElements,
       store.handoverDocumentationFormState,
+      aasIdForSubmodelSuperpath,
     )
 
     if (!handoverDocumentationFilesSuccess) {
       return { success: false }
     }
 
-    // post the aas with submodels
-    const builtAas = buildAssetAdministrationShell(assetData, digitalNameplate, technicalData, handoverDocumentation)
-
-    try {
-      const aasParseResult = jsonization.assetAdministrationShellFromJsonable(builtAas as any)
-      if (aasParseResult.error !== null) {
+    if (!useSuperpath) {
+      const aasSuccess = await postBuiltAas(builtAas, assetData.thumbnailFile)
+      if (!aasSuccess) {
         return { success: false }
       }
-      const aasInstance = aasParseResult.mustValue()
+    }
 
-      const success = await postAas(aasInstance)
-
-      if (!success) {
-        return { success: false }
-      }
-      if (assetData.thumbnailFile) {
-        const thumbnailSuccess = await putThumbnail(assetData.thumbnailFile, builtAas.id)
-
-        if (!thumbnailSuccess) {
-          return { success: false }
-        }
-      }
-
-      return {
-        success: true,
-        aasId: builtAas.id,
-        submodelIdToOpen: handoverDocumentationId,
-      }
-    } catch (error) {
-      window.alert(`There was an error creating aas: ${String(error)}`)
-      return { success: false }
+    return {
+      success: true,
+      aasId: builtAas.id,
+      submodelIdToOpen: handoverDocumentationId,
     }
   }
 
@@ -195,12 +227,13 @@ export function useAASCreationSubmission () {
     submodelId: string,
     elements: TemplateElement[],
     formState: FormStateObject | null,
+    aasId?: string,
   ): Promise<boolean> {
     const fileTasks = collectSubmodelFileUploadTasks(
       submodelId,
       elements,
       formState,
-      getSmEndpointById,
+      id => getSmEndpointById(id, aasId),
     )
 
     for (const task of fileTasks) {

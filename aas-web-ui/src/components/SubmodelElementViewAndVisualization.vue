@@ -57,10 +57,11 @@
 
         <v-empty-state
           v-else-if="
-            !['SMViewer', 'SMEditor'].includes(route.name as string) &&
+            ['AASViewer', 'AASEditor', 'AASSubmodelViewer'].includes(route.name as string) &&
               (!selectedAAS || Object.keys(selectedAAS).length === 0)
           "
           class="text-divider"
+          text="Select an AAS to view its Submodels and Submodel Elements"
           title="No selected AAS"
         />
 

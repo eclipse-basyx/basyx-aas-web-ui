@@ -240,6 +240,7 @@
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { Endpoint, ProtocolInformation } from '@/types/Descriptors'
+  import { isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
 
   const props = defineProps<{
     modelValue: boolean
@@ -307,11 +308,22 @@
   // Computed Properties
   const selectedAAS = computed(() => aasStore.getSelectedAAS) // Get the selected AAS from Store
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
+  const aasRegistryActive = computed(() =>
+    isComponentActiveForTemplate(selectedInfrastructure.value, 'AASRegistry'),
+  )
+  const aasDiscoveryActive = computed(() =>
+    isComponentActiveForTemplate(selectedInfrastructure.value, 'AASDiscovery'),
+  )
   const aasRepoHasRegistryIntegration = computed(
-    () => selectedInfrastructure.value?.components?.AASRepo?.hasRegistryIntegration ?? true,
+    () =>
+      !aasRegistryActive.value
+      || (selectedInfrastructure.value?.components?.AASRepo?.hasRegistryIntegration ?? true),
   )
   const aasRegistryHasDiscoveryIntegration = computed(
-    () => selectedInfrastructure.value?.components?.AASRegistry?.hasDiscoveryIntegration ?? true,
+    () =>
+      !aasRegistryActive.value
+      || !aasDiscoveryActive.value
+      || (selectedInfrastructure.value?.components?.AASRegistry?.hasDiscoveryIntegration ?? true),
   )
   const bordersToShow = computed(() => (panel: number) => {
     let border = ''

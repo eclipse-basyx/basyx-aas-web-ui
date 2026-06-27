@@ -375,6 +375,8 @@
       'Visualization',
       'AASEditor',
       'AASSubmodelViewer',
+      'SMViewer',
+      'SMEditor',
       'AASCommander',
     ].includes(route.name as string)
   })

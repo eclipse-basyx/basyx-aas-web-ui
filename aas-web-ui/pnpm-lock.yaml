@@ -30,8 +30,8 @@ importers:
         specifier: ^3.4.5
         version: 3.4.5(three@0.184.0)(web-ifc@0.0.77)
       '@thatopen/ui':
-        specifier: ^3.4.3
-        version: 3.4.3
+        specifier: ^3.4.5
+        version: 3.4.5
       '@thatopen/ui-obc':
         specifier: ^3.4.2
         version: 3.4.2(@thatopen/components-front@3.4.3(@thatopen/fragments@3.4.5(three@0.184.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.184.0))(three@0.184.0)(web-ifc@0.0.77))(@thatopen/components@3.4.6(@thatopen/fragments@3.4.5(three@0.184.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.184.0))(three@0.184.0)(web-ifc@0.0.77))(@thatopen/fragments@3.4.5(three@0.184.0)(web-ifc@0.0.77))(three@0.184.0)(web-ifc@0.0.77)
@@ -51,8 +51,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0
       apexcharts:
-        specifier: ^5.15.0
-        version: 5.15.0
+        specifier: ^5.15.2
+        version: 5.15.2
       basyx-typescript-sdk:
         specifier: ^2.2.4
         version: 2.2.4(@aas-core-works/aas-core3.1-typescript@1.0.1)
@@ -100,7 +100,7 @@ importers:
         version: 5.1.0(@vue/compiler-sfc@3.5.38)(pinia@3.0.4(typescript@6.0.3)(vue@3.5.38(typescript@6.0.3)))(vite@8.0.16(@types/node@26.0.0)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))(vue@3.5.38(typescript@6.0.3))
       vue3-apexcharts:
         specifier: ^1.11.1
-        version: 1.11.1(apexcharts@5.15.0)(vue@3.5.38(typescript@6.0.3))
+        version: 1.11.1(apexcharts@5.15.2)(vue@3.5.38(typescript@6.0.3))
       vuetify:
         specifier: ^4.1.2
         version: 4.1.2(typescript@6.0.3)(vite-plugin-vuetify@2.1.3)(vue@3.5.38(typescript@6.0.3))
@@ -171,6 +171,9 @@ importers:
       npm-run-all2:
         specifier: ^9.0.2
         version: 9.0.2
+      pnpm:
+        specifier: 11.9.0
+        version: 11.9.0
       sass-embedded:
         specifier: ^1.100.0
         version: 1.100.0
@@ -836,8 +839,8 @@ packages:
       three: '>=0.182.0'
       web-ifc: '>=0.0.77'
 
-  '@thatopen/ui@3.4.3':
-    resolution: {integrity: sha512-0H2SWb9YV8AwssZOzhox3Wc1FZz0TuWOiCUkmDT5gZJ9GChvI7akFL+rNsPZDDAiXV993nYgUeIhWnUfdX2EpQ==}
+  '@thatopen/ui@3.4.5':
+    resolution: {integrity: sha512-rXAnvQM/DKetebcvsZO+uptJilW0uWv3LVxCU/iWBHYsUrwu8PXG+w8tI8rc9NbgNZC7yxgvIKvFF3AojCXRqg==}
 
   '@tsconfig/node22@22.0.5':
     resolution: {integrity: sha512-hLf2ld+sYN/BtOJjHUWOk568dvjFQkHnLNa6zce25GIH+vxKfvTgm3qpaH6ToF5tu/NN0IH66s+Bb5wElHrLcw==}
@@ -1189,8 +1192,8 @@ packages:
     resolution: {integrity: sha512-4Dj6M28JB+oAH8kFkTLUo+a2jwOFkuqb3yucU0CANcRRUbxS0cP0nZYCGjcc3BNXwRIsUVmDGgzawme7zvJHvg==}
     engines: {node: '>=12'}
 
-  apexcharts@5.15.0:
-    resolution: {integrity: sha512-ATswoiZi8wynKcwqf0eyE0Is5mBQoDpxZN3PlSVy41OrD+9GMBp2kZQRjyGK+5/j0GFjHkuAd7GKOrt5VMoPrw==}
+  apexcharts@5.15.2:
+    resolution: {integrity: sha512-qbd+ehDiRxo++wAqaGLmJcd683ktulTqoku4WYYyQ3XOgJIn4yhOQGV27KcdK7c2yhwxblyh4mgMm8ukI0wC0Q==}
 
   are-docs-informative@0.0.2:
     resolution: {integrity: sha512-ixiS0nLNNG5jNQzgZJNoUpBKdo9yTYZMGJ+QgT2jmjR7G7+QHRCc4v6LQ3NgE7EBJq+o0ams3waJwkrlBom8Ig==}
@@ -2388,6 +2391,11 @@ packages:
 
   pnpm-workspace-yaml@1.6.1:
     resolution: {integrity: sha512-yTeZntGWi8m9WNuhoVsP0DpFc4sC1U0+rr/qR6Zi9n2g3sxXY+JfccjXjjruNz96tM8I09yaJUA86doRnNLkbg==}
+
+  pnpm@11.9.0:
+    resolution: {integrity: sha512-vWgtXQP+Ul73yf1ngMaITR51asTJyf4AxTh4KCQxDc+Q493E9Tg18G3669UIXkGFXgvLs7YN4qxburieUDbwOw==}
+    engines: {node: '>=22.13'}
+    hasBin: true
 
   postcss-selector-parser@7.1.1:
     resolution: {integrity: sha512-orRsuYpJVw8LdAwqqLykBj9ecS5/cRHlI5+nvTo8LcCKmzDmqVORXtOIYEEQuL9D4BxtA1lm5isAqzQZCoQ6Eg==}
@@ -3758,7 +3766,7 @@ snapshots:
   '@stylistic/eslint-plugin@5.10.0(eslint@10.5.0)':
     dependencies:
       '@eslint-community/eslint-utils': 4.9.1(eslint@10.5.0)
-      '@typescript-eslint/types': 8.61.0
+      '@typescript-eslint/types': 8.61.1
       eslint: 10.5.0
       eslint-visitor-keys: 4.2.1
       espree: 10.4.0
@@ -3809,12 +3817,12 @@ snapshots:
       '@thatopen/components': 3.4.6(@thatopen/fragments@3.4.5(three@0.184.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.184.0))(three@0.184.0)(web-ifc@0.0.77)
       '@thatopen/components-front': 3.4.3(@thatopen/fragments@3.4.5(three@0.184.0)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.184.0))(three@0.184.0)(web-ifc@0.0.77)
       '@thatopen/fragments': 3.4.5(three@0.184.0)(web-ifc@0.0.77)
-      '@thatopen/ui': 3.4.3
+      '@thatopen/ui': 3.4.5
       lit: 3.3.1
       three: 0.184.0
       web-ifc: 0.0.77
 
-  '@thatopen/ui@3.4.3':
+  '@thatopen/ui@3.4.5':
     dependencies:
       '@floating-ui/dom': 1.6.3
       chart.js: 4.5.1
@@ -4272,7 +4280,7 @@ snapshots:
 
   ansi-styles@6.2.3: {}
 
-  apexcharts@5.15.0: {}
+  apexcharts@5.15.2: {}
 
   are-docs-informative@0.0.2: {}
 
@@ -5436,6 +5444,8 @@ snapshots:
     dependencies:
       yaml: 2.9.0
 
+  pnpm@11.9.0: {}
+
   postcss-selector-parser@7.1.1:
     dependencies:
       cssesc: 3.0.0
@@ -6040,9 +6050,9 @@ snapshots:
       '@vue/language-core': 3.3.5
       typescript: 6.0.3
 
-  vue3-apexcharts@1.11.1(apexcharts@5.15.0)(vue@3.5.38(typescript@6.0.3)):
+  vue3-apexcharts@1.11.1(apexcharts@5.15.2)(vue@3.5.38(typescript@6.0.3)):
     dependencies:
-      apexcharts: 5.15.0
+      apexcharts: 5.15.2
       vue: 3.5.38(typescript@6.0.3)
 
   vue@3.5.38(typescript@6.0.3):

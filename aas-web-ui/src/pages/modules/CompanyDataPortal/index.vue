@@ -140,6 +140,7 @@
     inheritAttrs: false,
     isDesktopModule: true,
     isMobileModule: false,
+    supportedInfrastructureTemplates: ['mono-repo', 'mono-all'],
   })
 
   const model = ref(0)
