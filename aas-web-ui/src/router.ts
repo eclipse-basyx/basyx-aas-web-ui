@@ -540,8 +540,10 @@ export async function createAppRouter (): Promise<Router> {
     if (
       envStore.getSingleAas
       && (routesNeedingAasUrlQuery.has(to.name)
-        || (to.path.includes('/modules/') && to.meta.isOnlyVisibleWithSelectedAas))
-      && (!Object.hasOwn(to.query, 'aas') || (to.query.aas as string).trim() === '')
+        || (to.path.includes('/modules/')
+          && to.meta.isOnlyVisibleWithSelectedAas))
+        && (!Object.hasOwn(to.query, 'aas')
+          || (to.query.aas as string).trim() === '')
     ) {
       if (envStore.getSingleAasRedirect) {
         window.location.replace(envStore.getSingleAasRedirect)
@@ -568,45 +570,70 @@ export async function createAppRouter (): Promise<Router> {
     return null
   }
 
+  const handleMobileRouting = (to: any): { name: string, query?: any } | null => {
+    if (
+      routesForMobile.includes(to.name)
+      || routesStayOnPages.has(to.name)
+      || (to.path.includes('/modules/') && to.meta.isMobileModule)
+      || (to.name as string).startsWith('DPP')
+    ) {
+      return null
+    }
+
+    if (
+      routesOnlyDesktop.has(to.name)
+      || (to.path.includes('/modules/') && !to.meta.isMobileModule)
+    ) {
+      return { name: 'AASList', query: to.query }
+    }
+
+    return null
+  }
+
+  const handleSMRouting = (to: any): { name: string, query?: any } | null => {
+    if (['SMViewer', 'SMEditor'].includes(to.name as string)) {
+      if (smViewerEditor.value && to.name === 'SMEditor' && !allowEditing.value) {
+        return { name: 'SMViewer', query: to.query }
+      }
+      if (!smViewerEditor.value) {
+        return { name: (to.name as string).replace('SM', 'AAS'), query: to.query }
+      }
+    }
+    return null
+  }
+
+  const handleDesktopRouting = (to: any): { name: string, query?: any } | null => {
+    if (
+      routesForDesktop.includes(to.name)
+      || routesStayOnPages.has(to.name)
+      || (to.path.includes('/modules/') && to.meta.isDesktopModule)
+    ) {
+      const smResult = handleSMRouting(to)
+      if (smResult) {
+        return smResult
+      }
+
+      if (to.name === 'AASEditor' && !allowEditing.value) {
+        return { name: 'AASViewer', query: to.query }
+      }
+
+      return null
+    }
+    return null
+  }
+
   const handleDeviceRouting = (to: any): { name: string, query?: any } | false | null => {
     if (routesToVisualization.has(to.name)) {
       return { name: 'Visualization', query: to.query }
     }
 
     if (isMobile.value) {
-      if (
-        routesForMobile.includes(to.name)
-        || routesStayOnPages.has(to.name)
-        || (to.path.includes('/modules/') && to.meta.isMobileModule)
-      ) {
-        return null
-      }
-      if (
-        routesOnlyDesktop.has(to.name)
-        || (to.path.includes('/modules/') && !to.meta.isMobileModule)
-      ) {
-        return { name: 'AASList', query: to.query }
-      }
-      return null
+      return handleMobileRouting(to)
     }
 
-    if (
-      routesForDesktop.includes(to.name)
-      || routesStayOnPages.has(to.name)
-      || (to.path.includes('/modules/') && to.meta.isDesktopModule)
-    ) {
-      if (['SMViewer', 'SMEditor'].includes(to.name as string)) {
-        if (smViewerEditor.value && to.name === 'SMEditor' && !allowEditing.value) {
-          return { name: 'SMViewer', query: to.query }
-        }
-        if (!smViewerEditor.value) {
-          return { name: (to.name as string).replace('SM', 'AAS'), query: to.query }
-        }
-      }
-      if (to.name === 'AASEditor' && !allowEditing.value) {
-        return { name: 'AASViewer', query: to.query }
-      }
-      return null
+    const desktopResult = handleDesktopRouting(to)
+    if (desktopResult !== null) {
+      return desktopResult
     }
 
     if (
