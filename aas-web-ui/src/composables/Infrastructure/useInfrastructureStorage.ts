@@ -1,7 +1,14 @@
-import type { InfrastructureConfig, InfrastructureStorage, OAuth2ConnectionData } from '@/types/Infrastructure'
+import type {
+  ComponentConfig,
+  InfrastructureConfig,
+  InfrastructureStorage,
+  InfrastructureTemplate,
+  OAuth2ConnectionData,
+} from '@/types/Infrastructure'
 import { authenticateOAuth2ClientCredentials } from '@/composables/Auth/OAuth2Auth'
 import { useInfrastructureConfigLoader } from '@/composables/Infrastructure/useInfrastructureConfigLoader'
 import { useNavigationStore } from '@/store/NavigationStore'
+import { normalizeInfrastructureTemplate } from '@/utils/InfrastructureUtils'
 
 /**
  * Computes a simple hash of infrastructure configuration for change detection
@@ -11,6 +18,7 @@ function computeInfrastructureHash (infra: InfrastructureConfig): string {
   // Create stable string representation of configuration (excluding runtime fields)
   const configForHashing = {
     name: infra.name,
+    template: normalizeInfrastructureTemplate(infra.template),
     components: infra.components,
     auth: infra.auth,
     // Exclude: id (stable), token (runtime), isDefault (user preference), yamlConfigOutdated (runtime flag)
@@ -31,7 +39,7 @@ function computeInfrastructureHash (infra: InfrastructureConfig): string {
  */
 export function useInfrastructureStorage (): {
   generateInfrastructureId: () => string
-  createEmptyInfrastructure: (name?: string) => InfrastructureConfig
+  createEmptyInfrastructure: (name?: string, template?: InfrastructureTemplate) => InfrastructureConfig
   createDefaultInfrastructureFromEnv: (
     envConfig: {
       aasDiscoveryPath?: string
@@ -133,6 +141,55 @@ export function useInfrastructureStorage (): {
     return 'infra_env_' + Math.abs(hash).toString(36)
   }
 
+  function createDefaultComponents (): Record<keyof InfrastructureConfig['components'], ComponentConfig> {
+    return {
+      AASDiscovery: {
+        url: '',
+      },
+      AASRegistry: {
+        url: '',
+        hasDiscoveryIntegration: true,
+      },
+      SubmodelRegistry: {
+        url: '',
+      },
+      AASRepo: {
+        url: '',
+        hasRegistryIntegration: true,
+      },
+      SubmodelRepo: {
+        url: '',
+        hasRegistryIntegration: true,
+      },
+      ConceptDescriptionRepo: {
+        url: '',
+      },
+    }
+  }
+
+  function normalizeInfrastructureConfig (infrastructure: InfrastructureConfig): InfrastructureConfig {
+    const normalized = infrastructure
+    normalized.template = normalizeInfrastructureTemplate(normalized.template)
+    normalized.auth ??= { securityType: 'No Authentication' }
+
+    const defaultComponents = createDefaultComponents()
+    const existingComponents = (normalized as Partial<InfrastructureConfig>).components
+    normalized.components = {
+      ...defaultComponents,
+      ...existingComponents,
+    }
+
+    for (const [key, defaultComponent] of Object.entries(defaultComponents)) {
+      const componentKey = key as keyof InfrastructureConfig['components']
+      normalized.components[componentKey] = {
+        ...defaultComponent,
+        ...normalized.components[componentKey],
+      }
+    }
+
+    return normalized
+  }
+
   /**
    * Authenticates using OAuth2 client credentials flow and updates infrastructure token
    */
@@ -157,34 +214,16 @@ export function useInfrastructureStorage (): {
   /**
    * Creates an empty infrastructure configuration with default values
    */
-  function createEmptyInfrastructure (name = 'New Infrastructure'): InfrastructureConfig {
+  function createEmptyInfrastructure (
+    name = 'New Infrastructure',
+    template: InfrastructureTemplate = 'full',
+  ): InfrastructureConfig {
     return {
       id: generateInfrastructureId(),
       name,
+      template,
       auth: { securityType: 'No Authentication' },
-      components: {
-        AASDiscovery: {
-          url: '',
-        },
-        AASRegistry: {
-          url: '',
-          hasDiscoveryIntegration: true,
-        },
-        SubmodelRegistry: {
-          url: '',
-        },
-        AASRepo: {
-          url: '',
-          hasRegistryIntegration: true,
-        },
-        SubmodelRepo: {
-          url: '',
-          hasRegistryIntegration: true,
-        },
-        ConceptDescriptionRepo: {
-          url: '',
-        },
-      },
+      components: createDefaultComponents(),
     }
   }
 
@@ -332,7 +371,7 @@ export function useInfrastructureStorage (): {
       infrastructure.components.ConceptDescriptionRepo.url = legacyConceptDescriptionRepoURL
     }
 
-    return infrastructure
+    return normalizeInfrastructureConfig(infrastructure)
   }
 
   type MatchingEnvConfig = {
@@ -437,6 +476,7 @@ export function useInfrastructureStorage (): {
     refreshTokensCallback?: (infrastructureId: string) => Promise<void>,
   ): Promise<void> {
     for (const infra of infrastructures) {
+      normalizeInfrastructureConfig(infra)
       if (
         infra.auth?.securityType === 'OAuth2'
         && infra.auth.oauth2?.authFlow === 'client-credentials'
@@ -473,8 +513,10 @@ export function useInfrastructureStorage (): {
     if (stored) {
       try {
         const storage: InfrastructureStorage = JSON.parse(stored)
+        storage.infrastructures = storage.infrastructures.map(infra => normalizeInfrastructureConfig(infra))
 
         for (const yamlInfra of yamlConfig.infrastructures) {
+          normalizeInfrastructureConfig(yamlInfra)
           const storedInfra = storage.infrastructures.find(infra => infra.id === yamlInfra.id)
           if (storedInfra) {
             if (storedInfra.token) {
@@ -532,8 +574,10 @@ export function useInfrastructureStorage (): {
     if (stored) {
       try {
         const storage: InfrastructureStorage = JSON.parse(stored)
+        storage.infrastructures = storage.infrastructures.map(infra => normalizeInfrastructureConfig(infra))
 
         for (const yamlInfra of yamlConfig.infrastructures) {
+          normalizeInfrastructureConfig(yamlInfra)
           const storedInfra = storage.infrastructures.find(infra => infra.id === yamlInfra.id)
           if (storedInfra) {
             const currentYamlHash = computeInfrastructureHash(yamlInfra)
@@ -571,11 +615,11 @@ export function useInfrastructureStorage (): {
           : fallbackSelectedId
       } catch (error) {
         console.warn('Failed to parse localStorage, using YAML config only:', error)
-        mergedInfrastructures.push(...yamlConfig.infrastructures)
+        mergedInfrastructures.push(...yamlConfig.infrastructures.map(infra => normalizeInfrastructureConfig(infra)))
         selectedId = fallbackSelectedId
       }
     } else {
-      mergedInfrastructures.push(...yamlConfig.infrastructures)
+      mergedInfrastructures.push(...yamlConfig.infrastructures.map(infra => normalizeInfrastructureConfig(infra)))
     }
 
     await authenticateClientCredentialsInfrastructures(mergedInfrastructures, refreshTokensCallback)
@@ -641,6 +685,7 @@ export function useInfrastructureStorage (): {
       if (stored) {
         try {
           const storage: InfrastructureStorage = JSON.parse(stored)
+          storage.infrastructures = storage.infrastructures.map(infra => normalizeInfrastructureConfig(infra))
           matchingInfra = findMatchingInfrastructure(storage.infrastructures, envConfig)
         } catch (error) {
           console.warn('Failed to load infrastructure from storage:', error)
@@ -671,6 +716,7 @@ export function useInfrastructureStorage (): {
     const stored = window.localStorage.getItem('basyxInfrastructures')
     if (stored) {
       const storage: InfrastructureStorage = JSON.parse(stored)
+      storage.infrastructures = storage.infrastructures.map(infra => normalizeInfrastructureConfig(infra))
 
       // Determine which infrastructure should be selected
       let targetInfraId: string | null = null
@@ -698,6 +744,7 @@ export function useInfrastructureStorage (): {
     } else {
       // Migration from legacy storage
       const legacyInfra = createInfrastructureFromLegacyStorage()
+      normalizeInfrastructureConfig(legacyInfra)
 
       // Check if any legacy URLs exist
       const hasLegacyData = Object.values(legacyInfra.components).some(comp => comp.url.trim() !== '')
@@ -802,7 +849,7 @@ export function useInfrastructureStorage (): {
   ): void {
     try {
       const storage: InfrastructureStorage = {
-        infrastructures,
+        infrastructures: infrastructures.map(infra => normalizeInfrastructureConfig(infra)),
         selectedInfrastructureId,
       }
 

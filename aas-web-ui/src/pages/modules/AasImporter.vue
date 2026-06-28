@@ -58,6 +58,7 @@
           v-model="sourceUseSuperpath"
           class="mt-n2 mb-2"
           density="compact"
+          :disabled="sourceSuperpathRequired"
           hide-details
           label="Use AAS superpath endpoints for source Submodels"
         />
@@ -111,6 +112,7 @@
           v-model="destinationUseSuperpath"
           class="mt-n2 mb-4"
           density="compact"
+          :disabled="destinationSuperpathRequired"
           hide-details
           label="Use AAS superpath endpoints for destination Submodels"
         />
@@ -175,6 +177,10 @@
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { base64Encode } from '@/utils/EncodeDecodeUtils'
+  import {
+    getActiveComponentUrlForTemplate,
+    usesSubmodelSuperpath,
+  } from '@/utils/InfrastructureUtils'
 
   // Module shortcuts definition - available when this module is active
   export const shortcuts: PageShortcutDefinitions = () => [
@@ -203,6 +209,7 @@
   defineOptions({
     inheritAttrs: false,
     moduleTitle: 'AAS Importer',
+    supportedInfrastructureTemplates: ['full', 'identifiable', 'mono-repo', 'mono-all'],
   })
 
   const navigationStore = useNavigationStore()
@@ -269,6 +276,12 @@
       ) || null
     )
   })
+  const sourceSuperpathRequired = computed(() =>
+    selectedInfrastructure.value ? usesSubmodelSuperpath(selectedInfrastructure.value) : false,
+  )
+  const destinationSuperpathRequired = computed(() =>
+    destinationInfrastructure.value ? usesSubmodelSuperpath(destinationInfrastructure.value) : false,
+  )
 
   // Pre-select default infrastructure when component mounts
   onMounted(() => {
@@ -277,10 +290,12 @@
     }
   })
 
-  function hasConfiguredSubmodelRepo (infra: (typeof infrastructureStore.getInfrastructures)[number] | null): boolean {
+  function shouldUseSubmodelSuperpath (
+    infra: (typeof infrastructureStore.getInfrastructures)[number] | null,
+  ): boolean {
     if (!infra) return false
-    const submodelRepoUrl = infra.components.SubmodelRepo.url
-    return submodelRepoUrl !== null && submodelRepoUrl.trim() !== ''
+    return usesSubmodelSuperpath(infra)
+      || getActiveComponentUrlForTemplate(infra, 'SubmodelRepo') === ''
   }
 
   // Filter source infrastructures based on selected import mode
@@ -288,16 +303,16 @@
     return infrastructureStore.getInfrastructures
       .filter(infra => {
         if (isAssetIdMode.value) {
-          const discoveryUrl = infra.components.AASDiscovery.url
-          return discoveryUrl && discoveryUrl.trim() !== ''
+          return getActiveComponentUrlForTemplate(infra, 'AASDiscovery') !== ''
         }
-        const aasRepoUrl = infra.components.AASRepo.url
-        return aasRepoUrl && aasRepoUrl.trim() !== ''
+        return getActiveComponentUrlForTemplate(infra, 'AASRepo') !== ''
       })
       .map(infra => ({
         id: infra.id,
         label: infra.name,
-        sourceUrl: isAssetIdMode.value ? infra.components.AASDiscovery.url : infra.components.AASRepo.url,
+        sourceUrl: isAssetIdMode.value
+          ? getActiveComponentUrlForTemplate(infra, 'AASDiscovery')
+          : getActiveComponentUrlForTemplate(infra, 'AASRepo'),
       }))
   })
 
@@ -305,13 +320,12 @@
   const destinationInfrastructureItems = computed(() => {
     return infrastructureStore.getInfrastructures
       .filter(infra => {
-        const aasRepoUrl = infra.components.AASRepo.url
-        return aasRepoUrl && aasRepoUrl.trim() !== ''
+        return getActiveComponentUrlForTemplate(infra, 'AASRepo') !== ''
       })
       .map(infra => ({
         id: infra.id,
         label: infra.name + (infra.isDefault ? ' (Default)' : ''),
-        aasRepoUrl: infra.components.AASRepo.url,
+        aasRepoUrl: getActiveComponentUrlForTemplate(infra, 'AASRepo'),
       }))
   })
 
@@ -341,11 +355,11 @@
   })
 
   watch(selectedInfrastructure, infra => {
-    sourceUseSuperpath.value = !hasConfiguredSubmodelRepo(infra)
+    sourceUseSuperpath.value = shouldUseSubmodelSuperpath(infra)
   })
 
   watch(destinationInfrastructure, infra => {
-    destinationUseSuperpath.value = !hasConfiguredSubmodelRepo(infra)
+    destinationUseSuperpath.value = shouldUseSubmodelSuperpath(infra)
   })
 
   function buildAasEndpointFromRepo (aasRepoUrl: string, aasId: string): string {
@@ -434,7 +448,10 @@
           }
           aasId = selectedDiscoveredAasId.value
         } else {
-          const sourceDiscoveryUrl = selectedInfrastructure.value.components.AASDiscovery.url
+          const sourceDiscoveryUrl = getActiveComponentUrlForTemplate(
+            selectedInfrastructure.value,
+            'AASDiscovery',
+          )
           const discoveredIds = await getAasIds(trimmedImportIdentifier, sourceDiscoveryUrl)
 
           if (discoveredIds.length === 0) {
@@ -466,7 +483,7 @@
         throw new Error('Could not resolve a valid AAS ID for import')
       }
 
-      const sourceAasRepoUrl = selectedInfrastructure.value.components.AASRepo.url.trim()
+      const sourceAasRepoUrl = getActiveComponentUrlForTemplate(selectedInfrastructure.value, 'AASRepo')
       if (sourceAasRepoUrl === '') {
         throw new Error('Selected source infrastructure has no AAS Repository configured')
       }
@@ -474,10 +491,14 @@
       // Step 1: Get AAS Endpoint
       let aasEndpoint = buildAasEndpointFromRepo(sourceAasRepoUrl, aasId)
 
-      if (selectedInfrastructure?.value?.components.AASRegistry.url.trim() !== '') {
+      const sourceAasRegistryUrl = getActiveComponentUrlForTemplate(
+        selectedInfrastructure.value,
+        'AASRegistry',
+      )
+      if (sourceAasRegistryUrl !== '') {
         aasEndpoint = await getAasEndpointById(
           aasId,
-          selectedInfrastructure?.value?.components.AASRegistry.url,
+          sourceAasRegistryUrl,
         )
       }
 
@@ -499,7 +520,7 @@
               smEndpoint = buildSubmodelEndpointFromSuperpath(aasEndpoint, smId)
             } else {
               const sourceSubmodelRepoUrl
-                = selectedInfrastructure?.value?.components.SubmodelRepo.url.trim()
+                = getActiveComponentUrlForTemplate(selectedInfrastructure.value, 'SubmodelRepo')
               if (sourceSubmodelRepoUrl === '') {
                 throw new Error(
                   'Source infrastructure has no Submodel Repository configured and source superpath is disabled',
@@ -513,18 +534,21 @@
 
             if (
               !sourceUseSuperpath.value
-              && selectedInfrastructure?.value?.components.SubmodelRegistry.url.trim() !== ''
+              && getActiveComponentUrlForTemplate(selectedInfrastructure.value, 'SubmodelRegistry') !== ''
             ) {
               smEndpoint = await getSmEndpointById(
                 smId,
-                selectedInfrastructure?.value?.components.SubmodelRegistry.url,
+                getActiveComponentUrlForTemplate(selectedInfrastructure.value, 'SubmodelRegistry'),
               )
             }
 
             const submodel = await fetchSm(smEndpoint)
 
             // Fetch Concept Descriptions if configured
-            const cdRepoUrl = selectedInfrastructure?.value?.components.ConceptDescriptionRepo.url.trim()
+            const cdRepoUrl = getActiveComponentUrlForTemplate(
+              selectedInfrastructure.value,
+              'ConceptDescriptionRepo',
+            )
             if (cdRepoUrl !== '') {
               const cds = await fetchAllConceptDescriptions(submodel, smEndpoint, cdRepoUrl)
               if (cds && cds.length > 0) {
@@ -542,16 +566,23 @@
       await infrastructureStore.dispatchSelectInfrastructure(destinationInfrastructure.value.id)
       delete aas.endpoints
 
-      const destinationAasRepoUrl = destinationInfrastructure.value.components.AASRepo.url.trim()
+      const destinationAasRepoUrl = getActiveComponentUrlForTemplate(
+        destinationInfrastructure.value,
+        'AASRepo',
+      )
       if (destinationAasRepoUrl === '') {
         throw new Error('Selected destination infrastructure has no AAS Repository configured')
       }
 
       let destinationAasEndpoint = buildAasEndpointFromRepo(destinationAasRepoUrl, aasId)
-      if (destinationInfrastructure.value.components.AASRegistry.url.trim() !== '') {
+      const destinationAasRegistryUrl = getActiveComponentUrlForTemplate(
+        destinationInfrastructure.value,
+        'AASRegistry',
+      )
+      if (destinationAasRegistryUrl !== '') {
         destinationAasEndpoint = await getAasEndpointById(
           aasId,
-          destinationInfrastructure.value.components.AASRegistry.url,
+          destinationAasRegistryUrl,
         )
       }
 
