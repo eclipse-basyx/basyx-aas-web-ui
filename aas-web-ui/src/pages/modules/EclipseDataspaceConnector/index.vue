@@ -37,7 +37,7 @@
 
 <script lang="ts" setup>
   import type { YamlEdcConfig } from './types/Edc'
-  import yaml from 'js-yaml'
+  import { load } from 'js-yaml'
   import { computed, onMounted, ref, watch } from 'vue'
   import { type LocationQueryRaw, useRoute, useRouter } from 'vue-router'
   import { useEnvStore } from '@/store/EnvironmentStore'
@@ -128,7 +128,7 @@
       }
 
       const yamlText = await response.text()
-      const yamlConfig = yaml.load(yamlText) as YamlEdcConfig
+      const yamlConfig = load(yamlText) as YamlEdcConfig
 
       // Validate the configuration structure
       if (!validateYamlConfig(yamlConfig)) {
