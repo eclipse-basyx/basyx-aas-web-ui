@@ -255,6 +255,7 @@ export async function createAppRouter (): Promise<Router> {
 
     'Visualization', // desktop and mobile
   ]
+
   const routesUsingPathUrlQuery: Array<RouteRecordNameGeneric> = [
     'AASEditor', // just desktop
     'AASViewer', // just desktop
@@ -267,6 +268,23 @@ export async function createAppRouter (): Promise<Router> {
 
     'Visualization', // desktop and mobile
   ]
+
+  const routesNeedingAasUrlQuery: Set<RouteRecordNameGeneric> = new Set([
+    'AASEditor', // just desktop
+    'AASViewer', // just desktop
+    'AASSubmodelViewer', // just desktop
+
+    'AASList', // just mobile
+    'SubmodelList', // just mobile
+  ])
+
+  const routesNeedingPathUrlQuery: Set<RouteRecordNameGeneric> = new Set([
+    'SMEditor', // just desktop
+    'SMViewer', // just desktop
+
+    'Visualization', // desktop and mobile
+  ])
+
   const routesUsingAasOrPathUrlQuery: Set<RouteRecordNameGeneric> = new Set([
     ...routesUsingAasUrlQuery,
     ...routesUsingPathUrlQuery,
@@ -495,7 +513,7 @@ export async function createAppRouter (): Promise<Router> {
 
   const removeInvalidQueryParamsForRoute = (to: any): { path: string, query: LocationQueryRaw } | null => {
     if (
-      routesUsingAasUrlQuery.includes(to.name)
+      routesNeedingAasUrlQuery.has(to.name)
       && !Object.hasOwn(to.query, 'aas')
       && Object.hasOwn(to.query, 'path')
     ) {
@@ -521,7 +539,7 @@ export async function createAppRouter (): Promise<Router> {
   const handleSingleAasAndSingleSmRouting = (to: any): { name: string, query?: any } | false | null => {
     if (
       envStore.getSingleAas
-      && (routesUsingAasUrlQuery.includes(to.name)
+      && (routesNeedingAasUrlQuery.has(to.name)
         || (to.path.includes('/modules/') && to.meta.isOnlyVisibleWithSelectedAas))
       && (!Object.hasOwn(to.query, 'aas') || (to.query.aas as string).trim() === '')
     ) {
@@ -535,7 +553,7 @@ export async function createAppRouter (): Promise<Router> {
 
     if (
       envStore.getSingleSm
-      && (routesUsingOnlyPathUrlQuery.has(to.name)
+      && (routesNeedingPathUrlQuery.has(to.name)
         || (to.path.includes('/modules/') && to.meta.isOnlyVisibleWithSelectedNode))
       && (!Object.hasOwn(to.query, 'path') || (to.query.path as string).trim() === '')
     ) {
