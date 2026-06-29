@@ -14,6 +14,30 @@
           <span>?</span>
         </v-alert>
 
+        <v-alert
+          v-if="referencingContracts.length > 0"
+          border="start"
+          class="mt-3"
+          color="warning"
+          variant="tonal"
+        >
+          <div class="font-weight-bold mb-1">
+            The following contract definition{{ referencingContracts.length > 1 ? 's' : '' }} reference this asset and will be deleted first:
+          </div>
+
+          <v-list
+            class="bg-transparent pa-0"
+            density="compact"
+          >
+            <v-list-item
+              v-for="contract in referencingContracts"
+              :key="contract['@id']"
+              class="pa-0"
+            >
+              <span class="font-weight-bold text-primary">{{ contract['@id'] }}</span>
+            </v-list-item>
+          </v-list>
+        </v-alert>
       </v-card-text>
 
       <v-card-actions>
@@ -51,16 +75,20 @@
   }>()
 
   // Composables
-  const { deleteAsset: deleteAssetFromEdc } = useEdcClient()
+  const { deleteAsset: deleteAssetFromEdc, queryContractDefinitions, deleteContractDefinition } = useEdcClient()
 
   // Data
   const deleteAssetDialog = ref(false)
+  const referencingContracts = ref<any[]>([])
 
   // Watchers
   watch(
     () => props.modelValue,
-    value => {
+    async value => {
       deleteAssetDialog.value = value
+      if (value) {
+        await loadReferencingContracts()
+      }
     },
   )
 
@@ -68,8 +96,37 @@
     () => deleteAssetDialog.value,
     value => {
       emit('update:model-value', value)
+      if (!value) {
+        referencingContracts.value = []
+      }
     },
   )
+
+  async function loadReferencingContracts (): Promise<void> {
+    if (!props.asset?.['@id']) {
+      referencingContracts.value = []
+      return
+    }
+
+    const contracts = await queryContractDefinitions()
+    if (!contracts) {
+      referencingContracts.value = []
+      return
+    }
+
+    const assetId = props.asset['@id']
+    const EDC_ID_OPERAND = 'https://w3id.org/edc/v0.0.1/ns/id'
+
+    referencingContracts.value = contracts.filter((contract: any) => {
+      const selectors: any[] = contract['assetsSelector'] ?? contract['edc:assetsSelector'] ?? []
+      return selectors.some((criterion: any) => {
+        const left = criterion['operandLeft'] ?? criterion['edc:operandLeft'] ?? ''
+        const op = criterion['operator'] ?? criterion['edc:operator'] ?? ''
+        const right = criterion['operandRight'] ?? criterion['edc:operandRight'] ?? ''
+        return (left === EDC_ID_OPERAND || left === 'id') && op === '=' && right === assetId
+      })
+    })
+  }
 
   async function deleteAsset (): Promise<void> {
     if (!props.asset) {
@@ -77,7 +134,15 @@
     }
 
     try {
-      // Create the asset via EDC API
+      // Delete all referencing contract definitions first
+      for (const contract of referencingContracts.value) {
+        const contractDeleted = await deleteContractDefinition(contract['@id'])
+        if (!contractDeleted) {
+          console.error('Failed to delete referencing contract:', contract['@id'])
+        }
+      }
+
+      // Delete the asset via EDC API
       const response = await deleteAssetFromEdc(props.asset['@id'])
       if (response) {
         emit('asset-deleted', true)
@@ -86,7 +151,7 @@
         console.error('Failed to delete asset')
       }
     } catch (error_) {
-      console.error('Error creating asset:', error_)
+      console.error('Error deleting asset:', error_)
     }
   }
 
