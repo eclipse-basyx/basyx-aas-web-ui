@@ -12,6 +12,7 @@ export const useEdcStore = defineStore('edcStore', () => {
   const getEdcType = computed(() => config.value?.type || '')
   const getControlplaneEndpoint = computed(() => config.value?.controlplane.endpoint || '')
   const getControlplaneMgmtEndpoint = computed(() => config.value?.controlplane.managementEndpoint || '')
+  const getControlplaneDspEndpoint = computed(() => config.value?.controlplane.dspEndpoint || '')
   const getControlplaneApiAuthKey = computed(() => config.value?.security.config?.key || '')
   const getControlplaneTokenServerEndpoint = computed(() => config.value?.security.config?.url || '')
   const getControlplaneTokenClientId = computed(() => config.value?.security.config?.clientId || '')
@@ -72,6 +73,12 @@ export const useEdcStore = defineStore('edcStore', () => {
     }
   }
 
+  function setControlplaneDspEndpoint (url: string): void {
+    if (config.value) {
+      config.value.controlplane.dspEndpoint = url
+    }
+  }
+
   function setControlplaneKey (key: string): void {
     if (config.value) {
       if (!config.value.security.config) {
@@ -114,6 +121,7 @@ export const useEdcStore = defineStore('edcStore', () => {
     getEdcType,
     getControlplaneEndpoint,
     getControlplaneMgmtEndpoint,
+    getControlplaneDspEndpoint,
     getControlplaneApiAuthKey,
     getControlplaneTokenServerEndpoint,
     getControlplaneTokenClientId,
@@ -125,6 +133,7 @@ export const useEdcStore = defineStore('edcStore', () => {
     setEdcType,
     setControlplaneEndpoint,
     setControlplaneMgmtEndpoint,
+    setControlplaneDspEndpoint,
     setControlplaneKey,
     setSecurityConfigUrl,
     setSecurityConfigClientId,

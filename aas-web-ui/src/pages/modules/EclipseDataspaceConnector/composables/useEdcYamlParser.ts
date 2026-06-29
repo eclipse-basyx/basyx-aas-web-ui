@@ -47,10 +47,84 @@ export function useEdcYamlParser (): {
       controlplane: {
         endpoint: yamlConfig.edc.controlplane.endpoint.trim(),
         managementEndpoint: yamlConfig.edc.controlplane.managementEndpoint.trim(),
+        dspEndpoint: yamlConfig.edc.controlplane.dspEndpoint.trim(),
       },
       security: parseSecurityConfig(yamlConfig.edc.security),
       businessPartners: parseBusinessPartnersConfig(yamlConfig.edc['business-partners']),
     }
+  }
+
+  function validateControlplane (controlplane: unknown): boolean {
+    if (!controlplane || typeof controlplane !== 'object') {
+      console.error('Invalid EDC YAML configuration: missing or invalid controlplane')
+      return false
+    }
+
+    const obj = controlplane as Record<string, unknown>
+    if (!obj.endpoint || typeof obj.endpoint !== 'string') {
+      console.error('Invalid EDC YAML configuration: missing or invalid controlplane.endpoint')
+      return false
+    }
+    if (!obj.managementEndpoint || typeof obj.managementEndpoint !== 'string') {
+      console.error('Invalid EDC YAML configuration: missing or invalid controlplane.managementEndpoint')
+      return false
+    }
+    if (!obj.dspEndpoint || typeof obj.dspEndpoint !== 'string') {
+      console.error('Invalid EDC YAML configuration: missing or invalid controlplane.dspEndpoint')
+      return false
+    }
+    return true
+  }
+
+  function validateSecurity (security: unknown): boolean {
+    if (!security || typeof security !== 'object') {
+      console.error('Invalid EDC YAML configuration: missing or invalid security')
+      return false
+    }
+
+    const obj = security as Record<string, unknown>
+    if (!obj.type || typeof obj.type !== 'string') {
+      console.error('Invalid EDC YAML configuration: missing or invalid security.type')
+      return false
+    }
+    if (obj.config !== undefined && (typeof obj.config !== 'object' || obj.config === null)) {
+      console.error('Invalid EDC YAML configuration: invalid security.config')
+      return false
+    }
+    return true
+  }
+
+  function validateBusinessPartner (partner: unknown): boolean {
+    if (typeof partner !== 'object' || partner === null) {
+      console.error('Invalid EDC YAML configuration: business-partner entry is not an object')
+      return false
+    }
+
+    const obj = partner as Record<string, unknown>
+    if (!obj.name || typeof obj.name !== 'string') {
+      console.error('Invalid EDC YAML configuration: missing or invalid business-partner.name')
+      return false
+    }
+    if (!obj.bpn || typeof obj.bpn !== 'string') {
+      console.error('Invalid EDC YAML configuration: missing or invalid business-partner.bpn')
+      return false
+    }
+    if (!obj.dsp || typeof obj.dsp !== 'string') {
+      console.error('Invalid EDC YAML configuration: missing or invalid business-partner.dsp')
+      return false
+    }
+    return true
+  }
+
+  function validateBusinessPartners (businessPartners: unknown): boolean {
+    if (businessPartners === undefined) {
+      return true
+    }
+    if (!Array.isArray(businessPartners)) {
+      console.error('Invalid EDC YAML configuration: business-partners must be an array')
+      return false
+    }
+    return businessPartners.every(partner => validateBusinessPartner(partner))
   }
 
   function validateYamlConfig (config: unknown): config is YamlEdcConfig {
@@ -72,71 +146,11 @@ export function useEdcYamlParser (): {
       return false
     }
 
-    const controlplane = edcObj.controlplane
-    const security = edcObj.security
-
-    if (!controlplane || typeof controlplane !== 'object') {
-      console.error('Invalid EDC YAML configuration: missing or invalid controlplane')
-      return false
-    }
-
-    const controlplaneObj = controlplane as Record<string, unknown>
-    if (!controlplaneObj.endpoint || typeof controlplaneObj.endpoint !== 'string') {
-      console.error('Invalid EDC YAML configuration: missing or invalid controlplane.endpoint')
-      return false
-    }
-    if (!controlplaneObj.managementEndpoint || typeof controlplaneObj.managementEndpoint !== 'string') {
-      console.error('Invalid EDC YAML configuration: missing or invalid controlplane.managementEndpoint')
-      return false
-    }
-
-    if (!security || typeof security !== 'object') {
-      console.error('Invalid EDC YAML configuration: missing or invalid security')
-      return false
-    }
-
-    const securityObj = security as Record<string, unknown>
-    if (!securityObj.type || typeof securityObj.type !== 'string') {
-      console.error('Invalid EDC YAML configuration: missing or invalid security.type')
-      return false
-    }
-
-    if (securityObj.config !== undefined && (typeof securityObj.config !== 'object' || securityObj.config === null)) {
-      console.error('Invalid EDC YAML configuration: invalid security.config')
-      return false
-    }
-
-    // Validate business-partners if present
-    const businessPartners = edcObj['business-partners']
-    if (businessPartners !== undefined) {
-      if (!Array.isArray(businessPartners)) {
-        console.error('Invalid EDC YAML configuration: business-partners must be an array')
-        return false
-      }
-
-      for (const partner of businessPartners) {
-        if (typeof partner !== 'object' || partner === null) {
-          console.error('Invalid EDC YAML configuration: business-partner entry is not an object')
-          return false
-        }
-
-        const partnerObj = partner as Record<string, unknown>
-        if (!partnerObj.name || typeof partnerObj.name !== 'string') {
-          console.error('Invalid EDC YAML configuration: missing or invalid business-partner.name')
-          return false
-        }
-        if (!partnerObj.bpn || typeof partnerObj.bpn !== 'string') {
-          console.error('Invalid EDC YAML configuration: missing or invalid business-partner.bpn')
-          return false
-        }
-        if (!partnerObj.dsp || typeof partnerObj.dsp !== 'string') {
-          console.error('Invalid EDC YAML configuration: missing or invalid business-partner.dsp')
-          return false
-        }
-      }
-    }
-
-    return true
+    return (
+      validateControlplane(edcObj.controlplane)
+      && validateSecurity(edcObj.security)
+      && validateBusinessPartners(edcObj['business-partners'])
+    )
   }
 
   return {

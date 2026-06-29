@@ -11,6 +11,7 @@
 #   controlplane:
 #     endpoint: "http://localhost:8080"
 #     managementEndpoint: "http://localhost:8081"
+#     dspEndpoint: "http://localhost:8084/api/v1/dsp"
 #   security:
 #     type: Key
 #     config:
@@ -26,6 +27,7 @@
 #   controlplane:
 #     endpoint: "http://localhost:8080"
 #     managementEndpoint: "http://localhost:8081"
+#     dspEndpoint: "http://localhost:8084/api/v1/dsp"
 #   security:
 #     type: Token
 #     config:

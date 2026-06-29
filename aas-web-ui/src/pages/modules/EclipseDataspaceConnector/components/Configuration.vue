@@ -82,7 +82,7 @@
 
       <v-card-text>
         <v-row>
-          <v-col cols="12" md="5">
+          <v-col cols="12" md="4">
             <v-text-field
               v-model="edcControlplaneApiEndpoint"
               clearable
@@ -183,7 +183,7 @@
             </v-expand-transition>
           </v-col>
 
-          <v-col cols="12" md="6" offset="1">
+          <v-col cols="12" md="4">
             <v-text-field
               v-model="edcControlplaneManagementApiEndpoint"
               clearable
@@ -196,6 +196,21 @@
               variant="solo-filled"
             />
           </v-col>
+
+          <v-col cols="12" md="4">
+            <v-text-field
+              v-model="edcControlplaneDspEndpoint"
+              clearable
+              flat
+              hide-details="auto"
+              hint="e.g. https://.../api/v1/dsp"
+              label="DSP Endpoint"
+              prepend-inner-icon="mdi-web"
+              :rules="edcEndpointRule"
+              variant="solo-filled"
+            />
+          </v-col>
+
         </v-row>
       </v-card-text>
     </v-card>
@@ -395,8 +410,9 @@
   const selectedEdcMeta = computed(() =>
     edcType.value ? (edcData as any[]).find(e => e.id === edcType.value) ?? null : null,
   )
-  const edcControlplaneManagementApiEndpoint = ref(edcStore.getControlplaneMgmtEndpoint)
   const edcControlplaneApiEndpoint = ref(edcStore.getControlplaneEndpoint)
+  const edcControlplaneDspEndpoint = ref(edcStore.getControlplaneDspEndpoint)
+  const edcControlplaneManagementApiEndpoint = ref(edcStore.getControlplaneMgmtEndpoint)
   const edcControlplaneManagementApiAuthKey = ref(edcStore.getControlplaneApiAuthKey)
   const showEdcControlplaneManagementApiAuthKey = ref(false)
   const edcControlplaneTokenServerEndpoint = ref(edcStore.getControlplaneTokenServerEndpoint)
@@ -513,6 +529,13 @@
   )
 
   watch(
+    () => edcStore.getControlplaneDspEndpoint,
+    value => {
+      edcControlplaneDspEndpoint.value = value
+    },
+  )
+
+  watch(
     () => edcStore.getControlplaneApiAuthKey,
     value => {
       edcControlplaneManagementApiAuthKey.value = value
@@ -564,6 +587,13 @@
     () => edcControlplaneManagementApiEndpoint.value,
     value => {
       edcStore.setControlplaneMgmtEndpoint(value)
+    },
+  )
+
+  watch(
+    () => edcControlplaneDspEndpoint.value,
+    value => {
+      edcStore.setControlplaneDspEndpoint(value)
     },
   )
 

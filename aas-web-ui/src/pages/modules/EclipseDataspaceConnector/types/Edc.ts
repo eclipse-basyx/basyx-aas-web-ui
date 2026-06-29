@@ -5,6 +5,7 @@ export type EdcType = (typeof EDC_TYPES)[number]
 export interface EdcControlPlaneConfig {
   endpoint: string
   managementEndpoint: string
+  dspEndpoint: string
 }
 
 export interface BusinessPartner {

@@ -285,6 +285,10 @@
       value: edcStore.getControlplaneMgmtEndpoint,
     },
     {
+      label: 'Controlplane DSP Endpoint',
+      value: edcStore.getControlplaneDspEndpoint,
+    },
+    {
       label: 'Controlplane Auth',
       value: edcStore.getControlplaneApiAuthKey
         ? 'X-Api-Key: ' + edcStore.getControlplaneApiAuthKey.replace(/./gs, '*')
