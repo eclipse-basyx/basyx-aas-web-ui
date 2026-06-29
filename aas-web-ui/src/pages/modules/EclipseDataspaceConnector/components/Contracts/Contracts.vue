@@ -447,8 +447,19 @@
   }
 
   async function onContractUpdated (): Promise<void> {
+    // Remember the currently selected contract's ID before reloading
+    const previouslySelectedId = selectedContract.value?.['@id']
+
     // Reload the contract list
     await initialize()
+
+    // Re-select the updated contract so the JSON/Tree view reflects the new data
+    if (previouslySelectedId) {
+      const updatedContract = contractList.value.find((c: any) => c['@id'] === previouslySelectedId)
+      if (updatedContract) {
+        selectedContract.value = updatedContract
+      }
+    }
   }
 
   async function onContractDeleted (): Promise<void> {

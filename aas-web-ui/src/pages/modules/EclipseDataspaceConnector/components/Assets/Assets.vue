@@ -475,8 +475,19 @@
   }
 
   async function onAssetUpdated (): Promise<void> {
+    // Remember the currently selected asset's ID before reloading
+    const previouslySelectedId = selectedAsset.value?.['@id']
+
     // Reload the asset list
     await initialize()
+
+    // Re-select the updated asset so the JSON/Tree view reflects the new data
+    if (previouslySelectedId) {
+      const updatedAsset = assetList.value.find((a: any) => a['@id'] === previouslySelectedId)
+      if (updatedAsset) {
+        selectedAsset.value = updatedAsset
+      }
+    }
   }
 
   async function onAssetDeleted (): Promise<void> {

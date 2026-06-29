@@ -454,8 +454,19 @@
   }
 
   async function onPolicyUpdated (): Promise<void> {
+    // Remember the currently selected policy's ID before reloading
+    const previouslySelectedId = selectedPolicy.value?.['@id']
+
     // Reload the policy list
     await initialize()
+
+    // Re-select the updated policy so the JSON/Tree view reflects the new data
+    if (previouslySelectedId) {
+      const updatedPolicy = policyList.value.find((p: any) => p['@id'] === previouslySelectedId)
+      if (updatedPolicy) {
+        selectedPolicy.value = updatedPolicy
+      }
+    }
   }
 
   async function onPolicyDeleted (): Promise<void> {
