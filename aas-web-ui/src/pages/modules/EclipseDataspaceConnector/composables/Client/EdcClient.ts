@@ -17,6 +17,8 @@ export function useEdcClient () {
   const defaultPolicyDefinitionsRequestPath = '/policydefinitions/request'
   const defaultAssetsPath = '/assets'
   const defaultAssetsRequestPath = '/assets/request'
+  const defaultContractAgreementsPath = '/contractagreements'
+  const defaultContractAgreementsRequestPath = '/contractagreements/request'
   const defaultContractDefinitionsPath = '/contractdefinitions'
   const defaultContractDefinitionsRequestPath = '/contractdefinitions/request'
   const defaultCatalogRequestPath = '/catalog/request'
@@ -543,6 +545,81 @@ export function useEdcClient () {
   }
 
   /**
+   * Queries all contract agreements from the EDC controlplane according to a query specification.
+   * Based on OpenAPI spec: POST /v3/contractagreements/request
+   * @param endpoint Optional custom endpoint to query. If not provided, uses configured controlplane management endpoint
+   * @returns Array of ContractAgreement objects matching the query, or null if query fails
+   */
+  async function queryContractAgreements (endpoint?: string): Promise<Array<ContractAgreement> | null> {
+    const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
+    if (baseUrl === '') {
+      return null
+    }
+
+    const path = `${baseUrl}${defaultContractAgreementsRequestPath}`
+    const context = 'querying EDC contract agreements'
+    const disableMessage = false
+    const headers = new Headers()
+    headers.append('Content-Type', 'application/json')
+    const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
+    headers.append(authKey, authValue)
+    const bodyString: QuerySpec = {
+      '@context': {
+        edc: 'https://w3id.org/edc/v0.0.1/ns/',
+      },
+      '@type': 'QuerySpec',
+      'offset': 0,
+      'sortOrder': 'ASC',
+      'sortField': 'id',
+    }
+    const body = JSON.stringify(bodyString)
+
+    try {
+      const response = await postRequest(path, body, headers, context, disableMessage)
+      if (response.success && response.data) {
+        return response.data as Array<ContractAgreement>
+      }
+    } catch (error) {
+      console.warn('Query contract agreements failed:', error)
+    }
+
+    return null
+  }
+
+  /**
+   * Retrieves a contract agreement by its ID.
+   * Based on OpenAPI spec: GET /v3/contractagreements/{id}
+   * @param agreementId The ID of the contract agreement to retrieve
+   * @param endpoint Optional custom endpoint. If not provided, uses configured controlplane management endpoint
+   * @returns ContractAgreement object, or null if retrieval fails
+   */
+  async function getContractAgreement (agreementId: string, endpoint?: string): Promise<ContractAgreement | null> {
+    const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
+    if (baseUrl === '' || !agreementId) {
+      return null
+    }
+
+    const path = `${baseUrl}${defaultContractAgreementsPath}/${agreementId}`
+    const context = 'retrieving EDC contract agreement'
+    const disableMessage = false
+    const headers = new Headers()
+    headers.append('Content-Type', 'application/json')
+    const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
+    headers.append(authKey, authValue)
+
+    try {
+      const response = await getRequest(path, context, disableMessage, headers)
+      if (response.success && response.data) {
+        return response.data as ContractAgreement
+      }
+    } catch (error) {
+      console.warn('Get contract agreement failed:', error)
+    }
+
+    return null
+  }
+
+  /**
    * Queries all contract definitions from the EDC controlplane according to a query specification.
    * Based on OpenAPI spec: POST /v3/contractdefinitions/request
    * @param endpoint Optional custom endpoint to query. If not provided, uses configured controlplane endpoint
@@ -1033,6 +1110,8 @@ export function useEdcClient () {
     createAsset,
     updateAsset,
     deleteAsset,
+    queryContractAgreements,
+    getContractAgreement,
     queryContractDefinitions,
     getContractDefinition,
     createContractDefinition,
@@ -1161,6 +1240,17 @@ export interface Criterion {
   'operandLeft': unknown
   'operandRight': unknown
   'operator': string
+}
+
+export interface ContractAgreement {
+  '@id'?: string
+  '@type'?: string
+  '@context'?: Record<string, unknown>
+  'assetId'?: string
+  'consumerId'?: string
+  'contractSigningDate'?: number
+  'policy'?: Policy
+  'providerId'?: string
 }
 
 export interface ContractDefinition {
