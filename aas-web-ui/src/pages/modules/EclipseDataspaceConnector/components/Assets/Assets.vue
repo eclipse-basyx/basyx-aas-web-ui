@@ -385,9 +385,9 @@
   const createAssetsAasSmsDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
   const createAssetFromTemplateDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
   const updateAssetDialog = ref(false) // Variable to store if the Update Asset Dialog should be shown
-  const assetToUpdate = ref({}) // Variable to store the asset to be updated
+  const assetToUpdate = ref<any>({}) // Variable to store the asset to be updated
   const deleteAssetDialog = ref(false) // Variable to store if the Delete Asset Dialog should be shown
-  const assetToDelete = ref({}) // Variable to store the asset to be deleted
+  const assetToDelete = ref<any>({}) // Variable to store the asset to be deleted
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
 
   // Computed properties
@@ -491,8 +491,11 @@
   }
 
   async function onAssetDeleted (): Promise<void> {
+    // Only clear the selection if the deleted asset was the currently selected one
+    if (assetToDelete.value?.['@id'] === selectedAsset.value?.['@id']) {
+      selectedAsset.value = {}
+    }
     // Reload the asset list
-    selectedAsset.value = {}
     await initialize()
   }
 

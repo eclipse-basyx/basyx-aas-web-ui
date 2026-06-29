@@ -350,9 +350,9 @@
   const selectedContractJsonFormatted = ref<string>('')
   const createContractDialog = ref(false) // Variable to store if the Create Contract Dialog should be shown
   const updateContractDialog = ref(false) // Variable to store if the Update Contract Dialog should be shown
-  const contractToUpdate = ref({}) // Variable to store the contract to be updated
+  const contractToUpdate = ref<any>({}) // Variable to store the contract to be updated
   const deleteContractDialog = ref(false) // Variable to store if the Delete Contract Dialog should be shown
-  const contractToDelete = ref({}) // Variable to store the contract to be deleted
+  const contractToDelete = ref<any>({}) // Variable to store the contract to be deleted
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
 
   // Computed properties
@@ -463,8 +463,10 @@
   }
 
   async function onContractDeleted (): Promise<void> {
+    if (contractToDelete.value?.['@id'] === selectedContract.value?.['@id']) {
+      selectedContract.value = {}
+    }
     // Reload the contract list
-    selectedContract.value = {}
     await initialize()
   }
 

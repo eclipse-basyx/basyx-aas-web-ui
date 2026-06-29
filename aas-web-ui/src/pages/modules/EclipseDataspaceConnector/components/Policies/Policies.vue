@@ -357,9 +357,9 @@
   const selectedPolicyJsonFormatted = ref<string>('')
   const createPolicyDialog = ref(false) // Variable to store if the Create Policy Dialog should be shown
   const updatePolicyDialog = ref(false) // Variable to store if the Update Policy Dialog should be shown
-  const policyToUpdate = ref({}) // Variable to store the policy to be updated
+  const policyToUpdate = ref<any>({}) // Variable to store the policy to be updated
   const deletePolicyDialog = ref(false) // Variable to store if the Delete Policy Dialog should be shown
-  const policyToDelete = ref({}) // Variable to store the policy to be deleted
+  const policyToDelete = ref<any>({}) // Variable to store the policy to be deleted
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
 
   // Computed properties
@@ -470,8 +470,11 @@
   }
 
   async function onPolicyDeleted (): Promise<void> {
+    // Only clear the selection if the deleted asset was the currently selected one
+    if (policyToDelete.value?.['@id'] === selectedPolicy.value?.['@id']) {
+      selectedPolicy.value = {}
+    }
     // Reload the policy list
-    selectedPolicy.value = {}
     await initialize()
   }
 
