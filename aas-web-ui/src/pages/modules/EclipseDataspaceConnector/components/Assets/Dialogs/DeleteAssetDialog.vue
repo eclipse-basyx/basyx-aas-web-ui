@@ -118,13 +118,14 @@
     const EDC_ID_OPERAND = 'https://w3id.org/edc/v0.0.1/ns/id'
 
     referencingContracts.value = contracts.filter((contract: any) => {
-      const selectors: any[] = contract['assetsSelector'] ?? contract['edc:assetsSelector'] ?? []
-      return selectors.some((criterion: any) => {
-        const left = criterion['operandLeft'] ?? criterion['edc:operandLeft'] ?? ''
-        const op = criterion['operator'] ?? criterion['edc:operator'] ?? ''
-        const right = criterion['operandRight'] ?? criterion['edc:operandRight'] ?? ''
+      const selector: any = contract['assetsSelector'] ?? contract['edc:assetsSelector'] ?? null
+      if (selector) {
+        const left = selector['operandLeft'] ?? selector['edc:operandLeft'] ?? ''
+        const op = selector['operator'] ?? selector['edc:operator'] ?? ''
+        const right = selector['operandRight'] ?? selector['edc:operandRight'] ?? ''
         return (left === EDC_ID_OPERAND || left === 'id') && op === '=' && right === assetId
-      })
+      }
+      return false
     })
   }
 

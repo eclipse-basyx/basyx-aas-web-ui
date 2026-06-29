@@ -373,7 +373,7 @@
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Full height - header - tabs - footer - border
   const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
   const fullHeightMainWithTabs = ref('calc(100vh - 64px - 48px - 40px - 32px - 44px - 2px)') // Full height - header - tabs - footer - padding - view toggle - border
-  const selectedView = ref<'json' | 'tree'>('tree')
+  const selectedView = ref<'json' | 'tree'>('json')
   const assetList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Asset data
   const assetListUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Asset data before filtering
   const listLoading = ref(false) // Variable to store if the AAS List is loading
