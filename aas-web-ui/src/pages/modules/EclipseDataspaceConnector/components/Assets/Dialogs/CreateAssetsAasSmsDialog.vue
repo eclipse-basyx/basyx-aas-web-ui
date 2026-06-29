@@ -511,6 +511,16 @@
       <v-card-actions>
         <v-spacer />
 
+        <v-checkbox
+          v-model="updateEndpoints"
+          class="m-0"
+          density="compact"
+          hide-details
+          label="Add DSP Endpoint to AAS/SM descriptors"
+        />
+
+        <v-spacer />
+
         <v-btn
           rounded="lg"
           text="Cancel"
@@ -532,6 +542,7 @@
 </template>
 
 <script lang="ts" setup>
+  import { base64Decode } from 'basyx-typescript-sdk'
   import * as Prism from 'prismjs'
   import { computed, onMounted, ref } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
@@ -541,10 +552,14 @@
   import { useAASListPagination } from '@/composables/AAS/AASListPagination'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
+  import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
+  import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
   import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import assetTemplate from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.9.json'
+  import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { useAASStore } from '@/store/AASDataStore'
   import { useNavigationStore } from '@/store/NavigationStore'
+  import { extractEndpointHref, getEndpointProtocol } from '@/utils/AAS/DescriptorUtils'
   import { extractVersionRevision } from '@/utils/AAS/SemanticIdUtils'
   import { smts } from '@/utils/AAS/SubmodelTemplateUtils'
   import { base64Encode } from '@/utils/EncodeDecodeUtils'
@@ -573,12 +588,15 @@
   // Stores
   const navigationStore = useNavigationStore()
   const aasStore = useAASStore()
+  const edcStore = useEdcStore()
 
   // Composables
   const { createAsset } = useEdcClient()
   const { fetchAasShellListPage, fetchAasById, fetchAasSmListById } = useAASHandling()
   const { fetchSmById } = useSMHandling()
   const { nameToDisplay, descriptionToDisplay } = useReferableUtils()
+  const { fetchAasDescriptorById, putAasDescriptor } = useAASRegistryClient()
+  const { fetchSmDescriptorById, putSubmodelDescriptor } = useSMRegistryClient()
 
   // Vuetify
   const theme = useTheme()
@@ -625,6 +643,8 @@
   const smEdcAssetsJsonFormatted = ref<string>('')
 
   const selectedSmIds = ref<string[]>([])
+
+  const updateEndpoints = ref(false)
 
   const {
     hasMorePages,
@@ -992,6 +1012,12 @@
     templateStr = templateStr.replace(/\{\{Asset Description(?:\|[^}]*)?\}\}/g, assetDescription)
     templateStr = templateStr.replace(/\{\{Asset Endpoint(?:\|[^}]*)?\}\}/g, assetEndpoint)
 
+    // TODO Specification of oauth2 for dataAddress
+    templateStr = templateStr.replace(/\{\{Endpoint client ID(?:\|[^}]*)?\}\}/g, '')
+    templateStr = templateStr.replace(/\{\{Endpoint client secret key(?:\|[^}]*)?\}\}/g, '')
+    templateStr = templateStr.replace(/\{\{Token scope(?:\|[^}]*)?\}\}/g, '')
+    templateStr = templateStr.replace(/\{\{Token endpoint(?:\|[^}]*)?\}\}/g, '')
+
     return JSON.parse(templateStr)
   }
 
@@ -1043,8 +1069,64 @@
       edcAssets.map(edcAsset => createAsset(edcAsset)),
     )
 
-    const succeeded = results.filter(r => r.success).length
+    const succeededResults = results.filter(r => r.success)
     const failedResults = results.filter(r => !r.success)
+    if (updateEndpoints.value)
+      for (const succeededResult of succeededResults) {
+        const base64Id = succeededResult?.data?.['@id']
+        const id = (base64Id && base64Id !== '' ? base64Decode(base64Id) : '')
+        if (id !== '') {
+          const dpsEndpoint = edcStore.getControlplaneDspEndpoint
+          const aasDescriptor = await fetchAasDescriptorById(selectedAAS.value.id)
+          const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0')
+          if (id === selectedAAS.value.id) {
+            const aasDspEndpoint = {
+              interface: 'EDC-PROTOCOL',
+              protocolInformation: {
+                href: `${aasEndpoint}`,
+                endpointProtocol: getEndpointProtocol(aasEndpoint),
+                subprotocol: 'DSP',
+                subprotocolBody: `id=${base64Id};dspEndpoint=${dpsEndpoint}`,
+              },
+            }
+            aasDescriptor.endpoints.push(aasDspEndpoint)
+            await putAasDescriptor(aasDescriptor)
+          } else {
+            const smDescriptor = await fetchSmDescriptorById(id)
+            const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0')
+            const smDspEndpoint = {
+              interface: 'EDC-PROTOCOL',
+              protocolInformation: {
+                href: `${smEndpoint}`,
+                endpointProtocol: getEndpointProtocol(smEndpoint),
+                subprotocol: 'DSP',
+                subprotocolBody: `id=${base64Id};dspEndpoint=${dpsEndpoint}`,
+              },
+            }
+            smDescriptor.endpoints.push(smDspEndpoint)
+            await putSubmodelDescriptor(smDescriptor)
+
+            const aasDescriptorsmDescriptor = aasDescriptor.submodelDescriptors.find(
+              (descriptor: any) => descriptor.id === id,
+            )
+            if (aasDescriptorsmDescriptor) {
+              const endpoint = extractEndpointHref(aasDescriptorsmDescriptor, 'SUBMODEL-3.0')
+              const dspEndpoint = {
+                interface: 'EDC-PROTOCOL',
+                protocolInformation: {
+                  href: `${endpoint}`,
+                  endpointProtocol: getEndpointProtocol(endpoint),
+                  subprotocol: 'DSP',
+                  subprotocolBody: `id=${base64Id};dspEndpoint=${dpsEndpoint}`,
+                },
+              }
+              aasDescriptorsmDescriptor.endpoints.push(dspEndpoint)
+              await putAasDescriptor(aasDescriptor)
+            }
+          }
+        }
+      }
+
     const errors = failedResults
       .map(r => r.errorMessage)
       .filter(Boolean) as string[]
@@ -1055,11 +1137,11 @@
         timeout: 4000,
         color: 'success',
         btnColor: 'buttonText',
-        text: `Successfully created ${succeeded} EDC Asset${succeeded === 1 ? '' : 's'}.`,
+        text: `Successfully created ${succeededResults.length} EDC Asset${succeededResults.length === 1 ? '' : 's'}.`,
       })
       emit('assets-created', true)
       createAssetsDialog.value = false
-    } else if (succeeded === 0) {
+    } else if (succeededResults.length === 0) {
       navigationStore.dispatchSnackbar({
         status: true,
         timeout: 8000,
@@ -1074,7 +1156,7 @@
         timeout: 8000,
         color: 'warning',
         btnColor: 'buttonText',
-        text: `Created ${succeeded} EDC Asset${succeeded === 1 ? '' : 's'} successfully, ${failedResults.length} failed.`
+        text: `Created ${succeededResults.length} EDC Asset${succeededResults.length === 1 ? '' : 's'} successfully, ${failedResults.length} failed.`
           + (errors.length > 0 ? ` ${errors.join(', ')}` : ''),
       })
     }
