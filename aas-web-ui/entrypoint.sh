@@ -41,11 +41,13 @@
 : "${AUTHORIZATION_HEADER_PREFIX:=Bearer}"
 : "${AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION:=true}"
 : "${START_PAGE_ROUTE_NAME:=}"
+: "${CX_EDC_BFF_UPSTREAM_URL:=http://catena-x-edc-bff:3001}"
 
 # Replace ${BASE_PATH} in the NGINX config template (without trailing slash)
 BASE_PATH_NGINX_PREFIX=$(echo "$BASE_PATH" | sed 's|/*$||')
 export BASE_PATH_NGINX_PREFIX
-envsubst '${BASE_PATH_NGINX_PREFIX}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+export CX_EDC_BFF_UPSTREAM_URL
+envsubst '${BASE_PATH_NGINX_PREFIX} ${CX_EDC_BFF_UPSTREAM_URL}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
 # Add a trailing slash to BASE_PATH for the replacement in files
 BASE_PATH_WITH_SLASH=$(echo "$BASE_PATH" | sed 's|/*$|/|')
@@ -174,6 +176,7 @@ printf "%-38s %s\n" "Editor ID prefix:" "$EDITOR_ID_PREFIX"
 printf "%-38s %s\n" "Authorization header prefix:" "$AUTHORIZATION_HEADER_PREFIX"
 printf "%-38s %s\n" "Authorization header description endpoint exemption:" "$AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION"
 printf "%-38s %s\n" "Start page route name:" "$START_PAGE_ROUTE_NAME"
+printf "%-38s %s\n" "Catena-X EDC BFF upstream:" "$CX_EDC_BFF_UPSTREAM_URL"
 echo "-------------------------------------------------------------------------------------------------------------------------"
 
 # Replace the placeholders in all relevant files (.js, .html, .css)

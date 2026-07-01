@@ -34,25 +34,28 @@
             :copied-descriptor-available="Boolean(copiedDescriptor)"
             :copy-json-icon="copyJsonIcon"
             :descriptors="descriptors"
+            :has-more-descriptors="hasMoreDescriptors"
             :is-loading="isLoading"
+            :is-loading-more="isLoadingMoreDescriptors"
             :selected-descriptor-id="selectedDescriptorId"
             @copy="copyDescriptor"
             @copy-json="copyDescriptorAsJson"
             @create="openCreateDescriptorDialog"
             @delete="openDeleteDescriptorDialog"
             @edit="openEditDescriptorDialog"
+            @load-more="loadMoreDescriptors"
             @paste="pasteDescriptor"
             @select="selectDescriptor"
           />
         </div>
 
         <div class="d-flex flex-column overflow-hidden" style="min-height: 0; height: 100%">
-          <DescriptorDetails :descriptor="selectedDescriptor" />
+          <DescriptorDetails :descriptor="selectedDescriptor" :edc-config="selectedEdcConfig" />
         </div>
       </div>
 
       <div v-else class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0; height: 0">
-        <DescriptorDetails :descriptor="selectedDescriptor" />
+        <DescriptorDetails :descriptor="selectedDescriptor" :edc-config="selectedEdcConfig" />
       </div>
 
       <v-dialog v-model="descriptorListDialog" fullscreen transition="dialog-bottom-transition">
@@ -61,7 +64,9 @@
           :copy-json-icon="copyJsonIcon"
           :descriptors="descriptors"
           :flat="true"
+          :has-more-descriptors="hasMoreDescriptors"
           :is-loading="isLoading"
+          :is-loading-more="isLoadingMoreDescriptors"
           :selected-descriptor-id="selectedDescriptorId"
           :show-close-button="true"
           @close="closeDescriptorListDialog"
@@ -70,6 +75,7 @@
           @create="openCreateDescriptorDialogFromList"
           @delete="openDeleteDescriptorDialogFromList"
           @edit="openEditDescriptorDialogFromList"
+          @load-more="loadMoreDescriptors"
           @paste="pasteDescriptorFromList"
           @select="selectDescriptorFromList"
         />
@@ -94,6 +100,7 @@
 </template>
 
 <script lang="ts" setup>
+  import type { AasListPageResult, AssetIdFilter } from '@/composables/Client/AASRegistryClient'
   import { computed, onMounted, ref, toRaw, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useDisplay } from 'vuetify'
@@ -111,6 +118,7 @@
   import DescriptorList from '@/pages/modules/CatenaXplorer/components/DescriptorList.vue'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
+  import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
   defineOptions({
     inheritAttrs: false,
@@ -122,20 +130,39 @@
 
   const descriptorEndpointQueryParam = 'descriptor'
   const legacyDescriptorIdQueryParam = 'descriptorId'
+  const descriptorPageLimit = 100
   const defaultAssetIdName = 'manufacturerPartId'
+  const defaultAssetIdNameSuggestions = [
+    'globalAssetId',
+    'manufacturerPartId',
+    'customerPartId',
+  ]
 
   const route = useRoute()
   const router = useRouter()
   const display = useDisplay()
   const infrastructureStore = useInfrastructureStore()
   const navigationStore = useNavigationStore()
-  const { fetchAasDescriptorList, postAasDescriptor, putAasDescriptor, deleteAasDescriptor } = useAASRegistryClient()
+  const {
+    deleteAasDescriptor,
+    fetchAasDescriptorById,
+    fetchAasDescriptorListPage,
+    postAasDescriptor,
+    putAasDescriptor,
+  } = useAASRegistryClient()
   const { copyToClipboard } = useClipboardUtil()
   const { generateIri } = useIDUtils()
 
   const descriptors = ref<any[]>([])
+  const activeAssetIds = ref<AssetIdFilter[] | undefined>(undefined)
+  const descriptorPaginationGeneration = ref(0)
+  const hasMoreDescriptors = ref(false)
+  const isLoadingMoreDescriptors = ref(false)
   const knownAssetIdNames = ref<string[]>([])
+  const nextDescriptorCursor = ref<string | undefined>(undefined)
   const selectedDescriptorId = ref('')
+  const selectedDescriptorFallback = ref<any | null>(null)
+  const seenDescriptorCursors = ref(new Set<string>())
   const assetIdName = ref(defaultAssetIdName)
   const assetIdValue = ref('')
   const inlineError = ref('')
@@ -158,13 +185,22 @@
   const smAndDown = computed(() => display.smAndDown.value)
   const assetIdNameSuggestions = computed(() => {
     return Array.from(new Set([
-      defaultAssetIdName,
+      ...defaultAssetIdNameSuggestions,
       ...knownAssetIdNames.value,
       ...getAssetIdNameSuggestions(descriptors.value),
     ])).toSorted((a, b) => a.localeCompare(b))
   })
   const selectedDescriptor = computed(() => {
-    return descriptors.value.find(descriptor => descriptor?.id === selectedDescriptorId.value) ?? null
+    const descriptorId = selectedDescriptorId.value.trim()
+    if (descriptorId === '') {
+      return null
+    }
+
+    return descriptors.value.find(descriptor => descriptor?.id === descriptorId)
+      ?? (selectedDescriptorFallback.value?.id === descriptorId ? selectedDescriptorFallback.value : null)
+  })
+  const selectedEdcConfig = computed(() => {
+    return infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null
   })
 
   onMounted(() => {
@@ -179,6 +215,7 @@
     ],
     () => {
       selectedDescriptorId.value = getRouteDescriptorId()
+      void ensureSelectedDescriptorLoaded()
     },
   )
 
@@ -218,27 +255,171 @@
     if (dtrUrl.value.trim() === '') {
       descriptors.value = []
       selectedDescriptorId.value = ''
+      selectedDescriptorFallback.value = null
+      resetDescriptorPaginationState()
       inlineError.value = 'The selected Catena-X infrastructure has no Digital Twin Registry URL.'
       return
     }
 
+    const generation = beginDescriptorPagination(assetIds)
     isLoading.value = true
 
     try {
-      const loadedDescriptors = await fetchAasDescriptorList({ assetIds })
-      descriptors.value = loadedDescriptors
-      rememberAssetIdNames(loadedDescriptors)
+      const page = await fetchAasDescriptorListPage({
+        assetIds: activeAssetIds.value,
+        limit: descriptorPageLimit,
+      })
+
+      if (generation !== descriptorPaginationGeneration.value) {
+        return
+      }
+
+      descriptors.value = page.items
+      rememberAssetIdNames(page.items)
+      updateDescriptorPaginationState(page)
       selectedDescriptorId.value = getRouteDescriptorId()
       if (selectedDescriptorId.value !== '' && getRouteQueryString(legacyDescriptorIdQueryParam) !== '') {
         updateSelectedDescriptorRoute(selectedDescriptorId.value)
       }
+      await ensureSelectedDescriptorLoaded()
     } catch (error) {
       console.warn(error)
       descriptors.value = []
       selectedDescriptorId.value = getRouteDescriptorId()
+      selectedDescriptorFallback.value = null
+      resetDescriptorPaginationState()
       inlineError.value = 'Could not load AAS descriptors from the Digital Twin Registry.'
     } finally {
-      isLoading.value = false
+      if (generation === descriptorPaginationGeneration.value) {
+        isLoading.value = false
+      }
+    }
+  }
+
+  async function loadMoreDescriptors (): Promise<void> {
+    if (!hasMoreDescriptors.value || isLoading.value || isLoadingMoreDescriptors.value) {
+      return
+    }
+
+    const generation = descriptorPaginationGeneration.value
+    isLoadingMoreDescriptors.value = true
+
+    try {
+      const page = await fetchAasDescriptorListPage({
+        assetIds: activeAssetIds.value,
+        cursor: nextDescriptorCursor.value,
+        limit: descriptorPageLimit,
+      })
+
+      if (generation !== descriptorPaginationGeneration.value) {
+        return
+      }
+
+      appendDescriptorPageItems(page.items)
+      rememberAssetIdNames(page.items)
+      updateDescriptorPaginationState(page)
+      await ensureSelectedDescriptorLoaded()
+    } catch (error) {
+      console.warn(error)
+      inlineError.value = 'Could not load more AAS descriptors from the Digital Twin Registry.'
+    } finally {
+      if (generation === descriptorPaginationGeneration.value) {
+        isLoadingMoreDescriptors.value = false
+      }
+    }
+  }
+
+  function beginDescriptorPagination (assetIds?: AssetIdFilter[]): number {
+    descriptorPaginationGeneration.value += 1
+    descriptors.value = []
+    selectedDescriptorFallback.value = null
+    activeAssetIds.value = normalizeAssetIds(assetIds)
+    resetDescriptorPaginationState()
+    return descriptorPaginationGeneration.value
+  }
+
+  function resetDescriptorPaginationState (): void {
+    hasMoreDescriptors.value = false
+    isLoadingMoreDescriptors.value = false
+    nextDescriptorCursor.value = undefined
+    seenDescriptorCursors.value = new Set()
+  }
+
+  function updateDescriptorPaginationState (page: AasListPageResult<any>): void {
+    const cursor = page.nextCursor?.trim()
+    if (page.hasMore && cursor && !seenDescriptorCursors.value.has(cursor)) {
+      seenDescriptorCursors.value.add(cursor)
+      nextDescriptorCursor.value = cursor
+      hasMoreDescriptors.value = true
+      return
+    }
+
+    nextDescriptorCursor.value = undefined
+    hasMoreDescriptors.value = false
+  }
+
+  function appendDescriptorPageItems (pageItems: any[]): void {
+    if (pageItems.length === 0) {
+      return
+    }
+
+    const knownDescriptorIds = new Set(
+      descriptors.value
+        .map(descriptor => (typeof descriptor?.id === 'string' ? descriptor.id : ''))
+        .filter(descriptorId => descriptorId !== ''),
+    )
+
+    const newDescriptors = pageItems.filter(descriptor => {
+      const descriptorId = typeof descriptor?.id === 'string' ? descriptor.id : ''
+      if (descriptorId === '') {
+        return true
+      }
+      if (knownDescriptorIds.has(descriptorId)) {
+        return false
+      }
+      knownDescriptorIds.add(descriptorId)
+      return true
+    })
+
+    descriptors.value = [...descriptors.value, ...newDescriptors]
+  }
+
+  function normalizeAssetIds (assetIds?: AssetIdFilter[]): AssetIdFilter[] | undefined {
+    const normalizedAssetIds = assetIds
+      ?.map(assetId => ({
+        name: assetId.name.trim(),
+        value: assetId.value.trim(),
+      }))
+      .filter(assetId => assetId.name !== '' && assetId.value !== '')
+
+    return normalizedAssetIds && normalizedAssetIds.length > 0 ? normalizedAssetIds : undefined
+  }
+
+  async function ensureSelectedDescriptorLoaded (): Promise<void> {
+    const descriptorId = selectedDescriptorId.value.trim()
+    if (descriptorId === '') {
+      selectedDescriptorFallback.value = null
+      return
+    }
+
+    if (descriptors.value.some(descriptor => descriptor?.id === descriptorId)) {
+      selectedDescriptorFallback.value = null
+      return
+    }
+
+    if (activeAssetIds.value && activeAssetIds.value.length > 0) {
+      selectedDescriptorFallback.value = null
+      return
+    }
+
+    if (selectedDescriptorFallback.value?.id === descriptorId) {
+      return
+    }
+
+    const descriptor = await fetchAasDescriptorById(descriptorId)
+    if (descriptor && Object.keys(descriptor).length > 0) {
+      selectedDescriptorFallback.value = descriptor
+      rememberAssetIdNames([descriptor])
     }
   }
 
@@ -262,6 +443,7 @@
   function setSelectedDescriptorById (descriptorId: string): void {
     selectedDescriptorId.value = descriptorId
     updateSelectedDescriptorRoute(descriptorId)
+    void ensureSelectedDescriptorLoaded()
   }
 
   function openCreateDescriptorDialog (): void {
@@ -469,7 +651,13 @@
       return buildShellDescriptorEndpointUrl(dtrUrl.value, candidateId).replace(/\/+$/, '') === normalizedEndpoint
     })
 
-    return typeof descriptor?.id === 'string' ? descriptor.id : ''
+    if (typeof descriptor?.id === 'string') {
+      return descriptor.id
+    }
+
+    const endpointPath = normalizedEndpoint.split(/[?#]/, 1)[0]
+    const encodedDescriptorId = endpointPath.split('/').pop() ?? ''
+    return base64Decode(decodeURIComponent(encodedDescriptorId))
   }
 
   function cloneDescriptor<T> (descriptor: T): T {

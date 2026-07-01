@@ -17,6 +17,9 @@
 # - mono-repo: discovery and registries plus one aasEnvironment URL for the repositories
 # - mono-all: one aasEnvironment URL for all components
 # - catena-x: digitalTwinRegistry plus submodelService
+# Optional Catena-X EDC metadata:
+# - catenaX.edc.proxyId links this infrastructure to a server-side EDC BFF proxy config.
+# - Do not put the EDC Management API URL or x-api-key in this YAML file.
 
 infrastructures:
   # Specify which infrastructure should be selected by default
@@ -103,6 +106,11 @@ infrastructures:
   #       baseUrl: "https://dtr.staging.basyx.com"
   #     submodelService:
   #       baseUrl: "https://submodel-service.staging.basyx.com"
+  #   catenaX:
+  #     edc:
+  #       proxyId: default
+  #       defaultCounterPartyId: "did:web:provider.example.com"
+  #       defaultCounterPartyAddress: "https://provider.example.com/api/v1/dsp"
   #   security:
   #     type: basic
   #     config:

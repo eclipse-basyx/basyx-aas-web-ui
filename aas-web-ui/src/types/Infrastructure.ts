@@ -68,6 +68,20 @@ export interface ComponentConfig {
 }
 
 /**
+ * Public Catena-X EDC metadata. This deliberately contains no Management API
+ * URL or API key; those belong to the server-side EDC proxy configuration.
+ */
+export interface CatenaXEdcConfig {
+  proxyId: string
+  defaultCounterPartyId?: string
+  defaultCounterPartyAddress?: string
+}
+
+export interface CatenaXConfig {
+  edc?: CatenaXEdcConfig
+}
+
+/**
  * Complete infrastructure configuration
  */
 export interface InfrastructureConfig {
@@ -81,6 +95,7 @@ export interface InfrastructureConfig {
   components: {
     [key in BaSyxComponentKey]: ComponentConfig;
   }
+  catenaX?: CatenaXConfig
   /**
    * Hash of the original YAML configuration (if loaded from YAML)
    * Used to detect when YAML file has been updated
@@ -200,6 +215,13 @@ export interface YamlInfrastructureConfig {
     aasEnvironment?: YamlComponentConfig
     digitalTwinRegistry?: YamlComponentConfig
     submodelService?: YamlComponentConfig
+  }
+  catenaX?: {
+    edc?: {
+      proxyId?: string
+      defaultCounterPartyId?: string
+      defaultCounterPartyAddress?: string
+    }
   }
   security: YamlSecurityConfig
 }

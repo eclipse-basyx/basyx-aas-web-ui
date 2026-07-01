@@ -31,7 +31,7 @@ describe('catenaXplorerUtils.ts', () => {
       'http://localhost:5004/api/v3',
       'manufacturerPartId',
       '',
-    )).toBe('http://localhost:5004/api/v3/shell-descriptors?limit=1000')
+    )).toBe('http://localhost:5004/api/v3/shell-descriptors?limit=100')
   })
 
   it('builds a filtered shell descriptors request URL with encoded asset IDs', () => {
@@ -40,7 +40,7 @@ describe('catenaXplorerUtils.ts', () => {
       'manufacturerPartId',
       'PART-001',
     )).toBe(
-      'http://localhost:5004/api/v3/shell-descriptors?limit=1000'
+      'http://localhost:5004/api/v3/shell-descriptors?limit=100'
       + '&assetIds=eyJuYW1lIjoibWFudWZhY3R1cmVyUGFydElkIiwidmFsdWUiOiJQQVJULTAwMSJ9',
     )
   })
@@ -50,7 +50,7 @@ describe('catenaXplorerUtils.ts', () => {
       'http://localhost:5004/api/v3/shell-descriptors',
       'manufacturerPartId',
       '',
-    )).toBe('curl -X GET \'http://localhost:5004/api/v3/shell-descriptors?limit=1000\'')
+    )).toBe('curl -X GET \'http://localhost:5004/api/v3/shell-descriptors?limit=100\'')
   })
 
   it('extracts unique asset ID name suggestions from descriptors', () => {

@@ -31,6 +31,7 @@ declare module 'vue' {
     CADPreview: typeof import('./components/Plugins/CADPreview.vue')['default']
     CarbonFootprint_v0_9: typeof import('./components/Plugins/Submodels/CarbonFootprint_v0_9.vue')['default']
     CarbonFootprint_v1_0: typeof import('./components/Plugins/Submodels/CarbonFootprint_v1_0.vue')['default']
+    CatenaXEdcConfigPanel: typeof import('./components/AppNavigation/Settings/CatenaXEdcConfigPanel.vue')['default']
     CollectionForm: typeof import('./components/EditorComponents/SubmodelElements/CollectionForm.vue')['default']
     CommandPalette: typeof import('./components/AppNavigation/CommandPalette.vue')['default']
     ComponentConfigPanel: typeof import('./components/AppNavigation/Settings/ComponentConfigPanel.vue')['default']

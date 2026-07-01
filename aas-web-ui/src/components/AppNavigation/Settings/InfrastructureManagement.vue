@@ -125,6 +125,14 @@
               @update:discovery-integration="handleDiscoveryIntegrationUpdate"
               @update:registry-integration="handleRegistryIntegrationUpdate"
             />
+
+            <template v-if="editingInfrastructure.template === 'catena-x'">
+              <v-divider />
+              <v-list-subheader class="mb-3">Catena-X EDC Proxy</v-list-subheader>
+
+              <CatenaXEdcConfigPanel v-model="editingInfrastructure.catenaX" />
+            </template>
+
             <!-- Security Configuration -->
             <v-divider />
             <v-list-subheader class="mb-3">Security Configuration</v-list-subheader>
@@ -257,6 +265,7 @@
   import type { InfrastructureEndpointFieldKey } from '@/utils/InfrastructureUtils'
   import { computed, ref, toRaw, watch } from 'vue'
   import { useRouter } from 'vue-router'
+  import CatenaXEdcConfigPanel from '@/components/AppNavigation/Settings/CatenaXEdcConfigPanel.vue'
   import { useAuth } from '@/composables/Auth/useAuth'
   import { useBasicAuthForm } from '@/composables/Auth/useBasicAuthForm'
   import { useOAuth2Form } from '@/composables/Auth/useOAuth2Form'

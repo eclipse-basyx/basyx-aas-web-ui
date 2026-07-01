@@ -50,9 +50,10 @@ export function buildShellDescriptorsRequestUrl (
   dtrUrl: string,
   assetIdName: string,
   assetIdValue: string,
+  limit = 100,
 ): string {
   const queryParams = new URLSearchParams()
-  queryParams.set('limit', '1000')
+  queryParams.set('limit', String(limit))
 
   const name = toTrimmedString(assetIdName)
   const value = toTrimmedString(assetIdValue)

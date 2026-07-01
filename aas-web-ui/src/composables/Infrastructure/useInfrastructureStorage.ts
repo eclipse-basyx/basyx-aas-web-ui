@@ -20,6 +20,7 @@ function computeInfrastructureHash (infra: InfrastructureConfig): string {
     name: infra.name,
     template: normalizeInfrastructureTemplate(infra.template),
     components: infra.components,
+    catenaX: infra.catenaX,
     auth: infra.auth,
     // Exclude: id (stable), token (runtime), isDefault (user preference), yamlConfigOutdated (runtime flag)
   }
@@ -171,6 +172,7 @@ export function useInfrastructureStorage (): {
     const normalized = infrastructure
     normalized.template = normalizeInfrastructureTemplate(normalized.template)
     normalized.auth ??= { securityType: 'No Authentication' }
+    normalizeCatenaXConfig(normalized)
 
     const defaultComponents = createDefaultComponents()
     const existingComponents = (normalized as Partial<InfrastructureConfig>).components
@@ -188,6 +190,29 @@ export function useInfrastructureStorage (): {
     }
 
     return normalized
+  }
+
+  function normalizeCatenaXConfig (infrastructure: InfrastructureConfig): void {
+    if (infrastructure.template !== 'catena-x') {
+      delete infrastructure.catenaX
+      return
+    }
+
+    const edc = infrastructure.catenaX?.edc
+    const proxyId = edc?.proxyId?.trim() ?? ''
+
+    if (proxyId === '') {
+      delete infrastructure.catenaX
+      return
+    }
+
+    infrastructure.catenaX = {
+      edc: {
+        proxyId,
+        defaultCounterPartyId: edc?.defaultCounterPartyId?.trim() || undefined,
+        defaultCounterPartyAddress: edc?.defaultCounterPartyAddress?.trim() || undefined,
+      },
+    }
   }
 
   /**

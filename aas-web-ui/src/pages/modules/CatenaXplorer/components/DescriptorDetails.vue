@@ -56,6 +56,16 @@
 
       <SubmodelDescriptorPanels :descriptors="submodelDescriptors" />
 
+      <template v-if="edcProxyId">
+        <v-divider class="my-4" />
+
+        <CatenaXplorerEdcPanel
+          :default-counter-party-address="edcConfig?.defaultCounterPartyAddress"
+          :default-counter-party-id="edcConfig?.defaultCounterPartyId"
+          :proxy-id="edcProxyId"
+        />
+      </template>
+
       <v-divider class="my-4" />
 
       <DescriptorJsonPreview :descriptor="descriptor" />
@@ -64,6 +74,7 @@
 </template>
 
 <script lang="ts" setup>
+  import type { CatenaXEdcConfig } from '@/types/Infrastructure'
   import { computed } from 'vue'
   import {
     displayValue,
@@ -74,16 +85,19 @@
     getSpecificAssetIds,
     getSubmodelDescriptors,
   } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
+  import CatenaXplorerEdcPanel from '@/pages/modules/CatenaXplorer/components/CatenaXplorerEdcPanel.vue'
   import DescriptorJsonPreview from '@/pages/modules/CatenaXplorer/components/DescriptorJsonPreview.vue'
   import SpecificAssetIdsTable from '@/pages/modules/CatenaXplorer/components/SpecificAssetIdsTable.vue'
   import SubmodelDescriptorPanels from '@/pages/modules/CatenaXplorer/components/SubmodelDescriptorPanels.vue'
 
   const props = defineProps<{
     descriptor: any | null
+    edcConfig?: CatenaXEdcConfig | null
   }>()
 
   const specificAssetIds = computed(() => getSpecificAssetIds(props.descriptor))
   const submodelDescriptors = computed(() => getSubmodelDescriptors(props.descriptor))
+  const edcProxyId = computed(() => props.edcConfig?.proxyId?.trim() ?? '')
   const descriptorSummary = computed(() => {
     const descriptor = props.descriptor
     if (!descriptor) {
