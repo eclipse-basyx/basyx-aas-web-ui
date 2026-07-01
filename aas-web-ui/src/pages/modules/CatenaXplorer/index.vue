@@ -12,7 +12,6 @@
         v-model:asset-id-name="assetIdName"
         v-model:asset-id-value="assetIdValue"
         :asset-id-name-suggestions="assetIdNameSuggestions"
-        :asset-id-value-suggestions="assetIdValueSuggestions"
         :descriptor-count="descriptors.length"
         :dtr-url-to-display="dtrUrlToDisplay"
         :inline-error="inlineError"
@@ -100,10 +99,7 @@
   import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { useIDUtils } from '@/composables/IDUtils'
-  import {
-    getAssetIdNameSuggestions,
-    getAssetIdValueSuggestions,
-  } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
+  import { getAssetIdNameSuggestions } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
   import CatenaXplorerTopBar from '@/pages/modules/CatenaXplorer/components/CatenaXplorerTopBar.vue'
   import DeleteDescriptorDialog from '@/pages/modules/CatenaXplorer/components/DeleteDescriptorDialog.vue'
   import DescriptorDetails from '@/pages/modules/CatenaXplorer/components/DescriptorDetails.vue'
@@ -161,9 +157,6 @@
       ...knownAssetIdNames.value,
       ...getAssetIdNameSuggestions(descriptors.value),
     ])).toSorted((a, b) => a.localeCompare(b))
-  })
-  const assetIdValueSuggestions = computed(() => {
-    return getAssetIdValueSuggestions(descriptors.value, assetIdName.value)
   })
   const selectedDescriptor = computed(() => {
     return descriptors.value.find(descriptor => descriptor?.id === selectedDescriptorId.value) ?? null

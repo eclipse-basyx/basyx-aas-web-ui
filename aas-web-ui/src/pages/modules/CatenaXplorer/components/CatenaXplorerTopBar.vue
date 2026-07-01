@@ -7,7 +7,7 @@
       </div>
 
       <div class="d-flex align-center ga-1 ga-md-2 flex-grow-1" style="min-width: 0">
-        <v-combobox
+        <v-text-field
           v-model="assetIdValueModel"
           bg-color="surface-light"
           class="flex-grow-1"
@@ -15,7 +15,6 @@
           density="compact"
           flat
           hide-details
-          :items="assetIdValueSuggestions"
           label="Search specific asset ID"
           persistent-clear
           persistent-placeholder
@@ -62,7 +61,7 @@
           <template #clear="{ props: clearProps }">
             <v-icon v-bind="clearProps" icon="mdi-close" size="18" @click.stop="clear" />
           </template>
-        </v-combobox>
+        </v-text-field>
 
         <v-tooltip v-if="showDescriptorListButton" location="bottom" open-delay="600">
           <template #activator="{ props: tooltipProps }">
@@ -128,7 +127,6 @@
       assetIdName: string
       assetIdNameSuggestions: string[]
       assetIdValue: string
-      assetIdValueSuggestions?: string[]
       descriptorCount?: number
       dtrUrlToDisplay: string
       inlineError: string
@@ -136,7 +134,6 @@
       showDescriptorListButton?: boolean
     }>(),
     {
-      assetIdValueSuggestions: () => [],
       descriptorCount: 0,
       showDescriptorListButton: false,
     },

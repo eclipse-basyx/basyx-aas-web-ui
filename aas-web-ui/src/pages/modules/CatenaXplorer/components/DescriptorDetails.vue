@@ -55,6 +55,10 @@
       <v-divider class="my-4" />
 
       <SubmodelDescriptorPanels :descriptors="submodelDescriptors" />
+
+      <v-divider class="my-4" />
+
+      <DescriptorJsonPreview :descriptor="descriptor" />
     </template>
   </v-sheet>
 </template>
@@ -70,6 +74,7 @@
     getSpecificAssetIds,
     getSubmodelDescriptors,
   } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
+  import DescriptorJsonPreview from '@/pages/modules/CatenaXplorer/components/DescriptorJsonPreview.vue'
   import SpecificAssetIdsTable from '@/pages/modules/CatenaXplorer/components/SpecificAssetIdsTable.vue'
   import SubmodelDescriptorPanels from '@/pages/modules/CatenaXplorer/components/SubmodelDescriptorPanels.vue'
 

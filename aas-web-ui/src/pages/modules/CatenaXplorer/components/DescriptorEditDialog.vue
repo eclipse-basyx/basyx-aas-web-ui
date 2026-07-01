@@ -566,9 +566,6 @@
   const { generateIri } = useIDUtils()
   const assetKindOptions = ['Instance', 'Type']
   const specificAssetIdNameOptions = ['customerPartId', 'manufacturerPartId']
-  const specificAssetIdValueOptionsByName: Record<string, string[]> = {
-    manufacturerPartId: ['PUBLIC_READABLE'],
-  }
   const specificAssetIdMarkerOptionsByName: Record<string, string[]> = {
     manufacturerPartId: ['PUBLIC_READABLE'],
   }
@@ -862,8 +859,8 @@
     return specificAssetIdMarkerOptionsByName[name.trim()] ?? []
   }
 
-  function getSpecificAssetIdValueOptions (name: string): string[] {
-    return specificAssetIdValueOptionsByName[name.trim()] ?? []
+  function getSpecificAssetIdValueOptions (_name: string): string[] {
+    return []
   }
 
   function removeSubmodelDescriptor (index: number): void {

@@ -103,28 +103,6 @@ export function getAssetIdNameSuggestions (descriptors: any[]): string[] {
   return uniqueValues(names).toSorted((a, b) => a.localeCompare(b))
 }
 
-export function getAssetIdValueSuggestions (descriptors: any[], assetIdName: string): string[] {
-  const normalizedName = toTrimmedString(assetIdName)
-  const values: string[] = normalizedName === 'manufacturerPartId' ? ['PUBLIC_READABLE'] : []
-
-  for (const descriptor of descriptors) {
-    if (normalizedName === 'globalAssetId') {
-      values.push(toTrimmedString(descriptor?.globalAssetId))
-      continue
-    }
-
-    for (const specificAssetId of getSpecificAssetIds(descriptor)) {
-      if (toTrimmedString(specificAssetId?.name) !== normalizedName) {
-        continue
-      }
-
-      values.push(toTrimmedString(specificAssetId?.value), ...getExternalSubjectMarkerValues(specificAssetId))
-    }
-  }
-
-  return uniqueValues(values).toSorted((a, b) => a.localeCompare(b))
-}
-
 export function getDescriptorStats (descriptors: any[]): { descriptorCount: number } {
   return {
     descriptorCount: descriptors.length,
