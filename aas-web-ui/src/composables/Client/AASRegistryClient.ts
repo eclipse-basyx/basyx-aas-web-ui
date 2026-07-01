@@ -9,7 +9,14 @@ import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { removeNullValues } from '@/utils/generalUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
 
-export type AasListPageOptions = PaginationPageOptions
+export interface AssetIdFilter {
+  name: string
+  value: string
+}
+
+export type AasListPageOptions = PaginationPageOptions & {
+  assetIds?: AssetIdFilter[]
+}
 
 export type AasListPageResult<T> = PaginationPageResult<T>
 
@@ -39,6 +46,25 @@ export function useAASRegistryClient () {
 
     const selectedInfraUrl = infrastructureStore.getSelectedInfrastructure?.components?.AASRegistry?.url?.trim() ?? ''
     return selectedInfraUrl
+  }
+
+  function appendAssetIdQueryParams (queryParams: URLSearchParams, assetIds?: AssetIdFilter[]): void {
+    if (!Array.isArray(assetIds)) {
+      return
+    }
+
+    for (const assetId of assetIds) {
+      const name = assetId?.name?.trim() ?? ''
+      const value = assetId?.value?.trim() ?? ''
+      if (name === '' || value === '') {
+        continue
+      }
+
+      const encodedAssetId = base64Encode(JSON.stringify({ name, value }))
+      if (encodedAssetId !== '') {
+        queryParams.append('assetIds', encodedAssetId)
+      }
+    }
   }
 
   /**
@@ -73,6 +99,7 @@ export function useAASRegistryClient () {
     if (options.cursor && options.cursor.trim() !== '') {
       queryParams.set('cursor', options.cursor.trim())
     }
+    appendAssetIdQueryParams(queryParams, options.assetIds)
 
     const aasRegistryPath = appendQueryParams(aasRegUrl, queryParams)
     const aasRegistryContext = 'retrieving AAS Descriptors page'
@@ -104,7 +131,7 @@ export function useAASRegistryClient () {
    * @returns {Promise<Array<any>>} A promise that resolves to an array of AAS Descriptors.
    * An empty array is returned if the request fails or no AAS Descriptors are found.
    */
-  async function fetchAasDescriptorList (): Promise<Array<any>> {
+  async function fetchAasDescriptorList (options: AasListPageOptions = {}): Promise<Array<any>> {
     const failResponse = [] as Array<any>
     const descriptors: Array<any> = []
     const seenCursors = new Set<string>()
@@ -114,6 +141,7 @@ export function useAASRegistryClient () {
       const page = await fetchAasDescriptorListPage({
         limit: compatibilityFetchLimit,
         cursor,
+        assetIds: options.assetIds,
       })
 
       if (page.items.length > 0) {
