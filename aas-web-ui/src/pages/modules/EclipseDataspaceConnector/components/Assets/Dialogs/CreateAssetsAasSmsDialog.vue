@@ -1115,7 +1115,7 @@
             if (aasDescriptorsmDescriptor) {
               const endpoint = extractEndpointHref(aasDescriptorsmDescriptor, 'SUBMODEL-3.0')
               const dspEndpoint = {
-                interface: 'EDC-PROTOCOL',
+                interface: 'SUBMODEL-3.0',
                 protocolInformation: {
                   href: `${endpoint}`,
                   endpointProtocol: getEndpointProtocol(endpoint),
