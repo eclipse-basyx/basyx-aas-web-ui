@@ -3,7 +3,7 @@
     border
     class="pa-4 flex-grow-1 overflow-y-auto"
     rounded="lg"
-    style="min-height: 0"
+    style="min-height: 0; height: 100%; overflow-y: auto"
   >
     <v-empty-state
       v-if="!descriptor"

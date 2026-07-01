@@ -12,16 +12,24 @@
         v-model:asset-id-name="assetIdName"
         v-model:asset-id-value="assetIdValue"
         :asset-id-name-suggestions="assetIdNameSuggestions"
+        :asset-id-value-suggestions="assetIdValueSuggestions"
+        :descriptor-count="descriptors.length"
         :dtr-url-to-display="dtrUrlToDisplay"
         :inline-error="inlineError"
         :is-loading="isLoading"
+        :show-descriptor-list-button="smAndDown"
         @clear="clearSearch"
+        @open-descriptor-list="openDescriptorListDialog"
         @reload="reloadDescriptors"
         @search="searchDescriptors"
       />
 
-      <v-row align="stretch" class="flex-grow-1 overflow-hidden" no-gutters style="min-height: 0">
-        <v-col class="d-flex flex-column pe-lg-2" cols="12" lg="4" style="min-height: 0">
+      <div
+        v-if="mdAndUp"
+        class="flex-grow-1 overflow-hidden"
+        style="display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 16px; min-height: 0; height: 0"
+      >
+        <div class="d-flex flex-column overflow-hidden" style="min-height: 0; height: 100%">
           <DescriptorList
             :copied-descriptor-available="Boolean(copiedDescriptor)"
             :copy-json-icon="copyJsonIcon"
@@ -36,14 +44,38 @@
             @paste="pasteDescriptor"
             @select="selectDescriptor"
           />
-        </v-col>
+        </div>
 
-        <v-col class="d-flex flex-column ps-lg-2 pt-3 pt-lg-0" cols="12" lg="8" style="min-height: 0">
+        <div class="d-flex flex-column overflow-hidden" style="min-height: 0; height: 100%">
           <DescriptorDetails :descriptor="selectedDescriptor" />
-        </v-col>
-      </v-row>
+        </div>
+      </div>
 
-      <CreateDescriptorDialog
+      <div v-else class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0; height: 0">
+        <DescriptorDetails :descriptor="selectedDescriptor" />
+      </div>
+
+      <v-dialog v-model="descriptorListDialog" fullscreen transition="dialog-bottom-transition">
+        <DescriptorList
+          :copied-descriptor-available="Boolean(copiedDescriptor)"
+          :copy-json-icon="copyJsonIcon"
+          :descriptors="descriptors"
+          :flat="true"
+          :is-loading="isLoading"
+          :selected-descriptor-id="selectedDescriptorId"
+          :show-close-button="true"
+          @close="closeDescriptorListDialog"
+          @copy="copyDescriptor"
+          @copy-json="copyDescriptorAsJson"
+          @create="openCreateDescriptorDialogFromList"
+          @delete="openDeleteDescriptorDialogFromList"
+          @edit="openEditDescriptorDialogFromList"
+          @paste="pasteDescriptorFromList"
+          @select="selectDescriptorFromList"
+        />
+      </v-dialog>
+
+      <DescriptorEditDialog
         v-model="descriptorDialog"
         :descriptor="descriptorToEdit"
         :loading="isSavingDescriptor"
@@ -64,14 +96,18 @@
 <script lang="ts" setup>
   import { computed, onMounted, ref, toRaw, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
+  import { useDisplay } from 'vuetify'
   import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { useIDUtils } from '@/composables/IDUtils'
-  import { getAssetIdNameSuggestions } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
+  import {
+    getAssetIdNameSuggestions,
+    getAssetIdValueSuggestions,
+  } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
   import CatenaXplorerTopBar from '@/pages/modules/CatenaXplorer/components/CatenaXplorerTopBar.vue'
-  import CreateDescriptorDialog from '@/pages/modules/CatenaXplorer/components/CreateDescriptorDialog.vue'
   import DeleteDescriptorDialog from '@/pages/modules/CatenaXplorer/components/DeleteDescriptorDialog.vue'
   import DescriptorDetails from '@/pages/modules/CatenaXplorer/components/DescriptorDetails.vue'
+  import DescriptorEditDialog from '@/pages/modules/CatenaXplorer/components/DescriptorEditDialog.vue'
   import DescriptorList from '@/pages/modules/CatenaXplorer/components/DescriptorList.vue'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
@@ -80,7 +116,7 @@
     inheritAttrs: false,
     moduleTitle: 'CatenaXplorer',
     isDesktopModule: true,
-    isMobileModule: false,
+    isMobileModule: true,
     supportedInfrastructureTemplates: ['catena-x'],
   })
 
@@ -89,6 +125,7 @@
 
   const route = useRoute()
   const router = useRouter()
+  const display = useDisplay()
   const infrastructureStore = useInfrastructureStore()
   const navigationStore = useNavigationStore()
   const { fetchAasDescriptorList, postAasDescriptor, putAasDescriptor, deleteAasDescriptor } = useAASRegistryClient()
@@ -107,6 +144,7 @@
   const descriptorToEdit = ref<Record<string, unknown> | null>(null)
   const isSavingDescriptor = ref(false)
   const deleteDescriptorDialog = ref(false)
+  const descriptorListDialog = ref(false)
   const descriptorToDelete = ref<any | null>(null)
   const isDeletingDescriptor = ref(false)
   const copiedDescriptor = ref<Record<string, unknown> | null>(null)
@@ -115,12 +153,17 @@
 
   const dtrUrl = computed(() => infrastructureStore.getAASRegistryURL)
   const dtrUrlToDisplay = computed(() => dtrUrl.value.trim() || 'No Digital Twin Registry URL configured')
+  const mdAndUp = computed(() => display.mdAndUp.value)
+  const smAndDown = computed(() => display.smAndDown.value)
   const assetIdNameSuggestions = computed(() => {
     return Array.from(new Set([
       defaultAssetIdName,
       ...knownAssetIdNames.value,
       ...getAssetIdNameSuggestions(descriptors.value),
     ])).toSorted((a, b) => a.localeCompare(b))
+  })
+  const assetIdValueSuggestions = computed(() => {
+    return getAssetIdValueSuggestions(descriptors.value, assetIdName.value)
   })
   const selectedDescriptor = computed(() => {
     return descriptors.value.find(descriptor => descriptor?.id === selectedDescriptorId.value) ?? null
@@ -224,11 +267,21 @@
     descriptorDialog.value = true
   }
 
+  function openCreateDescriptorDialogFromList (): void {
+    closeDescriptorListDialog()
+    openCreateDescriptorDialog()
+  }
+
   function openEditDescriptorDialog (descriptor: any): void {
     inlineError.value = ''
     descriptorDialogMode.value = 'edit'
     descriptorToEdit.value = cloneDescriptor(descriptor)
     descriptorDialog.value = true
+  }
+
+  function openEditDescriptorDialogFromList (descriptor: any): void {
+    closeDescriptorListDialog()
+    openEditDescriptorDialog(descriptor)
   }
 
   async function saveDescriptor (descriptor: Record<string, unknown>): Promise<void> {
@@ -267,6 +320,11 @@
   function openDeleteDescriptorDialog (descriptor: any): void {
     descriptorToDelete.value = descriptor
     deleteDescriptorDialog.value = true
+  }
+
+  function openDeleteDescriptorDialogFromList (descriptor: any): void {
+    closeDescriptorListDialog()
+    openDeleteDescriptorDialog(descriptor)
   }
 
   async function deleteDescriptor (): Promise<void> {
@@ -342,6 +400,24 @@
 
     descriptorDialogMode.value = 'create'
     await saveDescriptor(descriptor)
+  }
+
+  async function pasteDescriptorFromList (): Promise<void> {
+    closeDescriptorListDialog()
+    await pasteDescriptor()
+  }
+
+  function openDescriptorListDialog (): void {
+    descriptorListDialog.value = true
+  }
+
+  function closeDescriptorListDialog (): void {
+    descriptorListDialog.value = false
+  }
+
+  function selectDescriptorFromList (descriptor: any): void {
+    selectDescriptor(descriptor)
+    closeDescriptorListDialog()
   }
 
   function getRouteDescriptorId (): string {

@@ -3,6 +3,7 @@ import {
   displayValue,
   formatDateTime,
   getAssetIdNameSuggestions,
+  getAssetIdValueSuggestions,
   getDescriptorKey,
   getDescriptorLastUpdatedAt,
   getDescriptorStats,
@@ -29,6 +30,28 @@ describe('catenaXplorerUtils.ts', () => {
     ])
 
     expect(suggestions).toEqual(['customerPartId', 'globalAssetId', 'manufacturerPartId'])
+  })
+
+  it('extracts asset ID value suggestions for a selected asset ID name', () => {
+    const suggestions = getAssetIdValueSuggestions([
+      {
+        specificAssetIds: [
+          {
+            name: 'manufacturerPartId',
+            value: 'PART-001',
+            externalSubjectId: { keys: [{ value: 'PUBLIC_READABLE' }] },
+          },
+          { name: 'customerPartId', value: 'CUSTOMER-PART-001' },
+        ],
+      },
+      {
+        specificAssetIds: [
+          { name: 'manufacturerPartId', value: 'PART-002' },
+        ],
+      },
+    ], 'manufacturerPartId')
+
+    expect(suggestions).toEqual(['PART-001', 'PART-002', 'PUBLIC_READABLE'])
   })
 
   it('formats display fallbacks for sparse descriptor values', () => {

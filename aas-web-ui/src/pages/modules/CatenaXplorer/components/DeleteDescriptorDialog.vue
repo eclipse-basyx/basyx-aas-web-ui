@@ -1,6 +1,14 @@
 <template>
-  <v-dialog v-model="dialogModel" max-width="500">
-    <v-card>
+  <v-dialog
+    v-model="dialogModel"
+    :fullscreen="smAndDown"
+    max-width="500"
+  >
+    <v-sheet
+      :border="!smAndDown"
+      :rounded="smAndDown ? undefined : 'lg'"
+      :style="smAndDown ? { height: '100vh' } : undefined"
+    >
       <v-card-title class="bg-cardHeader">Delete AAS Descriptor</v-card-title>
 
       <v-divider />
@@ -15,15 +23,25 @@
 
       <v-card-actions>
         <v-spacer />
-        <v-btn :disabled="loading" @click="dialogModel = false">Cancel</v-btn>
-        <v-btn color="error" :loading="loading" @click="emit('delete')">Delete</v-btn>
+        <v-btn :disabled="loading" rounded="lg" text="Cancel" @click="dialogModel = false" />
+
+        <v-btn
+          class="text-buttonText"
+          color="error"
+          :loading="loading"
+          rounded="lg"
+          text="Delete"
+          variant="flat"
+          @click="emit('delete')"
+        />
       </v-card-actions>
-    </v-card>
+    </v-sheet>
   </v-dialog>
 </template>
 
 <script lang="ts" setup>
   import { computed } from 'vue'
+  import { useDisplay } from 'vuetify'
 
   const props = withDefaults(
     defineProps<{
@@ -41,6 +59,8 @@
     (event: 'delete'): void
     (event: 'update:model-value', value: boolean): void
   }>()
+
+  const { smAndDown } = useDisplay()
 
   const dialogModel = computed({
     get: () => props.modelValue,

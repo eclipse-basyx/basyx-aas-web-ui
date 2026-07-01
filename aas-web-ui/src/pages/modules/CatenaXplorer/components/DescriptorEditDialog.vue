@@ -1,13 +1,25 @@
 <template>
-  <v-dialog v-model="dialogModel" persistent width="860">
-    <v-card>
-      <v-card-title class="bg-cardHeader">
-        {{ title }}
-      </v-card-title>
+  <v-dialog
+    v-model="dialogModel"
+    :fullscreen="smAndDown"
+    :max-width="smAndDown ? undefined : '1200px'"
+    persistent
+    transition="dialog-bottom-transition"
+  >
+    <v-sheet
+      :border="!smAndDown"
+      class="d-flex flex-column"
+      :rounded="smAndDown ? undefined : 'lg'"
+      :style="smAndDown ? { height: '100vh' } : undefined"
+    >
+      <v-card-title class="bg-cardHeader">{{ title }}</v-card-title>
 
       <v-divider />
 
-      <v-card-text class="pa-3 bg-card" style="overflow-y: auto">
+      <v-card-text
+        class="pt-1 overflow-y-auto"
+        :style="smAndDown ? { flex: '1 1 auto', minHeight: '0' } : { maxHeight: 'calc(100vh - 200px)' }"
+      >
         <v-alert
           v-if="localError"
           class="mb-3"
@@ -18,8 +30,15 @@
           variant="tonal"
         />
 
-        <v-expansion-panels v-model="openPanels" multiple>
-          <v-expansion-panel class="border-t-thin border-s-thin border-e-thin" :class="bordersToShow(0)">
+        <v-expansion-panels
+          v-model="openPanels"
+          gap="8"
+          multiple
+          rounded="lg"
+          static
+          variant="accordion"
+        >
+          <v-expansion-panel>
             <v-expansion-panel-title>Details</v-expansion-panel-title>
 
             <v-expansion-panel-text>
@@ -27,10 +46,13 @@
                 <v-col class="py-0">
                   <v-text-field
                     v-model="id"
+                    bg-color="surface-light"
                     clearable
-                    density="comfortable"
+                    density="compact"
                     :disabled="mode === 'edit'"
+                    flat
                     label="ID"
+                    single-line
                     variant="outlined"
                   />
                 </v-col>
@@ -40,9 +62,12 @@
                 <v-col class="py-0">
                   <v-text-field
                     v-model="idShort"
+                    bg-color="surface-light"
                     clearable
-                    density="comfortable"
+                    density="compact"
+                    flat
                     label="IdShort"
+                    single-line
                     variant="outlined"
                   />
                 </v-col>
@@ -53,8 +78,10 @@
                   <v-textarea
                     v-model="description"
                     auto-grow
+                    bg-color="surface-light"
                     clearable
-                    density="comfortable"
+                    density="compact"
+                    flat
                     label="Description"
                     rows="2"
                     variant="outlined"
@@ -64,7 +91,7 @@
             </v-expansion-panel-text>
           </v-expansion-panel>
 
-          <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(1)">
+          <v-expansion-panel>
             <v-expansion-panel-title>Asset</v-expansion-panel-title>
 
             <v-expansion-panel-text>
@@ -72,10 +99,13 @@
                 <v-col class="py-0" cols="12" md="6">
                   <v-select
                     v-model="assetKind"
+                    bg-color="surface-light"
                     clearable
-                    density="comfortable"
+                    density="compact"
+                    flat
                     :items="assetKindOptions"
                     label="Asset Kind"
+                    single-line
                     variant="outlined"
                   />
                 </v-col>
@@ -83,25 +113,161 @@
                 <v-col class="py-0" cols="12" md="6">
                   <v-text-field
                     v-model="assetType"
+                    bg-color="surface-light"
                     clearable
-                    density="comfortable"
+                    density="compact"
+                    flat
                     label="Asset Type"
+                    single-line
                     variant="outlined"
                   />
                 </v-col>
               </v-row>
 
-              <AssetIdInput
-                v-model:global-asset-id="globalAssetId"
-                v-model:specific-asset-ids="specificAssetIds"
-                :show-generate-iri-for-global="true"
-                :show-generate-iri-for-specific="true"
-                :show-specific-asset-ids="true"
+              <v-row align="center">
+                <v-col class="py-0">
+                  <v-text-field
+                    v-model="globalAssetId"
+                    bg-color="surface-light"
+                    clearable
+                    density="compact"
+                    flat
+                    label="Global Asset ID"
+                    single-line
+                    variant="outlined"
+                  >
+                    <template #append-inner>
+                      <v-tooltip location="bottom" open-delay="600">
+                        <template #activator="{ props: tooltipProps }">
+                          <v-btn
+                            v-bind="tooltipProps"
+                            icon="mdi-auto-fix"
+                            size="small"
+                            variant="text"
+                            @click.stop="globalAssetId = generateIri('GlobalAssetId')"
+                          />
+                        </template>
+
+                        <span>Generate Global Asset ID</span>
+                      </v-tooltip>
+                    </template>
+                  </v-text-field>
+                </v-col>
+              </v-row>
+
+              <div class="d-flex align-center justify-space-between ga-2 mb-3">
+                <div class="text-subtitle-2">Specific Asset IDs</div>
+
+                <v-tooltip location="bottom" open-delay="600">
+                  <template #activator="{ props: tooltipProps }">
+                    <v-btn
+                      v-bind="tooltipProps"
+                      class="text-buttonText"
+                      color="primary"
+                      prepend-icon="mdi-plus"
+                      rounded="lg"
+                      size="small"
+                      text="Add"
+                      variant="flat"
+                      @click="addSpecificAssetId"
+                    />
+                  </template>
+
+                  <span>Add specific asset ID</span>
+                </v-tooltip>
+              </div>
+
+              <v-empty-state
+                v-if="specificAssetIds.length === 0"
+                class="text-divider"
+                icon="mdi-tag-off-outline"
+                text="No specific asset IDs are configured for this descriptor."
+                title="No specific asset IDs"
               />
+
+              <v-sheet
+                v-for="(assetId, assetIdIndex) in specificAssetIds"
+                :key="assetId.localKey"
+                border
+                class="pa-3 mb-3"
+                rounded="lg"
+              >
+                <div class="d-flex align-center justify-space-between ga-2 mb-2">
+                  <div class="text-caption text-medium-emphasis">Specific Asset ID {{ assetIdIndex + 1 }}</div>
+
+                  <v-btn
+                    icon="mdi-delete"
+                    size="small"
+                    variant="text"
+                    @click="removeSpecificAssetId(assetIdIndex)"
+                  />
+                </div>
+
+                <v-row density="comfortable">
+                  <v-col cols="12" md="5">
+                    <v-combobox
+                      v-model="assetId.name"
+                      bg-color="surface-light"
+                      clearable
+                      density="compact"
+                      flat
+                      :items="specificAssetIdNameOptions"
+                      label="Name"
+                      single-line
+                      variant="outlined"
+                    />
+                  </v-col>
+
+                  <v-col cols="12" md="7">
+                    <v-combobox
+                      v-model="assetId.value"
+                      bg-color="surface-light"
+                      clearable
+                      density="compact"
+                      flat
+                      :items="getSpecificAssetIdValueOptions(assetId.name)"
+                      label="Value"
+                      single-line
+                      variant="outlined"
+                    >
+                      <template #append-inner>
+                        <v-tooltip location="bottom" open-delay="600">
+                          <template #activator="{ props: tooltipProps }">
+                            <v-btn
+                              v-bind="tooltipProps"
+                              icon="mdi-auto-fix"
+                              size="small"
+                              variant="text"
+                              @click.stop="assetId.value = generateIri('SpecificAssetId')"
+                            />
+                          </template>
+
+                          <span>Generate Specific Asset ID</span>
+                        </v-tooltip>
+                      </template>
+                    </v-combobox>
+                  </v-col>
+
+                  <v-col cols="12">
+                    <v-combobox
+                      v-model="assetId.externalSubjectMarkerValues"
+                      bg-color="surface-light"
+                      chips
+                      closable-chips
+                      density="compact"
+                      flat
+                      :items="getSpecificAssetIdMarkerOptions(assetId.name)"
+                      label="External Subject Markers"
+                      multiple
+                      variant="outlined"
+                    />
+                  </v-col>
+                </v-row>
+              </v-sheet>
             </v-expansion-panel-text>
           </v-expansion-panel>
 
-          <v-expansion-panel class="border-s-thin border-e-thin" :class="bordersToShow(2)">
+          <v-expansion-panel>
             <v-expansion-panel-title>
               <div class="d-flex align-center justify-space-between ga-2 w-100">
                 <span>Submodel Descriptors</span>
@@ -115,10 +281,13 @@
             <v-expansion-panel-text>
               <div class="d-flex justify-end mb-3">
                 <v-btn
+                  class="text-buttonText"
                   color="primary"
                   prepend-icon="mdi-plus"
+                  rounded="lg"
+                  size="small"
                   text="Add Submodel Descriptor"
-                  variant="outlined"
+                  variant="flat"
                   @click="addSubmodelDescriptor"
                 />
               </div>
@@ -131,12 +300,17 @@
                 title="No submodel descriptors"
               />
 
-              <v-expansion-panels v-else multiple variant="accordion">
+              <v-expansion-panels
+                v-else
+                gap="8"
+                multiple
+                rounded="lg"
+                static
+                variant="accordion"
+              >
                 <v-expansion-panel
                   v-for="(submodelDescriptor, submodelIndex) in submodelDescriptors"
                   :key="submodelDescriptor.localKey"
-                  border
-                  rounded="lg"
                 >
                   <v-expansion-panel-title>
                     <div class="d-flex align-center ga-2 w-100">
@@ -167,9 +341,12 @@
                       <v-col class="py-0" cols="12" md="6">
                         <v-text-field
                           v-model="submodelDescriptor.id"
+                          bg-color="surface-light"
                           clearable
-                          density="comfortable"
+                          density="compact"
+                          flat
                           label="ID"
+                          single-line
                           variant="outlined"
                         />
                       </v-col>
@@ -177,9 +354,12 @@
                       <v-col class="py-0" cols="12" md="6">
                         <v-text-field
                           v-model="submodelDescriptor.idShort"
+                          bg-color="surface-light"
                           clearable
-                          density="comfortable"
+                          density="compact"
+                          flat
                           label="IdShort"
+                          single-line
                           variant="outlined"
                         />
                       </v-col>
@@ -189,9 +369,12 @@
                       <v-col class="py-0" cols="12" md="6">
                         <v-text-field
                           v-model="submodelDescriptor.semanticIdValue"
+                          bg-color="surface-light"
                           clearable
-                          density="comfortable"
+                          density="compact"
+                          flat
                           label="Semantic ID"
+                          single-line
                           variant="outlined"
                         />
                       </v-col>
@@ -199,9 +382,11 @@
                       <v-col class="py-0" cols="12" md="6">
                         <v-combobox
                           v-model="submodelDescriptor.supplementalSemanticIdValues"
+                          bg-color="surface-light"
                           chips
                           closable-chips
-                          density="comfortable"
+                          density="compact"
+                          flat
                           label="Supplemental Semantic IDs"
                           multiple
                           variant="outlined"
@@ -213,10 +398,13 @@
                       <div class="text-subtitle-2">Endpoints</div>
 
                       <v-btn
+                        class="text-buttonText"
+                        color="primary"
                         prepend-icon="mdi-plus"
+                        rounded="lg"
                         size="small"
                         text="Add Endpoint"
-                        variant="tonal"
+                        variant="flat"
                         @click="addSubmodelEndpoint(submodelDescriptor)"
                       />
                     </div>
@@ -253,9 +441,12 @@
                         <v-col class="py-0" cols="12" md="4">
                           <v-text-field
                             v-model="endpoint.interfaceName"
+                            bg-color="surface-light"
                             clearable
-                            density="comfortable"
+                            density="compact"
+                            flat
                             label="Interface"
+                            single-line
                             variant="outlined"
                           />
                         </v-col>
@@ -263,9 +454,12 @@
                         <v-col class="py-0" cols="12" md="5">
                           <v-text-field
                             v-model="endpoint.href"
+                            bg-color="surface-light"
                             clearable
-                            density="comfortable"
+                            density="compact"
+                            flat
                             label="Href"
+                            single-line
                             variant="outlined"
                           />
                         </v-col>
@@ -273,9 +467,12 @@
                         <v-col class="py-0" cols="12" md="3">
                           <v-text-field
                             v-model="endpoint.endpointProtocol"
+                            bg-color="surface-light"
                             clearable
-                            density="comfortable"
+                            density="compact"
+                            flat
                             label="Protocol"
+                            single-line
                             variant="outlined"
                           />
                         </v-col>
@@ -293,18 +490,28 @@
 
       <v-card-actions>
         <v-spacer />
-        <v-btn :disabled="loading" @click="closeDialog">Cancel</v-btn>
-        <v-btn color="primary" :loading="loading" @click="saveDescriptor">Save</v-btn>
+        <v-btn :disabled="loading" rounded="lg" text="Cancel" @click="closeDialog" />
+
+        <v-btn
+          class="text-buttonText"
+          color="primary"
+          :loading="loading"
+          rounded="lg"
+          text="Save"
+          variant="flat"
+          @click="saveDescriptor"
+        />
       </v-card-actions>
-    </v-card>
+    </v-sheet>
   </v-dialog>
 </template>
 
 <script lang="ts" setup>
-  import type { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
   import { computed, ref, toRaw, watch } from 'vue'
-  import AssetIdInput from '@/components/EditorComponents/InputTypes/AssetIdInput.vue'
+  import { useDisplay } from 'vuetify'
+  import { useIDUtils } from '@/composables/IDUtils'
   import {
+    getExternalSubjectMarkerValues,
     getLangStringText,
     getReferenceKeyValues,
     normalizeSupplementalSemanticIds,
@@ -328,6 +535,14 @@
     supplementalSemanticIdValues: string[]
   }
 
+  interface SpecificAssetIdForm {
+    externalSubjectMarkerValues: string[]
+    localKey: string
+    name: string
+    source: Record<string, unknown>
+    value: string
+  }
+
   const props = withDefaults(
     defineProps<{
       descriptor?: Record<string, any> | null
@@ -347,7 +562,16 @@
     (event: 'save', value: Record<string, unknown>): void
   }>()
 
+  const display = useDisplay()
+  const { generateIri } = useIDUtils()
   const assetKindOptions = ['Instance', 'Type']
+  const specificAssetIdNameOptions = ['customerPartId', 'manufacturerPartId']
+  const specificAssetIdValueOptionsByName: Record<string, string[]> = {
+    manufacturerPartId: ['PUBLIC_READABLE'],
+  }
+  const specificAssetIdMarkerOptionsByName: Record<string, string[]> = {
+    manufacturerPartId: ['PUBLIC_READABLE'],
+  }
 
   const openPanels = ref([0, 1, 2])
   const id = ref('')
@@ -356,11 +580,12 @@
   const assetKind = ref<string | null>('Instance')
   const assetType = ref('')
   const globalAssetId = ref<string | null>(null)
-  const specificAssetIds = ref<Array<aasTypes.SpecificAssetId> | null>(null)
+  const specificAssetIds = ref<SpecificAssetIdForm[]>([])
   const submodelDescriptors = ref<SubmodelDescriptorForm[]>([])
   const originalDescriptor = ref<Record<string, unknown> | null>(null)
   const localError = ref('')
 
+  const smAndDown = computed(() => display.smAndDown.value)
   const title = computed(() => props.mode === 'edit' ? 'Edit AAS Descriptor' : 'Create AAS Descriptor')
 
   const dialogModel = computed({
@@ -457,7 +682,9 @@
     assetKind.value = source?.assetKind ?? (props.mode === 'create' ? 'Instance' : null)
     assetType.value = source?.assetType ?? ''
     globalAssetId.value = source?.globalAssetId ?? null
-    specificAssetIds.value = cloneValue(source?.specificAssetIds) ?? null
+    specificAssetIds.value = Array.isArray(source?.specificAssetIds)
+      ? source.specificAssetIds.map(assetId => toSpecificAssetIdForm(assetId))
+      : []
     submodelDescriptors.value = Array.isArray(source?.submodelDescriptors)
       ? source.submodelDescriptors.map(descriptor => toSubmodelForm(descriptor))
       : []
@@ -467,9 +694,9 @@
   function normalizeSpecificAssetIds (): Array<Record<string, unknown>> | null {
     const normalizedAssetIds: Array<Record<string, unknown>> = []
 
-    for (const assetId of specificAssetIds.value ?? []) {
-      const name = assetId?.name?.trim() ?? ''
-      const value = assetId?.value?.trim() ?? ''
+    for (const assetId of specificAssetIds.value) {
+      const name = assetId.name.trim()
+      const value = assetId.value.trim()
 
       if (name === '' && value === '') {
         continue
@@ -479,11 +706,18 @@
         return null
       }
 
-      normalizedAssetIds.push({
-        ...cloneRecord(assetId),
-        name,
-        value,
-      })
+      const normalizedAssetId = cloneRecord(assetId.source) ?? {}
+      normalizedAssetId.name = name
+      normalizedAssetId.value = value
+
+      const externalSubjectMarkerValues = uniqueNonEmpty(assetId.externalSubjectMarkerValues)
+      if (externalSubjectMarkerValues.length > 0) {
+        normalizedAssetId.externalSubjectId = createExternalReferenceFromValues(externalSubjectMarkerValues)
+      } else {
+        delete normalizedAssetId.externalSubjectId
+      }
+
+      normalizedAssetIds.push(normalizedAssetId)
     }
 
     return normalizedAssetIds
@@ -578,6 +812,16 @@
     }
   }
 
+  function toSpecificAssetIdForm (assetId: Record<string, any>): SpecificAssetIdForm {
+    return {
+      externalSubjectMarkerValues: getExternalSubjectMarkerValues(assetId),
+      localKey: createLocalKey(),
+      name: assetId?.name ?? '',
+      source: cloneRecord(assetId) ?? {},
+      value: assetId?.value ?? '',
+    }
+  }
+
   function toEndpointForm (endpoint: Record<string, any>): EndpointForm {
     return {
       endpointProtocol: endpoint?.protocolInformation?.endpointProtocol ?? '',
@@ -598,6 +842,28 @@
       source: {},
       supplementalSemanticIdValues: [],
     })
+  }
+
+  function addSpecificAssetId (): void {
+    specificAssetIds.value.push({
+      externalSubjectMarkerValues: [],
+      localKey: createLocalKey(),
+      name: '',
+      source: {},
+      value: '',
+    })
+  }
+
+  function removeSpecificAssetId (index: number): void {
+    specificAssetIds.value.splice(index, 1)
+  }
+
+  function getSpecificAssetIdMarkerOptions (name: string): string[] {
+    return specificAssetIdMarkerOptionsByName[name.trim()] ?? []
+  }
+
+  function getSpecificAssetIdValueOptions (name: string): string[] {
+    return specificAssetIdValueOptionsByName[name.trim()] ?? []
   }
 
   function removeSubmodelDescriptor (index: number): void {
@@ -627,6 +893,16 @@
           value,
         },
       ],
+    }
+  }
+
+  function createExternalReferenceFromValues (values: string[]): Record<string, unknown> {
+    return {
+      type: 'ExternalReference',
+      keys: values.map(value => ({
+        type: 'GlobalReference',
+        value,
+      })),
     }
   }
 
@@ -661,10 +937,5 @@
 
   function createLocalKey (): string {
     return crypto.randomUUID()
-  }
-
-  function bordersToShow (index: number): string {
-    const nextPanelIsOpen = openPanels.value.includes(index + 1)
-    return nextPanelIsOpen ? 'border-b-0' : 'border-b-thin'
   }
 </script>

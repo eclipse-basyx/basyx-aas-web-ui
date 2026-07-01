@@ -13,13 +13,17 @@
       title="No submodel descriptors"
     />
 
-    <v-expansion-panels v-else multiple variant="accordion">
+    <v-expansion-panels
+      v-else
+      gap="8"
+      multiple
+      rounded="lg"
+      static
+      variant="accordion"
+    >
       <v-expansion-panel
         v-for="submodelDescriptor in descriptors"
         :key="getDescriptorKey(submodelDescriptor)"
-        border
-        height="56px"
-        rounded="lg"
       >
         <v-expansion-panel-title>
           <div class="d-flex flex-column flex-md-row align-start align-md-center ga-2 w-100">
@@ -36,7 +40,7 @@
               </div>
             </div>
 
-            <div class="d-flex ga-1 flex-wrap">
+            <div class="d-none d-lg-flex ga-1 flex-wrap">
               <v-chip
                 v-for="marker in getSubmodelMarkerValues(submodelDescriptor)"
                 :key="marker"

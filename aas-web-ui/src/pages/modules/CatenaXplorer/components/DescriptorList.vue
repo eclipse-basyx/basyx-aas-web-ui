@@ -1,9 +1,9 @@
 <template>
   <v-sheet
-    border
+    :border="!flat"
     class="d-flex flex-column flex-grow-1 overflow-hidden"
-    rounded="lg"
-    style="min-height: 0"
+    :rounded="flat ? false : 'lg'"
+    style="min-height: 0; height: 100%"
   >
     <div class="px-4 py-3 d-flex align-center justify-space-between ga-2">
       <div class="text-h6">AAS Descriptors</div>
@@ -15,15 +15,49 @@
           <template #activator="{ props: tooltipProps }">
             <v-btn
               v-bind="tooltipProps"
+              border
+              color="surface-light"
+              :disabled="!copiedDescriptorAvailable"
+              icon="mdi-file-document-multiple-outline"
+              rounded="lg"
+              size="x-small"
+              variant="flat"
+              @click="emit('paste')"
+            />
+          </template>
+
+          <span>Paste copied descriptor</span>
+        </v-tooltip>
+
+        <v-tooltip location="bottom" open-delay="600">
+          <template #activator="{ props: tooltipProps }">
+            <v-btn
+              v-bind="tooltipProps"
+              class="text-buttonText"
               color="primary"
               icon="mdi-plus"
-              size="small"
-              variant="tonal"
+              rounded="lg"
+              size="x-small"
+              variant="flat"
               @click="emit('create')"
             />
           </template>
 
           <span>Create descriptor</span>
+        </v-tooltip>
+
+        <v-tooltip v-if="showCloseButton" location="bottom" open-delay="600">
+          <template #activator="{ props: tooltipProps }">
+            <v-btn
+              v-bind="tooltipProps"
+              icon="mdi-close"
+              size="small"
+              variant="text"
+              @click="emit('close')"
+            />
+          </template>
+
+          <span>Close descriptors</span>
         </v-tooltip>
       </div>
     </div>
@@ -51,7 +85,7 @@
       class="pa-2 overflow-y-auto flex-grow-1"
       density="comfortable"
       nav
-      style="min-height: 0"
+      style="min-height: 0; height: 0"
     >
       <v-list-item
         v-for="descriptor in descriptors"
@@ -100,7 +134,7 @@
                 />
               </template>
 
-              <v-sheet border>
+              <v-sheet border rounded="lg">
                 <v-list class="py-0" density="compact" slim>
                   <v-list-item @click.stop="emit('edit', descriptor)">
                     <template #prepend>
@@ -135,16 +169,6 @@
 
                     <v-list-item-subtitle>Copy as JSON</v-list-item-subtitle>
                   </v-list-item>
-
-                  <v-divider />
-
-                  <v-list-item :disabled="!copiedDescriptorAvailable" @click.stop="emit('paste')">
-                    <template #prepend>
-                      <v-icon size="x-small">mdi-file-document-multiple-outline</v-icon>
-                    </template>
-
-                    <v-list-item-subtitle>Paste</v-list-item-subtitle>
-                  </v-list-item>
                 </v-list>
               </v-sheet>
             </v-menu>
@@ -169,11 +193,14 @@
     copiedDescriptorAvailable: boolean
     copyJsonIcon: string
     descriptors: any[]
+    flat?: boolean
     isLoading: boolean
     selectedDescriptorId: string
+    showCloseButton?: boolean
   }>()
 
   const emit = defineEmits<{
+    'close': []
     'copy': [descriptor: any]
     'copy-json': [descriptor: any]
     'create': []
