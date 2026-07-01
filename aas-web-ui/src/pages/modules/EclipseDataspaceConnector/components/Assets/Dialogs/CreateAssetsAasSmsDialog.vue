@@ -1080,8 +1080,9 @@
           const aasDescriptor = await fetchAasDescriptorById(selectedAAS.value.id)
           const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0')
           if (id === selectedAAS.value.id) {
+            // Add DSP endpoint to AAS descriptor
             const aasDspEndpoint = {
-              interface: 'EDC-PROTOCOL',
+              interface: 'AAS-3.0',
               protocolInformation: {
                 href: `${aasEndpoint}`,
                 endpointProtocol: getEndpointProtocol(aasEndpoint),
@@ -1092,10 +1093,11 @@
             aasDescriptor.endpoints.push(aasDspEndpoint)
             await putAasDescriptor(aasDescriptor)
           } else {
+            // Add DSP endpoint to SM descriptor
             const smDescriptor = await fetchSmDescriptorById(id)
             const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0')
             const smDspEndpoint = {
-              interface: 'EDC-PROTOCOL',
+              interface: 'SUBMODEL-3.0',
               protocolInformation: {
                 href: `${smEndpoint}`,
                 endpointProtocol: getEndpointProtocol(smEndpoint),
@@ -1106,6 +1108,7 @@
             smDescriptor.endpoints.push(smDspEndpoint)
             await putSubmodelDescriptor(smDescriptor)
 
+            // Add DSP endpoint to SM descriptor in AAS descriptor
             const aasDescriptorsmDescriptor = aasDescriptor.submodelDescriptors.find(
               (descriptor: any) => descriptor.id === id,
             )
