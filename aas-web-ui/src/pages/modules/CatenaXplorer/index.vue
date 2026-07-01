@@ -133,9 +133,18 @@
   const descriptorPageLimit = 100
   const defaultAssetIdName = 'manufacturerPartId'
   const defaultAssetIdNameSuggestions = [
-    'globalAssetId',
+    'manufacturerId',
     'manufacturerPartId',
     'customerPartId',
+    'digitalTwinType',
+    'partInstanceId',
+    'intrinsicId',
+    'batchId',
+    'van',
+    'parentOrderNumber',
+    'jisNumber',
+    'jisCallDate',
+    'globalAssetId',
   ]
 
   const route = useRoute()
@@ -184,11 +193,18 @@
   const mdAndUp = computed(() => display.mdAndUp.value)
   const smAndDown = computed(() => display.smAndDown.value)
   const assetIdNameSuggestions = computed(() => {
-    return Array.from(new Set([
-      ...defaultAssetIdNameSuggestions,
+    const defaultSuggestionNames = new Set(defaultAssetIdNameSuggestions)
+    const discoveredSuggestions = Array.from(new Set([
       ...knownAssetIdNames.value,
       ...getAssetIdNameSuggestions(descriptors.value),
-    ])).toSorted((a, b) => a.localeCompare(b))
+    ]))
+      .filter(assetIdName => !defaultSuggestionNames.has(assetIdName))
+      .toSorted((a, b) => a.localeCompare(b))
+
+    return [
+      ...defaultAssetIdNameSuggestions,
+      ...discoveredSuggestions,
+    ]
   })
   const selectedDescriptor = computed(() => {
     const descriptorId = selectedDescriptorId.value.trim()
