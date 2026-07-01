@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildShellDescriptorEndpointUrl,
+  buildShellDescriptorsCurlCommand,
+  buildShellDescriptorsRequestUrl,
   displayValue,
   formatDateTime,
   getAssetIdNameSuggestions,
@@ -11,6 +14,45 @@ import {
 } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
 
 describe('catenaXplorerUtils.ts', () => {
+  it('builds shell descriptor endpoint URLs from DTR URLs and descriptor IDs', () => {
+    expect(buildShellDescriptorEndpointUrl(
+      'http://localhost:5004/api/v3',
+      'urn:example:aas:product-001',
+    )).toBe('http://localhost:5004/api/v3/shell-descriptors/dXJuOmV4YW1wbGU6YWFzOnByb2R1Y3QtMDAx')
+
+    expect(buildShellDescriptorEndpointUrl(
+      'http://localhost:5004/api/v3/shell-descriptors',
+      'urn:example:aas:product-001',
+    )).toBe('http://localhost:5004/api/v3/shell-descriptors/dXJuOmV4YW1wbGU6YWFzOnByb2R1Y3QtMDAx')
+  })
+
+  it('builds an unfiltered shell descriptors request URL without asset IDs', () => {
+    expect(buildShellDescriptorsRequestUrl(
+      'http://localhost:5004/api/v3',
+      'manufacturerPartId',
+      '',
+    )).toBe('http://localhost:5004/api/v3/shell-descriptors?limit=1000')
+  })
+
+  it('builds a filtered shell descriptors request URL with encoded asset IDs', () => {
+    expect(buildShellDescriptorsRequestUrl(
+      'http://localhost:5004/api/v3/',
+      'manufacturerPartId',
+      'PART-001',
+    )).toBe(
+      'http://localhost:5004/api/v3/shell-descriptors?limit=1000'
+      + '&assetIds=eyJuYW1lIjoibWFudWZhY3R1cmVyUGFydElkIiwidmFsdWUiOiJQQVJULTAwMSJ9',
+    )
+  })
+
+  it('builds a cURL command for shell descriptors', () => {
+    expect(buildShellDescriptorsCurlCommand(
+      'http://localhost:5004/api/v3/shell-descriptors',
+      'manufacturerPartId',
+      '',
+    )).toBe('curl -X GET \'http://localhost:5004/api/v3/shell-descriptors?limit=1000\'')
+  })
+
   it('extracts unique asset ID name suggestions from descriptors', () => {
     const suggestions = getAssetIdNameSuggestions([
       {

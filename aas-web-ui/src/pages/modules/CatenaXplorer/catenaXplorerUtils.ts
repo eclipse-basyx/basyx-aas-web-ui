@@ -1,3 +1,5 @@
+import { base64Encode } from '@/utils/EncodeDecodeUtils'
+
 export interface AssetIdFilterOption {
   name: string
   value: string
@@ -15,6 +17,58 @@ function toTrimmedString (value: unknown): string {
 
 function uniqueValues (values: string[]): string[] {
   return Array.from(new Set(values.filter(value => value.trim() !== '')))
+}
+
+function getShellDescriptorsEndpointUrl (dtrUrl: string): string {
+  const normalizedUrl = toTrimmedString(dtrUrl).replace(/\/+$/, '')
+
+  if (normalizedUrl === '') {
+    return '/shell-descriptors'
+  }
+
+  if (normalizedUrl.endsWith('/shell-descriptors')) {
+    return normalizedUrl
+  }
+
+  return `${normalizedUrl}/shell-descriptors`
+}
+
+export function buildShellDescriptorEndpointUrl (dtrUrl: string, descriptorId: string): string {
+  const id = toTrimmedString(descriptorId)
+  if (id === '') {
+    return ''
+  }
+
+  return `${getShellDescriptorsEndpointUrl(dtrUrl)}/${base64Encode(id)}`
+}
+
+function quoteShellArgument (value: string): string {
+  return `'${value.replace(/'/g, String.raw`'\''`)}'`
+}
+
+export function buildShellDescriptorsRequestUrl (
+  dtrUrl: string,
+  assetIdName: string,
+  assetIdValue: string,
+): string {
+  const queryParams = new URLSearchParams()
+  queryParams.set('limit', '1000')
+
+  const name = toTrimmedString(assetIdName)
+  const value = toTrimmedString(assetIdValue)
+  if (name !== '' && value !== '') {
+    queryParams.append('assetIds', base64Encode(JSON.stringify({ name, value })))
+  }
+
+  return `${getShellDescriptorsEndpointUrl(dtrUrl)}?${queryParams.toString()}`
+}
+
+export function buildShellDescriptorsCurlCommand (
+  dtrUrl: string,
+  assetIdName: string,
+  assetIdValue: string,
+): string {
+  return `curl -X GET ${quoteShellArgument(buildShellDescriptorsRequestUrl(dtrUrl, assetIdName, assetIdValue))}`
 }
 
 export function asArray<T = any> (value: unknown): T[] {

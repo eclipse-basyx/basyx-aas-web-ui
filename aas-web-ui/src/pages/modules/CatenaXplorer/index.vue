@@ -13,6 +13,7 @@
         v-model:asset-id-value="assetIdValue"
         :asset-id-name-suggestions="assetIdNameSuggestions"
         :descriptor-count="descriptors.length"
+        :dtr-url="dtrUrl"
         :dtr-url-to-display="dtrUrlToDisplay"
         :inline-error="inlineError"
         :is-loading="isLoading"
@@ -99,7 +100,10 @@
   import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { useIDUtils } from '@/composables/IDUtils'
-  import { getAssetIdNameSuggestions } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
+  import {
+    buildShellDescriptorEndpointUrl,
+    getAssetIdNameSuggestions,
+  } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
   import CatenaXplorerTopBar from '@/pages/modules/CatenaXplorer/components/CatenaXplorerTopBar.vue'
   import DeleteDescriptorDialog from '@/pages/modules/CatenaXplorer/components/DeleteDescriptorDialog.vue'
   import DescriptorDetails from '@/pages/modules/CatenaXplorer/components/DescriptorDetails.vue'
@@ -116,7 +120,8 @@
     supportedInfrastructureTemplates: ['catena-x'],
   })
 
-  const descriptorQueryParam = 'descriptorId'
+  const descriptorEndpointQueryParam = 'descriptor'
+  const legacyDescriptorIdQueryParam = 'descriptorId'
   const defaultAssetIdName = 'manufacturerPartId'
 
   const route = useRoute()
@@ -168,7 +173,10 @@
   })
 
   watch(
-    () => route.query[descriptorQueryParam],
+    () => [
+      route.query[descriptorEndpointQueryParam],
+      route.query[legacyDescriptorIdQueryParam],
+    ],
     () => {
       selectedDescriptorId.value = getRouteDescriptorId()
     },
@@ -221,6 +229,9 @@
       descriptors.value = loadedDescriptors
       rememberAssetIdNames(loadedDescriptors)
       selectedDescriptorId.value = getRouteDescriptorId()
+      if (selectedDescriptorId.value !== '' && getRouteQueryString(legacyDescriptorIdQueryParam) !== '') {
+        updateSelectedDescriptorRoute(selectedDescriptorId.value)
+      }
     } catch (error) {
       console.warn(error)
       descriptors.value = []
@@ -241,14 +252,14 @@
   function selectDescriptor (descriptor: any): void {
     const descriptorId = typeof descriptor?.id === 'string' ? descriptor.id : ''
     if (descriptorId !== '' && selectedDescriptorId.value === descriptorId) {
-      setSelectedDescriptor('')
+      setSelectedDescriptorById('')
       return
     }
 
-    setSelectedDescriptor(descriptorId)
+    setSelectedDescriptorById(descriptorId)
   }
 
-  function setSelectedDescriptor (descriptorId: string): void {
+  function setSelectedDescriptorById (descriptorId: string): void {
     selectedDescriptorId.value = descriptorId
     updateSelectedDescriptorRoute(descriptorId)
   }
@@ -301,7 +312,7 @@
       assetIdName.value = defaultAssetIdName
       assetIdValue.value = ''
       await loadDescriptors()
-      setSelectedDescriptor(typeof descriptor.id === 'string' ? descriptor.id : '')
+      setSelectedDescriptorById(typeof descriptor.id === 'string' ? descriptor.id : '')
     } catch (error) {
       console.warn(error)
       inlineError.value = `Could not ${descriptorDialogMode.value === 'edit' ? 'update' : 'create'} AAS descriptor in the Digital Twin Registry.`
@@ -340,7 +351,7 @@
       deleteDescriptorDialog.value = false
       descriptorToDelete.value = null
       if (selectedDescriptorId.value === descriptorId) {
-        setSelectedDescriptor('')
+        setSelectedDescriptorById('')
       }
       await loadDescriptors()
     } catch (error) {
@@ -414,7 +425,12 @@
   }
 
   function getRouteDescriptorId (): string {
-    const value = route.query[descriptorQueryParam]
+    const descriptorEndpoint = getRouteQueryString(descriptorEndpointQueryParam)
+    if (descriptorEndpoint !== '') {
+      return getDescriptorIdByEndpoint(descriptorEndpoint)
+    }
+
+    const value = route.query[legacyDescriptorIdQueryParam]
     if (Array.isArray(value)) {
       return value[0] ?? ''
     }
@@ -425,14 +441,35 @@
   function updateSelectedDescriptorRoute (descriptorId: string): void {
     const query = { ...route.query }
     if (descriptorId.trim() === '') {
-      delete query[descriptorQueryParam]
+      delete query[descriptorEndpointQueryParam]
+      delete query[legacyDescriptorIdQueryParam]
     } else {
-      query[descriptorQueryParam] = descriptorId
+      query[descriptorEndpointQueryParam] = buildShellDescriptorEndpointUrl(dtrUrl.value, descriptorId)
+      delete query[legacyDescriptorIdQueryParam]
     }
 
-    router.replace({ query }).catch(error => {
+    router.push({ query }).catch(error => {
       console.warn(error)
     })
+  }
+
+  function getRouteQueryString (queryParameter: string): string {
+    const value = route.query[queryParameter]
+    if (Array.isArray(value)) {
+      return value[0]?.trim() ?? ''
+    }
+
+    return typeof value === 'string' ? value.trim() : ''
+  }
+
+  function getDescriptorIdByEndpoint (descriptorEndpoint: string): string {
+    const normalizedEndpoint = descriptorEndpoint.replace(/\/+$/, '')
+    const descriptor = descriptors.value.find(candidate => {
+      const candidateId = typeof candidate?.id === 'string' ? candidate.id : ''
+      return buildShellDescriptorEndpointUrl(dtrUrl.value, candidateId).replace(/\/+$/, '') === normalizedEndpoint
+    })
+
+    return typeof descriptor?.id === 'string' ? descriptor.id : ''
   }
 
   function cloneDescriptor<T> (descriptor: T): T {

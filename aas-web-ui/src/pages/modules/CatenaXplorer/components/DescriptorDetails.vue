@@ -42,7 +42,7 @@
           md="6"
         >
           <div class="border rounded pa-3 h-100">
-            <div class="text-caption text-medium-emphasis">{{ item.label }}</div>
+            <div class="text-label-small text-medium-emphasis">{{ item.label }}</div>
             <div class="text-body-small text-break">{{ item.value }}</div>
           </div>
         </v-col>

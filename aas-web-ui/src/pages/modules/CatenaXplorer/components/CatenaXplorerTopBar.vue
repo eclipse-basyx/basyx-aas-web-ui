@@ -29,13 +29,54 @@
           <template #append-inner>
             <div class="d-flex align-center ga-1">
 
-              <v-btn
-                icon="mdi-magnify"
-                :loading="isLoading"
-                size="small"
-                variant="text"
-                @click.stop="search"
-              />
+              <v-menu
+                v-model="curlMenu"
+                :close-on-content-click="false"
+                location="bottom end"
+                offset="8"
+                :open-on-click="false"
+                open-on-hover
+              >
+                <template #activator="{ props: menuProps }">
+                  <v-btn
+                    v-bind="menuProps"
+                    icon="mdi-magnify"
+                    :loading="isLoading"
+                    size="small"
+                    variant="text"
+                    @click.stop="search"
+                  />
+                </template>
+
+                <v-sheet
+                  border
+                  class="pa-3"
+                  rounded="lg"
+                  style="width: min(420px, calc(100vw - 32px))"
+                >
+                  <div class="d-flex align-center justify-space-between ga-2">
+                    <div class="text-subtitle-2">Request as cURL</div>
+
+                    <v-tooltip location="bottom" open-delay="600">
+                      <template #activator="{ props: tooltipProps }">
+                        <v-btn
+                          v-bind="tooltipProps"
+                          :icon="copyCurlIcon"
+                          size="small"
+                          variant="text"
+                          @click.stop="copyCurlCommand"
+                        />
+                      </template>
+
+                      <span>Copy cURL</span>
+                    </v-tooltip>
+                  </div>
+
+                  <v-sheet class="pa-2 mt-2" color="surface-light" rounded="lg">
+                    <code class="text-label-small text-break" style="white-space: pre-wrap">{{ curlCommand }}</code>
+                  </v-sheet>
+                </v-sheet>
+              </v-menu>
 
               <v-divider inset vertical />
 
@@ -120,7 +161,9 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed } from 'vue'
+  import { computed, ref } from 'vue'
+  import { useClipboardUtil } from '@/composables/ClipboardUtil'
+  import { buildShellDescriptorsCurlCommand } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
 
   const props = withDefaults(
     defineProps<{
@@ -128,6 +171,7 @@
       assetIdNameSuggestions: string[]
       assetIdValue: string
       descriptorCount?: number
+      dtrUrl: string
       dtrUrlToDisplay: string
       inlineError: string
       isLoading: boolean
@@ -144,6 +188,11 @@
     (event: 'update:asset-id-name' | 'update:asset-id-value', value: string): void
   }>()
 
+  const { copyToClipboard } = useClipboardUtil()
+  const curlMenu = ref(false)
+  const copyCurlIcon = ref('mdi-clipboard-file-outline')
+  const copyCurlIconAsRef = computed(() => copyCurlIcon)
+
   const assetIdNameModel = computed({
     get: () => props.assetIdName,
     set: value => emit('update:asset-id-name', value),
@@ -159,8 +208,16 @@
     location: 'top',
   } as const
 
+  const curlCommand = computed(() => {
+    return buildShellDescriptorsCurlCommand(props.dtrUrl, props.assetIdName, props.assetIdValue)
+  })
+
   function search (): void {
     emit('search')
+  }
+
+  function copyCurlCommand (): void {
+    copyToClipboard(curlCommand.value, 'cURL request', copyCurlIconAsRef.value)
   }
 
   function clear (): void {
