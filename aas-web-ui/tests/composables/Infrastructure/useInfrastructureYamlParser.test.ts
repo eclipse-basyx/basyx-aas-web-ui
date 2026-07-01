@@ -112,4 +112,31 @@ describe('useInfrastructureYamlParser.ts', () => {
     expect(infrastructure.components.SubmodelRegistry.url).toBe('')
     expect(infrastructure.auth?.securityType).toBe('OAuth2')
   })
+
+  it('parses public Catena-X EDC proxy metadata', () => {
+    const { parseYamlConfig } = useInfrastructureYamlParser()
+
+    const parsed = parseYamlConfig(createYamlConfig({
+      name: 'Catena-X',
+      template: 'catena-x',
+      components: {
+        digitalTwinRegistry: { baseUrl: 'https://dtr.example' },
+        submodelService: { baseUrl: 'https://submodel-service.example' },
+      },
+      catenaX: {
+        edc: {
+          proxyId: 'default',
+          defaultCounterPartyId: 'did:web:provider.example',
+          defaultCounterPartyAddress: 'https://provider.example/api/v1/dsp',
+        },
+      },
+      security: { type: 'none' },
+    }))
+
+    expect(parsed.infrastructures[0].catenaX?.edc).toEqual({
+      proxyId: 'default',
+      defaultCounterPartyId: 'did:web:provider.example',
+      defaultCounterPartyAddress: 'https://provider.example/api/v1/dsp',
+    })
+  })
 })

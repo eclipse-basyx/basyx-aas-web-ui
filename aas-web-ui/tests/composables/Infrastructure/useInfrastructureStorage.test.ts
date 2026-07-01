@@ -79,4 +79,57 @@ describe('useInfrastructureStorage.ts', () => {
     const stored = JSON.parse(window.localStorage.getItem('basyxInfrastructures') ?? '{}')
     expect(stored.infrastructures[0].template).toBe('full')
   })
+
+  it('persists Catena-X EDC proxy metadata only for Catena-X infrastructures', () => {
+    const { saveInfrastructuresToStorage } = useInfrastructureStorage()
+
+    saveInfrastructuresToStorage([
+      {
+        id: 'catena-x',
+        name: 'Catena-X',
+        template: 'catena-x',
+        components: {
+          AASDiscovery: { url: 'https://dtr.example' },
+          AASRegistry: { url: 'https://dtr.example' },
+          SubmodelRegistry: { url: '' },
+          AASRepo: { url: '' },
+          SubmodelRepo: { url: 'https://submodel-service.example' },
+          ConceptDescriptionRepo: { url: '' },
+        },
+        catenaX: {
+          edc: {
+            proxyId: ' default ',
+            defaultCounterPartyId: ' did:web:provider.example ',
+            defaultCounterPartyAddress: ' https://provider.example/api/v1/dsp ',
+          },
+        },
+        auth: { securityType: 'No Authentication' },
+      },
+      {
+        id: 'full',
+        name: 'Full',
+        template: 'full',
+        components: {
+          AASDiscovery: { url: '' },
+          AASRegistry: { url: '' },
+          SubmodelRegistry: { url: '' },
+          AASRepo: { url: '' },
+          SubmodelRepo: { url: '' },
+          ConceptDescriptionRepo: { url: '' },
+        },
+        catenaX: {
+          edc: { proxyId: 'stale' },
+        },
+        auth: { securityType: 'No Authentication' },
+      },
+    ], 'catena-x')
+
+    const stored = JSON.parse(window.localStorage.getItem('basyxInfrastructures') ?? '{}')
+    expect(stored.infrastructures[0].catenaX.edc).toEqual({
+      proxyId: 'default',
+      defaultCounterPartyId: 'did:web:provider.example',
+      defaultCounterPartyAddress: 'https://provider.example/api/v1/dsp',
+    })
+    expect(stored.infrastructures[1].catenaX).toBeUndefined()
+  })
 })

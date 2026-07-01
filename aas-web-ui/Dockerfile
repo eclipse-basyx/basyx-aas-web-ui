@@ -25,6 +25,18 @@ COPY . .
 # Build the application
 ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN pnpm build
+RUN pnpm bff:build
+
+# Catena-X EDC BFF Stage
+FROM node:lts-slim AS edc-bff-stage
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+WORKDIR /usr/src/app
+ENV NODE_ENV=production
+ENV CX_EDC_BFF_PORT=3001
+COPY --from=build-stage /app/dist-bff /usr/src/app/dist-bff
+EXPOSE 3001
+CMD ["node", "/usr/src/app/dist-bff/edc-bff/server.js"]
 
 # Production Stage
 FROM nginx:mainline-alpine-slim AS production-stage

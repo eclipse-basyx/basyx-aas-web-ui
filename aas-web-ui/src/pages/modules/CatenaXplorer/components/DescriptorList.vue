@@ -86,6 +86,7 @@
       density="comfortable"
       nav
       style="min-height: 0; height: 0"
+      @scroll.passive="handleDescriptorListScroll"
     >
       <v-list-item
         v-for="descriptor in descriptors"
@@ -175,6 +176,40 @@
           </div>
         </template>
       </v-list-item>
+
+      <v-list-item
+        v-if="isLoadingMore"
+        class="px-4 py-1"
+        density="compact"
+      >
+        <template #prepend>
+          <v-progress-circular class="mr-2" indeterminate size="16" width="2" />
+        </template>
+
+        <v-list-item-subtitle class="text-medium-emphasis ml-1">
+          Loading more descriptors...
+        </v-list-item-subtitle>
+      </v-list-item>
+
+      <v-list-item
+        v-else-if="hasMoreDescriptors"
+        class="px-4 py-1"
+        density="compact"
+      >
+        <v-list-item-subtitle class="text-medium-emphasis">
+          Scroll down to load more descriptors.
+        </v-list-item-subtitle>
+
+        <template #append>
+          <v-btn
+            size="small"
+            variant="text"
+            @click.stop="emit('load-more')"
+          >
+            Load more
+          </v-btn>
+        </template>
+      </v-list-item>
     </v-list>
   </v-sheet>
 </template>
@@ -194,6 +229,8 @@
     copyJsonIcon: string
     descriptors: any[]
     flat?: boolean
+    hasMoreDescriptors?: boolean
+    isLoadingMore?: boolean
     isLoading: boolean
     selectedDescriptorId: string
     showCloseButton?: boolean
@@ -206,13 +243,31 @@
     'create': []
     'delete': [descriptor: any]
     'edit': [descriptor: any]
+    'load-more': []
     'paste': []
     'select': [descriptor: any]
   }>()
 
+  const scrollLoadThreshold = 160
   const descriptorStats = computed(() => getDescriptorStats(props.descriptors))
 
   function isSelectedDescriptor (descriptor: any): boolean {
     return props.selectedDescriptorId === descriptor?.id
+  }
+
+  function handleDescriptorListScroll (event: Event): void {
+    if (!props.hasMoreDescriptors || props.isLoadingMore || props.isLoading) {
+      return
+    }
+
+    const element = event.target
+    if (!(element instanceof HTMLElement)) {
+      return
+    }
+
+    const remainingDistance = element.scrollHeight - element.scrollTop - element.clientHeight
+    if (remainingDistance <= scrollLoadThreshold) {
+      emit('load-more')
+    }
   }
 </script>

@@ -143,6 +143,21 @@ export function useInfrastructureYamlParser (): {
     return `yaml_${yamlKey}`
   }
 
+  function parseCatenaXConfig (yamlConfig: YamlInfrastructureConfig): InfrastructureConfig['catenaX'] {
+    const proxyId = yamlConfig.catenaX?.edc?.proxyId?.trim()
+    if (!proxyId) {
+      return undefined
+    }
+
+    return {
+      edc: {
+        proxyId,
+        defaultCounterPartyId: yamlConfig.catenaX?.edc?.defaultCounterPartyId?.trim() || undefined,
+        defaultCounterPartyAddress: yamlConfig.catenaX?.edc?.defaultCounterPartyAddress?.trim() || undefined,
+      },
+    }
+  }
+
   /**
    * Parses a single YAML infrastructure configuration
    */
@@ -166,6 +181,11 @@ export function useInfrastructureYamlParser (): {
         SubmodelRepo: { url: '' },
         ConceptDescriptionRepo: { url: '' },
       },
+    }
+
+    const catenaX = parseCatenaXConfig(yamlConfig)
+    if (catenaX) {
+      infrastructure.catenaX = catenaX
     }
 
     function applyYamlComponentToKeys (
