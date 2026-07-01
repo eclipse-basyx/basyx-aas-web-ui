@@ -170,7 +170,7 @@ export function useAASDiscoveryClient () {
     const path = `${discoveryBaseUrl}/${base64Encode(aasId)}`
     const context = 'deleting AAS discovery asset links'
     const disableMessage = false
-    const response = await deleteRequest(path, context, disableMessage)
+    const response = await deleteRequest(path, new Headers(), context, disableMessage)
 
     return response.success
   }

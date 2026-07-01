@@ -314,7 +314,7 @@ export function useAASRegistryClient () {
     const context = 'deleting AAS Descriptor'
     const disableMessage = false
     const path = aasRegUrl + '/' + base64Encode(aasId)
-    const response = await deleteRequest(path, context, disableMessage)
+    const response = await deleteRequest(path, new Headers(), context, disableMessage)
 
     return response.success
   }

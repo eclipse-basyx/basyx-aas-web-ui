@@ -1,0 +1,24 @@
+{
+  "@context": [
+    "https://w3id.org/tractusx/edc/v0.0.1",
+    "http://www.w3.org/ns/odrl.jsonld",
+    {
+      "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+    }
+  ],
+  "@type": "PolicyDefinition",
+  "@id": "{{Policy Definition ID|Enter a unique policy definition identifier|This will be the @id of your policy definition}}",
+  "policy": {
+    "@type": "Set",
+    "permission": [
+      {
+        "action": "use",
+        "constraint": {
+          "leftOperand": "BusinessPartnerNumber",
+          "operator": "eq",
+          "rightOperand": "{{BPN|Enter a Business Business Partner Number|The BPN that is allowed to access the data}}"
+        }
+      }
+    ]
+  }
+}

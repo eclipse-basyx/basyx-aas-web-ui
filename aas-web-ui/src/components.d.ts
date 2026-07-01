@@ -85,6 +85,7 @@ declare module 'vue' {
     JSONArrayProperty: typeof import('./components/Plugins/SubmodelElements/JSONArrayProperty.vue')['default']
     JsonInsert: typeof import('./components/EditorComponents/JsonInsert.vue')['default']
     JSONPreview: typeof import('./components/Plugins/JSONPreview.vue')['default']
+    JsonTreeView: typeof import('./components/UIComponents/JsonTreeView.vue')['default']
     LastSync: typeof import('./components/UIComponents/LastSync.vue')['default']
     LineChart: typeof import('./components/Widgets/LineChart.vue')['default']
     ListForm: typeof import('./components/EditorComponents/SubmodelElements/ListForm.vue')['default']

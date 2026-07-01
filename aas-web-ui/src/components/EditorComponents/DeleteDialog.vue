@@ -129,7 +129,7 @@
 
       try {
         // delete the submodel
-        const submodelDeleteResponse = await deleteRequest(smEndpoint, 'removing Submodel', false)
+        const submodelDeleteResponse = await deleteRequest(smEndpoint, new Headers(), 'removing Submodel', false)
         if (!submodelDeleteResponse?.success) {
           deleteLoading.value = false
           return
@@ -190,7 +190,7 @@
     } else {
       // delete Submodel Element
       try {
-        const submodelElementDeleteResponse = await deleteRequest(props.element.path, 'removing Submodel Element', false)
+        const submodelElementDeleteResponse = await deleteRequest(props.element.path, new Headers(), 'removing Submodel Element', false)
         if (!submodelElementDeleteResponse?.success) {
           deleteLoading.value = false
           return

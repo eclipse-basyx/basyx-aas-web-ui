@@ -589,7 +589,7 @@ export function useSMRepositoryClient () {
       const path = smEndpoint
       const context = 'deleting Submodel'
       const disableMessage = false
-      const response = await deleteRequest(path, context, disableMessage)
+      const response = await deleteRequest(path, new Headers(), context, disableMessage)
       return response.success
     }
 
@@ -619,7 +619,7 @@ export function useSMRepositoryClient () {
     const path = submodelEndpoint
     const context = 'deleting Submodel'
     const disableMessage = false
-    const response = await deleteRequest(path, context, disableMessage)
+    const response = await deleteRequest(path, new Headers(), context, disableMessage)
     return response.success
   }
 
