@@ -2,12 +2,13 @@
   <section>
     <div class="text-h6 mb-2">Specific Asset IDs</div>
 
-    <v-empty-state
+    <v-alert
       v-if="assetIds.length === 0"
-      class="text-divider"
+      density="comfortable"
       icon="mdi-tag-off-outline"
       text="No specific asset IDs are visible for this descriptor."
-      title="No specific asset IDs"
+      type="info"
+      variant="tonal"
     />
 
     <div v-else class="overflow-x-auto">

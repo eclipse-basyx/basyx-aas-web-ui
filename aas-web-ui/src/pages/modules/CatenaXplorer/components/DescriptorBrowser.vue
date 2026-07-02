@@ -2,18 +2,12 @@
   <v-sheet
     :border="!embedded"
     class="catena-xplorer-browser"
-    :class="{ 'catena-xplorer-browser--embedded': embedded }"
+    :class="{
+      'catena-xplorer-browser--embedded': embedded,
+      'catena-xplorer-browser--fixed-create': isFixedCreateAction,
+    }"
     :rounded="embedded ? false : 'lg'"
   >
-    <DescriptorListHeader
-      :copied-descriptor-available="copiedDescriptorAvailable"
-      :descriptor-count="descriptors.length"
-      @create="emit('create')"
-      @paste="emit('paste')"
-    />
-
-    <v-divider />
-
     <DescriptorSearchForm
       v-model:asset-id-name="assetIdNameModel"
       v-model:asset-id-value="assetIdValueModel"
@@ -21,7 +15,6 @@
       :dtr-url="dtrUrl"
       :is-loading="isLoading"
       @clear="emit('clear')"
-      @reload="emit('reload')"
       @search="emit('search')"
     />
 
@@ -44,38 +37,47 @@
 
     <v-divider />
 
-    <div class="catena-xplorer-browser__list">
-      <DescriptorList
-        :copy-json-icon="copyJsonIcon"
-        :descriptors="descriptors"
-        :has-more-descriptors="hasMoreDescriptors"
-        :is-loading="isLoading"
-        :is-loading-more="isLoadingMore"
-        :selected-descriptor-id="selectedDescriptorId"
-        @copy="emit('copy', $event)"
-        @copy-json="emit('copy-json', $event)"
+    <div class="catena-xplorer-browser__results">
+      <div class="catena-xplorer-browser__list">
+        <DescriptorList
+          :copy-json-icon="copyJsonIcon"
+          :descriptors="descriptors"
+          :has-more-descriptors="hasMoreDescriptors"
+          :is-loading="isLoading"
+          :is-loading-more="isLoadingMore"
+          :selected-descriptor-id="selectedDescriptorId"
+          @copy-json="emit('copy-json', $event)"
+          @delete="emit('delete', $event)"
+          @duplicate="emit('duplicate', $event)"
+          @edit="emit('edit', $event)"
+          @load-more="emit('load-more')"
+          @select="emit('select', $event)"
+        />
+      </div>
+
+      <DescriptorCreateAction
+        v-if="isFixedCreateAction"
+        fixed
         @create="emit('create')"
-        @delete="emit('delete', $event)"
-        @edit="emit('edit', $event)"
-        @load-more="emit('load-more')"
-        @select="emit('select', $event)"
       />
+
+      <DescriptorCreateAction v-else @create="emit('create')" />
     </div>
   </v-sheet>
 </template>
 
 <script lang="ts" setup>
   import { computed } from 'vue'
+  import DescriptorCreateAction from '@/pages/modules/CatenaXplorer/components/DescriptorCreateAction.vue'
   import DescriptorList from '@/pages/modules/CatenaXplorer/components/DescriptorList.vue'
-  import DescriptorListHeader from '@/pages/modules/CatenaXplorer/components/DescriptorListHeader.vue'
   import DescriptorSearchForm from '@/pages/modules/CatenaXplorer/components/DescriptorSearchForm.vue'
 
   const props = defineProps<{
     assetIdName: string
     assetIdNameSuggestions: string[]
     assetIdValue: string
-    copiedDescriptorAvailable: boolean
     copyJsonIcon: string
+    createActionPlacement?: 'fixed' | 'footer'
     descriptors: any[]
     dtrUrl: string
     embedded?: boolean
@@ -88,14 +90,12 @@
 
   const emit = defineEmits<{
     'clear': []
-    'copy': [descriptor: any]
     'copy-json': [descriptor: any]
     'create': []
     'delete': [descriptor: any]
+    'duplicate': [descriptor: any]
     'edit': [descriptor: any]
     'load-more': []
-    'paste': []
-    'reload': []
     'search': []
     'select': [descriptor: any]
     'update:asset-id-name': [value: string]
@@ -111,6 +111,8 @@
     get: () => props.assetIdValue,
     set: value => emit('update:asset-id-value', value),
   })
+
+  const isFixedCreateAction = computed(() => props.createActionPlacement === 'fixed')
 </script>
 
 <style scoped>
@@ -125,12 +127,28 @@
   min-height: 100%;
 }
 
+.catena-xplorer-browser__results {
+  min-height: 0;
+}
+
+.catena-xplorer-browser--embedded .catena-xplorer-browser__results {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .catena-xplorer-browser__list {
   min-height: 0;
+}
+
+.catena-xplorer-browser--fixed-create .catena-xplorer-browser__list {
+  padding-bottom: 56px;
 }
 
 .catena-xplorer-browser--embedded .catena-xplorer-browser__list {
   flex: 1 1 auto;
   overflow-y: auto;
 }
+
 </style>

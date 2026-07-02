@@ -4,7 +4,6 @@
     v-model:asset-id-name="assetIdName"
     v-model:asset-id-value="assetIdValue"
     :asset-id-name-suggestions="assetIdNameSuggestions"
-    :copied-descriptor-available="Boolean(copiedDescriptor)"
     :copy-json-icon="copyJsonIcon"
     :descriptors="descriptors"
     :dtr-url="dtrUrl"
@@ -14,14 +13,12 @@
     :is-loading-more="isLoadingMoreDescriptors"
     :selected-descriptor-id="selectedDescriptorId"
     @clear="clearSearch"
-    @copy="copyDescriptor"
     @copy-json="copyDescriptorAsJson"
     @create="openCreateDescriptorDialog"
     @delete="openDeleteDescriptorDialog"
+    @duplicate="duplicateDescriptor"
     @edit="openEditDescriptorDialog"
     @load-more="loadMoreDescriptors"
-    @paste="pasteDescriptor"
-    @reload="reloadDescriptors"
     @search="searchDescriptors"
     @select="handleDescriptorSelect"
   />
@@ -63,8 +60,8 @@
               v-model:asset-id-name="assetIdName"
               v-model:asset-id-value="assetIdValue"
               :asset-id-name-suggestions="assetIdNameSuggestions"
-              :copied-descriptor-available="Boolean(copiedDescriptor)"
               :copy-json-icon="copyJsonIcon"
+              create-action-placement="fixed"
               :descriptors="descriptors"
               :dtr-url="dtrUrl"
               :has-more-descriptors="hasMoreDescriptors"
@@ -73,14 +70,12 @@
               :is-loading-more="isLoadingMoreDescriptors"
               :selected-descriptor-id="selectedDescriptorId"
               @clear="clearSearch"
-              @copy="copyDescriptor"
               @copy-json="copyDescriptorAsJson"
               @create="openCreateDescriptorDialog"
               @delete="openDeleteDescriptorDialog"
+              @duplicate="duplicateDescriptor"
               @edit="openEditDescriptorDialog"
               @load-more="loadMoreDescriptors"
-              @paste="pasteDescriptor"
-              @reload="reloadDescriptors"
               @search="searchDescriptors"
               @select="handleDescriptorSelect"
             />
@@ -137,7 +132,6 @@
   import DescriptorDetails from '@/pages/modules/CatenaXplorer/components/DescriptorDetails.vue'
   import DescriptorEditDialog from '@/pages/modules/CatenaXplorer/components/DescriptorEditDialog.vue'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
-  import { useNavigationStore } from '@/store/NavigationStore'
   import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
   defineOptions({
@@ -171,7 +165,6 @@
   const router = useRouter()
   const display = useDisplay()
   const infrastructureStore = useInfrastructureStore()
-  const navigationStore = useNavigationStore()
   const {
     deleteAasDescriptor,
     fetchAasDescriptorById,
@@ -203,7 +196,6 @@
   const deleteDescriptorDialog = ref(false)
   const descriptorToDelete = ref<any | null>(null)
   const isDeletingDescriptor = ref(false)
-  const copiedDescriptor = ref<Record<string, unknown> | null>(null)
   const copyJsonIcon = ref('mdi-clipboard-text-outline')
   const mobileView = ref<'browse' | 'details'>('browse')
   const copyJsonIconAsRef = computed(() => copyJsonIcon)
@@ -513,6 +505,7 @@
     }
 
     isSavingDescriptor.value = true
+    const descriptorIdToSelect = typeof descriptor.id === 'string' ? descriptor.id : ''
 
     try {
       const saved = descriptorDialogMode.value === 'edit'
@@ -527,8 +520,15 @@
       descriptorDialog.value = false
       assetIdName.value = defaultAssetIdName
       assetIdValue.value = ''
+      if (descriptorIdToSelect !== '') {
+        selectedDescriptorId.value = descriptorIdToSelect
+        updateSelectedDescriptorRoute(descriptorIdToSelect)
+      }
       await loadDescriptors()
-      setSelectedDescriptorById(typeof descriptor.id === 'string' ? descriptor.id : '')
+      setSelectedDescriptorById(descriptorIdToSelect)
+      if (smAndDown.value && descriptorIdToSelect !== '') {
+        mobileView.value = 'details'
+      }
     } catch (error) {
       console.warn(error)
       inlineError.value = `Could not ${descriptorDialogMode.value === 'edit' ? 'update' : 'create'} AAS descriptor in the Digital Twin Registry.`
@@ -573,27 +573,12 @@
     }
   }
 
-  function copyDescriptor (descriptor: any): void {
-    copiedDescriptor.value = cloneDescriptor(descriptor)
-    navigationStore.dispatchSnackbar({
-      status: true,
-      timeout: 2000,
-      color: 'success',
-      btnColor: 'buttonText',
-      text: 'AAS Descriptor copied.',
-    })
-  }
-
   function copyDescriptorAsJson (descriptor: any): void {
     copyToClipboard(JSON.stringify(cloneDescriptor(descriptor), null, 2), 'AAS Descriptor JSON', copyJsonIconAsRef.value)
   }
 
-  async function pasteDescriptor (): Promise<void> {
-    if (!copiedDescriptor.value) {
-      return
-    }
-
-    const descriptor = cloneDescriptor(copiedDescriptor.value)
+  async function duplicateDescriptor (sourceDescriptor: any): Promise<void> {
+    const descriptor = cloneDescriptor(sourceDescriptor)
     descriptor.id = generateIri('AssetAdministrationShell')
     if (typeof descriptor.idShort === 'string' && descriptor.idShort.trim() !== '') {
       descriptor.idShort = `${descriptor.idShort}_copy`

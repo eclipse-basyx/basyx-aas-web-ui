@@ -15,13 +15,13 @@ const DescriptorListItemStub = defineComponent({
     descriptor: Object,
     selected: Boolean,
   },
-  emits: ['copy', 'copy-json', 'delete', 'edit', 'select'],
+  emits: ['copy-json', 'delete', 'duplicate', 'edit', 'select'],
   template: `
     <div data-testid="descriptor-item">
       <button data-testid="select-descriptor" type="button" @click="$emit('select', descriptor)">select</button>
       <button data-testid="edit-descriptor" type="button" @click="$emit('edit', descriptor)">edit</button>
       <button data-testid="delete-descriptor" type="button" @click="$emit('delete', descriptor)">delete</button>
-      <button data-testid="copy-descriptor" type="button" @click="$emit('copy', descriptor)">copy</button>
+      <button data-testid="duplicate-descriptor" type="button" @click="$emit('duplicate', descriptor)">duplicate</button>
       <button data-testid="copy-json-descriptor" type="button" @click="$emit('copy-json', descriptor)">copy json</button>
     </div>
   `,
@@ -41,7 +41,6 @@ const SlotStub = defineComponent({
 function createWrapper (props?: Record<string, unknown>) {
   return mount(DescriptorList, {
     props: {
-      copiedDescriptorAvailable: true,
       copyJsonIcon: 'mdi-clipboard-text-outline',
       descriptors: [descriptor],
       isLoading: false,
@@ -78,13 +77,13 @@ describe('DescriptorList.vue', () => {
     item.vm.$emit('select', descriptor)
     item.vm.$emit('edit', descriptor)
     item.vm.$emit('delete', descriptor)
-    item.vm.$emit('copy', descriptor)
+    item.vm.$emit('duplicate', descriptor)
     item.vm.$emit('copy-json', descriptor)
 
     expect(wrapper.emitted('select')?.[0]).toEqual([descriptor])
     expect(wrapper.emitted('edit')?.[0]).toEqual([descriptor])
     expect(wrapper.emitted('delete')?.[0]).toEqual([descriptor])
-    expect(wrapper.emitted('copy')?.[0]).toEqual([descriptor])
+    expect(wrapper.emitted('duplicate')?.[0]).toEqual([descriptor])
     expect(wrapper.emitted('copy-json')?.[0]).toEqual([descriptor])
   })
 

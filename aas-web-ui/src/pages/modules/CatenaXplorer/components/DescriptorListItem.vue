@@ -2,7 +2,6 @@
   <v-list-item
     :active="selected"
     border
-    class="mb-2"
     color="primary"
     rounded="lg"
     :variant="selected ? 'tonal' : 'flat'"
@@ -65,12 +64,12 @@
 
               <v-divider />
 
-              <v-list-item @click.stop="emit('copy', descriptor)">
+              <v-list-item @click.stop="emit('duplicate', descriptor)">
                 <template #prepend>
-                  <v-icon size="x-small">mdi-clipboard-outline</v-icon>
+                  <v-icon size="x-small">mdi-content-duplicate</v-icon>
                 </template>
 
-                <v-list-item-title>Copy</v-list-item-title>
+                <v-list-item-title>Duplicate</v-list-item-title>
               </v-list-item>
 
               <v-list-item @click.stop="emit('copy-json', descriptor)">
@@ -102,9 +101,9 @@
   }>()
 
   const emit = defineEmits<{
-    'copy': [descriptor: any]
     'copy-json': [descriptor: any]
     'delete': [descriptor: any]
+    'duplicate': [descriptor: any]
     'edit': [descriptor: any]
     'select': [descriptor: any]
   }>()

@@ -18,7 +18,7 @@
 
     <v-list
       v-else
-      class="pa-2"
+      class="py-2 pe-2 ps-2"
       density="comfortable"
       nav
     >
@@ -28,9 +28,9 @@
         :copy-json-icon="copyJsonIcon"
         :descriptor="descriptor"
         :selected="isSelectedDescriptor(descriptor)"
-        @copy="emit('copy', $event)"
         @copy-json="emit('copy-json', $event)"
         @delete="emit('delete', $event)"
+        @duplicate="emit('duplicate', $event)"
         @edit="emit('edit', $event)"
         @select="emit('select', $event)"
       />
@@ -89,9 +89,9 @@
   }>()
 
   const emit = defineEmits<{
-    'copy': [descriptor: any]
     'copy-json': [descriptor: any]
     'delete': [descriptor: any]
+    'duplicate': [descriptor: any]
     'edit': [descriptor: any]
     'load-more': []
     'select': [descriptor: any]

@@ -16,7 +16,6 @@ const VSelectStub = defineComponent({
       type: Array,
       default: () => [],
     },
-    label: String,
     modelValue: String,
   },
   emits: ['keydown', 'update:modelValue'],
@@ -28,12 +27,9 @@ const VSelectStub = defineComponent({
     return { onChange }
   },
   template: `
-    <label data-testid="asset-key-field">
-      <span>{{ label }}</span>
-      <select data-testid="asset-key" :value="modelValue" @change="onChange" @keydown="$emit('keydown', $event)">
-        <option v-for="item in items" :key="String(item)" :value="item">{{ item }}</option>
-      </select>
-    </label>
+    <select data-testid="asset-key" :value="modelValue" @change="onChange" @keydown="$emit('keydown', $event)">
+      <option v-for="item in items" :key="String(item)" :value="item">{{ item }}</option>
+    </select>
   `,
 })
 
@@ -53,8 +49,10 @@ const VTextFieldStub = defineComponent({
   },
   template: `
     <label data-testid="asset-value-field">
+      <slot name="prepend-inner" />
       <span>{{ label }}</span>
       <input data-testid="asset-value" :value="modelValue" @input="onInput" @keydown="$emit('keydown', $event)">
+      <slot name="append-inner" />
       <button data-testid="clear-field" type="button" @click="$emit('click:clear')">clear</button>
       <slot name="clear" :props="{}" />
     </label>
@@ -106,11 +104,11 @@ function createWrapper () {
 }
 
 describe('DescriptorSearchForm.vue', () => {
-  it('renders the asset ID key before the asset ID value', () => {
+  it('renders the asset ID key selector inside the search field', () => {
     const wrapper = createWrapper()
 
-    expect(wrapper.html().indexOf('data-testid="asset-key-field"'))
-      .toBeLessThan(wrapper.html().indexOf('data-testid="asset-value-field"'))
+    expect(wrapper.find('[data-testid="asset-key"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="asset-value"]').exists()).toBe(true)
   })
 
   it('emits model updates for the key and value controls', async () => {
@@ -123,15 +121,14 @@ describe('DescriptorSearchForm.vue', () => {
     expect(wrapper.emitted('update:asset-id-value')?.[0]).toEqual(['PART-001'])
   })
 
-  it('searches with Enter and emits clear from the value field and reload actions', async () => {
+  it('searches with Enter, clears from the value field, and omits search options', async () => {
     const wrapper = createWrapper()
 
     await wrapper.find('[data-testid="asset-value"]').trigger('keydown.enter')
     await wrapper.find('[data-testid="clear-field"]').trigger('click')
-    await wrapper.find('[aria-label="Reload descriptors"]').trigger('click')
 
     expect(wrapper.emitted('search')).toHaveLength(1)
     expect(wrapper.emitted('clear')).toHaveLength(1)
-    expect(wrapper.emitted('reload')).toHaveLength(1)
+    expect(wrapper.find('[aria-label="Search options"]').exists()).toBe(false)
   })
 })

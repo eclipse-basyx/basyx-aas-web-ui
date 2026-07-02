@@ -1,90 +1,70 @@
 <template>
   <div class="pa-3">
-    <div class="d-flex flex-column ga-2">
-      <v-select
-        v-model="assetIdNameModel"
-        bg-color="surface-light"
-        density="compact"
-        flat
-        hide-details
-        :items="assetIdNameSuggestions"
-        label="Asset ID key"
-        :menu-props="assetIdSelectMenuProps"
-        variant="outlined"
-        @keydown.enter.prevent="search"
-      />
-
-      <div class="d-flex align-center ga-1">
-        <v-text-field
-          v-model="assetIdValueModel"
+    <v-text-field
+      v-model="assetIdValueModel"
+      bg-color="surface-light"
+      class="asset-id-search-field"
+      clearable
+      density="compact"
+      flat
+      hide-details
+      label="Search asset ID"
+      persistent-clear
+      persistent-placeholder
+      placeholder="Search asset ID"
+      rounded="lg"
+      variant="outlined"
+      @click:clear="clear"
+      @keydown.enter.prevent="search"
+    >
+      <template #prepend-inner>
+        <v-select
+          v-model="assetIdNameModel"
+          aria-label="Asset ID key"
           bg-color="surface-light"
-          class="flex-grow-1"
-          clearable
+          class="asset-id-key-select ms-n3"
           density="compact"
           flat
           hide-details
-          label="Asset ID value"
-          persistent-clear
-          placeholder="Search for Asset ID"
-          style="min-width: 0"
-          variant="outlined"
-          @click:clear="clear"
+          :items="assetIdNameSuggestions"
+          :menu-props="assetIdSelectMenuProps"
+          single-line
+          variant="solo"
+          @click.stop
           @keydown.enter.prevent="search"
-        >
-          <template #clear="{ props: clearProps }">
-            <v-icon v-bind="clearProps" icon="mdi-close" size="18" @click.stop="clear" />
-          </template>
-        </v-text-field>
+          @mousedown.stop
+        />
 
-        <v-tooltip location="bottom" open-delay="600">
-          <template #activator="{ props: tooltipProps }">
+        <v-divider class="asset-id-key-divider mx-1" vertical />
+      </template>
+
+      <template #append-inner>
+        <v-menu
+          v-model="curlMenu"
+          :close-on-content-click="false"
+          location="bottom"
+          :open-on-click="false"
+          open-on-hover
+        >
+          <template #activator="{ props: menuProps }">
             <v-btn
-              v-bind="tooltipProps"
+              v-bind="menuProps"
               aria-label="Search descriptors"
-              class="text-buttonText"
+              class="search-action-button text-buttonText"
               color="primary"
               icon="mdi-magnify"
               :loading="isLoading"
               rounded="lg"
               size="x-small"
               variant="flat"
-              @click="search"
+              @click.stop="search"
             />
-          </template>
-
-          <span>Search descriptors</span>
-        </v-tooltip>
-
-        <v-menu
-          v-model="curlMenu"
-          :close-on-content-click="false"
-          location="bottom end"
-          offset="8"
-        >
-          <template #activator="{ props: menuProps }">
-            <v-tooltip location="bottom" open-delay="600">
-              <template #activator="{ props: tooltipProps }">
-                <v-btn
-                  v-bind="mergeProps(menuProps, tooltipProps)"
-                  aria-label="Show cURL request"
-                  border
-                  color="surface-light"
-                  icon="mdi-console-line"
-                  rounded="lg"
-                  size="x-small"
-                  variant="flat"
-                />
-              </template>
-
-              <span>Show cURL request</span>
-            </v-tooltip>
           </template>
 
           <v-sheet
             border
-            class="pa-3"
+            class="curl-preview pa-3"
             rounded="lg"
-            style="width: min(420px, calc(100vw - 32px))"
           >
             <div class="d-flex align-center justify-space-between ga-2">
               <div class="text-subtitle-2">Request as cURL</div>
@@ -106,36 +86,21 @@
             </div>
 
             <v-sheet class="pa-2 mt-2" color="surface-light" rounded="lg">
-              <code class="text-label-small text-break" style="white-space: pre-wrap">{{ curlCommand }}</code>
+              <code class="curl-preview__code text-label-small text-break">{{ curlCommand }}</code>
             </v-sheet>
           </v-sheet>
         </v-menu>
+      </template>
 
-        <v-tooltip location="bottom" open-delay="600">
-          <template #activator="{ props: tooltipProps }">
-            <v-btn
-              v-bind="tooltipProps"
-              aria-label="Reload descriptors"
-              border
-              color="surface-light"
-              icon="mdi-reload"
-              :loading="isLoading"
-              rounded="lg"
-              size="x-small"
-              variant="flat"
-              @click="emit('reload')"
-            />
-          </template>
-
-          <span>Reload descriptors</span>
-        </v-tooltip>
-      </div>
-    </div>
+      <template #clear="{ props: clearProps }">
+        <v-icon v-bind="clearProps" icon="mdi-close" size="18" @click.stop="clear" />
+      </template>
+    </v-text-field>
   </div>
 </template>
 
 <script lang="ts" setup>
-  import { computed, mergeProps, ref } from 'vue'
+  import { computed, ref } from 'vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { buildShellDescriptorsCurlCommand } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
 
@@ -148,7 +113,7 @@
   }>()
 
   const emit = defineEmits<{
-    (event: 'clear' | 'reload' | 'search'): void
+    (event: 'clear' | 'search'): void
     (event: 'update:asset-id-name' | 'update:asset-id-value', value: string): void
   }>()
 
@@ -167,14 +132,14 @@
     set: value => emit('update:asset-id-value', value ?? ''),
   })
 
-  const assetIdSelectMenuProps = {
-    origin: 'overlap',
-    location: 'bottom',
-  } as const
-
   const curlCommand = computed(() => {
     return buildShellDescriptorsCurlCommand(props.dtrUrl, props.assetIdName, props.assetIdValue)
   })
+
+  const assetIdSelectMenuProps = {
+    origin: 'overlap',
+    location: 'top',
+  } as const
 
   function search (): void {
     emit('search')
@@ -188,3 +153,31 @@
     copyToClipboard(curlCommand.value, 'cURL request', copyCurlIconAsRef.value)
   }
 </script>
+
+<style scoped>
+.asset-id-key-select {
+  width: 164px;
+}
+
+.asset-id-search-field > :deep(.v-input__control > .v-field) {
+  padding-inline-end: 0;
+}
+
+.asset-id-search-field > :deep(.v-input__control > .v-field > .v-field__append-inner) {
+  padding-inline-end: 4px;
+}
+
+.asset-id-key-divider {
+  align-self: stretch;
+  margin-bottom: 8px;
+  margin-top: 8px;
+}
+
+.curl-preview {
+  width: min(420px, calc(100vw - 32px));
+}
+
+.curl-preview__code {
+  white-space: pre-wrap;
+}
+</style>

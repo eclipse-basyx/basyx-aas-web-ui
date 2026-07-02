@@ -10,7 +10,6 @@
       v-model:asset-id-name="assetIdNameModel"
       v-model:asset-id-value="assetIdValueModel"
       :asset-id-name-suggestions="assetIdNameSuggestions"
-      :copied-descriptor-available="copiedDescriptorAvailable"
       :copy-json-icon="copyJsonIcon"
       :descriptors="descriptors"
       :dtr-url="dtrUrl"
@@ -21,14 +20,12 @@
       :is-loading-more="isLoadingMore"
       :selected-descriptor-id="selectedDescriptorId"
       @clear="emit('clear')"
-      @copy="emit('copy', $event)"
       @copy-json="emit('copy-json', $event)"
       @create="emit('create')"
       @delete="emit('delete', $event)"
+      @duplicate="emit('duplicate', $event)"
       @edit="emit('edit', $event)"
       @load-more="emit('load-more')"
-      @paste="emit('paste')"
-      @reload="emit('reload')"
       @search="emit('search')"
       @select="emit('select', $event)"
     />
@@ -39,13 +36,12 @@
   import { computed } from 'vue'
   import DescriptorBrowser from '@/pages/modules/CatenaXplorer/components/DescriptorBrowser.vue'
 
-  const drawerWidth = 380
+  const drawerWidth = 400
 
   const props = defineProps<{
     assetIdName: string
     assetIdNameSuggestions: string[]
     assetIdValue: string
-    copiedDescriptorAvailable: boolean
     copyJsonIcon: string
     descriptors: any[]
     dtrUrl: string
@@ -58,14 +54,12 @@
 
   const emit = defineEmits<{
     'clear': []
-    'copy': [descriptor: any]
     'copy-json': [descriptor: any]
     'create': []
     'delete': [descriptor: any]
+    'duplicate': [descriptor: any]
     'edit': [descriptor: any]
     'load-more': []
-    'paste': []
-    'reload': []
     'search': []
     'select': [descriptor: any]
     'update:asset-id-name': [value: string]

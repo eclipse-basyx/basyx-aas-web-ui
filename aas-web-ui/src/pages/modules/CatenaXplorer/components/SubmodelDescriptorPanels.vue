@@ -5,12 +5,13 @@
       <v-chip size="x-small" variant="tonal">{{ descriptors.length }}</v-chip>
     </div>
 
-    <v-empty-state
+    <v-alert
       v-if="descriptors.length === 0"
-      class="text-divider"
+      density="comfortable"
       icon="mdi-view-module-outline"
       text="No embedded submodel descriptors are visible for this descriptor."
-      title="No submodel descriptors"
+      type="info"
+      variant="tonal"
     />
 
     <v-expansion-panels
@@ -86,12 +87,13 @@
 
           <div class="text-subtitle-2 mt-4 mb-2">Endpoints</div>
 
-          <v-empty-state
+          <v-alert
             v-if="getEndpointRows(submodelDescriptor.endpoints).length === 0"
-            class="text-divider"
+            density="comfortable"
             icon="mdi-information-outline"
             text="No submodel endpoints are visible for this descriptor."
-            title="No endpoints"
+            type="info"
+            variant="tonal"
           />
 
           <EndpointTable
