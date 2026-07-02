@@ -1,85 +1,105 @@
 <template>
-  <v-container
-    class="pa-3 pa-md-5 d-flex flex-column overflow-hidden"
-    fluid
-    style="height: calc(100svh - 105px); min-height: 0"
-  >
+  <CatenaXplorerNavigationDrawer
+    v-if="mdAndUp"
+    v-model:asset-id-name="assetIdName"
+    v-model:asset-id-value="assetIdValue"
+    :asset-id-name-suggestions="assetIdNameSuggestions"
+    :copied-descriptor-available="Boolean(copiedDescriptor)"
+    :copy-json-icon="copyJsonIcon"
+    :descriptors="descriptors"
+    :dtr-url="dtrUrl"
+    :has-more-descriptors="hasMoreDescriptors"
+    :inline-error="inlineError"
+    :is-loading="isLoading"
+    :is-loading-more="isLoadingMoreDescriptors"
+    :selected-descriptor-id="selectedDescriptorId"
+    @clear="clearSearch"
+    @copy="copyDescriptor"
+    @copy-json="copyDescriptorAsJson"
+    @create="openCreateDescriptorDialog"
+    @delete="openDeleteDescriptorDialog"
+    @edit="openEditDescriptorDialog"
+    @load-more="loadMoreDescriptors"
+    @paste="pasteDescriptor"
+    @reload="reloadDescriptors"
+    @search="searchDescriptors"
+    @select="handleDescriptorSelect"
+  />
+
+  <v-container class="pa-2" fluid>
     <div
-      class="mx-auto d-flex flex-column w-100 overflow-hidden"
-      style="max-width: 1440px; min-height: 0; height: 100%"
+      class="catena-xplorer-page mx-auto w-100"
+      :class="{ 'catena-xplorer-page--desktop': mdAndUp }"
     >
-      <CatenaXplorerTopBar
-        v-model:asset-id-name="assetIdName"
-        v-model:asset-id-value="assetIdValue"
-        :asset-id-name-suggestions="assetIdNameSuggestions"
-        :descriptor-count="descriptors.length"
-        :dtr-url="dtrUrl"
-        :dtr-url-to-display="dtrUrlToDisplay"
-        :inline-error="inlineError"
-        :is-loading="isLoading"
-        :show-descriptor-list-button="smAndDown"
-        @clear="clearSearch"
-        @open-descriptor-list="openDescriptorListDialog"
-        @reload="reloadDescriptors"
-        @search="searchDescriptors"
-      />
-
-      <div
-        v-if="mdAndUp"
-        class="flex-grow-1 overflow-hidden"
-        style="display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 16px; min-height: 0; height: 0"
-      >
-        <div class="d-flex flex-column overflow-hidden" style="min-height: 0; height: 100%">
-          <DescriptorList
-            :copied-descriptor-available="Boolean(copiedDescriptor)"
-            :copy-json-icon="copyJsonIcon"
-            :descriptors="descriptors"
-            :has-more-descriptors="hasMoreDescriptors"
-            :is-loading="isLoading"
-            :is-loading-more="isLoadingMoreDescriptors"
-            :selected-descriptor-id="selectedDescriptorId"
-            @copy="copyDescriptor"
-            @copy-json="copyDescriptorAsJson"
-            @create="openCreateDescriptorDialog"
-            @delete="openDeleteDescriptorDialog"
-            @edit="openEditDescriptorDialog"
-            @load-more="loadMoreDescriptors"
-            @paste="pasteDescriptor"
-            @select="selectDescriptor"
-          />
-        </div>
-
-        <div class="d-flex flex-column overflow-hidden" style="min-height: 0; height: 100%">
+      <template v-if="mdAndUp">
+        <main class="catena-xplorer-details">
           <DescriptorDetails :descriptor="selectedDescriptor" :edc-config="selectedEdcConfig" />
-        </div>
-      </div>
+        </main>
+      </template>
 
-      <div v-else class="d-flex flex-column flex-grow-1 overflow-hidden" style="min-height: 0; height: 0">
-        <DescriptorDetails :descriptor="selectedDescriptor" :edc-config="selectedEdcConfig" />
-      </div>
+      <template v-else>
+        <v-sheet border class="mb-3 overflow-hidden" rounded="lg">
+          <v-tabs
+            v-model="mobileView"
+            color="primary"
+            density="comfortable"
+            grow
+          >
+            <v-tab value="browse">
+              <v-icon class="me-2" icon="mdi-format-list-bulleted" size="small" />
+              Browse
+            </v-tab>
 
-      <v-dialog v-model="descriptorListDialog" fullscreen transition="dialog-bottom-transition">
-        <DescriptorList
-          :copied-descriptor-available="Boolean(copiedDescriptor)"
-          :copy-json-icon="copyJsonIcon"
-          :descriptors="descriptors"
-          :flat="true"
-          :has-more-descriptors="hasMoreDescriptors"
-          :is-loading="isLoading"
-          :is-loading-more="isLoadingMoreDescriptors"
-          :selected-descriptor-id="selectedDescriptorId"
-          :show-close-button="true"
-          @close="closeDescriptorListDialog"
-          @copy="copyDescriptor"
-          @copy-json="copyDescriptorAsJson"
-          @create="openCreateDescriptorDialogFromList"
-          @delete="openDeleteDescriptorDialogFromList"
-          @edit="openEditDescriptorDialogFromList"
-          @load-more="loadMoreDescriptors"
-          @paste="pasteDescriptorFromList"
-          @select="selectDescriptorFromList"
-        />
-      </v-dialog>
+            <v-tab value="details">
+              <v-icon class="me-2" icon="mdi-cube-scan" size="small" />
+              Details
+            </v-tab>
+          </v-tabs>
+        </v-sheet>
+
+        <v-window v-model="mobileView" :touch="false">
+          <v-window-item value="browse">
+            <DescriptorBrowser
+              v-model:asset-id-name="assetIdName"
+              v-model:asset-id-value="assetIdValue"
+              :asset-id-name-suggestions="assetIdNameSuggestions"
+              :copied-descriptor-available="Boolean(copiedDescriptor)"
+              :copy-json-icon="copyJsonIcon"
+              :descriptors="descriptors"
+              :dtr-url="dtrUrl"
+              :has-more-descriptors="hasMoreDescriptors"
+              :inline-error="inlineError"
+              :is-loading="isLoading"
+              :is-loading-more="isLoadingMoreDescriptors"
+              :selected-descriptor-id="selectedDescriptorId"
+              @clear="clearSearch"
+              @copy="copyDescriptor"
+              @copy-json="copyDescriptorAsJson"
+              @create="openCreateDescriptorDialog"
+              @delete="openDeleteDescriptorDialog"
+              @edit="openEditDescriptorDialog"
+              @load-more="loadMoreDescriptors"
+              @paste="pasteDescriptor"
+              @reload="reloadDescriptors"
+              @search="searchDescriptors"
+              @select="handleDescriptorSelect"
+            />
+          </v-window-item>
+
+          <v-window-item value="details">
+            <v-btn
+              class="mb-3"
+              prepend-icon="mdi-arrow-left"
+              variant="text"
+              @click="mobileView = 'browse'"
+            >
+              Browse descriptors
+            </v-btn>
+
+            <DescriptorDetails :descriptor="selectedDescriptor" :edc-config="selectedEdcConfig" />
+          </v-window-item>
+        </v-window>
+      </template>
 
       <DescriptorEditDialog
         v-model="descriptorDialog"
@@ -111,11 +131,11 @@
     buildShellDescriptorEndpointUrl,
     getAssetIdNameSuggestions,
   } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
-  import CatenaXplorerTopBar from '@/pages/modules/CatenaXplorer/components/CatenaXplorerTopBar.vue'
+  import CatenaXplorerNavigationDrawer from '@/pages/modules/CatenaXplorer/components/CatenaXplorerNavigationDrawer.vue'
   import DeleteDescriptorDialog from '@/pages/modules/CatenaXplorer/components/DeleteDescriptorDialog.vue'
+  import DescriptorBrowser from '@/pages/modules/CatenaXplorer/components/DescriptorBrowser.vue'
   import DescriptorDetails from '@/pages/modules/CatenaXplorer/components/DescriptorDetails.vue'
   import DescriptorEditDialog from '@/pages/modules/CatenaXplorer/components/DescriptorEditDialog.vue'
-  import DescriptorList from '@/pages/modules/CatenaXplorer/components/DescriptorList.vue'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { base64Decode } from '@/utils/EncodeDecodeUtils'
@@ -181,15 +201,14 @@
   const descriptorToEdit = ref<Record<string, unknown> | null>(null)
   const isSavingDescriptor = ref(false)
   const deleteDescriptorDialog = ref(false)
-  const descriptorListDialog = ref(false)
   const descriptorToDelete = ref<any | null>(null)
   const isDeletingDescriptor = ref(false)
   const copiedDescriptor = ref<Record<string, unknown> | null>(null)
   const copyJsonIcon = ref('mdi-clipboard-text-outline')
+  const mobileView = ref<'browse' | 'details'>('browse')
   const copyJsonIconAsRef = computed(() => copyJsonIcon)
 
   const dtrUrl = computed(() => infrastructureStore.getAASRegistryURL)
-  const dtrUrlToDisplay = computed(() => dtrUrl.value.trim() || 'No Digital Twin Registry URL configured')
   const mdAndUp = computed(() => display.mdAndUp.value)
   const smAndDown = computed(() => display.smAndDown.value)
   const assetIdNameSuggestions = computed(() => {
@@ -456,6 +475,15 @@
     setSelectedDescriptorById(descriptorId)
   }
 
+  function handleDescriptorSelect (descriptor: any): void {
+    const descriptorId = typeof descriptor?.id === 'string' ? descriptor.id : ''
+    selectDescriptor(descriptor)
+
+    if (smAndDown.value && descriptorId !== '' && selectedDescriptorId.value === descriptorId) {
+      mobileView.value = 'details'
+    }
+  }
+
   function setSelectedDescriptorById (descriptorId: string): void {
     selectedDescriptorId.value = descriptorId
     updateSelectedDescriptorRoute(descriptorId)
@@ -469,21 +497,11 @@
     descriptorDialog.value = true
   }
 
-  function openCreateDescriptorDialogFromList (): void {
-    closeDescriptorListDialog()
-    openCreateDescriptorDialog()
-  }
-
   function openEditDescriptorDialog (descriptor: any): void {
     inlineError.value = ''
     descriptorDialogMode.value = 'edit'
     descriptorToEdit.value = cloneDescriptor(descriptor)
     descriptorDialog.value = true
-  }
-
-  function openEditDescriptorDialogFromList (descriptor: any): void {
-    closeDescriptorListDialog()
-    openEditDescriptorDialog(descriptor)
   }
 
   async function saveDescriptor (descriptor: Record<string, unknown>): Promise<void> {
@@ -522,11 +540,6 @@
   function openDeleteDescriptorDialog (descriptor: any): void {
     descriptorToDelete.value = descriptor
     deleteDescriptorDialog.value = true
-  }
-
-  function openDeleteDescriptorDialogFromList (descriptor: any): void {
-    closeDescriptorListDialog()
-    openDeleteDescriptorDialog(descriptor)
   }
 
   async function deleteDescriptor (): Promise<void> {
@@ -604,24 +617,6 @@
     await saveDescriptor(descriptor)
   }
 
-  async function pasteDescriptorFromList (): Promise<void> {
-    closeDescriptorListDialog()
-    await pasteDescriptor()
-  }
-
-  function openDescriptorListDialog (): void {
-    descriptorListDialog.value = true
-  }
-
-  function closeDescriptorListDialog (): void {
-    descriptorListDialog.value = false
-  }
-
-  function selectDescriptorFromList (descriptor: any): void {
-    selectDescriptor(descriptor)
-    closeDescriptorListDialog()
-  }
-
   function getRouteDescriptorId (): string {
     const descriptorEndpoint = getRouteQueryString(descriptorEndpointQueryParam)
     if (descriptorEndpoint !== '') {
@@ -691,3 +686,17 @@
     delete descriptor.modified
   }
 </script>
+
+<style scoped>
+.catena-xplorer-page {
+  max-width: 1440px;
+}
+
+.catena-xplorer-page--desktop {
+  max-width: none;
+}
+
+.catena-xplorer-details {
+  min-width: 0;
+}
+</style>

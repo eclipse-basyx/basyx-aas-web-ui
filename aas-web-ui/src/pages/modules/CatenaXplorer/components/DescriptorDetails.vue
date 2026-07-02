@@ -1,9 +1,8 @@
 <template>
   <v-sheet
     border
-    class="pa-4 flex-grow-1 overflow-y-auto"
+    class="pa-3"
     rounded="lg"
-    style="min-height: 0; height: 100%; overflow-y: auto"
   >
     <v-empty-state
       v-if="!descriptor"
