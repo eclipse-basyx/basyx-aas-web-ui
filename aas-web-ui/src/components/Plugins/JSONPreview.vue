@@ -3,11 +3,11 @@
     <v-card>
       <v-card-title class="d-flex align-center">
         <v-icon class="mr-2">mdi-code-json</v-icon>
-        JSON Preview
+        {{ title }}
         <v-spacer />
         <!-- Search input -->
         <v-text-field
-          v-if="jsonContent"
+          v-if="jsonText"
           v-model="searchQuery"
           class="mx-2"
           clearable
@@ -20,7 +20,7 @@
         />
         <!-- Line wrap toggle -->
         <v-btn
-          v-if="jsonContent"
+          v-if="jsonText"
           icon
           :title="wordWrapEnabled ? 'Disable word wrap' : 'Enable word wrap'"
           variant="text"
@@ -30,7 +30,7 @@
         </v-btn>
         <!-- Line numbers toggle -->
         <v-btn
-          v-if="jsonContent"
+          v-if="jsonText"
           icon
           :title="showLineNumbers ? 'Hide line numbers' : 'Show line numbers'"
           variant="text"
@@ -40,7 +40,7 @@
         </v-btn>
         <!-- Download button -->
         <v-btn
-          v-if="jsonContent"
+          v-if="jsonText"
           icon
           title="Download JSON"
           variant="text"
@@ -50,7 +50,7 @@
         </v-btn>
         <!-- Copy button -->
         <v-btn
-          v-if="jsonContent"
+          v-if="jsonText"
           icon
           title="Copy to clipboard"
           variant="text"
@@ -99,7 +99,7 @@
           <div>{{ error }}</div>
         </div>
 
-        <div v-else-if="!jsonContent" class="no-content pa-4 text-center">No JSON content available</div>
+        <div v-else-if="!jsonText" class="no-content pa-4 text-center">No JSON content available</div>
 
         <div v-else class="json-container" :class="{ 'word-wrap-enabled': wordWrapEnabled }">
           <!-- Line numbers column -->
@@ -135,14 +135,22 @@
   import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
   import 'prismjs/themes/prism.css'
 
-  const props = defineProps({
-    submodelElementData: {
-      type: Object as () => any,
-      default: () => ({}),
+  const props = withDefaults(
+    defineProps<{
+      downloadFileName?: string
+      jsonContent?: unknown
+      submodelElementData?: any
+      title?: string
+    }>(),
+    {
+      downloadFileName: '',
+      jsonContent: undefined,
+      submodelElementData: () => ({}),
+      title: 'JSON Preview',
     },
-  })
+  )
 
-  const jsonContent = ref<string>('')
+  const jsonText = ref<string>('')
   const formattedJson = ref<string>('')
   const loading = ref<boolean>(false)
   const error = ref<string | null>(null)
@@ -185,13 +193,21 @@
     },
   )
 
-  // Apply highlighting whenever jsonContent changes
-  watch(jsonContent, () => {
+  watch(
+    () => props.jsonContent,
+    () => {
+      initialize()
+    },
+    { deep: true },
+  )
+
+  // Apply highlighting whenever JSON text changes
+  watch(jsonText, () => {
     highlightJson()
   })
 
-  // Reset search when JSON content changes
-  watch(jsonContent, () => {
+  // Reset search when JSON text changes
+  watch(jsonText, () => {
     searchQuery.value = ''
     searchResults.value = []
     highlightedLineNumbers.value = []
@@ -216,9 +232,9 @@
     highlightedLineNumbers.value = []
     currentSearchIndex.value = 0
 
-    if (!searchQuery.value || !jsonContent.value) return
+    if (!searchQuery.value || !jsonText.value) return
 
-    const lines = jsonContent.value.split('\n')
+    const lines = jsonText.value.split('\n')
     const query = searchQuery.value.toLowerCase()
 
     for (const [index, line] of lines.entries()) {
@@ -262,13 +278,13 @@
   }
 
   function highlightJson (): void {
-    if (!jsonContent.value) {
+    if (!jsonText.value) {
       formattedJson.value = ''
       return
     }
 
     try {
-      const formatted = formatJSON(jsonContent.value)
+      const formatted = formatJSON(jsonText.value)
 
       // Apply syntax highlighting using Prism
       if (Prism && Prism.highlight) {
@@ -279,14 +295,14 @@
       }
     } catch (error_) {
       console.error('Error highlighting JSON:', error_)
-      formattedJson.value = jsonContent.value || ''
+      formattedJson.value = jsonText.value || ''
     }
   }
 
   async function copyToClipboard (): Promise<void> {
-    if (jsonContent.value) {
+    if (jsonText.value) {
       try {
-        await navigator.clipboard.writeText(jsonContent.value)
+        await navigator.clipboard.writeText(jsonText.value)
         hasCopied.value = true
         setTimeout(() => {
           hasCopied.value = false
@@ -298,12 +314,12 @@
   }
 
   function downloadJson (): void {
-    if (jsonContent.value) {
-      const blob = new Blob([jsonContent.value], { type: 'application/json' })
+    if (jsonText.value) {
+      const blob = new Blob([jsonText.value], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${props.submodelElementData.idShort || 'download'}.json`
+      a.download = `${props.downloadFileName || props.submodelElementData?.idShort || 'download'}.json`
       document.body.append(a)
       a.click()
       a.remove()
@@ -312,15 +328,23 @@
   }
 
   async function initialize (): Promise<void> {
+    if (props.jsonContent !== undefined && props.jsonContent !== null) {
+      loading.value = false
+      error.value = null
+      jsonText.value = stringifyJsonContent(props.jsonContent)
+      highlightJson()
+      return
+    }
+
     if (!props.submodelElementData || !props.submodelElementData.path) {
-      jsonContent.value = ''
+      jsonText.value = ''
       error.value = 'No file path provided'
       return
     }
 
     loading.value = true
     error.value = null
-    jsonContent.value = ''
+    jsonText.value = ''
 
     try {
       const fileBlob = await fetchAttachmentFile(props.submodelElementData.path)
@@ -332,9 +356,9 @@
 
       if (fileBlob instanceof Blob) {
         const text = await fileBlob.text()
-        jsonContent.value = text
+        jsonText.value = text
       } else {
-        jsonContent.value = JSON.stringify(fileBlob, null, 2)
+        jsonText.value = JSON.stringify(fileBlob, null, 2)
       }
 
       highlightJson()
@@ -349,6 +373,20 @@
   function syncScroll (): void {
     if (showLineNumbers.value && lineNumbersContainer.value && jsonContainer.value) {
       lineNumbersContainer.value.scrollTop = jsonContainer.value.scrollTop
+    }
+  }
+
+  function stringifyJsonContent (content: unknown): string {
+    if (typeof content === 'string') {
+      return content
+    }
+
+    try {
+      return JSON.stringify(content, null, 2)
+    } catch (error_) {
+      console.error('Error stringifying JSON content:', error_)
+      error.value = `Error loading JSON content: ${error_ instanceof Error ? error_.message : 'Unknown error'}`
+      return ''
     }
   }
 </script>
