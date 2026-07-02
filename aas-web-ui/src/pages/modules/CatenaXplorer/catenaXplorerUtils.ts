@@ -11,6 +11,21 @@ export interface EndpointRow {
   endpointProtocol: string
 }
 
+export const defaultAssetIdNameSuggestions = [
+  'manufacturerId',
+  'manufacturerPartId',
+  'customerPartId',
+  'digitalTwinType',
+  'partInstanceId',
+  'intrinsicId',
+  'batchId',
+  'van',
+  'parentOrderNumber',
+  'jisNumber',
+  'jisCallDate',
+  'globalAssetId',
+]
+
 function toTrimmedString (value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
@@ -156,6 +171,26 @@ export function getAssetIdNameSuggestions (descriptors: any[]): string[] {
   }
 
   return uniqueValues(names).toSorted((a, b) => a.localeCompare(b))
+}
+
+export function buildAssetIdNameSuggestions (descriptors: any[], knownAssetIdNames: string[] = []): string[] {
+  const defaultSuggestionNames = new Set(defaultAssetIdNameSuggestions)
+  const discoveredSuggestions = uniqueValues([
+    ...knownAssetIdNames,
+    ...getAssetIdNameSuggestions(descriptors),
+  ])
+    .filter(assetIdName => !defaultSuggestionNames.has(assetIdName))
+    .toSorted((a, b) => a.localeCompare(b))
+
+  return [
+    ...defaultAssetIdNameSuggestions,
+    ...discoveredSuggestions,
+  ]
+}
+
+export function getSpecificAssetIdNameSuggestions (assetIdNameSuggestions: string[]): string[] {
+  return uniqueValues(assetIdNameSuggestions)
+    .filter(assetIdName => assetIdName !== 'globalAssetId')
 }
 
 export function getDescriptorStats (descriptors: any[]): { descriptorCount: number } {

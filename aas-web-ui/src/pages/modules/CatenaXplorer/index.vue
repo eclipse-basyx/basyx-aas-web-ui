@@ -98,6 +98,7 @@
 
       <DescriptorEditDialog
         v-model="descriptorDialog"
+        :asset-id-name-suggestions="assetIdNameSuggestions"
         :descriptor="descriptorToEdit"
         :loading="isSavingDescriptor"
         :mode="descriptorDialogMode"
@@ -123,6 +124,7 @@
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { useIDUtils } from '@/composables/IDUtils'
   import {
+    buildAssetIdNameSuggestions,
     buildShellDescriptorEndpointUrl,
     getAssetIdNameSuggestions,
   } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
@@ -146,20 +148,6 @@
   const legacyDescriptorIdQueryParam = 'descriptorId'
   const descriptorPageLimit = 100
   const defaultAssetIdName = 'manufacturerPartId'
-  const defaultAssetIdNameSuggestions = [
-    'manufacturerId',
-    'manufacturerPartId',
-    'customerPartId',
-    'digitalTwinType',
-    'partInstanceId',
-    'intrinsicId',
-    'batchId',
-    'van',
-    'parentOrderNumber',
-    'jisNumber',
-    'jisCallDate',
-    'globalAssetId',
-  ]
 
   const route = useRoute()
   const router = useRouter()
@@ -203,20 +191,7 @@
   const dtrUrl = computed(() => infrastructureStore.getAASRegistryURL)
   const mdAndUp = computed(() => display.mdAndUp.value)
   const smAndDown = computed(() => display.smAndDown.value)
-  const assetIdNameSuggestions = computed(() => {
-    const defaultSuggestionNames = new Set(defaultAssetIdNameSuggestions)
-    const discoveredSuggestions = Array.from(new Set([
-      ...knownAssetIdNames.value,
-      ...getAssetIdNameSuggestions(descriptors.value),
-    ]))
-      .filter(assetIdName => !defaultSuggestionNames.has(assetIdName))
-      .toSorted((a, b) => a.localeCompare(b))
-
-    return [
-      ...defaultAssetIdNameSuggestions,
-      ...discoveredSuggestions,
-    ]
-  })
+  const assetIdNameSuggestions = computed(() => buildAssetIdNameSuggestions(descriptors.value, knownAssetIdNames.value))
   const selectedDescriptor = computed(() => {
     const descriptorId = selectedDescriptorId.value.trim()
     if (descriptorId === '') {

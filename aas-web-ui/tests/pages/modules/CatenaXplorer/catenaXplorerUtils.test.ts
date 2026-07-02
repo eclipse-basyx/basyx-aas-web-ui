@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildAssetIdNameSuggestions,
   buildShellDescriptorEndpointUrl,
   buildShellDescriptorsCurlCommand,
   buildShellDescriptorsRequestUrl,
@@ -9,6 +10,7 @@ import {
   getDescriptorKey,
   getDescriptorLastUpdatedAt,
   getDescriptorStats,
+  getSpecificAssetIdNameSuggestions,
   getSubmodelMarkerValues,
   normalizeSupplementalSemanticIds,
 } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
@@ -71,6 +73,45 @@ describe('catenaXplorerUtils.ts', () => {
     ])
 
     expect(suggestions).toEqual(['customerPartId', 'globalAssetId', 'manufacturerPartId'])
+  })
+
+  it('builds shared asset ID suggestion lists for search and specific asset IDs', () => {
+    const searchSuggestions = buildAssetIdNameSuggestions(
+      [{ specificAssetIds: [{ name: 'customAssetId', value: 'CUSTOM-001' }] }],
+      ['zDiscoveredAssetId', 'manufacturerPartId'],
+    )
+
+    expect(searchSuggestions).toEqual([
+      'manufacturerId',
+      'manufacturerPartId',
+      'customerPartId',
+      'digitalTwinType',
+      'partInstanceId',
+      'intrinsicId',
+      'batchId',
+      'van',
+      'parentOrderNumber',
+      'jisNumber',
+      'jisCallDate',
+      'globalAssetId',
+      'customAssetId',
+      'zDiscoveredAssetId',
+    ])
+    expect(getSpecificAssetIdNameSuggestions(searchSuggestions)).toEqual([
+      'manufacturerId',
+      'manufacturerPartId',
+      'customerPartId',
+      'digitalTwinType',
+      'partInstanceId',
+      'intrinsicId',
+      'batchId',
+      'van',
+      'parentOrderNumber',
+      'jisNumber',
+      'jisCallDate',
+      'customAssetId',
+      'zDiscoveredAssetId',
+    ])
   })
 
   it('formats display fallbacks for sparse descriptor values', () => {
