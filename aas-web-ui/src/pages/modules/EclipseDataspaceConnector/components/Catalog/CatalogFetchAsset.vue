@@ -34,7 +34,7 @@
                 color="primary"
                 prepend-icon="mdi-import"
                 rounded="lg"
-                :text="'Import ' + (isValidAAS? 'AAS' : isValidSubmodel ? 'Submodel':'asset') + ' data to'"
+                :text="'Import ' + (isValidAAS? 'AAS' : isValidSubmodel ? 'Submodel':'asset') + ' to'"
                 variant="flat"
                 @click="importAsset()"
               />
