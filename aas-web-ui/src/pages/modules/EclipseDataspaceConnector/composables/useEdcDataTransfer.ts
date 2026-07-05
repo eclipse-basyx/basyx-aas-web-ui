@@ -24,6 +24,7 @@ export interface DataTransferEndpoint {
  */
 export function useEdcDataTransfer () {
   const {
+    getCatalogDataset,
     initiateContractNegotiation,
     getContractNegotiation,
     getContractNegotiationState,
@@ -40,22 +41,93 @@ export function useEdcDataTransfer () {
     return CANCELLED
   }
 
-  async function resolveEdcEndpoint (
-    selectedBusinessPartner: any,
-    selectedCatalogDataset: any,
+  /**
+   * Validates that the given Business Partner has a DSP endpoint and a BPN set.
+   * @returns An error message if validation fails, or `null` if the Business Partner is valid.
+   */
+  function validateBusinessPartner (businessPartner: any): string | null {
+    if (!Object.hasOwn(businessPartner, 'dsp') || businessPartner.dsp.trim() == '') {
+      return 'Error: DSP of Business Partner not found'
+    }
+
+    if (!Object.hasOwn(businessPartner, 'bpn') || businessPartner.bpn.trim() == '') {
+      return 'Error: BPN of Business Partner not found'
+    }
+
+    return null
+  }
+
+  async function resolveEdcEndpointByAssetId (
+    assetId: string, businessPartner: any,
     callbacks: DataTransferCallbacks,
   ): Promise<DataTransferEndpoint> {
     callbacks.cancelled.value = false
     callbacks.setInProgress(true)
+
+    if (!assetId || assetId.trim() == '') {
+      return abort(callbacks, 'Error: @id of Catalog Dataset not found')
+    }
+
+    const businessPartnerError = validateBusinessPartner(businessPartner)
+    if (businessPartnerError) {
+      return abort(callbacks, businessPartnerError)
+    }
+
+    const providerDspEndpoint = businessPartner.dsp
+    const providerBpn = businessPartner.bpn
+
+    // 1. Get Catalog Dataset
+
+    callbacks.setStatus('Get EDC Asset...')
+    if (callbacks.cancelled.value) {
+      return abort(callbacks, 'Data transfer cancelled')
+    }
+    const datasetRequest: any = {
+      '@id': assetId,
+      'counterPartyAddress': providerDspEndpoint,
+      'counterPartyId': providerBpn,
+      'protocol': 'dataspace-protocol-http',
+    }
+
+    const catalogDataset = await getCatalogDataset(datasetRequest)
+    if (!catalogDataset) {
+      return abort(callbacks, 'Error: Failed to getch EDC asset')
+    }
+
+    // 2. Resolve EDC Endpoint with Catalog Dataset
+    return await resolveEdcEndpointByCatalogDataset(catalogDataset, businessPartner, callbacks)
+  }
+
+  async function resolveEdcEndpointByCatalogDataset (
+    catalogDataset: any,
+    businessPartner: any,
+    callbacks: DataTransferCallbacks,
+  ): Promise<DataTransferEndpoint> {
+    callbacks.cancelled.value = false
+    callbacks.setInProgress(true)
+
+    if (!Object.hasOwn(catalogDataset, '@id') || catalogDataset['@id'].trim() == '') {
+      return abort(callbacks, 'Error: @id of Catalog Dataset not found')
+    }
+
+    const businessPartnerError = validateBusinessPartner(businessPartner)
+    if (businessPartnerError) {
+      return abort(callbacks, businessPartnerError)
+    }
+
+    const providerAssetId = catalogDataset['@id']
+    const providerDspEndpoint = businessPartner.dsp
+    const providerBpn = businessPartner.bpn
+
+    // 1. Initiate Contract Negotiation
     callbacks.setStatus('Initiating Contract Negotiation...')
+    if (callbacks.cancelled.value) {
+      return abort(callbacks, 'Data transfer cancelled')
+    }
 
-    const providerAssetId = selectedCatalogDataset['@id']
-    const providerDspEndpoint = selectedBusinessPartner.dsp
-    const providerBpn = selectedBusinessPartner.bpn
-
-    const policy = Array.isArray(selectedCatalogDataset['odrl:hasPolicy'])
-      ? selectedCatalogDataset['odrl:hasPolicy'][0]
-      : selectedCatalogDataset['odrl:hasPolicy']
+    const policy = Array.isArray(catalogDataset['odrl:hasPolicy'])
+      ? catalogDataset['odrl:hasPolicy'][0]
+      : catalogDataset['odrl:hasPolicy']
 
     if (!policy) {
       console.error('No policy found in dataset')
@@ -74,11 +146,6 @@ export function useEdcDataTransfer () {
         'prohibition': [],
         'obligation': [],
       },
-    }
-
-    // 1. Initiate Contract Negotiation
-    if (callbacks.cancelled.value) {
-      return abort(callbacks, 'Data transfer cancelled')
     }
     const negotiationResponse = await initiateContractNegotiation(contractRequest)
     if (!negotiationResponse) {
@@ -186,5 +253,5 @@ export function useEdcDataTransfer () {
     return { endpoint, headers }
   }
 
-  return { resolveEdcEndpoint }
+  return { resolveEdcEndpointByAssetId, resolveEdcEndpointByCatalogDataset }
 }

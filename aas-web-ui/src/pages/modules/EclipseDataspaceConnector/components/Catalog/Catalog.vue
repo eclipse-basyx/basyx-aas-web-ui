@@ -178,7 +178,7 @@
           class="ma-0 pa-0"
           fluid
           style="overflow-y: auto"
-          :style="{ height: fullHeightMain }"
+          :style="{ height: fullHeight }"
         >
 
           <!-- Empty states when nothing is selected yet -->
@@ -190,7 +190,7 @@
                 || Object.keys(selectedCatalogDataset).length === 0
             "
             class="mx-0 pa-0 d-flex align-center justify-center"
-            :style="{ height: fullHeightMain }"
+            :style="{ height: fullHeight }"
           >
             <v-empty-state
               v-if="
@@ -360,9 +360,7 @@
             <CatalogPushData
               v-if="isPushAsset"
               ref="pushDataRef"
-              :full-height-aas-sms-data-to-push-json="fullHeightAasSmsDataToPushJson"
-              :full-height-list="fullHeightList"
-              :full-height-lists="fullHeightLists"
+              :full-height="fullHeightAsset"
               :pushing-asset="dataTranserInProgress"
               :selected-business-partner="selectedBusinessPartner"
               :selected-catalog-dataset="selectedCatalogDataset"
@@ -378,7 +376,7 @@
               ref="discoverIdRef"
               :discovering-id="dataTranserInProgress"
               :discovery-id="discoveryId"
-              :height-aas-descriptor-json="heightJson"
+              :full-height="fullHeightAsset"
               :selected-business-partner="selectedBusinessPartner"
               :selected-catalog-dataset="selectedCatalogDataset"
               @update:discovering-id="dataTranserInProgress = $event"
@@ -390,7 +388,7 @@
               v-else
               ref="fetchAssetRef"
               :fetching-asset="dataTranserInProgress"
-              :height-asset-json="heightJson"
+              :full-height="fullHeightAsset"
               :selected-business-partner="selectedBusinessPartner"
               :selected-catalog-dataset="selectedCatalogDataset"
               @update:edc-status="edcStatus = $event"
@@ -421,7 +419,7 @@
   import { useTheme } from 'vuetify'
   import JsonTreeView from '@/components/UIComponents/JsonTreeView.vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
-  import CatalogDiscoverId from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/CatalogDiscoverId.vue'
+  import CatalogDiscoverId from '@/pages/modules/EclipseDataspaceConnector/components/Catalog//CatalogDiscoverId.vue'
   import CatalogFetchAsset from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/CatalogFetchAsset.vue'
   import CatalogPushData from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/CatalogPushData.vue'
   import {
@@ -450,17 +448,9 @@
   const theme = useTheme()
 
   // Constants
-  const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)')
-  const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 2px)')
-  const heightJson = ref('calc(100vh - 64px - 48px - 40px - 2px - 275px)')
-  const fullHeightLists = ref(
-    'calc(100vh - 64px - 48px - 40px - 2px - 275px - 60px - 60px - 1px)',
-  )
-  const fullHeightList = ref(
-    'calc(100vh - 64px - 48px - 40px - 2px - 275px - 60px - 60px - 64px)',
-  )
-  const fullHeightAasSmsDataToPushJson = ref(
-    'calc(100vh - 64px - 48px - 40px - 2px - 275px - 60px - 60px - 1px - 64px - 16px)',
+  const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Header - Tabs - Footer - Lines
+  const fullHeightAsset = ref(
+    'calc(100vh - 64px - 48px - 40px - 2px - 60px - 275px  - 60px - 1px)', // Header - Tabs - Footer - Lines - Dataset Header - Dataset Json - Dataset Footer - Line
   )
 
   // Data

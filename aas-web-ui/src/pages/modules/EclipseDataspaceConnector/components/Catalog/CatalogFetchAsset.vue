@@ -1,79 +1,90 @@
 <template>
-  <div>
-    <div class="d-flex justify-space-between align-center mt-4 mx-4 mb-2">
-      <v-btn-toggle
-        v-model="selectedAssetView"
-        density="compact"
-        mandatory
-        rounded="lg"
-        variant="outlined"
+  <v-layout :style="{ height: fullHeight }">
+    <v-main class="py-0">
+      <v-container
+        class="ma-0 pa-0"
+        fluid
+        style="overflow-y: auto"
+        :style="{ height: fullHeight }"
       >
-        <v-btn value="tree">
-          <v-icon start>mdi-file-tree-outline</v-icon>
-          Tree
-        </v-btn>
 
-        <v-btn value="json">
-          <v-icon start>mdi-code-json</v-icon>
-          JSON
-        </v-btn>
-      </v-btn-toggle>
-
-      <v-list-item-title class="text-body-large pr-2 d-flex align-center">
-        <template v-if="isValidAAS || isValidSubmodel">
-          <v-btn
-            class="text-buttonText mr-2"
-            :color="dataTranserInProgress ? 'error' : 'primary'"
-            :prepend-icon="dataTranserInProgress ? 'mdi-close' : 'mdi-import'"
+        <div class="d-flex justify-space-between align-center mt-4 mx-4 mb-2">
+          <v-btn-toggle
+            v-model="selectedAssetView"
+            density="compact"
+            mandatory
             rounded="lg"
-            :text="dataTranserInProgress ? 'Cancel Push' : 'Import ' + (isValidAAS? 'AAS' : isValidSubmodel ? 'Submodel':'asset') + ' data to'"
-            variant="flat"
-            @click="dataTranserInProgress ? cancel() : importAsset()"
-          />
+            variant="outlined"
+          >
+            <v-btn value="tree">
+              <v-icon start>mdi-file-tree-outline</v-icon>
+              Tree
+            </v-btn>
 
-          <div>
-            <v-select
-              v-model="selectedDestinationInfrastructureId"
-              density="compact"
-              hide-details
-              item-title="name"
-              item-value="id"
-              :items="destinationInfrastructureItems"
-              placeholder="Please select..."
-              variant="outlined"
-            />
-          </div>
-        </template>
+            <v-btn value="json">
+              <v-icon start>mdi-code-json</v-icon>
+              JSON
+            </v-btn>
+          </v-btn-toggle>
 
-        <template v-else>
-          <v-icon class="mr-2" color="primary" size="small">
-            mdi-cube
-          </v-icon>
-          Asset
-        </template>
-      </v-list-item-title>
-    </div>
+          <v-list-item-title class="text-body-large pr-2 d-flex align-center">
+            <template v-if="isValidAAS || isValidSubmodel">
+              <v-btn
+                class="text-buttonText mr-2"
+                color="primary"
+                prepend-icon="mdi-import"
+                rounded="lg"
+                :text="'Import ' + (isValidAAS? 'AAS' : isValidSubmodel ? 'Submodel':'asset') + ' data to'"
+                variant="flat"
+                @click="importAsset()"
+              />
 
-    <!-- Asset JSON view -->
-    <pre
-      v-if="selectedAssetView === 'json'"
-      class="json-content mt-0 mx-4 mb-5 bg-surface rounded border"
-      style="min-height: 63px"
-      :style="{ 'max-height': heightAssetJson }"
-    >
-      <code class="mx-5" v-html="assetJsonFormatted" />
-    </pre>
+              <div>
+                <v-select
+                  v-model="selectedDestinationInfrastructureId"
+                  density="compact"
+                  hide-details
+                  item-title="name"
+                  item-value="id"
+                  :items="destinationInfrastructureItems"
+                  placeholder="Please select..."
+                  variant="outlined"
+                />
+              </div>
+            </template>
 
-    <!-- Asset Tree view -->
-    <div
-      v-else
-      class="rounded border overflow-y-auto mx-4 mb-5 pa-4"
-      style="min-height: 63px; background-color: #f5f5f5"
-      :style="{ 'max-height': heightAssetJson }"
-    >
-      <JsonTreeView :data="assetJsonParsed" />
-    </div>
-  </div>
+            <template v-else>
+              <v-icon class="mr-2" color="primary" size="small">
+                mdi-cube
+              </v-icon>
+              Asset
+            </template>
+          </v-list-item-title>
+        </div>
+
+        <!-- Asset JSON view -->
+        <pre
+          v-if="selectedAssetView === 'json'"
+          class="json-content mt-0 mb-4 mx-4 bg-surface rounded border"
+          style="min-height: 63px"
+          :style="{ 'height': heightAssetJson }"
+        >
+          <code class="mx-5" v-html="assetJsonFormatted" />
+        </pre>
+
+        <!-- Asset Tree view -->
+        <div
+          v-else
+          class="rounded border overflow-y-auto mt-0 mb-4 mx-4 pa-4"
+          style="min-height: 63px; background-color: #f5f5f5"
+          :style="{ 'height': heightAssetJson }"
+        >
+          <JsonTreeView :data="assetJsonParsed" />
+        </div>
+
+      </v-container>
+    </v-main>
+  </v-layout>
 </template>
 
 <script lang="ts" setup>
@@ -95,7 +106,7 @@
     selectedBusinessPartner: any
     selectedCatalogDataset: any
     fetchingAsset: boolean
-    heightAssetJson: string
+    fullHeight: string
   }>()
 
   // Emits
@@ -113,13 +124,13 @@
   const assetJsonFormatted = ref<string>('')
   const assetJsonParsed = ref<unknown>({})
   const cancelled = ref(false)
-  const dataTranserInProgress = ref(false)
   const importingInProgress = ref<boolean>(false)
   const selectedAssetView = ref<'json' | 'tree'>('json')
   const selectedDestinationInfrastructureId = ref<string | null>(infrastructureStore.getSelectedInfrastructureId)
+  const heightAssetJson = ref(`calc(${props.fullHeight} - 60px - 16px)`)
 
   // Composables
-  const { resolveEdcEndpoint } = useEdcDataTransfer()
+  const { resolveEdcEndpointByCatalogDataset } = useEdcDataTransfer()
   const { postAas } = useAASRepositoryClient()
   const { postSubmodel } = useSMRepositoryClient()
 
@@ -181,9 +192,9 @@
     if (!props.selectedBusinessPartner || !props.selectedCatalogDataset)
       return
 
-    const { endpoint, headers } = await resolveEdcEndpoint(
-      props.selectedBusinessPartner,
+    const { endpoint, headers } = await resolveEdcEndpointByCatalogDataset(
       props.selectedCatalogDataset,
+      props.selectedBusinessPartner,
       {
         cancelled,
         setInProgress: value => emit('update:fetching-asset', value),

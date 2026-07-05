@@ -1,5 +1,5 @@
 <template>
-  <v-layout :style="{ height: fullHeightLists }">
+  <v-layout :style="{ height: fullHeight }">
 
     <!-- AAS list  -->
     <v-navigation-drawer
@@ -580,9 +580,7 @@
 
   // Props
   const props = defineProps<{
-    fullHeightLists: string
-    fullHeightList: string
-    fullHeightAasSmsDataToPushJson: string
+    fullHeight: string
     selectedBusinessPartner: any
     selectedCatalogDataset: any
     pushingAsset: boolean
@@ -626,8 +624,13 @@
   const smSearchValue = ref('')
   const smVirtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null)
 
+  const fullHeightList = ref(
+    `calc(${props.fullHeight} - 64px)`,
+  )
+  const fullHeightAasSmsDataToPushJson = ref(`calc(${props.fullHeight} - 64px - 16px)`)
+
   // Composables
-  const { resolveEdcEndpoint } = useEdcDataTransfer()
+  const { resolveEdcEndpointByCatalogDataset } = useEdcDataTransfer()
   const { fetchAasShellListPage, fetchAasById, fetchAasSmListById }
     = useAASHandling()
   const { fetchSmById } = useSMHandling()
@@ -1017,9 +1020,9 @@
   async function pushData (): Promise<void> {
     if (!props.selectedBusinessPartner || !props.selectedCatalogDataset) return
 
-    const { endpoint, headers } = await resolveEdcEndpoint(
-      props.selectedBusinessPartner,
+    const { endpoint, headers } = await resolveEdcEndpointByCatalogDataset(
       props.selectedCatalogDataset,
+      props.selectedBusinessPartner,
       {
         cancelled,
         setInProgress: value => emit('update:pushing-asset', value),

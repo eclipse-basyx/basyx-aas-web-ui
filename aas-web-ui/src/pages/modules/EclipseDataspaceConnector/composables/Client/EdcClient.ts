@@ -22,6 +22,7 @@ export function useEdcClient () {
   const defaultContractDefinitionsPath = '/contractdefinitions'
   const defaultContractDefinitionsRequestPath = '/contractdefinitions/request'
   const defaultCatalogRequestPath = '/catalog/request'
+  const defaultCatalogDatasetRequestPath = '/catalog/dataset/request'
   const defaultContractNegotiationsPath = '/contractnegotiations'
   const defaultTransferProcessesPath = '/transferprocesses'
   const defaultEdrsPath = '/edrs'
@@ -840,6 +841,49 @@ export function useEdcClient () {
   }
 
   /**
+   * Retrieves a single dataset from a connector.
+   * Based on OpenAPI spec: POST /v3/catalog/dataset/request
+   * @param datasetRequest The dataset request object containing counterPartyAddress and protocol
+   * @param endpoint Optional custom endpoint. If not provided, uses configured controlplane management endpoint
+   * @returns Dataset object, or null if query fails
+   */
+  async function getCatalogDataset (datasetRequest: DatasetRequest, endpoint?: string): Promise<Dataset | null> {
+    const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
+    if (baseUrl === '' || !datasetRequest) {
+      return null
+    }
+
+    const path = `${baseUrl}${defaultCatalogDatasetRequestPath}`
+    const context = 'retrieving EDC dataset'
+    const disableMessage = false
+    const headers = new Headers()
+    headers.append('Content-Type', 'application/json')
+    const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
+    headers.append(authKey, authValue)
+
+    // Ensure @context and @type are set if not provided
+    const bodyObj = {
+      '@context': {
+        '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
+      },
+      '@type': 'DatasetRequest',
+      ...datasetRequest,
+    }
+    const body = JSON.stringify(bodyObj)
+
+    try {
+      const response = await postRequest(path, body, headers, context, disableMessage)
+      if (response.success && response.data) {
+        return response.data as Dataset
+      }
+    } catch (error) {
+      console.warn('Get dataset failed:', error)
+    }
+
+    return null
+  }
+
+  /**
    * Initiates a contract negotiation for a given offer and with the given counter part.
    * Based on OpenAPI spec: POST /v3/contractnegotiations
    * @param contractRequest The contract request object containing counterPartyAddress, protocol and policy (offer)
@@ -1118,6 +1162,7 @@ export function useEdcClient () {
     updateContractDefinition,
     deleteContractDefinition,
     queryCatalog,
+    getCatalogDataset,
     initiateContractNegotiation,
     getContractNegotiation,
     getContractNegotiationState,
@@ -1278,6 +1323,23 @@ export interface Catalog {
   'dcat:dataset'?: any | any[]
   'dcat:service'?: any | any[]
   'dspace:participantId'?: string
+  '@context'?: Record<string, unknown>
+}
+
+export interface DatasetRequest {
+  '@context'?: Record<string, unknown>
+  '@type'?: string
+  'counterPartyAddress': string
+  'counterPartyId'?: string
+  'protocol': string
+  'querySpec'?: QuerySpec
+}
+
+export interface Dataset {
+  '@id'?: string
+  '@type'?: string
+  'odrl:hasPolicy'?: any | any[]
+  'dcat:distribution'?: any | any[]
   '@context'?: Record<string, unknown>
 }
 
