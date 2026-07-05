@@ -1018,7 +1018,19 @@
     templateStr = templateStr.replace(/\{\{Token scope(?:\|[^}]*)?\}\}/g, '')
     templateStr = templateStr.replace(/\{\{Token endpoint(?:\|[^}]*)?\}\}/g, '')
 
-    return JSON.parse(templateStr)
+    const edcAsset = JSON.parse(templateStr)
+
+    // Remove oauth2 properties from the dataAddress if they have an empty value
+    const dataAddress = edcAsset.dataAddress
+    if (dataAddress && typeof dataAddress === 'object') {
+      for (const key of Object.keys(dataAddress)) {
+        if (key.startsWith('oauth2:') && dataAddress[key] === '') {
+          delete dataAddress[key]
+        }
+      }
+    }
+
+    return edcAsset
   }
 
   function smTitleToDisplay (sm: any): string {
