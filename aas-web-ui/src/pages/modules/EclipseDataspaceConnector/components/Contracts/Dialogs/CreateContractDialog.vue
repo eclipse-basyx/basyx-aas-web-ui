@@ -212,7 +212,7 @@
     assetsLoading.value = true
     try {
       const assets = await queryAssets()
-      availableAssets.value = assets || []
+      availableAssets.value = (assets || []).toSorted((a, b) => getEdcAssetDisplayName(a).localeCompare(getEdcAssetDisplayName(b)))
     } catch (error) {
       console.error('Error loading assets:', error)
     } finally {
@@ -224,7 +224,7 @@
     policiesLoading.value = true
     try {
       const policies = await queryPolicyDefinitions()
-      availablePolicies.value = policies || []
+      availablePolicies.value = (policies || []).toSorted((a, b) => getEdcPolicyDisplayName(a).localeCompare(getEdcPolicyDisplayName(b)))
     } catch (error) {
       console.error('Error loading policies:', error)
     } finally {
