@@ -160,8 +160,8 @@ importers:
         specifier: ^4.7.2
         version: 4.7.2(eslint@10.6.0)(typescript@6.0.3)
       eslint-plugin-jsdoc:
-        specifier: ^63.0.10
-        version: 63.0.10(eslint@10.6.0)
+        specifier: ^63.0.11
+        version: 63.0.11(eslint@10.6.0)
       eslint-plugin-vue:
         specifier: ^10.9.2
         version: 10.9.2(@stylistic/eslint-plugin@5.10.0(eslint@10.6.0))(@typescript-eslint/parser@8.62.1(eslint@10.6.0)(typescript@6.0.3))(eslint@10.6.0)(vue-eslint-parser@10.4.1(eslint@10.6.0))
@@ -396,8 +396,8 @@ packages:
   '@emnapi/wasi-threads@1.2.2':
     resolution: {integrity: sha512-c95qOXkHdydNKhscBTebqEC1CVAZpyqOfVfBzQ1qgzyl3gfeldUjIggDbIZgDKsHLgnsM+igH7TJ/eAasaVuMA==}
 
-  '@es-joy/jsdoccomment@0.87.0':
-    resolution: {integrity: sha512-mFXZloZMzuJZXSHUmAFu/pXTk0ZJTJBluuAkrvbzidpTN8W6F2bpRFuedSH+85kbdlRLJqc+gfN+kD3JOLJK5g==}
+  '@es-joy/jsdoccomment@0.88.0':
+    resolution: {integrity: sha512-GK/HL/claLLNo5KG705auIlZMwEtmn88ofSGuLsmVZwKBqMPJhW9DiznYNq07QEqz9BPtA3LBfYImtZmhVvRAw==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
   '@es-joy/resolve.exports@1.2.0':
@@ -927,10 +927,6 @@ packages:
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
       typescript: '>=4.8.4 <6.1.0'
-
-  '@typescript-eslint/types@8.62.0':
-    resolution: {integrity: sha512-KvAclkktORPvM54TgLgA4z9HIV1M8zOgw9ZVNXl9f/8dLYfXYX1wkMXP7qmabpijQRV5bHJLOmoyGQbLMaUYeg==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@typescript-eslint/types@8.62.1':
     resolution: {integrity: sha512-ooCzJFaf+Hg+uG6fA3NRFGuFjlfNlDhBthbv4ZPU/0elCAFUfnyXUvf/WOpHz/jYwSmvU2GkR2LtyUfy1AxZ1Q==}
@@ -1562,8 +1558,8 @@ packages:
     peerDependencies:
       eslint: ^9.0.0 || ^10.0.0
 
-  eslint-plugin-jsdoc@63.0.10:
-    resolution: {integrity: sha512-A9UIWsCquaKnit7rasXxYf12hhGIdDRjv65/RUE3AxbT6rdKBvr3MjH37g3gP+g4ipQMXuMn9slFKjO+vqNfkg==}
+  eslint-plugin-jsdoc@63.0.11:
+    resolution: {integrity: sha512-QhLmqREgRJSIKg0r23ckTVaNK1lmMsTmpyY5Hv7NTCHNWTFZx/8PqycWhR0p0Lk/U5aJ6H3zAKMQ0xB2NkN0sA==}
     engines: {node: ^22.13.0 || >=24}
     peerDependencies:
       eslint: ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0
@@ -3464,10 +3460,10 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
-  '@es-joy/jsdoccomment@0.87.0':
+  '@es-joy/jsdoccomment@0.88.0':
     dependencies:
       '@types/estree': 1.0.9
-      '@typescript-eslint/types': 8.62.0
+      '@typescript-eslint/types': 8.62.1
       comment-parser: 1.4.7
       esquery: 1.7.0
       jsdoc-type-pratt-parser: 7.2.0
@@ -3943,8 +3939,6 @@ snapshots:
       typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
-
-  '@typescript-eslint/types@8.62.0': {}
 
   '@typescript-eslint/types@8.62.1': {}
 
@@ -4607,9 +4601,9 @@ snapshots:
     dependencies:
       eslint: 10.6.0
 
-  eslint-plugin-jsdoc@63.0.10(eslint@10.6.0):
+  eslint-plugin-jsdoc@63.0.11(eslint@10.6.0):
     dependencies:
-      '@es-joy/jsdoccomment': 0.87.0
+      '@es-joy/jsdoccomment': 0.88.0
       '@es-joy/resolve.exports': 1.2.0
       are-docs-informative: 0.0.2
       comment-parser: 1.4.7
