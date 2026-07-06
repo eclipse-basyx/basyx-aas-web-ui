@@ -41,12 +41,20 @@
 : "${AUTHORIZATION_HEADER_PREFIX:=Bearer}"
 : "${AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION:=true}"
 : "${START_PAGE_ROUTE_NAME:=}"
+: "${CX_EDC_BFF_ENABLED:=false}"
+: "${CX_EDC_BFF_PORT:=3001}"
+
+if [ "$CX_EDC_BFF_ENABLED" = "true" ] && [ -z "${CX_EDC_BFF_UPSTREAM_URL+x}" ]; then
+    CX_EDC_BFF_UPSTREAM_URL="http://127.0.0.1:${CX_EDC_BFF_PORT}"
+fi
+
 : "${CX_EDC_BFF_UPSTREAM_URL:=http://catena-x-edc-bff:3001}"
 
 # Replace ${BASE_PATH} in the NGINX config template (without trailing slash)
 BASE_PATH_NGINX_PREFIX=$(echo "$BASE_PATH" | sed 's|/*$||')
 export BASE_PATH_NGINX_PREFIX
 export CX_EDC_BFF_UPSTREAM_URL
+export CX_EDC_BFF_PORT
 envsubst '${BASE_PATH_NGINX_PREFIX} ${CX_EDC_BFF_UPSTREAM_URL}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
 # Add a trailing slash to BASE_PATH for the replacement in files
@@ -176,6 +184,7 @@ printf "%-38s %s\n" "Editor ID prefix:" "$EDITOR_ID_PREFIX"
 printf "%-38s %s\n" "Authorization header prefix:" "$AUTHORIZATION_HEADER_PREFIX"
 printf "%-38s %s\n" "Authorization header description endpoint exemption:" "$AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION"
 printf "%-38s %s\n" "Start page route name:" "$START_PAGE_ROUTE_NAME"
+printf "%-38s %s\n" "Integrated Catena-X EDC BFF:" "$CX_EDC_BFF_ENABLED"
 printf "%-38s %s\n" "Catena-X EDC BFF upstream:" "$CX_EDC_BFF_UPSTREAM_URL"
 echo "-------------------------------------------------------------------------------------------------------------------------"
 
@@ -223,5 +232,50 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__START_PAGE_ROUTE_NAME_PLACEHOLDER__/|$START_PAGE_ROUTE_NAME|g" \
     {} \;
 
+BFF_PID=""
+NGINX_PID=""
+
+stop_processes() {
+    if [ -n "$NGINX_PID" ]; then
+        kill "$NGINX_PID" 2>/dev/null || true
+    fi
+    if [ -n "$BFF_PID" ]; then
+        kill "$BFF_PID" 2>/dev/null || true
+    fi
+}
+
+trap stop_processes INT TERM
+
+if [ "$CX_EDC_BFF_ENABLED" = "true" ]; then
+    echo "Starting integrated Catena-X EDC BFF on port $CX_EDC_BFF_PORT"
+    node /usr/src/app/dist-bff/edc-bff/server.js &
+    BFF_PID="$!"
+fi
+
 # Start Nginx
-exec nginx -g 'daemon off;'
+nginx -g 'daemon off;' &
+NGINX_PID="$!"
+
+while :; do
+    if ! kill -0 "$NGINX_PID" 2>/dev/null; then
+        wait "$NGINX_PID"
+        EXIT_CODE="$?"
+        break
+    fi
+
+    if [ -n "$BFF_PID" ] && ! kill -0 "$BFF_PID" 2>/dev/null; then
+        wait "$BFF_PID"
+        EXIT_CODE="$?"
+        stop_processes
+        break
+    fi
+
+    sleep 2
+done
+
+if [ -n "$BFF_PID" ]; then
+    kill "$BFF_PID" 2>/dev/null || true
+    wait "$BFF_PID" 2>/dev/null || true
+fi
+
+exit "$EXIT_CODE"

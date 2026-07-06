@@ -1,0 +1,21 @@
+infrastructures:
+  default: catena-x-edc
+
+  catena-x-edc:
+    name: Catena-X EDC Explorer
+    template: catena-x
+    components: {}
+    catenaX:
+      accessMode: edc
+      edc:
+        proxyId: default
+        defaultPartnerId: provider-a
+        defaultCounterPartyId: "<COUNTERPARTY_ID>"
+        defaultCounterPartyAddress: "https://counterparty-edc.example.test/api/v1/dsp"
+        partners:
+          - id: provider-a
+            name: Provider A
+            counterPartyId: "<COUNTERPARTY_ID>"
+            counterPartyAddress: "https://counterparty-edc.example.test/api/v1/dsp"
+    security:
+      type: none

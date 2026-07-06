@@ -44,15 +44,15 @@ ARG HTTP_PROXY
 ARG HTTPS_PROXY
 # Set working directory
 WORKDIR /usr/src/app
-# Install jq
-RUN apk add --no-cache jq
-# Install gettext for envsubst
-RUN apk add --no-cache gettext
+# Install jq, gettext for envsubst, and nodejs for the optional integrated Catena-X EDC BFF
+RUN apk add --no-cache jq gettext nodejs
 # Create a non-root user and group
 RUN addgroup -g 1000 -S mygroup && \
   adduser -u 1000 -D -S -G mygroup myuser
 # Copy the dist folder from the build stage to the production stage
 COPY --from=build-stage /app/dist /usr/src/app/dist
+# Copy the compiled Catena-X EDC BFF so the UI container can optionally run it internally
+COPY --from=build-stage /app/dist-bff /usr/src/app/dist-bff
 # Replace the default Nginx configuration file with a custom one
 COPY nginx.conf /etc/nginx/nginx.conf.template
 # Copy the entrypoint script and make it executable

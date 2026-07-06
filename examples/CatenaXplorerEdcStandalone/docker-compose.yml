@@ -1,0 +1,45 @@
+services:
+  aas-web-ui:
+    build:
+      context: ../../aas-web-ui
+      target: production-stage
+    image: "${AAS_WEB_UI_IMAGE:-basyx-aas-web-ui:catena-xplorer-edc}"
+    container_name: catena-xplorer-ui
+    restart: unless-stopped
+    ports:
+      - "${PUBLIC_UI_PORT:-3000}:3000"
+    volumes:
+      - ./basyx-infra.yml:/basyx-infra.yml:ro
+    environment:
+      BASE_PATH: "${PUBLIC_BASE_PATH:-/}"
+      START_PAGE_ROUTE_NAME: "CatenaXplorer"
+      ENDPOINT_CONFIG_AVAILABLE: "false"
+      ALLOW_EDITING: "false"
+      ALLOW_UPLOADING: "false"
+      ALLOW_LOGOUT: "true"
+      SM_VIEWER_EDITOR: "true"
+      AUTHORIZATION_HEADER_PREFIX: "Bearer"
+      AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION: "true"
+      CX_EDC_BFF_ENABLED: "true"
+      CX_EDC_BFF_PORT: "3001"
+      CX_EDC_BFF_UPSTREAM_URL: "http://127.0.0.1:3001"
+      CX_EDC_BFF_AUTH_MODE: "${CX_EDC_BFF_AUTH_MODE:-none}"
+      CX_EDC_BFF_AUTH_JWKS_URL: "${CX_EDC_BFF_AUTH_JWKS_URL:-}"
+      CX_EDC_BFF_AUTH_ISSUER: "${CX_EDC_BFF_AUTH_ISSUER:-}"
+      CX_EDC_BFF_AUTH_AUDIENCE: "${CX_EDC_BFF_AUTH_AUDIENCE:-}"
+      CX_EDC_BFF_REQUIRED_ROLES: "${CX_EDC_BFF_REQUIRED_ROLES:-}"
+      CX_EDC_DEFAULT_MANAGEMENT_URL: "${CX_EDC_DEFAULT_MANAGEMENT_URL:?Set CX_EDC_DEFAULT_MANAGEMENT_URL in .env}"
+      CX_EDC_DEFAULT_API_KEY: "${CX_EDC_DEFAULT_API_KEY:?Set CX_EDC_DEFAULT_API_KEY in .env}"
+      CX_EDC_DEFAULT_API_KEY_HEADER: "${CX_EDC_DEFAULT_API_KEY_HEADER:-X-Api-Key}"
+      CX_EDC_DEFAULT_PARTICIPANT_ID: "${CX_EDC_DEFAULT_PARTICIPANT_ID:-}"
+      CX_EDC_DEFAULT_DSP_ENDPOINT: "${CX_EDC_DEFAULT_DSP_ENDPOINT:-}"
+      CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES: "${CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES:?Set CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES in .env}"
+      CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES: "${CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES:-false}"
+      CX_EDC_REQUEST_TIMEOUT_MS: "${CX_EDC_REQUEST_TIMEOUT_MS:-30000}"
+      CX_EDC_EDR_POLLING_ATTEMPTS: "${CX_EDC_EDR_POLLING_ATTEMPTS:-60}"
+      CX_EDC_EDR_POLLING_INTERVAL_MS: "${CX_EDC_EDR_POLLING_INTERVAL_MS:-2000}"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/ >/dev/null 2>&1 && node -e \"fetch('http://127.0.0.1:3001/api/catena-x/edc/default/status').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 15s
+      timeout: 5s
+      retries: 10
