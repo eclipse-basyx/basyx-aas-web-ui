@@ -1,4 +1,11 @@
-import type { EdcBffRuntimeConfig, EdcCatalogRequest, EdcDiscoveryRequest, EdcProxyConfig } from './types.js'
+import type {
+  EdcBffRuntimeConfig,
+  EdcCatalogRequest,
+  EdcDiscoveryRequest,
+  EdcDtrDescriptorByIdRequest,
+  EdcDtrDescriptorRequest,
+  EdcProxyConfig,
+} from './types.js'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import { pathToFileURL } from 'node:url'
 import { authorizeRequest, createAuthError } from './auth.js'
@@ -8,6 +15,8 @@ import {
   buildConnectorDiscoveryRequestBody,
   buildDspVersionParamsRequestBody,
   createHttpError,
+  fetchDtrShellDescriptorById,
+  fetchDtrShellDescriptors,
   forwardJsonToEdc,
 } from './edcRequests.js'
 
@@ -78,6 +87,16 @@ async function handleRequest (
     return
   }
 
+  if (route.action === 'dtr/shell-descriptors' && request.method === 'POST') {
+    await handleDtrShellDescriptorsRequest(request, response, proxy)
+    return
+  }
+
+  if (route.action === 'dtr/shell-descriptors/by-id' && request.method === 'POST') {
+    await handleDtrShellDescriptorByIdRequest(request, response, proxy)
+    return
+  }
+
   throw createHttpError('Route not found', 404)
 }
 
@@ -126,6 +145,34 @@ async function handleCatalogRequest (
     buildCatalogRequestBody(proxy, body),
   )
   writeJsonResponse(response, edcResponse.status, edcResponse.data)
+}
+
+async function handleDtrShellDescriptorsRequest (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+): Promise<void> {
+  assertProxyConfigured(proxy)
+  const body = await readJsonBody<EdcDtrDescriptorRequest>(request)
+  const result = await fetchDtrShellDescriptors(proxy, body)
+  writeJsonResponse(response, 200, {
+    data: result.data,
+    edc: result.metadata,
+  })
+}
+
+async function handleDtrShellDescriptorByIdRequest (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+): Promise<void> {
+  assertProxyConfigured(proxy)
+  const body = await readJsonBody<EdcDtrDescriptorByIdRequest>(request)
+  const result = await fetchDtrShellDescriptorById(proxy, body)
+  writeJsonResponse(response, 200, {
+    data: result.data,
+    edc: result.metadata,
+  })
 }
 
 function parseRoute (request: IncomingMessage): { proxyId: string, action: string } {

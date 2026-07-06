@@ -126,8 +126,51 @@ describe('useInfrastructureYamlParser.ts', () => {
       catenaX: {
         edc: {
           proxyId: 'default',
-          defaultCounterPartyId: 'did:web:provider.example',
-          defaultCounterPartyAddress: 'https://provider.example/api/v1/dsp',
+          defaultCounterPartyId: 'TEST_COUNTERPARTY_ID',
+          defaultCounterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+        },
+      },
+      security: { type: 'none' },
+    }))
+
+    expect(parsed.infrastructures[0].catenaX).toEqual({
+      accessMode: 'edc',
+      edc: {
+        proxyId: 'default',
+        defaultCounterPartyId: 'TEST_COUNTERPARTY_ID',
+        defaultCounterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+        defaultPartnerId: 'test-counterparty-id-https-counterparty-dsp-test-api-v1-dsp',
+        partners: [
+          {
+            id: 'test-counterparty-id-https-counterparty-dsp-test-api-v1-dsp',
+            counterPartyId: 'TEST_COUNTERPARTY_ID',
+            counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+          },
+        ],
+      },
+    })
+  })
+
+  it('parses Catena-X EDC partners from YAML', () => {
+    const { parseYamlConfig } = useInfrastructureYamlParser()
+
+    const parsed = parseYamlConfig(createYamlConfig({
+      name: 'Catena-X',
+      template: 'catena-x',
+      components: {},
+      catenaX: {
+        accessMode: 'edc',
+        edc: {
+          proxyId: 'default',
+          defaultPartnerId: 'partner-a',
+          partners: [
+            {
+              id: 'partner-a',
+              name: 'Partner A',
+              counterPartyId: 'TEST_PARTICIPANT_ID',
+              counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+            },
+          ],
         },
       },
       security: { type: 'none' },
@@ -135,8 +178,17 @@ describe('useInfrastructureYamlParser.ts', () => {
 
     expect(parsed.infrastructures[0].catenaX?.edc).toEqual({
       proxyId: 'default',
-      defaultCounterPartyId: 'did:web:provider.example',
-      defaultCounterPartyAddress: 'https://provider.example/api/v1/dsp',
+      defaultCounterPartyId: undefined,
+      defaultCounterPartyAddress: undefined,
+      defaultPartnerId: 'partner-a',
+      partners: [
+        {
+          id: 'partner-a',
+          name: 'Partner A',
+          counterPartyId: 'TEST_PARTICIPANT_ID',
+          counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+        },
+      ],
     })
   })
 })

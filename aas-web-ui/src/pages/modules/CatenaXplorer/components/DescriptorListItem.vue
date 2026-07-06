@@ -46,7 +46,7 @@
 
           <v-sheet border rounded="lg">
             <v-list class="py-0" density="compact" slim>
-              <v-list-item @click.stop="emit('edit', descriptor)">
+              <v-list-item v-if="!readOnly" @click.stop="emit('edit', descriptor)">
                 <template #prepend>
                   <v-icon size="x-small">mdi-pencil</v-icon>
                 </template>
@@ -54,7 +54,7 @@
                 <v-list-item-title>Edit</v-list-item-title>
               </v-list-item>
 
-              <v-list-item @click.stop="emit('delete', descriptor)">
+              <v-list-item v-if="!readOnly" @click.stop="emit('delete', descriptor)">
                 <template #prepend>
                   <v-icon size="x-small">mdi-delete</v-icon>
                 </template>
@@ -62,9 +62,9 @@
                 <v-list-item-title>Delete</v-list-item-title>
               </v-list-item>
 
-              <v-divider />
+              <v-divider v-if="!readOnly" />
 
-              <v-list-item @click.stop="emit('duplicate', descriptor)">
+              <v-list-item v-if="!readOnly" @click.stop="emit('duplicate', descriptor)">
                 <template #prepend>
                   <v-icon size="x-small">mdi-content-duplicate</v-icon>
                 </template>
@@ -97,6 +97,7 @@
   defineProps<{
     copyJsonIcon: string
     descriptor: any
+    readOnly?: boolean
     selected: boolean
   }>()
 

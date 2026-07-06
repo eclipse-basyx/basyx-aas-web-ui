@@ -11,6 +11,8 @@ export interface EdcProxyConfig {
   allowedCounterPartyAddresses: string[]
   allowInsecureCounterPartyAddresses: boolean
   requestTimeoutMs: number
+  edrPollingAttempts: number
+  edrPollingIntervalMs: number
 }
 
 export interface RedactedEdcProxyConfig {
@@ -50,4 +52,22 @@ export interface EdcCatalogRequest {
   counterPartyAddress?: string
   protocol?: string
   querySpec?: Record<string, unknown>
+}
+
+export interface EdcDtrDescriptorRequest {
+  counterPartyId?: string
+  counterPartyAddress?: string
+  protocol?: string
+  transferProcessId?: string
+  assetIds?: Array<{ name?: string, value?: string }>
+  cursor?: string
+  limit?: number
+}
+
+export interface EdcDtrDescriptorByIdRequest {
+  counterPartyId?: string
+  counterPartyAddress?: string
+  protocol?: string
+  transferProcessId?: string
+  descriptorId?: string
 }

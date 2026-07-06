@@ -16,9 +16,11 @@
 # - identifiable: aasRepository only; submodels are resolved via /shells/{aasId}/submodels/{submodelId}
 # - mono-repo: discovery and registries plus one aasEnvironment URL for the repositories
 # - mono-all: one aasEnvironment URL for all components
-# - catena-x: digitalTwinRegistry plus submodelService
+# - catena-x: direct digitalTwinRegistry plus submodelService, or EDC proxy access
 # Optional Catena-X EDC metadata:
+# - catenaX.accessMode can be "direct" or "edc"; older configs infer "edc" when proxyId is set.
 # - catenaX.edc.proxyId links this infrastructure to a server-side EDC BFF proxy config.
+# - catenaX.edc.partners can preconfigure known counterparties; users may still enter runtime partners.
 # - Do not put the EDC Management API URL or x-api-key in this YAML file.
 
 infrastructures:
@@ -101,16 +103,31 @@ infrastructures:
   # staging:
   #   name: Staging BaSyx
   #   template: catena-x
+  #   catenaX:
+  #     accessMode: direct
   #   components:
   #     digitalTwinRegistry:
   #       baseUrl: "https://dtr.staging.basyx.com"
   #     submodelService:
   #       baseUrl: "https://submodel-service.staging.basyx.com"
+
+  # # Catena-X EDC infrastructure
+  # edc:
+  #   name: EDC Catena-X
+  #   template: catena-x
+  #   components: {}
   #   catenaX:
+  #     accessMode: edc
   #     edc:
   #       proxyId: default
-  #       defaultCounterPartyId: "did:web:provider.example.com"
-  #       defaultCounterPartyAddress: "https://provider.example.com/api/v1/dsp"
+  #       defaultPartnerId: provider-a
+  #       defaultCounterPartyAddress: "<COUNTERPARTY_DSP_ADDRESS>"
+  #       defaultCounterPartyId: "<COUNTERPARTY_ID>"
+  #       partners:
+  #         - id: provider-a
+  #           name: Provider A
+  #           counterPartyId: "<COUNTERPARTY_ID>"
+  #           counterPartyAddress: "<COUNTERPARTY_DSP_ADDRESS>"
   #   security:
   #     type: basic
   #     config:

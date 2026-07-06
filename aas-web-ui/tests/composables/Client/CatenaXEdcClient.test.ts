@@ -57,14 +57,14 @@ describe('CatenaXEdcClient', () => {
     const { discoverConnector } = useCatenaXEdcClient()
     const result = await discoverConnector('default', {
       mode: 'connectors',
-      counterPartyId: 'did:web:provider.example',
+      counterPartyId: 'TEST_COUNTERPARTY_ID',
     })
 
     expect(mocks.postRequest).toHaveBeenCalledWith(
       '/ui/api/catena-x/edc/default/connectors/discover',
       JSON.stringify({
         mode: 'connectors',
-        counterPartyId: 'did:web:provider.example',
+        counterPartyId: 'TEST_COUNTERPARTY_ID',
       }),
       expect.any(Headers),
       'discovering EDC connector',
@@ -79,20 +79,84 @@ describe('CatenaXEdcClient', () => {
 
     const { requestCatalog } = useCatenaXEdcClient()
     const result = await requestCatalog('default', {
-      counterPartyId: 'did:web:provider.example',
-      counterPartyAddress: 'https://provider.example/api/v1/dsp',
+      counterPartyId: 'TEST_COUNTERPARTY_ID',
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
     })
 
     expect(mocks.postRequest).toHaveBeenCalledWith(
       '/api/catena-x/edc/default/catalog/request',
       JSON.stringify({
-        counterPartyId: 'did:web:provider.example',
-        counterPartyAddress: 'https://provider.example/api/v1/dsp',
+        counterPartyId: 'TEST_COUNTERPARTY_ID',
+        counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
       }),
       expect.any(Headers),
       'requesting EDC catalog',
       true,
     )
     expect(result).toEqual({ dataset: [] })
+  })
+
+  it('posts DTR descriptor page requests through the EDC proxy', async () => {
+    mocks.postRequest.mockResolvedValue({
+      success: true,
+      data: {
+        data: { result: [{ id: 'aas-1' }] },
+        edc: { transferProcessId: 'transfer-1' },
+      },
+    })
+
+    const { fetchDtrShellDescriptors } = useCatenaXEdcClient()
+    const result = await fetchDtrShellDescriptors('default', {
+      counterPartyId: 'TEST_PARTICIPANT_ID',
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+      protocol: 'dataspace-protocol-http',
+      limit: 100,
+    })
+
+    expect(mocks.postRequest).toHaveBeenCalledWith(
+      '/ui/api/catena-x/edc/default/dtr/shell-descriptors',
+      JSON.stringify({
+        counterPartyId: 'TEST_PARTICIPANT_ID',
+        counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+        protocol: 'dataspace-protocol-http',
+        limit: 100,
+      }),
+      expect.any(Headers),
+      'fetching DTR descriptors through EDC',
+      true,
+    )
+    expect(result?.edc.transferProcessId).toBe('transfer-1')
+  })
+
+  it('posts DTR descriptor by ID requests through the EDC proxy', async () => {
+    mocks.postRequest.mockResolvedValue({
+      success: true,
+      data: {
+        data: { id: 'aas-1' },
+        edc: { transferProcessId: 'transfer-1' },
+      },
+    })
+
+    const { fetchDtrShellDescriptorById } = useCatenaXEdcClient()
+    const result = await fetchDtrShellDescriptorById('default', {
+      counterPartyId: 'TEST_PARTICIPANT_ID',
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+      descriptorId: 'aas-1',
+      transferProcessId: 'transfer-1',
+    })
+
+    expect(mocks.postRequest).toHaveBeenCalledWith(
+      '/ui/api/catena-x/edc/default/dtr/shell-descriptors/by-id',
+      JSON.stringify({
+        counterPartyId: 'TEST_PARTICIPANT_ID',
+        counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+        descriptorId: 'aas-1',
+        transferProcessId: 'transfer-1',
+      }),
+      expect.any(Headers),
+      'fetching DTR descriptor through EDC',
+      true,
+    )
+    expect(result?.data).toEqual({ id: 'aas-1' })
   })
 })

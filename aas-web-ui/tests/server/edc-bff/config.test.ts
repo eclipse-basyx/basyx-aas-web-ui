@@ -9,26 +9,41 @@ import {
 describe('EDC BFF config', () => {
   it('loads shorthand default proxy config and redacts secrets', () => {
     const proxies = loadProxyConfigMap({
-      CX_EDC_DEFAULT_MANAGEMENT_URL: 'https://consumer.example/management',
-      CX_EDC_DEFAULT_API_KEY: 'top-secret',
-      CX_EDC_DEFAULT_PARTICIPANT_ID: 'BPNL000000000001',
-      CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES: 'https://provider.example/api/v1/dsp',
+      CX_EDC_DEFAULT_MANAGEMENT_URL: 'https://consumer-edc.test/management',
+      CX_EDC_DEFAULT_API_KEY: 'TEST_API_KEY',
+      CX_EDC_DEFAULT_PARTICIPANT_ID: 'TEST_PARTICIPANT_ID',
+      CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES: 'https://counterparty-dsp.test/api/v1/dsp',
     })
 
     const proxy = proxies.get('default')
     const redacted = redactProxyConfig(proxy, 'default')
 
-    expect(proxy?.apiKey).toBe('top-secret')
+    expect(proxy?.apiKey).toBe('TEST_API_KEY')
     expect(redacted).toMatchObject({
       id: 'default',
       configured: true,
       managementUrlConfigured: true,
       apiKeyConfigured: true,
-      participantId: 'BPNL000000000001',
+      participantId: 'TEST_PARTICIPANT_ID',
       allowedCounterPartyAddressCount: 1,
     })
-    expect(JSON.stringify(redacted)).not.toContain('top-secret')
-    expect(JSON.stringify(redacted)).not.toContain('consumer.example')
+    expect(JSON.stringify(redacted)).not.toContain('TEST_API_KEY')
+    expect(JSON.stringify(redacted)).not.toContain('consumer-edc.test')
+  })
+
+  it('loads EDR polling settings from environment variables', () => {
+    const proxies = loadProxyConfigMap({
+      CX_EDC_DEFAULT_MANAGEMENT_URL: 'https://consumer-edc.test/management',
+      CX_EDC_DEFAULT_API_KEY: 'TEST_API_KEY',
+      CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES: 'https://counterparty-dsp.test/api/v1/dsp',
+      CX_EDC_EDR_POLLING_ATTEMPTS: '45',
+      CX_EDC_EDR_POLLING_INTERVAL_MS: '1500',
+    })
+
+    expect(proxies.get('default')).toMatchObject({
+      edrPollingAttempts: 45,
+      edrPollingIntervalMs: 1500,
+    })
   })
 
   it('loads multiple proxy configs from inline JSON', () => {
@@ -36,19 +51,19 @@ describe('EDC BFF config', () => {
       CX_EDC_PROXY_CONFIG_JSON: JSON.stringify({
         proxies: {
           partnerA: {
-            managementUrl: 'https://consumer-a.example/management',
-            apiKey: 'secret-a',
-            allowedCounterPartyAddresses: ['https://provider-a.example/dsp'],
+            managementUrl: 'https://consumer-a.test/management',
+            apiKey: 'TEST_API_KEY_A',
+            allowedCounterPartyAddresses: ['https://counterparty-a.test/dsp'],
           },
           partnerB: {
-            managementUrl: 'https://consumer-b.example/management',
-            apiKey: 'secret-b',
+            managementUrl: 'https://consumer-b.test/management',
+            apiKey: 'TEST_API_KEY_B',
           },
         },
       }),
     })
 
-    expect(proxies.get('partnerA')?.managementUrl).toBe('https://consumer-a.example/management')
+    expect(proxies.get('partnerA')?.managementUrl).toBe('https://consumer-a.test/management')
     expect(proxies.get('partnerB')?.apiKeyHeader).toBe('X-Api-Key')
   })
 
@@ -63,28 +78,28 @@ describe('EDC BFF config', () => {
   })
 
   it('allows only configured counterparty address prefixes', () => {
-    const insecureProviderAddress = 'http' + '://provider.example/api/v1/dsp'
+    const insecureProviderAddress = 'http' + '://counterparty-dsp.test/api/v1/dsp'
     const proxy = loadProxyConfigMap({
-      CX_EDC_DEFAULT_MANAGEMENT_URL: 'https://consumer.example/management',
-      CX_EDC_DEFAULT_API_KEY: 'secret',
-      CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES: 'https://provider.example/api/v1/dsp',
+      CX_EDC_DEFAULT_MANAGEMENT_URL: 'https://consumer-edc.test/management',
+      CX_EDC_DEFAULT_API_KEY: 'TEST_API_KEY',
+      CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES: 'https://counterparty-dsp.test/api/v1/dsp',
     }).get('default')!
 
-    expect(isCounterPartyAddressAllowed(proxy, 'https://provider.example/api/v1/dsp')).toBe(true)
-    expect(isCounterPartyAddressAllowed(proxy, 'https://provider.example/api/v1/dsp/2025-1')).toBe(true)
-    expect(isCounterPartyAddressAllowed(proxy, 'https://evil.example/api/v1/dsp')).toBe(false)
+    expect(isCounterPartyAddressAllowed(proxy, 'https://counterparty-dsp.test/api/v1/dsp')).toBe(true)
+    expect(isCounterPartyAddressAllowed(proxy, 'https://counterparty-dsp.test/api/v1/dsp/2025-1')).toBe(true)
+    expect(isCounterPartyAddressAllowed(proxy, 'https://blocked-counterparty.test/api/v1/dsp')).toBe(false)
     expect(isCounterPartyAddressAllowed(proxy, insecureProviderAddress)).toBe(false)
   })
 
   it('requires an explicit wildcard to allow arbitrary HTTPS counterparties', () => {
-    const insecureProviderAddress = 'http' + '://provider.example/api/v1/dsp'
+    const insecureProviderAddress = 'http' + '://counterparty-dsp.test/api/v1/dsp'
     const proxy = loadProxyConfigMap({
-      CX_EDC_DEFAULT_MANAGEMENT_URL: 'https://consumer.example/management',
-      CX_EDC_DEFAULT_API_KEY: 'secret',
+      CX_EDC_DEFAULT_MANAGEMENT_URL: 'https://consumer-edc.test/management',
+      CX_EDC_DEFAULT_API_KEY: 'TEST_API_KEY',
       CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES: '*',
     }).get('default')!
 
-    expect(isCounterPartyAddressAllowed(proxy, 'https://provider.example/api/v1/dsp')).toBe(true)
+    expect(isCounterPartyAddressAllowed(proxy, 'https://counterparty-dsp.test/api/v1/dsp')).toBe(true)
     expect(isCounterPartyAddressAllowed(proxy, insecureProviderAddress)).toBe(false)
   })
 })

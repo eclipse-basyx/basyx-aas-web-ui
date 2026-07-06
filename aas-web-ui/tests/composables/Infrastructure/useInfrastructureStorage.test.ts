@@ -99,8 +99,8 @@ describe('useInfrastructureStorage.ts', () => {
         catenaX: {
           edc: {
             proxyId: ' default ',
-            defaultCounterPartyId: ' did:web:provider.example ',
-            defaultCounterPartyAddress: ' https://provider.example/api/v1/dsp ',
+            defaultCounterPartyId: ' TEST_COUNTERPARTY_ID ',
+            defaultCounterPartyAddress: ' https://counterparty-dsp.test/api/v1/dsp ',
           },
         },
         auth: { securityType: 'No Authentication' },
@@ -125,10 +125,21 @@ describe('useInfrastructureStorage.ts', () => {
     ], 'catena-x')
 
     const stored = JSON.parse(window.localStorage.getItem('basyxInfrastructures') ?? '{}')
-    expect(stored.infrastructures[0].catenaX.edc).toEqual({
-      proxyId: 'default',
-      defaultCounterPartyId: 'did:web:provider.example',
-      defaultCounterPartyAddress: 'https://provider.example/api/v1/dsp',
+    expect(stored.infrastructures[0].catenaX).toEqual({
+      accessMode: 'edc',
+      edc: {
+        proxyId: 'default',
+        defaultCounterPartyId: 'TEST_COUNTERPARTY_ID',
+        defaultCounterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+        defaultPartnerId: 'test-counterparty-id-https-counterparty-dsp-test-api-v1-dsp',
+        partners: [
+          {
+            id: 'test-counterparty-id-https-counterparty-dsp-test-api-v1-dsp',
+            counterPartyId: 'TEST_COUNTERPARTY_ID',
+            counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+          },
+        ],
+      },
     })
     expect(stored.infrastructures[1].catenaX).toBeUndefined()
   })

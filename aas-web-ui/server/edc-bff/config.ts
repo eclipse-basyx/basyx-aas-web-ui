@@ -21,6 +21,8 @@ interface RawProxyConfig {
   allowedCounterPartyAddresses?: unknown
   allowInsecureCounterPartyAddresses?: unknown
   requestTimeoutMs?: unknown
+  edrPollingAttempts?: unknown
+  edrPollingIntervalMs?: unknown
 }
 
 interface RawProxyConfigDocument {
@@ -31,6 +33,10 @@ const defaultProxyId = 'default'
 const defaultApiKeyHeader = 'X-Api-Key'
 const defaultRequestTimeoutMs = 30_000
 const maxRequestTimeoutMs = 120_000
+const defaultEdrPollingAttempts = 30
+const defaultEdrPollingIntervalMs = 2000
+const maxEdrPollingAttempts = 120
+const maxEdrPollingIntervalMs = 30_000
 
 export function loadRuntimeConfig (
   env: Env = process.env,
@@ -219,6 +225,18 @@ function normalizeProxyConfig (
       defaultRequestTimeoutMs,
       1000,
       maxRequestTimeoutMs,
+    ),
+    edrPollingAttempts: parseInteger(
+      rawProxy.edrPollingAttempts ?? env.CX_EDC_EDR_POLLING_ATTEMPTS,
+      defaultEdrPollingAttempts,
+      1,
+      maxEdrPollingAttempts,
+    ),
+    edrPollingIntervalMs: parseInteger(
+      rawProxy.edrPollingIntervalMs ?? env.CX_EDC_EDR_POLLING_INTERVAL_MS,
+      defaultEdrPollingIntervalMs,
+      250,
+      maxEdrPollingIntervalMs,
     ),
   }
 }

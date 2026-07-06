@@ -23,8 +23,8 @@ infrastructures:
     catenaX:
       edc:
         proxyId: default
-        defaultCounterPartyId: "did:web:provider.example"
-        defaultCounterPartyAddress: "https://provider.example/api/v1/dsp"
+        defaultCounterPartyId: "TEST_COUNTERPARTY_ID"
+        defaultCounterPartyAddress: "https://counterparty-dsp.test/api/v1/dsp"
     security:
       type: none
 ```
@@ -44,7 +44,7 @@ Start it with local development auth disabled:
 ```bash
 CX_EDC_BFF_AUTH_MODE=none \
 CX_EDC_DEFAULT_MANAGEMENT_URL=http://localhost:8182/management \
-CX_EDC_DEFAULT_API_KEY=password \
+CX_EDC_DEFAULT_API_KEY=<EDC_MANAGEMENT_API_KEY> \
 CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES='*' \
 CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES=true \
 pnpm bff:start
@@ -59,7 +59,7 @@ For a real connector, replace:
 Example allowlist:
 
 ```bash
-CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES='https://provider.example/api/v1/dsp,https://other-provider.example/api/v1/dsp'
+CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES='https://counterparty-dsp.test/api/v1/dsp,https://other-counterparty-dsp.test/api/v1/dsp'
 ```
 
 The wildcard is convenient for local testing, but avoid it for shared or production-like environments.
@@ -84,7 +84,7 @@ Or run the BFF on another port:
 CX_EDC_BFF_PORT=3002 \
 CX_EDC_BFF_AUTH_MODE=none \
 CX_EDC_DEFAULT_MANAGEMENT_URL=http://localhost:8182/management \
-CX_EDC_DEFAULT_API_KEY=password \
+CX_EDC_DEFAULT_API_KEY=<EDC_MANAGEMENT_API_KEY> \
 CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES='*' \
 CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES=true \
 pnpm bff:start
@@ -106,7 +106,7 @@ CX_EDC_BFF_UPSTREAM_URL=http://localhost:3002 pnpm dev
 
 The UI calls `/api/catena-x/edc/...`; Vite proxies those requests to the local BFF.
 
-Open the UI, select the Catena-X infrastructure, open CatenaXplorer, select a descriptor, and expand **EDC Connection** below the descriptor details.
+Open the UI, select the Catena-X infrastructure, open CatenaXplorer, choose a counterparty, and load descriptors through the descriptor search.
 
 ## 4. Smoke Test Without a Real EDC
 
@@ -130,8 +130,8 @@ http.createServer(async (req, res) => {
 
   if (req.url === '/management/v4alpha/connectordiscovery/connectors') {
     res.end(JSON.stringify([{
-      'edc:counterPartyId': 'did:web:provider.example',
-      'edc:counterPartyAddress': 'https://provider.example/api/v1/dsp/2025-1',
+      'edc:counterPartyId': 'TEST_COUNTERPARTY_ID',
+      'edc:counterPartyAddress': 'https://counterparty-dsp.test/api/v1/dsp/2025-1',
       'edc:protocol': 'dataspace-protocol-http:2025-1'
     }]))
     return
@@ -139,8 +139,8 @@ http.createServer(async (req, res) => {
 
   if (req.url === '/management/v4alpha/connectordiscovery/dspversionparams') {
     res.end(JSON.stringify({
-      'edc:counterPartyId': 'did:web:provider.example',
-      'edc:counterPartyAddress': 'https://provider.example/api/v1/dsp/2025-1',
+      'edc:counterPartyId': 'TEST_COUNTERPARTY_ID',
+      'edc:counterPartyAddress': 'https://counterparty-dsp.test/api/v1/dsp/2025-1',
       'edc:protocol': 'dataspace-protocol-http:2025-1'
     }))
     return
@@ -149,7 +149,7 @@ http.createServer(async (req, res) => {
   if (req.url === '/management/v3/catalog/request') {
     res.end(JSON.stringify({
       '@type': 'Catalog',
-      participantId: 'did:web:provider.example',
+      participantId: 'TEST_COUNTERPARTY_ID',
       dataset: [{ '@id': 'mock-asset', '@type': 'Dataset' }]
     }))
     return
@@ -190,6 +190,8 @@ CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES=true
 | `CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES` | Comma-separated provider DSP endpoint prefixes or `*`. |
 | `CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES` | Allows `http://` counterparty addresses for local testing. |
 | `CX_EDC_REQUEST_TIMEOUT_MS` | Upstream EDC request timeout, default `30000`. |
+| `CX_EDC_EDR_POLLING_ATTEMPTS` | EDR polling attempts, default `30`. |
+| `CX_EDC_EDR_POLLING_INTERVAL_MS` | Delay between EDR polling attempts in milliseconds, default `2000`. |
 
 For multiple proxy IDs, use `CX_EDC_PROXY_CONFIG_JSON` or `CX_EDC_PROXY_CONFIG_FILE`:
 
@@ -198,13 +200,13 @@ For multiple proxy IDs, use `CX_EDC_PROXY_CONFIG_JSON` or `CX_EDC_PROXY_CONFIG_F
   "proxies": {
     "default": {
       "managementUrl": "http://localhost:8182/management",
-      "apiKey": "password",
-      "allowedCounterPartyAddresses": ["https://provider.example/api/v1/dsp"]
+      "apiKey": "<EDC_MANAGEMENT_API_KEY>",
+      "allowedCounterPartyAddresses": ["https://counterparty-dsp.test/api/v1/dsp"]
     },
     "partner-test": {
       "managementUrl": "https://consumer-test.example/management",
-      "apiKey": "another-secret",
-      "participantId": "BPNL000000000001"
+      "apiKey": "<EDC_MANAGEMENT_API_KEY>",
+      "participantId": "TEST_PARTICIPANT_ID"
     }
   }
 }

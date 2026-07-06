@@ -27,6 +27,7 @@
         :key="getDescriptorKey(descriptor)"
         :copy-json-icon="copyJsonIcon"
         :descriptor="descriptor"
+        :read-only="readOnly"
         :selected="isSelectedDescriptor(descriptor)"
         @copy-json="emit('copy-json', $event)"
         @delete="emit('delete', $event)"
@@ -85,6 +86,7 @@
     hasMoreDescriptors?: boolean
     isLoadingMore?: boolean
     isLoading: boolean
+    readOnly?: boolean
     selectedDescriptorId: string
   }>()
 

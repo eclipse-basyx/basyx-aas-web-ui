@@ -38,7 +38,7 @@
         <v-divider class="asset-id-key-divider mx-1" vertical />
       </template>
 
-      <template #append-inner>
+      <template v-if="showCurl" #append-inner>
         <v-menu
           v-model="curlMenu"
           :close-on-content-click="false"
@@ -110,6 +110,7 @@
     assetIdValue: string
     dtrUrl: string
     isLoading: boolean
+    showCurl?: boolean
   }>()
 
   const emit = defineEmits<{

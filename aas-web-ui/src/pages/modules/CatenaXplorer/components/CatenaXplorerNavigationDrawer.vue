@@ -13,11 +13,17 @@
       :copy-json-icon="copyJsonIcon"
       :descriptors="descriptors"
       :dtr-url="dtrUrl"
+      :edc-access-enabled="edcAccessEnabled"
+      :edc-counter-party-address="edcCounterPartyAddress"
+      :edc-counter-party-id="edcCounterPartyId"
+      :edc-partner-id="edcPartnerId"
+      :edc-partners="edcPartners"
       embedded
       :has-more-descriptors="hasMoreDescriptors"
       :inline-error="inlineError"
       :is-loading="isLoading"
       :is-loading-more="isLoadingMore"
+      :read-only="readOnly"
       :selected-descriptor-id="selectedDescriptorId"
       @clear="emit('clear')"
       @copy-json="emit('copy-json', $event)"
@@ -28,11 +34,15 @@
       @load-more="emit('load-more')"
       @search="emit('search')"
       @select="emit('select', $event)"
+      @update:edc-counter-party-address="emit('update:edc-counter-party-address', $event)"
+      @update:edc-counter-party-id="emit('update:edc-counter-party-id', $event)"
+      @update:edc-partner-id="emit('update:edc-partner-id', $event)"
     />
   </v-navigation-drawer>
 </template>
 
 <script lang="ts" setup>
+  import type { CatenaXPartner } from '@/types/Infrastructure'
   import { computed } from 'vue'
   import DescriptorBrowser from '@/pages/modules/CatenaXplorer/components/DescriptorBrowser.vue'
 
@@ -45,10 +55,16 @@
     copyJsonIcon: string
     descriptors: any[]
     dtrUrl: string
+    edcAccessEnabled?: boolean
+    edcCounterPartyAddress?: string
+    edcCounterPartyId?: string
+    edcPartnerId?: string
+    edcPartners?: CatenaXPartner[]
     hasMoreDescriptors?: boolean
     inlineError: string
     isLoading: boolean
     isLoadingMore?: boolean
+    readOnly?: boolean
     selectedDescriptorId: string
   }>()
 
@@ -64,6 +80,9 @@
     'select': [descriptor: any]
     'update:asset-id-name': [value: string]
     'update:asset-id-value': [value: string]
+    'update:edc-counter-party-address': [value: string]
+    'update:edc-counter-party-id': [value: string]
+    'update:edc-partner-id': [value: string]
   }>()
 
   const assetIdNameModel = computed({

@@ -31,7 +31,7 @@
           density="compact"
           flat
           label="Default Counterparty ID"
-          placeholder="did:web:provider.example"
+          placeholder="Counterparty ID"
           variant="outlined"
         />
       </v-col>
@@ -44,7 +44,7 @@
           density="compact"
           flat
           label="Default Counterparty DSP Address"
-          placeholder="https://provider.example/api/v1/dsp"
+          placeholder="https://<counterparty-dsp-endpoint>"
           variant="outlined"
         />
       </v-col>
@@ -90,16 +90,51 @@
     }
 
     if (edc.proxyId.trim() === '') {
-      emit('update:model-value', undefined)
+      emit('update:model-value', { accessMode: props.modelValue?.accessMode ?? 'edc' })
       return
     }
 
     emit('update:model-value', {
+      accessMode: props.modelValue?.accessMode ?? 'edc',
       edc: {
         proxyId: edc.proxyId,
         defaultCounterPartyId: edc.defaultCounterPartyId || undefined,
         defaultCounterPartyAddress: edc.defaultCounterPartyAddress || undefined,
+        defaultPartnerId: props.modelValue?.edc?.defaultPartnerId,
+        partners: buildPartners(edc.defaultCounterPartyId, edc.defaultCounterPartyAddress),
       },
     })
+  }
+
+  function buildPartners (
+    counterPartyId?: string,
+    counterPartyAddress?: string,
+  ): NonNullable<CatenaXConfig['edc']>['partners'] | undefined {
+    const normalizedCounterPartyId = counterPartyId?.trim() ?? ''
+    const normalizedCounterPartyAddress = counterPartyAddress?.trim() ?? ''
+    const existingPartners = props.modelValue?.edc?.partners ?? []
+    if (normalizedCounterPartyId === '' || normalizedCounterPartyAddress === '') {
+      return existingPartners.length > 0 ? existingPartners : undefined
+    }
+
+    const partner = {
+      id: props.modelValue?.edc?.defaultPartnerId
+        ?? `${normalizedCounterPartyId}-${normalizedCounterPartyAddress}`
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, ''),
+      counterPartyId: normalizedCounterPartyId,
+      counterPartyAddress: normalizedCounterPartyAddress,
+    }
+
+    const partners = [
+      partner,
+      ...existingPartners.filter(existingPartner =>
+        existingPartner.counterPartyId !== normalizedCounterPartyId
+        || existingPartner.counterPartyAddress !== normalizedCounterPartyAddress,
+      ),
+    ]
+
+    return partners
   }
 </script>

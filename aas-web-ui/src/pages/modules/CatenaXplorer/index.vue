@@ -7,10 +7,16 @@
     :copy-json-icon="copyJsonIcon"
     :descriptors="descriptors"
     :dtr-url="dtrUrl"
+    :edc-access-enabled="isEdcAccessMode"
+    :edc-counter-party-address="edcCounterPartyAddress"
+    :edc-counter-party-id="edcCounterPartyId"
+    :edc-partner-id="selectedEdcPartnerId"
+    :edc-partners="edcPartnerOptions"
     :has-more-descriptors="hasMoreDescriptors"
     :inline-error="inlineError"
     :is-loading="isLoading"
     :is-loading-more="isLoadingMoreDescriptors"
+    :read-only="isEdcAccessMode"
     :selected-descriptor-id="selectedDescriptorId"
     @clear="clearSearch"
     @copy-json="copyDescriptorAsJson"
@@ -21,6 +27,9 @@
     @load-more="loadMoreDescriptors"
     @search="searchDescriptors"
     @select="handleDescriptorSelect"
+    @update:edc-counter-party-address="handleEdcCounterPartyAddressUpdate"
+    @update:edc-counter-party-id="handleEdcCounterPartyIdUpdate"
+    @update:edc-partner-id="handleEdcPartnerUpdate"
   />
 
   <v-container class="pa-2" fluid>
@@ -30,7 +39,7 @@
     >
       <template v-if="mdAndUp">
         <main class="catena-xplorer-details">
-          <DescriptorDetails :descriptor="selectedDescriptor" :edc-config="selectedEdcConfig" />
+          <DescriptorDetails :descriptor="selectedDescriptor" />
         </main>
       </template>
 
@@ -64,10 +73,16 @@
               create-action-placement="fixed"
               :descriptors="descriptors"
               :dtr-url="dtrUrl"
+              :edc-access-enabled="isEdcAccessMode"
+              :edc-counter-party-address="edcCounterPartyAddress"
+              :edc-counter-party-id="edcCounterPartyId"
+              :edc-partner-id="selectedEdcPartnerId"
+              :edc-partners="edcPartnerOptions"
               :has-more-descriptors="hasMoreDescriptors"
               :inline-error="inlineError"
               :is-loading="isLoading"
               :is-loading-more="isLoadingMoreDescriptors"
+              :read-only="isEdcAccessMode"
               :selected-descriptor-id="selectedDescriptorId"
               @clear="clearSearch"
               @copy-json="copyDescriptorAsJson"
@@ -78,6 +93,9 @@
               @load-more="loadMoreDescriptors"
               @search="searchDescriptors"
               @select="handleDescriptorSelect"
+              @update:edc-counter-party-address="handleEdcCounterPartyAddressUpdate"
+              @update:edc-counter-party-id="handleEdcCounterPartyIdUpdate"
+              @update:edc-partner-id="handleEdcPartnerUpdate"
             />
           </v-window-item>
 
@@ -91,7 +109,7 @@
               Browse descriptors
             </v-btn>
 
-            <DescriptorDetails :descriptor="selectedDescriptor" :edc-config="selectedEdcConfig" />
+            <DescriptorDetails :descriptor="selectedDescriptor" />
           </v-window-item>
         </v-window>
       </template>
@@ -117,12 +135,19 @@
 
 <script lang="ts" setup>
   import type { AasListPageResult, AssetIdFilter } from '@/composables/Client/AASRegistryClient'
+  import type { CatenaXPartner } from '@/types/Infrastructure'
   import { computed, onMounted, ref, toRaw, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useDisplay } from 'vuetify'
   import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
+  import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
+  import { parseNextCursor } from '@/composables/Client/PaginationUtils'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { useIDUtils } from '@/composables/IDUtils'
+  import {
+    getRecentCatenaXPartners,
+    rememberRecentCatenaXPartner,
+  } from '@/pages/modules/CatenaXplorer/catenaXplorerPartners'
   import {
     buildAssetIdNameSuggestions,
     buildShellDescriptorEndpointUrl,
@@ -135,6 +160,7 @@
   import DescriptorEditDialog from '@/pages/modules/CatenaXplorer/components/DescriptorEditDialog.vue'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { base64Decode } from '@/utils/EncodeDecodeUtils'
+  import { getCatenaXAccessMode } from '@/utils/InfrastructureUtils'
 
   defineOptions({
     inheritAttrs: false,
@@ -160,12 +186,18 @@
     postAasDescriptor,
     putAasDescriptor,
   } = useAASRegistryClient()
+  const {
+    fetchDtrShellDescriptorById,
+    fetchDtrShellDescriptors,
+  } = useCatenaXEdcClient()
   const { copyToClipboard } = useClipboardUtil()
   const { generateIri } = useIDUtils()
 
   const descriptors = ref<any[]>([])
   const activeAssetIds = ref<AssetIdFilter[] | undefined>(undefined)
   const descriptorPaginationGeneration = ref(0)
+  const edcTransferProcessId = ref('')
+  const edcRecentPartners = ref<CatenaXPartner[]>([])
   const hasMoreDescriptors = ref(false)
   const isLoadingMoreDescriptors = ref(false)
   const knownAssetIdNames = ref<string[]>([])
@@ -187,8 +219,17 @@
   const copyJsonIcon = ref('mdi-clipboard-text-outline')
   const mobileView = ref<'browse' | 'details'>('browse')
   const copyJsonIconAsRef = computed(() => copyJsonIcon)
+  const selectedEdcPartnerId = ref('')
+  const edcCounterPartyId = ref('')
+  const edcCounterPartyAddress = ref('')
+  const edcProtocol = ref('dataspace-protocol-http')
 
-  const dtrUrl = computed(() => infrastructureStore.getAASRegistryURL)
+  const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
+  const isEdcAccessMode = computed(() =>
+    selectedInfrastructure.value?.template === 'catena-x'
+    && getCatenaXAccessMode(selectedInfrastructure.value) === 'edc',
+  )
+  const dtrUrl = computed(() => isEdcAccessMode.value ? '' : infrastructureStore.getAASRegistryURL)
   const mdAndUp = computed(() => display.mdAndUp.value)
   const smAndDown = computed(() => display.smAndDown.value)
   const assetIdNameSuggestions = computed(() => buildAssetIdNameSuggestions(descriptors.value, knownAssetIdNames.value))
@@ -204,9 +245,14 @@
   const selectedEdcConfig = computed(() => {
     return infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null
   })
+  const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? '')
+  const configuredEdcPartners = computed(() => selectedEdcConfig.value?.partners ?? [])
+  const edcPartnerOptions = computed(() => mergePartners(configuredEdcPartners.value, edcRecentPartners.value))
 
   onMounted(() => {
     selectedDescriptorId.value = getRouteDescriptorId()
+    loadRecentEdcPartners()
+    selectDefaultEdcPartner()
     reloadDescriptors()
   })
 
@@ -224,6 +270,22 @@
   watch(
     () => dtrUrl.value,
     () => {
+      selectedDescriptorId.value = getRouteDescriptorId()
+      reloadDescriptors()
+    },
+  )
+
+  watch(
+    () => [
+      edcProxyId.value,
+      selectedEdcConfig.value?.defaultPartnerId,
+      configuredEdcPartners.value.length,
+      isEdcAccessMode.value,
+    ],
+    () => {
+      edcTransferProcessId.value = ''
+      loadRecentEdcPartners()
+      selectDefaultEdcPartner()
       selectedDescriptorId.value = getRouteDescriptorId()
       reloadDescriptors()
     },
@@ -254,12 +316,11 @@
   async function loadDescriptors (assetIds?: Array<{ name: string, value: string }>): Promise<void> {
     inlineError.value = ''
 
-    if (dtrUrl.value.trim() === '') {
+    if (!isDescriptorSourceConfigured()) {
       descriptors.value = []
       selectedDescriptorId.value = ''
       selectedDescriptorFallback.value = null
       resetDescriptorPaginationState()
-      inlineError.value = 'The selected Catena-X infrastructure has no Digital Twin Registry URL.'
       return
     }
 
@@ -267,7 +328,7 @@
     isLoading.value = true
 
     try {
-      const page = await fetchAasDescriptorListPage({
+      const page = await fetchDescriptorListPage({
         assetIds: activeAssetIds.value,
         limit: descriptorPageLimit,
       })
@@ -307,7 +368,7 @@
     isLoadingMoreDescriptors.value = true
 
     try {
-      const page = await fetchAasDescriptorListPage({
+      const page = await fetchDescriptorListPage({
         assetIds: activeAssetIds.value,
         cursor: nextDescriptorCursor.value,
         limit: descriptorPageLimit,
@@ -329,6 +390,202 @@
         isLoadingMoreDescriptors.value = false
       }
     }
+  }
+
+  async function fetchDescriptorListPage (options: {
+    assetIds?: AssetIdFilter[]
+    cursor?: string
+    limit?: number
+  }): Promise<AasListPageResult<any>> {
+    if (!isEdcAccessMode.value) {
+      return fetchAasDescriptorListPage(options)
+    }
+
+    const failResponse: AasListPageResult<any> = {
+      items: [],
+      hasMore: false,
+    }
+    const edcRequest = buildEdcDescriptorRequest()
+    if (!edcRequest) {
+      return failResponse
+    }
+
+    const response = await fetchDtrShellDescriptors(edcProxyId.value, {
+      ...edcRequest,
+      assetIds: options.assetIds,
+      cursor: options.cursor,
+      limit: options.limit,
+      transferProcessId: edcTransferProcessId.value || undefined,
+    })
+
+    if (!response) {
+      return failResponse
+    }
+
+    rememberCurrentEdcPartner()
+    edcTransferProcessId.value = response.edc.transferProcessId
+    const data = response.data as any
+    const nextCursor = parseNextCursor(data)
+
+    return {
+      items: Array.isArray(data?.result) ? data.result : [],
+      nextCursor,
+      hasMore: nextCursor !== undefined,
+      pagingMetadata: data?.paging_metadata ?? data?.pagingMetadata,
+    }
+  }
+
+  async function fetchDescriptorById (descriptorId: string): Promise<any> {
+    if (!isEdcAccessMode.value) {
+      return fetchAasDescriptorById(descriptorId)
+    }
+
+    const edcRequest = buildEdcDescriptorRequest()
+    if (!edcRequest) {
+      return {}
+    }
+
+    const response = await fetchDtrShellDescriptorById(edcProxyId.value, {
+      ...edcRequest,
+      descriptorId,
+      transferProcessId: edcTransferProcessId.value || undefined,
+    })
+
+    if (!response) {
+      return {}
+    }
+
+    rememberCurrentEdcPartner()
+    edcTransferProcessId.value = response.edc.transferProcessId
+    return response.data
+  }
+
+  function isDescriptorSourceConfigured (): boolean {
+    if (!isEdcAccessMode.value) {
+      if (dtrUrl.value.trim() === '') {
+        inlineError.value = 'The selected Catena-X infrastructure has no Digital Twin Registry URL.'
+        return false
+      }
+      return true
+    }
+
+    if (edcProxyId.value === '') {
+      inlineError.value = 'The selected Catena-X infrastructure has no EDC proxy ID.'
+      return false
+    }
+
+    if (edcCounterPartyId.value.trim() === '' || edcCounterPartyAddress.value.trim() === '') {
+      inlineError.value = 'Enter an EDC counterparty ID and DSP address.'
+      return false
+    }
+
+    return true
+  }
+
+  function buildEdcDescriptorRequest (): {
+    counterPartyId: string
+    counterPartyAddress: string
+    protocol: string
+  } | null {
+    if (!isDescriptorSourceConfigured()) {
+      return null
+    }
+
+    return {
+      counterPartyId: edcCounterPartyId.value.trim(),
+      counterPartyAddress: edcCounterPartyAddress.value.trim(),
+      protocol: edcProtocol.value.trim(),
+    }
+  }
+
+  function loadRecentEdcPartners (): void {
+    edcRecentPartners.value = edcProxyId.value ? getRecentCatenaXPartners(edcProxyId.value) : []
+  }
+
+  function selectDefaultEdcPartner (): void {
+    if (!isEdcAccessMode.value) {
+      return
+    }
+
+    const defaultPartnerId = selectedEdcConfig.value?.defaultPartnerId?.trim() ?? ''
+    const selectedPartner = edcPartnerOptions.value.find(partner => partner.id === selectedEdcPartnerId.value)
+    const defaultPartner = edcPartnerOptions.value.find(partner => partner.id === defaultPartnerId)
+      ?? edcPartnerOptions.value[0]
+
+    const targetPartner = selectedPartner ?? defaultPartner
+    if (!targetPartner) {
+      selectedEdcPartnerId.value = ''
+      if (edcCounterPartyId.value === '') {
+        edcCounterPartyId.value = selectedEdcConfig.value?.defaultCounterPartyId ?? ''
+      }
+      if (edcCounterPartyAddress.value === '') {
+        edcCounterPartyAddress.value = selectedEdcConfig.value?.defaultCounterPartyAddress ?? ''
+      }
+      return
+    }
+
+    selectedEdcPartnerId.value = targetPartner.id
+    edcCounterPartyId.value = targetPartner.counterPartyId
+    edcCounterPartyAddress.value = targetPartner.counterPartyAddress
+  }
+
+  function handleEdcPartnerUpdate (partnerId: string): void {
+    selectedEdcPartnerId.value = partnerId
+    const partner = edcPartnerOptions.value.find(candidate => candidate.id === partnerId)
+    if (!partner) {
+      edcTransferProcessId.value = ''
+      return
+    }
+
+    edcCounterPartyId.value = partner.counterPartyId
+    edcCounterPartyAddress.value = partner.counterPartyAddress
+    edcTransferProcessId.value = ''
+  }
+
+  function handleEdcCounterPartyIdUpdate (value: string): void {
+    edcCounterPartyId.value = value
+    selectedEdcPartnerId.value = ''
+    edcTransferProcessId.value = ''
+  }
+
+  function handleEdcCounterPartyAddressUpdate (value: string): void {
+    edcCounterPartyAddress.value = value
+    selectedEdcPartnerId.value = ''
+    edcTransferProcessId.value = ''
+  }
+
+  function rememberCurrentEdcPartner (): void {
+    const rememberedPartner = rememberRecentCatenaXPartner(edcProxyId.value, {
+      id: selectedEdcPartnerId.value,
+      counterPartyId: edcCounterPartyId.value,
+      counterPartyAddress: edcCounterPartyAddress.value,
+    })
+
+    if (!rememberedPartner) {
+      return
+    }
+
+    selectedEdcPartnerId.value = rememberedPartner.id
+    loadRecentEdcPartners()
+  }
+
+  function mergePartners (...partnerGroups: CatenaXPartner[][]): CatenaXPartner[] {
+    const partnersByKey = new Map<string, CatenaXPartner>()
+    for (const partner of partnerGroups.flat()) {
+      const counterPartyId = partner.counterPartyId.trim()
+      const counterPartyAddress = partner.counterPartyAddress.trim()
+      if (counterPartyId === '' || counterPartyAddress === '') {
+        continue
+      }
+
+      partnersByKey.set(`${counterPartyId}::${counterPartyAddress}`, {
+        ...partner,
+        counterPartyId,
+        counterPartyAddress,
+      })
+    }
+
+    return Array.from(partnersByKey.values())
   }
 
   function beginDescriptorPagination (assetIds?: AssetIdFilter[]): number {
@@ -418,7 +675,7 @@
       return
     }
 
-    const descriptor = await fetchAasDescriptorById(descriptorId)
+    const descriptor = await fetchDescriptorById(descriptorId)
     if (descriptor && Object.keys(descriptor).length > 0) {
       selectedDescriptorFallback.value = descriptor
       rememberAssetIdNames([descriptor])
@@ -458,6 +715,11 @@
   }
 
   function openCreateDescriptorDialog (): void {
+    if (isEdcAccessMode.value) {
+      inlineError.value = 'Descriptors loaded through EDC are read-only in CatenaXplorer.'
+      return
+    }
+
     inlineError.value = ''
     descriptorDialogMode.value = 'create'
     descriptorToEdit.value = null
@@ -465,6 +727,11 @@
   }
 
   function openEditDescriptorDialog (descriptor: any): void {
+    if (isEdcAccessMode.value) {
+      inlineError.value = 'Descriptors loaded through EDC are read-only in CatenaXplorer.'
+      return
+    }
+
     inlineError.value = ''
     descriptorDialogMode.value = 'edit'
     descriptorToEdit.value = cloneDescriptor(descriptor)
@@ -473,6 +740,11 @@
 
   async function saveDescriptor (descriptor: Record<string, unknown>): Promise<void> {
     inlineError.value = ''
+
+    if (isEdcAccessMode.value) {
+      inlineError.value = 'Descriptors loaded through EDC are read-only in CatenaXplorer.'
+      return
+    }
 
     if (dtrUrl.value.trim() === '') {
       inlineError.value = 'The selected Catena-X infrastructure has no Digital Twin Registry URL.'
@@ -513,11 +785,21 @@
   }
 
   function openDeleteDescriptorDialog (descriptor: any): void {
+    if (isEdcAccessMode.value) {
+      inlineError.value = 'Descriptors loaded through EDC are read-only in CatenaXplorer.'
+      return
+    }
+
     descriptorToDelete.value = descriptor
     deleteDescriptorDialog.value = true
   }
 
   async function deleteDescriptor (): Promise<void> {
+    if (isEdcAccessMode.value) {
+      inlineError.value = 'Descriptors loaded through EDC are read-only in CatenaXplorer.'
+      return
+    }
+
     const descriptorId = typeof descriptorToDelete.value?.id === 'string' ? descriptorToDelete.value.id : ''
     if (descriptorId.trim() === '') {
       deleteDescriptorDialog.value = false
@@ -553,6 +835,11 @@
   }
 
   async function duplicateDescriptor (sourceDescriptor: any): Promise<void> {
+    if (isEdcAccessMode.value) {
+      inlineError.value = 'Descriptors loaded through EDC are read-only in CatenaXplorer.'
+      return
+    }
+
     const descriptor = cloneDescriptor(sourceDescriptor)
     descriptor.id = generateIri('AssetAdministrationShell')
     if (typeof descriptor.idShort === 'string' && descriptor.idShort.trim() !== '') {
