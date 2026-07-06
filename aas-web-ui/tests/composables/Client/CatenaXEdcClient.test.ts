@@ -51,6 +51,19 @@ describe('CatenaXEdcClient', () => {
     await expect(fetchStatus('missing')).resolves.toBeNull()
   })
 
+  it('does not call the BFF without a proxy ID', async () => {
+    const { fetchStatus, fetchDtrShellDescriptors } = useCatenaXEdcClient()
+
+    await expect(fetchStatus('')).resolves.toBeNull()
+    await expect(fetchDtrShellDescriptors('  ', {
+      counterPartyId: 'TEST_PARTICIPANT_ID',
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+    })).resolves.toBeNull()
+
+    expect(mocks.getRequest).not.toHaveBeenCalled()
+    expect(mocks.postRequest).not.toHaveBeenCalled()
+  })
+
   it('posts connector discovery requests', async () => {
     mocks.postRequest.mockResolvedValue({ success: true, data: [{ protocol: 'dataspace-protocol-http:2025-1' }] })
 

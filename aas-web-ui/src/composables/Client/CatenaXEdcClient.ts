@@ -73,8 +73,13 @@ export function useCatenaXEdcClient (): {
   const envStore = useEnvStore()
 
   async function fetchStatus (proxyId: string): Promise<CatenaXEdcStatus | null> {
+    const url = buildEdcProxyUrl(proxyId, 'status')
+    if (!url) {
+      return null
+    }
+
     const result = await getRequest(
-      buildEdcProxyUrl(proxyId, 'status'),
+      url,
       'fetching EDC proxy status',
       true,
     )
@@ -86,8 +91,13 @@ export function useCatenaXEdcClient (): {
     proxyId: string,
     request: CatenaXEdcDiscoveryRequest,
   ): Promise<unknown | null> {
+    const url = buildEdcProxyUrl(proxyId, 'connectors/discover')
+    if (!url) {
+      return null
+    }
+
     const result = await postRequest(
-      buildEdcProxyUrl(proxyId, 'connectors/discover'),
+      url,
       JSON.stringify(request),
       createJsonHeaders(),
       'discovering EDC connector',
@@ -101,8 +111,13 @@ export function useCatenaXEdcClient (): {
     proxyId: string,
     request: CatenaXEdcCatalogRequest,
   ): Promise<unknown | null> {
+    const url = buildEdcProxyUrl(proxyId, 'catalog/request')
+    if (!url) {
+      return null
+    }
+
     const result = await postRequest(
-      buildEdcProxyUrl(proxyId, 'catalog/request'),
+      url,
       JSON.stringify(request),
       createJsonHeaders(),
       'requesting EDC catalog',
@@ -116,8 +131,13 @@ export function useCatenaXEdcClient (): {
     proxyId: string,
     request: CatenaXEdcDtrDescriptorPageRequest,
   ): Promise<CatenaXEdcDtrResponse | null> {
+    const url = buildEdcProxyUrl(proxyId, 'dtr/shell-descriptors')
+    if (!url) {
+      return null
+    }
+
     const result = await postRequest(
-      buildEdcProxyUrl(proxyId, 'dtr/shell-descriptors'),
+      url,
       JSON.stringify(request),
       createJsonHeaders(),
       'fetching DTR descriptors through EDC',
@@ -131,8 +151,13 @@ export function useCatenaXEdcClient (): {
     proxyId: string,
     request: CatenaXEdcDtrDescriptorByIdRequest,
   ): Promise<CatenaXEdcDtrResponse | null> {
+    const url = buildEdcProxyUrl(proxyId, 'dtr/shell-descriptors/by-id')
+    if (!url) {
+      return null
+    }
+
     const result = await postRequest(
-      buildEdcProxyUrl(proxyId, 'dtr/shell-descriptors/by-id'),
+      url,
       JSON.stringify(request),
       createJsonHeaders(),
       'fetching DTR descriptor through EDC',
@@ -142,9 +167,14 @@ export function useCatenaXEdcClient (): {
     return result.success ? result.data as CatenaXEdcDtrResponse : null
   }
 
-  function buildEdcProxyUrl (proxyId: string, path: string): string {
+  function buildEdcProxyUrl (proxyId: string, path: string): string | null {
+    const normalizedProxyId = proxyId.trim()
+    if (normalizedProxyId === '') {
+      return null
+    }
+
     const basePath = normalizeBasePath(envStore.getEnvBasePath)
-    return `${basePath}api/catena-x/edc/${encodeURIComponent(proxyId)}/${path}`
+    return `${basePath}api/catena-x/edc/${encodeURIComponent(normalizedProxyId)}/${path}`
   }
 
   return {
