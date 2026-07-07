@@ -255,6 +255,7 @@ export async function createAppRouter (): Promise<Router> {
 
     'Visualization', // desktop and mobile
   ]
+
   const routesUsingPathUrlQuery: Array<RouteRecordNameGeneric> = [
     'AASEditor', // just desktop
     'AASViewer', // just desktop
@@ -267,6 +268,23 @@ export async function createAppRouter (): Promise<Router> {
 
     'Visualization', // desktop and mobile
   ]
+
+  const routesNeedingAasUrlQuery: Set<RouteRecordNameGeneric> = new Set([
+    'AASEditor', // just desktop
+    'AASViewer', // just desktop
+    'AASSubmodelViewer', // just desktop
+
+    'AASList', // just mobile
+    'SubmodelList', // just mobile
+  ])
+
+  const routesNeedingPathUrlQuery: Set<RouteRecordNameGeneric> = new Set([
+    'SMEditor', // just desktop
+    'SMViewer', // just desktop
+
+    'Visualization', // desktop and mobile
+  ])
+
   const routesUsingAasOrPathUrlQuery: Set<RouteRecordNameGeneric> = new Set([
     ...routesUsingAasUrlQuery,
     ...routesUsingPathUrlQuery,
@@ -458,7 +476,7 @@ export async function createAppRouter (): Promise<Router> {
       }
 
       if (
-        routesUsingAasUrlQuery.includes(updatedRoute.name)
+        routesNeedingAasUrlQuery.has(updatedRoute.name)
         && !Object.hasOwn(updatedRoute.query, 'aas')
         && Object.hasOwn(updatedRoute.query, 'path')
       ) {
@@ -495,7 +513,7 @@ export async function createAppRouter (): Promise<Router> {
 
   const removeInvalidQueryParamsForRoute = (to: any): { path: string, query: LocationQueryRaw } | null => {
     if (
-      routesUsingAasUrlQuery.includes(to.name)
+      routesNeedingAasUrlQuery.has(to.name)
       && !Object.hasOwn(to.query, 'aas')
       && Object.hasOwn(to.query, 'path')
     ) {
@@ -521,9 +539,11 @@ export async function createAppRouter (): Promise<Router> {
   const handleSingleAasAndSingleSmRouting = (to: any): { name: string, query?: any } | false | null => {
     if (
       envStore.getSingleAas
-      && (routesUsingAasUrlQuery.includes(to.name)
-        || (to.path.includes('/modules/') && to.meta.isOnlyVisibleWithSelectedAas))
-      && (!Object.hasOwn(to.query, 'aas') || (to.query.aas as string).trim() === '')
+      && (routesNeedingAasUrlQuery.has(to.name)
+        || (to.path.includes('/modules/')
+          && to.meta.isOnlyVisibleWithSelectedAas))
+        && (!Object.hasOwn(to.query, 'aas')
+          || (to.query.aas as string).trim() === '')
     ) {
       if (envStore.getSingleAasRedirect) {
         window.location.replace(envStore.getSingleAasRedirect)
@@ -535,7 +555,7 @@ export async function createAppRouter (): Promise<Router> {
 
     if (
       envStore.getSingleSm
-      && (routesUsingOnlyPathUrlQuery.has(to.name)
+      && (routesNeedingPathUrlQuery.has(to.name)
         || (to.path.includes('/modules/') && to.meta.isOnlyVisibleWithSelectedNode))
       && (!Object.hasOwn(to.query, 'path') || (to.query.path as string).trim() === '')
     ) {
@@ -550,45 +570,70 @@ export async function createAppRouter (): Promise<Router> {
     return null
   }
 
+  const handleMobileRouting = (to: any): { name: string, query?: any } | null => {
+    if (
+      routesForMobile.includes(to.name)
+      || routesStayOnPages.has(to.name)
+      || (to.path.includes('/modules/') && to.meta.isMobileModule)
+      || (to.name as string).startsWith('DPP')
+    ) {
+      return null
+    }
+
+    if (
+      routesOnlyDesktop.has(to.name)
+      || (to.path.includes('/modules/') && !to.meta.isMobileModule)
+    ) {
+      return { name: 'AASList', query: to.query }
+    }
+
+    return null
+  }
+
+  const handleSMRouting = (to: any): { name: string, query?: any } | null => {
+    if (['SMViewer', 'SMEditor'].includes(to.name as string)) {
+      if (smViewerEditor.value && to.name === 'SMEditor' && !allowEditing.value) {
+        return { name: 'SMViewer', query: to.query }
+      }
+      if (!smViewerEditor.value) {
+        return { name: (to.name as string).replace('SM', 'AAS'), query: to.query }
+      }
+    }
+    return null
+  }
+
+  const handleDesktopRouting = (to: any): { name: string, query?: any } | null => {
+    if (
+      routesForDesktop.includes(to.name)
+      || routesStayOnPages.has(to.name)
+      || (to.path.includes('/modules/') && to.meta.isDesktopModule)
+    ) {
+      const smResult = handleSMRouting(to)
+      if (smResult) {
+        return smResult
+      }
+
+      if (to.name === 'AASEditor' && !allowEditing.value) {
+        return { name: 'AASViewer', query: to.query }
+      }
+
+      return null
+    }
+    return null
+  }
+
   const handleDeviceRouting = (to: any): { name: string, query?: any } | false | null => {
     if (routesToVisualization.has(to.name)) {
       return { name: 'Visualization', query: to.query }
     }
 
     if (isMobile.value) {
-      if (
-        routesForMobile.includes(to.name)
-        || routesStayOnPages.has(to.name)
-        || (to.path.includes('/modules/') && to.meta.isMobileModule)
-      ) {
-        return null
-      }
-      if (
-        routesOnlyDesktop.has(to.name)
-        || (to.path.includes('/modules/') && !to.meta.isMobileModule)
-      ) {
-        return { name: 'AASList', query: to.query }
-      }
-      return null
+      return handleMobileRouting(to)
     }
 
-    if (
-      routesForDesktop.includes(to.name)
-      || routesStayOnPages.has(to.name)
-      || (to.path.includes('/modules/') && to.meta.isDesktopModule)
-    ) {
-      if (['SMViewer', 'SMEditor'].includes(to.name as string)) {
-        if (smViewerEditor.value && to.name === 'SMEditor' && !allowEditing.value) {
-          return { name: 'SMViewer', query: to.query }
-        }
-        if (!smViewerEditor.value) {
-          return { name: (to.name as string).replace('SM', 'AAS'), query: to.query }
-        }
-      }
-      if (to.name === 'AASEditor' && !allowEditing.value) {
-        return { name: 'AASViewer', query: to.query }
-      }
-      return null
+    const desktopResult = handleDesktopRouting(to)
+    if (desktopResult !== null) {
+      return desktopResult
     }
 
     if (
