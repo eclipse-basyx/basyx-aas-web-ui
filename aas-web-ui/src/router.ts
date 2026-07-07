@@ -476,7 +476,7 @@ export async function createAppRouter (): Promise<Router> {
       }
 
       if (
-        routesUsingAasUrlQuery.includes(updatedRoute.name)
+        routesNeedingAasUrlQuery.has(updatedRoute.name)
         && !Object.hasOwn(updatedRoute.query, 'aas')
         && Object.hasOwn(updatedRoute.query, 'path')
       ) {
