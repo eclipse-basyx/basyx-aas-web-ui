@@ -9,7 +9,7 @@
 - Keep components small and focused. If a components <template> exceeds 200 lines, consider splitting it into smaller components.
 - Keep the code DRY. If you find yourself repeating code, consider creating a reusable component or composable.
 - Keep the code readable and lean. Avoid unnecessary complexity and abstractions. If a piece of code is hard to understand, consider refactoring it.
-- Structure vue components with the following order: <script setup>, <template>, <style scoped>. Use the <script setup> syntax for all components.
+- Structure vue components with the following order: <template>, <script setup>, <style scoped>. Use the <script setup> syntax for all components.
 - Structure the <script> section with the following order: imports, props, emits, refs, reactive state, computed properties, watchers, lifecycle hooks and methods
 
 ## Stack

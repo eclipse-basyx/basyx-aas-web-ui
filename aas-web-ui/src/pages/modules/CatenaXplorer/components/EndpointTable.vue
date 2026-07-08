@@ -1,11 +1,11 @@
 <template>
   <div class="overflow-x-auto">
     <v-table class="border rounded" density="comfortable">
-      <thead>
+      <thead class="bg-tableHeader">
         <tr>
-          <th class="text-left text-body-small">Interface</th>
-          <th class="text-left text-body-small">Endpoint</th>
-          <th class="text-left text-body-small">Protocol</th>
+          <th class="text-titleText">Interface</th>
+          <th class="text-titleText">Endpoint</th>
+          <th class="text-titleText">Protocol</th>
         </tr>
       </thead>
 

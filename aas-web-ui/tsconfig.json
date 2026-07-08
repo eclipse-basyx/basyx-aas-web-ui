@@ -9,6 +9,9 @@
       "path": "./tsconfig.node.json"
     },
     {
+      "path": "./tsconfig.bff.json"
+    },
+    {
       "path": "./tsconfig.app.json"
     },
     {

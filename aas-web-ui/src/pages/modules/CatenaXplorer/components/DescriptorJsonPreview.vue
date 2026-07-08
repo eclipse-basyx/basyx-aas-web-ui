@@ -1,28 +1,10 @@
 <template>
   <section>
-    <v-expansion-panels
-      gap="8"
-      rounded="lg"
-      static
-      variant="accordion"
-    >
-      <v-expansion-panel>
-        <v-expansion-panel-title>
-          <div class="d-flex align-center ga-2">
-            <v-icon icon="mdi-code-json" size="small" />
-            <span>JSON Preview</span>
-          </div>
-        </v-expansion-panel-title>
-
-        <v-expansion-panel-text>
-          <JSONPreview
-            :download-file-name="downloadFileName"
-            :json-content="descriptor"
-            title="AAS Descriptor JSON"
-          />
-        </v-expansion-panel-text>
-      </v-expansion-panel>
-    </v-expansion-panels>
+    <JSONPreview
+      :download-file-name="downloadFileName"
+      :json-content="descriptor"
+      title="AAS Descriptor JSON"
+    />
   </section>
 </template>
 

@@ -5,6 +5,7 @@ import {
   BASYX_COMPONENT_KEYS,
   getActiveComponentKeys,
   getActiveComponentUrlForTemplate,
+  getCatenaXAccessMode,
   getDefaultAasUploadMode,
   getEndpointFieldsForTemplate,
   getEndpointFieldValue,
@@ -56,6 +57,18 @@ describe('InfrastructureUtils.ts', () => {
       'DigitalTwinRegistry',
       'SubmodelService',
     ])
+  })
+
+  it('uses no component endpoints for Catena-X EDC mode', () => {
+    const infrastructure = createInfrastructure('catena-x')
+    infrastructure.catenaX = {
+      accessMode: 'edc',
+      edc: { proxyId: 'default' },
+    }
+
+    expect(getCatenaXAccessMode(infrastructure)).toBe('edc')
+    expect(getEndpointFieldsForTemplate(infrastructure)).toEqual([])
+    expect(getActiveComponentKeys(infrastructure)).toEqual([])
   })
 
   it('maps grouped endpoint URLs into compatibility component slots', () => {

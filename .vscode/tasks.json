@@ -1,0 +1,18 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "aas-web-ui: bff:build",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "bff:build"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "group": "build",
+      "problemMatcher": "$tsc"
+    }
+  ]
+}

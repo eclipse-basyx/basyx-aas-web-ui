@@ -1,5 +1,5 @@
 import type { BaSyxComponentKey } from '@/types/BaSyx'
-import type { InfrastructureConfig, InfrastructureTemplate } from '@/types/Infrastructure'
+import type { CatenaXAccessMode, InfrastructureConfig, InfrastructureTemplate } from '@/types/Infrastructure'
 
 export type InfrastructureEndpointFieldKey
   = BaSyxComponentKey | 'AASEnvironment' | 'DigitalTwinRegistry' | 'SubmodelService'
@@ -20,6 +20,8 @@ export interface InfrastructureTemplateDefinition {
 }
 
 export type InfrastructureAasUploadMode = 'client' | 'server'
+type InfrastructureTemplateInput = InfrastructureTemplate | Pick<InfrastructureConfig, 'template'> | null | undefined
+type InfrastructureConfigInput = InfrastructureTemplate | Pick<InfrastructureConfig, 'template' | 'catenaX' | 'components'> | null | undefined
 
 export const DEFAULT_INFRASTRUCTURE_TEMPLATE: InfrastructureTemplate = 'full'
 
@@ -178,6 +180,28 @@ export function getInfrastructureTemplate (
     : normalizeInfrastructureTemplate(templateOrInfra?.template)
 }
 
+export function isCatenaXAccessMode (value: unknown): value is CatenaXAccessMode {
+  return value === 'direct' || value === 'edc'
+}
+
+export function getCatenaXAccessMode (
+  infrastructure?: Pick<InfrastructureConfig, 'template' | 'catenaX' | 'components'> | null,
+): CatenaXAccessMode {
+  if (!infrastructure || getInfrastructureTemplate(infrastructure) !== 'catena-x') {
+    return 'direct'
+  }
+
+  if (isCatenaXAccessMode(infrastructure.catenaX?.accessMode)) {
+    return infrastructure.catenaX.accessMode
+  }
+
+  if (infrastructure.catenaX?.edc?.proxyId?.trim()) {
+    return 'edc'
+  }
+
+  return 'direct'
+}
+
 export function getInfrastructureTemplateDefinition (
   templateOrInfra?: InfrastructureTemplate | Pick<InfrastructureConfig, 'template'> | null,
 ): InfrastructureTemplateDefinition {
@@ -188,13 +212,21 @@ export function getInfrastructureTemplateDefinition (
 }
 
 export function getEndpointFieldsForTemplate (
-  templateOrInfra?: InfrastructureTemplate | Pick<InfrastructureConfig, 'template'> | null,
+  templateOrInfra?: InfrastructureConfigInput,
 ): InfrastructureEndpointField[] {
+  if (
+    typeof templateOrInfra === 'object'
+    && getInfrastructureTemplate(templateOrInfra) === 'catena-x'
+    && getCatenaXAccessMode(templateOrInfra) === 'edc'
+  ) {
+    return []
+  }
+
   return getInfrastructureTemplateDefinition(templateOrInfra).endpointFields
 }
 
 export function getActiveComponentKeys (
-  templateOrInfra?: InfrastructureTemplate | Pick<InfrastructureConfig, 'template'> | null,
+  templateOrInfra?: InfrastructureConfigInput,
 ): BaSyxComponentKey[] {
   return Array.from(
     new Set(getEndpointFieldsForTemplate(templateOrInfra).flatMap(field => field.componentKeys)),
@@ -202,14 +234,14 @@ export function getActiveComponentKeys (
 }
 
 export function isComponentActiveForTemplate (
-  templateOrInfra: InfrastructureTemplate | Pick<InfrastructureConfig, 'template'> | null | undefined,
+  templateOrInfra: InfrastructureConfigInput,
   componentKey: BaSyxComponentKey,
 ): boolean {
   return getActiveComponentKeys(templateOrInfra).includes(componentKey)
 }
 
 export function getActiveComponentUrlForTemplate (
-  infrastructure: Pick<InfrastructureConfig, 'components' | 'template'> | null | undefined,
+  infrastructure: Pick<InfrastructureConfig, 'components' | 'template' | 'catenaX'> | null | undefined,
   componentKey: BaSyxComponentKey,
 ): string {
   if (!infrastructure || !isComponentActiveForTemplate(infrastructure, componentKey)) {
@@ -220,7 +252,7 @@ export function getActiveComponentUrlForTemplate (
 }
 
 export function getEndpointFieldByKey (
-  templateOrInfra: InfrastructureTemplate | Pick<InfrastructureConfig, 'template'> | null | undefined,
+  templateOrInfra: InfrastructureConfigInput,
   fieldKey: InfrastructureEndpointFieldKey,
 ): InfrastructureEndpointField | undefined {
   return getEndpointFieldsForTemplate(templateOrInfra).find(field => field.key === fieldKey)
@@ -250,7 +282,7 @@ export function setEndpointFieldValue (
 }
 
 export function usesSubmodelSuperpath (
-  templateOrInfra?: InfrastructureTemplate | Pick<InfrastructureConfig, 'template'> | null,
+  templateOrInfra?: InfrastructureTemplateInput,
 ): boolean {
   return getInfrastructureTemplateDefinition(templateOrInfra).usesSubmodelSuperpath
 }

@@ -11,6 +11,39 @@ export interface EndpointRow {
   endpointProtocol: string
 }
 
+export interface DescriptorTimestampInfo {
+  label: 'Created' | 'Updated'
+  value: string
+}
+
+export interface SubmodelEdcEndpointInfo {
+  assetId: string
+  dspEndpoint: string
+  href: string
+  subprotocolBody: string
+}
+
+export interface EdcSubmodelViewState {
+  data?: unknown
+  error?: string
+  isLoading?: boolean
+}
+
+export const defaultAssetIdNameSuggestions = [
+  'manufacturerId',
+  'manufacturerPartId',
+  'customerPartId',
+  'digitalTwinType',
+  'partInstanceId',
+  'intrinsicId',
+  'batchId',
+  'van',
+  'parentOrderNumber',
+  'jisNumber',
+  'jisCallDate',
+  'globalAssetId',
+]
+
 function toTrimmedString (value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
@@ -50,9 +83,10 @@ export function buildShellDescriptorsRequestUrl (
   dtrUrl: string,
   assetIdName: string,
   assetIdValue: string,
+  limit = 100,
 ): string {
   const queryParams = new URLSearchParams()
-  queryParams.set('limit', '1000')
+  queryParams.set('limit', String(limit))
 
   const name = toTrimmedString(assetIdName)
   const value = toTrimmedString(assetIdValue)
@@ -157,6 +191,26 @@ export function getAssetIdNameSuggestions (descriptors: any[]): string[] {
   return uniqueValues(names).toSorted((a, b) => a.localeCompare(b))
 }
 
+export function buildAssetIdNameSuggestions (descriptors: any[], knownAssetIdNames: string[] = []): string[] {
+  const defaultSuggestionNames = new Set(defaultAssetIdNameSuggestions)
+  const discoveredSuggestions = uniqueValues([
+    ...knownAssetIdNames,
+    ...getAssetIdNameSuggestions(descriptors),
+  ])
+    .filter(assetIdName => !defaultSuggestionNames.has(assetIdName))
+    .toSorted((a, b) => a.localeCompare(b))
+
+  return [
+    ...defaultAssetIdNameSuggestions,
+    ...discoveredSuggestions,
+  ]
+}
+
+export function getSpecificAssetIdNameSuggestions (assetIdNameSuggestions: string[]): string[] {
+  return uniqueValues(assetIdNameSuggestions)
+    .filter(assetIdName => assetIdName !== 'globalAssetId')
+}
+
 export function getDescriptorStats (descriptors: any[]): { descriptorCount: number } {
   return {
     descriptorCount: descriptors.length,
@@ -164,6 +218,10 @@ export function getDescriptorStats (descriptors: any[]): { descriptorCount: numb
 }
 
 export function getDescriptorLastUpdatedAt (descriptor: any): string {
+  return getDescriptorTimestampInfo(descriptor)?.value ?? ''
+}
+
+export function getDescriptorTimestampInfo (descriptor: any): DescriptorTimestampInfo | null {
   const candidates = [
     descriptor?.updatedAt,
     descriptor?.lastUpdatedAt,
@@ -172,10 +230,22 @@ export function getDescriptorLastUpdatedAt (descriptor: any): string {
     descriptor?.lastModified,
     descriptor?.modifiedAt,
     descriptor?.modified,
-    descriptor?.createdAt,
   ]
+  const updatedAt = candidates.map(candidate => toTrimmedString(candidate)).find(candidate => candidate !== '') ?? ''
+  if (updatedAt !== '') {
+    return {
+      label: 'Updated',
+      value: updatedAt,
+    }
+  }
 
-  return candidates.map(candidate => toTrimmedString(candidate)).find(candidate => candidate !== '') ?? ''
+  const createdAt = toTrimmedString(descriptor?.createdAt)
+  return createdAt === ''
+    ? null
+    : {
+        label: 'Created',
+        value: createdAt,
+      }
 }
 
 export function getEndpointRows (endpoints: unknown): EndpointRow[] {
@@ -212,4 +282,50 @@ export function getSubmodelMarkerValues (submodelDescriptor: any): string[] {
   return uniqueValues(
     normalizeSupplementalSemanticIds(submodelDescriptor).flatMap(reference => getReferenceKeyValues(reference)),
   )
+}
+
+export function parseSubprotocolBody (value: unknown): Record<string, string> {
+  const body = toTrimmedString(value)
+  if (body === '') {
+    return {}
+  }
+
+  const params: Record<string, string> = {}
+  for (const segment of body.split(';')) {
+    const [rawKey, ...rawValueParts] = segment.split('=')
+    const key = toTrimmedString(rawKey)
+    const rawValue = rawValueParts.join('=')
+    if (key === '' || rawValueParts.length === 0) {
+      continue
+    }
+    params[key] = toTrimmedString(rawValue)
+  }
+
+  return params
+}
+
+export function getSubmodelEdcEndpointInfo (submodelDescriptor: any): SubmodelEdcEndpointInfo | null {
+  const endpoints = asArray<any>(submodelDescriptor?.endpoints)
+  const endpoint = endpoints.find(candidate => {
+    const protocolInformation = candidate?.protocolInformation
+    return toTrimmedString(protocolInformation?.subprotocol).toUpperCase() === 'DSP'
+      && toTrimmedString(protocolInformation?.subprotocolBody) !== ''
+  }) ?? endpoints.find(candidate => toTrimmedString(candidate?.protocolInformation?.subprotocolBody) !== '')
+  const protocolInformation = endpoint?.protocolInformation
+  const href = toTrimmedString(protocolInformation?.href)
+  const subprotocolBody = toTrimmedString(protocolInformation?.subprotocolBody)
+  const params = parseSubprotocolBody(subprotocolBody)
+  const assetId = params.id
+  const dspEndpoint = params.dspEndpoint
+
+  if (href === '' || subprotocolBody === '' || !assetId || !dspEndpoint) {
+    return null
+  }
+
+  return {
+    assetId,
+    dspEndpoint,
+    href,
+    subprotocolBody,
+  }
 }

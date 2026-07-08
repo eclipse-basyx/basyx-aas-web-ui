@@ -1,0 +1,74 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Catena-X EDC BFF",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/aas-web-ui",
+      "program": "${workspaceFolder}/aas-web-ui/dist-bff/edc-bff/server.js",
+      "preLaunchTask": "aas-web-ui: bff:build",
+      "console": "integratedTerminal",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "env": {
+        "CX_EDC_BFF_PORT": "3001",
+        "CX_EDC_BFF_AUTH_MODE": "none",
+        "CX_EDC_DEFAULT_MANAGEMENT_URL": "${input:catenaXEdcManagementUrl}",
+        "CX_EDC_DEFAULT_API_KEY": "${input:catenaXEdcApiKey}",
+        "CX_EDC_DEFAULT_API_KEY_HEADER": "X-Api-Key",
+        "CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES": "${input:catenaXEdcAllowedCounterPartyAddresses}",
+        "CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES": "false",
+        "CX_EDC_REQUEST_TIMEOUT_MS": "30000",
+        "CX_EDC_EDR_POLLING_ATTEMPTS": "30",
+        "CX_EDC_EDR_POLLING_INTERVAL_MS": "2000"
+      }
+    },
+    {
+      "name": "AAS Web UI",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/aas-web-ui",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "dev"
+      ],
+      "console": "integratedTerminal",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "env": {
+        "CX_EDC_BFF_UPSTREAM_URL": "http://localhost:3001"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "AAS Web UI + Catena-X EDC BFF",
+      "configurations": [
+        "Catena-X EDC BFF",
+        "AAS Web UI"
+      ],
+      "stopAll": true
+    }
+  ],
+  "inputs": [
+    {
+      "id": "catenaXEdcManagementUrl",
+      "type": "promptString",
+      "description": "Consumer EDC Management API URL, for example https://<consumer-edc-host>/management"
+    },
+    {
+      "id": "catenaXEdcApiKey",
+      "type": "promptString",
+      "description": "Catena-X EDC Management API X-Api-Key",
+      "password": true
+    },
+    {
+      "id": "catenaXEdcAllowedCounterPartyAddresses",
+      "type": "promptString",
+      "description": "Allowed provider DSP endpoint prefixes, comma-separated or *"
+    }
+  ]
+}

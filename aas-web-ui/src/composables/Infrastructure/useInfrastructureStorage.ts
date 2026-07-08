@@ -1,4 +1,6 @@
 import type {
+  CatenaXAccessMode,
+  CatenaXPartner,
   ComponentConfig,
   InfrastructureConfig,
   InfrastructureStorage,
@@ -20,6 +22,7 @@ function computeInfrastructureHash (infra: InfrastructureConfig): string {
     name: infra.name,
     template: normalizeInfrastructureTemplate(infra.template),
     components: infra.components,
+    catenaX: infra.catenaX,
     auth: infra.auth,
     // Exclude: id (stable), token (runtime), isDefault (user preference), yamlConfigOutdated (runtime flag)
   }
@@ -171,6 +174,7 @@ export function useInfrastructureStorage (): {
     const normalized = infrastructure
     normalized.template = normalizeInfrastructureTemplate(normalized.template)
     normalized.auth ??= { securityType: 'No Authentication' }
+    normalizeCatenaXConfig(normalized)
 
     const defaultComponents = createDefaultComponents()
     const existingComponents = (normalized as Partial<InfrastructureConfig>).components
@@ -188,6 +192,104 @@ export function useInfrastructureStorage (): {
     }
 
     return normalized
+  }
+
+  function normalizeCatenaXConfig (infrastructure: InfrastructureConfig): void {
+    if (infrastructure.template !== 'catena-x') {
+      delete infrastructure.catenaX
+      return
+    }
+
+    const edc = infrastructure.catenaX?.edc
+    const accessMode = getNormalizedCatenaXAccessMode(infrastructure)
+
+    if (accessMode === 'direct') {
+      infrastructure.catenaX = { accessMode: 'direct' }
+      return
+    }
+
+    const proxyId = edc?.proxyId?.trim() ?? ''
+
+    if (proxyId === '') {
+      infrastructure.catenaX = { accessMode: 'edc' }
+      return
+    }
+
+    const legacyDefaultPartner = createLegacyDefaultPartner(edc?.defaultCounterPartyId, edc?.defaultCounterPartyAddress)
+    const partners = normalizeCatenaXPartners([
+      ...(edc?.partners ?? []),
+      ...(legacyDefaultPartner ? [legacyDefaultPartner] : []),
+    ])
+
+    infrastructure.catenaX = {
+      accessMode: 'edc',
+      edc: {
+        proxyId,
+        defaultCounterPartyId: edc?.defaultCounterPartyId?.trim() || undefined,
+        defaultCounterPartyAddress: edc?.defaultCounterPartyAddress?.trim() || undefined,
+        defaultPartnerId: edc?.defaultPartnerId?.trim() || partners[0]?.id || undefined,
+        partners: partners.length > 0 ? partners : undefined,
+      },
+    }
+  }
+
+  function getNormalizedCatenaXAccessMode (infrastructure: InfrastructureConfig): CatenaXAccessMode {
+    const accessMode = infrastructure.catenaX?.accessMode
+    if (accessMode === 'direct' || accessMode === 'edc') {
+      return accessMode
+    }
+
+    return infrastructure.catenaX?.edc?.proxyId?.trim() ? 'edc' : 'direct'
+  }
+
+  function normalizeCatenaXPartners (partners: CatenaXPartner[]): CatenaXPartner[] {
+    const uniquePartners = new Map<string, CatenaXPartner>()
+
+    for (const partner of partners) {
+      const counterPartyId = partner.counterPartyId?.trim() ?? ''
+      const counterPartyAddress = partner.counterPartyAddress?.trim() ?? ''
+      if (counterPartyId === '' || counterPartyAddress === '') {
+        continue
+      }
+
+      const id = partner.id?.trim() || createPartnerId(counterPartyId, counterPartyAddress)
+      if (id === '') {
+        continue
+      }
+
+      uniquePartners.set(`${counterPartyId}::${counterPartyAddress}`, {
+        id,
+        name: partner.name?.trim() || undefined,
+        counterPartyId,
+        counterPartyAddress,
+      })
+    }
+
+    return Array.from(uniquePartners.values())
+  }
+
+  function createLegacyDefaultPartner (
+    counterPartyId: string | undefined,
+    counterPartyAddress: string | undefined,
+  ): CatenaXPartner | undefined {
+    const normalizedCounterPartyId = counterPartyId?.trim() ?? ''
+    const normalizedCounterPartyAddress = counterPartyAddress?.trim() ?? ''
+    if (normalizedCounterPartyId === '' || normalizedCounterPartyAddress === '') {
+      return undefined
+    }
+
+    return {
+      id: createPartnerId(normalizedCounterPartyId, normalizedCounterPartyAddress),
+      counterPartyId: normalizedCounterPartyId,
+      counterPartyAddress: normalizedCounterPartyAddress,
+    }
+  }
+
+  function createPartnerId (counterPartyId: string, counterPartyAddress: string): string {
+    return `${counterPartyId}-${counterPartyAddress}`
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
   }
 
   /**
