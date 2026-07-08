@@ -74,6 +74,7 @@
                     density="compact"
                   >
                     <v-list-item-title>{{ action.title }}</v-list-item-title>
+
                     <v-list-item-subtitle>
                       <v-btn
                         v-if="action.machineRefAasId"
@@ -86,6 +87,7 @@
                         <v-icon size="x-small" start>mdi-open-in-new</v-icon>
                         {{ action.machineName }}
                       </v-btn>
+
                       <span v-else>{{ action.machineName }}</span>
                     </v-list-item-subtitle>
 
