@@ -13,7 +13,7 @@ services:
     environment:
       BASE_PATH: "${PUBLIC_BASE_PATH:-/}"
       START_PAGE_ROUTE_NAME: "CatenaXplorer"
-      ENDPOINT_CONFIG_AVAILABLE: "false"
+      ENDPOINT_CONFIG_AVAILABLE: "true"
       ALLOW_EDITING: "false"
       ALLOW_UPLOADING: "false"
       ALLOW_LOGOUT: "true"
@@ -39,7 +39,7 @@ services:
       CX_EDC_EDR_POLLING_ATTEMPTS: "${CX_EDC_EDR_POLLING_ATTEMPTS:-60}"
       CX_EDC_EDR_POLLING_INTERVAL_MS: "${CX_EDC_EDR_POLLING_INTERVAL_MS:-2000}"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/ >/dev/null 2>&1 && node -e \"fetch('http://127.0.0.1:3001/api/catena-x/edc/default/status').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/ >/dev/null 2>&1 && wget -qO- http://127.0.0.1:3001/health >/dev/null 2>&1"]
       interval: 15s
       timeout: 5s
       retries: 10

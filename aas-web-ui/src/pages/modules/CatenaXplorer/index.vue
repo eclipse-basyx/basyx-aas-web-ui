@@ -370,7 +370,7 @@
       selectedDescriptorId.value = getRouteDescriptorId()
       selectedDescriptorFallback.value = null
       resetDescriptorPaginationState()
-      inlineError.value = 'Could not load AAS descriptors from the Digital Twin Registry.'
+      inlineError.value = getErrorMessage(error, 'Could not load AAS descriptors from the Digital Twin Registry.')
     } finally {
       if (generation === descriptorPaginationGeneration.value) {
         isLoading.value = false
@@ -403,7 +403,7 @@
       await ensureSelectedDescriptorLoaded()
     } catch (error) {
       console.warn(error)
-      inlineError.value = 'Could not load more AAS descriptors from the Digital Twin Registry.'
+      inlineError.value = getErrorMessage(error, 'Could not load more AAS descriptors from the Digital Twin Registry.')
     } finally {
       if (generation === descriptorPaginationGeneration.value) {
         isLoadingMoreDescriptors.value = false
@@ -420,13 +420,9 @@
       return fetchAasDescriptorListPage(options)
     }
 
-    const failResponse: AasListPageResult<any> = {
-      items: [],
-      hasMore: false,
-    }
     const edcRequest = buildEdcDescriptorRequest()
     if (!edcRequest) {
-      return failResponse
+      throw new Error(inlineError.value || 'The selected Catena-X infrastructure is not configured for EDC descriptor access.')
     }
 
     const response = await fetchDtrShellDescriptors(edcProxyId.value, {
@@ -438,7 +434,7 @@
     })
 
     if (!response) {
-      return failResponse
+      throw new Error(buildEdcFailureMessage('Could not load AAS descriptors through EDC.'))
     }
 
     rememberCurrentEdcPartner()
@@ -539,6 +535,14 @@
   function buildEdcFailureMessage (fallback: string): string {
     const details = consumeEdcRequestFailureDetails()?.trim()
     return details ? `${fallback}\n${details}` : fallback
+  }
+
+  function getErrorMessage (error: unknown, fallback: string): string {
+    if (error instanceof Error && error.message.trim() !== '') {
+      return error.message
+    }
+
+    return fallback
   }
 
   function isDescriptorSourceConfigured (): boolean {

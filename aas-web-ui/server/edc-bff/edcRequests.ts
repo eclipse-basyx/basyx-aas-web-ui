@@ -26,6 +26,7 @@ const catalogContext = [
 ]
 const odrlContextUrl = 'http' + '://www.w3.org/ns/odrl/2/'
 const dctContextUrl = 'http' + '://purl.org/dc/terms/'
+const dcatContextUrl = 'http' + '://www.w3.org/ns/dcat#'
 const xsdContextUrl = 'http' + '://www.w3.org/2001/XMLSchema#'
 
 const contractContext = {
@@ -46,6 +47,30 @@ const contractContext = {
 
 const defaultDtrProtocol = 'dataspace-protocol-http'
 const dtrTaxonomyId = 'https://w3id.org/catenax/taxonomy#DigitalTwinRegistry'
+const catalogDatasetKeys = [
+  'dcat:dataset',
+  'dataset',
+  dcatContextUrl + 'dataset',
+  'https://www.w3.org/ns/dcat#dataset',
+  'https://www.w3.org/ns/dcat/dataset',
+]
+const catalogParticipantIdKeys = [
+  'dspace:participantId',
+  'participantId',
+  'edc:participantId',
+  'https://w3id.org/dspace/v0.8/participantId',
+]
+const datasetTypeKeys = [
+  'dct:type',
+  'type',
+  dctContextUrl + 'type',
+  'https://purl.org/dc/terms/type',
+]
+const datasetPolicyKeys = [
+  'odrl:hasPolicy',
+  'hasPolicy',
+  odrlContextUrl + 'hasPolicy',
+]
 
 export interface EdcAssetOffer {
   assetId: string
@@ -201,7 +226,8 @@ function extractCatalogDatasetOffer (
     missingPolicyMessage: string
   },
 ): EdcAssetOffer {
-  const datasets = asArray((catalog as Record<string, unknown>)?.['dcat:dataset'])
+  const catalogRecord = catalog as Record<string, unknown> | undefined
+  const datasets = asArray(getRecordValue(catalogRecord, catalogDatasetKeys))
   const normalizedAssetId = trimString(options.assetId)
   const normalizedDatasetTypeId = trimString(options.datasetTypeId)
   const dataset = datasets.find(candidate => {
@@ -209,7 +235,7 @@ function extractCatalogDatasetOffer (
       return getDatasetId(candidate) === normalizedAssetId
     }
     if (normalizedDatasetTypeId) {
-      return getNestedId(candidate, 'dct:type') === normalizedDatasetTypeId
+      return getNestedId(candidate, datasetTypeKeys) === normalizedDatasetTypeId
     }
     return false
   }) ?? (normalizedAssetId ? undefined : datasets[0])
@@ -220,8 +246,8 @@ function extractCatalogDatasetOffer (
 
   const datasetRecord = dataset as Record<string, unknown>
   const assetId = getDatasetId(datasetRecord)
-  const participantId = trimString((catalog as Record<string, unknown>)?.['dspace:participantId'])
-  const policy = datasetRecord['odrl:hasPolicy'] ?? datasetRecord.hasPolicy
+  const participantId = trimString(getRecordValue(catalogRecord, catalogParticipantIdKeys))
+  const policy = getRecordValue(datasetRecord, datasetPolicyKeys)
 
   if (!assetId) {
     throw createHttpError(options.missingAssetIdMessage, 502)
@@ -745,8 +771,10 @@ function buildSubmodelDataUrl (endpoint: string, href: string): string {
 
   try {
     const endpointUrl = new URL(normalizedEndpoint)
-    const hrefUrl = new URL(normalizedHref)
-    return `${endpointUrl.origin}${hrefUrl.pathname}${hrefUrl.search}`
+    const hrefUrl = new URL(normalizedHref, endpointUrl)
+    const baseUrl = endpointUrl.toString().replace(/[?#].*$/, '').replace(/\/+$/, '')
+    const hrefPath = stripBasePath(hrefUrl.pathname, endpointUrl.pathname)
+    return `${baseUrl}${hrefPath}${hrefUrl.search}`
   } catch {
     throw createHttpError('Submodel endpoint URL is invalid', 400)
   }
@@ -770,14 +798,52 @@ function asArray<T = unknown> (value: unknown): T[] {
   return []
 }
 
-function getNestedId (value: unknown, key: string): string {
-  const nestedValue = (value as Record<string, unknown> | undefined)?.[key]
+function getNestedId (value: unknown, keys: string[]): string {
+  const nestedValue = getRecordValue(value as Record<string, unknown> | undefined, keys)
   return trimString((nestedValue as Record<string, unknown> | undefined)?.['@id'])
+}
+
+function getRecordValue (record: Record<string, unknown> | undefined, keys: string[]): unknown {
+  if (!record) {
+    return undefined
+  }
+
+  for (const key of keys) {
+    if (Object.prototype.hasOwnProperty.call(record, key)) {
+      return record[key]
+    }
+  }
+
+  return undefined
 }
 
 function getDatasetId (value: unknown): string {
   const record = value as Record<string, unknown> | undefined
   return trimString(record?.['@id']) || trimString(record?.id)
+}
+
+function stripBasePath (hrefPath: string, endpointPath: string): string {
+  const normalizedHrefPath = normalizeUrlPath(hrefPath)
+  const normalizedEndpointPath = normalizeUrlPath(endpointPath)
+
+  if (normalizedEndpointPath === '/') {
+    return normalizedHrefPath
+  }
+
+  if (normalizedHrefPath === normalizedEndpointPath) {
+    return ''
+  }
+
+  if (normalizedHrefPath.startsWith(`${normalizedEndpointPath}/`)) {
+    return normalizedHrefPath.slice(normalizedEndpointPath.length)
+  }
+
+  return normalizedHrefPath
+}
+
+function normalizeUrlPath (path: string): string {
+  const normalizedPath = `/${path.replace(/^\/+/, '').replace(/\/+$/, '')}`
+  return normalizedPath === '' ? '/' : normalizedPath
 }
 
 function getSubmodelDescriptorEndpoint (descriptor: unknown): { href: string, subprotocolBody: string } {

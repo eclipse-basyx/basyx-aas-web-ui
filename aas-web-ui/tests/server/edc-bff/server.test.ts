@@ -254,13 +254,13 @@ describe('EDC BFF server', () => {
         const address = upstreamServer?.address()
         const port = typeof address === 'object' && address ? address.port : 0
         response.end(JSON.stringify({
-          endpoint: `http://127.0.0.1:${port}/data`,
+          endpoint: `http://127.0.0.1:${port}/api/public`,
           authorization: 'TEST_SUBMODEL_AUTHORIZATION',
         }))
         return
       }
 
-      if (request.url === '/submodel/data') {
+      if (request.url === '/api/public/submodel/data') {
         expect(request.headers.authorization).toBe('TEST_SUBMODEL_AUTHORIZATION')
         response.end(JSON.stringify({
           id: 'urn:example:submodel:1',
@@ -308,7 +308,7 @@ describe('EDC BFF server', () => {
         submodelDescriptor: {
           endpoints: [{
             protocolInformation: {
-              href: `http://old-data-plane.test:${upstreamPort}/submodel/data`,
+              href: `http://old-data-plane.test:${upstreamPort}/api/public/submodel/data`,
               subprotocol: 'DSP',
               subprotocolBody: 'id=submodel-asset;dspEndpoint=https://counterparty-dsp.test/api/v1/dsp',
             },

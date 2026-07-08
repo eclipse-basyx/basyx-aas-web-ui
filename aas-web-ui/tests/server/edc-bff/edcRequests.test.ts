@@ -136,6 +136,27 @@ describe('EDC BFF request helpers', () => {
     })
   })
 
+  it('extracts compacted DTR catalog data without JSON-LD prefixes', () => {
+    const catalog = {
+      participantId: 'TEST_PARTICIPANT_ID',
+      dataset: {
+        id: 'dtr-asset',
+        type: { '@id': 'https://w3id.org/catenax/taxonomy#DigitalTwinRegistry' },
+        hasPolicy: {
+          '@id': 'offer-1',
+          '@type': 'Offer',
+          'permission': [],
+        },
+      },
+    }
+
+    expect(extractDigitalTwinRegistryOffer(catalog)).toMatchObject({
+      assetId: 'dtr-asset',
+      participantId: 'TEST_PARTICIPANT_ID',
+      policy: { '@id': 'offer-1' },
+    })
+  })
+
   it('negotiates EDR access, polls until available, and fetches DTR descriptors', async () => {
     const proxy = createProxyConfig()
     const fetchMock = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
@@ -242,6 +263,28 @@ describe('EDC BFF request helpers', () => {
     })
   })
 
+  it('extracts compacted Submodel catalog data by asset ID', () => {
+    const catalog = {
+      participantId: 'TEST_PARTICIPANT_ID',
+      dataset: [
+        {
+          id: 'other-asset',
+          hasPolicy: { '@id': 'offer-other', '@type': 'Offer' },
+        },
+        {
+          id: 'submodel-asset',
+          hasPolicy: { '@id': 'offer-submodel', '@type': 'Offer' },
+        },
+      ],
+    }
+
+    expect(extractSubmodelOffer(catalog, 'submodel-asset')).toMatchObject({
+      assetId: 'submodel-asset',
+      participantId: 'TEST_PARTICIPANT_ID',
+      policy: { '@id': 'offer-submodel' },
+    })
+  })
+
   it('negotiates EDR access and fetches a Submodel through the provider data plane', async () => {
     const proxy = createProxyConfig()
     const fetchMock = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
@@ -276,7 +319,7 @@ describe('EDC BFF request helpers', () => {
 
       if (urlString.endsWith('/management/v3/edrs/submodel-transfer-1/dataaddress?auto_refresh=true')) {
         return Response.json({
-          endpoint: 'https://fresh-data-plane.test/edr-root',
+          endpoint: 'https://fresh-data-plane.test/api/public',
           authorization: 'TEST_SUBMODEL_AUTHORIZATION',
         })
       }
@@ -336,7 +379,7 @@ describe('EDC BFF request helpers', () => {
         })
       }
 
-      if (urlString === 'https://fresh-data-plane.test/api/public/submodel-asset/submodel') {
+      if (urlString === 'https://fresh-data-plane.test/edr-root/api/public/submodel-asset/submodel') {
         return Response.json({ id: 'urn:example:submodel:1', submodelElements: [] })
       }
 
