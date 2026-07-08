@@ -90,7 +90,11 @@ async function verifyJwtSignature (
 
   const [encodedHeader, encodedPayload, encodedSignature] = token.split('.')
   const jwks = await getJwks(authConfig.jwksUrl, fetchFn)
-  const jwk = jwks.keys?.find(key => key.kid === header.kid)
+  let jwk = jwks.keys?.find(key => key.kid === header.kid)
+  if (!jwk) {
+    const refreshedJwks = await getJwks(authConfig.jwksUrl, fetchFn, true)
+    jwk = refreshedJwks.keys?.find(key => key.kid === header.kid)
+  }
   if (!jwk) {
     throw createAuthError('JWT signing key not found', 401)
   }
@@ -115,9 +119,9 @@ async function verifyJwtSignature (
   }
 }
 
-async function getJwks (jwksUrl: string, fetchFn: typeof fetch): Promise<JsonWebKeySet> {
+async function getJwks (jwksUrl: string, fetchFn: typeof fetch, forceRefresh = false): Promise<JsonWebKeySet> {
   const cached = jwksCache.get(jwksUrl)
-  if (cached) {
+  if (cached && !forceRefresh) {
     return cached
   }
 

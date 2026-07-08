@@ -37,6 +37,7 @@ const defaultEdrPollingAttempts = 30
 const defaultEdrPollingIntervalMs = 2000
 const maxEdrPollingAttempts = 120
 const maxEdrPollingIntervalMs = 30_000
+const unsetIntegerValues = new Set<unknown>([undefined, null, ''])
 
 export function loadRuntimeConfig (
   env: Env = process.env,
@@ -268,7 +269,12 @@ function matchesAllowedAddress (address: URL, allowedAddress: URL): boolean {
 }
 
 function parseInteger (value: unknown, fallback: number, min: number, max: number): number {
-  const parsed = Number(value)
+  const normalizedValue = typeof value === 'string' ? value.trim() : value
+  if (unsetIntegerValues.has(normalizedValue)) {
+    return fallback
+  }
+
+  const parsed = Number(normalizedValue)
   if (!Number.isInteger(parsed)) {
     return fallback
   }

@@ -46,6 +46,23 @@ describe('EDC BFF config', () => {
     })
   })
 
+  it('falls back to default numeric settings for blank environment variables', () => {
+    const proxies = loadProxyConfigMap({
+      CX_EDC_DEFAULT_MANAGEMENT_URL: 'https://consumer-edc.test/management',
+      CX_EDC_DEFAULT_API_KEY: 'TEST_API_KEY',
+      CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES: 'https://counterparty-dsp.test/api/v1/dsp',
+      CX_EDC_REQUEST_TIMEOUT_MS: '',
+      CX_EDC_EDR_POLLING_ATTEMPTS: '',
+      CX_EDC_EDR_POLLING_INTERVAL_MS: '',
+    })
+
+    expect(proxies.get('default')).toMatchObject({
+      requestTimeoutMs: 30_000,
+      edrPollingAttempts: 30,
+      edrPollingIntervalMs: 2000,
+    })
+  })
+
   it('loads multiple proxy configs from inline JSON', () => {
     const proxies = loadProxyConfigMap({
       CX_EDC_PROXY_CONFIG_JSON: JSON.stringify({
