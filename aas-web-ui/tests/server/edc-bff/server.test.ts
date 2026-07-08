@@ -65,6 +65,49 @@ describe('EDC BFF server', () => {
     expect(missingResponse.status).toBe(404)
   })
 
+  it('returns route diagnostics for unsupported BFF actions without exposing secrets', async () => {
+    const config: EdcBffRuntimeConfig = {
+      port: 0,
+      auth: { mode: 'none', requiredRoles: [] },
+      proxies: new Map([
+        ['default', {
+          id: 'default',
+          managementUrl: 'https://consumer-edc.test/management',
+          apiKey: 'TEST_API_KEY',
+          apiKeyHeader: 'X-Api-Key',
+          allowedCounterPartyAddresses: [],
+          allowInsecureCounterPartyAddresses: false,
+          requestTimeoutMs: 30_000,
+          edrPollingAttempts: 30,
+          edrPollingIntervalMs: 2000,
+        }],
+      ]),
+    }
+
+    server = createEdcBffServer(config)
+    await new Promise<void>(resolve => server?.listen(0, resolve))
+    const address = server.address()
+    const port = typeof address === 'object' && address ? address.port : 0
+
+    const response = await fetch(`http://127.0.0.1:${port}/api/catena-x/edc/default/unknown/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    })
+    const payload = await response.json()
+
+    expect(response.status).toBe(404)
+    expect(payload).toMatchObject({
+      error: 'Route not found',
+      status: 404,
+      code: 'ROUTE_NOT_FOUND',
+      method: 'POST',
+      path: '/api/catena-x/edc/default/unknown/action',
+    })
+    expect(JSON.stringify(payload)).not.toContain('TEST_API_KEY')
+    expect(JSON.stringify(payload)).not.toContain('consumer-edc.test')
+  })
+
   it('serves DTR descriptor pages through the EDC flow without exposing secrets', async () => {
     upstreamServer = createHttpServer((request, response) => {
       response.setHeader('Content-Type', 'application/json')
@@ -171,5 +214,125 @@ describe('EDC BFF server', () => {
     })
     expect(JSON.stringify(payload)).not.toContain('TEST_API_KEY')
     expect(JSON.stringify(payload)).not.toContain('TEST_EDR_AUTHORIZATION')
+  })
+
+  it('serves Submodels through the EDC flow without exposing secrets', async () => {
+    upstreamServer = createHttpServer((request, response) => {
+      response.setHeader('Content-Type', 'application/json')
+
+      if (request.url === '/management/v3/catalog/request') {
+        response.end(JSON.stringify({
+          'dspace:participantId': 'TEST_PARTICIPANT_ID',
+          'dcat:dataset': {
+            '@id': 'submodel-asset',
+            'odrl:hasPolicy': {
+              '@id': 'offer-submodel',
+              '@type': 'odrl:Offer',
+              'odrl:permission': [],
+            },
+          },
+        }))
+        return
+      }
+
+      if (request.url === '/management/v3/edrs') {
+        response.end(JSON.stringify({ '@id': 'submodel-negotiation-1' }))
+        return
+      }
+
+      if (request.url === '/management/v3/edrs/request') {
+        response.end(JSON.stringify([{
+          transferProcessId: 'submodel-transfer-1',
+          assetId: 'submodel-asset',
+          providerId: 'TEST_PARTICIPANT_ID',
+          agreementId: 'submodel-agreement-1',
+        }]))
+        return
+      }
+
+      if (request.url === '/management/v3/edrs/submodel-transfer-1/dataaddress?auto_refresh=true') {
+        const address = upstreamServer?.address()
+        const port = typeof address === 'object' && address ? address.port : 0
+        response.end(JSON.stringify({
+          endpoint: `http://127.0.0.1:${port}/data`,
+          authorization: 'TEST_SUBMODEL_AUTHORIZATION',
+        }))
+        return
+      }
+
+      if (request.url === '/submodel/data') {
+        expect(request.headers.authorization).toBe('TEST_SUBMODEL_AUTHORIZATION')
+        response.end(JSON.stringify({
+          id: 'urn:example:submodel:1',
+          submodelElements: [{ modelType: 'Property', idShort: 'temperature', value: '20' }],
+        }))
+        return
+      }
+
+      response.statusCode = 404
+      response.end(JSON.stringify({ error: 'not found' }))
+    })
+    await new Promise<void>(resolve => upstreamServer?.listen(0, resolve))
+    const upstreamAddress = upstreamServer.address()
+    const upstreamPort = typeof upstreamAddress === 'object' && upstreamAddress ? upstreamAddress.port : 0
+
+    const config: EdcBffRuntimeConfig = {
+      port: 0,
+      auth: { mode: 'none', requiredRoles: [] },
+      proxies: new Map([
+        ['default', {
+          id: 'default',
+          managementUrl: `http://127.0.0.1:${upstreamPort}/management`,
+          apiKey: 'TEST_API_KEY',
+          apiKeyHeader: 'X-Api-Key',
+          allowedCounterPartyAddresses: ['https://counterparty-dsp.test/api/v1/dsp'],
+          allowInsecureCounterPartyAddresses: false,
+          requestTimeoutMs: 30_000,
+          edrPollingAttempts: 30,
+          edrPollingIntervalMs: 2000,
+        }],
+      ]),
+    }
+
+    server = createEdcBffServer(config)
+    await new Promise<void>(resolve => server?.listen(0, resolve))
+    const address = server.address()
+    const port = typeof address === 'object' && address ? address.port : 0
+    const response = await fetch(`http://127.0.0.1:${port}/api/catena-x/edc/default/submodels/fetch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        counterPartyId: 'TEST_PARTICIPANT_ID',
+        counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+        protocol: 'dataspace-protocol-http',
+        submodelDescriptor: {
+          endpoints: [{
+            protocolInformation: {
+              href: `http://old-data-plane.test:${upstreamPort}/submodel/data`,
+              subprotocol: 'DSP',
+              subprotocolBody: 'id=submodel-asset;dspEndpoint=https://counterparty-dsp.test/api/v1/dsp',
+            },
+          }],
+        },
+      }),
+    })
+    const payload = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(payload).toMatchObject({
+      data: {
+        id: 'urn:example:submodel:1',
+        submodelElements: [{ idShort: 'temperature' }],
+      },
+      edc: {
+        transferProcessId: 'submodel-transfer-1',
+        assetId: 'submodel-asset',
+        providerId: 'TEST_PARTICIPANT_ID',
+        agreementId: 'submodel-agreement-1',
+        contractNegotiationId: 'submodel-negotiation-1',
+      },
+    })
+    expect(JSON.stringify(payload)).not.toContain('TEST_API_KEY')
+    expect(JSON.stringify(payload)).not.toContain('TEST_SUBMODEL_AUTHORIZATION')
   })
 })

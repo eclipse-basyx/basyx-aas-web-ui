@@ -39,7 +39,12 @@
     >
       <template v-if="mdAndUp">
         <main class="catena-xplorer-details">
-          <DescriptorDetails :descriptor="selectedDescriptor" />
+          <DescriptorDetails
+            :descriptor="selectedDescriptor"
+            :edc-access-enabled="isEdcAccessMode"
+            :edc-submodels="edcSubmodels"
+            @load-edc-submodel="loadEdcSubmodel"
+          />
         </main>
       </template>
 
@@ -109,7 +114,12 @@
               Browse descriptors
             </v-btn>
 
-            <DescriptorDetails :descriptor="selectedDescriptor" />
+            <DescriptorDetails
+              :descriptor="selectedDescriptor"
+              :edc-access-enabled="isEdcAccessMode"
+              :edc-submodels="edcSubmodels"
+              @load-edc-submodel="loadEdcSubmodel"
+            />
           </v-window-item>
         </v-window>
       </template>
@@ -135,6 +145,8 @@
 
 <script lang="ts" setup>
   import type { AasListPageResult, AssetIdFilter } from '@/composables/Client/AASRegistryClient'
+  import type { CatenaXEdcDtrMetadata } from '@/composables/Client/CatenaXEdcClient'
+  import type { EdcSubmodelViewState } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
   import type { CatenaXPartner } from '@/types/Infrastructure'
   import { computed, onMounted, ref, toRaw, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
@@ -152,6 +164,8 @@
     buildAssetIdNameSuggestions,
     buildShellDescriptorEndpointUrl,
     getAssetIdNameSuggestions,
+    getDescriptorKey,
+    getSubmodelEdcEndpointInfo,
   } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
   import CatenaXplorerNavigationDrawer from '@/pages/modules/CatenaXplorer/components/CatenaXplorerNavigationDrawer.vue'
   import DeleteDescriptorDialog from '@/pages/modules/CatenaXplorer/components/DeleteDescriptorDialog.vue'
@@ -174,6 +188,7 @@
   const legacyDescriptorIdQueryParam = 'descriptorId'
   const descriptorPageLimit = 100
   const defaultAssetIdName = 'manufacturerPartId'
+  const edcDtrAssetKey = 'DigitalTwinRegistry'
 
   const route = useRoute()
   const router = useRouter()
@@ -187,8 +202,10 @@
     putAasDescriptor,
   } = useAASRegistryClient()
   const {
+    consumeLastRequestFailureDetails: consumeEdcRequestFailureDetails,
     fetchDtrShellDescriptorById,
     fetchDtrShellDescriptors,
+    fetchSubmodel,
   } = useCatenaXEdcClient()
   const { copyToClipboard } = useClipboardUtil()
   const { generateIri } = useIDUtils()
@@ -196,8 +213,9 @@
   const descriptors = ref<any[]>([])
   const activeAssetIds = ref<AssetIdFilter[] | undefined>(undefined)
   const descriptorPaginationGeneration = ref(0)
-  const edcTransferProcessId = ref('')
+  const edcTransferProcessIds = ref<Record<string, string>>({})
   const edcRecentPartners = ref<CatenaXPartner[]>([])
+  const edcSubmodels = ref<Record<string, EdcSubmodelViewState>>({})
   const hasMoreDescriptors = ref(false)
   const isLoadingMoreDescriptors = ref(false)
   const knownAssetIdNames = ref<string[]>([])
@@ -280,10 +298,11 @@
       edcProxyId.value,
       selectedEdcConfig.value?.defaultPartnerId,
       configuredEdcPartners.value.length,
+      edcProtocol.value,
       isEdcAccessMode.value,
     ],
     () => {
-      edcTransferProcessId.value = ''
+      resetEdcSessionState()
       loadRecentEdcPartners()
       selectDefaultEdcPartner()
       selectedDescriptorId.value = getRouteDescriptorId()
@@ -415,7 +434,7 @@
       assetIds: options.assetIds,
       cursor: options.cursor,
       limit: options.limit,
-      transferProcessId: edcTransferProcessId.value || undefined,
+      transferProcessId: getEdcTransferProcessId(edcDtrAssetKey, edcRequest.counterPartyAddress),
     })
 
     if (!response) {
@@ -423,7 +442,7 @@
     }
 
     rememberCurrentEdcPartner()
-    edcTransferProcessId.value = response.edc.transferProcessId
+    rememberEdcTransferProcessId(edcDtrAssetKey, response.edc, edcRequest.counterPartyAddress)
     const data = response.data as any
     const nextCursor = parseNextCursor(data)
 
@@ -448,7 +467,7 @@
     const response = await fetchDtrShellDescriptorById(edcProxyId.value, {
       ...edcRequest,
       descriptorId,
-      transferProcessId: edcTransferProcessId.value || undefined,
+      transferProcessId: getEdcTransferProcessId(edcDtrAssetKey, edcRequest.counterPartyAddress),
     })
 
     if (!response) {
@@ -456,8 +475,70 @@
     }
 
     rememberCurrentEdcPartner()
-    edcTransferProcessId.value = response.edc.transferProcessId
+    rememberEdcTransferProcessId(edcDtrAssetKey, response.edc, edcRequest.counterPartyAddress)
     return response.data
+  }
+
+  async function loadEdcSubmodel (submodelDescriptor: any): Promise<void> {
+    if (!isEdcAccessMode.value) {
+      return
+    }
+
+    const stateKey = getDescriptorKey(submodelDescriptor)
+    const endpoint = getSubmodelEdcEndpointInfo(submodelDescriptor)
+    if (!endpoint) {
+      updateEdcSubmodelState(stateKey, {
+        error: 'This submodel descriptor has no complete DSP endpoint information.',
+        isLoading: false,
+      })
+      return
+    }
+
+    const edcRequest = buildEdcDescriptorRequest()
+    if (!edcRequest) {
+      return
+    }
+
+    updateEdcSubmodelState(stateKey, {
+      error: '',
+      isLoading: true,
+    })
+
+    try {
+      const response = await fetchSubmodel(edcProxyId.value, {
+        ...edcRequest,
+        counterPartyAddress: endpoint.dspEndpoint,
+        submodelDescriptor,
+        transferProcessId: getEdcTransferProcessId(endpoint.assetId, endpoint.dspEndpoint),
+      })
+
+      if (!response) {
+        updateEdcSubmodelState(stateKey, {
+          error: buildEdcFailureMessage('Could not load the Submodel through EDC.'),
+          isLoading: false,
+        })
+        return
+      }
+
+      rememberCurrentEdcPartner()
+      rememberEdcTransferProcessId(endpoint.assetId, response.edc, endpoint.dspEndpoint)
+      updateEdcSubmodelState(stateKey, {
+        data: response.data,
+        error: '',
+        isLoading: false,
+      })
+    } catch (error) {
+      console.warn(error)
+      updateEdcSubmodelState(stateKey, {
+        error: buildEdcFailureMessage('Could not load the Submodel through EDC.'),
+        isLoading: false,
+      })
+    }
+  }
+
+  function buildEdcFailureMessage (fallback: string): string {
+    const details = consumeEdcRequestFailureDetails()?.trim()
+    return details ? `${fallback}\n${details}` : fallback
   }
 
   function isDescriptorSourceConfigured (): boolean {
@@ -498,6 +579,51 @@
     }
   }
 
+  function getEdcTransferProcessId (assetId: string, counterPartyAddress: string): string | undefined {
+    return edcTransferProcessIds.value[buildEdcTransferProcessKey(assetId, counterPartyAddress)] || undefined
+  }
+
+  function rememberEdcTransferProcessId (
+    assetId: string,
+    metadata: CatenaXEdcDtrMetadata,
+    counterPartyAddress: string,
+  ): void {
+    const transferProcessId = metadata.transferProcessId?.trim()
+    if (!transferProcessId) {
+      return
+    }
+
+    edcTransferProcessIds.value = {
+      ...edcTransferProcessIds.value,
+      [buildEdcTransferProcessKey(assetId, counterPartyAddress)]: transferProcessId,
+    }
+  }
+
+  function buildEdcTransferProcessKey (assetId: string, counterPartyAddress: string): string {
+    return JSON.stringify([
+      edcProxyId.value,
+      edcCounterPartyId.value.trim(),
+      counterPartyAddress.trim(),
+      edcProtocol.value.trim(),
+      assetId.trim(),
+    ])
+  }
+
+  function resetEdcSessionState (): void {
+    edcTransferProcessIds.value = {}
+    edcSubmodels.value = {}
+  }
+
+  function updateEdcSubmodelState (key: string, patch: EdcSubmodelViewState): void {
+    edcSubmodels.value = {
+      ...edcSubmodels.value,
+      [key]: {
+        ...edcSubmodels.value[key],
+        ...patch,
+      },
+    }
+  }
+
   function loadRecentEdcPartners (): void {
     edcRecentPartners.value = edcProxyId.value ? getRecentCatenaXPartners(edcProxyId.value) : []
   }
@@ -533,25 +659,25 @@
     selectedEdcPartnerId.value = partnerId
     const partner = edcPartnerOptions.value.find(candidate => candidate.id === partnerId)
     if (!partner) {
-      edcTransferProcessId.value = ''
+      resetEdcSessionState()
       return
     }
 
     edcCounterPartyId.value = partner.counterPartyId
     edcCounterPartyAddress.value = partner.counterPartyAddress
-    edcTransferProcessId.value = ''
+    resetEdcSessionState()
   }
 
   function handleEdcCounterPartyIdUpdate (value: string): void {
     edcCounterPartyId.value = value
     selectedEdcPartnerId.value = ''
-    edcTransferProcessId.value = ''
+    resetEdcSessionState()
   }
 
   function handleEdcCounterPartyAddressUpdate (value: string): void {
     edcCounterPartyAddress.value = value
     selectedEdcPartnerId.value = ''
-    edcTransferProcessId.value = ''
+    resetEdcSessionState()
   }
 
   function rememberCurrentEdcPartner (): void {

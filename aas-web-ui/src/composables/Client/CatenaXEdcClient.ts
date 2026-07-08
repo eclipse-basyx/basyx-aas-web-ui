@@ -43,6 +43,12 @@ export interface CatenaXEdcDtrDescriptorByIdRequest extends CatenaXEdcDtrRequest
   descriptorId: string
 }
 
+export interface CatenaXEdcSubmodelRequest extends CatenaXEdcDtrRequest {
+  href?: string
+  submodelDescriptor?: unknown
+  subprotocolBody?: string
+}
+
 export interface CatenaXEdcDtrMetadata {
   assetId?: string
   providerId?: string
@@ -68,8 +74,17 @@ export function useCatenaXEdcClient (): {
     proxyId: string,
     request: CatenaXEdcDtrDescriptorByIdRequest,
   ) => Promise<CatenaXEdcDtrResponse | null>
+  fetchSubmodel: (
+    proxyId: string,
+    request: CatenaXEdcSubmodelRequest,
+  ) => Promise<CatenaXEdcDtrResponse | null>
+  consumeLastRequestFailureDetails: () => string | undefined
 } {
-  const { getRequest, postRequest } = useRequestHandling()
+  const {
+    consumeLastRequestFailureDetails,
+    getRequest,
+    postRequest,
+  } = useRequestHandling()
   const envStore = useEnvStore()
 
   async function fetchStatus (proxyId: string): Promise<CatenaXEdcStatus | null> {
@@ -167,6 +182,26 @@ export function useCatenaXEdcClient (): {
     return result.success ? result.data as CatenaXEdcDtrResponse : null
   }
 
+  async function fetchSubmodel (
+    proxyId: string,
+    request: CatenaXEdcSubmodelRequest,
+  ): Promise<CatenaXEdcDtrResponse | null> {
+    const url = buildEdcProxyUrl(proxyId, 'submodels/fetch')
+    if (!url) {
+      return null
+    }
+
+    const result = await postRequest(
+      url,
+      JSON.stringify(request),
+      createJsonHeaders(),
+      'fetching Submodel through EDC',
+      true,
+    )
+
+    return result.success ? result.data as CatenaXEdcDtrResponse : null
+  }
+
   function buildEdcProxyUrl (proxyId: string, path: string): string | null {
     const normalizedProxyId = proxyId.trim()
     if (normalizedProxyId === '') {
@@ -183,6 +218,8 @@ export function useCatenaXEdcClient (): {
     requestCatalog,
     fetchDtrShellDescriptors,
     fetchDtrShellDescriptorById,
+    fetchSubmodel,
+    consumeLastRequestFailureDetails,
   }
 }
 

@@ -71,3 +71,13 @@ export interface EdcDtrDescriptorByIdRequest {
   transferProcessId?: string
   descriptorId?: string
 }
+
+export interface EdcSubmodelFetchRequest {
+  counterPartyId?: string
+  counterPartyAddress?: string
+  protocol?: string
+  transferProcessId?: string
+  submodelDescriptor?: unknown
+  href?: string
+  subprotocolBody?: string
+}

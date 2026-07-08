@@ -5,6 +5,7 @@ import type {
   EdcDtrDescriptorByIdRequest,
   EdcDtrDescriptorRequest,
   EdcProxyConfig,
+  EdcSubmodelFetchRequest,
 } from './types.js'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import { pathToFileURL } from 'node:url'
@@ -17,6 +18,7 @@ import {
   createHttpError,
   fetchDtrShellDescriptorById,
   fetchDtrShellDescriptors,
+  fetchSubmodel,
   forwardJsonToEdc,
 } from './edcRequests.js'
 
@@ -28,7 +30,7 @@ export function createEdcBffServer (config: EdcBffRuntimeConfig) {
     try {
       await handleRequest(request, response, config)
     } catch (error) {
-      handleError(response, error)
+      handleError(response, request, error)
     }
   })
 }
@@ -94,6 +96,11 @@ async function handleRequest (
 
   if (route.action === 'dtr/shell-descriptors/by-id' && request.method === 'POST') {
     await handleDtrShellDescriptorByIdRequest(request, response, proxy)
+    return
+  }
+
+  if (route.action === 'submodels/fetch' && request.method === 'POST') {
+    await handleSubmodelFetchRequest(request, response, proxy)
     return
   }
 
@@ -175,6 +182,20 @@ async function handleDtrShellDescriptorByIdRequest (
   })
 }
 
+async function handleSubmodelFetchRequest (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+): Promise<void> {
+  assertProxyConfigured(proxy)
+  const body = await readJsonBody<EdcSubmodelFetchRequest>(request)
+  const result = await fetchSubmodel(proxy, body)
+  writeJsonResponse(response, 200, {
+    data: result.data,
+    edc: result.metadata,
+  })
+}
+
 function parseRoute (request: IncomingMessage): { proxyId: string, action: string } {
   const url = new URL(request.url ?? '', 'http://localhost')
   if (!url.pathname.startsWith(`${apiBasePath}/`)) {
@@ -220,23 +241,73 @@ async function readJsonBody<T> (request: IncomingMessage): Promise<T> {
   return JSON.parse(body) as T
 }
 
-function handleError (response: ServerResponse, error: unknown): void {
-  if ((error as Error).name === 'AbortError') {
-    writeJsonResponse(response, 504, { error: 'EDC request timed out' })
-    return
-  }
-
+function handleError (response: ServerResponse, request: IncomingMessage, error: unknown): void {
   const status = getErrorStatus(error)
-  writeJsonResponse(response, status, { error: error instanceof Error ? error.message : String(error) })
+  const message = getErrorMessage(error)
+  writeJsonResponse(response, status, {
+    error: message,
+    status,
+    code: getErrorCode(error, message, status),
+    method: request.method ?? 'UNKNOWN',
+    path: getRequestPath(request),
+  })
 }
 
 function getErrorStatus (error: unknown): number {
+  if ((error as Error).name === 'AbortError') {
+    return 504
+  }
+
   const status = (error as { status?: unknown }).status
   if (typeof status === 'number' && status >= 400 && status < 600) {
     return status
   }
 
   return error instanceof SyntaxError ? 400 : 500
+}
+
+function getErrorMessage (error: unknown): string {
+  if ((error as Error).name === 'AbortError') {
+    return 'EDC request timed out'
+  }
+
+  if (error instanceof SyntaxError) {
+    return 'Invalid JSON request body'
+  }
+
+  return error instanceof Error ? error.message : String(error)
+}
+
+function getErrorCode (error: unknown, message: string, status: number): string {
+  const explicitCode = (error as { code?: unknown }).code
+  if (typeof explicitCode === 'string' && explicitCode.trim() !== '') {
+    return explicitCode.trim()
+  }
+
+  if ((error as Error).name === 'AbortError') {
+    return 'EDC_REQUEST_TIMEOUT'
+  }
+
+  if (error instanceof SyntaxError) {
+    return 'INVALID_JSON'
+  }
+
+  const normalizedMessage = message
+    .replace(/\([^)]*\)/g, '')
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+
+  return normalizedMessage || `HTTP_${status}`
+}
+
+function getRequestPath (request: IncomingMessage): string {
+  try {
+    return new URL(request.url ?? '', 'http://localhost').pathname
+  } catch {
+    return request.url ?? ''
+  }
 }
 
 function writeJsonResponse (response: ServerResponse, status: number, data: unknown): void {

@@ -13,11 +13,11 @@
 
     <div v-else class="overflow-x-auto">
       <v-table class="border rounded" density="comfortable">
-        <thead>
+        <thead class="bg-tableHeader">
           <tr>
-            <th class="text-left text-body-small">Name</th>
-            <th class="text-left text-body-small">Value</th>
-            <th class="text-left text-body-small">Markers</th>
+            <th class="text-titleText">Name</th>
+            <th class="text-titleText">Value</th>
+            <th class="text-titleText">Markers</th>
           </tr>
         </thead>
 

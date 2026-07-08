@@ -10,9 +10,12 @@ import {
   getDescriptorKey,
   getDescriptorLastUpdatedAt,
   getDescriptorStats,
+  getDescriptorTimestampInfo,
   getSpecificAssetIdNameSuggestions,
+  getSubmodelEdcEndpointInfo,
   getSubmodelMarkerValues,
   normalizeSupplementalSemanticIds,
+  parseSubprotocolBody,
 } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
 
 describe('catenaXplorerUtils.ts', () => {
@@ -143,6 +146,23 @@ describe('catenaXplorerUtils.ts', () => {
     })).toBe('2026-01-01T10:00:00Z')
   })
 
+  it('labels descriptor timestamps by the source field', () => {
+    expect(getDescriptorTimestampInfo({
+      createdAt: '2026-01-01T10:00:00Z',
+      updatedAt: '2026-01-02T10:00:00Z',
+    })).toEqual({
+      label: 'Updated',
+      value: '2026-01-02T10:00:00Z',
+    })
+
+    expect(getDescriptorTimestampInfo({
+      createdAt: '2026-01-01T10:00:00Z',
+    })).toEqual({
+      label: 'Created',
+      value: '2026-01-01T10:00:00Z',
+    })
+  })
+
   it('normalizes plural and singular supplemental semantic IDs', () => {
     const pluralReference = {
       type: 'ExternalReference',
@@ -178,5 +198,33 @@ describe('catenaXplorerUtils.ts', () => {
         ],
       },
     })).toEqual(['PUBLIC_READABLE', 'BPN_COMPANY_001', 'BPN_COMPANY_002'])
+  })
+
+  it('parses Submodel EDC endpoint information', () => {
+    expect(parseSubprotocolBody(
+      ' id = submodel-asset ; dspEndpoint = https://counterparty-dsp.test/api/v1/dsp ; malformed ',
+    )).toEqual({
+      id: 'submodel-asset',
+      dspEndpoint: 'https://counterparty-dsp.test/api/v1/dsp',
+    })
+
+    expect(getSubmodelEdcEndpointInfo({
+      endpoints: [{
+        protocolInformation: {
+          href: 'https://data-plane.test/api/public/submodel-asset/submodel',
+          subprotocol: 'DSP',
+          subprotocolBody: 'id=submodel-asset;dspEndpoint=https://counterparty-dsp.test/api/v1/dsp',
+        },
+      }],
+    })).toEqual({
+      assetId: 'submodel-asset',
+      dspEndpoint: 'https://counterparty-dsp.test/api/v1/dsp',
+      href: 'https://data-plane.test/api/public/submodel-asset/submodel',
+      subprotocolBody: 'id=submodel-asset;dspEndpoint=https://counterparty-dsp.test/api/v1/dsp',
+    })
+
+    expect(getSubmodelEdcEndpointInfo({
+      endpoints: [{ protocolInformation: { href: 'https://data-plane.test/submodel' } }],
+    })).toBeNull()
   })
 })

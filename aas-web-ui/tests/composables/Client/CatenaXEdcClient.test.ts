@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
 
 const mocks = vi.hoisted(() => ({
+  consumeLastRequestFailureDetails: vi.fn(),
   getRequest: vi.fn(),
   postRequest: vi.fn(),
   basePath: '/ui/',
@@ -9,6 +10,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@/composables/RequestHandling', () => ({
   useRequestHandling: () => ({
+    consumeLastRequestFailureDetails: mocks.consumeLastRequestFailureDetails,
     getRequest: mocks.getRequest,
     postRequest: mocks.postRequest,
   }),
@@ -24,6 +26,7 @@ describe('CatenaXEdcClient', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.basePath = '/ui/'
+    mocks.consumeLastRequestFailureDetails.mockReturnValue(undefined)
   })
 
   it('fetches proxy status through the same-origin base path', async () => {
@@ -52,12 +55,17 @@ describe('CatenaXEdcClient', () => {
   })
 
   it('does not call the BFF without a proxy ID', async () => {
-    const { fetchStatus, fetchDtrShellDescriptors } = useCatenaXEdcClient()
+    const { fetchStatus, fetchDtrShellDescriptors, fetchSubmodel } = useCatenaXEdcClient()
 
     await expect(fetchStatus('')).resolves.toBeNull()
     await expect(fetchDtrShellDescriptors('  ', {
       counterPartyId: 'TEST_PARTICIPANT_ID',
       counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+    })).resolves.toBeNull()
+    await expect(fetchSubmodel(' ', {
+      counterPartyId: 'TEST_PARTICIPANT_ID',
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+      subprotocolBody: 'id=submodel-asset;dspEndpoint=https://counterparty-dsp.test/api/v1/dsp',
     })).resolves.toBeNull()
 
     expect(mocks.getRequest).not.toHaveBeenCalled()
@@ -171,5 +179,45 @@ describe('CatenaXEdcClient', () => {
       true,
     )
     expect(result?.data).toEqual({ id: 'aas-1' })
+  })
+
+  it('posts Submodel fetch requests through the EDC proxy', async () => {
+    mocks.postRequest.mockResolvedValue({
+      success: true,
+      data: {
+        data: { id: 'submodel-1', submodelElements: [] },
+        edc: { transferProcessId: 'transfer-1' },
+      },
+    })
+
+    const { fetchSubmodel } = useCatenaXEdcClient()
+    const result = await fetchSubmodel('default', {
+      counterPartyId: 'TEST_PARTICIPANT_ID',
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+      submodelDescriptor: { id: 'submodel-1' },
+      transferProcessId: 'transfer-1',
+    })
+
+    expect(mocks.postRequest).toHaveBeenCalledWith(
+      '/ui/api/catena-x/edc/default/submodels/fetch',
+      JSON.stringify({
+        counterPartyId: 'TEST_PARTICIPANT_ID',
+        counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+        submodelDescriptor: { id: 'submodel-1' },
+        transferProcessId: 'transfer-1',
+      }),
+      expect.any(Headers),
+      'fetching Submodel through EDC',
+      true,
+    )
+    expect(result?.data).toEqual({ id: 'submodel-1', submodelElements: [] })
+  })
+
+  it('exposes the last EDC request failure details', () => {
+    mocks.consumeLastRequestFailureDetails.mockReturnValue('Status: 404')
+
+    const { consumeLastRequestFailureDetails } = useCatenaXEdcClient()
+
+    expect(consumeLastRequestFailureDetails()).toBe('Status: 404')
   })
 })

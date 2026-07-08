@@ -143,6 +143,7 @@ declare module 'vue' {
     SubmodelList: typeof import('./components/SubmodelList.vue')['default']
     SubmodelSelection: typeof import('./components/AppNavigation/SubmodelSelection.vue')['default']
     SubmodelTree: typeof import('./components/SubmodelTree.vue')['default']
+    SubmodelValueOnlyView: typeof import('./components/UIComponents/SubmodelValueOnlyView.vue')['default']
     SupplementalSemanticID: typeof import('./components/UIComponents/SupplementalSemanticID.vue')['default']
     TechnicalData_v1_2: typeof import('./components/Plugins/Submodels/TechnicalData_v1_2.vue')['default']
     TechnicalData_v2_0: typeof import('./components/Plugins/Submodels/TechnicalData_v2_0.vue')['default']

@@ -23,13 +23,13 @@
         </div>
 
         <v-chip
-          v-if="getDescriptorLastUpdatedAt(descriptor)"
+          v-if="descriptorTimestamp"
           color="primary"
           prepend-icon="mdi-calendar-clock"
           size="x-small"
           variant="tonal"
         >
-          Updated {{ formatDateTime(getDescriptorLastUpdatedAt(descriptor)) }}
+          {{ descriptorTimestamp.label }} {{ formatDateTime(descriptorTimestamp.value) }}
         </v-chip>
       </div>
 
@@ -53,7 +53,12 @@
 
       <v-divider class="my-4" />
 
-      <SubmodelDescriptorPanels :descriptors="submodelDescriptors" />
+      <SubmodelDescriptorPanels
+        :descriptors="submodelDescriptors"
+        :edc-access-enabled="edcAccessEnabled"
+        :edc-submodels="edcSubmodels"
+        @load-edc-submodel="emit('load-edc-submodel', $event)"
+      />
 
       <v-divider class="my-4" />
 
@@ -63,11 +68,12 @@
 </template>
 
 <script lang="ts" setup>
+  import type { EdcSubmodelViewState } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
   import { computed } from 'vue'
   import {
     displayValue,
     formatDateTime,
-    getDescriptorLastUpdatedAt,
+    getDescriptorTimestampInfo,
     getDescriptorTitle,
     getLangStringText,
     getSpecificAssetIds,
@@ -79,10 +85,17 @@
 
   const props = defineProps<{
     descriptor: any | null
+    edcAccessEnabled?: boolean
+    edcSubmodels?: Record<string, EdcSubmodelViewState>
+  }>()
+
+  const emit = defineEmits<{
+    'load-edc-submodel': [descriptor: any]
   }>()
 
   const specificAssetIds = computed(() => getSpecificAssetIds(props.descriptor))
   const submodelDescriptors = computed(() => getSubmodelDescriptors(props.descriptor))
+  const descriptorTimestamp = computed(() => getDescriptorTimestampInfo(props.descriptor))
   const descriptorSummary = computed(() => {
     const descriptor = props.descriptor
     if (!descriptor) {

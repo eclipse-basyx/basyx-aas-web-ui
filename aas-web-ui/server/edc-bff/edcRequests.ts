@@ -4,6 +4,7 @@ import type {
   EdcDtrDescriptorByIdRequest,
   EdcDtrDescriptorRequest,
   EdcProxyConfig,
+  EdcSubmodelFetchRequest,
 } from './types.js'
 import { isCounterPartyAddressAllowed, joinManagementUrl } from './config.js'
 
@@ -45,11 +46,14 @@ const contractContext = {
 
 const defaultDtrProtocol = 'dataspace-protocol-http'
 const dtrTaxonomyId = 'https://w3id.org/catenax/taxonomy#DigitalTwinRegistry'
-export interface DigitalTwinRegistryOffer {
+
+export interface EdcAssetOffer {
   assetId: string
   participantId: string
   policy: Record<string, unknown>
 }
+
+export type DigitalTwinRegistryOffer = EdcAssetOffer
 
 export interface EdcDtrFetchMetadata {
   assetId?: string
@@ -69,6 +73,13 @@ export interface EdcDtrFetchOptions {
   fetchFn?: typeof fetch
   pollingAttempts?: number
   pollingIntervalMs?: number
+}
+
+export interface SubmodelEndpointInfo {
+  assetId: string
+  dspEndpoint: string
+  href: string
+  subprotocolBody: string
 }
 
 export function buildConnectorDiscoveryRequestBody (request: EdcDiscoveryRequest): Record<string, unknown> {
@@ -158,21 +169,62 @@ export function buildDigitalTwinRegistryQuerySpec (limit = 50): Record<string, u
 }
 
 export function extractDigitalTwinRegistryOffer (catalog: unknown): DigitalTwinRegistryOffer {
+  return extractCatalogDatasetOffer(catalog, {
+    datasetTypeId: dtrTaxonomyId,
+    missingDatasetMessage: 'EDC catalog did not contain a Digital Twin Registry dataset',
+    missingAssetIdMessage: 'Digital Twin Registry dataset did not include an asset ID',
+    missingPolicyMessage: 'Digital Twin Registry dataset did not include a contract policy',
+  })
+}
+
+export function extractSubmodelOffer (catalog: unknown, assetId: string): EdcAssetOffer {
+  const normalizedAssetId = trimString(assetId)
+  if (!normalizedAssetId) {
+    throw createHttpError('subprotocolBody.id is required for EDC submodel access', 400)
+  }
+
+  return extractCatalogDatasetOffer(catalog, {
+    assetId: normalizedAssetId,
+    missingDatasetMessage: 'EDC catalog did not contain the requested Submodel dataset',
+    missingAssetIdMessage: 'Submodel dataset did not include an asset ID',
+    missingPolicyMessage: 'Submodel dataset did not include a contract policy',
+  })
+}
+
+function extractCatalogDatasetOffer (
+  catalog: unknown,
+  options: {
+    assetId?: string
+    datasetTypeId?: string
+    missingDatasetMessage: string
+    missingAssetIdMessage: string
+    missingPolicyMessage: string
+  },
+): EdcAssetOffer {
   const datasets = asArray((catalog as Record<string, unknown>)?.['dcat:dataset'])
-  const dataset = datasets.find(candidate => getNestedId(candidate, 'dct:type') === dtrTaxonomyId)
-    ?? datasets[0]
+  const normalizedAssetId = trimString(options.assetId)
+  const normalizedDatasetTypeId = trimString(options.datasetTypeId)
+  const dataset = datasets.find(candidate => {
+    if (normalizedAssetId) {
+      return getDatasetId(candidate) === normalizedAssetId
+    }
+    if (normalizedDatasetTypeId) {
+      return getNestedId(candidate, 'dct:type') === normalizedDatasetTypeId
+    }
+    return false
+  }) ?? (normalizedAssetId ? undefined : datasets[0])
 
   if (!dataset || typeof dataset !== 'object') {
-    throw createHttpError('EDC catalog did not contain a Digital Twin Registry dataset', 502)
+    throw createHttpError(options.missingDatasetMessage, 502)
   }
 
   const datasetRecord = dataset as Record<string, unknown>
-  const assetId = trimString(datasetRecord['@id']) || trimString(datasetRecord.id)
+  const assetId = getDatasetId(datasetRecord)
   const participantId = trimString((catalog as Record<string, unknown>)?.['dspace:participantId'])
   const policy = datasetRecord['odrl:hasPolicy'] ?? datasetRecord.hasPolicy
 
   if (!assetId) {
-    throw createHttpError('Digital Twin Registry dataset did not include an asset ID', 502)
+    throw createHttpError(options.missingAssetIdMessage, 502)
   }
 
   if (!participantId) {
@@ -180,7 +232,7 @@ export function extractDigitalTwinRegistryOffer (catalog: unknown): DigitalTwinR
   }
 
   if (!policy || typeof policy !== 'object') {
-    throw createHttpError('Digital Twin Registry dataset did not include a contract policy', 502)
+    throw createHttpError(options.missingPolicyMessage, 502)
   }
 
   return {
@@ -191,8 +243,8 @@ export function extractDigitalTwinRegistryOffer (catalog: unknown): DigitalTwinR
 }
 
 export function buildEdrContractRequestBody (
-  request: EdcDtrDescriptorRequest | EdcDtrDescriptorByIdRequest,
-  offer: DigitalTwinRegistryOffer,
+  request: EdcDtrDescriptorRequest | EdcDtrDescriptorByIdRequest | EdcSubmodelFetchRequest,
+  offer: EdcAssetOffer,
 ): Record<string, unknown> {
   const counterPartyAddress = trimString(request.counterPartyAddress)
   if (!counterPartyAddress) {
@@ -281,6 +333,68 @@ export async function fetchDtrShellDescriptorById (
     new URLSearchParams(),
     options.fetchFn ?? fetch,
   )
+}
+
+export async function fetchSubmodel (
+  proxy: EdcProxyConfig,
+  request: EdcSubmodelFetchRequest,
+  options: EdcDtrFetchOptions = {},
+): Promise<EdcDtrFetchResult> {
+  const endpoint = extractSubmodelEndpointInfo(request)
+  const access = await ensureSubmodelAccess(proxy, request, endpoint, options)
+  return fetchSubmodelData(access, endpoint.href, options.fetchFn ?? fetch)
+}
+
+export function extractSubmodelEndpointInfo (request: EdcSubmodelFetchRequest): SubmodelEndpointInfo {
+  const requestHref = trimString(request.href)
+  const requestSubprotocolBody = trimString(request.subprotocolBody)
+  const descriptorEndpoint = getSubmodelDescriptorEndpoint(request.submodelDescriptor)
+  const href = requestHref || descriptorEndpoint.href
+  const subprotocolBody = requestSubprotocolBody || descriptorEndpoint.subprotocolBody
+  const parsedSubprotocolBody = parseSubprotocolBody(subprotocolBody)
+  const assetId = parsedSubprotocolBody.id
+  const dspEndpoint = parsedSubprotocolBody.dspEndpoint
+
+  if (!href) {
+    throw createHttpError('Submodel descriptor did not include an endpoint href', 400)
+  }
+  if (!subprotocolBody) {
+    throw createHttpError('Submodel descriptor did not include a subprotocolBody', 400)
+  }
+  if (!assetId) {
+    throw createHttpError('subprotocolBody.id is required for EDC submodel access', 400)
+  }
+  if (!dspEndpoint) {
+    throw createHttpError('subprotocolBody.dspEndpoint is required for EDC submodel access', 400)
+  }
+
+  return {
+    assetId,
+    dspEndpoint,
+    href,
+    subprotocolBody,
+  }
+}
+
+export function parseSubprotocolBody (value: unknown): Record<string, string> {
+  const body = trimString(value)
+  if (!body) {
+    return {}
+  }
+
+  const params: Record<string, string> = {}
+  for (const segment of body.split(';')) {
+    const [rawKey, ...rawValueParts] = segment.split('=')
+    const key = trimString(rawKey)
+    const rawValue = rawValueParts.join('=')
+    const paramValue = trimString(rawValue)
+    if (!key || rawValueParts.length === 0) {
+      continue
+    }
+    params[key] = paramValue
+  }
+
+  return params
 }
 
 export async function forwardJsonToEdc (
@@ -404,6 +518,65 @@ async function ensureDtrAccess (
     buildEdrContractRequestBody(request, offer),
     fetchFn,
   )
+  return negotiateEdrAccess(proxy, offer, negotiationResponse, options, fetchFn)
+}
+
+async function ensureSubmodelAccess (
+  proxy: EdcProxyConfig,
+  request: EdcSubmodelFetchRequest,
+  endpoint: SubmodelEndpointInfo,
+  options: EdcDtrFetchOptions,
+): Promise<{ dataAddress: Record<string, unknown>, metadata: EdcDtrFetchMetadata }> {
+  const transferProcessId = trimString(request.transferProcessId)
+  const fetchFn = options.fetchFn ?? fetch
+
+  if (transferProcessId) {
+    const dataAddress = await getDataAddress(proxy, transferProcessId, fetchFn)
+    return {
+      dataAddress,
+      metadata: {
+        assetId: endpoint.assetId,
+        transferProcessId,
+      },
+    }
+  }
+
+  const counterPartyId = trimString(request.counterPartyId)
+  if (!counterPartyId) {
+    throw createHttpError('counterPartyId is required for EDC submodel access', 400)
+  }
+
+  const submodelRequest = {
+    ...request,
+    counterPartyId,
+    counterPartyAddress: endpoint.dspEndpoint,
+    protocol: trimString(request.protocol) || defaultDtrProtocol,
+  }
+  const catalogResponse = await forwardJsonToEdc(
+    proxy,
+    '/v3/catalog/request',
+    buildCatalogRequestBody(proxy, submodelRequest),
+    fetchFn,
+  )
+  assertSuccessfulEdcResponse(catalogResponse, 'EDC catalog request failed')
+
+  const offer = extractSubmodelOffer(catalogResponse.data, endpoint.assetId)
+  const negotiationResponse = await forwardJsonToEdc(
+    proxy,
+    '/v3/edrs',
+    buildEdrContractRequestBody(submodelRequest, offer),
+    fetchFn,
+  )
+  return negotiateEdrAccess(proxy, offer, negotiationResponse, options, fetchFn)
+}
+
+async function negotiateEdrAccess (
+  proxy: EdcProxyConfig,
+  offer: EdcAssetOffer,
+  negotiationResponse: EdcForwardResult,
+  options: EdcDtrFetchOptions,
+  fetchFn: typeof fetch,
+): Promise<{ dataAddress: Record<string, unknown>, metadata: EdcDtrFetchMetadata }> {
   assertSuccessfulEdcResponse(negotiationResponse, 'EDC contract negotiation failed')
 
   const contractNegotiationId = trimString((negotiationResponse.data as Record<string, unknown>)?.['@id'])
@@ -527,11 +700,56 @@ async function fetchDtrData (
   }
 }
 
+async function fetchSubmodelData (
+  access: { dataAddress: Record<string, unknown>, metadata: EdcDtrFetchMetadata },
+  href: string,
+  fetchFn: typeof fetch,
+): Promise<EdcDtrFetchResult> {
+  const url = buildSubmodelDataUrl(trimString(access.dataAddress.endpoint), href)
+  const response = await fetchFn(url, {
+    method: 'GET',
+    headers: {
+      Authorization: trimString(access.dataAddress.authorization),
+      Accept: 'application/json',
+    },
+  })
+  const data = await parseResponseBody(response)
+
+  if (!response.ok) {
+    throw createHttpError(`Submodel data plane request failed (${response.status})`, 502)
+  }
+
+  return {
+    status: response.status,
+    data,
+    metadata: access.metadata,
+  }
+}
+
 function buildDtrDataUrl (endpoint: string, path: string, queryParams: URLSearchParams): string {
   const baseUrl = endpoint.replace(/\/+$/, '')
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
   const queryString = queryParams.toString()
   return `${baseUrl}${normalizedPath}${queryString ? `?${queryString}` : ''}`
+}
+
+function buildSubmodelDataUrl (endpoint: string, href: string): string {
+  const normalizedEndpoint = trimString(endpoint)
+  const normalizedHref = trimString(href)
+  if (!normalizedEndpoint) {
+    throw createHttpError('EDC dataaddress did not include an endpoint', 502)
+  }
+  if (!normalizedHref) {
+    throw createHttpError('Submodel descriptor did not include an endpoint href', 400)
+  }
+
+  try {
+    const endpointUrl = new URL(normalizedEndpoint)
+    const hrefUrl = new URL(normalizedHref)
+    return `${endpointUrl.origin}${hrefUrl.pathname}${hrefUrl.search}`
+  } catch {
+    throw createHttpError('Submodel endpoint URL is invalid', 400)
+  }
 }
 
 function normalizeLimit (limit: unknown): number | undefined {
@@ -555,6 +773,30 @@ function asArray<T = unknown> (value: unknown): T[] {
 function getNestedId (value: unknown, key: string): string {
   const nestedValue = (value as Record<string, unknown> | undefined)?.[key]
   return trimString((nestedValue as Record<string, unknown> | undefined)?.['@id'])
+}
+
+function getDatasetId (value: unknown): string {
+  const record = value as Record<string, unknown> | undefined
+  return trimString(record?.['@id']) || trimString(record?.id)
+}
+
+function getSubmodelDescriptorEndpoint (descriptor: unknown): { href: string, subprotocolBody: string } {
+  const endpoints = asArray((descriptor as Record<string, unknown> | undefined)?.endpoints)
+  const dspEndpoint = endpoints.find(endpoint => {
+    const protocolInformation = (endpoint as Record<string, unknown> | undefined)?.protocolInformation as Record<string, unknown> | undefined
+    return trimString(protocolInformation?.subprotocol).toUpperCase() === 'DSP'
+      && trimString(protocolInformation?.subprotocolBody) !== ''
+  })
+  const endpoint = dspEndpoint ?? endpoints.find(candidate => {
+    const protocolInformation = (candidate as Record<string, unknown> | undefined)?.protocolInformation as Record<string, unknown> | undefined
+    return trimString(protocolInformation?.subprotocolBody) !== ''
+  })
+  const protocolInformation = (endpoint as Record<string, unknown> | undefined)?.protocolInformation as Record<string, unknown> | undefined
+
+  return {
+    href: trimString(protocolInformation?.href),
+    subprotocolBody: trimString(protocolInformation?.subprotocolBody),
+  }
 }
 
 function cloneRecord (record: Record<string, unknown>): Record<string, unknown> {
