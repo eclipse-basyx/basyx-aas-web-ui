@@ -80,7 +80,7 @@ export function useIDUtils () {
 
     // URL Regex
     const expression
-      = /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z0-9\u00A1-\uFFFF][a-z0-9\u00A1-\uFFFF_-]{0,62})?[a-z0-9\u00A1-\uFFFF]\.)+(?:[a-z\u00A1-\uFFFF]{2,}\.?))(?::\d{2,5})?(?:[/?#]\S*)?$/i
+      = /^(?:(?:https?|ftp):)?\/\/(?:\S+@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4])|(?:(?:[a-z0-9\u00A1-\uFFFF][\w\u00A1-\uFFFF-]{0,62})?[a-z0-9\u00A1-\uFFFF]\.)+[a-z\u00A1-\uFFFF]{2,}\.?)(?::\d{2,5})?(?:[/?#]\S*)?$/i
     const regex = new RegExp(expression)
 
     // Check idPrefix
@@ -95,12 +95,12 @@ export function useIDUtils () {
     return `${idPrefix}ids/${type.trim() === '' ? '' : type}${generateCustomId()}`
   }
 
-  const customIdRegex = /^((1000|[1-9][0-9]{3})_){3}(1000|[1-9][0-9]{3})$/
+  const customIdRegex = /^(?:[1-9]\d{3}_){3}[1-9]\d{3}$/
   /**
    * Generates a custom ID consisting of four segments, each being a random number between 1000 and 9999,
    * joined by underscores.
    *
-   * The return value matches the regular expression: /^((1000|[1-9][0-9]{3})_){3}(1000|[1-9][0-9]{3})$/
+   * The return value matches the regular expression: /^(?:[1-9]\d{3}_){3}[1-9]\d{3}$/
    *
    * @returns {string} A custom ID in the format of "xxxx_xxxx_xxxx_xxxx" where each "xxxx" is a random number
    * between 1000 and 9999.

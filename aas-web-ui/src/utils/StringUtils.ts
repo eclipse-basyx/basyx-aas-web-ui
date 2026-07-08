@@ -64,7 +64,7 @@ export function isEmptyString (val: string): boolean {
 export function safeSegment (value: string, fallback: string): string {
   const cleaned = value
     ?.trim()
-    .replace(/[^a-zA-Z0-9._-]/g, '-')
+    .replace(/[^\w.-]/g, '-')
     .replace(/-+/g, '-')
 
   if (!cleaned) {
@@ -78,7 +78,7 @@ export function safeSegment (value: string, fallback: string): string {
   }
 
   // Reject reserved Windows device names.
-  const windowsReservedPattern = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i
+  const windowsReservedPattern = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i
   if (windowsReservedPattern.test(dotStripped)) {
     return fallback
   }

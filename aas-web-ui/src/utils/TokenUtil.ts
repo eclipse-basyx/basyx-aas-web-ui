@@ -26,7 +26,7 @@ export function getUserFromToken (accessToken: string): UserData {
       throw new Error('Malformed JWT token: expected 3 segments separated by dots.')
     }
 
-    const accessTokenPayload = JSON.parse(base64Decode(accessToken.split('.')[1]))
+    const accessTokenPayload = JSON.parse(base64Decode(tokenParts[1]))
 
     const user = {
       username: accessTokenPayload?.preferred_username,

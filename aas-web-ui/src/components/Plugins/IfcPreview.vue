@@ -57,11 +57,11 @@
 </template>
 
 <script lang="ts" setup>
-  import * as OBC from '@thatopen/components'
-  import * as OBCF from '@thatopen/components-front'
-  import * as BUI from '@thatopen/ui'
-  import * as BUIC from '@thatopen/ui-obc'
-  import * as THREE from 'three'
+  import type * as OBCModule from '@thatopen/components'
+  import type * as OBCFModule from '@thatopen/components-front'
+  import type * as BUIModule from '@thatopen/ui'
+  import type * as BUICModule from '@thatopen/ui-obc'
+  import type * as THREEModule from 'three'
   import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { useEnvStore } from '@/store/EnvironmentStore'
@@ -96,9 +96,15 @@
   const selectedElementInfo = ref<string | null>(null)
   const propertiesTableInitialized = ref(false)
 
+  let OBC: typeof OBCModule
+  let OBCF: typeof OBCFModule
+  let BUI: typeof BUIModule
+  let BUIC: typeof BUICModule
+  let THREE: typeof THREEModule
+
   // Store references to clean up later
-  let components: OBC.Components | null = null
-  let world: OBC.World | null = null
+  let components: any = null
+  let world: any = null
   let resizeObserver: ResizeObserver | null = null
   let propertiesTable: any = null
   let updatePropertiesTable: any | null = null
@@ -106,6 +112,8 @@
 
   onMounted(async () => {
     try {
+      await loadIfcDependencies()
+
       BUI.Manager.init()
 
       // Initialize the BUIC manager for view cube support
@@ -139,6 +147,24 @@
     }
   })
 
+  async function loadIfcDependencies (): Promise<void> {
+    if (OBC && OBCF && BUI && BUIC && THREE) return
+
+    const [obc, obcf, bui, buic, three] = await Promise.all([
+      import('@thatopen/components'),
+      import('@thatopen/components-front'),
+      import('@thatopen/ui'),
+      import('@thatopen/ui-obc'),
+      import('three'),
+    ])
+
+    OBC = obc
+    OBCF = obcf
+    BUI = bui
+    BUIC = buic
+    THREE = three
+  }
+
   async function initViewer (): Promise<void> {
     isLoading.value = true
 
@@ -146,11 +172,11 @@
       components = new OBC.Components()
       const worlds = components.get(OBC.Worlds)
 
-      world = worlds.create<OBC.SimpleScene, OBC.OrthoPerspectiveCamera, OBC.SimpleRenderer>()
+      world = worlds.create()
 
-      world.scene = new OBC.SimpleScene(components);
-      (world.scene as any).setup();
-      (world.scene.three as THREE.Scene).background = null
+      world.scene = new OBC.SimpleScene(components)
+      world.scene.setup()
+      world.scene.three.background = null
 
       world.renderer = new OBC.SimpleRenderer(components, ifcContainer.value!)
       world.camera = new OBC.OrthoPerspectiveCamera(components)
@@ -190,9 +216,9 @@
       // (converted from the IFC in this case),
       // it utilizes the world camera for updates
       // and is added to the scene.
-      fragments.list.onItemSet.add(({ value: model }) => {
+      fragments.list.onItemSet.add(({ value: model }: { value: any }) => {
         if (world && world.camera) {
-          model.useCamera(world.camera.three as THREE.PerspectiveCamera | THREE.OrthographicCamera)
+          model.useCamera(world.camera.three)
           world.scene.three.add(model.object)
           fragments.core.update(true)
         }
@@ -234,7 +260,7 @@
     // The OrthoPerspectiveCamera handles perspective/orthographic switching automatically
     // We just need to ensure it knows about the aspect ratio
     if (world.camera && world.camera.three) {
-      const camera = world.camera.three as THREE.PerspectiveCamera
+      const camera = world.camera.three
       camera.aspect = aspect
       camera.updateProjectionMatrix()
     }
@@ -284,7 +310,7 @@
       const height = container.clientHeight
 
       // Update camera
-      const camera = world.camera.three as THREE.PerspectiveCamera
+      const camera = world.camera.three
       camera.aspect = width / height
       camera.updateProjectionMatrix()
 

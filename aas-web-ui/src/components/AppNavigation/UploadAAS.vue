@@ -108,6 +108,11 @@
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { Endpoint, ProtocolInformation } from '@/types/Descriptors'
+  import {
+    getDefaultAasUploadMode,
+    type InfrastructureAasUploadMode,
+    isComponentActiveForTemplate,
+  } from '@/utils/InfrastructureUtils'
   import { useAASXImport } from '../../composables/AAS/AASXImport'
 
   // Stores
@@ -133,7 +138,7 @@
   }>()
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: boolean): void
+    (event: 'update:model-value', value: boolean): void
   }>()
 
   const uploadAASDialog = ref(false)
@@ -142,7 +147,7 @@
   const ignoreDuplicates = ref(true)
   const uploadProgress = ref(0)
   const currentFileLabel = ref('')
-  const uploadMode = ref<'client' | 'server'>('client')
+  const uploadMode = ref<InfrastructureAasUploadMode>('client')
 
   const uploadModes = [
     { title: 'Client-side Import', value: 'client' },
@@ -174,14 +179,39 @@
   })
 
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
+  function allSelectedFilesAreAasx (): boolean {
+    return aasFiles.value.length > 0
+      && aasFiles.value.every(file => detectImportFileKind(file.name) === 'aasx')
+  }
+
+  const defaultUploadMode = computed<InfrastructureAasUploadMode>(() => {
+    const infrastructureDefault = getDefaultAasUploadMode(selectedInfrastructure.value)
+    return infrastructureDefault === 'server' && allSelectedFilesAreAasx() ? 'server' : 'client'
+  })
+  const aasRegistryActive = computed(() =>
+    isComponentActiveForTemplate(selectedInfrastructure.value, 'AASRegistry'),
+  )
+  const submodelRegistryActive = computed(() =>
+    isComponentActiveForTemplate(selectedInfrastructure.value, 'SubmodelRegistry'),
+  )
+  const aasDiscoveryActive = computed(() =>
+    isComponentActiveForTemplate(selectedInfrastructure.value, 'AASDiscovery'),
+  )
   const aasRepoHasRegistryIntegration = computed(
-    () => selectedInfrastructure.value?.components?.AASRepo?.hasRegistryIntegration ?? true,
+    () =>
+      !aasRegistryActive.value
+      || (selectedInfrastructure.value?.components?.AASRepo?.hasRegistryIntegration ?? true),
   )
   const submodelRepoHasRegistryIntegration = computed(
-    () => selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true,
+    () =>
+      !submodelRegistryActive.value
+      || (selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true),
   )
   const aasRegistryHasDiscoveryIntegration = computed(
-    () => selectedInfrastructure.value?.components?.AASRegistry?.hasDiscoveryIntegration ?? true,
+    () =>
+      !aasRegistryActive.value
+      || !aasDiscoveryActive.value
+      || (selectedInfrastructure.value?.components?.AASRegistry?.hasDiscoveryIntegration ?? true),
   )
   const manualDescriptorSyncRequired = computed(
     () => !aasRepoHasRegistryIntegration.value || !submodelRepoHasRegistryIntegration.value,
@@ -191,6 +221,9 @@
   watch(
     () => props.modelValue,
     value => {
+      if (value) {
+        uploadMode.value = defaultUploadMode.value
+      }
       uploadAASDialog.value = value
     },
   )
@@ -198,7 +231,16 @@
   watch(
     () => uploadAASDialog.value,
     value => {
-      emit('update:modelValue', value)
+      emit('update:model-value', value)
+    },
+  )
+
+  watch(
+    () => aasFiles.value.map(file => file.name),
+    () => {
+      if (uploadAASDialog.value && !loadingUpload.value) {
+        uploadMode.value = defaultUploadMode.value
+      }
     },
   )
 
@@ -367,7 +409,7 @@
     loadingUpload.value = false
     uploadProgress.value = 0
     currentFileLabel.value = ''
-    uploadMode.value = 'client'
+    uploadMode.value = defaultUploadMode.value
   }
 
   function createEndpoints (href: string, type: string): Array<Endpoint> {

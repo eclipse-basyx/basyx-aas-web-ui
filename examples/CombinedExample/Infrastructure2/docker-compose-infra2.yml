@@ -7,11 +7,11 @@ services:
       # Component configuration
       SERVER_PORT: 8081
       BASYX_BACKEND: MongoDB
-      SPRING_DATA_MONGODB_HOST: mongo
-      SPRING_DATA_MONGODB_DATABASE: aas-discovery-2
-      SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE: admin
-      SPRING_DATA_MONGODB_USERNAME: mongoAdmin
-      SPRING_DATA_MONGODB_PASSWORD: mongoPassword
+      SPRING_MONGODB_HOST: mongo
+      SPRING_MONGODB_DATABASE: aas-discovery-2
+      SPRING_MONGODB_AUTHENTICATION_DATABASE: admin
+      SPRING_MONGODB_USERNAME: mongoAdmin
+      SPRING_MONGODB_PASSWORD: mongoPassword
       BASYX_CORS_ALLOWED_ORIGINS: '*'
       BASYX_CORS_ALLOWED_METHODS: 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD'
     ports:
@@ -32,8 +32,8 @@ services:
     environment:
       # Component configuration
       SERVER_PORT: 8080
-      SPRING_DATA_MONGODB_URI: mongodb://mongoAdmin:mongoPassword@mongo:27017
-      SPRING_DATA_MONGODB_DATABASE: aas-registry-2
+      SPRING_MONGODB_URI: mongodb://mongoAdmin:mongoPassword@mongo:27017
+      SPRING_MONGODB_DATABASE: aas-registry-2
       SERVER_SERVLET_CONTEXT_PATH: /
       BASYX_CORS_ALLOWED_ORIGINS: '*'
       BASYX_CORS_ALLOWED_METHODS: GET,POST,PATCH,DELETE,PUT,OPTIONS,HEAD
@@ -51,8 +51,8 @@ services:
     environment:
       # Component configuration
       SERVER_PORT: 8080
-      SPRING_DATA_MONGODB_URI: mongodb://mongoAdmin:mongoPassword@mongo:27017
-      SPRING_DATA_MONGODB_DATABASE: sm-registry-2
+      SPRING_MONGODB_URI: mongodb://mongoAdmin:mongoPassword@mongo:27017
+      SPRING_MONGODB_DATABASE: sm-registry-2
       SERVER_SERVLET_CONTEXT_PATH: /
       BASYX_CORS_ALLOWED_ORIGINS: '*'
       BASYX_CORS_ALLOWED_METHODS: GET,POST,PATCH,DELETE,PUT,OPTIONS,HEAD
@@ -78,11 +78,11 @@ services:
       # Component configuration
       SERVER_PORT: 8081
       BASYX_BACKEND: MongoDB
-      SPRING_DATA_MONGODB_HOST: mongo
-      SPRING_DATA_MONGODB_DATABASE: aas-env-2
-      SPRING_DATA_MONGODB_AUTHENTICATION_DATABASE: admin
-      SPRING_DATA_MONGODB_USERNAME: mongoAdmin
-      SPRING_DATA_MONGODB_PASSWORD: mongoPassword
+      SPRING_MONGODB_HOST: mongo
+      SPRING_MONGODB_DATABASE: aas-env-2
+      SPRING_MONGODB_AUTHENTICATION_DATABASE: admin
+      SPRING_MONGODB_USERNAME: mongoAdmin
+      SPRING_MONGODB_PASSWORD: mongoPassword
       BASYX_CORS_ALLOWED_ORIGINS: '*'
       BASYX_CORS_ALLOWED_METHODS: 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD'
       BASYX_ENVIRONMENT: file:aas

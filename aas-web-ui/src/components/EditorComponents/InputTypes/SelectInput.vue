@@ -50,7 +50,7 @@
   )
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: ValueType<typeof props.type> | null): void
+    (event: 'update:model-value', value: ValueType<typeof props.type> | null): void
   }>()
 
   const selectedValue = ref<ComboboxValue<ValueType<typeof props.type>>>(props.modelValue)
@@ -163,7 +163,7 @@
 
     if (normalizedValue === null) {
       lastValidValue.value = null
-      emit('update:modelValue', null)
+      emit('update:model-value', null)
       return
     }
 
@@ -172,7 +172,7 @@
       if (selectedValue.value !== normalizedValue) {
         selectedValue.value = normalizedValue
       }
-      emit('update:modelValue', normalizedValue)
+      emit('update:model-value', normalizedValue)
       return
     }
 

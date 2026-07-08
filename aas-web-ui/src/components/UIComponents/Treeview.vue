@@ -563,13 +563,13 @@
   }
 
   function canElementAddSubmodelElement (item: any): boolean {
-    return (
-      item.modelType === 'Submodel'
-      || item.modelType === 'SubmodelElementCollection'
-      || item.modelType === 'SubmodelElementList'
-      || item.modelType === 'Entity'
-      || item.modelType === 'AnnotatedRelationshipElement'
-    )
+    return [
+      'Submodel',
+      'SubmodelElementCollection',
+      'SubmodelElementList',
+      'Entity',
+      'AnnotatedRelationshipElement',
+    ].includes(item.modelType)
   }
 
   function canPasteElement (item: any): boolean {

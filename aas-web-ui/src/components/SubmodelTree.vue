@@ -493,7 +493,7 @@
   watch(
     () => triggerTreeviewReload.value,
     triggerVal => {
-      if (triggerVal === true && !isAuthenticating.value) {
+      if (triggerVal > 0 && !isAuthenticating.value) {
         initialize()
       }
     },

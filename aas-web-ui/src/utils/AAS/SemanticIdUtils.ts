@@ -1,4 +1,4 @@
-const versionRevisionRegex = /\/(\d{1,})\/(\d{1,})(\/|$)/ // This regex matches the version/revision string of a semanticId ".../version/revision"
+const versionRevisionRegex = /\/(\d+)\/(\d+)(\/|$)/ // This regex matches the version/revision string of a semanticId ".../version/revision"
 
 /**
  * Checks if the `semanticId` of a SubmodelElement (SME) matches the given `semanticId`.
@@ -66,7 +66,7 @@ export function checkSemanticIdEclassIrdi (keyValue: string, semanticId: string)
       keyValue = keyValue.slice(0, -3)
       semanticId = semanticId.slice(0, -3)
     }
-    if (new RegExp(/[#-]{1}\d{3}$/).test(semanticId) || new RegExp(/[#-]{1}\d{3}\*\d{1,}$/).test(semanticId)) {
+    if (new RegExp(/[#-]\d{3}$/).test(semanticId) || new RegExp(/[#-]\d{3}\*\d+$/).test(semanticId)) {
       return getEquivalentEclassSemanticIds(keyValue).includes(semanticId)
     }
 
@@ -77,7 +77,7 @@ export function checkSemanticIdEclassIrdi (keyValue: string, semanticId: string)
       })
     )
   } else if (keyValue.startsWith('0173/1///')) {
-    if (new RegExp(/[#-]{1}\d{3}$/).test(semanticId) || new RegExp(/[#-]{1}\d{3}\*\d{1,}$/).test(semanticId)) {
+    if (new RegExp(/[#-]\d{3}$/).test(semanticId) || new RegExp(/[#-]\d{3}\*\d+$/).test(semanticId)) {
       // Eclass IRDI with version; like 0173/1///01#AHF578#001
       return getEquivalentEclassSemanticIds(keyValue).includes(semanticId)
     }
@@ -114,7 +114,7 @@ export function checkSemanticIdEclassIrdiUrl (keyValue: string, semanticId: stri
   }
 
   // Eclass URL like https://api.eclass-cdp.com/0173-1-01-AHF578-001
-  if (new RegExp(/[#-]{1}\d{3}$/).test(semanticId) || new RegExp(/[#-]{1}\d{3}~\d{1,}$/).test(semanticId)) {
+  if (new RegExp(/[#-]\d{3}$/).test(semanticId) || new RegExp(/[#-]\d{3}~\d+$/).test(semanticId)) {
     // Eclass URL with version (like https://api.eclass-cdp.com/0173-1-01-AHF578-001)
     return getEquivalentEclassSemanticIds(semanticId).includes(keyValue)
   }
@@ -150,7 +150,7 @@ export function checkSemanticIdIecCdd (keyValue: string, semanticId: string): bo
   }
 
   // IEC CDD like 0112/2///61987#ABN590#002
-  if (new RegExp(/[#-]{1}\d{3}$/).test(semanticId) // IEC CDD with version; like 0112/2///61987#ABN590#002
+  if (new RegExp(/[#-]\d{3}$/).test(semanticId) // IEC CDD with version; like 0112/2///61987#ABN590#002
     && keyValue === semanticId) {
     return true
   }
@@ -192,7 +192,7 @@ export function checkSemanticIdIri (keyValue: string, semanticId: string): boole
     semanticId = semanticId.slice(0, Math.max(0, semanticId.length - 1))
   }
 
-  if (new RegExp(/\/\d{1,}\/\d{1,}\/{0,1}$/).test(semanticId) || new RegExp(/\/\d{1,}\/\d{1,}\//).test(semanticId)) {
+  if (new RegExp(/\/\d+\/\d+\/?$/).test(semanticId) || new RegExp(/\/\d+\/\d+\//).test(semanticId)) {
     // IRI with version like https://admin-shell.io/idta/CarbonFootprint/ProductCarbonFootprint/0/9
     // IRI with version like https://admin-shell.io/zvei/nameplate/1/0/ContactInformations
     return (

@@ -15,6 +15,7 @@
     isDesktopModule: true,
     isMobileModule: true,
     moduleTitle: 'PCF Process',
+    supportedInfrastructureTemplates: ['full', 'mono-repo', 'mono-all'],
   })
 
   const step = ref(1)

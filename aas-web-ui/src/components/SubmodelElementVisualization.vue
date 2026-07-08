@@ -3,7 +3,7 @@
     <template
       v-if="
         ((selectedAAS && Object.keys(selectedAAS).length > 0) ||
-          ['SMViewer', 'SMEditor'].includes(route.name as string)) &&
+          ['SMViewer', 'SMEditor', 'Visualization'].includes(route.name as string)) &&
           selectedNode &&
           Object.keys(selectedNode).length > 0 &&
           submodelElementData &&

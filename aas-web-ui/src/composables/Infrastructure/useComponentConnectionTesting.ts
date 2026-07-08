@@ -1,8 +1,19 @@
 import type { BaSyxComponentKey } from '@/types/BaSyx'
-import type { ComponentConnectionStatus, ComponentTestingLoading } from '@/types/Infrastructure'
+import type {
+  ComponentConnectionStatus,
+  ComponentTestingLoading,
+  InfrastructureConfig,
+  InfrastructureTemplate,
+} from '@/types/Infrastructure'
+import type { InfrastructureEndpointFieldKey } from '@/utils/InfrastructureUtils'
 import { type Ref, ref } from 'vue'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
-import { BASYX_COMPONENT_KEYS } from '@/utils/InfrastructureUtils'
+import {
+  BASYX_COMPONENT_KEYS,
+  getEndpointFieldByKey,
+  getEndpointFieldsForTemplate,
+  getEndpointFieldValue,
+} from '@/utils/InfrastructureUtils'
 
 /**
  * Composable for managing BaSyx component connection testing
@@ -12,7 +23,15 @@ export function useComponentConnectionTesting (): {
   componentTestingLoading: Ref<ComponentTestingLoading>
   testingAllConnections: Ref<boolean>
   testComponentConnection: (componentKey: BaSyxComponentKey, url: string) => Promise<void>
-  testAllConnections: (components: Record<BaSyxComponentKey, { url: string }>) => Promise<void>
+  testEndpointField: (
+    template: InfrastructureTemplate,
+    fieldKey: InfrastructureEndpointFieldKey,
+    components: InfrastructureConfig['components'],
+  ) => Promise<void>
+  testAllConnections: (
+    components: InfrastructureConfig['components'],
+    template: InfrastructureTemplate,
+  ) => Promise<void>
   resetConnectionStatus: () => void
 } {
   const infrastructureStore = useInfrastructureStore()
@@ -22,22 +41,31 @@ export function useComponentConnectionTesting (): {
   const componentTestingLoading = ref<ComponentTestingLoading>({} as ComponentTestingLoading)
   const testingAllConnections = ref(false)
 
+  function updateGlobalTestingState (): void {
+    infrastructureStore.dispatchIsTestingConnections(Object.values(componentTestingLoading.value).some(Boolean))
+  }
+
+  function setComponentTestingLoading (componentKey: BaSyxComponentKey, loading: boolean): void {
+    componentTestingLoading.value[componentKey] = loading
+    updateGlobalTestingState()
+  }
+
   /**
    * Test connection to a single component
    */
   async function testComponentConnection (componentKey: BaSyxComponentKey, url: string): Promise<void> {
     if (!url || url.trim() === '') {
       componentConnectionStatus.value[componentKey] = false
+      setComponentTestingLoading(componentKey, false)
       return
     }
 
-    componentTestingLoading.value[componentKey] = true
     componentConnectionStatus.value[componentKey] = null
+    const originalUrl = infrastructureStore.getBasyxComponents[componentKey].url
+    setComponentTestingLoading(componentKey, true)
 
     try {
       // Temporarily set the component URL in the store to test it
-      const originalUrl = infrastructureStore.getBasyxComponents[componentKey].url
-      infrastructureStore.dispatchIsTestingConnections(true)
       infrastructureStore.getBasyxComponents[componentKey].url = url
 
       // Test the connection
@@ -46,25 +74,51 @@ export function useComponentConnectionTesting (): {
       // Get the connection result
       const connected = infrastructureStore.getBasyxComponents[componentKey].connected
       componentConnectionStatus.value[componentKey] = connected
-
-      // Restore original URL
-      infrastructureStore.getBasyxComponents[componentKey].url = originalUrl
     } catch {
       componentConnectionStatus.value[componentKey] = false
     } finally {
-      infrastructureStore.dispatchIsTestingConnections(false)
-      componentTestingLoading.value[componentKey] = false
+      // Restore original URL
+      infrastructureStore.getBasyxComponents[componentKey].url = originalUrl
+      setComponentTestingLoading(componentKey, false)
     }
+  }
+
+  /**
+   * Test connection to a visible endpoint field. Grouped endpoint fields fan out to
+   * their mapped internal components.
+   */
+  async function testEndpointField (
+    template: InfrastructureTemplate,
+    fieldKey: InfrastructureEndpointFieldKey,
+    components: InfrastructureConfig['components'],
+  ): Promise<void> {
+    const endpointField = getEndpointFieldByKey(template, fieldKey)
+    if (!endpointField) {
+      return
+    }
+
+    const url = getEndpointFieldValue(components, endpointField)
+    const testPromises = endpointField.componentKeys.map(key => testComponentConnection(key, url))
+    await Promise.all(testPromises)
   }
 
   /**
    * Test all component connections
    */
-  async function testAllConnections (components: Record<BaSyxComponentKey, { url: string }>): Promise<void> {
+  async function testAllConnections (
+    components: InfrastructureConfig['components'],
+    template: InfrastructureTemplate,
+  ): Promise<void> {
     testingAllConnections.value = true
-    const testPromises = BASYX_COMPONENT_KEYS.map(key => testComponentConnection(key, components[key].url))
-    await Promise.all(testPromises)
-    testingAllConnections.value = false
+    try {
+      const testPromises = getEndpointFieldsForTemplate(template).flatMap(endpointField => {
+        const url = getEndpointFieldValue(components, endpointField)
+        return endpointField.componentKeys.map(key => testComponentConnection(key, url))
+      })
+      await Promise.all(testPromises)
+    } finally {
+      testingAllConnections.value = false
+    }
   }
 
   /**
@@ -75,6 +129,7 @@ export function useComponentConnectionTesting (): {
       componentConnectionStatus.value[key] = null
       componentTestingLoading.value[key] = false
     }
+    updateGlobalTestingState()
   }
 
   return {
@@ -84,6 +139,7 @@ export function useComponentConnectionTesting (): {
     testingAllConnections,
     // Methods
     testComponentConnection,
+    testEndpointField,
     testAllConnections,
     resetConnectionStatus,
   }

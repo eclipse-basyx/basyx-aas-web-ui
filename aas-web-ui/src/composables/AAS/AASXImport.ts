@@ -6,6 +6,8 @@ import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
 import { useCDRepositoryClient } from '@/composables/Client/CDRepositoryClient'
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
+import { useInfrastructureStore } from '@/store/InfrastructureStore'
+import { isComponentActiveForTemplate, usesSubmodelSuperpath } from '@/utils/InfrastructureUtils'
 import { safeSegment } from '@/utils/StringUtils'
 
 type JsonRecord = Record<string, unknown>
@@ -101,7 +103,7 @@ export function normalizePackagePath (path: string): string {
   try {
     normalized = new URL(normalized).pathname
   } catch {
-    normalized = normalized.split('?')[0]
+    normalized = normalized.split('?', 1)[0]
   }
 
   if (!normalized.startsWith('/')) {
@@ -376,6 +378,7 @@ export function useAASXImport (): {
   const { postSubmodel, putSubmodel, putAttachmentFile, getSmEndpointById } = useSMRepositoryClient()
   const { postConceptDescription, putConceptDescription } = useCDRepositoryClient()
   const { determineContentType } = useSMEFile()
+  const infrastructureStore = useInfrastructureStore()
 
   function parseEnvironmentText (environmentText: string, sourceLabel: string): JsonRecord {
     const trimmedText = environmentText.trim()
@@ -531,12 +534,12 @@ export function useAASXImport (): {
     return await putConceptDescription(conceptDescription)
   }
 
-  async function upsertSubmodel (submodel: aasCore.types.Submodel): Promise<boolean> {
-    const created = await postSubmodel(submodel)
+  async function upsertSubmodel (submodel: aasCore.types.Submodel, aasId?: string): Promise<boolean> {
+    const created = await postSubmodel(submodel, false, aasId)
     if (created) {
       return true
     }
-    return await putSubmodel(submodel)
+    return await putSubmodel(submodel, false, aasId)
   }
 
   async function upsertAas (aas: aasCore.types.AssetAdministrationShell): Promise<boolean> {
@@ -547,33 +550,89 @@ export function useAASXImport (): {
     return await putAas(aas)
   }
 
-  async function importParsedPackage (parsedPackage: ParsedAASX, warnings: string[]): Promise<ClientAASXImportResult> {
-    for (const { core: conceptDescription, json } of parsedPackage.cdById.values()) {
-      const success = await upsertConceptDescription(conceptDescription)
-      if (!success) {
-        warnings.push(`Failed to create or update Concept Description '${asString(json.id)}'.`)
+  function aasReferencesSubmodel (aas: JsonRecord, submodelId: string): boolean {
+    return asArray(aas.submodels).some(submodelRef => {
+      const reference = asRecord(submodelRef)
+      if (!reference) {
+        return false
       }
+
+      return asArray(reference.keys).some(key => asString(asRecord(key)?.value).trim() === submodelId)
+    })
+  }
+
+  function findAasIdForSubmodel (parsedPackage: ParsedAASX, submodelId: string): string | undefined {
+    for (const { json } of parsedPackage.aasById.values()) {
+      const aasId = asString(json.id).trim()
+      if (aasId !== '' && aasReferencesSubmodel(json, submodelId)) {
+        return aasId
+      }
+    }
+
+    if (parsedPackage.aasById.size === 1) {
+      const onlyAas = Array.from(parsedPackage.aasById.values())[0]
+      const aasId = asString(onlyAas?.json.id).trim()
+      return aasId === '' ? undefined : aasId
+    }
+
+    return undefined
+  }
+
+  async function importParsedPackage (parsedPackage: ParsedAASX, warnings: string[]): Promise<ClientAASXImportResult> {
+    const selectedInfrastructure = infrastructureStore.getSelectedInfrastructure
+    const useSuperpath = usesSubmodelSuperpath(selectedInfrastructure)
+    const conceptDescriptionRepoActive = isComponentActiveForTemplate(
+      selectedInfrastructure,
+      'ConceptDescriptionRepo',
+    )
+    const importedAasIds: string[] = []
+
+    async function upsertParsedAasEntries (): Promise<void> {
+      for (const { core: aas, json } of parsedPackage.aasById.values()) {
+        const success = await upsertAas(aas)
+        if (success) {
+          importedAasIds.push(asString(json.id))
+        } else {
+          warnings.push(`Failed to create or update AAS '${asString(json.id)}'.`)
+        }
+      }
+    }
+
+    if (conceptDescriptionRepoActive) {
+      for (const { core: conceptDescription, json } of parsedPackage.cdById.values()) {
+        const success = await upsertConceptDescription(conceptDescription)
+        if (!success) {
+          warnings.push(`Failed to create or update Concept Description '${asString(json.id)}'.`)
+        }
+      }
+    }
+
+    if (useSuperpath) {
+      await upsertParsedAasEntries()
     }
 
     for (const { core: submodel, json } of parsedPackage.submodelById.values()) {
-      const success = await upsertSubmodel(submodel)
+      const submodelId = asString(json.id).trim()
+      const aasId = useSuperpath ? findAasIdForSubmodel(parsedPackage, submodelId) : undefined
+
+      if (useSuperpath && !aasId) {
+        warnings.push(`Failed to create or update Submodel '${submodelId}': no referencing AAS found.`)
+        continue
+      }
+
+      const success = await upsertSubmodel(submodel, aasId)
       if (!success) {
-        warnings.push(`Failed to create or update Submodel '${asString(json.id)}'.`)
+        warnings.push(`Failed to create or update Submodel '${submodelId}'.`)
       }
     }
 
-    const importedAasIds: string[] = []
-    for (const { core: aas, json } of parsedPackage.aasById.values()) {
-      const success = await upsertAas(aas)
-      if (success) {
-        importedAasIds.push(asString(json.id))
-      } else {
-        warnings.push(`Failed to create or update AAS '${asString(json.id)}'.`)
-      }
+    if (!useSuperpath) {
+      await upsertParsedAasEntries()
     }
 
     for (const attachment of parsedPackage.attachments) {
-      const smEndpoint = getSmEndpointById(attachment.submodelId)
+      const aasId = useSuperpath ? findAasIdForSubmodel(parsedPackage, attachment.submodelId) : undefined
+      const smEndpoint = getSmEndpointById(attachment.submodelId, aasId)
       if (!smEndpoint || smEndpoint.trim() === '') {
         warnings.push(
           `Skipped attachment upload: no Submodel endpoint available for '${attachment.submodelId}'.`,

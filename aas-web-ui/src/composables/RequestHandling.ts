@@ -216,6 +216,10 @@ export function useRequestHandling () {
     return JSON.parse(bodyText)
   }
 
+  function getResponseContentType (response: Response): string {
+    return response.headers.get('Content-Type')?.split(';', 1)[0] ?? ''
+  }
+
   function getRequest (path: string, context: string, disableMessage: boolean, headers: Headers = new Headers()): any {
     if (shouldAddAuthorizationHeader(path)) {
       // No Authorization needed for the /description endpoint.
@@ -223,35 +227,35 @@ export function useRequestHandling () {
     }
     return fetch(path, { method: 'GET', headers })
       .then(async response => {
+        const contentType = getResponseContentType(response)
         // Check if the Server responded with content.
         if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'application/json'
+          contentType === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await parseJsonIfPresent(response) } // Return the response as JSON
         } else if (
-          response.headers.get('Content-Type')?.split(';')[0]
-          === 'application/asset-administration-shell-package+xml'
+          contentType === 'application/asset-administration-shell-package+xml'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await response.blob() } // Return the response as Blob}
         } else if (
-          response.headers.get('Content-Type')?.split(';')[0].includes('image')
+          contentType.includes('image')
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await response.blob() } // Return the response as Blob
         } else if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'text/csv'
+          contentType === 'text/csv'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await response.text() } // Return the response as text
         } else if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'text/plain'
+          contentType === 'text/plain'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await response.text() } // Return the response as text
         } else if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'application/pdf'
+          contentType === 'application/pdf'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await response.blob() } // Return the response as Blob
@@ -307,14 +311,15 @@ export function useRequestHandling () {
     }
     return fetch(path, { method: 'POST', body, headers })
       .then(async response => {
+        const contentType = getResponseContentType(response)
         // Check if the Server responded with content
         if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'application/json'
+          contentType === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await parseJsonIfPresent(response) } // Return the response as JSON
         } else if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'text/csv'
+          contentType === 'text/csv'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await response.text() } // Return the response as text
@@ -365,9 +370,10 @@ export function useRequestHandling () {
     headers = addAuthorizationHeader(headers) // Add the Authorization header
     return fetch(path, { method: 'PUT', body, headers })
       .then(response => {
+        const contentType = getResponseContentType(response)
         // Check if the Server responded with content
         if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'application/json'
+          contentType === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return parseJsonIfPresent(response) // Return the response as JSON
@@ -411,9 +417,10 @@ export function useRequestHandling () {
     headers = addAuthorizationHeader(headers) // Add the Authorization header
     return fetch(path, { method: 'PATCH', body, headers })
       .then(response => {
+        const contentType = getResponseContentType(response)
         // Check if the Server responded with content
         if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'application/json'
+          contentType === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return parseJsonIfPresent(response) // Return the response as JSON
@@ -456,9 +463,10 @@ export function useRequestHandling () {
   function deleteRequest (path: string, context: string, disableMessage: boolean): any {
     return fetch(path, { method: 'DELETE', headers: addAuthorizationHeader(new Headers()) })
       .then(response => {
+        const contentType = getResponseContentType(response)
         // Check if the Server responded with content
         if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'application/json'
+          contentType === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return parseJsonIfPresent(response) // Return the response as JSON

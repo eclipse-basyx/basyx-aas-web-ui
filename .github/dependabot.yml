@@ -4,7 +4,24 @@ updates:
     directory: "/aas-web-ui"
     schedule:
       interval: "daily"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    groups:
+      vitest-stack:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+    cooldown:
+      default-days: 1
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    groups:
+      github-actions-workflows:
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 1

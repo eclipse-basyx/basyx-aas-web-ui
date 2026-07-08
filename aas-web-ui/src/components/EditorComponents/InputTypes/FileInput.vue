@@ -101,7 +101,7 @@
 
   const emit = defineEmits<{
     (event: 'update:path', value: string | null): void
-    (event: 'update:contentType', value: string): void
+    (event: 'update:content-type', value: string): void
     (event: 'update:file', value: File | undefined): void
   }>()
 
@@ -147,7 +147,7 @@
     if (newValue === null) {
       return
     }
-    emit('update:contentType', newValue)
+    emit('update:content-type', newValue)
     updateFilePreview()
   })
 

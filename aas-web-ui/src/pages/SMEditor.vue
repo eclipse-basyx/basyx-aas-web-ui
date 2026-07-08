@@ -2,20 +2,28 @@
   <v-container class="pa-0" fluid>
     <!-- Horizontal Flexbox for the three main components (SubmodelTree, PropertyView, ComponentVisualization) -->
     <div style="display: flex">
-      <!-- SubmodelTree Component -->
-      <div class="pa-0 window" style="width: 35%">
-        <SubmodelTree />
-      </div>
-      <!-- Divider -->
-      <div style="position: relative; height: calc(100vh - 106px); z-index: 1">
-        <v-icon style="position: absolute; top: -3px; left: -16.5px">mdi-pan-left</v-icon>
-        <v-divider style="position: absolute; height: calc(100vh - 106px); z-index: 1" vertical />
-        <v-icon style="position: absolute; top: -3px; right: -16.5px">mdi-pan-right</v-icon>
-      </div>
+
+      <template v-if="!singleSm">
+
+        <!-- SubmodelTree Component -->
+        <div class="pa-0 window" style="width: 35%">
+          <SubmodelTree />
+        </div>
+
+        <!-- Divider -->
+        <div style="position: relative; height: calc(100vh - 106px); z-index: 1">
+          <v-icon style="position: absolute; top: -3px; left: -16.5px">mdi-pan-left</v-icon>
+          <v-divider style="position: absolute; height: calc(100vh - 106px); z-index: 1" vertical />
+          <v-icon style="position: absolute; top: -3px; right: -16.5px">mdi-pan-right</v-icon>
+        </div>
+
+      </template>
+
       <!-- SM/SME view and visualization Component -->
-      <div class="pa-0 window" style="width: 65%">
+      <div class="pa-0 window" :style="singleSm? 'width: 100%': 'width: 65%'">
         <SubmodelElementViewAndVisualization />
       </div>
+
     </div>
   </v-container>
 </template>
@@ -23,11 +31,17 @@
 <script lang="ts" setup>
   import { computed, onBeforeUnmount, onMounted } from 'vue'
   import { useTheme } from 'vuetify'
+  import { useEnvStore } from '@/store/EnvironmentStore'
 
+  // Stores
+  const envStore = useEnvStore()
+
+  // Vuetify
   const theme = useTheme()
 
   // Computed Properties
   const primaryColor = computed(() => theme.current.value.colors.primary)
+  const singleSm = computed(() => envStore.getSingleSm) // Get the single SM state from the Store
 
   onMounted(() => {
     // get the HTML Elements of all Columns (Windows)
@@ -86,7 +100,7 @@
     const onMouseMove = function (e: any): void {
       if (!curCol) return // if no element is selected return
       let screenWidth = document.documentElement.clientWidth // the width of the screen (Window) excluding the scrollbar
-      const navigationDrawer: any = document.querySelectorAll('.leftMenu')[0] // the width of the navigation drawer
+      const navigationDrawer: any = document.querySelector('.leftMenu') // the width of the navigation drawer
       const isDrawerOpen: boolean = navigationDrawer.style.transform == 'translateX(0px)' // checks if the navigation drawer is open
       screenWidth = screenWidth - (isDrawerOpen ? navigationDrawer.clientWidth : 0) // if the navigation drawer is open subtract the width of the navigation drawer from the screen width
       const diffX = Number.parseInt(e.pageX) - pageX // amount the header was dragged (minus - left, plus - right)

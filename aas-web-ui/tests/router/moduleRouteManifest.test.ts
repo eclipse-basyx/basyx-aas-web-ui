@@ -19,6 +19,7 @@ describe('module manifest child routes', () => {
         isVisibleModule: true,
         isOnlyVisibleWithSelectedAas: true,
         isOnlyVisibleWithSelectedNode: false,
+        supportedInfrastructureTemplates: ['full', 'mono-all'],
         preserveRouteQuery: true,
       },
       {
@@ -37,6 +38,7 @@ describe('module manifest child routes', () => {
     expect(children[0].name).toBe('Dpp__TechnicalData')
     expect(children[0].meta?.isDesktopModule).toBe(true)
     expect(children[0].meta?.isOnlyVisibleWithSelectedAas).toBe(true)
+    expect(children[0].meta?.supportedInfrastructureTemplates).toEqual(['full', 'mono-all'])
     expect(children[0].meta?.preserveRouteQuery).toBe(true)
   })
 

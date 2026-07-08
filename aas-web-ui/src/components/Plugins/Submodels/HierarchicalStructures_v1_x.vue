@@ -1141,7 +1141,7 @@
         // Create new relationship - use POST on the source entity
         const sourcePath = sourceEntity.path as string
         const splitted = sourcePath.split('/submodel-elements/')
-        const submodelId = base64Decode(splitted[0].split('/submodels/')[1])
+        const submodelId = base64Decode(splitted[0].split('/submodels/', 2)[1])
         const idShortPath = splitted[1]
 
         success = await postSubmodelElement(relationshipElement, submodelId, idShortPath)

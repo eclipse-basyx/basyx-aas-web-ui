@@ -8,12 +8,6 @@
 import { createVuetify } from 'vuetify'
 // Composables
 import { mdi } from 'vuetify/iconsets/mdi'
-import { VFileUpload } from 'vuetify/labs/VFileUpload'
-import {
-  VStepperVertical,
-  VStepperVerticalActions,
-  VStepperVerticalItem,
-} from 'vuetify/labs/VStepperVertical'
 import { customIcons } from '@/assets/Icons/customIcons'
 import { adjustColorBrightness } from '@/utils/ThemeUtils'
 // Styles
@@ -24,12 +18,6 @@ import 'vuetify/styles'
 export function initializeVuetify (primaryLightColor = '#0cb2f0', primaryDarkColor = '#F69222') {
   // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
   const vuetify = createVuetify({
-    components: {
-      VFileUpload,
-      VStepperVertical,
-      VStepperVerticalItem,
-      VStepperVerticalActions,
-    },
     defaults: {
       VBtn: {
         class: 'text-body-medium',

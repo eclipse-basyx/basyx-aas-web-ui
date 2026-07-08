@@ -204,6 +204,7 @@
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { Endpoint, ProtocolInformation } from '@/types/Descriptors'
+  import { isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
 
   const props = defineProps<{
     modelValue: boolean
@@ -224,7 +225,7 @@
   const infrastructureStore = useInfrastructureStore()
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: boolean): void
+    (event: 'update:model-value', value: boolean): void
   }>()
 
   const {
@@ -266,8 +267,13 @@
   const selectedNode = computed(() => aasStore.getSelectedNode) // Get the selected AAS from Store
   const selectedAAS = computed(() => aasStore.getSelectedAAS) // Get the selected AAS from Store
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
+  const submodelRegistryActive = computed(() =>
+    isComponentActiveForTemplate(selectedInfrastructure.value, 'SubmodelRegistry'),
+  )
   const submodelRepoHasRegistryIntegration = computed(
-    () => selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true,
+    () =>
+      !submodelRegistryActive.value
+      || (selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true),
   )
   const bordersToShow = computed(() => (panel: number) => {
     let border = ''
@@ -328,7 +334,7 @@
   watch(
     () => editSMDialog.value,
     value => {
-      emit('update:modelValue', value)
+      emit('update:model-value', value)
     },
   )
 

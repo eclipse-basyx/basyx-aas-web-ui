@@ -117,7 +117,7 @@
 
   const emit = defineEmits<{
     (event: 'update:content', value: Uint8Array | null): void
-    (event: 'update:contentType', value: string): void
+    (event: 'update:content-type', value: string): void
     (event: 'update:blob', value: File | undefined): void
   }>()
 
@@ -156,7 +156,7 @@
     if (newValue === null) {
       return
     }
-    emit('update:contentType', newValue)
+    emit('update:content-type', newValue)
   })
 
   watch(
@@ -259,6 +259,6 @@
   }
 
   function isTextContentType (contentType: string): boolean {
-    return /^text\/|application\/(json|xml|javascript|x-javascript)/i.test(contentType)
+    return /^text\/|application\/(?:json|xml|javascript|x-javascript)/i.test(contentType)
   }
 </script>

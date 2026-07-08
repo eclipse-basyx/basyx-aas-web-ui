@@ -6,10 +6,9 @@ import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
 import { useIDUtils } from '@/composables/IDUtils'
 import { useAASStore } from '@/store/AASDataStore'
 import { useClipboardStore } from '@/store/ClipboardStore'
-import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { useNavigationStore } from '@/store/NavigationStore'
 import { getCreatedSubmodelElementPath, isDataElementModelType } from '@/utils/AAS/SubmodelElementPathUtils'
-import { base64Decode, base64Encode } from '@/utils/EncodeDecodeUtils'
+import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
 export function useClipboardUtil () {
   // Vue Router
@@ -20,16 +19,14 @@ export function useClipboardUtil () {
   const aasStore = useAASStore()
   const clipboardStore = useClipboardStore()
   const navigationStore = useNavigationStore()
-  const infrastructureStore = useInfrastructureStore()
 
   // composables
-  const { postSubmodel, postSubmodelElement } = useSMRepositoryClient()
+  const { postSubmodel, postSubmodelElement, getSmEndpointById } = useSMRepositoryClient()
   const { putAas } = useAASRepositoryClient()
   const { generateIri } = useIDUtils()
 
   // Computed properties
   const selectedAAS = computed(() => aasStore.getSelectedAAS)
-  const submodelRepoUrl = computed(() => infrastructureStore.getSubmodelRepoURL)
 
   function copyToClipboard (value: string, valueName: string, iconReference: { value: string }): void {
     if (!value) {
@@ -147,7 +144,7 @@ export function useClipboardUtil () {
     await addSubmodelReferenceToAas(submodel)
     // Fetch and dispatch Submodel
     const query = structuredClone(route.query)
-    query.path = submodelRepoUrl.value + '/' + base64Encode(submodel.id)
+    query.path = getSmEndpointById(submodel.id)
     router.push({ query })
 
     navigationStore.dispatchTriggerTreeviewReload()
@@ -203,7 +200,7 @@ export function useClipboardUtil () {
     } else {
       // Extract the submodel ID and the idShortPath from the parentElement path
       const splitted = parentElement.path.split('/submodel-elements/')
-      const submodelId = base64Decode(splitted[0].split('/submodels/')[1])
+      const submodelId = base64Decode(splitted[0].split('/submodels/', 2)[1])
       const idShortPath = splitted[1]
 
       // Create the property on the parent element
