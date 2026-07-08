@@ -1,4 +1,4 @@
-name: Sync pnpm version in workflows
+name: Sync pnpm packageManager version
 
 on:
   push:
@@ -74,27 +74,15 @@ jobs:
           "
           echo "Updated packageManager to pnpm@${VERSION}+sha512.${HASH}"
 
-      - name: Update pnpm version in workflow files
-        run: |
-          TARGET="${{ steps.pnpm-version.outputs.version }}"
-          for file in .github/workflows/*.yml; do
-            if grep -q 'pnpm/action-setup' "$file"; then
-              echo "Patching $file"
-              # Use perl for reliable multi-line replacement: after pnpm/action-setup,
-              # replace the immediately following `version: X.Y.Z` with the new version.
-              perl -i -0pe "s|(pnpm/action-setup[^\n]*\n\s+with:\n\s+version:) [\d.]+|\$1 ${TARGET}|g" "$file"
-            fi
-          done
-
-      - name: Commit all changes
+      - name: Commit packageManager change
         run: |
           TARGET="${{ steps.pnpm-version.outputs.version }}"
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add aas-web-ui/package.json .github/workflows/*.yml
+          git add aas-web-ui/package.json
           if git diff --staged --quiet; then
             echo "No pnpm sync changes to commit."
           else
-            git commit -m "chore: sync pnpm version to ${TARGET} in packageManager and workflow files"
+            git commit -m "chore: sync packageManager to pnpm ${TARGET}"
             git push
           fi
