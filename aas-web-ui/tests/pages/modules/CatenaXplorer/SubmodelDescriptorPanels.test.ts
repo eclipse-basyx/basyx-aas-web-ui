@@ -36,6 +36,17 @@ const VBtnStub = defineComponent({
   `,
 })
 
+const VBtnToggleStub = defineComponent({
+  emits: ['update:modelValue'],
+  template: `
+    <div>
+      <button data-testid="show-table" type="button" @click="$emit('update:modelValue', 'table')">Table</button>
+      <button data-testid="show-json" type="button" @click="$emit('update:modelValue', 'json')">JSON</button>
+      <slot />
+    </div>
+  `,
+})
+
 const GenericDataTableViewStub = defineComponent({
   name: 'GenericDataTableView',
   props: {
@@ -62,6 +73,20 @@ const SubmodelValueOnlyViewStub = defineComponent({
   template: '<div data-testid="value-only-view">{{ keys }}</div>',
 })
 
+const JSONPreviewStub = defineComponent({
+  props: {
+    jsonContent: {
+      type: Object,
+      default: () => ({}),
+    },
+    title: {
+      type: String,
+      default: '',
+    },
+  },
+  template: '<div data-testid="json-preview">{{ title }} {{ jsonContent.id }}</div>',
+})
+
 function createWrapper (props?: Record<string, unknown>) {
   return mount(SubmodelDescriptorPanels, {
     props: {
@@ -72,16 +97,19 @@ function createWrapper (props?: Record<string, unknown>) {
       stubs: {
         EndpointTable: true,
         GenericDataTableView: GenericDataTableViewStub,
+        JSONPreview: JSONPreviewStub,
         ReferenceChips: true,
         SubmodelValueOnlyView: SubmodelValueOnlyViewStub,
         VAlert: { props: ['text'], template: '<div data-testid="alert"><slot />{{ text }}</div>' },
         VBtn: VBtnStub,
+        VBtnToggle: VBtnToggleStub,
         VChip: { template: '<span><slot /></span>' },
         VCol: PassthroughStub,
         VExpansionPanel: PassthroughStub,
         VExpansionPanels: PassthroughStub,
         VExpansionPanelText: PassthroughStub,
         VExpansionPanelTitle: PassthroughStub,
+        VIcon: true,
         VRow: PassthroughStub,
         VSheet: PassthroughStub,
         VTable: { template: '<table><slot /></table>' },
@@ -142,6 +170,28 @@ describe('SubmodelDescriptorPanels.vue', () => {
     expect(wrapper.text()).toContain('Submodel Value')
     expect(wrapper.find('[data-testid="generic-table"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="value-only-view"]').text()).toBe('general,scopeOfPcfForm')
+  })
+
+  it('switches loaded submodels to raw JSON preview', async () => {
+    const wrapper = createWrapper({
+      edcAccessEnabled: true,
+      edcSubmodels: {
+        'urn:example:submodel:1': {
+          data: {
+            id: 'urn:example:submodel:1',
+            submodelElements: [{ modelType: 'Property', idShort: 'temperature', value: '20' }],
+          },
+        },
+      },
+    })
+
+    expect(wrapper.find('[data-testid="json-preview"]').exists()).toBe(false)
+
+    await wrapper.find('[data-testid="show-json"]').trigger('click')
+
+    expect(wrapper.find('[data-testid="json-preview"]').text()).toContain('Submodel JSON')
+    expect(wrapper.find('[data-testid="json-preview"]').text()).toContain('urn:example:submodel:1')
+    expect(wrapper.find('[data-testid="generic-table"]').exists()).toBe(false)
   })
 
   it('renders detailed EDC submodel errors', () => {

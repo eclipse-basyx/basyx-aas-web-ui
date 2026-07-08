@@ -139,37 +139,68 @@
             </v-alert>
 
             <template v-if="hasSubmodelData(submodelDescriptor)">
-              <div class="text-subtitle-2 mt-4 mb-2">
-                {{ getLoadedSubmodelTitle(submodelDescriptor) }}
+              <div class="d-flex flex-column flex-md-row align-start align-md-center justify-space-between ga-2 mt-4 mb-2">
+                <div class="text-subtitle-2">
+                  {{ getLoadedSubmodelTitle(submodelDescriptor) }}
+                </div>
+
+                <v-btn-toggle
+                  color="primary"
+                  density="compact"
+                  divided
+                  mandatory
+                  :model-value="getSubmodelViewMode(submodelDescriptor)"
+                  variant="outlined"
+                  @update:model-value="setSubmodelViewMode(submodelDescriptor, $event)"
+                >
+                  <v-btn value="table">
+                    <v-icon start>mdi-table</v-icon>
+                    Table
+                  </v-btn>
+
+                  <v-btn value="json">
+                    <v-icon start>mdi-code-json</v-icon>
+                    JSON
+                  </v-btn>
+                </v-btn-toggle>
               </div>
 
-              <v-sheet
-                v-if="isFullSubmodelResponse(submodelDescriptor)"
-                border
-                rounded
-              >
-                <v-table density="comfortable" hover>
-                  <thead class="bg-tableHeader">
-                    <tr>
-                      <th class="text-titleText">SubmodelElement</th>
-                      <th class="text-titleText">Description</th>
-                      <th class="text-titleText">Definition</th>
-                      <th class="text-titleText">Value</th>
-                    </tr>
-                  </thead>
+              <template v-if="getSubmodelViewMode(submodelDescriptor) === 'table'">
+                <v-sheet
+                  v-if="isFullSubmodelResponse(submodelDescriptor)"
+                  border
+                  rounded
+                >
+                  <v-table density="comfortable" hover>
+                    <thead class="bg-tableHeader">
+                      <tr>
+                        <th class="text-titleText">SubmodelElement</th>
+                        <th class="text-titleText">Description</th>
+                        <th class="text-titleText">Definition</th>
+                        <th class="text-titleText">Value</th>
+                      </tr>
+                    </thead>
 
-                  <tbody>
-                    <GenericDataTableView
-                      :level="0"
-                      :submodel-element-data="getSubmodelElements(submodelDescriptor)"
-                    />
-                  </tbody>
-                </v-table>
-              </v-sheet>
+                    <tbody>
+                      <GenericDataTableView
+                        :level="0"
+                        :submodel-element-data="getSubmodelElements(submodelDescriptor)"
+                      />
+                    </tbody>
+                  </v-table>
+                </v-sheet>
 
-              <SubmodelValueOnlyView
+                <SubmodelValueOnlyView
+                  v-else
+                  :value="getSubmodelData(submodelDescriptor)"
+                />
+              </template>
+
+              <JSONPreview
                 v-else
-                :value="getSubmodelData(submodelDescriptor)"
+                :download-file-name="getSubmodelDownloadFileName(submodelDescriptor)"
+                :json-content="getSubmodelData(submodelDescriptor)"
+                :title="`${getLoadedSubmodelTitle(submodelDescriptor)} JSON`"
               />
             </template>
           </template>
@@ -181,6 +212,8 @@
 
 <script lang="ts" setup>
   import type { EdcSubmodelViewState } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
+  import { ref } from 'vue'
+  import JSONPreview from '@/components/Plugins/JSONPreview.vue'
   import SubmodelValueOnlyView from '@/components/UIComponents/SubmodelValueOnlyView.vue'
   import {
     getDescriptorKey,
@@ -206,6 +239,8 @@
   const emit = defineEmits<{
     'load-edc-submodel': [descriptor: any]
   }>()
+
+  const submodelViewModes = ref<Record<string, 'table' | 'json'>>({})
 
   function getSubmodelState (submodelDescriptor: any): EdcSubmodelViewState {
     return props.edcSubmodels[getDescriptorKey(submodelDescriptor)] ?? {}
@@ -235,6 +270,27 @@
 
   function getLoadedSubmodelTitle (submodelDescriptor: any): string {
     return isFullSubmodelResponse(submodelDescriptor) ? 'Submodel' : 'Submodel Value'
+  }
+
+  function getSubmodelViewMode (submodelDescriptor: any): 'table' | 'json' {
+    return submodelViewModes.value[getDescriptorKey(submodelDescriptor)] ?? 'table'
+  }
+
+  function setSubmodelViewMode (submodelDescriptor: any, value: unknown): void {
+    if (value !== 'table' && value !== 'json') {
+      return
+    }
+
+    submodelViewModes.value = {
+      ...submodelViewModes.value,
+      [getDescriptorKey(submodelDescriptor)]: value,
+    }
+  }
+
+  function getSubmodelDownloadFileName (submodelDescriptor: any): string {
+    return `submodel-${getDescriptorTitle(submodelDescriptor)}`
+      .replace(/[^\w.-]+/g, '-')
+      .replace(/^-|-$/g, '')
   }
 
   function getSubmodelErrorLines (submodelDescriptor: any): string[] {
