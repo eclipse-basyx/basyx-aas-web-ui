@@ -24,13 +24,13 @@ export function useComponentConnectionTesting (): {
   testingAllConnections: Ref<boolean>
   testComponentConnection: (componentKey: BaSyxComponentKey, url: string) => Promise<void>
   testEndpointField: (
-    template: InfrastructureTemplate,
+    templateOrInfrastructure: InfrastructureTemplate | InfrastructureConfig,
     fieldKey: InfrastructureEndpointFieldKey,
     components: InfrastructureConfig['components'],
   ) => Promise<void>
   testAllConnections: (
     components: InfrastructureConfig['components'],
-    template: InfrastructureTemplate,
+    templateOrInfrastructure: InfrastructureTemplate | InfrastructureConfig,
   ) => Promise<void>
   resetConnectionStatus: () => void
 } {
@@ -88,11 +88,11 @@ export function useComponentConnectionTesting (): {
    * their mapped internal components.
    */
   async function testEndpointField (
-    template: InfrastructureTemplate,
+    templateOrInfrastructure: InfrastructureTemplate | InfrastructureConfig,
     fieldKey: InfrastructureEndpointFieldKey,
     components: InfrastructureConfig['components'],
   ): Promise<void> {
-    const endpointField = getEndpointFieldByKey(template, fieldKey)
+    const endpointField = getEndpointFieldByKey(templateOrInfrastructure, fieldKey)
     if (!endpointField) {
       return
     }
@@ -107,11 +107,11 @@ export function useComponentConnectionTesting (): {
    */
   async function testAllConnections (
     components: InfrastructureConfig['components'],
-    template: InfrastructureTemplate,
+    templateOrInfrastructure: InfrastructureTemplate | InfrastructureConfig,
   ): Promise<void> {
     testingAllConnections.value = true
     try {
-      const testPromises = getEndpointFieldsForTemplate(template).flatMap(endpointField => {
+      const testPromises = getEndpointFieldsForTemplate(templateOrInfrastructure).flatMap(endpointField => {
         const url = getEndpointFieldValue(components, endpointField)
         return endpointField.componentKeys.map(key => testComponentConnection(key, url))
       })

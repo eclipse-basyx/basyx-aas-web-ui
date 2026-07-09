@@ -523,6 +523,7 @@
     getExternalSubjectMarkerValues,
     getLangStringText,
     getReferenceKeyValues,
+    getSpecificAssetIdNameSuggestions,
     normalizeSupplementalSemanticIds,
   } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
 
@@ -554,12 +555,14 @@
 
   const props = withDefaults(
     defineProps<{
+      assetIdNameSuggestions?: string[]
       descriptor?: Record<string, any> | null
       loading?: boolean
       mode?: 'create' | 'edit'
       modelValue: boolean
     }>(),
     {
+      assetIdNameSuggestions: () => [],
       descriptor: null,
       loading: false,
       mode: 'create',
@@ -574,7 +577,6 @@
   const display = useDisplay()
   const { generateIri } = useIDUtils()
   const assetKindOptions = ['Instance', 'Type']
-  const specificAssetIdNameOptions = ['customerPartId', 'manufacturerPartId']
   const specificAssetIdMarkerOptionsByName: Record<string, string[]> = {
     manufacturerPartId: ['PUBLIC_READABLE'],
   }
@@ -591,6 +593,7 @@
   const localError = ref('')
 
   const smAndDown = computed(() => display.smAndDown.value)
+  const specificAssetIdNameOptions = computed(() => getSpecificAssetIdNameSuggestions(props.assetIdNameSuggestions))
   const title = computed(() => props.mode === 'edit' ? 'Edit AAS Descriptor' : 'Create AAS Descriptor')
 
   const dialogModel = computed({

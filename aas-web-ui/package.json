@@ -7,6 +7,8 @@
     "dev": "vite",
     "prebuild": "run-s lint:check test:run type-check",
     "build": "vite build",
+    "bff:build": "tsc -p tsconfig.bff.json",
+    "bff:start": "node dist-bff/edc-bff/server.js",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc -b --force",

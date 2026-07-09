@@ -22,7 +22,23 @@ export function useRequestHandling () {
   }
 
   function buildErrorDetailsFromPayload (errorData: any): string {
-    if (!Array.isArray(errorData) || errorData.length === 0) {
+    if (Array.isArray(errorData)) {
+      return buildArrayErrorDetails(errorData)
+    }
+
+    if (errorData && typeof errorData === 'object') {
+      return buildObjectErrorDetails(errorData as Record<string, unknown>)
+    }
+
+    if (typeof errorData === 'string') {
+      return errorData
+    }
+
+    return ''
+  }
+
+  function buildArrayErrorDetails (errorData: any[]): string {
+    if (errorData.length === 0) {
       return ''
     }
 
@@ -34,26 +50,52 @@ export function useRequestHandling () {
       text?: unknown
     }
 
-    let errorMessage = ''
+    const lines: string[] = []
 
-    if (error.code) {
-      errorMessage += 'Status: ' + String(error.code)
-    }
-    if (error.messageType) {
-      errorMessage += '\nMessage Type: ' + String(error.messageType)
-    }
-    if (error.correlationId) {
-      errorMessage += '\nCorrelation ID: ' + String(error.correlationId)
-    }
+    appendErrorLine(lines, 'Status', error.code)
+    appendErrorLine(lines, 'Message Type', error.messageType)
+    appendErrorLine(lines, 'Correlation ID', error.correlationId)
+
     if (error.timestamp) {
-      const errorDate = new Date(String(error.timestamp)).toLocaleString()
-      errorMessage += '\nTimestamp: ' + errorDate
-    }
-    if (error.text) {
-      errorMessage += '\nText: ' + String(error.text)
+      appendErrorLine(lines, 'Timestamp', new Date(String(error.timestamp)).toLocaleString())
     }
 
-    return errorMessage
+    appendErrorLine(lines, 'Text', error.text)
+
+    return lines.join('\n')
+  }
+
+  function buildObjectErrorDetails (errorData: Record<string, unknown>): string {
+    const lines: string[] = []
+    const message = errorData.error ?? errorData.message ?? errorData.text
+    const route = [errorData.method, errorData.path]
+      .map(value => typeof value === 'string' ? value.trim() : '')
+      .filter(Boolean)
+      .join(' ')
+
+    appendErrorLine(lines, 'Status', errorData.status)
+    appendErrorLine(lines, 'Code', errorData.code)
+    appendErrorLine(lines, 'Message', message)
+    appendErrorLine(lines, 'Route', route)
+    appendErrorLine(lines, 'Correlation ID', errorData.correlationId)
+    appendErrorLine(lines, 'Timestamp', errorData.timestamp)
+
+    return lines.join('\n')
+  }
+
+  function appendErrorLine (lines: string[], label: string, value: unknown): void {
+    let text = ''
+    if (typeof value === 'string') {
+      text = value.trim()
+    } else if (value !== undefined && value !== null) {
+      text = String(value)
+    }
+
+    if (text === '') {
+      return
+    }
+
+    lines.push(`${label}: ${text}`)
   }
 
   function consumeLastRequestFailureStatus (): number | undefined {

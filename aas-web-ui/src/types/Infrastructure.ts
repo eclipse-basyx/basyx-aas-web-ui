@@ -11,6 +11,11 @@ export type SecurityType = 'No Authentication' | 'Basic Authentication' | 'Beare
 export type InfrastructureTemplate = 'full' | 'identifiable' | 'mono-repo' | 'mono-all' | 'catena-x'
 
 /**
+ * Catena-X access modes supported by the CatenaXplorer module
+ */
+export type CatenaXAccessMode = 'direct' | 'edc'
+
+/**
  * Basic authentication credentials
  */
 export interface BasicAuthData {
@@ -68,6 +73,30 @@ export interface ComponentConfig {
 }
 
 /**
+ * Public Catena-X EDC metadata. This deliberately contains no Management API
+ * URL or API key; those belong to the server-side EDC proxy configuration.
+ */
+export interface CatenaXEdcConfig {
+  proxyId: string
+  defaultCounterPartyId?: string
+  defaultCounterPartyAddress?: string
+  defaultPartnerId?: string
+  partners?: CatenaXPartner[]
+}
+
+export interface CatenaXPartner {
+  id: string
+  name?: string
+  counterPartyId: string
+  counterPartyAddress: string
+}
+
+export interface CatenaXConfig {
+  accessMode?: CatenaXAccessMode
+  edc?: CatenaXEdcConfig
+}
+
+/**
  * Complete infrastructure configuration
  */
 export interface InfrastructureConfig {
@@ -81,6 +110,7 @@ export interface InfrastructureConfig {
   components: {
     [key in BaSyxComponentKey]: ComponentConfig;
   }
+  catenaX?: CatenaXConfig
   /**
    * Hash of the original YAML configuration (if loaded from YAML)
    * Used to detect when YAML file has been updated
@@ -200,6 +230,21 @@ export interface YamlInfrastructureConfig {
     aasEnvironment?: YamlComponentConfig
     digitalTwinRegistry?: YamlComponentConfig
     submodelService?: YamlComponentConfig
+  }
+  catenaX?: {
+    accessMode?: CatenaXAccessMode | string
+    edc?: {
+      proxyId?: string
+      defaultCounterPartyId?: string
+      defaultCounterPartyAddress?: string
+      defaultPartnerId?: string
+      partners?: Array<{
+        id?: string
+        name?: string
+        counterPartyId?: string
+        counterPartyAddress?: string
+      }>
+    }
   }
   security: YamlSecurityConfig
 }

@@ -2,21 +2,22 @@
   <section>
     <div class="text-h6 mb-2">Specific Asset IDs</div>
 
-    <v-empty-state
+    <v-alert
       v-if="assetIds.length === 0"
-      class="text-divider"
+      density="comfortable"
       icon="mdi-tag-off-outline"
       text="No specific asset IDs are visible for this descriptor."
-      title="No specific asset IDs"
+      type="info"
+      variant="tonal"
     />
 
     <div v-else class="overflow-x-auto">
       <v-table class="border rounded" density="comfortable">
-        <thead>
+        <thead class="bg-tableHeader">
           <tr>
-            <th class="text-left text-body-small">Name</th>
-            <th class="text-left text-body-small">Value</th>
-            <th class="text-left text-body-small">Markers</th>
+            <th class="text-titleText">Name</th>
+            <th class="text-titleText">Value</th>
+            <th class="text-titleText">Markers</th>
           </tr>
         </thead>
 

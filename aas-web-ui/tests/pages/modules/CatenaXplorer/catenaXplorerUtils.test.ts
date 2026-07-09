@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildAssetIdNameSuggestions,
   buildShellDescriptorEndpointUrl,
   buildShellDescriptorsCurlCommand,
   buildShellDescriptorsRequestUrl,
@@ -9,8 +10,12 @@ import {
   getDescriptorKey,
   getDescriptorLastUpdatedAt,
   getDescriptorStats,
+  getDescriptorTimestampInfo,
+  getSpecificAssetIdNameSuggestions,
+  getSubmodelEdcEndpointInfo,
   getSubmodelMarkerValues,
   normalizeSupplementalSemanticIds,
+  parseSubprotocolBody,
 } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
 
 describe('catenaXplorerUtils.ts', () => {
@@ -31,7 +36,7 @@ describe('catenaXplorerUtils.ts', () => {
       'http://localhost:5004/api/v3',
       'manufacturerPartId',
       '',
-    )).toBe('http://localhost:5004/api/v3/shell-descriptors?limit=1000')
+    )).toBe('http://localhost:5004/api/v3/shell-descriptors?limit=100')
   })
 
   it('builds a filtered shell descriptors request URL with encoded asset IDs', () => {
@@ -40,7 +45,7 @@ describe('catenaXplorerUtils.ts', () => {
       'manufacturerPartId',
       'PART-001',
     )).toBe(
-      'http://localhost:5004/api/v3/shell-descriptors?limit=1000'
+      'http://localhost:5004/api/v3/shell-descriptors?limit=100'
       + '&assetIds=eyJuYW1lIjoibWFudWZhY3R1cmVyUGFydElkIiwidmFsdWUiOiJQQVJULTAwMSJ9',
     )
   })
@@ -50,7 +55,7 @@ describe('catenaXplorerUtils.ts', () => {
       'http://localhost:5004/api/v3/shell-descriptors',
       'manufacturerPartId',
       '',
-    )).toBe('curl -X GET \'http://localhost:5004/api/v3/shell-descriptors?limit=1000\'')
+    )).toBe('curl -X GET \'http://localhost:5004/api/v3/shell-descriptors?limit=100\'')
   })
 
   it('extracts unique asset ID name suggestions from descriptors', () => {
@@ -71,6 +76,45 @@ describe('catenaXplorerUtils.ts', () => {
     ])
 
     expect(suggestions).toEqual(['customerPartId', 'globalAssetId', 'manufacturerPartId'])
+  })
+
+  it('builds shared asset ID suggestion lists for search and specific asset IDs', () => {
+    const searchSuggestions = buildAssetIdNameSuggestions(
+      [{ specificAssetIds: [{ name: 'customAssetId', value: 'CUSTOM-001' }] }],
+      ['zDiscoveredAssetId', 'manufacturerPartId'],
+    )
+
+    expect(searchSuggestions).toEqual([
+      'manufacturerId',
+      'manufacturerPartId',
+      'customerPartId',
+      'digitalTwinType',
+      'partInstanceId',
+      'intrinsicId',
+      'batchId',
+      'van',
+      'parentOrderNumber',
+      'jisNumber',
+      'jisCallDate',
+      'globalAssetId',
+      'customAssetId',
+      'zDiscoveredAssetId',
+    ])
+    expect(getSpecificAssetIdNameSuggestions(searchSuggestions)).toEqual([
+      'manufacturerId',
+      'manufacturerPartId',
+      'customerPartId',
+      'digitalTwinType',
+      'partInstanceId',
+      'intrinsicId',
+      'batchId',
+      'van',
+      'parentOrderNumber',
+      'jisNumber',
+      'jisCallDate',
+      'customAssetId',
+      'zDiscoveredAssetId',
+    ])
   })
 
   it('formats display fallbacks for sparse descriptor values', () => {
@@ -100,6 +144,23 @@ describe('catenaXplorerUtils.ts', () => {
     expect(getDescriptorLastUpdatedAt({
       createdAt: '2026-01-01T10:00:00Z',
     })).toBe('2026-01-01T10:00:00Z')
+  })
+
+  it('labels descriptor timestamps by the source field', () => {
+    expect(getDescriptorTimestampInfo({
+      createdAt: '2026-01-01T10:00:00Z',
+      updatedAt: '2026-01-02T10:00:00Z',
+    })).toEqual({
+      label: 'Updated',
+      value: '2026-01-02T10:00:00Z',
+    })
+
+    expect(getDescriptorTimestampInfo({
+      createdAt: '2026-01-01T10:00:00Z',
+    })).toEqual({
+      label: 'Created',
+      value: '2026-01-01T10:00:00Z',
+    })
   })
 
   it('normalizes plural and singular supplemental semantic IDs', () => {
@@ -137,5 +198,33 @@ describe('catenaXplorerUtils.ts', () => {
         ],
       },
     })).toEqual(['PUBLIC_READABLE', 'BPN_COMPANY_001', 'BPN_COMPANY_002'])
+  })
+
+  it('parses Submodel EDC endpoint information', () => {
+    expect(parseSubprotocolBody(
+      ' id = submodel-asset ; dspEndpoint = https://counterparty-dsp.test/api/v1/dsp ; malformed ',
+    )).toEqual({
+      id: 'submodel-asset',
+      dspEndpoint: 'https://counterparty-dsp.test/api/v1/dsp',
+    })
+
+    expect(getSubmodelEdcEndpointInfo({
+      endpoints: [{
+        protocolInformation: {
+          href: 'https://data-plane.test/api/public/submodel-asset/submodel',
+          subprotocol: 'DSP',
+          subprotocolBody: 'id=submodel-asset;dspEndpoint=https://counterparty-dsp.test/api/v1/dsp',
+        },
+      }],
+    })).toEqual({
+      assetId: 'submodel-asset',
+      dspEndpoint: 'https://counterparty-dsp.test/api/v1/dsp',
+      href: 'https://data-plane.test/api/public/submodel-asset/submodel',
+      subprotocolBody: 'id=submodel-asset;dspEndpoint=https://counterparty-dsp.test/api/v1/dsp',
+    })
+
+    expect(getSubmodelEdcEndpointInfo({
+      endpoints: [{ protocolInformation: { href: 'https://data-plane.test/submodel' } }],
+    })).toBeNull()
   })
 })

@@ -2,6 +2,7 @@
   "extends": "@vue/tsconfig/tsconfig.dom.json",
   "include": [
     "env.d.ts",
+    "server/**/*.ts",
     "src/**/*",
     "src/**/*.vue",
     "tests/**/*.ts",

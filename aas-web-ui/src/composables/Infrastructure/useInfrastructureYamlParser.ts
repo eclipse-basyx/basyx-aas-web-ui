@@ -1,5 +1,7 @@
 import type { BaSyxComponentKey } from '@/types/BaSyx'
 import type {
+  CatenaXAccessMode,
+  CatenaXPartner,
   InfrastructureAuth,
   InfrastructureConfig,
   ParsedInfrastructureConfig,
@@ -143,6 +145,90 @@ export function useInfrastructureYamlParser (): {
     return `yaml_${yamlKey}`
   }
 
+  function parseCatenaXConfig (yamlConfig: YamlInfrastructureConfig): InfrastructureConfig['catenaX'] {
+    if (normalizeInfrastructureTemplate(yamlConfig.template) !== 'catena-x') {
+      return undefined
+    }
+
+    const accessMode = normalizeCatenaXAccessMode(yamlConfig.catenaX?.accessMode)
+    const proxyId = yamlConfig.catenaX?.edc?.proxyId?.trim()
+    const uniquePartners = parseCatenaXPartners(yamlConfig)
+
+    if (accessMode === 'direct') {
+      return { accessMode }
+    }
+
+    if (!proxyId) {
+      return accessMode === 'edc' ? { accessMode: 'edc' } : undefined
+    }
+
+    return {
+      accessMode: 'edc',
+      edc: {
+        proxyId,
+        defaultCounterPartyId: yamlConfig.catenaX?.edc?.defaultCounterPartyId?.trim() || undefined,
+        defaultCounterPartyAddress: yamlConfig.catenaX?.edc?.defaultCounterPartyAddress?.trim() || undefined,
+        defaultPartnerId: yamlConfig.catenaX?.edc?.defaultPartnerId?.trim()
+          || uniquePartners[0]?.id
+          || undefined,
+        partners: uniquePartners.length > 0 ? uniquePartners : undefined,
+      },
+    }
+  }
+
+  function normalizeCatenaXAccessMode (value: unknown): CatenaXAccessMode | undefined {
+    return value === 'direct' || value === 'edc' ? value : undefined
+  }
+
+  function parseCatenaXPartners (yamlConfig: YamlInfrastructureConfig): CatenaXPartner[] {
+    const partners = yamlConfig.catenaX?.edc?.partners
+      ?.map(partner => ({
+        id: partner.id?.trim() || createPartnerId(partner.counterPartyId, partner.counterPartyAddress),
+        name: partner.name?.trim() || undefined,
+        counterPartyId: partner.counterPartyId?.trim() ?? '',
+        counterPartyAddress: partner.counterPartyAddress?.trim() ?? '',
+      }))
+      .filter(partner => partner.id !== '' && partner.counterPartyId !== '' && partner.counterPartyAddress !== '')
+
+    const legacyDefaultPartner = createLegacyDefaultPartner(
+      yamlConfig.catenaX?.edc?.defaultCounterPartyId,
+      yamlConfig.catenaX?.edc?.defaultCounterPartyAddress,
+    )
+
+    return Array.from(
+      new Map([
+        ...(partners ?? []),
+        ...(legacyDefaultPartner ? [legacyDefaultPartner] : []),
+      ].map(partner => [`${partner.counterPartyId}::${partner.counterPartyAddress}`, partner])).values(),
+    )
+  }
+
+  function createLegacyDefaultPartner (
+    counterPartyId: string | undefined,
+    counterPartyAddress: string | undefined,
+  ): CatenaXPartner | undefined {
+    const normalizedCounterPartyId = counterPartyId?.trim() ?? ''
+    const normalizedCounterPartyAddress = counterPartyAddress?.trim() ?? ''
+    if (normalizedCounterPartyId === '' || normalizedCounterPartyAddress === '') {
+      return undefined
+    }
+
+    return {
+      id: createPartnerId(normalizedCounterPartyId, normalizedCounterPartyAddress),
+      counterPartyId: normalizedCounterPartyId,
+      counterPartyAddress: normalizedCounterPartyAddress,
+    }
+  }
+
+  function createPartnerId (counterPartyId: string | undefined, counterPartyAddress: string | undefined): string {
+    const rawId = `${counterPartyId?.trim() ?? ''}-${counterPartyAddress?.trim() ?? ''}`
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+
+    return rawId || ''
+  }
+
   /**
    * Parses a single YAML infrastructure configuration
    */
@@ -166,6 +252,11 @@ export function useInfrastructureYamlParser (): {
         SubmodelRepo: { url: '' },
         ConceptDescriptionRepo: { url: '' },
       },
+    }
+
+    const catenaX = parseCatenaXConfig(yamlConfig)
+    if (catenaX) {
+      infrastructure.catenaX = catenaX
     }
 
     function applyYamlComponentToKeys (
