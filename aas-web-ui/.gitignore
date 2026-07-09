@@ -29,3 +29,5 @@ tsconfig.tsbuildinfo
 # Playwright integration test artifacts
 /playwright-report
 /test-results
+.DS_Store
+.DS_Store
