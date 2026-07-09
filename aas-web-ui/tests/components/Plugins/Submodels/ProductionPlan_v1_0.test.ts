@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 import ProductionPlan from '@/components/Plugins/Submodels/ProductionPlan_v1_0.vue'
 
 const { jumpToAasByIdMock } = vi.hoisted(() => ({
@@ -54,7 +55,7 @@ const globalStubs = {
   'v-list-item-subtitle': slotStub,
   'v-chip': true,
   'v-spacer': true,
-  'v-btn': true,
+  'v-btn': { template: '<v-btn-stub><slot /></v-btn-stub>' },
   'v-icon': true,
 }
 
@@ -195,15 +196,17 @@ describe('ProductionPlan_v1_0.vue – MachineRef navigation', () => {
   })
 
   describe('machine name rendering', () => {
-    it('renders machine name as plain text when no MachineRef is present', () => {
+    it('renders machine name as plain text when no MachineRef is present', async () => {
       const wrapper = createWrapper(createSubmodelData(false))
+      await nextTick()
 
       expect(wrapper.find('v-btn-stub').exists()).toBe(false)
       expect(wrapper.text()).toContain('Welding Robot AN16')
     })
 
-    it('renders machine name inside a button when MachineRef is present', () => {
+    it('renders machine name inside a button when MachineRef is present', async () => {
       const wrapper = createWrapper(createSubmodelData(true))
+      await nextTick()
 
       expect(wrapper.find('v-btn-stub').exists()).toBe(true)
       expect(wrapper.find('v-btn-stub').text()).toContain('Welding Robot AN16')
