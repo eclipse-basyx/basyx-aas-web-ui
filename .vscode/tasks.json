@@ -65,13 +65,118 @@
       "problemMatcher": "$tsc"
     },
     {
-      "label": "aas-web-ui: dev (port 3999)",
+      "label": "aas-web-ui: install",
+      "type": "shell",
+      "args": [
+        "install"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "windows": {
+        "command": "pnpm.cmd"
+      },
+      "linux": {
+        "command": "pnpm"
+      },
+      "osx": {
+        "command": "pnpm"
+      },
+      "group": "build",
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "aas-web-ui: build",
+      "type": "shell",
+      "args": [
+        "build"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "windows": {
+        "command": "pnpm.cmd"
+      },
+      "linux": {
+        "command": "pnpm"
+      },
+      "osx": {
+        "command": "pnpm"
+      },
+      "group": "build",
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "aas-web-ui: lint",
+      "type": "shell",
+      "args": [
+        "lint"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "windows": {
+        "command": "pnpm.cmd"
+      },
+      "linux": {
+        "command": "pnpm"
+      },
+      "osx": {
+        "command": "pnpm"
+      },
+      "group": "build",
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "aas-web-ui: lint:fix",
+      "type": "shell",
+      "args": [
+        "lint:fix"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "windows": {
+        "command": "pnpm.cmd"
+      },
+      "linux": {
+        "command": "pnpm"
+      },
+      "osx": {
+        "command": "pnpm"
+      },
+      "group": "build",
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "aas-web-ui: test",
+      "type": "shell",
+      "args": [
+        "test"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "windows": {
+        "command": "pnpm.cmd"
+      },
+      "linux": {
+        "command": "pnpm"
+      },
+      "osx": {
+        "command": "pnpm"
+      },
+      "group": "build",
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "aas-web-ui: dev (port 3000)",
       "type": "shell",
       "options": {
         "cwd": "${workspaceFolder}/aas-web-ui"
       },
       "windows": {
-        "command": "Start-Process 'http://localhost:3999'; pnpm dev --port 3999",
+        "command": "Start-Process 'http://localhost:3000'; pnpm dev --port 3000",
         "options": {
           "shell": {
             "executable": "powershell.exe",
@@ -82,7 +187,7 @@
         }
       },
       "linux": {
-        "command": "xdg-open http://localhost:3999; pnpm dev --port 3999",
+        "command": "xdg-open http://localhost:3000; pnpm dev --port 3000",
         "options": {
           "shell": {
             "executable": "/bin/bash",
@@ -93,7 +198,7 @@
         }
       },
       "osx": {
-        "command": "open http://localhost:3999; pnpm dev --port 3999",
+        "command": "open http://localhost:3000; pnpm dev --port 3000",
         "options": {
           "shell": {
             "executable": "/bin/zsh",
@@ -112,7 +217,7 @@
         "background": {
           "activeOnStart": true,
           "beginsPattern": ".*",
-          "endsPattern": ".*Local.*3999.*"
+          "endsPattern": ".*Local.*3000.*"
         }
       }
     }
