@@ -111,20 +111,55 @@
               {{ selectedTemplateDescription }}
             </v-alert>
 
-            <v-divider />
-            <v-list-subheader class="mb-3">Component Endpoints</v-list-subheader>
-            <!-- Component Configurations -->
-            <ComponentConfigPanel
-              :component-connection-status="componentConnectionStatus"
-              :component-testing-loading="componentTestingLoading"
-              :components="editingInfrastructure.components"
-              :template="editingInfrastructure.template"
-              @test-connection="testComponentConnection"
-              @update:component-url="handleComponentUrlUpdate"
-              @update:connection-status="handleConnectionStatusUpdate"
-              @update:discovery-integration="handleDiscoveryIntegrationUpdate"
-              @update:registry-integration="handleRegistryIntegrationUpdate"
-            />
+            <template v-if="editingInfrastructure.template === 'catena-x'">
+              <v-divider />
+              <v-list-subheader class="mb-3">Catena-X Access Mode</v-list-subheader>
+
+              <v-btn-toggle
+                v-model="catenaXAccessMode"
+                class="mb-3"
+                color="primary"
+                divided
+                mandatory
+                rounded="lg"
+                variant="outlined"
+              >
+                <v-btn value="direct">
+                  <v-icon class="me-2" icon="mdi-server-network" size="small" />
+                  Direct
+                </v-btn>
+
+                <v-btn value="edc">
+                  <v-icon class="me-2" icon="mdi-shield-key-outline" size="small" />
+                  EDC
+                </v-btn>
+              </v-btn-toggle>
+            </template>
+
+            <template v-if="!isEditingCatenaXEdcMode">
+              <v-divider />
+              <v-list-subheader class="mb-3">Component Endpoints</v-list-subheader>
+              <!-- Component Configurations -->
+              <ComponentConfigPanel
+                :component-connection-status="componentConnectionStatus"
+                :component-testing-loading="componentTestingLoading"
+                :components="editingInfrastructure.components"
+                :template="editingInfrastructure.template"
+                @test-connection="testComponentConnection"
+                @update:component-url="handleComponentUrlUpdate"
+                @update:connection-status="handleConnectionStatusUpdate"
+                @update:discovery-integration="handleDiscoveryIntegrationUpdate"
+                @update:registry-integration="handleRegistryIntegrationUpdate"
+              />
+            </template>
+
+            <template v-if="isEditingCatenaXEdcMode">
+              <v-divider />
+              <v-list-subheader class="mb-3">Catena-X EDC Proxy</v-list-subheader>
+
+              <CatenaXEdcConfigPanel v-model="editingInfrastructure.catenaX" />
+            </template>
+
             <!-- Security Configuration -->
             <v-divider />
             <v-list-subheader class="mb-3">Security Configuration</v-list-subheader>
@@ -162,6 +197,7 @@
 
         <v-card-actions>
           <v-btn
+            v-if="!isEditingCatenaXEdcMode"
             border
             color="surface-light"
             :loading="testingAllConnections"
@@ -250,6 +286,7 @@
   import type { BaSyxComponentKey } from '@/types/BaSyx'
   import type {
     AuthFlowOption,
+    CatenaXAccessMode,
     InfrastructureConfig,
     InfrastructureTemplate,
     SecurityType,
@@ -257,6 +294,7 @@
   import type { InfrastructureEndpointFieldKey } from '@/utils/InfrastructureUtils'
   import { computed, ref, toRaw, watch } from 'vue'
   import { useRouter } from 'vue-router'
+  import CatenaXEdcConfigPanel from '@/components/AppNavigation/Settings/CatenaXEdcConfigPanel.vue'
   import { useAuth } from '@/composables/Auth/useAuth'
   import { useBasicAuthForm } from '@/composables/Auth/useBasicAuthForm'
   import { useOAuth2Form } from '@/composables/Auth/useOAuth2Form'
@@ -264,6 +302,7 @@
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import {
+    getCatenaXAccessMode,
     getEndpointFieldsForTemplate,
     getEndpointFieldValue,
     getInfrastructureTemplateDefinition,
@@ -344,6 +383,18 @@
   const selectedTemplateDescription = computed(
     () => getInfrastructureTemplateDefinition(editingInfrastructure.value.template).description,
   )
+  const catenaXAccessMode = computed({
+    get: () => getCatenaXAccessMode(editingInfrastructure.value),
+    set: (value: CatenaXAccessMode) => {
+      editingInfrastructure.value.catenaX = {
+        ...editingInfrastructure.value.catenaX,
+        accessMode: value,
+      }
+    },
+  })
+  const isEditingCatenaXEdcMode = computed(
+    () => editingInfrastructure.value.template === 'catena-x' && catenaXAccessMode.value === 'edc',
+  )
 
   const router = useRouter()
 
@@ -414,6 +465,10 @@
     const { valid } = await formRef.value.validate()
     if (!valid) return
 
+    if (!validateInfrastructureModeConfiguration(editingInfrastructure.value)) {
+      return
+    }
+
     normalizeGroupedEndpointFields(editingInfrastructure.value)
 
     // Save auth data
@@ -453,7 +508,7 @@
   // Test individual endpoint field connection
   async function testComponentConnection (fieldKey: InfrastructureEndpointFieldKey): Promise<void> {
     await connectionTesting.testEndpointField(
-      editingInfrastructure.value.template,
+      editingInfrastructure.value,
       fieldKey,
       editingInfrastructure.value.components,
     )
@@ -463,12 +518,15 @@
   async function testAllConnections (): Promise<void> {
     await connectionTesting.testAllConnections(
       editingInfrastructure.value.components,
-      editingInfrastructure.value.template,
+      editingInfrastructure.value,
     )
   }
 
   function handleTemplateUpdate (template: InfrastructureTemplate | string): void {
     editingInfrastructure.value.template = normalizeInfrastructureTemplate(template)
+    if (editingInfrastructure.value.template === 'catena-x' && !editingInfrastructure.value.catenaX) {
+      editingInfrastructure.value.catenaX = { accessMode: 'direct' }
+    }
     normalizeGroupedEndpointFields(editingInfrastructure.value)
     connectionTesting.resetConnectionStatus()
   }
@@ -520,5 +578,40 @@
 
   function handleDiscoveryIntegrationUpdate (componentKey: BaSyxComponentKey, enabled: boolean): void {
     editingInfrastructure.value.components[componentKey].hasDiscoveryIntegration = enabled
+  }
+
+  function validateInfrastructureModeConfiguration (infra: InfrastructureConfig): boolean {
+    if (infra.template !== 'catena-x') {
+      return true
+    }
+
+    if (getCatenaXAccessMode(infra) === 'edc') {
+      if (!infra.catenaX?.edc?.proxyId?.trim()) {
+        navigationStore.dispatchSnackbar({
+          status: true,
+          timeout: 8000,
+          color: 'warning',
+          btnColor: 'buttonText',
+          text: 'Enter an EDC proxy ID for this Catena-X infrastructure.',
+        })
+        return false
+      }
+      return true
+    }
+
+    const missingEndpoint = getEndpointFieldsForTemplate(infra)
+      .find(endpointField => getEndpointFieldValue(infra.components, endpointField).trim() === '')
+    if (missingEndpoint) {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 8000,
+        color: 'warning',
+        btnColor: 'buttonText',
+        text: `Enter a ${missingEndpoint.label} endpoint URL for this Catena-X infrastructure.`,
+      })
+      return false
+    }
+
+    return true
   }
 </script>
