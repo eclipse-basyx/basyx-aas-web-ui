@@ -4,15 +4,117 @@
     {
       "label": "aas-web-ui: bff:build",
       "type": "shell",
-      "command": "pnpm",
       "args": [
         "bff:build"
       ],
       "options": {
         "cwd": "${workspaceFolder}/aas-web-ui"
       },
+      "windows": {
+        "command": "pnpm.cmd"
+      },
+      "linux": {
+        "command": "pnpm"
+      },
+      "osx": {
+        "command": "pnpm"
+      },
       "group": "build",
       "problemMatcher": "$tsc"
+    },
+    {
+      "label": "aas-web-ui: install & build",
+      "type": "shell",
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "windows": {
+        "command": "pnpm install; pnpm build",
+        "options": {
+          "shell": {
+            "executable": "powershell.exe",
+            "args": [
+              "-Command"
+            ]
+          }
+        }
+      },
+      "linux": {
+        "command": "pnpm install && pnpm build",
+        "options": {
+          "shell": {
+            "executable": "/bin/bash",
+            "args": [
+              "-c"
+            ]
+          }
+        }
+      },
+      "osx": {
+        "command": "pnpm install && pnpm build",
+        "options": {
+          "shell": {
+            "executable": "/bin/zsh",
+            "args": [
+              "-c"
+            ]
+          }
+        }
+      },
+      "group": "build",
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "aas-web-ui: dev (port 3999)",
+      "type": "shell",
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "windows": {
+        "command": "Start-Process 'http://localhost:3999'; pnpm dev --port 3999",
+        "options": {
+          "shell": {
+            "executable": "powershell.exe",
+            "args": [
+              "-Command"
+            ]
+          }
+        }
+      },
+      "linux": {
+        "command": "xdg-open http://localhost:3999; pnpm dev --port 3999",
+        "options": {
+          "shell": {
+            "executable": "/bin/bash",
+            "args": [
+              "-c"
+            ]
+          }
+        }
+      },
+      "osx": {
+        "command": "open http://localhost:3999; pnpm dev --port 3999",
+        "options": {
+          "shell": {
+            "executable": "/bin/zsh",
+            "args": [
+              "-c"
+            ]
+          }
+        }
+      },
+      "group": "build",
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*",
+          "endsPattern": ".*Local.*3999.*"
+        }
+      }
     }
   ]
 }
