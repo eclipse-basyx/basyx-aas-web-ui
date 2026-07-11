@@ -42,6 +42,7 @@
 : "${AUTHORIZATION_HEADER_PREFIX:=Bearer}"
 : "${AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION:=true}"
 : "${START_PAGE_ROUTE_NAME:=}"
+: "${COMPANY_LOOKUP_DOMAIN:=}"
 : "${CX_EDC_BFF_ENABLED:=false}"
 : "${CX_EDC_BFF_PORT:=3001}"
 
@@ -186,6 +187,7 @@ printf "%-38s %s\n" "Editor ID prefix:" "$EDITOR_ID_PREFIX"
 printf "%-38s %s\n" "Authorization header prefix:" "$AUTHORIZATION_HEADER_PREFIX"
 printf "%-38s %s\n" "Authorization header description endpoint exemption:" "$AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION"
 printf "%-38s %s\n" "Start page route name:" "$START_PAGE_ROUTE_NAME"
+printf "%-38s %s\n" "Company Lookup Domain:" "$COMPANY_LOOKUP_DOMAIN"
 printf "%-38s %s\n" "Integrated Catena-X EDC BFF:" "$CX_EDC_BFF_ENABLED"
 printf "%-38s %s\n" "Catena-X EDC BFF upstream:" "$CX_EDC_BFF_UPSTREAM_URL"
 echo "-------------------------------------------------------------------------------------------------------------------------"
@@ -233,6 +235,7 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__AUTHORIZATION_HEADER_PREFIX_PLACEHOLDER__/|$AUTHORIZATION_HEADER_PREFIX|g" \
     -e "s|/__AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION_PLACEHOLDER__/|$AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION|g" \
     -e "s|/__START_PAGE_ROUTE_NAME_PLACEHOLDER__/|$START_PAGE_ROUTE_NAME|g" \
+    -e "s|/__COMPANY_LOOKUP_DOMAIN_PLACEHOLDER__/|$COMPANY_LOOKUP_DOMAIN|g" \
     {} \;
 
 BFF_PID=""
