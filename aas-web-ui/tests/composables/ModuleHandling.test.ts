@@ -250,7 +250,7 @@ describe('ModuleHandling.ts', () => {
     const filteredRoutes = determineFilteredAndOrderedModuleRoutes()
 
     expect(filteredRoutes).toHaveLength(1)
-    expect(filteredRoutes[0].name).toBe('CompanyLookupModule')
+    expect(filteredRoutes[0].name).toBe('EnvModule')
   })
 
   it('excludes a module when a required infrastructure endpoint is not set', async () => {
@@ -295,7 +295,7 @@ describe('ModuleHandling.ts', () => {
     const filteredRoutes = determineFilteredAndOrderedModuleRoutes()
 
     expect(filteredRoutes).toHaveLength(1)
-    expect(filteredRoutes[0].name).toBe('AasRepoDependentModule')
+    expect(filteredRoutes[0].name).toBe('BaSyxComponentEndpointModule')
   })
 
   it('reacts to route name and store changes when wrapped in computed by callers', async () => {
