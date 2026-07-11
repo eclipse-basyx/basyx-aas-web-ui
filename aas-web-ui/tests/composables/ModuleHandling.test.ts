@@ -20,6 +20,8 @@ const mockState = {
   selectedAas: ref<Record<string, unknown> | null>(null),
   selectedNode: ref<Record<string, unknown> | null>(null),
   selectedInfrastructure: ref<{ template: string } | null>({ template: 'full' }),
+  setEnvVariables: ref<Array<string>>([]),
+  setInfrastructureEndpoints: ref<Array<string>>([]),
 }
 
 async function importUseModuleHandling () {
@@ -58,6 +60,13 @@ async function importUseModuleHandling () {
       get getSelectedInfrastructure () {
         return mockState.selectedInfrastructure.value
       },
+      isEndpointSet: (componentKey: string) => mockState.setInfrastructureEndpoints.value.includes(componentKey),
+    }),
+  }))
+
+  vi.doMock('@/store/EnvironmentStore', () => ({
+    useEnvStore: () => ({
+      isEnvVariableSet: (envVariableName: string) => mockState.setEnvVariables.value.includes(envVariableName),
     }),
   }))
 
@@ -74,6 +83,8 @@ describe('ModuleHandling.ts', () => {
     mockState.selectedAas.value = null
     mockState.selectedNode.value = null
     mockState.selectedInfrastructure.value = { template: 'full' }
+    mockState.setEnvVariables.value = []
+    mockState.setInfrastructureEndpoints.value = []
     mockState.moduleRoutes.value = [
       createModuleRoute({
         path: '/modules/test-module',
@@ -195,6 +206,96 @@ describe('ModuleHandling.ts', () => {
 
     expect(filteredRoutes).toHaveLength(1)
     expect(filteredRoutes[0].name).toBe('WriteHeavyModule')
+  })
+
+  it('excludes a module when a required env variable is not set', async () => {
+    mockState.setEnvVariables.value = []
+    mockState.moduleRoutes.value = [
+      createModuleRoute({
+        path: '/modules/env',
+        name: 'EnvModule',
+        meta: {
+          isDesktopModule: true,
+          isMobileModule: true,
+          isVisibleModule: true,
+          needsEnvVariables: ['ENV_VARIABLE_NAME'],
+        },
+      }),
+    ]
+
+    const { useModuleHandling } = await importUseModuleHandling()
+    const { determineFilteredAndOrderedModuleRoutes } = useModuleHandling()
+    const filteredRoutes = determineFilteredAndOrderedModuleRoutes()
+
+    expect(filteredRoutes).toHaveLength(0)
+  })
+
+  it('includes a module when all required env variables are set', async () => {
+    mockState.setEnvVariables.value = ['ENV_VARIABLE_NAME']
+    mockState.moduleRoutes.value = [
+      createModuleRoute({
+        path: '/modules/env',
+        name: 'EnvModule',
+        meta: {
+          isDesktopModule: true,
+          isMobileModule: true,
+          isVisibleModule: true,
+          needsEnvVariables: ['ENV_VARIABLE_NAME'],
+        },
+      }),
+    ]
+
+    const { useModuleHandling } = await importUseModuleHandling()
+    const { determineFilteredAndOrderedModuleRoutes } = useModuleHandling()
+    const filteredRoutes = determineFilteredAndOrderedModuleRoutes()
+
+    expect(filteredRoutes).toHaveLength(1)
+    expect(filteredRoutes[0].name).toBe('CompanyLookupModule')
+  })
+
+  it('excludes a module when a required infrastructure endpoint is not set', async () => {
+    mockState.setInfrastructureEndpoints.value = []
+    mockState.moduleRoutes.value = [
+      createModuleRoute({
+        path: '/modules/basyx-component-endpoint',
+        name: 'BaSyxComponentEndpointModule',
+        meta: {
+          isDesktopModule: true,
+          isMobileModule: true,
+          isVisibleModule: true,
+          needsInfrastructureEndpoints: ['AASRepo'],
+        },
+      }),
+    ]
+
+    const { useModuleHandling } = await importUseModuleHandling()
+    const { determineFilteredAndOrderedModuleRoutes } = useModuleHandling()
+    const filteredRoutes = determineFilteredAndOrderedModuleRoutes()
+
+    expect(filteredRoutes).toHaveLength(0)
+  })
+
+  it('includes a module when all required infrastructure endpoints are set', async () => {
+    mockState.setInfrastructureEndpoints.value = ['AASRepo']
+    mockState.moduleRoutes.value = [
+      createModuleRoute({
+        path: '/modules/basyx-component-endpoint',
+        name: 'BaSyxComponentEndpointModule',
+        meta: {
+          isDesktopModule: true,
+          isMobileModule: true,
+          isVisibleModule: true,
+          needsInfrastructureEndpoints: ['AASRepo'],
+        },
+      }),
+    ]
+
+    const { useModuleHandling } = await importUseModuleHandling()
+    const { determineFilteredAndOrderedModuleRoutes } = useModuleHandling()
+    const filteredRoutes = determineFilteredAndOrderedModuleRoutes()
+
+    expect(filteredRoutes).toHaveLength(1)
+    expect(filteredRoutes[0].name).toBe('AasRepoDependentModule')
   })
 
   it('reacts to route name and store changes when wrapped in computed by callers', async () => {

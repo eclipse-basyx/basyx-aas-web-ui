@@ -1,3 +1,4 @@
+import type { BaSyxComponentKey } from '@/types/BaSyx'
 import type { InfrastructureTemplate } from '@/types/Infrastructure'
 
 export interface SnackbarType {
@@ -60,6 +61,8 @@ export interface ModuleNavigationRouteMeta {
   isOnlyVisibleWithSelectedAas?: boolean
   isOnlyVisibleWithSelectedNode?: boolean
   visibleOnRoutes?: Array<string>
+  needsEnvVariables?: Array<string>
+  needsInfrastructureEndpoints?: Array<BaSyxComponentKey>
   supportedInfrastructureTemplates?: InfrastructureTemplate[]
   preserveRouteQuery?: boolean
 }

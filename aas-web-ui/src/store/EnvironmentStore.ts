@@ -146,7 +146,70 @@ export const useEnvStore = defineStore('envStore', () => {
   })
   const getCompanyLookupDomain = computed(() => companyLookupDomain.value)
 
+  // Maps env variable names to their corresponding getter, so
+  // e.g. `ModuleNavigationRouteMeta.needsEnvVariables` can check readiness generically.
+  const envVariableGetters: Record<string, ComputedRef<string | boolean | undefined>> = {
+    BASE_PATH: getEnvBasePath,
+    LOGO_LIGHT_PATH: getEnvLogoLightPath,
+    LOGO_DARK_PATH: getEnvLogoDarkPath,
+    AAS_DISCOVERY_PATH: getEnvAASDiscoveryPath,
+    AAS_REGISTRY_PATH: getEnvAASRegistryPath,
+    SUBMODEL_REGISTRY_PATH: getEnvSubmodelRegistryPath,
+    AAS_REPO_PATH: getEnvAASRepoPath,
+    SUBMODEL_REPO_PATH: getEnvSubmodelRepoPath,
+    CD_REPO_PATH: getEnvConceptDescriptionRepoPath,
+    COMPANY_LOOKUP_PATH: getEnvCompanyLookupPath,
+    PRIMARY_LIGHT_COLOR: getEnvPrimaryLightColor,
+    PRIMARY_DARK_COLOR: getEnvPrimaryDarkColor,
+    INFLUXDB_TOKEN: getEnvInfluxdbToken,
+    KEYCLOAK_ACTIVE: getKeycloakActive,
+    KEYCLOAK_URL: getKeycloakUrl,
+    KEYCLOAK_REALM: getKeycloakRealm,
+    KEYCLOAK_CLIENT_ID: getKeycloakClientId,
+    KEYCLOAK_FEATURE_CONTROL: getKeycloakFeatureControl,
+    KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX: getKeycloakFeatureControlRolePrefix,
+    OIDC_ACTIVE: getOidcActive,
+    OIDC_URL: getOidcUrl,
+    OIDC_SCOPE: getOidcScope,
+    OIDC_CLIENT_ID: getOidcClientId,
+    PRECONFIGURED_AUTH: getPreconfiguredAuth,
+    PRECONFIGURED_AUTH_CLIENT_SECRET: getPreconfiguredAuthClientSecret,
+    ENDPOINT_CONFIG_AVAILABLE: getEndpointConfigAvailable,
+    SINGLE_AAS: getSingleAas,
+    SINGLE_AAS_REDIRECT: getSingleAasRedirect,
+    SM_VIEWER_EDITOR: getSmViewerEditor,
+    SINGLE_SM: getSingleSm,
+    SINGLE_SM_REDIRECT: getSingleSmRedirect,
+    ALLOW_EDITING: getAllowEditing,
+    ALLOW_UPLOADING: getAllowUploading,
+    ALLOW_LOGOUT: getAllowLogout,
+    BASIC_AUTH_ACTIVE: getBasicAuthActive,
+    BASIC_AUTH_USERNAME: getBasicAuthUsername,
+    BASIC_AUTH_PASSWORD: getBasicAuthPassword,
+    EDITOR_ID_PREFIX: getEditorIdPrefix,
+    AUTHORIZATION_HEADER_PREFIX: getAuthorizationPrefix,
+    AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION: getAuthorizationDescriptionEndpointExemption,
+    START_PAGE_ROUTE_NAME: getStartPageRouteName,
+    COMPANY_LOOKUP_DOMAIN: getCompanyLookupDomain,
+  }
+
   // Actions
+  function isEnvVariableSet (envVariableName: string): boolean {
+    const envVariableGetter = envVariableGetters[envVariableName]
+    if (!envVariableGetter) {
+      return false
+    }
+    const value = envVariableGetter.value
+
+    // Boolean-flag env variables (e.g. VITE_KEYCLOAK_ACTIVE) are considered "set" per default
+    if (typeof value === 'boolean') {
+      return true
+    }
+
+    const trimmedValue = (value || '').trim()
+    return trimmedValue !== '' && !trimmedValue.includes('PLACEHOLDER')
+  }
+
   function setSingleAas (singleAasValue: string): void {
     singleAas.value = singleAasValue
   }
@@ -221,6 +284,7 @@ export const useEnvStore = defineStore('envStore', () => {
     getCOmpanyLookupDomain: getCompanyLookupDomain,
 
     // Actions
+    isEnvVariableSet,
     setSingleAas,
     setSingleSm,
     setSmViewerEditor,
