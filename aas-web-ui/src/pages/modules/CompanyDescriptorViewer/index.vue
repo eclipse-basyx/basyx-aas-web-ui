@@ -67,7 +67,7 @@
         <StringListElement
           v-if="companyDescriptor.nameOptions && companyDescriptor.nameOptions.length > 0"
           :small="false"
-          :string-array="companyDescriptor.nameOptions"
+          :strings="companyDescriptor.nameOptions"
           :title="'Name Options'"
         />
 
@@ -103,7 +103,7 @@
         <StringListElement
           v-if="companyDescriptor.assetIdRegexPatterns && companyDescriptor.assetIdRegexPatterns.length > 0"
           :small="false"
-          :string-array="companyDescriptor.assetIdRegexPatterns"
+          :strings="companyDescriptor.assetIdRegexPatterns"
           :title="'Asset ID Regex Patterns'"
         />
       </v-list>
