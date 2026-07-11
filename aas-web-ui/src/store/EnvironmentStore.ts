@@ -281,7 +281,7 @@ export const useEnvStore = defineStore('envStore', () => {
     getAuthorizationPrefix,
     getAuthorizationDescriptionEndpointExemption,
     getStartPageRouteName,
-    getCOmpanyLookupDomain: getCompanyLookupDomain,
+    getCompanyLookupDomain,
 
     // Actions
     isEnvVariableSet,
