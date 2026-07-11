@@ -12,7 +12,7 @@
 # - hasRegistryIntegration: Backend repository creates/updates/deletes descriptors automatically.
 # - hasDiscoveryIntegration: Backend AAS registry creates/updates/deletes discovery asset links automatically.
 # Optional infrastructure template (defaults to "full" when omitted):
-# - full: aasDiscovery, aasRegistry, submodelRegistry, aasRepository, submodelRepository, conceptDescriptionRepository
+# - full: aasDiscovery, aasRegistry, submodelRegistry, aasRepository, submodelRepository, conceptDescriptionRepository, companyLookup
 # - identifiable: aasRepository only; submodels are resolved via /shells/{aasId}/submodels/{submodelId}
 # - mono-repo: discovery and registries plus one aasEnvironment URL for the repositories
 # - mono-all: one aasEnvironment URL for all components
@@ -47,6 +47,8 @@ infrastructures:
         hasRegistryIntegration: true
       conceptDescriptionRepository:
         baseUrl: "http://localhost:9081"
+      companyLookup:
+        baseUrl: "http://localhost:9085"
     security:
       type: none
 
@@ -67,6 +69,8 @@ infrastructures:
   #       baseUrl: "https://aasenv.basyx.example.com"
   #     conceptDescriptionRepository:
   #       baseUrl: "https://aasenv.basyx.example.com"
+  #     companyLookup:
+  #       baseUrl: "https://companylookup.basyx.example.com"
   #   security:
   #     type: oauth2
   #     config:
@@ -110,6 +114,11 @@ infrastructures:
   #       baseUrl: "https://dtr.staging.basyx.com"
   #     submodelService:
   #       baseUrl: "https://submodel-service.staging.basyx.com"
+  #   security:
+  #     type: basic
+  #     config:
+  #       username: "admin"
+  #       password: "admin123"
 
   # # Catena-X EDC infrastructure
   # edc:

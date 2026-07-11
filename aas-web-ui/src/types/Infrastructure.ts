@@ -228,6 +228,7 @@ export interface YamlInfrastructureConfig {
     submodelRepository?: YamlComponentConfig
     conceptDescriptionRepository?: YamlComponentConfig
     aasEnvironment?: YamlComponentConfig
+    companyLookup?: YamlComponentConfig
     digitalTwinRegistry?: YamlComponentConfig
     submodelService?: YamlComponentConfig
   }

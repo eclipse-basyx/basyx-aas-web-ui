@@ -34,6 +34,7 @@ export function useInfrastructureYamlParser (): {
     aasRepository: 'AASRepo',
     submodelRepository: 'SubmodelRepo',
     conceptDescriptionRepository: 'ConceptDescriptionRepo',
+    companyLookup: 'CompanyLookup',
   }
 
   /**
@@ -251,6 +252,7 @@ export function useInfrastructureYamlParser (): {
         AASRepo: { url: '' },
         SubmodelRepo: { url: '' },
         ConceptDescriptionRepo: { url: '' },
+        CompanyLookup: { url: '' },
       },
     }
 

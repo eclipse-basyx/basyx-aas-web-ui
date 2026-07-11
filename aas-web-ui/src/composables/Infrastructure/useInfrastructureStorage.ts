@@ -167,6 +167,9 @@ export function useInfrastructureStorage (): {
       ConceptDescriptionRepo: {
         url: '',
       },
+      CompanyLookup: {
+        url: '',
+      },
     }
   }
 

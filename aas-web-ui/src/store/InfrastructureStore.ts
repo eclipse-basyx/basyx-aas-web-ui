@@ -6,6 +6,7 @@ import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient'
 import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
 import { useCDRepositoryClient } from '@/composables/Client/CDRepositoryClient'
+import { useCompanyLookupClient } from '@/composables/Client/CompanyLookupClient'
 import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
 import { useInfrastructureAuth } from '@/composables/Infrastructure/useInfrastructureAuth'
@@ -35,6 +36,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   const { endpointPath: aasRepoEndpointPath } = useAASRepositoryClient()
   const { endpointPath: smRepoEndpointPath } = useSMRepositoryClient()
   const { endpointPath: cdRepoEndpointPath } = useCDRepositoryClient()
+  const { endpointPath: companyLookupEndpointPath } = useCompanyLookupClient()
 
   // Computed Properties from Environment Store
   const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable)
@@ -44,6 +46,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   const EnvAASRepoPath = computed(() => envStore.getEnvAASRepoPath)
   const EnvSubmodelRepoPath = computed(() => envStore.getEnvSubmodelRepoPath)
   const EnvConceptDescriptionRepoPath = computed(() => envStore.getEnvConceptDescriptionRepoPath)
+  const EnvCompanyLookupPath = computed(() => envStore.getEnvCompanyLookupPath)
   const EnvKeycloakActive = computed(() => envStore.getKeycloakActive)
   const EnvKeycloakUrl = computed(() => envStore.getKeycloakUrl)
   const EnvKeycloakRealm = computed(() => envStore.getKeycloakRealm)
@@ -71,6 +74,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   const AASRepoURL = ref<string>('')
   const SubmodelRepoURL = ref<string>('')
   const ConceptDescriptionRepoURL = ref<string>('')
+  const CompanyLookupURL = ref<string>('')
 
   // Reactive BaSyx Components Configurations
   const basyxComponents = reactive<Record<BaSyxComponentKey, BaSyxComponent>>({
@@ -128,6 +132,15 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       pathCheck: cdRepoEndpointPath,
       additionalParams: '?limit=1',
     },
+    CompanyLookup: {
+      url: CompanyLookupURL,
+      loading: ref(false),
+      connected: ref(null),
+      connect: () => connectComponent('CompanyLookup'),
+      label: 'Company Lookup URL',
+      pathCheck: companyLookupEndpointPath,
+      additionalParams: '?limit=1',
+    },
   })
 
   // Getters
@@ -157,6 +170,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   const getSubmodelRepoURL = computed(() => getActiveComponentUrl('SubmodelRepo', SubmodelRepoURL.value))
   const getConceptDescriptionRepoURL = computed(() =>
     getActiveComponentUrl('ConceptDescriptionRepo', ConceptDescriptionRepoURL.value),
+  )
+  const getCompanyLookupURL = computed(() =>
+    getActiveComponentUrl('CompanyLookup', CompanyLookupURL.value),
   )
   const getBasyxComponents = computed(() => basyxComponents)
   const getIsAuthenticating = computed(() => isAuthenticating.value)
@@ -239,6 +255,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       AASRepoURL.value = initialInfra.components.AASRepo.url
       SubmodelRepoURL.value = initialInfra.components.SubmodelRepo.url
       ConceptDescriptionRepoURL.value = initialInfra.components.ConceptDescriptionRepo.url
+      CompanyLookupURL.value = initialInfra.components.CompanyLookup.url
     }
 
     // Connect components after infrastructure is loaded and synced
@@ -259,6 +276,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       AASRepoURL.value = infra.components.AASRepo.url
       SubmodelRepoURL.value = infra.components.SubmodelRepo.url
       ConceptDescriptionRepoURL.value = infra.components.ConceptDescriptionRepo.url
+      CompanyLookupURL.value = infra.components.CompanyLookup.url
     }
   })
 
@@ -287,6 +305,10 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       }
       case 'ConceptDescriptionRepo': {
         ConceptDescriptionRepoURL.value = url
+        break
+      }
+      case 'CompanyLookup': {
+        CompanyLookupURL.value = url
         break
       }
       default: {
@@ -371,6 +393,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         AASRepoURL.value = infrastructure.components.AASRepo.url
         SubmodelRepoURL.value = infrastructure.components.SubmodelRepo.url
         ConceptDescriptionRepoURL.value = infrastructure.components.ConceptDescriptionRepo.url
+        CompanyLookupURL.value = infrastructure.components.CompanyLookup.url
       }
     }
   }
@@ -395,6 +418,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             aasRepoPath: EnvAASRepoPath.value,
             submodelRepoPath: EnvSubmodelRepoPath.value,
             conceptDescriptionRepoPath: EnvConceptDescriptionRepoPath.value,
+            companyLookupEndpointPath: EnvCompanyLookupPath.value,
             keycloakActive: EnvKeycloakActive.value,
             keycloakUrl: EnvKeycloakUrl.value,
             keycloakRealm: EnvKeycloakRealm.value,
@@ -465,6 +489,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       AASRepoURL.value = selectedInfra.components.AASRepo.url
       SubmodelRepoURL.value = selectedInfra.components.SubmodelRepo.url
       ConceptDescriptionRepoURL.value = selectedInfra.components.ConceptDescriptionRepo.url
+      CompanyLookupURL.value = selectedInfra.components.CompanyLookup.url
     }
 
     // Clear AAS list and treeview
@@ -739,6 +764,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     getAASRepoURL,
     getSubmodelRepoURL,
     getConceptDescriptionRepoURL,
+    getCompanyLookupURL,
     getBasyxComponents,
     getDefaultInfrastructureId,
     getIsAuthenticating,
