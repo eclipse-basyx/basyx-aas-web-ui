@@ -94,6 +94,18 @@ describe('BooleanType', () => {
     expect((output.vm as any).helperText).toBe('')
   })
 
+  it.each([
+    [true, 'true'],
+    [false, 'false'],
+  ])('emits operation values as AAS strings for %s', (value, expectedValue) => {
+    const wrapper = mountBooleanType({ idShort: 'enabled', value: !value })
+
+    ;(wrapper.vm as any).newBooleanValue = value
+    ;(wrapper.vm as any).changeState()
+
+    expect(wrapper.emitted('update-value')).toEqual([[expectedValue]])
+  })
+
   it('shows the server value while a regular property has an unsaved change', async () => {
     const wrapper = mountBooleanType({ idShort: 'enabled', value: false }, false)
 
@@ -104,21 +116,24 @@ describe('BooleanType', () => {
     expect((wrapper.vm as any).helperText).toBe('Not saved')
   })
 
-  it('saves an editable regular property immediately when toggled', async () => {
+  it.each([
+    [true, '"true"'],
+    [false, '"false"'],
+  ])('saves the regular property as an AAS string for %s', async (value, expectedBody) => {
     const wrapper = mountBooleanType({
       idShort: 'enabled',
       modelType: 'Property',
       path: 'https://example.test/properties/enabled',
-      value: false,
+      value: !value,
     }, false)
 
-    ;(wrapper.vm as any).newBooleanValue = true
+    ;(wrapper.vm as any).newBooleanValue = value
     ;(wrapper.vm as any).changeState()
     await flushPromises()
 
     expect(requestMocks.patchRequest).toHaveBeenCalledOnce()
     expect(requestMocks.patchRequest.mock.calls[0][0]).toBe('https://example.test/properties/enabled/$value')
-    expect(requestMocks.patchRequest.mock.calls[0][1]).toBe('"true"')
+    expect(requestMocks.patchRequest.mock.calls[0][1]).toBe(expectedBody)
     expect((wrapper.vm as any).saveStatus).toBe('saved')
   })
 

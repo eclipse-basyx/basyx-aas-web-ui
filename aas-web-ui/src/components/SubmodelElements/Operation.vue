@@ -253,7 +253,7 @@
 
   function updateOperationVariable (e: any, variable: any): void {
     // console.log('updateOperationVariable: ', 'new Value: ', e, ' Variable: ', variable);
-    variable.value = e
+    variable.value = variable.valueType === 'xs:boolean' && typeof e === 'boolean' ? e.toString() : e
   }
 
   function refreshWebUi (): void {

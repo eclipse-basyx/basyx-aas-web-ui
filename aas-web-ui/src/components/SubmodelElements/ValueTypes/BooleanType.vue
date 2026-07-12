@@ -55,7 +55,7 @@
   })
 
   const emit = defineEmits<{
-    (event: 'update-value', updatedBooleanValue: any): void
+    (event: 'update-value', updatedBooleanValue: string): void
   }>()
 
   // Data
@@ -140,7 +140,7 @@
 
   async function updateValue (): Promise<void> {
     if (isOperationVariable.value) {
-      emit('update-value', newBooleanValue.value)
+      emit('update-value', newBooleanValue.value.toString())
       return
     }
 
