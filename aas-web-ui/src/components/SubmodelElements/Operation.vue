@@ -37,41 +37,36 @@
 
               <v-divider v-if="variable.value && variable.value.description" class="mt-1" />
               <!-- Variable Value -->
-              <v-list-item class="px-0 pb-0">
-                <v-list-item-title class="pt-1">
-                  <!-- <pre class="mx-4 mt-2 mb-1 pa-3" style="border: solid; border-radius: 3px; border-width: 1px">{{ variable }}</pre> -->
-                  <!-- Value Representation depending on the ModelType -->
-                  <Property
-                    v-if="variable.value.modelType === 'Property'"
-                    :is-editable="isEditable"
-                    :is-operation-variable="true"
-                    :property-object="variable.value"
-                    :variable-type="variableType.type"
-                    @update-value="updateOperationVariable($event, variable.value)"
-                  />
+              <!-- Value Representation depending on the ModelType -->
+              <Property
+                v-if="variable.value.modelType === 'Property'"
+                :is-editable="isEditable"
+                :is-operation-variable="true"
+                :property-object="variable.value"
+                :variable-type="variableType.type"
+                @update-value="updateOperationVariable($event, variable.value)"
+              />
 
-                  <ReferenceElement
-                    v-else-if="variable.value.modelType === 'ReferenceElement'"
-                    :is-editable="isEditable"
-                    :is-operation-variable="true"
-                    :reference-element-object="variable.value"
-                    :variable-type="variableType.type"
-                    @update-value="
-                      updateOperationVariable($event, variable.value)
-                    "
-                  />
+              <ReferenceElement
+                v-else-if="variable.value.modelType === 'ReferenceElement'"
+                :is-editable="isEditable"
+                :is-operation-variable="true"
+                :reference-element-object="variable.value"
+                :variable-type="variableType.type"
+                @update-value="
+                  updateOperationVariable($event, variable.value)
+                "
+              />
 
-                  <InvalidElement
-                    v-else
-                    :invalid-element-object="variable.value"
-                    :is-operation-variable="true"
-                    :variable-type="variableType.type"
-                    @update-value="
-                      updateOperationVariable($event, variable.value)
-                    "
-                  />
-                </v-list-item-title>
-              </v-list-item>
+              <InvalidElement
+                v-else
+                :invalid-element-object="variable.value"
+                :is-operation-variable="true"
+                :variable-type="variableType.type"
+                @update-value="
+                  updateOperationVariable($event, variable.value)
+                "
+              />
             </v-card>
           </template>
         </v-container>
@@ -258,7 +253,7 @@
 
   function updateOperationVariable (e: any, variable: any): void {
     // console.log('updateOperationVariable: ', 'new Value: ', e, ' Variable: ', variable);
-    variable.value = e
+    variable.value = variable.valueType === 'xs:boolean' && typeof e === 'boolean' ? e.toString() : e
   }
 
   function refreshWebUi (): void {
