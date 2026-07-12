@@ -30,6 +30,8 @@
 : "${SINGLE_AAS:=false}"
 : "${SINGLE_AAS_REDIRECT:=}"
 : "${SM_VIEWER_EDITOR:=true}"
+: "${SINGLE_SM:=false}"
+: "${SINGLE_SM_REDIRECT:=}"
 : "${ALLOW_EDITING:=true}"
 : "${ALLOW_UPLOADING:=true}"
 : "${ALLOW_LOGOUT:=true}"
@@ -39,11 +41,21 @@
 : "${AUTHORIZATION_HEADER_PREFIX:=Bearer}"
 : "${AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION:=true}"
 : "${START_PAGE_ROUTE_NAME:=}"
+: "${CX_EDC_BFF_ENABLED:=false}"
+: "${CX_EDC_BFF_PORT:=3001}"
+
+if [ "$CX_EDC_BFF_ENABLED" = "true" ] && [ -z "${CX_EDC_BFF_UPSTREAM_URL+x}" ]; then
+    CX_EDC_BFF_UPSTREAM_URL="http://127.0.0.1:${CX_EDC_BFF_PORT}"
+fi
+
+: "${CX_EDC_BFF_UPSTREAM_URL:=http://catena-x-edc-bff:3001}"
 
 # Replace ${BASE_PATH} in the NGINX config template (without trailing slash)
 BASE_PATH_NGINX_PREFIX=$(echo "$BASE_PATH" | sed 's|/*$||')
 export BASE_PATH_NGINX_PREFIX
-envsubst '${BASE_PATH_NGINX_PREFIX}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+export CX_EDC_BFF_UPSTREAM_URL
+export CX_EDC_BFF_PORT
+envsubst '${BASE_PATH_NGINX_PREFIX} ${CX_EDC_BFF_UPSTREAM_URL}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
 # Add a trailing slash to BASE_PATH for the replacement in files
 BASE_PATH_WITH_SLASH=$(echo "$BASE_PATH" | sed 's|/*$|/|')
@@ -58,10 +70,10 @@ if [ -f "$YAML_CONFIG_PATH" ]; then
     echo "Processing infrastructure configuration"
     echo "========================================="
     echo "YAML config found at: $YAML_CONFIG_PATH"
-    
+
     # Create config directory if it doesn't exist
     mkdir -p "$CONFIG_OUTPUT_DIR"
-    
+
     # Copy YAML file to config directory (will be parsed by the application)
     if cp "$YAML_CONFIG_PATH" "$YAML_OUTPUT_PATH"; then
         echo "Successfully copied YAML configuration"
@@ -160,6 +172,8 @@ printf "%-38s %s\n" "Endpoint config available:" "$ENDPOINT_CONFIG_AVAILABLE"
 printf "%-38s %s\n" "Single AAS:" "$SINGLE_AAS"
 printf "%-38s %s\n" "Single AAS redirect:" "$SINGLE_AAS_REDIRECT"
 printf "%-38s %s\n" "SM Viewer/Editor:" "$SM_VIEWER_EDITOR"
+printf "%-38s %s\n" "Single SM:" "$SINGLE_SM"
+printf "%-38s %s\n" "Single SM redirect:" "$SINGLE_SM_REDIRECT"
 printf "%-38s %s\n" "Allow editing:" "$ALLOW_EDITING"
 printf "%-38s %s\n" "Allow uploading:" "$ALLOW_UPLOADING"
 printf "%-38s %s\n" "Allow logout:" "$ALLOW_LOGOUT"
@@ -170,6 +184,8 @@ printf "%-38s %s\n" "Editor ID prefix:" "$EDITOR_ID_PREFIX"
 printf "%-38s %s\n" "Authorization header prefix:" "$AUTHORIZATION_HEADER_PREFIX"
 printf "%-38s %s\n" "Authorization header description endpoint exemption:" "$AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION"
 printf "%-38s %s\n" "Start page route name:" "$START_PAGE_ROUTE_NAME"
+printf "%-38s %s\n" "Integrated Catena-X EDC BFF:" "$CX_EDC_BFF_ENABLED"
+printf "%-38s %s\n" "Catena-X EDC BFF upstream:" "$CX_EDC_BFF_UPSTREAM_URL"
 echo "-------------------------------------------------------------------------------------------------------------------------"
 
 # Replace the placeholders in all relevant files (.js, .html, .css)
@@ -202,6 +218,8 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__SINGLE_AAS_PLACEHOLDER__/|$SINGLE_AAS|g" \
     -e "s|/__SINGLE_AAS_REDIRECT_PLACEHOLDER__/|$SINGLE_AAS_REDIRECT|g" \
     -e "s|/__SM_VIEWER_EDITOR_PLACEHOLDER__/|$SM_VIEWER_EDITOR|g" \
+    -e "s|/__SINGLE_SM_PLACEHOLDER__/|$SINGLE_SM|g" \
+    -e "s|/__SINGLE_SM_REDIRECT_PLACEHOLDER__/|$SINGLE_SM_REDIRECT|g" \
     -e "s|/__ALLOW_EDITING_PLACEHOLDER__/|$ALLOW_EDITING|g" \
     -e "s|/__ALLOW_UPLOADING_PLACEHOLDER__/|$ALLOW_UPLOADING|g" \
     -e "s|/__ALLOW_LOGOUT_PLACEHOLDER__/|$ALLOW_LOGOUT|g" \
@@ -214,5 +232,50 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__START_PAGE_ROUTE_NAME_PLACEHOLDER__/|$START_PAGE_ROUTE_NAME|g" \
     {} \;
 
+BFF_PID=""
+NGINX_PID=""
+
+stop_processes() {
+    if [ -n "$NGINX_PID" ]; then
+        kill "$NGINX_PID" 2>/dev/null || true
+    fi
+    if [ -n "$BFF_PID" ]; then
+        kill "$BFF_PID" 2>/dev/null || true
+    fi
+}
+
+trap stop_processes INT TERM
+
+if [ "$CX_EDC_BFF_ENABLED" = "true" ]; then
+    echo "Starting integrated Catena-X EDC BFF on port $CX_EDC_BFF_PORT"
+    node /usr/src/app/dist-bff/edc-bff/server.js &
+    BFF_PID="$!"
+fi
+
 # Start Nginx
-exec nginx -g 'daemon off;'
+nginx -g 'daemon off;' &
+NGINX_PID="$!"
+
+while :; do
+    if ! kill -0 "$NGINX_PID" 2>/dev/null; then
+        wait "$NGINX_PID"
+        EXIT_CODE="$?"
+        break
+    fi
+
+    if [ -n "$BFF_PID" ] && ! kill -0 "$BFF_PID" 2>/dev/null; then
+        wait "$BFF_PID"
+        EXIT_CODE="$?"
+        stop_processes
+        break
+    fi
+
+    sleep 2
+done
+
+if [ -n "$BFF_PID" ]; then
+    kill "$BFF_PID" 2>/dev/null || true
+    wait "$BFF_PID" 2>/dev/null || true
+fi
+
+exit "$EXIT_CODE"

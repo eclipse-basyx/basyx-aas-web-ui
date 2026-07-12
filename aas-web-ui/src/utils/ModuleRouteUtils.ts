@@ -1,3 +1,4 @@
+import type { InfrastructureTemplate } from '@/types/Infrastructure'
 import type { RouteRecordRaw, RouteRecordSingleView } from 'vue-router'
 
 export type ModuleRouteMeta = {
@@ -10,6 +11,8 @@ export type ModuleRouteMeta = {
   isVisibleModule?: boolean
   isOnlyVisibleWithSelectedAas?: boolean
   isOnlyVisibleWithSelectedNode?: boolean
+  visibleOnRoutes?: Array<string>
+  supportedInfrastructureTemplates?: InfrastructureTemplate[]
   preserveRouteQuery?: boolean
 }
 
@@ -29,7 +32,7 @@ function sanitizeChildRouteSegment (pathSegment: string): string {
     .trim()
     .replace(/^\/+|\/+$/g, '')
     .replace(/\//g, '_')
-    .replace(/[^a-zA-Z0-9_-]/g, '_')
+    .replace(/[^\w-]/g, '_')
   return sanitized === '' ? 'Child' : sanitized
 }
 
@@ -94,6 +97,10 @@ export function buildValidatedModuleChildRoutes (moduleName: string,
         isVisibleModule: parentMeta.isVisibleModule,
         isOnlyVisibleWithSelectedAas: parentMeta.isOnlyVisibleWithSelectedAas,
         isOnlyVisibleWithSelectedNode: parentMeta.isOnlyVisibleWithSelectedNode,
+        supportedInfrastructureTemplates:
+          childRouteDefinition.meta && Object.hasOwn(childRouteDefinition.meta, 'supportedInfrastructureTemplates')
+            ? childRouteDefinition.meta.supportedInfrastructureTemplates
+            : parentMeta.supportedInfrastructureTemplates,
         preserveRouteQuery:
                     childRouteDefinition.meta && Object.hasOwn(childRouteDefinition.meta, 'preserveRouteQuery')
                       ? childRouteDefinition.meta.preserveRouteQuery

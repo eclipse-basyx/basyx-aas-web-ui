@@ -61,7 +61,7 @@ export function useHierarchicalStructure_v1_xUtils () {
 
     // Extract the submodel ID and idShortPath from the path
     const splitted = entityPath.split('/submodel-elements/')
-    const submodelId = base64Decode(splitted[0].split('/submodels/')[1])
+    const submodelId = base64Decode(splitted[0].split('/submodels/', 2)[1])
     const idShortPath = splitted[1] // e.g., "CompositeMachine.ElectricalEnclosure.PLC"
 
     // Build keys array starting with Submodel

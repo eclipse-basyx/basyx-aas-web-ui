@@ -117,6 +117,12 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       hmr: true,
+      proxy: {
+        '/api/catena-x/edc': {
+          target: process.env.CX_EDC_BFF_UPSTREAM_URL || 'http://localhost:3001',
+          changeOrigin: true,
+        },
+      },
     },
   }
 })

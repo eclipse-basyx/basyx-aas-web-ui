@@ -51,6 +51,8 @@ export const useEnvStore = defineStore('envStore', () => {
   const singleAas = ref(withProductionPlaceholder(import.meta.env.VITE_SINGLE_AAS, '/__SINGLE_AAS_PLACEHOLDER__/'))
   const singleAasRedirect = ref(withProductionPlaceholder(import.meta.env.VITE_SINGLE_AAS_REDIRECT, '/__SINGLE_AAS_REDIRECT_PLACEHOLDER__/'))
   const smViewerEditor = ref(withProductionPlaceholder(import.meta.env.VITE_SM_VIEWER_EDITOR, '/__SM_VIEWER_EDITOR_PLACEHOLDER__/'))
+  const singleSm = ref(withProductionPlaceholder(import.meta.env.VITE_SINGLE_SM, '/__SINGLE_SM_PLACEHOLDER__/'))
+  const singleSmRedirect = ref(withProductionPlaceholder(import.meta.env.VITE_SINGLE_SM_REDIRECT, '/__SINGLE_SM_REDIRECT_PLACEHOLDER__/'))
   const allowEditing = ref(withProductionPlaceholder(import.meta.env.VITE_ALLOW_EDITING, '/__ALLOW_EDITING_PLACEHOLDER__/'))
   const allowUploading = ref(withProductionPlaceholder(import.meta.env.VITE_ALLOW_UPLOADING, '/__ALLOW_UPLOADING_PLACEHOLDER__/'))
   const allowLogout = ref(withProductionPlaceholder(import.meta.env.VITE_ALLOW_LOGOUT, '/__ALLOW_LOGOUT_PLACEHOLDER__/'))
@@ -103,6 +105,16 @@ export const useEnvStore = defineStore('envStore', () => {
     return undefined
   })
   const getSmViewerEditor = computed(() => parseBooleanEnv(smViewerEditor.value))
+  const getSingleSm = computed(() => parseBooleanEnv(singleSm.value))
+  const getSingleSmRedirect = computed(() => {
+    if (parseBooleanEnv(singleSm.value) && singleSmRedirect.value) {
+      if (urlRegex.test(singleSmRedirect.value)) {
+        return singleSmRedirect.value
+      }
+      return undefined
+    }
+    return undefined
+  })
   const getAllowEditing = computed(() => parseBooleanEnv(allowEditing.value))
   const getAllowUploading = computed(() => parseBooleanEnv(allowUploading.value))
   const getAllowLogout = computed(() => parseBooleanEnv(allowLogout.value))
@@ -134,6 +146,10 @@ export const useEnvStore = defineStore('envStore', () => {
   // Actions
   function setSingleAas (singleAasValue: string): void {
     singleAas.value = singleAasValue
+  }
+
+  function setSingleSm (singleSmValue: string): void {
+    singleSm.value = singleSmValue
   }
 
   function setSmViewerEditor (smViewerEditorValue: string): void {
@@ -186,6 +202,8 @@ export const useEnvStore = defineStore('envStore', () => {
     getSingleAas,
     getSingleAasRedirect,
     getSmViewerEditor,
+    getSingleSm,
+    getSingleSmRedirect,
     getAllowEditing,
     getAllowUploading,
     getAllowLogout,
@@ -199,6 +217,7 @@ export const useEnvStore = defineStore('envStore', () => {
 
     // Actions
     setSingleAas,
+    setSingleSm,
     setSmViewerEditor,
     setAllowEditing,
     setAllowUploading,

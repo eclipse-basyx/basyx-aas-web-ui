@@ -63,7 +63,7 @@ export async function upsertSubmodel (baseUrl: string, smIdPrefix: string) {
   }
   const smBody = JSON.stringify(aas.jsonization.toJsonable(submodel), null, 2)
 
-  let res = await fetch(`${baseUrl.endsWith('/shells') ? baseUrl.split('/shells')[0] : baseUrl}/submodels`, {
+  let res = await fetch(`${baseUrl.endsWith('/shells') ? baseUrl.split('/shells', 1)[0] : baseUrl}/submodels`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: smBody,
@@ -77,7 +77,7 @@ export async function upsertSubmodel (baseUrl: string, smIdPrefix: string) {
   if (res.status === 409) {
     const submodelIdB64 = base64UrlEncode(submodel.id)
     res = await fetch(
-      `${baseUrl.endsWith('/shells') ? baseUrl.split('/shells')[0] : baseUrl}/submodels/${submodelIdB64}`,
+      `${baseUrl.endsWith('/shells') ? baseUrl.split('/shells', 1)[0] : baseUrl}/submodels/${submodelIdB64}`,
       {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },

@@ -270,7 +270,7 @@
       if (props.blobObject.contentType.startsWith('text/')) {
         link.download = selectedNode.value.idShort + '.txt'
       } else {
-        const extension = props.blobObject.contentType.split('/')[1] || 'bin'
+        const extension = props.blobObject.contentType.split('/', 2)[1] || 'bin'
         link.download = selectedNode.value.idShort + '.' + extension
       }
 
@@ -288,6 +288,6 @@
 
   // Helper to check if content type is text-based
   function isTextContentType (contentType: string): boolean {
-    return /^text\/|application\/(json|xml|javascript|x-javascript)/i.test(contentType || '')
+    return /^text\/|application\/(?:json|xml|javascript|x-javascript)/i.test(contentType || '')
   }
 </script>

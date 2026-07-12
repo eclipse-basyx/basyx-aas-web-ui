@@ -126,8 +126,8 @@
   )
 
   const emit = defineEmits<{
-    (event: 'update:globalAssetId', value: string | null): void
-    (event: 'update:specificAssetIds', value: Array<aasTypes.SpecificAssetId> | null): void
+    (event: 'update:global-asset-id', value: string | null): void
+    (event: 'update:specific-asset-ids', value: Array<aasTypes.SpecificAssetId> | null): void
   }>()
 
   const globalAssetIdValue = ref<string | null>(props.globalAssetId)
@@ -137,17 +137,17 @@
 
   watch(globalAssetIdValue, newValue => {
     if (newValue === '') {
-      emit('update:globalAssetId', null)
+      emit('update:global-asset-id', null)
       globalAssetIdValue.value = null
     } else {
-      emit('update:globalAssetId', newValue)
+      emit('update:global-asset-id', newValue)
     }
   })
 
   watch(
     specificAssetIdsValue,
     newValue => {
-      emit('update:specificAssetIds', newValue.length > 0 ? newValue : null)
+      emit('update:specific-asset-ids', newValue.length > 0 ? newValue : null)
     },
     { deep: true },
   )

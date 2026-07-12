@@ -633,7 +633,11 @@
 
       if (columns[1] === 'result') {
         headerLine = line
-        return
+        continue
+      }
+
+      if (!headerLine || columns.length < 3) {
+        continue
       }
 
       const table = columns[2]
@@ -722,7 +726,7 @@
     }
 
     // Build series
-    const series = datasetLines.slice(1).map((line: string) => {
+    const series = datasetLines.map((line: string) => {
       const cols = line.split(',')
       return { time: cols[idxTime], value: Number.parseFloat(cols[idxValue]) }
     })

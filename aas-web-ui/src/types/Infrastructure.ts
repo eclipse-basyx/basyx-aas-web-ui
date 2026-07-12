@@ -6,6 +6,16 @@ import type { BaSyxComponentKey } from '@/types/BaSyx'
 export type SecurityType = 'No Authentication' | 'Basic Authentication' | 'Bearer Token' | 'OAuth2'
 
 /**
+ * Supported infrastructure topology templates
+ */
+export type InfrastructureTemplate = 'full' | 'identifiable' | 'mono-repo' | 'mono-all' | 'catena-x'
+
+/**
+ * Catena-X access modes supported by the CatenaXplorer module
+ */
+export type CatenaXAccessMode = 'direct' | 'edc'
+
+/**
  * Basic authentication credentials
  */
 export interface BasicAuthData {
@@ -63,11 +73,36 @@ export interface ComponentConfig {
 }
 
 /**
+ * Public Catena-X EDC metadata. This deliberately contains no Management API
+ * URL or API key; those belong to the server-side EDC proxy configuration.
+ */
+export interface CatenaXEdcConfig {
+  proxyId: string
+  defaultCounterPartyId?: string
+  defaultCounterPartyAddress?: string
+  defaultPartnerId?: string
+  partners?: CatenaXPartner[]
+}
+
+export interface CatenaXPartner {
+  id: string
+  name?: string
+  counterPartyId: string
+  counterPartyAddress: string
+}
+
+export interface CatenaXConfig {
+  accessMode?: CatenaXAccessMode
+  edc?: CatenaXEdcConfig
+}
+
+/**
  * Complete infrastructure configuration
  */
 export interface InfrastructureConfig {
   id: string
   name: string
+  template: InfrastructureTemplate
   isDefault?: boolean
   auth?: InfrastructureAuth
   token?: TokenData
@@ -75,6 +110,7 @@ export interface InfrastructureConfig {
   components: {
     [key in BaSyxComponentKey]: ComponentConfig;
   }
+  catenaX?: CatenaXConfig
   /**
    * Hash of the original YAML configuration (if loaded from YAML)
    * Used to detect when YAML file has been updated
@@ -183,6 +219,7 @@ export interface YamlSecurityConfig {
  */
 export interface YamlInfrastructureConfig {
   name?: string
+  template?: InfrastructureTemplate | string
   components: {
     aasDiscovery?: YamlComponentConfig
     aasRegistry?: YamlComponentConfig
@@ -190,6 +227,24 @@ export interface YamlInfrastructureConfig {
     aasRepository?: YamlComponentConfig
     submodelRepository?: YamlComponentConfig
     conceptDescriptionRepository?: YamlComponentConfig
+    aasEnvironment?: YamlComponentConfig
+    digitalTwinRegistry?: YamlComponentConfig
+    submodelService?: YamlComponentConfig
+  }
+  catenaX?: {
+    accessMode?: CatenaXAccessMode | string
+    edc?: {
+      proxyId?: string
+      defaultCounterPartyId?: string
+      defaultCounterPartyAddress?: string
+      defaultPartnerId?: string
+      partners?: Array<{
+        id?: string
+        name?: string
+        counterPartyId?: string
+        counterPartyAddress?: string
+      }>
+    }
   }
   security: YamlSecurityConfig
 }

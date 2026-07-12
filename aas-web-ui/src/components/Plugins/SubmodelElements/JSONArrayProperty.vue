@@ -21,6 +21,7 @@
   // Options
   defineOptions({
     name: 'JSONArrayProperty',
+    // eslint-disable-next-line unicorn/prefer-https -- Semantic IDs are exact identifiers, not fetch URLs.
     semanticId: 'http://iese.fraunhofer.de/prop_jsonarray',
   })
 

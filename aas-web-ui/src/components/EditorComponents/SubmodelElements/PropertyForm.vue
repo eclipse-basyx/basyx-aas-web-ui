@@ -236,7 +236,7 @@
   }
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: boolean): void
+    (event: 'update:model-value', value: boolean): void
   }>()
 
   watch(
@@ -252,7 +252,7 @@
   watch(
     () => editPropertyDialog.value,
     value => {
-      emit('update:modelValue', value)
+      emit('update:model-value', value)
     },
   )
 
@@ -462,7 +462,7 @@
       } else {
         // Extract the submodel ID and the idShortPath from the parentElement path
         const splitted = props.parentElement.path.split('/submodel-elements/')
-        const submodelId = base64Decode(splitted[0].split('/submodels/')[1])
+        const submodelId = base64Decode(splitted[0].split('/submodels/', 2)[1])
         const idShortPath = splitted[1]
 
         // Create the property on the parent element

@@ -40,12 +40,12 @@
 
             <v-col class="pa-2 d-flex justify-center justify-md-end" cols="12" md="3">
               <v-sheet border class="pa-2" min-width="132" rounded="lg">
-                <v-img
-                  v-if="qrCodeSrc"
-                  contain
-                  height="116"
-                  :src="qrCodeSrc"
-                  width="116"
+                <GlobalAssetQrCode
+                  v-if="hasDppId"
+                  :content="dppId"
+                  :margin="2"
+                  :scale="4"
+                  style="width: 116px; height: 116px"
                 />
 
                 <v-icon v-else class="ma-8" color="medium-emphasis" size="36">mdi-qrcode-off</v-icon>
@@ -75,9 +75,9 @@
 </template>
 
 <script lang="ts" setup>
-  import QRCode from 'qrcode'
   import { computed, onMounted, ref, watch } from 'vue'
   import { type LocationQueryRaw, useRoute, useRouter } from 'vue-router'
+  import GlobalAssetQrCode from '@/components/UIComponents/GlobalAssetQrCode.vue'
   import { useTechnicalData_v1_2Utils } from '@/composables/AAS/SubmodelTemplates/TechnicalData_v1_2Utils'
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { urlRegex, useUrlUtils } from '@/composables/UrlUtils'
@@ -99,7 +99,6 @@
   const { getAasEndpointById } = useAASRepositoryClient()
   const { getBlobUrl } = useUrlUtils()
 
-  const qrCodeSrc = ref('')
   const productImageSrc = ref('')
   const productImageAspectRatio = ref(1)
 
@@ -125,6 +124,7 @@
     return ''
   })
   const dppIdToDisplay = computed(() => (dppId.value && dppId.value.trim() !== '' ? dppId.value : '-'))
+  const hasDppId = computed(() => dppId.value.trim() !== '')
 
   const activeView = computed(() => (route.path.toLowerCase().endsWith('/pcf') ? 'pcf' : 'general'))
   const showDefaultGeneral = computed(() => route.path.toLowerCase() === '/modules/dppdemo')
@@ -142,22 +142,9 @@
 
   async function initializeHeaderData (): Promise<void> {
     productImageSrc.value = ''
-    qrCodeSrc.value = ''
     productImageAspectRatio.value = 1
 
     if (!selectedAas.value || Object.keys(selectedAas.value).length === 0) return
-
-    if (dppId.value && dppId.value.trim() !== '') {
-      try {
-        qrCodeSrc.value = await QRCode.toDataURL(dppId.value, {
-          errorCorrectionLevel: 'Q',
-          margin: 2,
-          scale: 4,
-        })
-      } catch {
-        qrCodeSrc.value = ''
-      }
-    }
 
     const defaultThumbnail = selectedAas.value?.assetInformation?.defaultThumbnail
 

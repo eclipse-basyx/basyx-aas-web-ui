@@ -82,4 +82,75 @@ describe('AASRegistryClient.ts pagination contract', () => {
     expect(result.nextCursor).toBeUndefined()
     expect(result.hasMore).toBe(false)
   })
+
+  it('appends repeated assetIds query params and ignores blank filters', async () => {
+    mockDeps.getRequest.mockResolvedValueOnce({
+      success: true,
+      data: {
+        result: [{ id: 'aas-1' }],
+      },
+    })
+
+    const { useAASRegistryClient } = await import('@/composables/Client/AASRegistryClient')
+    const { fetchAasDescriptorListPage } = useAASRegistryClient()
+
+    await fetchAasDescriptorListPage({
+      limit: 25,
+      assetIds: [
+        { name: 'manufacturerPartId', value: 'PART-001' },
+        { name: '', value: 'ignored' },
+        { name: 'globalAssetId', value: 'urn:example:asset:product-001' },
+      ],
+    })
+
+    expect(mockDeps.getRequest).toHaveBeenCalledWith(
+      'https://example.test/shell-descriptors?limit=25'
+      + '&assetIds=eyJuYW1lIjoibWFudWZhY3R1cmVyUGFydElkIiwidmFsdWUiOiJQQVJULTAwMSJ9'
+      + '&assetIds=eyJuYW1lIjoiZ2xvYmFsQXNzZXRJZCIsInZhbHVlIjoidXJuOmV4YW1wbGU6YXNzZXQ6cHJvZHVjdC0wMDEifQ',
+      'retrieving AAS Descriptors page',
+      false,
+    )
+  })
+
+  it('carries assetIds filters through paged list fetching', async () => {
+    mockDeps.getRequest
+      .mockResolvedValueOnce({
+        success: true,
+        data: {
+          result: [{ id: 'aas-1' }],
+          paging_metadata: {
+            cursor: 'cursor-2',
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        data: {
+          result: [{ id: 'aas-2' }],
+        },
+      })
+
+    const { useAASRegistryClient } = await import('@/composables/Client/AASRegistryClient')
+    const { fetchAasDescriptorList } = useAASRegistryClient()
+
+    const result = await fetchAasDescriptorList({
+      assetIds: [{ name: 'manufacturerPartId', value: 'PART-001' }],
+    })
+
+    expect(result).toEqual([{ id: 'aas-1' }, { id: 'aas-2' }])
+    expect(mockDeps.getRequest).toHaveBeenNthCalledWith(
+      1,
+      'https://example.test/shell-descriptors?limit=1000'
+      + '&assetIds=eyJuYW1lIjoibWFudWZhY3R1cmVyUGFydElkIiwidmFsdWUiOiJQQVJULTAwMSJ9',
+      'retrieving AAS Descriptors page',
+      false,
+    )
+    expect(mockDeps.getRequest).toHaveBeenNthCalledWith(
+      2,
+      'https://example.test/shell-descriptors?limit=1000&cursor=cursor-2'
+      + '&assetIds=eyJuYW1lIjoibWFudWZhY3R1cmVyUGFydElkIiwidmFsdWUiOiJQQVJULTAwMSJ9',
+      'retrieving AAS Descriptors page',
+      false,
+    )
+  })
 })

@@ -9,9 +9,7 @@
         hide-details
         placeholder="Search..."
         prepend-inner-icon="mdi-magnify"
-        @keydown.down.prevent="selectNext"
-        @keydown.enter.prevent="activateSelected"
-        @keydown.up.prevent="selectPrevious"
+        @keydown="handleSearchKeydown"
       />
 
       <v-card-text class="pa-0" style="max-height: 400px; overflow-y: auto">
@@ -95,7 +93,7 @@
   }>()
 
   const emit = defineEmits<{
-    'update:modelValue': [value: boolean]
+    'update:model-value': [value: boolean]
   }>()
 
   const route = useRoute()
@@ -214,7 +212,7 @@
 
   const dialogModel = computed({
     get: () => props.modelValue,
-    set: (value: boolean) => emit('update:modelValue', value),
+    set: (value: boolean) => emit('update:model-value', value),
   })
 
   // Clear search when dialog is closed
@@ -243,6 +241,26 @@
   function activateSelected (): void {
     if (filteredRoutes.value.length > 0 && selectedIndex.value < filteredRoutes.value.length) {
       navigateToRoute(filteredRoutes.value[selectedIndex.value])
+    }
+  }
+
+  function handleSearchKeydown (event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'ArrowDown': {
+        event.preventDefault()
+        selectNext()
+        break
+      }
+      case 'ArrowUp': {
+        event.preventDefault()
+        selectPrevious()
+        break
+      }
+      case 'Enter': {
+        event.preventDefault()
+        activateSelected()
+        break
+      }
     }
   }
 

@@ -126,7 +126,7 @@
 
   // Emits
   const emit = defineEmits<{
-    'update:previewDialog': [value: boolean]
+    'update:preview-dialog': [value: boolean]
   }>()
 
   // Composables
@@ -222,7 +222,7 @@
   )
 
   watch(dialog, newValue => {
-    emit('update:previewDialog', newValue)
+    emit('update:preview-dialog', newValue)
     if (!newValue) {
       resetState()
     }

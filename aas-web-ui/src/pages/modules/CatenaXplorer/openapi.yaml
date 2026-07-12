@@ -1,0 +1,719 @@
+openapi: 3.0.3
+info:
+  title: Digital Twin Registry API
+  description: |-
+    Combined API for Asset Administration Shell Registry Service and
+    Asset Administration Shell Basic Discovery Service.
+
+    Edc-Bpn header: Optional header used in the query language for access control
+    and filtering. If the end user can change this header, the access control is
+    not secure because it is not derived from the token.
+
+    Discovery integration:
+    Creating or updating shell descriptors also creates/updates discovery entries, including the
+    descriptor globalAssetId as specific asset id name "globalAssetId" when present.
+
+    Digital Twin Registry custom additions (beyond IDTA base profile):
+
+    - PUT /shell-descriptors/{aasIdentifier} and PUT
+      /shell-descriptors/{aasIdentifier}/submodel-descriptors/{submodelIdentifier} use
+      path identifiers as source of truth (path id wins over request body id).
+    - SubmodelDescriptor input uses "supplementalSemanticIds" (plural) by default.
+      Singular "supplementalSemanticId" compatibility can be enabled via
+      general.supportsSingularSupplementalSemanticId (env:
+      GENERAL_SUPPORTSSINGULARSUPPLEMENTALSEMANTICID).
+    - POST /lookup/shellsByAssetLink supports createdAfter (RFC3339). Invalid values
+      return HTTP 400.
+    - For DTR compatibility, empty-asset-link requests on /lookup/shellsByAssetLink and
+      /lookup/shells may return {}.
+    - POST /lookup/shells/{aasIdentifier} always appends provided links (no replace, no
+      deduplication; duplicates may occur) and returns 404 when the addressed shell does
+      not exist.
+
+    Copyright: Industrial Digital Twin Association (IDTA) 2025
+  contact:
+    name: Industrial Digital Twin Association (IDTA)
+    email: info@idtwin.org
+  license:
+    name: CC BY 4.0
+    url: https://creativecommons.org/licenses/by/4.0/
+  version: V3.2.0
+  x-profile-identifiers:
+    - https://admin-shell.io/aas/API/3/2/AssetAdministrationShellRegistryServiceSpecification/SSP-001
+    - https://admin-shell.io/aas/API/3/2/AssetAdministrationShellRegistryServiceSpecification/SSP-003
+    - https://admin-shell.io/aas/API/3/2/AssetAdministrationShellRegistryServiceSpecification/SSP-004
+    - https://admin-shell.io/aas/API/3/2/DiscoveryServiceSpecification/SSP-001
+servers:
+- url: 'https://admin-shell.io/api/v3/'
+- url: 'https://example.com/'
+
+components:
+  parameters:
+    aasIdentifier:
+      name: aasIdentifier
+      in: path
+      required: true
+      description: Identifier of the Asset Administration Shell.
+      schema:
+        type: string
+    submodelIdentifier:
+      name: submodelIdentifier
+      in: path
+      required: true
+      description: Identifier of the Submodel.
+      schema:
+        type: string
+    EdcBpnHeader:
+      name: Edc-Bpn
+      in: header
+      required: false
+      description: >-
+        Optional header used in the query language for access control and filtering.
+        If the end user can change this header, the access control is not secure
+        because it is not derived from the token.
+      schema:
+        type: string
+
+paths:
+  /description:
+    get:
+      tags:
+        - Description API
+      summary: Returns the self-describing information of a network resource (ServiceDescription)
+      operationId: GetDescription
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+      responses:
+        '200':
+          description: The service description
+          content:
+            application/json:
+              schema:
+                $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/ServiceDescription'
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+
+  # ---- AAS Registry Service ----
+  /shell-descriptors:
+    get:
+      tags:
+        - Asset Administration Shell Registry API
+      summary: Returns all Asset Administration Shell Descriptors
+      operationId: GetAllAssetAdministrationShellDescriptors
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/GetAllAssetAdministrationShellDescriptors/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+        - $ref: '../Part2-API-Schemas/openapi.yaml#/components/parameters/Limit'
+        - $ref: '../Part2-API-Schemas/openapi.yaml#/components/parameters/Cursor'
+        - $ref: '../Part2-API-Schemas/openapi.yaml#/components/parameters/AssetKind'
+        - $ref: '../Part2-API-Schemas/openapi.yaml#/components/parameters/AssetType'
+        - $ref: '../Part2-API-Schemas/openapi.yaml#/components/parameters/AssetIds'
+        - $ref: '../Part2-API-Schemas/openapi.yaml#/components/parameters/CreatedFrom'
+        - $ref: '../Part2-API-Schemas/openapi.yaml#/components/parameters/UpdatedFrom'
+      responses:
+        '200':
+          description: Requested Asset Administration Shell Descriptors
+          content:
+            application/json:
+              schema:
+                $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/GetAssetAdministrationShellDescriptorsResult'
+        '400':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/bad-request'
+        '403':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/forbidden'
+        '500':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/internal-server-error'
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+    post:
+      tags:
+        - Asset Administration Shell Registry API
+      summary: Creates a new Asset Administration Shell Descriptor, i.e. registers an AAS
+      description: >-
+        Creating a shell descriptor also creates discovery entries, including
+        globalAssetId as specific asset id name "globalAssetId" when present.
+      operationId: PostAssetAdministrationShellDescriptor
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/PostAssetAdministrationShellDescriptor/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+      requestBody:
+        description: Asset Administration Shell Descriptor object
+        content:
+          application/json:
+            schema:
+              $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/AssetAdministrationShellDescriptor'
+        required: true
+      responses:
+        '201':
+          description: Asset Administration Shell Descriptor created successfully
+          headers:
+            Location:
+              description: URL of the newly created resource
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/AssetAdministrationShellDescriptor'
+        '400':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/bad-request'
+        '403':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/forbidden'
+        '409':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/conflict'
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+
+  /bulk/shell-descriptors:
+    post:
+      tags:
+        - Async Bulk Asset Administration Shell Registry API
+      summary: Creates multiple new Asset Administration Shell Descriptors
+      operationId: CreateBulkAssetAdministrationShellDescriptors
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/CreateBulkAssetAdministrationShellDescriptors/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+      requestBody:
+        description: List of Asset Administration Shell Descriptor objects
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              minItems: 1
+              items:
+                $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/AssetAdministrationShellDescriptor'
+      responses:
+        '202':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/accepted'
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+    put:
+      tags:
+        - Async Bulk Asset Administration Shell Registry API
+      summary: Creates or updates multiple existing Asset Administration Shell Descriptors
+      operationId: PutBulkAssetAdministrationShellDescriptorsById
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/PutBulkAssetAdministrationShellDescriptorsById/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+      requestBody:
+        description: List of Asset Administration Shell Descriptor objects
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              minItems: 1
+              items:
+                $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/AssetAdministrationShellDescriptor'
+      responses:
+        '202':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/accepted'
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+    delete:
+      tags:
+        - Async Bulk Asset Administration Shell Registry API
+      summary: Deletes multiple Asset Administration Shell Descriptors
+      operationId: DeleteBulkAssetAdministrationShellDescriptorsById
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/DeleteBulkAssetAdministrationShellDescriptorsById/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+      requestBody:
+        description: List of Asset Administration Shell Identifiers
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              minItems: 1
+              items:
+                type: string
+      responses:
+        '202':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/accepted'
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+
+  /bulk/status/{handleId}:
+    get:
+      tags:
+        - Async Bulk Status API
+      summary: Returns the status of an asynchronously invoked bulk operation
+      operationId: GetAsyncBulkStatus
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/GetAsyncBulkStatus/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+        - name: handleId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Bulk request is still running
+          content:
+            application/json:
+              schema:
+                $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/BaseOperationResult'
+        '302':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/found'
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+
+  /bulk/result/{handleId}:
+    get:
+      tags:
+        - Async Bulk Result API
+      summary: Returns the result object of an asynchronously invoked bulk operation
+      operationId: GetBulkAsyncResult
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/GetBulkAsyncResult/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+        - name: handleId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Bulk request completed successfully
+        '400':
+          description: >-
+            Bulk request completed with descriptor failures. Processing is strict atomic:
+            if one descriptor operation fails, the complete transaction is rolled back.
+            The response body contains processedCount, successfulCount, failedCount and details
+            about failing descriptor operations.
+          content:
+            application/json:
+              schema:
+                type: object
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+
+  /shell-descriptors/{aasIdentifier}:
+    get:
+      tags:
+        - Asset Administration Shell Registry API
+      summary: Returns a specific Asset Administration Shell Descriptor
+      operationId: GetAssetAdministrationShellDescriptorById
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/GetAssetAdministrationShellDescriptorById/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+        - $ref: '#/components/parameters/aasIdentifier'
+      responses:
+        '200':
+          description: Requested Asset Administration Shell Descriptor
+          content:
+            application/json:
+              schema:
+                $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/AssetAdministrationShellDescriptor'
+        '400':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/bad-request'
+        '403':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/forbidden'
+        '404':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/not-found'
+        '500':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/internal-server-error'
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+    put:
+      tags:
+        - Asset Administration Shell Registry API
+      summary: Creates or updates an existing Asset Administration Shell Descriptor
+      description: |-
+        Path identifier is authoritative and overwrites descriptor.id from request body.
+
+        Creating or updating a shell descriptor also creates/updates discovery
+        entries, including globalAssetId as specific asset id name
+        "globalAssetId" when present.
+      operationId: PutAssetAdministrationShellDescriptorById
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/PutAssetAdministrationShellDescriptorById/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+        - $ref: '#/components/parameters/aasIdentifier'
+      requestBody:
+        description: Asset Administration Shell Descriptor object
+        content:
+          application/json:
+            schema:
+              $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/AssetAdministrationShellDescriptor'
+        required: true
+      responses:
+        '204':
+          description: Asset Administration Shell Descriptor updated successfully
+        '400':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/bad-request'
+        '403':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/forbidden'
+        '404':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/not-found'
+        '409':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/conflict'
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+    delete:
+      tags:
+        - Asset Administration Shell Registry API
+      summary: Deletes an Asset Administration Shell Descriptor, i.e. de-registers an AAS
+      operationId: DeleteAssetAdministrationShellDescriptorById
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/DeleteAssetAdministrationShellDescriptorById/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+        - $ref: '#/components/parameters/aasIdentifier'
+      responses:
+        '204':
+          description: Asset Administration Shell Descriptor deleted successfully
+        '400':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/bad-request'
+        '403':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/forbidden'
+        '404':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/not-found'
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+
+  /shell-descriptors/{aasIdentifier}/submodel-descriptors:
+    get:
+      tags:
+        - Asset Administration Shell Registry API
+      summary: Returns all Submodel Descriptors
+      operationId: GetAllSubmodelDescriptorsThroughSuperpath
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/GetAllSubmodelDescriptors/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+        - $ref: '#/components/parameters/aasIdentifier'
+        - $ref: '../Part2-API-Schemas/openapi.yaml#/components/parameters/Limit'
+        - $ref: '../Part2-API-Schemas/openapi.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Requested Submodel Descriptors
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/PagedResult'
+                  - type: object
+                    properties:
+                      result:
+                        type: array
+                        items:
+                          $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/SubmodelDescriptor'
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+    post:
+      tags:
+        - Asset Administration Shell Registry API
+      summary: Creates a new Submodel Descriptor, i.e. registers a submodel
+      operationId: PostSubmodelDescriptorThroughSuperpath
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/PostSubmodelDescriptor/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+        - $ref: '#/components/parameters/aasIdentifier'
+      requestBody:
+        description: Submodel Descriptor object
+        content:
+          application/json:
+            schema:
+              $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/SubmodelDescriptor'
+        required: true
+      responses:
+        '201':
+          description: Submodel Descriptor created successfully
+          headers:
+            Location:
+              description: URL of the newly created resource
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/SubmodelDescriptor'
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+
+  /shell-descriptors/{aasIdentifier}/submodel-descriptors/{submodelIdentifier}:
+    get:
+      tags:
+        - Asset Administration Shell Registry API
+      summary: Returns a specific Submodel Descriptor
+      operationId: GetSubmodelDescriptorByIdThroughSuperpath
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/GetSubmodelDescriptorById/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+        - $ref: '#/components/parameters/aasIdentifier'
+        - $ref: '#/components/parameters/submodelIdentifier'
+      responses:
+        '200':
+          description: Requested Submodel Descriptor
+          content:
+            application/json:
+              schema:
+                $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/SubmodelDescriptor'
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+    put:
+      tags:
+        - Asset Administration Shell Registry API
+      summary: Creates or updates an existing Submodel Descriptor
+      description: >-
+        DTR extension: path identifier is authoritative and overwrites
+        submodelDescriptor.id from request body.
+      operationId: PutSubmodelDescriptorByIdThroughSuperpath
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/PutSubmodelDescriptorById/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+        - $ref: '#/components/parameters/aasIdentifier'
+        - $ref: '#/components/parameters/submodelIdentifier'
+      requestBody:
+        description: Submodel Descriptor object
+        content:
+          application/json:
+            schema:
+              $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/SubmodelDescriptor'
+        required: true
+      responses:
+        '204':
+          description: Submodel Descriptor updated successfully
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+    delete:
+      tags:
+        - Asset Administration Shell Registry API
+      summary: Deletes a Submodel Descriptor
+      operationId: DeleteSubmodelDescriptorByIdThroughSuperpath
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/DeleteSubmodelDescriptorById/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+        - $ref: '#/components/parameters/aasIdentifier'
+        - $ref: '#/components/parameters/submodelIdentifier'
+      responses:
+        '204':
+          description: Submodel Descriptor deleted successfully
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+
+  /query/shell-descriptors:
+    post:
+      tags:
+        - Asset Administration Shell Registry API
+      summary: Queries Asset Administration Shell Descriptors
+      operationId: QueryAssetAdministrationShellDescriptors
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/QueryAssetAdministrationShellDescriptors/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+        - $ref: '../Part2-API-Schemas/openapi.yaml#/components/parameters/Limit'
+        - $ref: '../Part2-API-Schemas/openapi.yaml#/components/parameters/Cursor'
+      requestBody:
+        description: Query statement
+        content:
+          application/json:
+            schema:
+              $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/Query'
+        required: true
+      responses:
+        '200':
+          description: Requested Asset Administration Shell Descriptors
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/PagedResult'
+                  - type: object
+                    properties:
+                      result:
+                        type: array
+                        items:
+                          $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/AssetAdministrationShellDescriptor'
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+
+  # ---- Discovery Service ----
+  /lookup/shells:
+    get:
+      deprecated: true
+      tags:
+        - Asset Administration Shell Basic Discovery API
+      summary: Returns a list of Asset Administration Shell IDs linked to specific asset identifiers or the global asset ID
+      description: >-
+        DTR compatibility note: when no decodable assetIds are provided, the response may
+        be {} (empty object).
+      operationId: GetAllAssetAdministrationShellIdsByAssetLink
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/GetAllAssetAdministrationShellIdsByAssetLink/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+        - $ref: '../Part2-API-Schemas/openapi.yaml#/components/parameters/AssetIds'
+        - $ref: '../Part2-API-Schemas/openapi.yaml#/components/parameters/Limit'
+        - $ref: '../Part2-API-Schemas/openapi.yaml#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Requested Asset Administration Shell IDs
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - allOf:
+                      - $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/PagedResult'
+                      - type: object
+                        properties:
+                          result:
+                            type: array
+                            items:
+                              type: string
+                  - type: object
+                    description: DTR compatibility response for empty assetIds input.
+                    additionalProperties: false
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+
+  /lookup/shellsByAssetLink:
+    post:
+      tags:
+        - Asset Administration Shell Basic Discovery API
+      summary: Returns a list of Asset Administration Shell IDs linked to specific asset identifiers or the global asset ID
+      description: |-
+        DTR extension:
+
+        - Supports createdAfter query parameter (RFC3339) to apply additional filtering.
+        - For compatibility, when the request body contains no asset links the response
+          may be {} (empty object).
+      operationId: SearchAllAssetAdministrationShellIdsByAssetLink
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/SearchAllAssetAdministrationShellIdsByAssetLink/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+        - $ref: '../Part2-API-Schemas/openapi.yaml#/components/parameters/Limit'
+        - $ref: '../Part2-API-Schemas/openapi.yaml#/components/parameters/Cursor'
+        - name: createdAfter
+          in: query
+          description: >-
+            DTR extension: filter results by creation timestamp (RFC3339).
+            Invalid values return HTTP 400.
+          required: false
+          schema:
+            type: string
+            format: date-time
+      requestBody:
+        description: A list of specific asset identifiers. Search for the global asset ID is supported by setting "name"  to "globalAssetId" (see Constraint AASd-116).
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                '$ref': '../Part2-API-Schemas/openapi.yaml#/components/schemas/AssetLink'
+      responses:
+        '200':
+          description: Requested Asset Administration Shell IDs
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - allOf:
+                      - $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/PagedResult'
+                      - type: object
+                        properties:
+                          result:
+                            type: array
+                            items:
+                              type: string
+                  - type: object
+                    description: DTR compatibility response for empty assetLinks input.
+                    additionalProperties: false
+        '400':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/bad-request'
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+
+  /lookup/shells/{aasIdentifier}:
+    get:
+      tags:
+        - Asset Administration Shell Basic Discovery API
+      summary: Returns a list of specific asset identifiers based on an Asset Administration Shell ID to edit discoverable content.
+      operationId: GetAllAssetLinksById
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/GetAllAssetLinksById/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+        - $ref: '#/components/parameters/aasIdentifier'
+      responses:
+        '200':
+          description: Requested Asset Links
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/SpecificAssetId'
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+    post:
+      tags:
+        - Asset Administration Shell Basic Discovery API
+      summary: Creates or merges asset links associated to the Asset Administration Shell.
+      description: |-
+        DTR extension:
+
+        - Never replaces existing links; always appends provided links.
+        - No deduplication is applied; duplicate links can be created.
+        - Returns 404 if the addressed shell does not exist.
+      operationId: PostAllAssetLinksById
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/PostAllAssetLinksById/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+        - $ref: '#/components/parameters/aasIdentifier'
+      requestBody:
+        description: A list of specific asset identifiers
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/SpecificAssetId'
+        required: true
+      responses:
+        '201':
+          description: Asset Links created successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '../Part2-API-Schemas/openapi.yaml#/components/schemas/SpecificAssetId'
+        '404':
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/not-found'
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'
+    delete:
+      tags:
+        - Asset Administration Shell Basic Discovery API
+      summary: Deletes specified specific asset identifiers linked to an Asset Administration Shell
+      operationId: DeleteAllAssetLinksById
+      x-semanticIds:
+        - https://admin-shell.io/aas/API/DeleteAllAssetLinksById/3/2
+      parameters:
+        - $ref: '#/components/parameters/EdcBpnHeader'
+        - $ref: '#/components/parameters/aasIdentifier'
+      responses:
+        '204':
+          description: Asset Links deleted successfully
+        default:
+          $ref: '../Part2-API-Schemas/openapi.yaml#/components/responses/default'

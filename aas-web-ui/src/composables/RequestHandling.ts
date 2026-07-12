@@ -22,7 +22,23 @@ export function useRequestHandling () {
   }
 
   function buildErrorDetailsFromPayload (errorData: any): string {
-    if (!Array.isArray(errorData) || errorData.length === 0) {
+    if (Array.isArray(errorData)) {
+      return buildArrayErrorDetails(errorData)
+    }
+
+    if (errorData && typeof errorData === 'object') {
+      return buildObjectErrorDetails(errorData as Record<string, unknown>)
+    }
+
+    if (typeof errorData === 'string') {
+      return errorData
+    }
+
+    return ''
+  }
+
+  function buildArrayErrorDetails (errorData: any[]): string {
+    if (errorData.length === 0) {
       return ''
     }
 
@@ -34,26 +50,52 @@ export function useRequestHandling () {
       text?: unknown
     }
 
-    let errorMessage = ''
+    const lines: string[] = []
 
-    if (error.code) {
-      errorMessage += 'Status: ' + String(error.code)
-    }
-    if (error.messageType) {
-      errorMessage += '\nMessage Type: ' + String(error.messageType)
-    }
-    if (error.correlationId) {
-      errorMessage += '\nCorrelation ID: ' + String(error.correlationId)
-    }
+    appendErrorLine(lines, 'Status', error.code)
+    appendErrorLine(lines, 'Message Type', error.messageType)
+    appendErrorLine(lines, 'Correlation ID', error.correlationId)
+
     if (error.timestamp) {
-      const errorDate = new Date(String(error.timestamp)).toLocaleString()
-      errorMessage += '\nTimestamp: ' + errorDate
-    }
-    if (error.text) {
-      errorMessage += '\nText: ' + String(error.text)
+      appendErrorLine(lines, 'Timestamp', new Date(String(error.timestamp)).toLocaleString())
     }
 
-    return errorMessage
+    appendErrorLine(lines, 'Text', error.text)
+
+    return lines.join('\n')
+  }
+
+  function buildObjectErrorDetails (errorData: Record<string, unknown>): string {
+    const lines: string[] = []
+    const message = errorData.error ?? errorData.message ?? errorData.text
+    const route = [errorData.method, errorData.path]
+      .map(value => typeof value === 'string' ? value.trim() : '')
+      .filter(Boolean)
+      .join(' ')
+
+    appendErrorLine(lines, 'Status', errorData.status)
+    appendErrorLine(lines, 'Code', errorData.code)
+    appendErrorLine(lines, 'Message', message)
+    appendErrorLine(lines, 'Route', route)
+    appendErrorLine(lines, 'Correlation ID', errorData.correlationId)
+    appendErrorLine(lines, 'Timestamp', errorData.timestamp)
+
+    return lines.join('\n')
+  }
+
+  function appendErrorLine (lines: string[], label: string, value: unknown): void {
+    let text = ''
+    if (typeof value === 'string') {
+      text = value.trim()
+    } else if (value !== undefined && value !== null) {
+      text = String(value)
+    }
+
+    if (text === '') {
+      return
+    }
+
+    lines.push(`${label}: ${text}`)
   }
 
   function consumeLastRequestFailureStatus (): number | undefined {
@@ -216,6 +258,10 @@ export function useRequestHandling () {
     return JSON.parse(bodyText)
   }
 
+  function getResponseContentType (response: Response): string {
+    return response.headers.get('Content-Type')?.split(';', 1)[0] ?? ''
+  }
+
   function getRequest (path: string, context: string, disableMessage: boolean, headers: Headers = new Headers()): any {
     if (shouldAddAuthorizationHeader(path)) {
       // No Authorization needed for the /description endpoint.
@@ -223,35 +269,35 @@ export function useRequestHandling () {
     }
     return fetch(path, { method: 'GET', headers })
       .then(async response => {
+        const contentType = getResponseContentType(response)
         // Check if the Server responded with content.
         if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'application/json'
+          contentType === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await parseJsonIfPresent(response) } // Return the response as JSON
         } else if (
-          response.headers.get('Content-Type')?.split(';')[0]
-          === 'application/asset-administration-shell-package+xml'
+          contentType === 'application/asset-administration-shell-package+xml'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await response.blob() } // Return the response as Blob}
         } else if (
-          response.headers.get('Content-Type')?.split(';')[0].includes('image')
+          contentType.includes('image')
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await response.blob() } // Return the response as Blob
         } else if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'text/csv'
+          contentType === 'text/csv'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await response.text() } // Return the response as text
         } else if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'text/plain'
+          contentType === 'text/plain'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await response.text() } // Return the response as text
         } else if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'application/pdf'
+          contentType === 'application/pdf'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await response.blob() } // Return the response as Blob
@@ -307,14 +353,15 @@ export function useRequestHandling () {
     }
     return fetch(path, { method: 'POST', body, headers })
       .then(async response => {
+        const contentType = getResponseContentType(response)
         // Check if the Server responded with content
         if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'application/json'
+          contentType === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await parseJsonIfPresent(response) } // Return the response as JSON
         } else if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'text/csv'
+          contentType === 'text/csv'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return { response, data: await response.text() } // Return the response as text
@@ -365,9 +412,10 @@ export function useRequestHandling () {
     headers = addAuthorizationHeader(headers) // Add the Authorization header
     return fetch(path, { method: 'PUT', body, headers })
       .then(response => {
+        const contentType = getResponseContentType(response)
         // Check if the Server responded with content
         if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'application/json'
+          contentType === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return parseJsonIfPresent(response) // Return the response as JSON
@@ -411,9 +459,10 @@ export function useRequestHandling () {
     headers = addAuthorizationHeader(headers) // Add the Authorization header
     return fetch(path, { method: 'PATCH', body, headers })
       .then(response => {
+        const contentType = getResponseContentType(response)
         // Check if the Server responded with content
         if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'application/json'
+          contentType === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return parseJsonIfPresent(response) // Return the response as JSON
@@ -456,9 +505,10 @@ export function useRequestHandling () {
   function deleteRequest (path: string, context: string, disableMessage: boolean): any {
     return fetch(path, { method: 'DELETE', headers: addAuthorizationHeader(new Headers()) })
       .then(response => {
+        const contentType = getResponseContentType(response)
         // Check if the Server responded with content
         if (
-          response.headers.get('Content-Type')?.split(';')[0] === 'application/json'
+          contentType === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
           return parseJsonIfPresent(response) // Return the response as JSON

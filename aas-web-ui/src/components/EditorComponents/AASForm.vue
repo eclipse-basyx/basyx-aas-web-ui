@@ -1,8 +1,8 @@
 <template>
   <v-dialog v-model="editAASDialog" persistent width="860">
     <v-card>
-      <v-card-title>
-        <span class="text-body-large">{{ newShell ? 'Create a new AAS' : 'Edit AAS' }}</span>
+      <v-card-title class="bg-cardHeader">
+        {{ newShell ? 'Create a new AAS' : 'Edit AAS' }}
       </v-card-title>
 
       <v-divider />
@@ -240,6 +240,7 @@
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { Endpoint, ProtocolInformation } from '@/types/Descriptors'
+  import { isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
 
   const props = defineProps<{
     modelValue: boolean
@@ -261,7 +262,7 @@
   const navigationStore = useNavigationStore()
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: boolean): void
+    (event: 'update:model-value', value: boolean): void
   }>()
 
   const {
@@ -307,11 +308,22 @@
   // Computed Properties
   const selectedAAS = computed(() => aasStore.getSelectedAAS) // Get the selected AAS from Store
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
+  const aasRegistryActive = computed(() =>
+    isComponentActiveForTemplate(selectedInfrastructure.value, 'AASRegistry'),
+  )
+  const aasDiscoveryActive = computed(() =>
+    isComponentActiveForTemplate(selectedInfrastructure.value, 'AASDiscovery'),
+  )
   const aasRepoHasRegistryIntegration = computed(
-    () => selectedInfrastructure.value?.components?.AASRepo?.hasRegistryIntegration ?? true,
+    () =>
+      !aasRegistryActive.value
+      || (selectedInfrastructure.value?.components?.AASRepo?.hasRegistryIntegration ?? true),
   )
   const aasRegistryHasDiscoveryIntegration = computed(
-    () => selectedInfrastructure.value?.components?.AASRegistry?.hasDiscoveryIntegration ?? true,
+    () =>
+      !aasRegistryActive.value
+      || !aasDiscoveryActive.value
+      || (selectedInfrastructure.value?.components?.AASRegistry?.hasDiscoveryIntegration ?? true),
   )
   const bordersToShow = computed(() => (panel: number) => {
     let border = ''
@@ -372,7 +384,7 @@
   watch(
     () => editAASDialog.value,
     value => {
-      emit('update:modelValue', value)
+      emit('update:model-value', value)
     },
   )
 

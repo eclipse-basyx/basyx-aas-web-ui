@@ -218,6 +218,41 @@ describe('RequestHandling.ts', () => {
     expect(consumeLastRequestFailureStatus()).toBe(409)
   })
 
+  it('stores object error payload details from BFF responses', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      Response.json(
+        {
+          error: 'Route not found',
+          status: 404,
+          code: 'ROUTE_NOT_FOUND',
+          method: 'POST',
+          path: '/api/catena-x/edc/default/submodels/fetch',
+        },
+        {
+          status: 404,
+          statusText: 'Not Found',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': '156',
+          },
+        },
+      ),
+    ) as unknown as typeof fetch
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { postRequest, consumeLastRequestFailureDetails, consumeLastRequestFailureStatus } = useRequestHandling()
+
+    const response = await postRequest('/api/catena-x/edc/default/submodels/fetch', '{}', new Headers(), 'fetching Submodel', true)
+
+    expect(response).toEqual({ success: false, status: 404 })
+    expect(consumeLastRequestFailureStatus()).toBe(404)
+    const details = consumeLastRequestFailureDetails()
+    expect(details).toContain('Status: 404')
+    expect(details).toContain('Code: ROUTE_NOT_FOUND')
+    expect(details).toContain('Message: Route not found')
+    expect(details).toContain('Route: POST /api/catena-x/edc/default/submodels/fetch')
+  })
+
   it('keeps empty text payload as valid response data in getRequest', async () => {
     global.fetch = vi.fn().mockResolvedValue(
       new Response('', {

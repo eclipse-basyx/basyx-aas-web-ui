@@ -44,6 +44,7 @@
   import { Endpoint, ProtocolInformation } from '@/types/Descriptors'
   import { getCreatedSubmodelElementPath, isDataElementModelType } from '@/utils/AAS/SubmodelElementPathUtils'
   import { base64Decode } from '@/utils/EncodeDecodeUtils'
+  import { isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
 
   const props = defineProps<{
     modelValue: boolean
@@ -52,7 +53,7 @@
   }>()
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: boolean): void
+    (event: 'update:model-value', value: boolean): void
   }>()
 
   // Vue Router
@@ -87,8 +88,13 @@
   // Computed Properties
   const selectedAAS = computed(() => aasStore.getSelectedAAS) // Get the selected AAS from Store
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
+  const submodelRegistryActive = computed(() =>
+    isComponentActiveForTemplate(selectedInfrastructure.value, 'SubmodelRegistry'),
+  )
   const submodelRepoHasRegistryIntegration = computed(
-    () => selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true,
+    () =>
+      !submodelRegistryActive.value
+      || (selectedInfrastructure.value?.components?.SubmodelRepo?.hasRegistryIntegration ?? true),
   )
 
   watch(
@@ -101,7 +107,7 @@
   watch(
     () => jsonInsertDialog.value,
     value => {
-      emit('update:modelValue', value)
+      emit('update:model-value', value)
     },
   )
 
@@ -244,7 +250,7 @@
     } else {
       // Extract the submodel ID and the idShortPath from the parentElement path
       const splitted = props.parentElement.path.split('/submodel-elements/')
-      const submodelId = base64Decode(splitted[0].split('/submodels/')[1])
+      const submodelId = base64Decode(splitted[0].split('/submodels/', 2)[1])
       const idShortPath = splitted[1]
 
       // Create the property on the parent element

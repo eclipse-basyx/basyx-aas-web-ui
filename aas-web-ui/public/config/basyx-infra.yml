@@ -11,6 +11,17 @@
 # Optional component flags:
 # - hasRegistryIntegration: Backend repository creates/updates/deletes descriptors automatically.
 # - hasDiscoveryIntegration: Backend AAS registry creates/updates/deletes discovery asset links automatically.
+# Optional infrastructure template (defaults to "full" when omitted):
+# - full: aasDiscovery, aasRegistry, submodelRegistry, aasRepository, submodelRepository, conceptDescriptionRepository
+# - identifiable: aasRepository only; submodels are resolved via /shells/{aasId}/submodels/{submodelId}
+# - mono-repo: discovery and registries plus one aasEnvironment URL for the repositories
+# - mono-all: one aasEnvironment URL for all components
+# - catena-x: direct digitalTwinRegistry plus submodelService, or EDC proxy access
+# Optional Catena-X EDC metadata:
+# - catenaX.accessMode can be "direct" or "edc"; older configs infer "edc" when proxyId is set.
+# - catenaX.edc.proxyId links this infrastructure to a server-side EDC BFF proxy config.
+# - catenaX.edc.partners can preconfigure known counterparties; users may still enter runtime partners.
+# - Do not put the EDC Management API URL or x-api-key in this YAML file.
 
 infrastructures:
   # Specify which infrastructure should be selected by default
@@ -19,6 +30,7 @@ infrastructures:
   # Local development infrastructure (no authentication)
   local:
     name: Local BaSyx
+    template: full
     components:
       aasDiscovery:
         baseUrl: "http://localhost:9084"
@@ -41,6 +53,7 @@ infrastructures:
   # # Production infrastructure with OAuth2 (Authorization Code Flow)
   # production:
   #   name: Production BaSyx
+  #   template: full
   #   components:
   #     aasDiscovery:
   #       baseUrl: "https://discovery.basyx.example.com"
@@ -67,6 +80,7 @@ infrastructures:
   # # Only use this for non-production scenarios or with proper secret management.
   # service:
   #   name: Service Account BaSyx
+  #   template: mono-repo
   #   components:
   #     aasDiscovery:
   #       baseUrl: "https://discovery.basyx.service.com"
@@ -74,11 +88,7 @@ infrastructures:
   #       baseUrl: "https://aasreg.basyx.service.com"
   #     submodelRegistry:
   #       baseUrl: "https://smreg.basyx.service.com"
-  #     aasRepository:
-  #       baseUrl: "https://aasenv.basyx.service.com"
-  #     submodelRepository:
-  #       baseUrl: "https://aasenv.basyx.service.com"
-  #     conceptDescriptionRepository:
+  #     aasEnvironment:
   #       baseUrl: "https://aasenv.basyx.service.com"
   #   security:
   #     type: oauth2
@@ -92,19 +102,32 @@ infrastructures:
   # # Infrastructure with Basic Authentication
   # staging:
   #   name: Staging BaSyx
+  #   template: catena-x
+  #   catenaX:
+  #     accessMode: direct
   #   components:
-  #     aasDiscovery:
-  #       baseUrl: "https://discovery.staging.basyx.com"
-  #     aasRegistry:
-  #       baseUrl: "https://aasreg.staging.basyx.com"
-  #     submodelRegistry:
-  #       baseUrl: "https://smreg.staging.basyx.com"
-  #     aasRepository:
-  #       baseUrl: "https://aasenv.staging.basyx.com"
-  #     submodelRepository:
-  #       baseUrl: "https://aasenv.staging.basyx.com"
-  #     conceptDescriptionRepository:
-  #       baseUrl: "https://aasenv.staging.basyx.com"
+  #     digitalTwinRegistry:
+  #       baseUrl: "https://dtr.staging.basyx.com"
+  #     submodelService:
+  #       baseUrl: "https://submodel-service.staging.basyx.com"
+
+  # # Catena-X EDC infrastructure
+  # edc:
+  #   name: EDC Catena-X
+  #   template: catena-x
+  #   components: {}
+  #   catenaX:
+  #     accessMode: edc
+  #     edc:
+  #       proxyId: default
+  #       defaultPartnerId: provider-a
+  #       defaultCounterPartyAddress: "<COUNTERPARTY_DSP_ADDRESS>"
+  #       defaultCounterPartyId: "<COUNTERPARTY_ID>"
+  #       partners:
+  #         - id: provider-a
+  #           name: Provider A
+  #           counterPartyId: "<COUNTERPARTY_ID>"
+  #           counterPartyAddress: "<COUNTERPARTY_DSP_ADDRESS>"
   #   security:
   #     type: basic
   #     config:
@@ -114,18 +137,9 @@ infrastructures:
   # # Infrastructure with Bearer Token
   # test:
   #   name: Test BaSyx
+  #   template: identifiable
   #   components:
-  #     aasDiscovery:
-  #       baseUrl: "https://discovery.test.basyx.com"
-  #     aasRegistry:
-  #       baseUrl: "https://aasreg.test.basyx.com"
-  #     submodelRegistry:
-  #       baseUrl: "https://smreg.test.basyx.com"
   #     aasRepository:
-  #       baseUrl: "https://aasenv.test.basyx.com"
-  #     submodelRepository:
-  #       baseUrl: "https://aasenv.test.basyx.com"
-  #     conceptDescriptionRepository:
   #       baseUrl: "https://aasenv.test.basyx.com"
   #   security:
   #     type: bearer

@@ -1,10 +1,24 @@
 <template>
-  <v-dialog v-model="dialogOpen" max-width="900px" persistent scrollable>
-    <v-sheet border rounded="lg">
+  <v-dialog
+    v-model="dialogOpen"
+    :fullscreen="isMobile"
+    :max-width="isMobile ? undefined : '900px'"
+    persistent
+    :scrollable="!isMobile"
+  >
+    <v-sheet
+      border
+      class="d-flex flex-column"
+      :rounded="isMobile ? undefined : 'lg'"
+      :style="isMobile ? { height: '100vh' } : undefined"
+    >
       <v-card-title class="bg-cardHeader">Manage Infrastructures</v-card-title>
       <v-divider />
 
-      <v-card-text style="max-height: 600px">
+      <v-card-text
+        class="overflow-y-auto"
+        :style="isMobile ? { flex: '1 1 auto', minHeight: '0' } : { maxHeight: '600px' }"
+      >
         <InfrastructureListTable
           v-model:default-infrastructure-id="defaultInfrastructure"
           :infrastructures="infrastructures"
@@ -34,12 +48,25 @@
     </v-sheet>
 
     <!-- Edit/Add Infrastructure Dialog -->
-    <v-dialog v-model="editDialogOpen" max-width="1200px" persistent>
-      <v-sheet border rounded="lg">
+    <v-dialog
+      v-model="editDialogOpen"
+      :fullscreen="isMobile"
+      :max-width="isMobile ? undefined : '1200px'"
+      persistent
+    >
+      <v-sheet
+        border
+        class="d-flex flex-column"
+        :rounded="isMobile ? undefined : 'lg'"
+        :style="isMobile ? { height: '100vh' } : undefined"
+      >
         <v-card-title class="bg-cardHeader">{{ editMode === 'add' ? 'Add' : 'Edit' }} Infrastructure</v-card-title>
         <v-divider />
 
-        <v-card-text class="pt-1" style="max-height: calc(100vh - 200px); overflow-y: auto">
+        <v-card-text
+          class="pt-1 overflow-y-auto"
+          :style="isMobile ? { flex: '1 1 auto', minHeight: '0' } : { maxHeight: 'calc(100vh - 200px)' }"
+        >
           <v-form ref="formRef">
             <!-- Infrastructure Name -->
             <v-list-subheader class="mb-1">Infrastructure Name</v-list-subheader>
@@ -57,18 +84,82 @@
             />
 
             <v-divider />
-            <v-list-subheader class="mb-3">Component Endpoints</v-list-subheader>
-            <!-- Component Configurations -->
-            <ComponentConfigPanel
-              :component-connection-status="componentConnectionStatus"
-              :component-testing-loading="componentTestingLoading"
-              :components="editingInfrastructure.components"
-              @test-connection="testComponentConnection"
-              @update:component-url="handleComponentUrlUpdate"
-              @update:connection-status="handleConnectionStatusUpdate"
-              @update:discovery-integration="handleDiscoveryIntegrationUpdate"
-              @update:registry-integration="handleRegistryIntegrationUpdate"
+
+            <v-list-subheader class="mb-1">Infrastructure Template</v-list-subheader>
+
+            <v-select
+              v-model="editingInfrastructure.template"
+              bg-color="surface-light"
+              class="mb-2"
+              density="compact"
+              flat
+              item-title="label"
+              item-value="value"
+              :items="infrastructureTemplateOptions"
+              label="Template"
+              :rules="[requiredRule]"
+              variant="outlined"
+              @update:model-value="handleTemplateUpdate"
             />
+
+            <v-alert
+              class="mb-3"
+              density="compact"
+              type="info"
+              variant="tonal"
+            >
+              {{ selectedTemplateDescription }}
+            </v-alert>
+
+            <template v-if="editingInfrastructure.template === 'catena-x'">
+              <v-divider />
+              <v-list-subheader class="mb-3">Catena-X Access Mode</v-list-subheader>
+
+              <v-btn-toggle
+                v-model="catenaXAccessMode"
+                class="mb-3"
+                color="primary"
+                divided
+                mandatory
+                rounded="lg"
+                variant="outlined"
+              >
+                <v-btn value="direct">
+                  <v-icon class="me-2" icon="mdi-server-network" size="small" />
+                  Direct
+                </v-btn>
+
+                <v-btn value="edc">
+                  <v-icon class="me-2" icon="mdi-shield-key-outline" size="small" />
+                  EDC
+                </v-btn>
+              </v-btn-toggle>
+            </template>
+
+            <template v-if="!isEditingCatenaXEdcMode">
+              <v-divider />
+              <v-list-subheader class="mb-3">Component Endpoints</v-list-subheader>
+              <!-- Component Configurations -->
+              <ComponentConfigPanel
+                :component-connection-status="componentConnectionStatus"
+                :component-testing-loading="componentTestingLoading"
+                :components="editingInfrastructure.components"
+                :template="editingInfrastructure.template"
+                @test-connection="testComponentConnection"
+                @update:component-url="handleComponentUrlUpdate"
+                @update:connection-status="handleConnectionStatusUpdate"
+                @update:discovery-integration="handleDiscoveryIntegrationUpdate"
+                @update:registry-integration="handleRegistryIntegrationUpdate"
+              />
+            </template>
+
+            <template v-if="isEditingCatenaXEdcMode">
+              <v-divider />
+              <v-list-subheader class="mb-3">Catena-X EDC Proxy</v-list-subheader>
+
+              <CatenaXEdcConfigPanel v-model="editingInfrastructure.catenaX" />
+            </template>
+
             <!-- Security Configuration -->
             <v-divider />
             <v-list-subheader class="mb-3">Security Configuration</v-list-subheader>
@@ -106,6 +197,7 @@
 
         <v-card-actions>
           <v-btn
+            v-if="!isEditingCatenaXEdcMode"
             border
             color="surface-light"
             :loading="testingAllConnections"
@@ -133,52 +225,92 @@
 
     <!-- Delete Confirmation Dialog -->
     <v-dialog v-model="deleteDialogOpen" max-width="400px">
-      <v-card>
-        <v-card-title>Confirm Delete</v-card-title>
+      <v-sheet border :rounded="isMobile ? undefined : 'lg'">
+        <v-card-title class="bg-cardHeader">Confirm Delete</v-card-title>
+        <v-divider />
 
         <v-card-text>
           Are you sure you want to delete the infrastructure "{{ infrastructureToDelete?.name }}"?
         </v-card-text>
 
+        <v-divider />
+
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="deleteDialogOpen = false">Cancel</v-btn>
-          <v-btn color="error" @click="confirmDelete">Delete</v-btn>
+          <v-btn rounded="lg" text="Cancel" @click="deleteDialogOpen = false" />
+
+          <v-btn
+            class="text-buttonText"
+            color="error"
+            rounded="lg"
+            text="Delete"
+            variant="flat"
+            @click="confirmDelete"
+          />
         </v-card-actions>
-      </v-card>
+      </v-sheet>
     </v-dialog>
 
     <!-- Reset Confirmation Dialog -->
     <v-dialog v-model="resetDialogOpen" max-width="400px">
-      <v-card>
-        <v-card-title>Confirm Reset to Defaults</v-card-title>
+      <v-sheet border :rounded="isMobile ? undefined : 'lg'">
+        <v-card-title class="bg-cardHeader">Confirm Reset to Defaults</v-card-title>
+        <v-divider />
 
         <v-card-text>
           Are you sure you want to reset all infrastructures to their default settings? This action cannot be
           undone.
         </v-card-text>
 
+        <v-divider />
+
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="resetDialogOpen = false">Cancel</v-btn>
-          <v-btn color="error" @click="confirmReset">Reset</v-btn>
+          <v-btn rounded="lg" text="Cancel" @click="resetDialogOpen = false" />
+
+          <v-btn
+            class="text-buttonText"
+            color="error"
+            rounded="lg"
+            text="Reset"
+            variant="flat"
+            @click="confirmReset"
+          />
         </v-card-actions>
-      </v-card>
+      </v-sheet>
     </v-dialog>
   </v-dialog>
 </template>
 
 <script lang="ts" setup>
   import type { BaSyxComponentKey } from '@/types/BaSyx'
-  import type { AuthFlowOption, InfrastructureConfig, SecurityType } from '@/types/Infrastructure'
+  import type {
+    AuthFlowOption,
+    CatenaXAccessMode,
+    InfrastructureConfig,
+    InfrastructureTemplate,
+    SecurityType,
+  } from '@/types/Infrastructure'
+  import type { InfrastructureEndpointFieldKey } from '@/utils/InfrastructureUtils'
   import { computed, ref, toRaw, watch } from 'vue'
   import { useRouter } from 'vue-router'
+  import CatenaXEdcConfigPanel from '@/components/AppNavigation/Settings/CatenaXEdcConfigPanel.vue'
   import { useAuth } from '@/composables/Auth/useAuth'
   import { useBasicAuthForm } from '@/composables/Auth/useBasicAuthForm'
   import { useOAuth2Form } from '@/composables/Auth/useOAuth2Form'
   import { useComponentConnectionTesting } from '@/composables/Infrastructure/useComponentConnectionTesting'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
-  import { requiredRule } from '@/utils/InfrastructureUtils'
+  import { useNavigationStore } from '@/store/NavigationStore'
+  import {
+    getCatenaXAccessMode,
+    getEndpointFieldsForTemplate,
+    getEndpointFieldValue,
+    getInfrastructureTemplateDefinition,
+    INFRASTRUCTURE_TEMPLATE_OPTIONS,
+    normalizeInfrastructureTemplate,
+    requiredRule,
+    setEndpointFieldValue,
+  } from '@/utils/InfrastructureUtils'
 
   // Props
   const props = defineProps<{
@@ -192,8 +324,10 @@
 
   // Stores
   const infrastructureStore = useInfrastructureStore()
+  const navigationStore = useNavigationStore()
 
   // Computed Properties
+  const isMobile = computed(() => navigationStore.getIsMobile)
   const infrastructures = computed(() => infrastructureStore.getInfrastructures)
   const selectedInfrastructureId = computed(() => infrastructureStore.getSelectedInfrastructureId)
 
@@ -245,6 +379,22 @@
   const componentConnectionStatus = connectionTesting.componentConnectionStatus
   const componentTestingLoading = connectionTesting.componentTestingLoading
   const testingAllConnections = connectionTesting.testingAllConnections
+  const infrastructureTemplateOptions = INFRASTRUCTURE_TEMPLATE_OPTIONS
+  const selectedTemplateDescription = computed(
+    () => getInfrastructureTemplateDefinition(editingInfrastructure.value.template).description,
+  )
+  const catenaXAccessMode = computed({
+    get: () => getCatenaXAccessMode(editingInfrastructure.value),
+    set: (value: CatenaXAccessMode) => {
+      editingInfrastructure.value.catenaX = {
+        ...editingInfrastructure.value.catenaX,
+        accessMode: value,
+      }
+    },
+  })
+  const isEditingCatenaXEdcMode = computed(
+    () => editingInfrastructure.value.template === 'catena-x' && catenaXAccessMode.value === 'edc',
+  )
 
   const router = useRouter()
 
@@ -315,6 +465,12 @@
     const { valid } = await formRef.value.validate()
     if (!valid) return
 
+    if (!validateInfrastructureModeConfiguration(editingInfrastructure.value)) {
+      return
+    }
+
+    normalizeGroupedEndpointFields(editingInfrastructure.value)
+
     // Save auth data
     await saveAuthDataToInfrastructure(editingInfrastructure.value)
 
@@ -349,15 +505,44 @@
     resetDialogOpen.value = false
   }
 
-  // Test individual component connection
-  async function testComponentConnection (componentKey: BaSyxComponentKey): Promise<void> {
-    const url = editingInfrastructure.value.components[componentKey].url
-    await connectionTesting.testComponentConnection(componentKey, url)
+  // Test individual endpoint field connection
+  async function testComponentConnection (fieldKey: InfrastructureEndpointFieldKey): Promise<void> {
+    await connectionTesting.testEndpointField(
+      editingInfrastructure.value,
+      fieldKey,
+      editingInfrastructure.value.components,
+    )
   }
 
   // Test all component connections for the currently edited infrastructure
   async function testAllConnections (): Promise<void> {
-    await connectionTesting.testAllConnections(editingInfrastructure.value.components)
+    await connectionTesting.testAllConnections(
+      editingInfrastructure.value.components,
+      editingInfrastructure.value,
+    )
+  }
+
+  function handleTemplateUpdate (template: InfrastructureTemplate | string): void {
+    editingInfrastructure.value.template = normalizeInfrastructureTemplate(template)
+    if (editingInfrastructure.value.template === 'catena-x' && !editingInfrastructure.value.catenaX) {
+      editingInfrastructure.value.catenaX = { accessMode: 'direct' }
+    }
+    normalizeGroupedEndpointFields(editingInfrastructure.value)
+    connectionTesting.resetConnectionStatus()
+  }
+
+  function normalizeGroupedEndpointFields (infra: InfrastructureConfig): void {
+    for (const endpointField of getEndpointFieldsForTemplate(infra)) {
+      if (endpointField.componentKeys.length <= 1) {
+        continue
+      }
+
+      setEndpointFieldValue(
+        infra.components,
+        endpointField,
+        getEndpointFieldValue(infra.components, endpointField),
+      )
+    }
   }
 
   async function authenticateOAuth2 (): Promise<void> {
@@ -393,5 +578,40 @@
 
   function handleDiscoveryIntegrationUpdate (componentKey: BaSyxComponentKey, enabled: boolean): void {
     editingInfrastructure.value.components[componentKey].hasDiscoveryIntegration = enabled
+  }
+
+  function validateInfrastructureModeConfiguration (infra: InfrastructureConfig): boolean {
+    if (infra.template !== 'catena-x') {
+      return true
+    }
+
+    if (getCatenaXAccessMode(infra) === 'edc') {
+      if (!infra.catenaX?.edc?.proxyId?.trim()) {
+        navigationStore.dispatchSnackbar({
+          status: true,
+          timeout: 8000,
+          color: 'warning',
+          btnColor: 'buttonText',
+          text: 'Enter an EDC proxy ID for this Catena-X infrastructure.',
+        })
+        return false
+      }
+      return true
+    }
+
+    const missingEndpoint = getEndpointFieldsForTemplate(infra)
+      .find(endpointField => getEndpointFieldValue(infra.components, endpointField).trim() === '')
+    if (missingEndpoint) {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 8000,
+        color: 'warning',
+        btnColor: 'buttonText',
+        text: `Enter a ${missingEndpoint.label} endpoint URL for this Catena-X infrastructure.`,
+      })
+      return false
+    }
+
+    return true
   }
 </script>

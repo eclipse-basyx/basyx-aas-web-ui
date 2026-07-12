@@ -34,7 +34,10 @@
             </td>
 
             <td>
-              <span class="text-body-small opacity-60">{{ getInfrastructureSummary(infra) }}</span>
+              <div class="d-flex flex-column">
+                <span class="text-body-small">{{ getInfrastructureTemplateDefinition(infra).label }}</span>
+                <span class="text-body-small opacity-60">{{ getInfrastructureSummary(infra) }}</span>
+              </div>
             </td>
 
             <td style="width: 120px">
@@ -75,7 +78,7 @@
 <script lang="ts" setup>
   import type { InfrastructureConfig } from '@/types/Infrastructure'
   import { computed } from 'vue'
-  import { getInfrastructureSummary } from '@/utils/InfrastructureUtils'
+  import { getInfrastructureSummary, getInfrastructureTemplateDefinition } from '@/utils/InfrastructureUtils'
 
   // Props
   const props = defineProps<{
@@ -89,18 +92,18 @@
     'edit': [infrastructure: InfrastructureConfig]
     'delete': [infrastructure: InfrastructureConfig]
     'add': []
-    'update:defaultInfrastructureId': [id: string]
+    'update:default-infrastructure-id': [id: string]
   }>()
 
   // Local state
   const selectedDefault = computed({
     get: () => props.defaultInfrastructureId,
-    set: (value: string) => emit('update:defaultInfrastructureId', value),
+    set: (value: string) => emit('update:default-infrastructure-id', value),
   })
 
   function handleDefaultChange (newDefaultId: string | null): void {
     if (newDefaultId) {
-      emit('update:defaultInfrastructureId', newDefaultId)
+      emit('update:default-infrastructure-id', newDefaultId)
     }
   }
 </script>

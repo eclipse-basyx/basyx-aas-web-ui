@@ -7,7 +7,7 @@ export function useCarbonFootprint_v0_9Utils () {
   const semanticIdSMCTransportCarbonFootprint
     = 'https://admin-shell.io/idta/CarbonFootprint/TransportCarbonFootprint/0/9'
 
-  const pcfLifeCyclePhases = [
+  const pcfLifecyclePhases = [
     {
       valueId: '0173-1#07-ABU208#001',
       value: 'A1 - raw material supply (and upstream production)',
@@ -127,21 +127,21 @@ export function useCarbonFootprint_v0_9Utils () {
     },
   ]
 
-  function getPcfLifeCyclePhaseFromId (pcfLifeCyclePhaseId: string): any {
+  function getPcfLifecyclePhaseFromId (pcfLifecyclePhaseId: string): any {
     const failResponse = {}
 
-    if (!pcfLifeCyclePhaseId || pcfLifeCyclePhaseId.trim() === '') {
+    if (!pcfLifecyclePhaseId || pcfLifecyclePhaseId.trim() === '') {
       return failResponse
     }
 
-    const pcfLifeCyclePhase = pcfLifeCyclePhases.find(
-      (pcfLifeCyclePhase: any) =>
-        pcfLifeCyclePhase.identifier === pcfLifeCyclePhaseId
-        || pcfLifeCyclePhase.valueId === pcfLifeCyclePhaseId,
+    const pcfLifecyclePhase = pcfLifecyclePhases.find(
+      (pcfLifecyclePhase: any) =>
+        pcfLifecyclePhase.identifier === pcfLifecyclePhaseId
+        || pcfLifecyclePhase.valueId === pcfLifecyclePhaseId,
     )
 
-    if (pcfLifeCyclePhase && Object.keys(pcfLifeCyclePhase).length > 0) {
-      return pcfLifeCyclePhase
+    if (pcfLifecyclePhase && Object.keys(pcfLifecyclePhase).length > 0) {
+      return pcfLifecyclePhase
     }
 
     return failResponse
@@ -182,9 +182,9 @@ export function useCarbonFootprint_v0_9Utils () {
     semanticId,
     semanticIdSMCProductCarbonFootprint,
     semanticIdSMCTransportCarbonFootprint,
-    pcfLifeCyclePhases,
+    pcfLifecyclePhases,
     tcfProcessesForGreenhouseGasEmissionInATransportServices,
-    getPcfLifeCyclePhaseFromId,
+    getPcfLifecyclePhaseFromId,
     getTcfProcessesForGreenhouseGasEmissionInATransportServiceFromId,
   }
 }

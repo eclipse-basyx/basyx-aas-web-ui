@@ -60,7 +60,7 @@
             label="Username"
             :model-value="basicAuthUsername"
             variant="outlined"
-            @update:model-value="$emit('update:basicAuthUsername', $event)"
+            @update:model-value="$emit('update:basic-auth-username', $event)"
           />
 
           <v-text-field
@@ -70,7 +70,7 @@
             :model-value="basicAuthPassword"
             type="password"
             variant="outlined"
-            @update:model-value="$emit('update:basicAuthPassword', $event)"
+            @update:model-value="$emit('update:basic-auth-password', $event)"
           />
         </template>
 
@@ -83,7 +83,7 @@
             :model-value="bearerToken"
             rows="3"
             variant="outlined"
-            @update:model-value="$emit('update:bearerToken', $event)"
+            @update:model-value="$emit('update:bearer-token', $event)"
           />
         </template>
 
@@ -98,7 +98,7 @@
             label="Auth Flow"
             :model-value="oAuth2AuthFlow"
             variant="outlined"
-            @update:model-value="$emit('update:oAuth2AuthFlow', $event)"
+            @update:model-value="$emit('update:o-auth2-auth-flow', $event)"
           />
 
           <v-alert
@@ -123,7 +123,7 @@
             :model-value="oauth2Data.host"
             placeholder="https://oauth.example.com"
             variant="outlined"
-            @update:model-value="$emit('update:oauth2Host', $event)"
+            @update:model-value="$emit('update:oauth2-host', $event)"
           />
 
           <v-text-field
@@ -132,7 +132,7 @@
             label="Client ID"
             :model-value="oauth2Data.clientId"
             variant="outlined"
-            @update:model-value="$emit('update:oauth2ClientId', $event)"
+            @update:model-value="$emit('update:oauth2-client-id', $event)"
           />
 
           <v-text-field
@@ -143,7 +143,7 @@
             :model-value="oauth2Data.clientSecret"
             type="password"
             variant="outlined"
-            @update:model-value="$emit('update:oauth2ClientSecret', $event)"
+            @update:model-value="$emit('update:oauth2-client-secret', $event)"
           />
 
           <v-text-field
@@ -153,7 +153,7 @@
             label="Username"
             :model-value="oauth2Data.username"
             variant="outlined"
-            @update:model-value="$emit('update:oauth2Username', $event)"
+            @update:model-value="$emit('update:oauth2-username', $event)"
           />
 
           <v-text-field
@@ -164,7 +164,7 @@
             :model-value="oauth2Data.password"
             type="password"
             variant="outlined"
-            @update:model-value="$emit('update:oauth2Password', $event)"
+            @update:model-value="$emit('update:oauth2-password', $event)"
           />
 
           <v-text-field
@@ -173,7 +173,7 @@
             label="Scope (optional)"
             :model-value="oauth2Data.scope"
             variant="outlined"
-            @update:model-value="$emit('update:oauth2Scope', $event)"
+            @update:model-value="$emit('update:oauth2-scope', $event)"
           />
 
           <v-row v-if="oAuth2AuthFlow === 'client-credentials'" class="mb-2">
@@ -250,21 +250,21 @@
 
   // Emits
   const emit = defineEmits<{
-    'update:securityType': [value: string]
-    'update:basicAuthUsername': [value: string]
-    'update:basicAuthPassword': [value: string]
-    'update:bearerToken': [value: string]
-    'update:oAuth2AuthFlow': [value: string]
-    'update:oauth2Host': [value: string]
-    'update:oauth2ClientId': [value: string]
-    'update:oauth2ClientSecret': [value: string]
-    'update:oauth2Username': [value: string]
-    'update:oauth2Password': [value: string]
-    'update:oauth2Scope': [value: string]
+    'update:security-type': [value: string]
+    'update:basic-auth-username': [value: string]
+    'update:basic-auth-password': [value: string]
+    'update:bearer-token': [value: string]
+    'update:o-auth2-auth-flow': [value: string]
+    'update:oauth2-host': [value: string]
+    'update:oauth2-client-id': [value: string]
+    'update:oauth2-client-secret': [value: string]
+    'update:oauth2-username': [value: string]
+    'update:oauth2-password': [value: string]
+    'update:oauth2-scope': [value: string]
     'authenticate-oauth2': []
   }>()
 
   function handleSecurityTypeChange (value: string): void {
-    emit('update:securityType', value)
+    emit('update:security-type', value)
   }
 </script>

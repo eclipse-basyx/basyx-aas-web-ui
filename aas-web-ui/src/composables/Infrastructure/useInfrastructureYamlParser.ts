@@ -1,12 +1,19 @@
 import type { BaSyxComponentKey } from '@/types/BaSyx'
 import type {
+  CatenaXAccessMode,
+  CatenaXPartner,
   InfrastructureAuth,
   InfrastructureConfig,
   ParsedInfrastructureConfig,
+  YamlComponentConfig,
   YamlInfrastructureConfig,
   YamlInfrastructuresConfig,
   YamlSecurityConfig,
 } from '@/types/Infrastructure'
+import {
+  getEndpointFieldsForTemplate,
+  normalizeInfrastructureTemplate,
+} from '@/utils/InfrastructureUtils'
 
 /**
  * Composable for parsing YAML infrastructure configuration
@@ -138,6 +145,90 @@ export function useInfrastructureYamlParser (): {
     return `yaml_${yamlKey}`
   }
 
+  function parseCatenaXConfig (yamlConfig: YamlInfrastructureConfig): InfrastructureConfig['catenaX'] {
+    if (normalizeInfrastructureTemplate(yamlConfig.template) !== 'catena-x') {
+      return undefined
+    }
+
+    const accessMode = normalizeCatenaXAccessMode(yamlConfig.catenaX?.accessMode)
+    const proxyId = yamlConfig.catenaX?.edc?.proxyId?.trim()
+    const uniquePartners = parseCatenaXPartners(yamlConfig)
+
+    if (accessMode === 'direct') {
+      return { accessMode }
+    }
+
+    if (!proxyId) {
+      return accessMode === 'edc' ? { accessMode: 'edc' } : undefined
+    }
+
+    return {
+      accessMode: 'edc',
+      edc: {
+        proxyId,
+        defaultCounterPartyId: yamlConfig.catenaX?.edc?.defaultCounterPartyId?.trim() || undefined,
+        defaultCounterPartyAddress: yamlConfig.catenaX?.edc?.defaultCounterPartyAddress?.trim() || undefined,
+        defaultPartnerId: yamlConfig.catenaX?.edc?.defaultPartnerId?.trim()
+          || uniquePartners[0]?.id
+          || undefined,
+        partners: uniquePartners.length > 0 ? uniquePartners : undefined,
+      },
+    }
+  }
+
+  function normalizeCatenaXAccessMode (value: unknown): CatenaXAccessMode | undefined {
+    return value === 'direct' || value === 'edc' ? value : undefined
+  }
+
+  function parseCatenaXPartners (yamlConfig: YamlInfrastructureConfig): CatenaXPartner[] {
+    const partners = yamlConfig.catenaX?.edc?.partners
+      ?.map(partner => ({
+        id: partner.id?.trim() || createPartnerId(partner.counterPartyId, partner.counterPartyAddress),
+        name: partner.name?.trim() || undefined,
+        counterPartyId: partner.counterPartyId?.trim() ?? '',
+        counterPartyAddress: partner.counterPartyAddress?.trim() ?? '',
+      }))
+      .filter(partner => partner.id !== '' && partner.counterPartyId !== '' && partner.counterPartyAddress !== '')
+
+    const legacyDefaultPartner = createLegacyDefaultPartner(
+      yamlConfig.catenaX?.edc?.defaultCounterPartyId,
+      yamlConfig.catenaX?.edc?.defaultCounterPartyAddress,
+    )
+
+    return Array.from(
+      new Map([
+        ...(partners ?? []),
+        ...(legacyDefaultPartner ? [legacyDefaultPartner] : []),
+      ].map(partner => [`${partner.counterPartyId}::${partner.counterPartyAddress}`, partner])).values(),
+    )
+  }
+
+  function createLegacyDefaultPartner (
+    counterPartyId: string | undefined,
+    counterPartyAddress: string | undefined,
+  ): CatenaXPartner | undefined {
+    const normalizedCounterPartyId = counterPartyId?.trim() ?? ''
+    const normalizedCounterPartyAddress = counterPartyAddress?.trim() ?? ''
+    if (normalizedCounterPartyId === '' || normalizedCounterPartyAddress === '') {
+      return undefined
+    }
+
+    return {
+      id: createPartnerId(normalizedCounterPartyId, normalizedCounterPartyAddress),
+      counterPartyId: normalizedCounterPartyId,
+      counterPartyAddress: normalizedCounterPartyAddress,
+    }
+  }
+
+  function createPartnerId (counterPartyId: string | undefined, counterPartyAddress: string | undefined): string {
+    const rawId = `${counterPartyId?.trim() ?? ''}-${counterPartyAddress?.trim() ?? ''}`
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+
+    return rawId || ''
+  }
+
   /**
    * Parses a single YAML infrastructure configuration
    */
@@ -146,9 +237,11 @@ export function useInfrastructureYamlParser (): {
     yamlConfig: YamlInfrastructureConfig,
     isDefault = false,
   ): InfrastructureConfig {
+    const template = normalizeInfrastructureTemplate(yamlConfig.template)
     const infrastructure: InfrastructureConfig = {
       id: generateYamlInfrastructureId(yamlKey),
       name: yamlConfig.name || yamlKey,
+      template,
       isDefault,
       auth: parseSecurityConfig(yamlConfig.security),
       components: {
@@ -161,20 +254,49 @@ export function useInfrastructureYamlParser (): {
       },
     }
 
-    // Map YAML component configurations to internal structure
-    for (const [yamlKey, internalKey] of Object.entries(componentKeyMap)) {
-      const yamlComponent = yamlConfig.components[yamlKey as keyof typeof yamlConfig.components]
-      if (yamlComponent?.baseUrl) {
-        infrastructure.components[internalKey].url = yamlComponent.baseUrl
-        if (yamlComponent.hasRegistryIntegration !== undefined) {
-          infrastructure.components[internalKey].hasRegistryIntegration
+    const catenaX = parseCatenaXConfig(yamlConfig)
+    if (catenaX) {
+      infrastructure.catenaX = catenaX
+    }
+
+    function applyYamlComponentToKeys (
+      yamlComponent: YamlComponentConfig | undefined,
+      componentKeys: BaSyxComponentKey[],
+    ): void {
+      if (!yamlComponent?.baseUrl) {
+        return
+      }
+
+      for (const componentKey of componentKeys) {
+        infrastructure.components[componentKey].url = yamlComponent.baseUrl
+
+        if (
+          yamlComponent.hasRegistryIntegration !== undefined
+          && (componentKey === 'AASRepo' || componentKey === 'SubmodelRepo')
+        ) {
+          infrastructure.components[componentKey].hasRegistryIntegration
             = yamlComponent.hasRegistryIntegration
         }
-        if (yamlComponent.hasDiscoveryIntegration !== undefined) {
-          infrastructure.components[internalKey].hasDiscoveryIntegration
+
+        if (yamlComponent.hasDiscoveryIntegration !== undefined && componentKey === 'AASRegistry') {
+          infrastructure.components[componentKey].hasDiscoveryIntegration
             = yamlComponent.hasDiscoveryIntegration
         }
       }
+    }
+
+    // Map YAML component configurations to internal structure
+    for (const [yamlKey, internalKey] of Object.entries(componentKeyMap)) {
+      const yamlComponent = yamlConfig.components[yamlKey as keyof typeof yamlConfig.components]
+      applyYamlComponentToKeys(yamlComponent, [internalKey])
+    }
+
+    // Map grouped endpoint configurations for templates such as mono-repo and Catena-X.
+    for (const endpointField of getEndpointFieldsForTemplate(template)) {
+      const yamlComponent = yamlConfig.components[
+        endpointField.yamlKey as keyof typeof yamlConfig.components
+      ]
+      applyYamlComponentToKeys(yamlComponent, endpointField.componentKeys)
     }
 
     return infrastructure

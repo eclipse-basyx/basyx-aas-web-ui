@@ -11,7 +11,7 @@
   }>()
 
   const emit = defineEmits<{
-    (event: 'update:modelValue', value: boolean): void
+    (event: 'update:model-value', value: boolean): void
   }>()
 
   const booleanValue = ref<boolean>(
@@ -19,7 +19,7 @@
   )
 
   watch(booleanValue, newValue => {
-    emit('update:modelValue', newValue)
+    emit('update:model-value', newValue)
   })
 
   watch(
