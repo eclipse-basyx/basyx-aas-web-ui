@@ -13,6 +13,7 @@ describe('MetamodelVerification.ts', () => {
     expect(result.isValid).toBe(false)
     expect(result.fieldErrors.size + result.globalErrors.length).toBeGreaterThan(0)
     expect(result.totalErrors).toBeGreaterThan(0)
+    expect(result.issues[0]).toEqual(expect.objectContaining({ path: expect.any(String), message: expect.any(String) }))
   })
 
   it('caps reported errors to maxErrors', () => {

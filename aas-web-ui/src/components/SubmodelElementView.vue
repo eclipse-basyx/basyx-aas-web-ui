@@ -128,38 +128,44 @@
 
           <Property
             v-else-if="submodelElementData.modelType === 'Property'"
+            :class="operationOwned ? 'mt-4' : ''"
             :is-editable="editorMode"
+            :is-operation-variable="operationOwned"
             :property-object="submodelElementData"
+            :variable-type="operationOwned && editorMode ? '' : submodelElementData.operationVariableDirection"
+            @update-value="updateOperationOwnedValue"
           />
 
           <MultiLanguageProperty
             v-else-if="submodelElementData.modelType === 'MultiLanguageProperty'"
             :key="submodelElementData.path"
-            :is-editable="editorMode"
+            :is-editable="editorMode && !operationOwned"
             :multi-language-property-object="submodelElementData"
           />
 
           <Operation
             v-else-if="submodelElementData.modelType === 'Operation'"
-            :is-editable="editorMode"
+            :invocation-available="!operationOwned"
+            :is-editable="editorMode && !operationOwned"
             :operation-object="submodelElementData"
           />
 
           <File
             v-else-if="submodelElementData.modelType === 'File'"
             :file-object="submodelElementData"
-            :is-editable="editorMode"
+            :is-editable="editorMode && !operationOwned"
+            :operation-owned="operationOwned"
           />
 
           <Blob
             v-else-if="submodelElementData.modelType === 'Blob'"
             :blob-object="submodelElementData"
-            :is-editable="editorMode"
+            :is-editable="editorMode && !operationOwned"
           />
 
           <ReferenceElement
             v-else-if="submodelElementData.modelType === 'ReferenceElement'"
-            :is-editable="editorMode"
+            :is-editable="editorMode && !operationOwned"
             :reference-element-object="submodelElementData"
           />
 
@@ -181,7 +187,12 @@
           <AnnotatedRelationshipElement
             v-else-if="submodelElementData.modelType === 'AnnotatedRelationshipElement'"
             :annotated-relationship-element-object="submodelElementData"
-            :is-editable="editorMode"
+            :is-editable="editorMode && !operationOwned"
+          />
+
+          <SubmodelElementSummary
+            v-else-if="['BasicEventElement', 'Capability'].includes(submodelElementData.modelType)"
+            :element="submodelElementData"
           />
 
           <InvalidElement v-else :invalid-element-object="submodelElementData" />
@@ -236,6 +247,7 @@
   import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import { useRoute } from 'vue-router'
   import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling'
+  import { useOperationTreeMutation } from '@/composables/AAS/OperationTreeMutation'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMEHandling } from '@/composables/AAS/SMEHandling'
   import { useAASStore } from '@/store/AASDataStore'
@@ -253,6 +265,7 @@
   // Composables
   const { fetchCds } = useConceptDescriptionHandling()
   const { fetchSme } = useSMEHandling()
+  const { mutateOperation } = useOperationTreeMutation()
   const { nameToDisplay } = useReferableUtils()
 
   // Data
@@ -268,6 +281,8 @@
   const selectedNode = computed(() => aasStore.getSelectedNode)
   const autoSync = computed(() => navigationStore.getAutoSync)
   const editorMode = computed(() => ['AASEditor', 'SMEditor'].includes(route.name as string))
+  const operationOwned = computed(() => submodelElementData.value?.persistence?.kind === 'operation')
+  const pendingOperationValueUpdates = new Map<string, string>()
 
   const conceptDescriptionPanelTitleStyle = {
     minHeight: '40px',
@@ -298,7 +313,7 @@
         // create new interval
         autoSyncInterval.value = window.setInterval(async () => {
           // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-          await initialize(await fetchSme(selectedNode.value.path, true))
+          await initialize(await fetchSelectedNode())
         }, autoSync.value.interval)
       }
 
@@ -316,7 +331,7 @@
         // create new interval
         autoSyncInterval.value = window.setInterval(async () => {
           // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-          await initialize(await fetchSme(selectedNodeValue.path, true))
+          await initialize(await fetchSelectedNode(selectedNodeValue))
         }, autoSync.value.interval)
       }
 
@@ -335,12 +350,12 @@
     async autoSyncValue => {
       window.clearInterval(autoSyncInterval.value) // clear old interval
       if (autoSyncValue.state && selectedNode.value && Object.keys(selectedNode.value).length > 0) {
-        initialize(await fetchSme(selectedNode.value.path, true))
+        initialize(await fetchSelectedNode())
 
         // create new interval
         autoSyncInterval.value = window.setInterval(async () => {
           // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-          initialize(await fetchSme(selectedNode.value.path, true))
+          initialize(await fetchSelectedNode())
         }, autoSyncValue.interval)
       }
     },
@@ -352,7 +367,7 @@
       // create new interval
       autoSyncInterval.value = window.setInterval(async () => {
         // Note: Not only fetchSme() (like in AASListDetails). Dispatching needed for ComponentVisualization
-        initialize(await fetchSme(selectedNode.value.path, true))
+        initialize(await fetchSelectedNode())
       }, autoSync.value.interval)
     }
 
@@ -400,6 +415,35 @@
       }
 
       conceptDescriptions.value = []
+    }
+  }
+
+  async function fetchSelectedNode (node: any = selectedNode.value): Promise<any> {
+    if (node?.persistence?.kind === 'operation') {
+      return fetchSme(node.persistence.operationPath, true, node.persistence.fragment)
+    }
+    return fetchSme(node?.path, true)
+  }
+
+  async function updateOperationOwnedValue (value: unknown): Promise<void> {
+    if (!operationOwned.value) return
+    const node = submodelElementData.value
+    const normalizedValue = typeof value === 'boolean' ? String(value) : value
+    const serializedValue = JSON.stringify(normalizedValue)
+    const selectionKey = node.selectionKey || node.path
+    if (JSON.stringify(node.value) === serializedValue || pendingOperationValueUpdates.get(selectionKey) === serializedValue) {
+      return
+    }
+    pendingOperationValueUpdates.set(selectionKey, serializedValue)
+    try {
+      const result = await mutateOperation(node.persistence, ({ target }) => {
+        target.value = normalizedValue
+      })
+      if (!result.success) return
+      const updatedNode = await fetchSelectedNode(node)
+      aasStore.dispatchSelectedNode(updatedNode)
+    } finally {
+      pendingOperationValueUpdates.delete(selectionKey)
     }
   }
 

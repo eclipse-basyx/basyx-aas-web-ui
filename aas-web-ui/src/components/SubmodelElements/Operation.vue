@@ -40,7 +40,7 @@
               <!-- Value Representation depending on the ModelType -->
               <Property
                 v-if="variable.value.modelType === 'Property'"
-                :is-editable="isEditable"
+                :is-editable="variablesEditable"
                 :is-operation-variable="true"
                 :property-object="variable.value"
                 :variable-type="variableType.type"
@@ -49,7 +49,7 @@
 
               <ReferenceElement
                 v-else-if="variable.value.modelType === 'ReferenceElement'"
-                :is-editable="isEditable"
+                :is-editable="variablesEditable"
                 :is-operation-variable="true"
                 :reference-element-object="variable.value"
                 :variable-type="variableType.type"
@@ -58,15 +58,7 @@
                 "
               />
 
-              <InvalidElement
-                v-else
-                :invalid-element-object="variable.value"
-                :is-operation-variable="true"
-                :variable-type="variableType.type"
-                @update-value="
-                  updateOperationVariable($event, variable.value)
-                "
-              />
+              <SubmodelElementSummary v-else :element="variable.value" />
             </v-card>
           </template>
         </v-container>
@@ -87,7 +79,7 @@
 
       <v-divider />
       <!-- Action Buttons for the Operation -->
-      <v-list class="bg-elevatedCard pa-0" nav>
+      <v-list v-if="invocationAvailable" class="bg-elevatedCard pa-0" nav>
         <v-list-item>
           <template #append>
             <!-- Clear-Button -->
@@ -110,12 +102,23 @@
           </template>
         </v-list-item>
       </v-list>
+
+      <v-alert
+        v-else
+        class="ma-3"
+        density="compact"
+        type="info"
+        variant="tonal"
+      >
+        This nested Operation is owned by another Operation. Invoke the repository-backed owning
+        Operation instead.
+      </v-alert>
     </v-card>
   </v-container>
 </template>
 
 <script lang="ts" setup>
-  import { onMounted, ref, watch } from 'vue'
+  import { computed, onMounted, ref, watch } from 'vue'
   import { useRequestHandling } from '@/composables/RequestHandling'
   import { useNavigationStore } from '@/store/NavigationStore'
 
@@ -134,6 +137,10 @@
       type: Boolean,
       default: true,
     },
+    invocationAvailable: {
+      type: Boolean,
+      default: true,
+    },
   })
 
   const localOperationObject = ref({} as any)
@@ -143,6 +150,7 @@
     { type: 'outputVariables', name: 'Output Variables', id: 2 },
   ])
   const loading = ref(false)
+  const variablesEditable = computed(() => props.isEditable && props.invocationAvailable)
 
   // Watchers
   watch(

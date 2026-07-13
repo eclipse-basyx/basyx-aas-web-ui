@@ -130,4 +130,44 @@ describe('Operation.vue', () => {
     expect(requestBody.inputArguments[0].value.value).toBe('true')
     expect(typeof requestBody.inputArguments[0].value.value).toBe('string')
   })
+
+  it('renders nested Operation variables as read-only when invocation is unavailable', async () => {
+    const wrapper = mount(Operation, {
+      props: {
+        isEditable: true,
+        invocationAvailable: false,
+        operationObject: {
+          modelType: 'Operation',
+          idShort: 'Nested',
+          inputVariables: [{
+            value: { modelType: 'Property', idShort: 'input', valueType: 'xs:string', value: 'value' },
+          }],
+          inoutputVariables: [],
+          outputVariables: [],
+        },
+      },
+      global: {
+        stubs: {
+          'v-container': { template: '<div><slot /></div>' },
+          'v-card': { template: '<div><slot /></div>' },
+          'v-list': { template: '<div><slot /></div>' },
+          'v-list-item': { template: '<div><slot /></div>' },
+          'v-list-item-title': { template: '<div><slot /></div>' },
+          'v-divider': true,
+          'v-alert': { template: '<div><slot /></div>' },
+          'DescriptionElement': true,
+          'ReferenceElement': true,
+          'SubmodelElementSummary': true,
+          'Property': {
+            props: ['isEditable'],
+            template: '<span data-test="property-editable">{{ String(isEditable) }}</span>',
+          },
+        },
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.get('[data-test="property-editable"]').text()).toBe('false')
+  })
 })

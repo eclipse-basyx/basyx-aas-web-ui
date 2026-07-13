@@ -47,7 +47,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
   const moduleRoutes = ref<Array<ModuleNavigationRoute>>([])
 
   // Core query params that are always allowed (UI framework params)
-  const coreQueryParams = ['aas', 'path', 'view']
+  const coreQueryParams = ['aas', 'path', 'fragment', 'view']
 
   // Query params registered by plugins (dynamic, based on active plugin)
   const registeredQueryParams = ref<RegisteredQueryParamType[]>([])
