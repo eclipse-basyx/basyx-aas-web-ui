@@ -35,6 +35,57 @@ type ModuleDefinition = {
   moduleManifest?: ModuleRouteManifest
 }
 
+type FetchAndDispatchSme = (
+  path: string,
+  withConceptDescriptions?: boolean,
+  operationFragment?: string,
+) => Promise<any>
+
+export async function fetchAndValidateSmeSelection (
+  to: any,
+  from: any,
+  selectedNode: Record<string, unknown> | null | undefined,
+  fetchAndDispatchSme: FetchAndDispatchSme,
+  clearSelectedNode: () => void,
+): Promise<{
+  fetchedSme: Record<string, unknown> | null
+  redirect: { path: string, query: LocationQueryRaw } | null
+}> {
+  let fetchedSme: Record<string, unknown> | null = null
+
+  if (
+    Object.hasOwn(to.query, 'path')
+    && (to.query.path as string).trim() !== ''
+    && (!selectedNode
+      || Object.keys(selectedNode).length === 0
+      || !Object.hasOwn(from.query, 'path')
+      || (Object.hasOwn(from.query, 'path')
+        && (from.query.path as string).trim() !== (to.query.path as string).trim())
+      || from.query.fragment !== to.query.fragment)
+  ) {
+    const fragment = typeof to.query.fragment === 'string' ? to.query.fragment : undefined
+    fetchedSme = await fetchAndDispatchSme(to.query.path as string, true, fragment)
+    if (!fetchedSme || Object.keys(fetchedSme).length === 0) {
+      const query = { ...to.query }
+      if (fragment) {
+        delete query.fragment
+      } else {
+        delete query.path
+      }
+      return { fetchedSme: null, redirect: { path: to.path, query } }
+    }
+  } else if (!to.query.path || to.query.path === '') {
+    clearSelectedNode()
+    if (to.query.fragment) {
+      const query = { ...to.query }
+      delete query.fragment
+      return { fetchedSme: null, redirect: { path: to.path, query } }
+    }
+  }
+
+  return { fetchedSme, redirect: null }
+}
+
 function findRouteByName (records: Array<RouteRecordRaw>, name: string): RouteRecordRaw | undefined {
   for (const record of records) {
     if (record.name?.toString() === name) {
@@ -660,6 +711,7 @@ export async function createAppRouter (): Promise<Router> {
       if (!combinationAasPathIsOk) {
         const query = { ...to.query }
         delete query.path
+        delete query.fragment
         return { path: to.path, query }
       }
     }
@@ -695,27 +747,13 @@ export async function createAppRouter (): Promise<Router> {
     to: any,
     from: any,
   ): Promise<{ fetchedSme: Record<string, unknown> | null, redirect: { path: string, query: LocationQueryRaw } | null }> => {
-    let fetchedSme: Record<string, unknown> | null = null
-    if (
-      Object.hasOwn(to.query, 'path')
-      && (to.query.path as string).trim() !== ''
-      && (!aasStore.getSelectedNode
-        || Object.keys(aasStore.getSelectedNode).length === 0
-        || !Object.hasOwn(from.query, 'path')
-        || (Object.hasOwn(from.query, 'path')
-          && (from.query.path as string).trim() !== (to.query.path as string).trim()))
-    ) {
-      fetchedSme = await fetchAndDispatchSme(to.query.path as string, true)
-      if (!fetchedSme || Object.keys(fetchedSme).length === 0) {
-        const query = { ...to.query }
-        delete query.path
-        return { fetchedSme: null, redirect: { path: to.path, query } }
-      }
-    } else if (!to.query.path || to.query.path === '') {
-      aasStore.dispatchSelectedNode({})
-    }
-
-    return { fetchedSme, redirect: null }
+    return fetchAndValidateSmeSelection(
+      to,
+      from,
+      aasStore.getSelectedNode,
+      fetchAndDispatchSme,
+      () => aasStore.dispatchSelectedNode({}),
+    )
   }
 
   const cleanupPluginQueryParams = (
@@ -727,12 +765,13 @@ export async function createAppRouter (): Promise<Router> {
       = Object.hasOwn(from.query, 'path')
         && Object.hasOwn(to.query, 'path')
         && (from.query.path as string).trim() !== (to.query.path as string).trim()
+    const fragmentChanged = from.query.fragment !== to.query.fragment
     const aasChanged
       = Object.hasOwn(from.query, 'aas')
         && Object.hasOwn(to.query, 'aas')
         && (from.query.aas as string).trim() !== (to.query.aas as string).trim()
 
-    if (pathChanged || aasChanged) {
+    if (pathChanged || fragmentChanged || aasChanged) {
       const selectedNode = fetchedSme || aasStore.getSelectedNode
       const { filteredQuery, removedParams } = navigationStore.filterQueryParams(to.query, selectedNode)
 

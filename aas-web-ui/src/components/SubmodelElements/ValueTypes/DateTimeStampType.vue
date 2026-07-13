@@ -96,6 +96,7 @@
   const newDateTimestampValue = ref<string>('')
   const newDate = ref<any>(new Date())
   const newTime = ref<string>('')
+  const lastSubmittedValue = ref<unknown>()
 
   // Computed Properties
   const selectedNode = computed(() => aasStore.getSelectedNode)
@@ -128,6 +129,7 @@
   })
 
   function initialize (dateTimestampValue: string): void {
+    lastSubmittedValue.value = dateTimestampValue
     if (dateTimestampValue && dateTimestampValue.trim() !== '') {
       const dateTimestampString = dateTimestampValue.trim()
       const matches = dateTimestampString.match(new RegExp(dateTimeRegex))
@@ -166,6 +168,11 @@
 
   function updateValue (): void {
     if (isOperationVariable.value) {
+      if (
+        newDateTimestampValue.value === props.dateTimeStampValue.value
+        || newDateTimestampValue.value === lastSubmittedValue.value
+      ) return
+      lastSubmittedValue.value = newDateTimestampValue.value
       emit('update-value', newDateTimestampValue.value)
       return
     }

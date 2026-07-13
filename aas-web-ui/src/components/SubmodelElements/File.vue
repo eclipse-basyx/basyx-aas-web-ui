@@ -7,6 +7,13 @@
     <v-card v-if="fileObject" color="elevatedCard">
       <!-- Path (Value) of the File Element -->
       <v-list class="bg-elevatedCard pt-0" nav>
+        <v-list-item v-if="operationOwned">
+          <v-alert density="compact" type="info" variant="tonal">
+            This File belongs to an Operation variable. Attachment upload and download are unavailable;
+            edit its metadata or path from the tree context menu.
+          </v-alert>
+        </v-list-item>
+
         <v-list-item class="pb-0">
           <!-- mimeType -->
           <v-list-item-title>
@@ -19,7 +26,7 @@
           <!-- Donwload File Button -->
           <template #append>
             <v-btn
-              v-if="fileObject.value"
+              v-if="fileObject.value && !operationOwned"
               class="text-buttonText"
               color="primary"
               :href="localPathValue"
@@ -125,6 +132,10 @@
       type: Boolean,
       default: true,
     },
+    operationOwned: {
+      type: Boolean,
+      default: false,
+    },
   })
 
   const aasStore = useAASStore()
@@ -158,7 +169,7 @@
     async newFileObject => {
       if (newFileObject && !isFocused.value) {
         newPathValue.value = newFileObject.value
-        localPathValue.value = await valueBlob(newFileObject)
+        localPathValue.value = props.operationOwned ? '' : await valueBlob(newFileObject)
       }
     },
     { deep: true, immediate: true },
@@ -167,7 +178,7 @@
   onMounted(async () => {
     if (props.fileObject) {
       newPathValue.value = props.fileObject.value
-      localPathValue.value = await valueBlob(props.fileObject)
+      localPathValue.value = props.operationOwned ? '' : await valueBlob(props.fileObject)
     }
   })
 
