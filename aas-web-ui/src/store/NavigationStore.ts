@@ -81,6 +81,12 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     Snackbar.value = snackbarObj
   }
 
+  function dispatchDismissInfrastructureSnackbar (): void {
+    if (Snackbar.value.infrastructureId) {
+      Snackbar.value = { status: false }
+    }
+  }
+
   function dispatchAutoSync (updatedAutoSync: AutoSyncType): void {
     autoSync.value = updatedAutoSync
   }
@@ -265,6 +271,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     // Actions
     dispatchDrawerState,
     dispatchSnackbar,
+    dispatchDismissInfrastructureSnackbar,
     dispatchAutoSync,
     dispatchStatusCheck,
     dispatchIsMobile,

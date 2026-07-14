@@ -29,4 +29,28 @@ describe('NavigationStore', () => {
     expect(navigationStore.getClearTreeview).toBe(2)
     expect(navigationStore.getTriggerTreeviewReload).toBe(2)
   })
+
+  it('dismisses infrastructure-scoped snackbars when the infrastructure changes', () => {
+    const navigationStore = useNavigationStore()
+
+    navigationStore.dispatchSnackbar({
+      status: true,
+      text: 'Authentication required',
+      infrastructureId: 'infra-1',
+    })
+    navigationStore.dispatchDismissInfrastructureSnackbar()
+
+    expect(navigationStore.getSnackbar).toEqual({ status: false })
+
+    navigationStore.dispatchSnackbar({
+      status: true,
+      text: 'A general notification',
+    })
+    navigationStore.dispatchDismissInfrastructureSnackbar()
+
+    expect(navigationStore.getSnackbar).toEqual({
+      status: true,
+      text: 'A general notification',
+    })
+  })
 })

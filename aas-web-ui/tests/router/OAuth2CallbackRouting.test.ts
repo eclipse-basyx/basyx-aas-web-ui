@@ -36,6 +36,7 @@ const mockDeps = vi.hoisted(() => ({
   infrastructureStore: {
     getInfrastructures: [] as Array<any>,
     getSelectedInfrastructure: null as any,
+    getIsLoginAvailable: true,
     waitForInitialization: vi.fn(),
     dispatchUpdateInfrastructure: vi.fn(),
     setAuthenticationStatusForInfrastructure: vi.fn(),
@@ -43,13 +44,16 @@ const mockDeps = vi.hoisted(() => ({
   navigationStore: {
     dispatchModuleRoutes: vi.fn(),
     dispatchSnackbar: vi.fn(),
+    getSnackbar: { status: false },
     dispatchUrlQuery: vi.fn(),
     filterQueryParams: vi.fn(() => ({ filteredQuery: {}, removedParams: [] })),
     getIsMobile: false,
     getUrlQuery: {},
   },
   exchangeOAuth2AuthorizationCode: vi.fn(),
+  aasByEndpointHasSmeByPath: vi.fn(),
   fetchAndDispatchAas: vi.fn(),
+  fetchAndDispatchSme: vi.fn(),
 }))
 
 vi.mock('@/store/AASDataStore', () => ({
@@ -71,13 +75,13 @@ vi.mock('@/store/NavigationStore', () => ({
 vi.mock('@/composables/AAS/AASHandling', () => ({
   useAASHandling: () => ({
     fetchAndDispatchAas: mockDeps.fetchAndDispatchAas,
-    aasByEndpointHasSmeByPath: vi.fn().mockResolvedValue(true),
+    aasByEndpointHasSmeByPath: mockDeps.aasByEndpointHasSmeByPath,
   }),
 }))
 
 vi.mock('@/composables/AAS/SMEHandling', () => ({
   useSMEHandling: () => ({
-    fetchAndDispatchSme: vi.fn(),
+    fetchAndDispatchSme: mockDeps.fetchAndDispatchSme,
   }),
 }))
 
@@ -108,6 +112,8 @@ describe('OAuth2 callback routing', () => {
       tokenType: 'Bearer',
     })
     mockDeps.fetchAndDispatchAas.mockResolvedValue({ id: 'aas' })
+    mockDeps.aasByEndpointHasSmeByPath.mockResolvedValue(true)
+    mockDeps.fetchAndDispatchSme.mockResolvedValue({ idShort: 'submodel' })
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue({ token_endpoint: 'https://idp.example/token' }),
@@ -137,7 +143,8 @@ describe('OAuth2 callback routing', () => {
     expect(mockDeps.infrastructureStore.setAuthenticationStatusForInfrastructure).toHaveBeenCalledWith('infrastructure-1', true)
   })
 
-  it('returns to the selected AAS after a query-free logout callback', async () => {
+  it('returns to the selected route after a query-free logout callback without refetching protected data', async () => {
+    window.history.replaceState({}, '', '/aasviewer?aas=urn%3Aexample%3Aaas&path=%2Fsubmodels%2F0')
     const { callbackPath } = startLogoutTransaction()
     const router = await createAppRouter()
 
@@ -145,5 +152,15 @@ describe('OAuth2 callback routing', () => {
 
     expect(router.currentRoute.value.name).toBe('AASViewer')
     expect(router.currentRoute.value.query).toMatchObject({ aas: 'urn:example:aas' })
+    expect(router.currentRoute.value.query).toMatchObject({ path: '/submodels/0' })
+    expect(mockDeps.navigationStore.dispatchSnackbar).toHaveBeenCalledWith(
+      expect.objectContaining({
+        baseError: 'Authentication required!',
+        actionText: 'Login',
+      }),
+    )
+    expect(mockDeps.aasByEndpointHasSmeByPath).not.toHaveBeenCalled()
+    expect(mockDeps.fetchAndDispatchAas).not.toHaveBeenCalled()
+    expect(mockDeps.fetchAndDispatchSme).not.toHaveBeenCalled()
   })
 })

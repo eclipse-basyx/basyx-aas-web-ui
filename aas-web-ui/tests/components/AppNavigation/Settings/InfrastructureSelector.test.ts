@@ -4,6 +4,7 @@ import InfrastructureSelector from '@/components/AppNavigation/Settings/Infrastr
 
 const mocks = vi.hoisted(() => ({
   events: [] as string[],
+  dispatchUrlQuery: vi.fn(),
   dispatchSelectInfrastructure: vi.fn(),
   push: vi.fn(),
   replace: vi.fn(),
@@ -39,6 +40,12 @@ vi.mock('@/store/InfrastructureStore', () => ({
     getSelectedInfrastructure: { template: 'mono-all' },
     getSelectedInfrastructureId: 'infra-1',
     dispatchSelectInfrastructure: mocks.dispatchSelectInfrastructure,
+  }),
+}))
+
+vi.mock('@/store/NavigationStore', () => ({
+  useNavigationStore: () => ({
+    dispatchUrlQuery: mocks.dispatchUrlQuery,
   }),
 }))
 
@@ -78,6 +85,7 @@ describe('InfrastructureSelector', () => {
     await flushPromises()
 
     expect(mocks.replace).toHaveBeenCalledWith({ query: {} })
+    expect(mocks.dispatchUrlQuery).toHaveBeenCalledWith({})
     expect(mocks.dispatchSelectInfrastructure).toHaveBeenCalledWith('infra-2')
     expect(mocks.events).toEqual(['clear-route', 'select-infrastructure'])
   })

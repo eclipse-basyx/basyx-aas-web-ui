@@ -118,6 +118,47 @@ export function useAuth (router?: Router) {
   }
 
   /**
+   * Show the authentication-required notification for the currently selected
+   * infrastructure. The action is intentionally bound to that infrastructure,
+   * so a stale notification cannot start OAuth for a later selection.
+   */
+  function showLoginRequiredSnackbar (): void {
+    const infra = infrastructureStore.getSelectedInfrastructure
+    if (!infra) {
+      return
+    }
+
+    const currentSnackbar = navStore.getSnackbar
+    if (
+      currentSnackbar.status
+      && currentSnackbar.kind === 'authentication-required'
+      && currentSnackbar.infrastructureId === infra.id
+    ) {
+      return
+    }
+
+    const isLoginAvailable = infrastructureStore.getIsLoginAvailable
+    navStore.dispatchSnackbar({
+      status: true,
+      timeout: 8000,
+      color: 'warning',
+      btnColor: 'buttonText',
+      baseError: 'Authentication required!',
+      extendedError: 'Please log in again.',
+      infrastructureId: infra.id,
+      kind: 'authentication-required',
+      actionText: isLoginAvailable ? 'Login' : undefined,
+      actionCallback: isLoginAvailable
+        ? async () => {
+          if (infrastructureStore.getSelectedInfrastructure?.id === infra.id) {
+            await login()
+          }
+        }
+        : undefined,
+    })
+  }
+
+  /**
    * Clear local token and update UI
    */
   function clearLocalToken ({ preserveRouteQuery = false }: { preserveRouteQuery?: boolean } = {}): void {
@@ -226,5 +267,6 @@ export function useAuth (router?: Router) {
     login,
     logout,
     clearLocalToken,
+    showLoginRequiredSnackbar,
   }
 }

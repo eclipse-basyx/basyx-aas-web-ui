@@ -32,11 +32,13 @@
   import { useRouter } from 'vue-router'
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
+  import { useNavigationStore } from '@/store/NavigationStore'
   import { getActiveComponentKeys } from '@/utils/InfrastructureUtils'
 
   // Stores
   const infrastructureStore = useInfrastructureStore()
   const envStore = useEnvStore()
+  const navigationStore = useNavigationStore()
 
   const router = useRouter()
 
@@ -98,6 +100,7 @@
     await router.replace({
       query: {},
     })
+    navigationStore.dispatchUrlQuery({})
 
     // dispatchSelectInfrastructure handles connection checking and data reload internally
     await infrastructureStore.dispatchSelectInfrastructure(infrastructureId)

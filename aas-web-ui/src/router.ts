@@ -13,6 +13,7 @@ import {
   getAuthorizationTransaction,
   getOAuth2CallbackUri,
 } from '@/composables/Auth/OAuth2Navigation'
+import { useAuth } from '@/composables/Auth/useAuth'
 import { useRouteHandling } from '@/composables/routeHandling'
 import AASEditor from '@/pages/AASEditor.vue'
 import AASSubmodelViewer from '@/pages/AASSubmodelViewer.vue'
@@ -380,6 +381,7 @@ export async function createAppRouter (): Promise<Router> {
   })
 
   let infrastructureInitializationEnsured = false
+  let skipAasAndSmeDataLoadingForLogoutReturn = false
 
   const tryResolveRouteByName = (name: string): RouteRecordRaw | undefined => {
     const direct = findRouteByName(routes, name)
@@ -920,6 +922,11 @@ export async function createAppRouter (): Promise<Router> {
     }
   }
 
+  const showLogoutLoginSnackbar = (): void => {
+    const { showLoginRequiredSnackbar } = useAuth(router)
+    showLoginRequiredSnackbar()
+  }
+
   router.beforeEach(async function (to, from) {
     if (!infrastructureInitializationEnsured) {
       await infrastructureStore.waitForInitialization()
@@ -933,6 +940,8 @@ export async function createAppRouter (): Promise<Router> {
 
     const logoutRedirect = consumeLogoutTransaction(to.path)
     if (logoutRedirect) {
+      skipAasAndSmeDataLoadingForLogoutReturn = true
+      showLogoutLoginSnackbar()
       return { ...logoutRedirect, replace: true }
     }
 
@@ -985,6 +994,11 @@ export async function createAppRouter (): Promise<Router> {
     const deviceRoute = handleDeviceRouting(to)
     if (deviceRoute !== null) {
       return deviceRoute
+    }
+
+    if (skipAasAndSmeDataLoadingForLogoutReturn) {
+      skipAasAndSmeDataLoadingForLogoutReturn = false
+      return true
     }
 
     const aasSmeRoute = await handleAasAndSmeDataLoading(to, from)

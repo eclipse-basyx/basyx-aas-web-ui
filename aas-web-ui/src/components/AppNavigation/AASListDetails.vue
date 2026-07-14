@@ -184,6 +184,8 @@
   const statusCheckInterval = ref<number | undefined>(undefined)
   const downloadAASDialog = ref(false) // Variable to store if the DownloadAAS Dialog should be shown
   const aasToDownload = ref({}) // Variable to store the AAS to be downloaded
+  let statusCheckGeneration = 0
+  let isUnmounted = false
 
   // Computed Properties
   const isMobile = computed(() => navigationStore.getIsMobile)
@@ -191,6 +193,7 @@
   const selectedAAS = computed(() => aasStore.getSelectedAAS) // Get the selected AAS from Store
   const aasRegistryURL = computed(() => infrastructureStore.getAASRegistryURL) // Get AAS Registry URL from Store
   const aasRepoURL = computed(() => infrastructureStore.getAASRepoURL) // Get the AAS Repository URL from the Store
+  const selectedInfrastructureId = computed(() => infrastructureStore.getSelectedInfrastructureId)
   const detailsListHeight = computed(() => {
     if (isMobile.value) {
       return singleAas.value
@@ -209,6 +212,7 @@
   watch(
     () => aasRegistryURL.value,
     async () => {
+      invalidatePendingStatusChecks()
       initializeView()
     },
   )
@@ -216,6 +220,7 @@
   watch(
     () => aasRepoURL.value,
     async () => {
+      invalidatePendingStatusChecks()
       initializeView()
     },
   )
@@ -223,6 +228,7 @@
   watch(
     () => selectedAAS.value,
     async () => {
+      invalidatePendingStatusChecks()
       window.clearInterval(autoSyncInterval.value) // clear old interval
       if (autoSync.value.state && selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
         // create new interval
@@ -265,6 +271,7 @@
   watch(
     () => statusCheck.value,
     async statusCheckValue => {
+      invalidatePendingStatusChecks()
       window.clearInterval(statusCheckInterval.value) // clear old interval
       if (statusCheckValue.state === true) {
         assetAdministrationShellData.value.status = 'status loading'
@@ -310,9 +317,26 @@
   })
 
   onBeforeUnmount(() => {
+    isUnmounted = true
+    invalidatePendingStatusChecks()
     window.clearInterval(autoSyncInterval.value)
     window.clearInterval(statusCheckInterval.value)
   })
+
+  function invalidatePendingStatusChecks (): void {
+    statusCheckGeneration += 1
+  }
+
+  function isCurrentStatusCheck (
+    generation: number,
+    aasId: string,
+    infrastructureId: string | null,
+  ): boolean {
+    return !isUnmounted
+      && generation === statusCheckGeneration
+      && selectedAAS.value?.id === aasId
+      && selectedInfrastructureId.value === infrastructureId
+  }
 
   async function initializeView (init = false): Promise<void> {
     if (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0) {
@@ -328,10 +352,22 @@
   }
 
   async function updateStatusOfAas (init = false): Promise<void> {
-    if (assetAdministrationShellData.value && Object.keys(assetAdministrationShellData.value).length > 0) {
+    const aasId = selectedAAS.value?.id
+    const infrastructureId = selectedInfrastructureId.value
+    const generation = statusCheckGeneration
+
+    if (typeof aasId === 'string' && aasId !== '' && isCurrentStatusCheck(generation, aasId, infrastructureId)) {
       await new Promise(resolve => setTimeout(resolve, 600)) // Give the UI the chance to refresh status icons
 
-      const aasIsAvailable = await aasIsAvailableById(assetAdministrationShellData.value.id)
+      if (!isCurrentStatusCheck(generation, aasId, infrastructureId)) {
+        return
+      }
+
+      const aasIsAvailable = await aasIsAvailableById(aasId)
+
+      if (!isCurrentStatusCheck(generation, aasId, infrastructureId)) {
+        return
+      }
 
       if (aasIsAvailable) {
         assetAdministrationShellData.value.status
