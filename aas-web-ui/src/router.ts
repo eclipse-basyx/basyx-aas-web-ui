@@ -1,11 +1,18 @@
 import type { InfrastructureConfig } from '@/types/Infrastructure'
-import type { LocationQueryRaw, Router, RouteRecordNameGeneric, RouteRecordRaw } from 'vue-router'
+import type { LocationQueryRaw, RouteLocationRaw, Router, RouteRecordNameGeneric, RouteRecordRaw } from 'vue-router'
 import { createRouter, createWebHistory } from 'vue-router'
 import AASList from '@/components/AppNavigation/AASList.vue'
 import ComponentVisualization from '@/components/ComponentVisualization.vue'
 import SubmodelList from '@/components/SubmodelList.vue'
 import { useAASHandling } from '@/composables/AAS/AASHandling'
 import { useSMEHandling } from '@/composables/AAS/SMEHandling'
+import {
+  clearAuthorizationTransaction,
+  consumeAuthorizationTransaction,
+  consumeLogoutTransaction,
+  getAuthorizationTransaction,
+  getOAuth2CallbackUri,
+} from '@/composables/Auth/OAuth2Navigation'
 import { useRouteHandling } from '@/composables/routeHandling'
 import AASEditor from '@/pages/AASEditor.vue'
 import AASSubmodelViewer from '@/pages/AASSubmodelViewer.vue'
@@ -802,7 +809,7 @@ export async function createAppRouter (): Promise<Router> {
     return cleanupPluginQueryParams(to, from, fetchedSme)
   }
 
-  const handleOAuthCallback = async (to: any): Promise<{ name: string, replace: true } | null> => {
+  const handleOAuthCallback = async (to: any): Promise<RouteLocationRaw | null> => {
     if (!(to.query.state && to.query.code)) {
       return null
     }
@@ -810,6 +817,7 @@ export async function createAppRouter (): Promise<Router> {
     const state = to.query.state as string
     const code = to.query.code as string
     const issuerURL = to.query.iss as string
+    const transaction = getAuthorizationTransaction(state)
 
     try {
       const { exchangeOAuth2AuthorizationCode } = await import('@/composables/Auth/OAuth2Auth')
@@ -817,12 +825,16 @@ export async function createAppRouter (): Promise<Router> {
 
       await infraStore.waitForInitialization()
 
+      if (!transaction) {
+        throw new Error('OAuth2 authorization transaction not found or has expired')
+      }
+
       const infrastructure = infraStore.getInfrastructures.find(
-        (infra: InfrastructureConfig) => infra.id === state,
+        (infra: InfrastructureConfig) => infra.id === transaction.infrastructureId,
       )
 
       if (!infrastructure || !infrastructure.auth?.oauth2) {
-        throw new Error(`Infrastructure with ID '${state}' not found or missing OAuth2 config`)
+        throw new Error(`Infrastructure with ID '${transaction.infrastructureId}' not found or missing OAuth2 config`)
       }
 
       const issuer = issuerURL || infrastructure.auth.oauth2.host
@@ -863,13 +875,10 @@ export async function createAppRouter (): Promise<Router> {
         tokenEndpoint = `${normalizedIssuer}/token`
       }
 
-      const pathname = window.location.pathname
-      const redirectUri = `${window.location.origin}${pathname}`
-
       const tokenData = await exchangeOAuth2AuthorizationCode({
         tokenEndpoint,
         clientId: infrastructure.auth.oauth2.clientId,
-        redirectUri,
+        redirectUri: getOAuth2CallbackUri(),
         code,
         state,
       })
@@ -892,8 +901,10 @@ export async function createAppRouter (): Promise<Router> {
         text: 'OAuth2 authentication successful!',
       })
 
-      return { name: resolveStartRouteName(), replace: true }
+      const returnLocation = consumeAuthorizationTransaction(state)?.returnLocation ?? transaction.returnLocation
+      return { ...returnLocation, replace: true }
     } catch (error) {
+      clearAuthorizationTransaction(state)
       const errorMessage = error instanceof Error ? error.message : 'OAuth2 authentication failed'
       console.error('[OAuth2 Callback] Failed:', errorMessage, error)
       navigationStore.dispatchSnackbar({
@@ -918,6 +929,11 @@ export async function createAppRouter (): Promise<Router> {
     const oauthRedirect = await handleOAuthCallback(to)
     if (oauthRedirect) {
       return oauthRedirect
+    }
+
+    const logoutRedirect = consumeLogoutTransaction(to.path)
+    if (logoutRedirect) {
+      return { ...logoutRedirect, replace: true }
     }
 
     // Handle redirection of `globalAssetId`, `aasId` and `smId`

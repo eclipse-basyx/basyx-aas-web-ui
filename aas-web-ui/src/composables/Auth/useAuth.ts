@@ -1,4 +1,5 @@
 import type { Router } from 'vue-router'
+import { startLogoutTransaction } from '@/composables/Auth/OAuth2Navigation'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { useNavigationStore } from '@/store/NavigationStore'
 
@@ -119,7 +120,7 @@ export function useAuth (router?: Router) {
   /**
    * Clear local token and update UI
    */
-  function clearLocalToken (): void {
+  function clearLocalToken ({ preserveRouteQuery = false }: { preserveRouteQuery?: boolean } = {}): void {
     const infra = infrastructureStore.getSelectedInfrastructure
     if (infra) {
       infrastructureStore.setAuthenticationStatusForInfrastructure(infra.id, false)
@@ -128,8 +129,8 @@ export function useAuth (router?: Router) {
       navStore.dispatchClearAASList()
       navStore.dispatchClearTreeview()
 
-      // Clear query params if router is available
-      if (router) {
+      // Keep the deep link while an OAuth logout round trip is in progress.
+      if (router && !preserveRouteQuery) {
         router.push({ query: {} })
       }
 
@@ -182,9 +183,10 @@ export function useAuth (router?: Router) {
         }
 
         logoutUrl = new URL(endSessionEndpoint)
+        const logoutTransaction = startLogoutTransaction()
         logoutUrl.searchParams.set(
           'post_logout_redirect_uri',
-          window.location.origin + window.location.pathname,
+          logoutTransaction.redirectUri,
         )
 
         // Add id_token_hint if available (required by some OAuth2 providers)
@@ -210,7 +212,7 @@ export function useAuth (router?: Router) {
         clearLocalToken()
         return
       }
-      clearLocalToken()
+      clearLocalToken({ preserveRouteQuery: true })
       window.location.href = logoutUrl.toString()
       return
     } else {

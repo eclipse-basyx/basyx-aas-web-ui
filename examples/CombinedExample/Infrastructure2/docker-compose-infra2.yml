@@ -1,110 +1,76 @@
 services:
-  # Infrastructure 2 AAS Discovery service
-  aas-discovery-infra2:
-    image: eclipsebasyx/aas-discovery:2.0.0-SNAPSHOT
-    container_name: aas-discovery-infra2
+  db-infra2:
+    image: postgres:18.4
+    container_name: postgres-infra2
     environment:
-      # Component configuration
-      SERVER_PORT: 8081
-      BASYX_BACKEND: MongoDB
-      SPRING_MONGODB_HOST: mongo
-      SPRING_MONGODB_DATABASE: aas-discovery-2
-      SPRING_MONGODB_AUTHENTICATION_DATABASE: admin
-      SPRING_MONGODB_USERNAME: mongoAdmin
-      SPRING_MONGODB_PASSWORD: mongoPassword
-      BASYX_CORS_ALLOWED_ORIGINS: '*'
-      BASYX_CORS_ALLOWED_METHODS: 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD'
-    ports:
-      - '9084:8081'
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: basyxInfra2
+    command: ["postgres", "-c", "listen_addresses=*"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d basyxInfra2"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
+    networks:
+      - multiple-infrastructures
+
+  basyx-configuration-infra2:
+    image: eclipsebasyx/basyxconfigurationservice-go:SNAPSHOT
+    pull_policy: always
+    container_name: basyx-configuration-infra2
+    environment:
+      POSTGRES_HOST: db-infra2
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DBNAME: basyxInfra2
+      POSTGRES_MAXOPENCONNECTIONS: 500
+      POSTGRES_MAXIDLECONNECTIONS: 500
+      POSTGRES_CONNMAXLIFETIMEMINUTES: 5
     depends_on:
-      mongo:
+      db-infra2:
         condition: service_healthy
     networks:
       - multiple-infrastructures
 
-  # Infrastructure 2 AAS Registry service
-  aas-registry-infra2:
-    image: eclipsebasyx/aas-registry-log-mongodb:2.0.0-SNAPSHOT
-    container_name: aas-registry-infra2
-    ports:
-      - "9082:8080"
-    environment:
-      # Component configuration
-      SERVER_PORT: 8080
-      SPRING_MONGODB_URI: mongodb://mongoAdmin:mongoPassword@mongo:27017
-      SPRING_MONGODB_DATABASE: aas-registry-2
-      SERVER_SERVLET_CONTEXT_PATH: /
-      BASYX_CORS_ALLOWED_ORIGINS: '*'
-      BASYX_CORS_ALLOWED_METHODS: GET,POST,PATCH,DELETE,PUT,OPTIONS,HEAD
-    restart: unless-stopped
-    depends_on:
-      mongo:
-        condition: service_healthy
-    networks:
-      - multiple-infrastructures
-
-  # Infrastructure 2 Submodel Registry service
-  sm-registry-infra2:
-    image: eclipsebasyx/submodel-registry-log-mongodb:2.0.0-SNAPSHOT
-    container_name: sm-registry-infra2
-    environment:
-      # Component configuration
-      SERVER_PORT: 8080
-      SPRING_MONGODB_URI: mongodb://mongoAdmin:mongoPassword@mongo:27017
-      SPRING_MONGODB_DATABASE: sm-registry-2
-      SERVER_SERVLET_CONTEXT_PATH: /
-      BASYX_CORS_ALLOWED_ORIGINS: '*'
-      BASYX_CORS_ALLOWED_METHODS: GET,POST,PATCH,DELETE,PUT,OPTIONS,HEAD
-    ports:
-      - "9083:8080"
-    restart: unless-stopped
-    depends_on:
-      mongo:
-        condition: service_healthy
-    networks:
-      - multiple-infrastructures
-
-  # Infrastructure 2 AAS Environment service
   aas-env-infra2:
-    image: eclipsebasyx/aas-environment:2.0.0-SNAPSHOT
+    image: eclipsebasyx/aasenvironment-go:SNAPSHOT
+    pull_policy: always
     container_name: aas-env-infra2
-    volumes:
-      - ./aas:/application/aas
+    command: ["/app/aasenvironmentservice"]
     ports:
-      - '9081:8081'
-    restart: unless-stopped
+      - "9081:8081"
     environment:
-      # Component configuration
       SERVER_PORT: 8081
-      BASYX_BACKEND: MongoDB
-      SPRING_MONGODB_HOST: mongo
-      SPRING_MONGODB_DATABASE: aas-env-2
-      SPRING_MONGODB_AUTHENTICATION_DATABASE: admin
-      SPRING_MONGODB_USERNAME: mongoAdmin
-      SPRING_MONGODB_PASSWORD: mongoPassword
-      BASYX_CORS_ALLOWED_ORIGINS: '*'
-      BASYX_CORS_ALLOWED_METHODS: 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD'
-      BASYX_ENVIRONMENT: file:aas
-      BASYX_AASREPOSITORY_FEATURE_DISCOVERYINTEGRATION: http://aas-discovery-infra2:8081
-      BASYX_AASREPOSITORY_FEATURE_REGISTRYINTEGRATION: http://aas-registry-infra2:8080
-      BASYX_SUBMODELREPOSITORY_FEATURE_REGISTRYINTEGRATION: http://sm-registry-infra2:8080
-      BASYX_EXTERNALURL: http://localhost:9081
-      SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: 1024MB
-      SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: 1024MB
+      CORS_ALLOWEDORIGINS: http://localhost:3000
+      CORS_ALLOWEDHEADERS: "*"
+      CORS_ALLOWEDCREDENTIALS: "true"
+      CORS_ALLOWEDMETHODS: GET,POST,PUT,PATCH,DELETE,OPTIONS
+      POSTGRES_HOST: db-infra2
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DBNAME: basyxInfra2
+      POSTGRES_MAXOPENCONNECTIONS: 500
+      POSTGRES_MAXIDLECONNECTIONS: 500
+      POSTGRES_CONNMAXLIFETIMEMINUTES: 5
+      ABAC_ENABLED: "false"
+      GENERAL_AASREGISTRYINTEGRATION: "true"
+      GENERAL_SUBMODELREGISTRYINTEGRATION: "true"
+      GENERAL_DISCOVERYINTEGRATION: "true"
+      GENERAL_EXTERNALURL: http://localhost:9081
+      GENERAL_AAS_PRECONFIG_PATHS: /app/preconfiguration/BOMAAS.aasx,/app/preconfiguration/FileHandlingAAS.aasx,/app/preconfiguration/IESEDriveMotorDM3000.aasx,/app/preconfiguration/IFCShell.aasx,/app/preconfiguration/SensorExampleComplete.aasx
+    volumes:
+      - ./aas:/app/preconfiguration:ro
     depends_on:
-      mongo:
-        condition: service_healthy
-      aas-discovery-infra2:
-        condition: service_healthy
-      aas-registry-infra2:
-        condition: service_healthy
-      sm-registry-infra2:
-        condition: service_healthy
+      basyx-configuration-infra2:
+        condition: service_completed_successfully
+    restart: unless-stopped
     networks:
       - multiple-infrastructures
 
-  # Node-RED
   nodered-infra2:
     build: ./nodered
     container_name: nodered-infra2
@@ -121,30 +87,29 @@ services:
     networks:
       - multiple-infrastructures
 
-  # MQTT Broker
   mosquitto-infra2:
     image: eclipse-mosquitto:2.0.15
     container_name: mosquitto-infra2
     ports:
-      - 1883:1883
+      - "1883:1883"
     volumes:
       - ./mosquitto/config:/mosquitto/config
-    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", mosquitto_sub -p 1883 -t 'topic' -C 1 -E -i probe -W 3]
+      test: ["CMD-SHELL", "mosquitto_sub -p 1883 -t 'topic' -C 1 -E -i probe -W 3"]
       interval: 5s
       retries: 3
       start_period: 1s
       timeout: 10s
+    restart: unless-stopped
     networks:
       - multiple-infrastructures
 
-  # MQTT Client
   mqtt-client-infra2:
     build: ./mqtt-client
     container_name: mqtt-client-infra2
     depends_on:
-      - mosquitto-infra2
+      mosquitto-infra2:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - multiple-infrastructures

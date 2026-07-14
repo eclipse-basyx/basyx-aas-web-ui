@@ -92,11 +92,15 @@
 
   // Methods
   async function onInfrastructureChange (infrastructureId: string): Promise<void> {
-    // dispatchSelectInfrastructure handles connection checking and data reload internally
-    await infrastructureStore.dispatchSelectInfrastructure(infrastructureId)
-    router.push({
+    // Clear the selected AAS and submodel while their infrastructure is still active.
+    // Selecting an infrastructure reloads data immediately, so doing this afterwards
+    // can request the previous AAS descriptor from the newly selected infrastructure.
+    await router.replace({
       query: {},
     })
+
+    // dispatchSelectInfrastructure handles connection checking and data reload internally
+    await infrastructureStore.dispatchSelectInfrastructure(infrastructureId)
   }
 
   function openManageDialog (): void {
