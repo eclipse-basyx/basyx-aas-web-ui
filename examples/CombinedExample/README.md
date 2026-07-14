@@ -9,7 +9,7 @@ This example runs the BaSyx AAS Web UI against two independent BaSyx Go AAS Envi
 - Each environment has its own PostgreSQL 18.4 database and one-shot BaSyx configuration service, so their persisted data and schema setup are isolated.
 - Keycloak 26.6.4 is exposed directly at `http://keycloak.localhost:8080`; no reverse proxy or `*.basyx.localhost` host entries are required.
 - InfluxDB, Telegraf, MQTT, and Node-RED remain available for the time-series and live-sensor portions of the showcase.
-- Infrastructure 1 preloads the IESE Drive Motor package alongside protected showcase packages. Anonymous visitors see only the Motor shell plus its Nameplate and Technical Data submodels; the descriptor list is therefore genuinely filtered.
+- Infrastructure 1 preloads the IESE Drive Motor package alongside protected showcase packages. Anonymous visitors see only the Motor shell plus its Nameplate and Technical Data submodels.
 - Infrastructure 2 preloads five Go-compatible showcase packages, including the IESE Drive Motor package from the BaSyx Go minimal example in place of the incompatible PFC200 package.
 
 The UI service uses the published `eclipsebasyx/aas-gui:SNAPSHOT` image.
@@ -50,7 +50,7 @@ Keycloak administrator credentials are `admin` / `admin`. The secured UI test ac
 3. Open the Motor AAS. Only **Nameplate** and **TechnicalData** must be visible and readable.
 4. Log in as `admin` / `pwd` to see all preloaded AASs and all submodels.
 
-The policy grants anonymous `READ` access to both the descriptors and the actual AAS/Submodel identifiables. The Motor AAS is selected by its AAS ID; the two public submodels are selected by semantic ID and constrained to their matching Motor IDs. This prevents a descriptor from being visible when its resource is not, and prevents another AAS with a coincidentally matching semantic ID from becoming public.
+The policy grants anonymous `READ` access to both the descriptors and the actual AAS/Submodel identifiables. The Motor AAS is selected by its AAS ID; the two public submodels are selected by semantic ID and constrained to their matching Motor IDs. All Concept Descriptions are also readable anonymously, which lets the UI resolve standard semantic IDs without prompting for login. The UI omits references that resolve to an intentional privacy-preserving `404` instead of rendering them as failed tree entries. Filtering `$aas#submodels[]` directly is currently disabled because it triggers a BaSyx Go SQL error; see [BaSyx Go issue #496](https://github.com/eclipse-basyx/basyx-go-components/issues/496).
 
 The compose setup uses `ABAC_POLICY_FILE_IMPORT=always`, so restarting Infra 1 reapplies the checked-in policy. This is intentional for a reproducible example; do not use this setting where policies are managed at runtime.
 

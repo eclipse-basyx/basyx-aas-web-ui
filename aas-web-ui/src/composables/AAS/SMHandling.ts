@@ -196,6 +196,7 @@ export function useSMHandling () {
     withConceptDescriptions = false,
     setDataFlag = false,
     aasId?: string,
+    suppressNotFound = false,
   ): Promise<any> {
     const failResponse = {}
 
@@ -209,7 +210,7 @@ export function useSMHandling () {
       return failResponse
     }
 
-    const smEndpoint = await getSmEndpointById(smId, aasId)
+    const smEndpoint = await getSmEndpointById(smId, aasId, suppressNotFound)
 
     return smEndpoint && smEndpoint.trim() !== ''
       ? fetchSm(smEndpoint.trim(), withConceptDescriptions, setDataFlag)
@@ -278,7 +279,11 @@ export function useSMHandling () {
    * @param {string} smId - The ID of the SM to retrieve the endpoint for.
    * @returns {Promise<string>} A promise that resolves to an SM endpoint.
    */
-  async function getSmEndpointById (smId: string, aasId?: string): Promise<string> {
+  async function getSmEndpointById (
+    smId: string,
+    aasId?: string,
+    suppressNotFound = false,
+  ): Promise<string> {
     const failResponse = ''
 
     if (!smId) {
@@ -292,7 +297,7 @@ export function useSMHandling () {
     }
 
     // First try to determine SM endpoint with the help of the registry
-    let smEndpoint = await getSmEndpointByIdFromRegistry(smId)
+    let smEndpoint = await getSmEndpointByIdFromRegistry(smId, undefined, suppressNotFound)
 
     if (smEndpoint && smEndpoint.trim() !== '') {
       return smEndpoint.trim()

@@ -215,6 +215,53 @@ describe('RequestHandling.ts', () => {
     )
   })
 
+  it('suppresses only an explicitly expected 404 while retaining its structured result', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      Response.json([{ code: 404, text: 'Submodel Descriptor not found' }], {
+        status: 404,
+        statusText: 'Not Found',
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    ) as unknown as typeof fetch
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { getRequest, consumeLastRequestFailureStatus } = useRequestHandling()
+
+    const response = await getRequest(
+      '/api/submodel-descriptors/hidden',
+      'retrieving SM Descriptor',
+      false,
+      new Headers(),
+      { suppressStatuses: [404] },
+    )
+
+    expect(response).toEqual(expect.objectContaining({ success: false, status: 404 }))
+    expect(consumeLastRequestFailureStatus()).toBe(404)
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalled()
+  })
+
+  it('continues to report a normal 404 when the caller has not marked it as expected', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      Response.json([{ code: 404, text: 'Submodel Descriptor not found' }], {
+        status: 404,
+        statusText: 'Not Found',
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    ) as unknown as typeof fetch
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { getRequest } = useRequestHandling()
+
+    await getRequest('/api/submodel-descriptors/missing', 'retrieving SM Descriptor', false)
+
+    expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(
+      expect.objectContaining({
+        color: 'error',
+        baseError: 'Error retrieving SM Descriptor!',
+      }),
+    )
+  })
+
   it('treats PUT array error payload with code 403 as failure', async () => {
     global.fetch = vi.fn().mockResolvedValue(
       Response.json([{ code: 403, text: 'Forbidden' }], {

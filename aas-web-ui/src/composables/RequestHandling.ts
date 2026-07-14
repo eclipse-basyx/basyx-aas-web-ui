@@ -3,6 +3,14 @@ import { useEnvStore } from '@/store/EnvironmentStore'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { useNavigationStore } from '@/store/NavigationStore'
 
+export interface RequestErrorHandlingOptions {
+  /**
+   * Status codes which are an expected outcome for this specific request.
+   * Authentication and authorization failures are never suppressed.
+   */
+  suppressStatuses?: ReadonlyArray<number>
+}
+
 export function useRequestHandling () {
   let lastRequestFailureStatus: number | undefined
   let lastRequestFailureDetails: string | undefined
@@ -113,7 +121,11 @@ export function useRequestHandling () {
    * Centralized error handler for catch blocks
    * Handles authentication errors and general errors
    */
-  function handleRequestError (error: unknown, disableMessage: boolean): { success: false, status?: number } {
+  function handleRequestError (
+    error: unknown,
+    disableMessage: boolean,
+    errorHandlingOptions: RequestErrorHandlingOptions = {},
+  ): { success: false, status?: number } {
     const errorMessage = error instanceof Error ? error.message : String(error)
     const statusCode = extractStatusCode(errorMessage)
     const is401Error = statusCode === 401
@@ -162,7 +174,7 @@ export function useRequestHandling () {
     }
 
     // Handle other errors
-    if (!disableMessage) {
+    if (!disableMessage && !shouldSuppressStatus(statusCode, errorHandlingOptions)) {
       navigationStore.dispatchSnackbar({
         status: true,
         timeout: 60_000,
@@ -172,6 +184,13 @@ export function useRequestHandling () {
       })
     }
     return { success: false, status: statusCode }
+  }
+
+  function shouldSuppressStatus (
+    status: number | undefined,
+    errorHandlingOptions: RequestErrorHandlingOptions,
+  ): boolean {
+    return status !== undefined && errorHandlingOptions.suppressStatuses?.includes(status) === true
   }
 
   function extractStatusCode (errorMessage: string): number | undefined {
@@ -244,26 +263,33 @@ export function useRequestHandling () {
     data: any,
     context: string,
     disableMessage: boolean,
+    errorHandlingOptions: RequestErrorHandlingOptions = {},
   ): { success: false, status: number } {
     const details = buildErrorDetailsFromPayload(data)
     setLastRequestFailureStatus(status)
     setLastRequestFailureDetails(details)
 
     if (status === 401 || status === 403) {
-      handleRequestError(new Error('Error status: ' + status), disableMessage)
+      handleRequestError(new Error('Error status: ' + status), disableMessage, errorHandlingOptions)
       setLastRequestFailureStatus(status)
       setLastRequestFailureDetails(details)
       return { success: false, status }
     }
 
-    if (!disableMessage) {
+    if (!disableMessage && !shouldSuppressStatus(status, errorHandlingOptions)) {
       errorHandler(data, context)
     }
 
     return { success: false, status }
   }
 
-  function getRequest (path: string, context: string, disableMessage: boolean, headers: Headers = new Headers()): any {
+  function getRequest (
+    path: string,
+    context: string,
+    disableMessage: boolean,
+    headers: Headers = new Headers(),
+    errorHandlingOptions: RequestErrorHandlingOptions = {},
+  ): any {
     if (shouldAddAuthorizationHeader(path)) {
       // No Authorization needed for the /description endpoint.
       headers = addAuthorizationHeader(headers) // Add the Authorization header
@@ -316,7 +342,7 @@ export function useRequestHandling () {
         // Check if the Server responded with an error
         const failureStatus = extractErrorStatusFromPayload(data) ?? (response.ok ? undefined : response.status)
         if (failureStatus !== undefined) {
-          return { ...handlePayloadFailure(failureStatus, data, context, disableMessage), raw: response }
+          return { ...handlePayloadFailure(failureStatus, data, context, disableMessage, errorHandlingOptions), raw: response }
         } else if (data !== undefined) {
           setLastRequestFailureStatus(undefined)
           setLastRequestFailureDetails(undefined)
@@ -332,7 +358,7 @@ export function useRequestHandling () {
           throw new Error('Unexpected response format')
         }
       })
-      .catch(error => handleRequestError(error, disableMessage))
+      .catch(error => handleRequestError(error, disableMessage, errorHandlingOptions))
   }
 
   function postRequest (

@@ -45,4 +45,35 @@ describe('Operation fragment routing', () => {
       },
     })
   })
+
+  it('removes an unavailable deep-linked Submodel path while retaining its AAS selection', async () => {
+    const fetchAndDispatchSme = vi.fn().mockResolvedValue({})
+
+    const result = await fetchAndValidateSmeSelection(
+      {
+        path: '/aasviewer',
+        query: {
+          aas: 'https://example.test/shells/public-aas',
+          path: 'https://example.test/submodels/hidden-submodel',
+        },
+      },
+      { path: '/aasviewer', query: {} },
+      {},
+      fetchAndDispatchSme,
+      vi.fn(),
+    )
+
+    expect(fetchAndDispatchSme).toHaveBeenCalledWith(
+      'https://example.test/submodels/hidden-submodel',
+      true,
+      undefined,
+    )
+    expect(result).toEqual({
+      fetchedSme: null,
+      redirect: {
+        path: '/aasviewer',
+        query: { aas: 'https://example.test/shells/public-aas' },
+      },
+    })
+  })
 })

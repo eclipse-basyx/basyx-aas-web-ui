@@ -24,6 +24,16 @@ export interface AasShellListPageResult {
   source: AasListSource
 }
 
+/**
+ * A filtered AAS may still contain an old or externally supplied Submodel
+ * reference. Empty results are therefore deliberately omitted from the UI;
+ * request failures other than the explicitly suppressed reference 404 remain
+ * reported by the request handler.
+ */
+export function filterResolvedSubmodels (submodels: Array<any>): Array<any> {
+  return submodels.filter(submodel => submodel && Object.keys(submodel).length > 0)
+}
+
 export function useAASHandling () {
   // Composables
   const {
@@ -469,10 +479,10 @@ export function useAASHandling () {
 
       const submodelPromises = submodelRefs.map((submodelRef: any) => {
         const smId = extractIdFromReference(submodelRef, 'Submodel')
-        return fetchSmById(smId, false, true, aasId)
+        return fetchSmById(smId, false, true, aasId, true)
       })
 
-      return await Promise.all(submodelPromises)
+      return filterResolvedSubmodels(await Promise.all(submodelPromises))
     }
 
     return failResponse
