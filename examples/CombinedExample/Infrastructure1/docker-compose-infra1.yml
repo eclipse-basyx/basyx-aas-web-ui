@@ -97,7 +97,7 @@ services:
       POSTGRES_CONNMAXLIFETIMEMINUTES: 5
       ABAC_ENABLED: "true"
       ABAC_MODELPATH: /security_env/access-rules.json
-      ABAC_POLICY_FILE_IMPORT: if_missing
+      ABAC_POLICY_FILE_IMPORT: always
       OIDC_TRUSTLISTPATH: /security_env/trustlist.json
       GENERAL_AASREGISTRYINTEGRATION: "true"
       GENERAL_SUBMODELREGISTRYINTEGRATION: "true"
