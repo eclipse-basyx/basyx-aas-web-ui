@@ -8,7 +8,7 @@ import { useNavigationStore } from '@/store/NavigationStore'
  * Composable for handling authentication logic
  * Centralizes login and logout functionality for OAuth2
  */
-export function useAuth (_router?: Router) {
+export function useAuth (router?: Router) {
   const infrastructureStore = useInfrastructureStore()
   const navStore = useNavigationStore()
 
@@ -162,7 +162,10 @@ export function useAuth (_router?: Router) {
   /**
    * Clear local token and update UI
    */
-  function clearLocalToken ({ reloadData = true }: { reloadData?: boolean } = {}): void {
+  function clearLocalToken ({
+    reloadData = true,
+    showSuccess = true,
+  }: { reloadData?: boolean, showSuccess?: boolean } = {}): void {
     const infra = infrastructureStore.getSelectedInfrastructure
     if (infra) {
       infrastructureStore.setAuthenticationStatusForInfrastructure(infra.id, false)
@@ -175,12 +178,37 @@ export function useAuth (_router?: Router) {
         navStore.dispatchTriggerTreeviewReload()
       }
 
+      if (showSuccess) {
+        navStore.dispatchSnackbar({
+          status: true,
+          timeout: 3000,
+          color: 'success',
+          btnColor: 'buttonText',
+          text: 'Logged out successfully',
+        })
+      }
+    }
+  }
+
+  async function completeLocalLogout (logoutError?: unknown): Promise<void> {
+    const logoutTransaction = router ? startLogoutTransaction() : null
+    clearLocalToken({
+      reloadData: !logoutTransaction,
+      showSuccess: !logoutError,
+    })
+
+    if (logoutTransaction) {
+      await router?.replace(logoutTransaction.callbackPath)
+    }
+
+    if (logoutError) {
       navStore.dispatchSnackbar({
         status: true,
-        timeout: 3000,
-        color: 'success',
+        timeout: 4000,
+        color: 'error',
         btnColor: 'buttonText',
-        text: 'Logged out successfully',
+        text: 'Failed to initiate logout',
+        extendedError: logoutError instanceof Error ? logoutError.message : 'Unknown error',
       })
     }
   }
@@ -198,6 +226,7 @@ export function useAuth (_router?: Router) {
     if (infra.auth?.oauth2) {
       const host = infra.auth.oauth2.host
       if (!host) {
+        await completeLocalLogout(new Error('OAuth2 issuer is missing from the infrastructure configuration'))
         return
       }
       let logoutUrl
@@ -205,7 +234,7 @@ export function useAuth (_router?: Router) {
         const openIdConfiguration = await discoverOpenIdConfiguration(host)
         const endSessionEndpoint = openIdConfiguration.end_session_endpoint
         if (!endSessionEndpoint) {
-          clearLocalToken()
+          await completeLocalLogout()
           return
         }
 
@@ -227,15 +256,7 @@ export function useAuth (_router?: Router) {
           }
         }
       } catch (error) {
-        navStore.dispatchSnackbar({
-          status: true,
-          timeout: 4000,
-          color: 'error',
-          btnColor: 'buttonText',
-          text: 'Failed to initiate logout',
-          extendedError: error instanceof Error ? error.message : 'Unknown error',
-        })
-        clearLocalToken()
+        await completeLocalLogout(error)
         return
       }
       clearLocalToken({ reloadData: false })
@@ -243,7 +264,7 @@ export function useAuth (_router?: Router) {
       return
     } else {
       // No logout URL - just clear local token
-      clearLocalToken()
+      await completeLocalLogout()
       return
     }
   }

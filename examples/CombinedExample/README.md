@@ -61,7 +61,7 @@ The compose setup uses `ABAC_POLICY_FILE_IMPORT=always`, so restarting Infra 1 r
 3. Log out, or open that URL in a fresh browser profile.
 4. Complete the Keycloak login again.
 
-After both login and logout, the browser must return to the same AAS viewer location, including its `aas` query parameter. The Keycloak redirect URI remains the canonical `http://localhost:3000/`; the UI restores the exact in-app route from its per-tab transaction state.
+After login, the browser must return to the same AAS viewer location, including its `aas` query parameter. Logout restores the same location when the selected AAS remains anonymously readable; otherwise, the unavailable AAS and Submodel selection is cleared. The Keycloak redirect URI remains the canonical `http://localhost:3000/`; the UI restores and revalidates the exact in-app route from its per-tab transaction state.
 
 ## Feature tour
 

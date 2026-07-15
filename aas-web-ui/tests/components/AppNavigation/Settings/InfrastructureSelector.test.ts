@@ -5,6 +5,7 @@ import InfrastructureSelector from '@/components/AppNavigation/Settings/Infrastr
 const mocks = vi.hoisted(() => ({
   events: [] as string[],
   dispatchUrlQuery: vi.fn(),
+  dispatchRouteTransition: vi.fn(),
   dispatchSelectInfrastructure: vi.fn(),
   push: vi.fn(),
   replace: vi.fn(),
@@ -46,6 +47,7 @@ vi.mock('@/store/InfrastructureStore', () => ({
 vi.mock('@/store/NavigationStore', () => ({
   useNavigationStore: () => ({
     dispatchUrlQuery: mocks.dispatchUrlQuery,
+    dispatchRouteTransition: mocks.dispatchRouteTransition,
   }),
 }))
 
@@ -53,6 +55,9 @@ describe('InfrastructureSelector', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.events.length = 0
+    mocks.dispatchRouteTransition.mockImplementation((transition: string | null) => {
+      mocks.events.push(transition ? `begin-${transition}` : 'end-transition')
+    })
     mocks.replace.mockImplementation(async () => {
       mocks.events.push('clear-route')
     })
@@ -87,6 +92,11 @@ describe('InfrastructureSelector', () => {
     expect(mocks.replace).toHaveBeenCalledWith({ query: {} })
     expect(mocks.dispatchUrlQuery).toHaveBeenCalledWith({})
     expect(mocks.dispatchSelectInfrastructure).toHaveBeenCalledWith('infra-2')
-    expect(mocks.events).toEqual(['clear-route', 'select-infrastructure'])
+    expect(mocks.events).toEqual([
+      'begin-infrastructure-switch',
+      'clear-route',
+      'end-transition',
+      'select-infrastructure',
+    ])
   })
 })

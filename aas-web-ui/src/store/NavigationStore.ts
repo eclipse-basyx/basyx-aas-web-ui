@@ -29,6 +29,8 @@ type NavigationRouter = {
   push: (target: RouterNavigationTarget) => unknown
 }
 
+type RouteTransition = 'infrastructure-switch'
+
 export const useNavigationStore = defineStore('navigationStore', () => {
   // States
   const drawerState = ref(true)
@@ -45,6 +47,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
   const triggerTreeviewReload = ref(0)
   const urlQuery = ref<LocationQuery>({} as LocationQuery)
   const moduleRoutes = ref<Array<ModuleNavigationRoute>>([])
+  const routeTransition = ref<RouteTransition | null>(null)
 
   // Core query params that are always allowed (UI framework params)
   const coreQueryParams = ['aas', 'path', 'fragment', 'view']
@@ -67,6 +70,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
   const getTriggerTreeviewReload = computed(() => triggerTreeviewReload.value)
   const getUrlQuery = computed(() => urlQuery.value)
   const getModuleRoutes = computed(() => moduleRoutes.value)
+  const getRouteTransition = computed(() => routeTransition.value)
   const getCoreQueryParams = computed(() => coreQueryParams)
   const getRegisteredQueryParams = computed(() => registeredQueryParams.value)
 
@@ -133,6 +137,10 @@ export const useNavigationStore = defineStore('navigationStore', () => {
 
   function dispatchModuleRoutes (routes: ModuleNavigationRoute[]): void {
     moduleRoutes.value = routes
+  }
+
+  function dispatchRouteTransition (transition: RouteTransition | null): void {
+    routeTransition.value = transition
   }
 
   /**
@@ -265,6 +273,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     getTriggerTreeviewReload,
     getUrlQuery,
     getModuleRoutes,
+    getRouteTransition,
     getCoreQueryParams,
     getRegisteredQueryParams,
 
@@ -284,6 +293,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     dispatchTriggerTreeviewReload,
     dispatchUrlQuery,
     dispatchModuleRoutes,
+    dispatchRouteTransition,
     navigateToEditorMode,
     navigateToViewerMode,
     registerQueryParam,

@@ -97,10 +97,15 @@
     // Clear the selected AAS and submodel while their infrastructure is still active.
     // Selecting an infrastructure reloads data immediately, so doing this afterwards
     // can request the previous AAS descriptor from the newly selected infrastructure.
-    await router.replace({
-      query: {},
-    })
-    navigationStore.dispatchUrlQuery({})
+    navigationStore.dispatchRouteTransition('infrastructure-switch')
+    try {
+      await router.replace({
+        query: {},
+      })
+      navigationStore.dispatchUrlQuery({})
+    } finally {
+      navigationStore.dispatchRouteTransition(null)
+    }
 
     // dispatchSelectInfrastructure handles connection checking and data reload internally
     await infrastructureStore.dispatchSelectInfrastructure(infrastructureId)

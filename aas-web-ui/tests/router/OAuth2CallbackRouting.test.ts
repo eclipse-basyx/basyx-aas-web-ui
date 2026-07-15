@@ -49,6 +49,7 @@ const mockDeps = vi.hoisted(() => ({
     filterQueryParams: vi.fn(() => ({ filteredQuery: {}, removedParams: [] })),
     getIsMobile: false,
     getUrlQuery: {},
+    getRouteTransition: null as string | null,
   },
   exchangeOAuth2AuthorizationCode: vi.fn(),
   clearOAuth2AuthorizationCodeState: vi.fn(),
@@ -105,9 +106,11 @@ describe('OAuth2 callback routing', () => {
 
     mockDeps.infrastructureStore.getInfrastructures = [mockDeps.infrastructure]
     mockDeps.infrastructureStore.getSelectedInfrastructure = mockDeps.infrastructure
+    mockDeps.infrastructure.auth.oauth2.host = 'https://idp.example'
     mockDeps.infrastructureStore.waitForInitialization.mockResolvedValue(undefined)
     mockDeps.aasStore.getSelectedAAS = {}
     mockDeps.aasStore.getSelectedNode = {}
+    mockDeps.navigationStore.getRouteTransition = null
     mockDeps.envStore.getSingleAas = true
     mockDeps.envStore.getSingleSm = false
     mockDeps.exchangeOAuth2AuthorizationCode.mockResolvedValue({
@@ -214,6 +217,28 @@ describe('OAuth2 callback routing', () => {
     expect(mockDeps.navigationStore.dispatchSnackbar).not.toHaveBeenCalled()
   })
 
+  it('allows an infrastructure switch to clear a single-AAS route without redirecting', async () => {
+    mockDeps.navigationStore.getRouteTransition = 'infrastructure-switch'
+    const router = await createAppRouter()
+
+    await router.push('/aasviewer')
+
+    expect(router.currentRoute.value.name).toBe('AASViewer')
+    expect(router.currentRoute.value.query).not.toHaveProperty('aas')
+  })
+
+  it('allows an infrastructure switch to clear a single-Submodel route without redirecting', async () => {
+    mockDeps.envStore.getSingleAas = false
+    mockDeps.envStore.getSingleSm = true
+    mockDeps.navigationStore.getRouteTransition = 'infrastructure-switch'
+    const router = await createAppRouter()
+
+    await router.push('/smviewer')
+
+    expect(router.currentRoute.value.name).toBe('SMViewer')
+    expect(router.currentRoute.value.query).not.toHaveProperty('path')
+  })
+
   it('rejects an issuer injected into the authorization response', async () => {
     const { state } = startAuthorizationTransaction('infrastructure-1')
     const router = await createAppRouter()
@@ -227,6 +252,27 @@ describe('OAuth2 callback routing', () => {
         text: 'OAuth2 authentication failed',
         extendedError: expect.stringContaining('issuer'),
       }),
+    )
+  })
+
+  it('accepts an Entra tenant issuer returned for tenant-independent metadata', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        issuer: 'https://login.microsoftonline.com/{tenantid}/v2.0',
+        token_endpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+      }),
+    } as any)
+    mockDeps.infrastructure.auth.oauth2.host = 'https://login.microsoftonline.com/common/v2.0'
+    const { state } = startAuthorizationTransaction('infrastructure-1')
+    const router = await createAppRouter()
+    const callbackIssuer = 'https://login.microsoftonline.com/9188040d-6c67-4c5b-b112-36a304b66dad/v2.0'
+
+    await router.push(`/?code=authorization-code&state=${state}&iss=${encodeURIComponent(callbackIssuer)}`)
+
+    expect(mockDeps.exchangeOAuth2AuthorizationCode).toHaveBeenCalledOnce()
+    expect(mockDeps.navigationStore.dispatchSnackbar).not.toHaveBeenCalledWith(
+      expect.objectContaining({ text: 'OAuth2 authentication failed' }),
     )
   })
 

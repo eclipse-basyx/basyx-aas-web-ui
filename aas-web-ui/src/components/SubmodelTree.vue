@@ -403,6 +403,7 @@
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
+  import { useLoadGeneration } from '@/composables/LoadGeneration'
   import { verifyForEditor } from '@/composables/MetamodelVerification'
   import { useAASStore } from '@/store/AASDataStore'
   import { useClipboardStore } from '@/store/ClipboardStore'
@@ -445,8 +446,8 @@
   const submodelTree = ref([] as Array<any>) as Ref<Array<any>> // Submodel Treeview Data
   const submodelTreeUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the unfiltere Submodel Treeview Data before filtering
   const debouncedFilterSubmodelTree = debounce(filterSubmodelTree, 300) // Debounced function to filter the AAS List
-  const treeLoading = ref(false) // Variable to store if the AAS List is loading
-  let treeLoadGeneration = 0
+  const treeLoad = useLoadGeneration()
+  const treeLoading = treeLoad.loading // Variable to store if the Submodel Tree is loading
   const selectSMETypeToAddDialog = ref(false) // Variable to store if the Add SubmodelElement Dialog should be shown
   const propertyDialog = ref(false) // Variable to store if the PropertyForm Dialog should be shown
   const mlpDialog = ref(false) // Variable to store if the MultiLanguagePropertyForm Dialog should be shown
@@ -529,9 +530,10 @@
   watch(
     () => aasRegistryURL.value,
     () => {
-      treeLoadGeneration += 1
+      treeLoad.invalidate()
       if (!['SMViewer', 'SMEditor'].includes(route.name as string)) {
         submodelTree.value = []
+        submodelTreeUnfiltered.value = []
       }
     },
   )
@@ -539,17 +541,19 @@
   watch(
     () => submodelRegistryURL.value,
     () => {
-      treeLoadGeneration += 1
+      treeLoad.invalidate()
       submodelTree.value = []
+      submodelTreeUnfiltered.value = []
     },
   )
 
   watch(
     () => selectedAAS.value,
     () => {
-      treeLoadGeneration += 1
+      treeLoad.invalidate()
       if (!['SMViewer', 'SMEditor'].includes(route.name as string)) {
         submodelTree.value = []
+        submodelTreeUnfiltered.value = []
         if (!isAuthenticating.value) {
           initialize()
         }
@@ -583,7 +587,7 @@
   watch(
     () => clearTreeview.value,
     () => {
-      treeLoadGeneration += 1
+      treeLoad.invalidate()
       submodelTree.value = []
       submodelTreeUnfiltered.value = []
     },
@@ -611,27 +615,28 @@
   })
 
   onBeforeUnmount(() => {
-    treeLoadGeneration += 1
+    treeLoad.invalidate()
   })
 
   async function initialize (): Promise<void> {
-    const generation = ++treeLoadGeneration
     if (
       !['SMEditor', 'SMViewer'].includes(route.name as string)
       && (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0)
     ) {
+      treeLoad.invalidate()
       submodelTree.value = []
+      submodelTreeUnfiltered.value = []
       return
     }
 
-    treeLoading.value = true
+    const generation = treeLoad.start()
 
     try {
       let submodels: Array<any> = []
 
       submodels = await (['SMEditor', 'SMViewer'].includes(route.name as string) ? fetchSmList() : fetchAasSmListById(selectedAAS.value.id))
 
-      if (generation !== treeLoadGeneration) {
+      if (!treeLoad.isCurrent(generation)) {
         return
       }
 
@@ -694,9 +699,7 @@
         expandTree()
       }
     } finally {
-      if (generation === treeLoadGeneration) {
-        treeLoading.value = false
-      }
+      treeLoad.finish(generation)
     }
   }
 

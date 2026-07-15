@@ -12,7 +12,7 @@ import {
   getAuthorizationTransaction,
   getOAuth2CallbackUri,
 } from '@/composables/Auth/OAuth2Navigation'
-import { discoverOpenIdConfiguration } from '@/composables/Auth/OpenIdConnect'
+import { discoverOpenIdConfiguration, oidcIssuersMatch } from '@/composables/Auth/OpenIdConnect'
 import { useRouteHandling } from '@/composables/routeHandling'
 import AASEditor from '@/pages/AASEditor.vue'
 import AASSubmodelViewer from '@/pages/AASSubmodelViewer.vue'
@@ -866,7 +866,10 @@ export async function createAppRouter (): Promise<Router> {
 
       const openIdConfiguration = await discoverOpenIdConfiguration(configuredIssuer)
       const callbackIssuer = typeof to.query.iss === 'string' ? to.query.iss : undefined
-      if (callbackIssuer && callbackIssuer !== openIdConfiguration.issuer) {
+      if (
+        callbackIssuer
+        && (!openIdConfiguration.issuer || !oidcIssuersMatch(openIdConfiguration.issuer, callbackIssuer))
+      ) {
         throw new Error('OAuth2 response issuer does not match the configured identity provider')
       }
 
@@ -971,9 +974,11 @@ export async function createAppRouter (): Promise<Router> {
       return cleanedRoute
     }
 
-    const singleRoute = handleSingleAasAndSingleSmRouting(to)
-    if (singleRoute !== null) {
-      return singleRoute
+    if (navigationStore.getRouteTransition !== 'infrastructure-switch') {
+      const singleRoute = handleSingleAasAndSingleSmRouting(to)
+      if (singleRoute !== null) {
+        return singleRoute
+      }
     }
 
     if (
