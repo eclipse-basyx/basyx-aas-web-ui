@@ -37,7 +37,7 @@ vi.mock('@/composables/IDUtils', () => ({
   }),
 }))
 
-describe('AASRepositoryClient.ts pagination contract', () => {
+describe('AASRepositoryClient.ts', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockState.aasRepoUrl = 'https://example.test/shells'
@@ -85,5 +85,14 @@ describe('AASRepositoryClient.ts pagination contract', () => {
     expect(result.items).toEqual([{ id: 'aas-1' }])
     expect(result.nextCursor).toBeUndefined()
     expect(result.hasMore).toBe(false)
+  })
+
+  it('returns no selectable AAS for a structured repository 404', async () => {
+    mockDeps.getRequest.mockResolvedValueOnce({ success: false, status: 404 })
+
+    const { useAASRepositoryClient } = await import('@/composables/Client/AASRepositoryClient')
+    const { fetchAas } = useAASRepositoryClient()
+
+    await expect(fetchAas('https://example.test/shells/protected')).resolves.toEqual({})
   })
 })

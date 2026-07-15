@@ -1,4 +1,6 @@
 import type { Router } from 'vue-router'
+import { startLogoutTransaction } from '@/composables/Auth/OAuth2Navigation'
+import { discoverOpenIdConfiguration } from '@/composables/Auth/OpenIdConnect'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { useNavigationStore } from '@/store/NavigationStore'
 
@@ -117,28 +119,96 @@ export function useAuth (router?: Router) {
   }
 
   /**
+   * Show the authentication-required notification for the currently selected
+   * infrastructure. The action is intentionally bound to that infrastructure,
+   * so a stale notification cannot start OAuth for a later selection.
+   */
+  function showLoginRequiredSnackbar (): void {
+    const infra = infrastructureStore.getSelectedInfrastructure
+    if (!infra) {
+      return
+    }
+
+    const currentSnackbar = navStore.getSnackbar
+    if (
+      currentSnackbar.status
+      && currentSnackbar.kind === 'authentication-required'
+      && currentSnackbar.infrastructureId === infra.id
+    ) {
+      return
+    }
+
+    const isLoginAvailable = infrastructureStore.getIsLoginAvailable
+    navStore.dispatchSnackbar({
+      status: true,
+      timeout: 8000,
+      color: 'warning',
+      btnColor: 'buttonText',
+      baseError: 'Authentication required!',
+      extendedError: 'Please log in again.',
+      infrastructureId: infra.id,
+      kind: 'authentication-required',
+      actionText: isLoginAvailable ? 'Login' : undefined,
+      actionCallback: isLoginAvailable
+        ? async () => {
+          if (infrastructureStore.getSelectedInfrastructure?.id === infra.id) {
+            await login()
+          }
+        }
+        : undefined,
+    })
+  }
+
+  /**
    * Clear local token and update UI
    */
-  function clearLocalToken (): void {
+  function clearLocalToken ({
+    reloadData = true,
+    showSuccess = true,
+  }: { reloadData?: boolean, showSuccess?: boolean } = {}): void {
     const infra = infrastructureStore.getSelectedInfrastructure
     if (infra) {
       infrastructureStore.setAuthenticationStatusForInfrastructure(infra.id, false)
       const updatedInfra = { ...infra, token: undefined }
       infrastructureStore.dispatchUpdateInfrastructure(updatedInfra)
-      navStore.dispatchClearAASList()
-      navStore.dispatchClearTreeview()
-
-      // Clear query params if router is available
-      if (router) {
-        router.push({ query: {} })
+      if (reloadData) {
+        navStore.dispatchClearAASList()
+        navStore.dispatchClearTreeview()
+        navStore.dispatchTriggerAASListReload()
+        navStore.dispatchTriggerTreeviewReload()
       }
 
+      if (showSuccess) {
+        navStore.dispatchSnackbar({
+          status: true,
+          timeout: 3000,
+          color: 'success',
+          btnColor: 'buttonText',
+          text: 'Logged out successfully',
+        })
+      }
+    }
+  }
+
+  async function completeLocalLogout (logoutError?: unknown): Promise<void> {
+    const logoutTransaction = router ? startLogoutTransaction() : null
+    clearLocalToken({
+      reloadData: !logoutTransaction,
+      showSuccess: !logoutError,
+    })
+
+    if (logoutTransaction) {
+      await router?.replace(logoutTransaction.callbackPath)
+    }
+
+    if (logoutError) {
       navStore.dispatchSnackbar({
         status: true,
-        timeout: 3000,
-        color: 'success',
+        timeout: 4000,
+        color: 'error',
         btnColor: 'buttonText',
-        text: 'Logged out successfully',
+        text: 'Failed to initiate logout',
+        extendedError: logoutError instanceof Error ? logoutError.message : 'Unknown error',
       })
     }
   }
@@ -156,35 +226,23 @@ export function useAuth (router?: Router) {
     if (infra.auth?.oauth2) {
       const host = infra.auth.oauth2.host
       if (!host) {
+        await completeLocalLogout(new Error('OAuth2 issuer is missing from the infrastructure configuration'))
         return
       }
       let logoutUrl
       try {
-        // Fetch end_session_endpoint from well-known configuration
-        const wellKnownUrl = `${host}/.well-known/openid-configuration`
-        let endSessionEndpoint
-
-        try {
-          const wellKnownResponse = await fetch(wellKnownUrl)
-
-          if (wellKnownResponse.ok) {
-            const wellKnownConfig = await wellKnownResponse.json()
-            endSessionEndpoint = wellKnownConfig.end_session_endpoint
-          }
-        } catch (error) {
-          console.warn('[useAuth] Failed to fetch .well-known configuration for logout', error)
-        }
-
+        const openIdConfiguration = await discoverOpenIdConfiguration(host)
+        const endSessionEndpoint = openIdConfiguration.end_session_endpoint
         if (!endSessionEndpoint) {
-          // Fallback to host + /logout if well-known config doesn't provide end_session_endpoint
-          const normalizedHost = host.endsWith('/') ? host.slice(0, -1) : host
-          endSessionEndpoint = `${normalizedHost}/logout`
+          await completeLocalLogout()
+          return
         }
 
         logoutUrl = new URL(endSessionEndpoint)
+        const logoutTransaction = startLogoutTransaction()
         logoutUrl.searchParams.set(
           'post_logout_redirect_uri',
-          window.location.origin + window.location.pathname,
+          logoutTransaction.redirectUri,
         )
 
         // Add id_token_hint if available (required by some OAuth2 providers)
@@ -198,24 +256,15 @@ export function useAuth (router?: Router) {
           }
         }
       } catch (error) {
-        navStore.dispatchSnackbar({
-          status: true,
-          timeout: 4000,
-          color: 'error',
-          btnColor: 'buttonText',
-          text: 'Failed to initiate logout',
-          extendedError: error instanceof Error ? error.message : 'Unknown error',
-        })
-        // Fallback: just clear local token
-        clearLocalToken()
+        await completeLocalLogout(error)
         return
       }
-      clearLocalToken()
+      clearLocalToken({ reloadData: false })
       window.location.href = logoutUrl.toString()
       return
     } else {
       // No logout URL - just clear local token
-      clearLocalToken()
+      await completeLocalLogout()
       return
     }
   }
@@ -224,5 +273,6 @@ export function useAuth (router?: Router) {
     login,
     logout,
     clearLocalToken,
+    showLoginRequiredSnackbar,
   }
 }

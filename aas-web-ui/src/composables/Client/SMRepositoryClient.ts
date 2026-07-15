@@ -215,8 +215,9 @@ export function useSMRepositoryClient () {
       const smRepoNotFoundError = Array.isArray(smRepoResponse.data)
         ? smRepoResponse.data.some((message: any) => Number(message.code) === 404)
         : false
+      const responseStatus = Number(smRepoResponse.status)
 
-      if (smRepoAuthorizationError) {
+      if (smRepoAuthorizationError || [401, 403].includes(responseStatus)) {
         return {
           id: generateUUIDFromString(smEndpoint),
           idShort: 'Submodel Not Authorized!',
@@ -230,7 +231,7 @@ export function useSMRepositoryClient () {
         }
       }
 
-      if (smRepoBadRequestError || smRepoNotFoundError) {
+      if (smRepoBadRequestError || smRepoNotFoundError || [400, 404].includes(responseStatus)) {
         return {}
       }
 

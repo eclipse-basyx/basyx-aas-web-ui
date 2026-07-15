@@ -327,10 +327,3 @@ export function getInfrastructureSummary (infra: InfrastructureConfig): string {
 export function requiredRule (value: string): string | boolean {
   return !!value || 'This field is required'
 }
-
-/**
- * Get OAuth2 redirect URI for the current application
- */
-export function getRedirectUri (): string {
-  return `${window.location.origin}${window.location.pathname}/oauth2/callback`
-}
