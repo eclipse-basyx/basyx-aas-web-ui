@@ -106,6 +106,8 @@ describe('OAuth2 callback routing', () => {
     mockDeps.infrastructureStore.getInfrastructures = [mockDeps.infrastructure]
     mockDeps.infrastructureStore.getSelectedInfrastructure = mockDeps.infrastructure
     mockDeps.infrastructureStore.waitForInitialization.mockResolvedValue(undefined)
+    mockDeps.aasStore.getSelectedAAS = {}
+    mockDeps.aasStore.getSelectedNode = {}
     mockDeps.envStore.getSingleAas = true
     mockDeps.envStore.getSingleSm = false
     mockDeps.exchangeOAuth2AuthorizationCode.mockResolvedValue({
@@ -189,6 +191,27 @@ describe('OAuth2 callback routing', () => {
     expect(mockDeps.navigationStore.dispatchSnackbar).not.toHaveBeenCalledWith(
       expect.objectContaining({ baseError: 'Authentication required!' }),
     )
+  })
+
+  it('clears an AAS and Submodel which are no longer visible after logout', async () => {
+    mockDeps.envStore.getSingleAas = false
+    mockDeps.aasStore.getSelectedAAS = { id: 'protected-aas' }
+    mockDeps.aasStore.getSelectedNode = { id: 'protected-submodel' }
+    mockDeps.fetchAndDispatchAas.mockResolvedValueOnce({})
+    window.history.replaceState({}, '', '/aasviewer?aas=protected-aas&path=protected-submodel')
+    const { callbackPath } = startLogoutTransaction()
+    const router = await createAppRouter()
+
+    await router.push(callbackPath)
+
+    expect(router.currentRoute.value.name).toBe('AASViewer')
+    expect(router.currentRoute.value.query).not.toHaveProperty('aas')
+    expect(router.currentRoute.value.query).not.toHaveProperty('path')
+    expect(mockDeps.aasStore.dispatchSelectedAAS).toHaveBeenCalledWith({})
+    expect(mockDeps.aasStore.dispatchSelectedNode).toHaveBeenCalledWith({})
+    expect(mockDeps.aasByEndpointHasSmeByPath).not.toHaveBeenCalled()
+    expect(mockDeps.fetchAndDispatchSme).not.toHaveBeenCalled()
+    expect(mockDeps.navigationStore.dispatchSnackbar).not.toHaveBeenCalled()
   })
 
   it('rejects an issuer injected into the authorization response', async () => {

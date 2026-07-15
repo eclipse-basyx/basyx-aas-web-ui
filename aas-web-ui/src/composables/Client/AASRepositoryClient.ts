@@ -200,8 +200,9 @@ export function useAASRepositoryClient () {
       const aasRepoNotFoundError = Array.isArray(aasRepoResponse.data)
         ? aasRepoResponse.data.some((message: any) => Number(message.code) === 404)
         : false
+      const responseStatus = Number(aasRepoResponse.status)
 
-      if (aasRepoAuthorizationError) {
+      if (aasRepoAuthorizationError || [401, 403].includes(responseStatus)) {
         return {
           id: generateUUIDFromString(aasEndpoint),
           idShort: 'AAS Not Authorized!',
@@ -214,7 +215,7 @@ export function useAASRepositoryClient () {
         }
       }
 
-      if (aasRepoBadRequestError || aasRepoNotFoundError) {
+      if (aasRepoBadRequestError || aasRepoNotFoundError || [400, 404].includes(responseStatus)) {
         return {}
       }
 

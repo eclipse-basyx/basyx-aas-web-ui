@@ -741,6 +741,10 @@ export async function createAppRouter (): Promise<Router> {
       if (!aas || Object.keys(aas).length === 0) {
         const query = { ...to.query }
         delete query.aas
+        delete query.path
+        delete query.fragment
+        aasStore.dispatchSelectedAAS({})
+        aasStore.dispatchSelectedNode({})
         return { path: to.path, query }
       }
     } else if (!to.query.aas || to.query.aas === '') {
@@ -791,14 +795,14 @@ export async function createAppRouter (): Promise<Router> {
   }
 
   const handleAasAndSmeDataLoading = async (to: any, from: any): Promise<{ path: string, query: LocationQueryRaw } | null> => {
-    const invalidPathRoute = await validateAasPathCombination(to)
-    if (invalidPathRoute) {
-      return invalidPathRoute
-    }
-
     const invalidAasRoute = await fetchAndValidateAasForRoute(to, from)
     if (invalidAasRoute) {
       return invalidAasRoute
+    }
+
+    const invalidPathRoute = await validateAasPathCombination(to)
+    if (invalidPathRoute) {
+      return invalidPathRoute
     }
 
     const { fetchedSme, redirect } = await fetchAndValidateSmeForRoute(to, from)
