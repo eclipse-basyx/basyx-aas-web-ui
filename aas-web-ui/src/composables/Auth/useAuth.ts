@@ -1,5 +1,6 @@
 import type { Router } from 'vue-router'
 import { startLogoutTransaction } from '@/composables/Auth/OAuth2Navigation'
+import { discoverOpenIdConfiguration } from '@/composables/Auth/OpenIdConnect'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { useNavigationStore } from '@/store/NavigationStore'
 
@@ -7,7 +8,7 @@ import { useNavigationStore } from '@/store/NavigationStore'
  * Composable for handling authentication logic
  * Centralizes login and logout functionality for OAuth2
  */
-export function useAuth (router?: Router) {
+export function useAuth (_router?: Router) {
   const infrastructureStore = useInfrastructureStore()
   const navStore = useNavigationStore()
 
@@ -161,18 +162,17 @@ export function useAuth (router?: Router) {
   /**
    * Clear local token and update UI
    */
-  function clearLocalToken ({ preserveRouteQuery = false }: { preserveRouteQuery?: boolean } = {}): void {
+  function clearLocalToken ({ reloadData = true }: { reloadData?: boolean } = {}): void {
     const infra = infrastructureStore.getSelectedInfrastructure
     if (infra) {
       infrastructureStore.setAuthenticationStatusForInfrastructure(infra.id, false)
       const updatedInfra = { ...infra, token: undefined }
       infrastructureStore.dispatchUpdateInfrastructure(updatedInfra)
-      navStore.dispatchClearAASList()
-      navStore.dispatchClearTreeview()
-
-      // Keep the deep link while an OAuth logout round trip is in progress.
-      if (router && !preserveRouteQuery) {
-        router.push({ query: {} })
+      if (reloadData) {
+        navStore.dispatchClearAASList()
+        navStore.dispatchClearTreeview()
+        navStore.dispatchTriggerAASListReload()
+        navStore.dispatchTriggerTreeviewReload()
       }
 
       navStore.dispatchSnackbar({
@@ -202,25 +202,11 @@ export function useAuth (router?: Router) {
       }
       let logoutUrl
       try {
-        // Fetch end_session_endpoint from well-known configuration
-        const wellKnownUrl = `${host}/.well-known/openid-configuration`
-        let endSessionEndpoint
-
-        try {
-          const wellKnownResponse = await fetch(wellKnownUrl)
-
-          if (wellKnownResponse.ok) {
-            const wellKnownConfig = await wellKnownResponse.json()
-            endSessionEndpoint = wellKnownConfig.end_session_endpoint
-          }
-        } catch (error) {
-          console.warn('[useAuth] Failed to fetch .well-known configuration for logout', error)
-        }
-
+        const openIdConfiguration = await discoverOpenIdConfiguration(host)
+        const endSessionEndpoint = openIdConfiguration.end_session_endpoint
         if (!endSessionEndpoint) {
-          // Fallback to host + /logout if well-known config doesn't provide end_session_endpoint
-          const normalizedHost = host.endsWith('/') ? host.slice(0, -1) : host
-          endSessionEndpoint = `${normalizedHost}/logout`
+          clearLocalToken()
+          return
         }
 
         logoutUrl = new URL(endSessionEndpoint)
@@ -249,11 +235,10 @@ export function useAuth (router?: Router) {
           text: 'Failed to initiate logout',
           extendedError: error instanceof Error ? error.message : 'Unknown error',
         })
-        // Fallback: just clear local token
         clearLocalToken()
         return
       }
-      clearLocalToken({ preserveRouteQuery: true })
+      clearLocalToken({ reloadData: false })
       window.location.href = logoutUrl.toString()
       return
     } else {

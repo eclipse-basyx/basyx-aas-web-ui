@@ -117,6 +117,14 @@ export function useRequestHandling () {
   const environmentStore = useEnvStore()
   const { showLoginRequiredSnackbar } = useAuth()
 
+  function getRequestOwnerId (): string | undefined {
+    return infrastructureStore.getSelectedInfrastructure?.id
+  }
+
+  function isCurrentRequestOwner (requestOwnerId: string | undefined): boolean {
+    return requestOwnerId === getRequestOwnerId()
+  }
+
   /**
    * Centralized error handler for catch blocks
    * Handles authentication errors and general errors
@@ -125,6 +133,7 @@ export function useRequestHandling () {
     error: unknown,
     disableMessage: boolean,
     errorHandlingOptions: RequestErrorHandlingOptions = {},
+    requestOwnerId: string | undefined = getRequestOwnerId(),
   ): { success: false, status?: number } {
     const errorMessage = error instanceof Error ? error.message : String(error)
     const statusCode = extractStatusCode(errorMessage)
@@ -132,6 +141,10 @@ export function useRequestHandling () {
     const is403Error = statusCode === 403
     setLastRequestFailureStatus(statusCode)
     setLastRequestFailureDetails(errorMessage)
+
+    if (!isCurrentRequestOwner(requestOwnerId)) {
+      return { success: false, status: statusCode }
+    }
 
     const currentInfra = infrastructureStore.getSelectedInfrastructure
     const hasAuth = currentInfra?.auth && currentInfra.auth.securityType !== 'No Authentication'
@@ -264,13 +277,18 @@ export function useRequestHandling () {
     context: string,
     disableMessage: boolean,
     errorHandlingOptions: RequestErrorHandlingOptions = {},
+    requestOwnerId: string | undefined = getRequestOwnerId(),
   ): { success: false, status: number } {
     const details = buildErrorDetailsFromPayload(data)
     setLastRequestFailureStatus(status)
     setLastRequestFailureDetails(details)
 
+    if (!isCurrentRequestOwner(requestOwnerId)) {
+      return { success: false, status }
+    }
+
     if (status === 401 || status === 403) {
-      handleRequestError(new Error('Error status: ' + status), disableMessage, errorHandlingOptions)
+      handleRequestError(new Error('Error status: ' + status), disableMessage, errorHandlingOptions, requestOwnerId)
       setLastRequestFailureStatus(status)
       setLastRequestFailureDetails(details)
       return { success: false, status }
@@ -290,6 +308,7 @@ export function useRequestHandling () {
     headers: Headers = new Headers(),
     errorHandlingOptions: RequestErrorHandlingOptions = {},
   ): any {
+    const requestOwnerId = getRequestOwnerId()
     if (shouldAddAuthorizationHeader(path)) {
       // No Authorization needed for the /description endpoint.
       headers = addAuthorizationHeader(headers) // Add the Authorization header
@@ -342,7 +361,17 @@ export function useRequestHandling () {
         // Check if the Server responded with an error
         const failureStatus = extractErrorStatusFromPayload(data) ?? (response.ok ? undefined : response.status)
         if (failureStatus !== undefined) {
-          return { ...handlePayloadFailure(failureStatus, data, context, disableMessage, errorHandlingOptions), raw: response }
+          return {
+            ...handlePayloadFailure(
+              failureStatus,
+              data,
+              context,
+              disableMessage,
+              errorHandlingOptions,
+              requestOwnerId,
+            ),
+            raw: response,
+          }
         } else if (data !== undefined) {
           setLastRequestFailureStatus(undefined)
           setLastRequestFailureDetails(undefined)
@@ -358,7 +387,7 @@ export function useRequestHandling () {
           throw new Error('Unexpected response format')
         }
       })
-      .catch(error => handleRequestError(error, disableMessage, errorHandlingOptions))
+      .catch(error => handleRequestError(error, disableMessage, errorHandlingOptions, requestOwnerId))
   }
 
   function postRequest (
@@ -369,6 +398,7 @@ export function useRequestHandling () {
     disableMessage: boolean,
     isTSRequest = false,
   ): any {
+    const requestOwnerId = getRequestOwnerId()
     if (!isTSRequest) {
       headers = addAuthorizationHeader(headers) // Add the Authorization header
     }
@@ -397,11 +427,11 @@ export function useRequestHandling () {
         // Check if the Server responded with an error
         const payloadStatus = extractErrorStatusFromPayload(data)
         if (payloadStatus !== undefined) {
-          return handlePayloadFailure(payloadStatus, data, context, disableMessage)
+          return handlePayloadFailure(payloadStatus, data, context, disableMessage, {}, requestOwnerId)
         } else if (!response.ok) {
           setLastRequestFailureStatus(response.status)
           setLastRequestFailureDetails(buildErrorDetailsFromPayload(data) || undefined)
-          if (!disableMessage && data) {
+          if (isCurrentRequestOwner(requestOwnerId) && !disableMessage && data) {
             errorHandler(data, context)
           }
           return { success: false, status: response.status }
@@ -420,10 +450,11 @@ export function useRequestHandling () {
           throw new Error('Unexpected response format')
         }
       })
-      .catch(error => handleRequestError(error, disableMessage))
+      .catch(error => handleRequestError(error, disableMessage, {}, requestOwnerId))
   }
 
   function putRequest (path: string, body: any, headers: Headers, context: string, disableMessage: boolean): any {
+    const requestOwnerId = getRequestOwnerId()
     headers = addAuthorizationHeader(headers) // Add the Authorization header
     return fetch(path, { method: 'PUT', body, headers })
       .then(response => {
@@ -445,7 +476,7 @@ export function useRequestHandling () {
         // Check if the Server responded with an error
         const payloadStatus = extractErrorStatusFromPayload(data)
         if (payloadStatus !== undefined) {
-          return handlePayloadFailure(payloadStatus, data, context, disableMessage)
+          return handlePayloadFailure(payloadStatus, data, context, disableMessage, {}, requestOwnerId)
         } else if (data) {
           setLastRequestFailureStatus(undefined)
           setLastRequestFailureDetails(undefined)
@@ -461,10 +492,11 @@ export function useRequestHandling () {
           throw new Error('Unexpected response format')
         }
       })
-      .catch(error => handleRequestError(error, disableMessage))
+      .catch(error => handleRequestError(error, disableMessage, {}, requestOwnerId))
   }
 
   function patchRequest (path: string, body: any, headers: Headers, context: string, disableMessage: boolean): any {
+    const requestOwnerId = getRequestOwnerId()
     headers = addAuthorizationHeader(headers) // Add the Authorization header
     return fetch(path, { method: 'PATCH', body, headers })
       .then(response => {
@@ -486,7 +518,7 @@ export function useRequestHandling () {
         // Check if the Server responded with an error
         const payloadStatus = extractErrorStatusFromPayload(data)
         if (payloadStatus !== undefined) {
-          return handlePayloadFailure(payloadStatus, data, context, disableMessage)
+          return handlePayloadFailure(payloadStatus, data, context, disableMessage, {}, requestOwnerId)
         } else if (data) {
           setLastRequestFailureStatus(undefined)
           setLastRequestFailureDetails(undefined)
@@ -502,10 +534,11 @@ export function useRequestHandling () {
           throw new Error('Unexpected response format')
         }
       })
-      .catch(error => handleRequestError(error, disableMessage))
+      .catch(error => handleRequestError(error, disableMessage, {}, requestOwnerId))
   }
 
   function deleteRequest (path: string, context: string, disableMessage: boolean): any {
+    const requestOwnerId = getRequestOwnerId()
     return fetch(path, { method: 'DELETE', headers: addAuthorizationHeader(new Headers()) })
       .then(response => {
         const contentType = getResponseContentType(response)
@@ -526,7 +559,7 @@ export function useRequestHandling () {
         // Check if the Server responded with an error
         const payloadStatus = extractErrorStatusFromPayload(data)
         if (payloadStatus !== undefined) {
-          return handlePayloadFailure(payloadStatus, data, context, disableMessage)
+          return handlePayloadFailure(payloadStatus, data, context, disableMessage, {}, requestOwnerId)
         } else if (data) {
           setLastRequestFailureStatus(undefined)
           setLastRequestFailureDetails(undefined)
@@ -539,7 +572,7 @@ export function useRequestHandling () {
           return { success: true }
         }
       })
-      .catch(error => handleRequestError(error, disableMessage))
+      .catch(error => handleRequestError(error, disableMessage, {}, requestOwnerId))
   }
 
   function addAuthorizationHeader (headers: Headers): Headers {

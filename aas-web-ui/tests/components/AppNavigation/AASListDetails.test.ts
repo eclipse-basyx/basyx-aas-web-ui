@@ -1,6 +1,12 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick, ref } from 'vue'
 import AASListDetails from '@/components/AppNavigation/AASListDetails.vue'
+
+const state = vi.hoisted(() => ({
+  selectedAAS: null as any,
+  infrastructureId: null as any,
+}))
 
 const mocks = vi.hoisted(() => ({
   aasIsAvailableById: vi.fn(),
@@ -28,10 +34,8 @@ vi.mock('@/composables/Client/AASRepositoryClient', () => ({
 
 vi.mock('@/store/AASDataStore', () => ({
   useAASStore: () => ({
-    getSelectedAAS: {
-      id: 'urn:example:old-aas',
-      path: 'https://infra-1.example/shells/old-aas',
-      assetInformation: { assetKind: 'Instance' },
+    get getSelectedAAS () {
+      return state.selectedAAS.value
     },
   }),
 }))
@@ -46,6 +50,9 @@ vi.mock('@/store/InfrastructureStore', () => ({
   useInfrastructureStore: () => ({
     getAASRegistryURL: 'https://infra-1.example/shell-descriptors',
     getAASRepoURL: 'https://infra-1.example/shells',
+    get getSelectedInfrastructureId () {
+      return state.infrastructureId.value
+    },
   }),
 }))
 
@@ -64,6 +71,12 @@ describe('AASListDetails', () => {
     mocks.aasIsAvailableById.mockResolvedValue(true)
     mocks.fetchAas.mockResolvedValue({})
     mocks.fetchAssetInformation.mockResolvedValue({})
+    state.selectedAAS = ref({
+      id: 'urn:example:old-aas',
+      path: 'https://infra-1.example/shells/old-aas',
+      assetInformation: { assetKind: 'Instance' },
+    })
+    state.infrastructureId = ref('infra-1')
   })
 
   afterEach(() => {
@@ -80,5 +93,35 @@ describe('AASListDetails', () => {
     await vi.advanceTimersByTimeAsync(600)
 
     expect(mocks.aasIsAvailableById).not.toHaveBeenCalled()
+  })
+
+  it('does not replace current details with late data from the previously selected AAS', async () => {
+    let resolveOld!: (value: any) => void
+    let resolveNew!: (value: any) => void
+    mocks.fetchAssetInformation
+      .mockReturnValueOnce(new Promise(resolve => {
+        resolveOld = resolve
+      }))
+      .mockReturnValueOnce(new Promise(resolve => {
+        resolveNew = resolve
+      }))
+
+    const wrapper = mount(AASListDetails, { shallow: true })
+    await flushPromises()
+
+    state.selectedAAS.value = {
+      id: 'urn:example:new-aas',
+      path: 'https://infra-1.example/shells/new-aas',
+      assetInformation: { assetKind: 'Instance' },
+    }
+    await nextTick()
+    await flushPromises()
+
+    resolveNew({ assetKind: 'Instance', globalAssetId: 'new-asset' })
+    await flushPromises()
+    resolveOld({ assetKind: 'Instance', globalAssetId: 'old-asset' })
+    await flushPromises()
+
+    expect((wrapper.vm as any).assetInformation.globalAssetId).toBe('new-asset')
   })
 })

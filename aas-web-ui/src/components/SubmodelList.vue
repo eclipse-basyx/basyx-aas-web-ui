@@ -226,7 +226,7 @@
 
 <script lang="ts" setup>
   import type { ComponentPublicInstance, Ref } from 'vue'
-  import { computed, onActivated, onMounted, ref, watch } from 'vue'
+  import { computed, onActivated, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
@@ -262,6 +262,7 @@
   const submodelList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the SM Data
   const submodelListUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the SM Data before filtering
   const listLoading = ref(false) // Variable to store if the AAS List is loading
+  let listLoadGeneration = 0
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null) // Reference to the Virtual Scroll Component
 
   // Computed Properties
@@ -277,6 +278,7 @@
   watch(
     () => aasRegistryURL.value,
     () => {
+      listLoadGeneration += 1
       submodelList.value = []
     },
   )
@@ -284,6 +286,7 @@
   watch(
     () => submodelRegistryURL.value,
     () => {
+      listLoadGeneration += 1
       submodelList.value = []
     },
   )
@@ -291,6 +294,7 @@
   watch(
     () => selectedAAS.value,
     () => {
+      listLoadGeneration += 1
       submodelList.value = []
       initialize()
     },
@@ -311,8 +315,13 @@
     scrollToSelectedSubmodel()
   })
 
+  onBeforeUnmount(() => {
+    listLoadGeneration += 1
+  })
+
   function initialize (): void {
-    if (!selectedAAS.value || Object.keys(selectedAAS).length === 0) {
+    const generation = ++listLoadGeneration
+    if (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0) {
       submodelList.value = []
       return
     }
@@ -320,6 +329,9 @@
     listLoading.value = true
 
     fetchAasSmListById(selectedAAS.value.id).then((submodels: Array<any>) => {
+      if (generation !== listLoadGeneration) {
+        return
+      }
       const submodelsSorted = submodels.toSorted((smA: any, smB: any) => {
         // Sort SMs with respect to displayed title and version
         return smTitleToDisplay(smA) + '|' + smVersionToDisplay(smA)

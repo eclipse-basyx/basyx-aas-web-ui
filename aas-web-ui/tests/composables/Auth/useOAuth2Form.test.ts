@@ -6,6 +6,7 @@ const mockDeps = vi.hoisted(() => ({
   dispatchSnackbar: vi.fn(),
   dispatchTriggerAASListReload: vi.fn(),
   dispatchTriggerTreeviewReload: vi.fn(),
+  clearOAuth2AuthorizationCodeState: vi.fn(),
   initiateOAuth2AuthorizationCodeFlow: vi.fn(),
 }))
 
@@ -19,6 +20,7 @@ vi.mock('@/store/NavigationStore', () => ({
 
 vi.mock('@/composables/Auth/OAuth2Auth', () => ({
   authenticateOAuth2ClientCredentials: vi.fn(),
+  clearOAuth2AuthorizationCodeState: mockDeps.clearOAuth2AuthorizationCodeState,
   initiateOAuth2AuthorizationCodeFlow: mockDeps.initiateOAuth2AuthorizationCodeFlow,
 }))
 
@@ -59,7 +61,7 @@ describe('useOAuth2Form authorization-code flow', () => {
     expect(config).toMatchObject({
       authorizationEndpoint: 'https://idp.example/authorize',
       clientId: 'web-ui',
-      redirectUri: `${window.location.origin}/aasviewer`,
+      redirectUri: `${window.location.origin}/`,
       scope: 'openid profile email',
     })
     expect(config.state).not.toBe('infrastructure-1')
@@ -71,5 +73,30 @@ describe('useOAuth2Form authorization-code flow', () => {
       },
       hash: '#details',
     })
+  })
+
+  it('cleans up the navigation and PKCE state when redirect initiation fails', async () => {
+    mockDeps.initiateOAuth2AuthorizationCodeFlow.mockRejectedValueOnce(new Error('navigation failed'))
+    const oauth2Form = useOAuth2Form()
+    oauth2Form.loadFromInfrastructure({
+      id: 'infrastructure-1',
+      auth: {
+        securityType: 'OAuth2',
+        oauth2: {
+          host: 'https://idp.example',
+          clientId: 'web-ui',
+          authFlow: 'auth-code',
+        },
+      },
+    } as any)
+
+    await oauth2Form.authenticate('infrastructure-1')
+
+    const [{ state }] = mockDeps.initiateOAuth2AuthorizationCodeFlow.mock.calls[0]
+    expect(getAuthorizationTransaction(state)).toBeNull()
+    expect(mockDeps.clearOAuth2AuthorizationCodeState).toHaveBeenCalledWith(state)
+    expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(
+      expect.objectContaining({ text: 'Failed to initiate OAuth2 authorization flow' }),
+    )
   })
 })

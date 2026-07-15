@@ -23,7 +23,7 @@ describe('OAuth2 navigation transactions', () => {
     const { redirectUri, state } = startAuthorizationTransaction('infrastructure-1')
 
     expect(state).not.toBe('infrastructure-1')
-    expect(redirectUri).toBe(`${window.location.origin}/aasviewer`)
+    expect(redirectUri).toBe(`${window.location.origin}/`)
     expect(getAuthorizationTransaction(state)).toEqual({
       infrastructureId: 'infrastructure-1',
       returnLocation: {
@@ -44,7 +44,8 @@ describe('OAuth2 navigation transactions', () => {
   it('restores a deep link after a query-free logout callback', () => {
     const { callbackPath, redirectUri } = startLogoutTransaction()
 
-    expect(redirectUri).toBe(`${window.location.origin}/aasviewer`)
+    expect(callbackPath).toBe('/')
+    expect(redirectUri).toBe(`${window.location.origin}/`)
     expect(consumeLogoutTransaction(callbackPath)).toEqual({
       path: '/aasviewer',
       query: {
@@ -63,7 +64,7 @@ describe('OAuth2 navigation transactions', () => {
 
     const { redirectUri, state } = startAuthorizationTransaction('infrastructure-1')
 
-    expect(redirectUri).toBe(`${window.location.origin}/ui/aasviewer`)
+    expect(redirectUri).toBe(`${window.location.origin}/ui/`)
     expect(getAuthorizationTransaction(state)?.returnLocation).toEqual({
       path: '/aasviewer',
       query: { aas: 'urn:example:aas' },

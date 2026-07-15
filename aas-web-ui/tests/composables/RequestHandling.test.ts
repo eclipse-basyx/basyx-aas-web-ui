@@ -27,8 +27,12 @@ vi.mock('@/store/NavigationStore', () => ({
 
 vi.mock('@/store/InfrastructureStore', () => ({
   useInfrastructureStore: () => ({
-    getSelectedInfrastructure: mockState.selectedInfrastructure,
-    getIsLoginAvailable: mockState.isLoginAvailable,
+    get getSelectedInfrastructure () {
+      return mockState.selectedInfrastructure
+    },
+    get getIsLoginAvailable () {
+      return mockState.isLoginAvailable
+    },
     setAuthenticationStatusForInfrastructure: mockDeps.setAuthenticationStatusForInfrastructure,
   }),
 }))
@@ -192,6 +196,37 @@ describe('RequestHandling.ts', () => {
     await useRequestHandling().getRequest('/secured/shells', 'retrieving AAS list', false)
 
     expect(mockDeps.showLoginRequiredSnackbar).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not apply a late authentication failure to a newly selected infrastructure', async () => {
+    mockState.selectedInfrastructure = {
+      id: 'infra-old',
+      auth: { securityType: 'OAuth2', oauth2: { authFlow: 'auth-code' } },
+      token: undefined,
+    }
+
+    let resolveRequest!: (response: Response) => void
+    global.fetch = vi.fn().mockReturnValue(new Promise<Response>(resolve => {
+      resolveRequest = resolve
+    })) as unknown as typeof fetch
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const pendingRequest = useRequestHandling().getRequest('/old/shells', 'retrieving AAS list', false)
+
+    mockState.selectedInfrastructure = {
+      id: 'infra-new',
+      auth: { securityType: 'OAuth2', oauth2: { authFlow: 'auth-code' } },
+      token: undefined,
+    }
+    resolveRequest(Response.json([{ code: 403, text: 'access denied' }], {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    }))
+
+    await pendingRequest
+
+    expect(mockDeps.setAuthenticationStatusForInfrastructure).not.toHaveBeenCalled()
+    expect(mockDeps.showLoginRequiredSnackbar).not.toHaveBeenCalled()
   })
 
   it('returns structured status for non-auth failures and keeps generic error snackbar', async () => {

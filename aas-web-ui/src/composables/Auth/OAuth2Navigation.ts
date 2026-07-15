@@ -48,21 +48,6 @@ function getApplicationPath (pathname: string): string | null {
   return `/${pathname.slice(basePath.length)}`
 }
 
-function getCurrentReturnLocation (): OAuth2ReturnLocation {
-  const currentUrl = new URL(window.location.href)
-  const path = getApplicationPath(currentUrl.pathname)
-
-  if (!path) {
-    throw new Error('Current URL is outside the application base path')
-  }
-
-  return {
-    path,
-    query: parseQuery(currentUrl.search),
-    hash: currentUrl.hash,
-  }
-}
-
 function getCurrentReturnUrl (): string {
   return window.location.href
 }
@@ -123,7 +108,7 @@ function readStoredValue<T> (key: string): T | null {
  * dynamic redirect URI registration.
  */
 export function getOAuth2CallbackUri (): string {
-  return `${window.location.origin}${window.location.pathname}`
+  return new URL(import.meta.env.BASE_URL, window.location.origin).toString()
 }
 
 /**
@@ -184,9 +169,10 @@ export function clearAuthorizationTransaction (state: string): void {
  * Stores the current location before sending the browser to an IdP logout endpoint.
  */
 export function startLogoutTransaction (): { callbackPath: string, redirectUri: string } {
-  const returnLocation = getCurrentReturnLocation()
+  const redirectUri = getOAuth2CallbackUri()
+  const callbackPath = getApplicationPath(new URL(redirectUri).pathname) ?? '/'
   const transaction: StoredLogoutTransaction = {
-    callbackPath: returnLocation.path,
+    callbackPath,
     returnUrl: getCurrentReturnUrl(),
   }
 
@@ -194,7 +180,7 @@ export function startLogoutTransaction (): { callbackPath: string, redirectUri: 
 
   return {
     callbackPath: transaction.callbackPath,
-    redirectUri: getOAuth2CallbackUri(),
+    redirectUri,
   }
 }
 

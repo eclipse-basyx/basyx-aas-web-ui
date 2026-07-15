@@ -396,7 +396,7 @@
   import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization'
   import type { Ref } from 'vue'
   import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
-  import { computed, onMounted, ref, watch } from 'vue'
+  import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
   import { useOperationTreeMutation } from '@/composables/AAS/OperationTreeMutation'
@@ -446,6 +446,7 @@
   const submodelTreeUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the unfiltere Submodel Treeview Data before filtering
   const debouncedFilterSubmodelTree = debounce(filterSubmodelTree, 300) // Debounced function to filter the AAS List
   const treeLoading = ref(false) // Variable to store if the AAS List is loading
+  let treeLoadGeneration = 0
   const selectSMETypeToAddDialog = ref(false) // Variable to store if the Add SubmodelElement Dialog should be shown
   const propertyDialog = ref(false) // Variable to store if the PropertyForm Dialog should be shown
   const mlpDialog = ref(false) // Variable to store if the MultiLanguagePropertyForm Dialog should be shown
@@ -528,6 +529,7 @@
   watch(
     () => aasRegistryURL.value,
     () => {
+      treeLoadGeneration += 1
       if (!['SMViewer', 'SMEditor'].includes(route.name as string)) {
         submodelTree.value = []
       }
@@ -537,6 +539,7 @@
   watch(
     () => submodelRegistryURL.value,
     () => {
+      treeLoadGeneration += 1
       submodelTree.value = []
     },
   )
@@ -544,6 +547,7 @@
   watch(
     () => selectedAAS.value,
     () => {
+      treeLoadGeneration += 1
       if (!['SMViewer', 'SMEditor'].includes(route.name as string)) {
         submodelTree.value = []
         if (!isAuthenticating.value) {
@@ -579,6 +583,7 @@
   watch(
     () => clearTreeview.value,
     () => {
+      treeLoadGeneration += 1
       submodelTree.value = []
       submodelTreeUnfiltered.value = []
     },
@@ -605,7 +610,12 @@
     }
   })
 
+  onBeforeUnmount(() => {
+    treeLoadGeneration += 1
+  })
+
   async function initialize (): Promise<void> {
+    const generation = ++treeLoadGeneration
     if (
       !['SMEditor', 'SMViewer'].includes(route.name as string)
       && (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0)
@@ -620,6 +630,10 @@
       let submodels: Array<any> = []
 
       submodels = await (['SMEditor', 'SMViewer'].includes(route.name as string) ? fetchSmList() : fetchAasSmListById(selectedAAS.value.id))
+
+      if (generation !== treeLoadGeneration) {
+        return
+      }
 
       // Handle empty objects and sort
       const validSubmodels: Array<any> = []
@@ -680,7 +694,9 @@
         expandTree()
       }
     } finally {
-      treeLoading.value = false
+      if (generation === treeLoadGeneration) {
+        treeLoading.value = false
+      }
     }
   }
 

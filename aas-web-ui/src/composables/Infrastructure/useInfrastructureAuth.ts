@@ -1,4 +1,5 @@
 import type { InfrastructureConfig } from '@/types/Infrastructure'
+import { discoverOpenIdConfiguration } from '@/composables/Auth/OpenIdConnect'
 
 /**
  * Composable for managing infrastructure authentication and token refresh
@@ -91,30 +92,10 @@ export function useInfrastructureAuth (): {
             continue
           }
 
-          // Fetch token endpoint from well-known configuration
-          const wellKnownUrl = `${auth.oauth2.host}/.well-known/openid-configuration`
-          let tokenEndpoint
-
-          try {
-            const wellKnownResponse = await fetch(wellKnownUrl)
-
-            if (wellKnownResponse.ok) {
-              const wellKnownConfig = await wellKnownResponse.json()
-              tokenEndpoint = wellKnownConfig.token_endpoint
-            }
-          } catch (error) {
-            console.warn(
-              `[useInfrastructureAuth] Failed to fetch .well-known configuration for ${infrastructure.name}, using fallback`,
-              error,
-            )
-          }
-
-          // Fallback to host + /token if well-known config is not available
+          const openIdConfiguration = await discoverOpenIdConfiguration(auth.oauth2.host)
+          const tokenEndpoint = openIdConfiguration.token_endpoint
           if (!tokenEndpoint) {
-            const normalizedHost = auth.oauth2.host.endsWith('/')
-              ? auth.oauth2.host.slice(0, -1)
-              : auth.oauth2.host
-            tokenEndpoint = `${normalizedHost}/token`
+            throw new Error('Token endpoint not found in OpenID configuration')
           }
 
           const { refreshOAuth2Token } = await import('@/composables/Auth/OAuth2Auth')

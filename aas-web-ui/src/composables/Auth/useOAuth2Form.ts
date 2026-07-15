@@ -2,12 +2,14 @@ import type { AuthTokenState, InfrastructureConfig, OAuth2FormData } from '@/typ
 import { type Ref, ref } from 'vue'
 import {
   authenticateOAuth2ClientCredentials,
+  clearOAuth2AuthorizationCodeState,
   initiateOAuth2AuthorizationCodeFlow,
 } from '@/composables/Auth/OAuth2Auth'
 import {
   clearAuthorizationTransaction,
   startAuthorizationTransaction,
 } from '@/composables/Auth/OAuth2Navigation'
+import { discoverOpenIdConfiguration } from '@/composables/Auth/OpenIdConnect'
 import { useNavigationStore } from '@/store/NavigationStore'
 
 /**
@@ -171,27 +173,10 @@ export function useOAuth2Form (): {
       loading.value = true
       let authorizationState: string | undefined
       try {
-        // Fetch well-known configuration to get authorization endpoint
-        const wellKnownUrl = `${formData.value.host}/.well-known/openid-configuration`
-        let authorizationEndpoint
-
-        try {
-          const wellKnownResponse = await fetch(wellKnownUrl)
-
-          if (wellKnownResponse.ok) {
-            const wellKnownConfig = await wellKnownResponse.json()
-            authorizationEndpoint = wellKnownConfig.authorization_endpoint
-          }
-        } catch (error) {
-          console.warn('[useOAuth2Form] Failed to fetch .well-known configuration, using fallback', error)
-        }
-
-        // Fallback to host + /authorize if well-known config is not available
+        const openIdConfiguration = await discoverOpenIdConfiguration(formData.value.host)
+        const authorizationEndpoint = openIdConfiguration.authorization_endpoint
         if (!authorizationEndpoint) {
-          const normalizedHost = formData.value.host.endsWith('/')
-            ? formData.value.host.slice(0, -1)
-            : formData.value.host
-          authorizationEndpoint = `${normalizedHost}/authorize`
+          throw new Error('Authorization endpoint not found in OpenID configuration')
         }
 
         const transaction = startAuthorizationTransaction(infrastructureId)
@@ -208,6 +193,7 @@ export function useOAuth2Form (): {
       } catch (error) {
         if (authorizationState) {
           clearAuthorizationTransaction(authorizationState)
+          clearOAuth2AuthorizationCodeState(authorizationState)
         }
         loading.value = false
         navigationStore.dispatchSnackbar({

@@ -133,4 +133,13 @@ describe('SMRepositoryClient.ts write contract', () => {
       false,
     )
   })
+
+  it('returns no tree node for a referenced Submodel hidden as 404', async () => {
+    mockDeps.getRequest.mockResolvedValueOnce({ success: false, status: 404 })
+
+    const { useSMRepositoryClient } = await import('@/composables/Client/SMRepositoryClient')
+    const { fetchSm } = useSMRepositoryClient()
+
+    await expect(fetchSm('https://example.test/submodels/hidden')).resolves.toEqual({})
+  })
 })

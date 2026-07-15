@@ -51,6 +51,7 @@ const mockDeps = vi.hoisted(() => ({
     getUrlQuery: {},
   },
   exchangeOAuth2AuthorizationCode: vi.fn(),
+  clearOAuth2AuthorizationCodeState: vi.fn(),
   aasByEndpointHasSmeByPath: vi.fn(),
   fetchAndDispatchAas: vi.fn(),
   fetchAndDispatchSme: vi.fn(),
@@ -93,6 +94,7 @@ vi.mock('@/composables/routeHandling', () => ({
 
 vi.mock('@/composables/Auth/OAuth2Auth', () => ({
   exchangeOAuth2AuthorizationCode: mockDeps.exchangeOAuth2AuthorizationCode,
+  clearOAuth2AuthorizationCodeState: mockDeps.clearOAuth2AuthorizationCodeState,
 }))
 
 describe('OAuth2 callback routing', () => {
@@ -104,6 +106,8 @@ describe('OAuth2 callback routing', () => {
     mockDeps.infrastructureStore.getInfrastructures = [mockDeps.infrastructure]
     mockDeps.infrastructureStore.getSelectedInfrastructure = mockDeps.infrastructure
     mockDeps.infrastructureStore.waitForInitialization.mockResolvedValue(undefined)
+    mockDeps.envStore.getSingleAas = true
+    mockDeps.envStore.getSingleSm = false
     mockDeps.exchangeOAuth2AuthorizationCode.mockResolvedValue({
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
@@ -116,7 +120,10 @@ describe('OAuth2 callback routing', () => {
     mockDeps.fetchAndDispatchSme.mockResolvedValue({ idShort: 'submodel' })
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
-      json: vi.fn().mockResolvedValue({ token_endpoint: 'https://idp.example/token' }),
+      json: vi.fn().mockResolvedValue({
+        issuer: 'https://idp.example',
+        token_endpoint: 'https://idp.example/token',
+      }),
     }))
   })
 
@@ -129,7 +136,7 @@ describe('OAuth2 callback routing', () => {
     const { state } = startAuthorizationTransaction('infrastructure-1')
     const router = await createAppRouter()
 
-    await router.push(`/aasviewer?code=authorization-code&state=${state}`)
+    await router.push(`/?code=authorization-code&state=${state}&iss=${encodeURIComponent('https://idp.example')}`)
 
     expect(router.currentRoute.value.name).toBe('AASViewer')
     expect(router.currentRoute.value.query).toMatchObject({ aas: 'urn:example:aas' })
@@ -137,13 +144,13 @@ describe('OAuth2 callback routing', () => {
     expect(router.currentRoute.value.query).not.toHaveProperty('state')
     expect(mockDeps.exchangeOAuth2AuthorizationCode).toHaveBeenCalledWith(expect.objectContaining({
       clientId: 'web-ui',
-      redirectUri: `${window.location.origin}/aasviewer`,
+      redirectUri: `${window.location.origin}/`,
       state,
     }))
     expect(mockDeps.infrastructureStore.setAuthenticationStatusForInfrastructure).toHaveBeenCalledWith('infrastructure-1', true)
   })
 
-  it('returns to the selected route after a query-free logout callback without refetching protected data', async () => {
+  it('rehydrates a public AAS and Submodel after returning from logout', async () => {
     window.history.replaceState({}, '', '/aasviewer?aas=urn%3Aexample%3Aaas&path=%2Fsubmodels%2F0')
     const { callbackPath } = startLogoutTransaction()
     const router = await createAppRouter()
@@ -153,14 +160,63 @@ describe('OAuth2 callback routing', () => {
     expect(router.currentRoute.value.name).toBe('AASViewer')
     expect(router.currentRoute.value.query).toMatchObject({ aas: 'urn:example:aas' })
     expect(router.currentRoute.value.query).toMatchObject({ path: '/submodels/0' })
+    expect(mockDeps.navigationStore.dispatchSnackbar).not.toHaveBeenCalledWith(
+      expect.objectContaining({ baseError: 'Authentication required!' }),
+    )
+    expect(mockDeps.aasByEndpointHasSmeByPath).toHaveBeenCalled()
+    expect(mockDeps.fetchAndDispatchAas).toHaveBeenCalled()
+    expect(mockDeps.fetchAndDispatchSme).toHaveBeenCalled()
+  })
+
+  it('rehydrates a public Submodel in single-Submodel mode after logout', async () => {
+    mockDeps.envStore.getSingleAas = false
+    mockDeps.envStore.getSingleSm = true
+    window.history.replaceState({}, '', '/smviewer?path=https%3A%2F%2Finfra.example%2Fsubmodels%2Fnameplate')
+    const { callbackPath } = startLogoutTransaction()
+    const router = await createAppRouter()
+
+    await router.push(callbackPath)
+
+    expect(router.currentRoute.value.name).toBe('SMViewer')
+    expect(router.currentRoute.value.query).toMatchObject({
+      path: 'https://infra.example/submodels/nameplate',
+    })
+    expect(mockDeps.fetchAndDispatchSme).toHaveBeenCalledWith(
+      'https://infra.example/submodels/nameplate',
+      true,
+      undefined,
+    )
+    expect(mockDeps.navigationStore.dispatchSnackbar).not.toHaveBeenCalledWith(
+      expect.objectContaining({ baseError: 'Authentication required!' }),
+    )
+  })
+
+  it('rejects an issuer injected into the authorization response', async () => {
+    const { state } = startAuthorizationTransaction('infrastructure-1')
+    const router = await createAppRouter()
+
+    await router.push(`/?code=authorization-code&state=${state}&iss=${encodeURIComponent('https://attacker.example')}`)
+
+    expect(mockDeps.exchangeOAuth2AuthorizationCode).not.toHaveBeenCalled()
+    expect(mockDeps.clearOAuth2AuthorizationCodeState).toHaveBeenCalledWith(state)
     expect(mockDeps.navigationStore.dispatchSnackbar).toHaveBeenCalledWith(
       expect.objectContaining({
-        baseError: 'Authentication required!',
-        actionText: 'Login',
+        text: 'OAuth2 authentication failed',
+        extendedError: expect.stringContaining('issuer'),
       }),
     )
-    expect(mockDeps.aasByEndpointHasSmeByPath).not.toHaveBeenCalled()
-    expect(mockDeps.fetchAndDispatchAas).not.toHaveBeenCalled()
-    expect(mockDeps.fetchAndDispatchSme).not.toHaveBeenCalled()
+  })
+
+  it('consumes a denied authorization response and restores the prior route', async () => {
+    const { state } = startAuthorizationTransaction('infrastructure-1')
+    const router = await createAppRouter()
+
+    await router.push(`/?error=access_denied&error_description=Login%20cancelled&state=${state}`)
+
+    expect(router.currentRoute.value.name).toBe('AASViewer')
+    expect(router.currentRoute.value.query).toMatchObject({ aas: 'urn:example:aas' })
+    expect(router.currentRoute.value.query).not.toHaveProperty('error')
+    expect(mockDeps.exchangeOAuth2AuthorizationCode).not.toHaveBeenCalled()
+    expect(mockDeps.clearOAuth2AuthorizationCodeState).toHaveBeenCalledWith(state)
   })
 })

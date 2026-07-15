@@ -82,18 +82,20 @@ describe('AASHandling.ts filtered Submodel references', () => {
     expect(mockDeps.fetchSmById).toHaveBeenNthCalledWith(
       1,
       'public-submodel',
-      false,
-      true,
-      'motor-aas',
-      true,
+      {
+        aasId: 'motor-aas',
+        setData: true,
+        suppressNotFound: true,
+      },
     )
     expect(mockDeps.fetchSmById).toHaveBeenNthCalledWith(
       2,
       'hidden-submodel',
-      false,
-      true,
-      'motor-aas',
-      true,
+      {
+        aasId: 'motor-aas',
+        setData: true,
+        suppressNotFound: true,
+      },
     )
   })
 })

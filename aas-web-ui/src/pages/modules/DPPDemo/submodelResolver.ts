@@ -31,7 +31,7 @@ export function useDppSubmodelResolver (): DppSubmodelResolver {
       return {}
     }
 
-    return (await fetchSmById(submodelId, false, true)) as Record<string, unknown>
+    return (await fetchSmById(submodelId, { setData: true })) as Record<string, unknown>
   }
 
   return { resolveSubmodelBySemanticId }

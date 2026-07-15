@@ -7,13 +7,12 @@ import SubmodelList from '@/components/SubmodelList.vue'
 import { useAASHandling } from '@/composables/AAS/AASHandling'
 import { useSMEHandling } from '@/composables/AAS/SMEHandling'
 import {
-  clearAuthorizationTransaction,
   consumeAuthorizationTransaction,
   consumeLogoutTransaction,
   getAuthorizationTransaction,
   getOAuth2CallbackUri,
 } from '@/composables/Auth/OAuth2Navigation'
-import { useAuth } from '@/composables/Auth/useAuth'
+import { discoverOpenIdConfiguration } from '@/composables/Auth/OpenIdConnect'
 import { useRouteHandling } from '@/composables/routeHandling'
 import AASEditor from '@/pages/AASEditor.vue'
 import AASSubmodelViewer from '@/pages/AASSubmodelViewer.vue'
@@ -381,7 +380,6 @@ export async function createAppRouter (): Promise<Router> {
   })
 
   let infrastructureInitializationEnsured = false
-  let skipAasAndSmeDataLoadingForLogoutReturn = false
 
   const tryResolveRouteByName = (name: string): RouteRecordRaw | undefined => {
     const direct = findRouteByName(routes, name)
@@ -812,17 +810,35 @@ export async function createAppRouter (): Promise<Router> {
   }
 
   const handleOAuthCallback = async (to: any): Promise<RouteLocationRaw | null> => {
-    if (!(to.query.state && to.query.code)) {
+    const state = typeof to.query.state === 'string' ? to.query.state : undefined
+    const code = typeof to.query.code === 'string' ? to.query.code : undefined
+    const authorizationError = typeof to.query.error === 'string' ? to.query.error : undefined
+    if (!state || (!code && !authorizationError)) {
       return null
     }
 
-    const state = to.query.state as string
-    const code = to.query.code as string
-    const issuerURL = to.query.iss as string
     const transaction = getAuthorizationTransaction(state)
+    const { clearOAuth2AuthorizationCodeState, exchangeOAuth2AuthorizationCode } = await import('@/composables/Auth/OAuth2Auth')
+
+    if (authorizationError) {
+      const returnLocation = consumeAuthorizationTransaction(state)?.returnLocation ?? transaction?.returnLocation
+      clearOAuth2AuthorizationCodeState(state)
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 8000,
+        color: 'warning',
+        btnColor: 'buttonText',
+        text: 'OAuth2 authorization was not completed',
+        extendedError: typeof to.query.error_description === 'string'
+          ? to.query.error_description
+          : authorizationError,
+      })
+      return returnLocation
+        ? { ...returnLocation, replace: true }
+        : { name: resolveStartRouteName(), replace: true }
+    }
 
     try {
-      const { exchangeOAuth2AuthorizationCode } = await import('@/composables/Auth/OAuth2Auth')
       const infraStore = useInfrastructureStore()
 
       await infraStore.waitForInitialization()
@@ -839,42 +855,20 @@ export async function createAppRouter (): Promise<Router> {
         throw new Error(`Infrastructure with ID '${transaction.infrastructureId}' not found or missing OAuth2 config`)
       }
 
-      const issuer = issuerURL || infrastructure.auth.oauth2.host
-      if (!issuer) {
-        throw new Error('OAuth2 issuer URL not found in callback or infrastructure config')
+      const configuredIssuer = infrastructure.auth.oauth2.host
+      if (!configuredIssuer) {
+        throw new Error('OAuth2 issuer is missing from the infrastructure configuration')
       }
 
-      try {
-        const issuerUrl = new URL(issuer)
-        if (!['http:', 'https:'].includes(issuerUrl.protocol)) {
-          throw new Error(`Invalid issuer URL protocol: ${issuerUrl.protocol}. Must be http: or https:`)
-        }
-      } catch (error) {
-        if (error instanceof TypeError) {
-          throw new Error(`Invalid issuer URL format: ${issuer}. Must be a valid HTTP(S) URL.`, {
-            cause: error,
-          })
-        }
-        throw error
+      const openIdConfiguration = await discoverOpenIdConfiguration(configuredIssuer)
+      const callbackIssuer = typeof to.query.iss === 'string' ? to.query.iss : undefined
+      if (callbackIssuer && callbackIssuer !== openIdConfiguration.issuer) {
+        throw new Error('OAuth2 response issuer does not match the configured identity provider')
       }
 
-      const wellKnownUrl = `${issuer}/.well-known/openid-configuration`
-      let tokenEndpoint
-
-      try {
-        const wellKnownResponse = await fetch(wellKnownUrl)
-
-        if (wellKnownResponse.ok) {
-          const wellKnownConfig = await wellKnownResponse.json()
-          tokenEndpoint = wellKnownConfig.token_endpoint
-        }
-      } catch (error) {
-        console.warn('[OAuth2 Callback] Failed to fetch .well-known configuration, using fallback', error)
-      }
-
+      const tokenEndpoint = openIdConfiguration.token_endpoint
       if (!tokenEndpoint) {
-        const normalizedIssuer = issuer.endsWith('/') ? issuer.slice(0, -1) : issuer
-        tokenEndpoint = `${normalizedIssuer}/token`
+        throw new Error('Token endpoint not found in OpenID configuration')
       }
 
       const tokenData = await exchangeOAuth2AuthorizationCode({
@@ -906,7 +900,8 @@ export async function createAppRouter (): Promise<Router> {
       const returnLocation = consumeAuthorizationTransaction(state)?.returnLocation ?? transaction.returnLocation
       return { ...returnLocation, replace: true }
     } catch (error) {
-      clearAuthorizationTransaction(state)
+      const returnLocation = consumeAuthorizationTransaction(state)?.returnLocation ?? transaction?.returnLocation
+      clearOAuth2AuthorizationCodeState(state)
       const errorMessage = error instanceof Error ? error.message : 'OAuth2 authentication failed'
       console.error('[OAuth2 Callback] Failed:', errorMessage, error)
       navigationStore.dispatchSnackbar({
@@ -918,13 +913,10 @@ export async function createAppRouter (): Promise<Router> {
         extendedError: errorMessage,
       })
 
-      return { name: resolveStartRouteName(), replace: true }
+      return returnLocation
+        ? { ...returnLocation, replace: true }
+        : { name: resolveStartRouteName(), replace: true }
     }
-  }
-
-  const showLogoutLoginSnackbar = (): void => {
-    const { showLoginRequiredSnackbar } = useAuth(router)
-    showLoginRequiredSnackbar()
   }
 
   router.beforeEach(async function (to, from) {
@@ -940,8 +932,6 @@ export async function createAppRouter (): Promise<Router> {
 
     const logoutRedirect = consumeLogoutTransaction(to.path)
     if (logoutRedirect) {
-      skipAasAndSmeDataLoadingForLogoutReturn = true
-      showLogoutLoginSnackbar()
       return { ...logoutRedirect, replace: true }
     }
 
@@ -994,11 +984,6 @@ export async function createAppRouter (): Promise<Router> {
     const deviceRoute = handleDeviceRouting(to)
     if (deviceRoute !== null) {
       return deviceRoute
-    }
-
-    if (skipAasAndSmeDataLoadingForLogoutReturn) {
-      skipAasAndSmeDataLoadingForLogoutReturn = false
-      return true
     }
 
     const aasSmeRoute = await handleAasAndSmeDataLoading(to, from)
