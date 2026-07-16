@@ -6,7 +6,6 @@ import {
   getActiveComponentKeys,
   getActiveComponentUrlForTemplate,
   getCatenaXAccessMode,
-  getDefaultAasUploadMode,
   getEndpointFieldsForTemplate,
   getEndpointFieldValue,
   getInfrastructureSummary,
@@ -118,15 +117,6 @@ describe('InfrastructureUtils.ts', () => {
     expect(getActiveComponentUrlForTemplate(infrastructure, 'AASRepo')).toBe('https://aas-repo.example')
     expect(getActiveComponentUrlForTemplate(infrastructure, 'SubmodelRepo')).toBe('')
     expect(getActiveComponentUrlForTemplate(infrastructure, 'AASRegistry')).toBe('')
-  })
-
-  it('defaults AASX uploads to the server for every infrastructure template', () => {
-    expect(getDefaultAasUploadMode('mono-repo')).toBe('server')
-    expect(getDefaultAasUploadMode('mono-all')).toBe('server')
-    expect(getDefaultAasUploadMode('full')).toBe('server')
-    expect(getDefaultAasUploadMode('identifiable')).toBe('server')
-    expect(getDefaultAasUploadMode('catena-x')).toBe('server')
-    expect(getDefaultAasUploadMode(undefined)).toBe('server')
   })
 
   it('defaults module template support to all templates', () => {

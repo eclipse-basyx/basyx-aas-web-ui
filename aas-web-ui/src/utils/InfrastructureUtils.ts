@@ -19,7 +19,6 @@ export interface InfrastructureTemplateDefinition {
   usesSubmodelSuperpath: boolean
 }
 
-export type InfrastructureAasUploadMode = 'client' | 'server'
 type InfrastructureTemplateInput = InfrastructureTemplate | Pick<InfrastructureConfig, 'template'> | null | undefined
 type InfrastructureConfigInput = InfrastructureTemplate | Pick<InfrastructureConfig, 'template' | 'catenaX' | 'components'> | null | undefined
 
@@ -301,12 +300,6 @@ export function supportsInfrastructureTemplate (
   }
 
   return validSupportedTemplates.includes(getInfrastructureTemplate(templateOrInfra))
-}
-
-export function getDefaultAasUploadMode (
-  _templateOrInfra?: InfrastructureTemplate | Pick<InfrastructureConfig, 'template'> | null,
-): InfrastructureAasUploadMode {
-  return 'server'
 }
 
 /**
