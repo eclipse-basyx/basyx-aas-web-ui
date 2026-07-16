@@ -74,7 +74,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/three": "^0.185.1",
     "@vitejs/plugin-basic-ssl": "^2.1.4",
-    "@vitejs/plugin-vue": "^6.0.7",
+    "@vitejs/plugin-vue": "^6.0.8",
     "@vitest/coverage-istanbul": "^4.1.10",
     "@vitest/ui": "^4.1.10",
     "@vue/test-utils": "^2.4.11",
