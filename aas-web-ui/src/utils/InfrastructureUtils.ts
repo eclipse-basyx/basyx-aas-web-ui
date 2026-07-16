@@ -304,10 +304,9 @@ export function supportsInfrastructureTemplate (
 }
 
 export function getDefaultAasUploadMode (
-  templateOrInfra?: InfrastructureTemplate | Pick<InfrastructureConfig, 'template'> | null,
+  _templateOrInfra?: InfrastructureTemplate | Pick<InfrastructureConfig, 'template'> | null,
 ): InfrastructureAasUploadMode {
-  const template = getInfrastructureTemplate(templateOrInfra)
-  return template === 'mono-repo' || template === 'mono-all' ? 'server' : 'client'
+  return 'server'
 }
 
 /**

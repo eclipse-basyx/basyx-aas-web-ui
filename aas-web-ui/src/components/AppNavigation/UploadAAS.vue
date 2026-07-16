@@ -16,7 +16,13 @@
         <!-- Options -->
         <v-label class="mt-5">Options</v-label>
 
-        <v-radio-group v-model="uploadMode" class="mt-4" density="compact" hide-details>
+        <v-radio-group
+          class="mt-4"
+          density="compact"
+          hide-details
+          :model-value="uploadMode"
+          @update:model-value="selectUploadMode"
+        >
           <v-radio
             v-for="mode in uploadModes"
             :key="mode.value"
@@ -148,6 +154,7 @@
   const uploadProgress = ref(0)
   const currentFileLabel = ref('')
   const uploadMode = ref<InfrastructureAasUploadMode>('client')
+  const uploadModeManuallySelected = ref(false)
 
   const uploadModes = [
     { title: 'Client-side Import', value: 'client' },
@@ -186,7 +193,10 @@
 
   const defaultUploadMode = computed<InfrastructureAasUploadMode>(() => {
     const infrastructureDefault = getDefaultAasUploadMode(selectedInfrastructure.value)
-    return infrastructureDefault === 'server' && allSelectedFilesAreAasx() ? 'server' : 'client'
+    const noFilesSelected = aasFiles.value.length === 0
+    return infrastructureDefault === 'server' && (noFilesSelected || allSelectedFilesAreAasx())
+      ? 'server'
+      : 'client'
   })
   const aasRegistryActive = computed(() =>
     isComponentActiveForTemplate(selectedInfrastructure.value, 'AASRegistry'),
@@ -222,6 +232,7 @@
     () => props.modelValue,
     value => {
       if (value) {
+        uploadModeManuallySelected.value = false
         uploadMode.value = defaultUploadMode.value
       }
       uploadAASDialog.value = value
@@ -238,11 +249,22 @@
   watch(
     () => aasFiles.value.map(file => file.name),
     () => {
-      if (uploadAASDialog.value && !loadingUpload.value) {
+      if (
+        uploadAASDialog.value
+        && !loadingUpload.value
+        && !uploadModeManuallySelected.value
+      ) {
         uploadMode.value = defaultUploadMode.value
       }
     },
   )
+
+  function selectUploadMode (mode: InfrastructureAasUploadMode | null): void {
+    if (mode === null) return
+
+    uploadMode.value = mode
+    uploadModeManuallySelected.value = true
+  }
 
   async function uploadAASFiles (): Promise<void> {
     if (aasFiles.value.length === 0) return
@@ -409,6 +431,7 @@
     loadingUpload.value = false
     uploadProgress.value = 0
     currentFileLabel.value = ''
+    uploadModeManuallySelected.value = false
     uploadMode.value = defaultUploadMode.value
   }
 

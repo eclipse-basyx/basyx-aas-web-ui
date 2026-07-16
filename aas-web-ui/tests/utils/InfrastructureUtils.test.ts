@@ -120,13 +120,13 @@ describe('InfrastructureUtils.ts', () => {
     expect(getActiveComponentUrlForTemplate(infrastructure, 'AASRegistry')).toBe('')
   })
 
-  it('defaults server-side upload only for mono templates', () => {
+  it('defaults AASX uploads to the server for every infrastructure template', () => {
     expect(getDefaultAasUploadMode('mono-repo')).toBe('server')
     expect(getDefaultAasUploadMode('mono-all')).toBe('server')
-    expect(getDefaultAasUploadMode('full')).toBe('client')
-    expect(getDefaultAasUploadMode('identifiable')).toBe('client')
-    expect(getDefaultAasUploadMode('catena-x')).toBe('client')
-    expect(getDefaultAasUploadMode(undefined)).toBe('client')
+    expect(getDefaultAasUploadMode('full')).toBe('server')
+    expect(getDefaultAasUploadMode('identifiable')).toBe('server')
+    expect(getDefaultAasUploadMode('catena-x')).toBe('server')
+    expect(getDefaultAasUploadMode(undefined)).toBe('server')
   })
 
   it('defaults module template support to all templates', () => {
