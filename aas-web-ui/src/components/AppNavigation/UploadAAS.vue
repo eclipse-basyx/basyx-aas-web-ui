@@ -103,11 +103,6 @@
   import type { SubmodelDescriptor } from '@/types/Descriptors'
   import type { jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { computed, ref, watch, watchEffect } from 'vue'
-  import {
-    type AasUploadMode,
-    isServerAasUploadSupported,
-    resolveAasUploadMode,
-  } from '@/composables/AAS/AASUploadMode'
   import { detectImportFileKind } from '@/composables/AAS/SerializationFormats'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
   import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient'
@@ -121,6 +116,8 @@
   import { useNavigationStore } from '@/store/NavigationStore'
   import { Endpoint, ProtocolInformation } from '@/types/Descriptors'
   import {
+    getDefaultAasUploadMode,
+    type InfrastructureAasUploadMode,
     isComponentActiveForTemplate,
   } from '@/utils/InfrastructureUtils'
   import { useAASXImport } from '../../composables/AAS/AASXImport'
@@ -157,11 +154,11 @@
   const ignoreDuplicates = ref(true)
   const uploadProgress = ref(0)
   const currentFileLabel = ref('')
-  const preferredUploadMode = ref<AasUploadMode | null>(null)
+  const preferredUploadMode = ref<InfrastructureAasUploadMode | null>(null)
 
   const uploadModes = [
     { title: 'Client-side Import', value: 'client' },
-    { title: 'Server Upload Endpoint (AASX only)', value: 'server' },
+    { title: 'Server Upload Endpoint', value: 'server' },
   ]
 
   const descriptorsAvailable = computed(() => {
@@ -189,13 +186,14 @@
   })
 
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
-  const selectedFileNames = computed(() => aasFiles.value.map(file => file.name))
   const serverUploadSupported = computed(() =>
-    isServerAasUploadSupported(selectedFileNames.value),
+    aasFiles.value.length > 0
+    && aasFiles.value.every(file => detectImportFileKind(file.name) === 'aasx'),
   )
-  const uploadMode = computed<AasUploadMode>(() =>
-    resolveAasUploadMode(selectedFileNames.value, preferredUploadMode.value),
-  )
+  const uploadMode = computed<InfrastructureAasUploadMode>(() => {
+    if (!serverUploadSupported.value) return 'client'
+    return preferredUploadMode.value ?? getDefaultAasUploadMode(selectedInfrastructure.value)
+  })
   const aasRegistryActive = computed(() =>
     isComponentActiveForTemplate(selectedInfrastructure.value, 'AASRegistry'),
   )
@@ -243,7 +241,7 @@
     },
   )
 
-  function selectUploadMode (mode: AasUploadMode | null): void {
+  function selectUploadMode (mode: InfrastructureAasUploadMode | null): void {
     if (mode === null) return
 
     preferredUploadMode.value = mode
@@ -252,10 +250,7 @@
   async function uploadAASFiles (): Promise<void> {
     if (aasFiles.value.length === 0) return
 
-    const resolvedUploadMode = resolveAasUploadMode(
-      selectedFileNames.value,
-      preferredUploadMode.value,
-    )
+    const resolvedUploadMode = uploadMode.value
     loadingUpload.value = true
     uploadProgress.value = 0
 
