@@ -1,4 +1,4 @@
-import type { EdcConfig, EdcType, YamlEdcConfig, YamlEdcSecurityConfig } from '@/pages/modules/EclipseDataspaceConnector/types/Edc'
+import type { EdcConfig, EdcType, YamlEdcConfig, YamlEdcDataspaceConfig, YamlEdcSecurityConfig } from '@/pages/modules/EclipseDataspaceConnector/types/Edc'
 import { EDC_TYPES } from '@/pages/modules/EclipseDataspaceConnector/types/Edc'
 
 export function useEdcYamlParser (): {
@@ -26,6 +26,16 @@ export function useEdcYamlParser (): {
     }
   }
 
+  function parseDataspaceConfig (yamlDataspace?: YamlEdcDataspaceConfig): EdcConfig['dataspace'] {
+    if (!yamlDataspace) {
+      return {}
+    }
+
+    return {
+      ssiHost: yamlDataspace.ssi_host ? yamlDataspace.ssi_host.trim() : undefined,
+    }
+  }
+
   function parseBusinessPartnersConfig (yamlBusinessPartners?: unknown): EdcConfig['businessPartners'] {
     if (!yamlBusinessPartners || !Array.isArray(yamlBusinessPartners)) {
       return []
@@ -49,6 +59,7 @@ export function useEdcYamlParser (): {
         managementEndpoint: yamlConfig.edc.controlplane.managementEndpoint.trim(),
         dspEndpoint: yamlConfig.edc.controlplane.dspEndpoint.trim(),
       },
+      dataspace: parseDataspaceConfig(yamlConfig.edc.dataspace),
       security: parseSecurityConfig(yamlConfig.edc.security),
       businessPartners: parseBusinessPartnersConfig(yamlConfig.edc['business-partners']),
     }
@@ -71,6 +82,25 @@ export function useEdcYamlParser (): {
     }
     if (!obj.dspEndpoint || typeof obj.dspEndpoint !== 'string') {
       console.error('Invalid EDC YAML configuration: missing or invalid controlplane.dspEndpoint')
+      return false
+    }
+    return true
+  }
+
+  function validateDataspace (dataspace: unknown): boolean {
+    // dataspace block (and ssi_host within it) is optional, e.g. for EDC v0.9
+    if (dataspace === undefined) {
+      return true
+    }
+
+    if (typeof dataspace !== 'object' || dataspace === null) {
+      console.error('Invalid EDC YAML configuration: invalid dataspace')
+      return false
+    }
+
+    const obj = dataspace as Record<string, unknown>
+    if (obj.ssi_host !== undefined && typeof obj.ssi_host !== 'string') {
+      console.error('Invalid EDC YAML configuration: invalid dataspace.ssi_host')
       return false
     }
     return true
@@ -148,6 +178,7 @@ export function useEdcYamlParser (): {
 
     return (
       validateControlplane(edcObj.controlplane)
+      && validateDataspace(edcObj.dataspace)
       && validateSecurity(edcObj.security)
       && validateBusinessPartners(edcObj['business-partners'])
     )

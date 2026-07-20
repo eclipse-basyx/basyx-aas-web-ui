@@ -230,6 +230,7 @@
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { useEdcDataTransfer } from '@/pages/modules/EclipseDataspaceConnector/composables/useEdcDataTransfer'
+  import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { base64Encode } from '@/utils/EncodeDecodeUtils'
@@ -255,6 +256,7 @@
   // Stores
   const navigationStore = useNavigationStore()
   const infrastructureStore = useInfrastructureStore()
+  const edcStore = useEdcStore()
 
   const aasDescriptorJson = ref<string>('')
   const aasDescriptorJsonFormatted = ref<string>('')
@@ -290,6 +292,7 @@
   const { postSubmodel } = useSMRepositoryClient()
 
   // Computed
+  const isEdcV0_12_1 = computed(() => edcStore.getEdcType === 'Tractus-X EDC v0.12.1')
   const isValidAasEnvironment = computed(() => {
     const environment = aasEnvironment.value
     return (
@@ -319,6 +322,33 @@
     if (!props.selectedBusinessPartner || !props.selectedCatalogDataset)
       return
 
+    const usePermission = isEdcV0_12_1.value
+      ? {
+        action: 'use',
+        constraint: [
+          {
+            and: [
+              {
+                leftOperand: 'FrameworkAgreement',
+                operator: 'eq',
+                rightOperand: 'DataExchangeGovernance:1.0',
+              },
+              {
+                leftOperand: 'Membership',
+                operator: 'eq',
+                rightOperand: 'active',
+              },
+              {
+                leftOperand: 'UsagePurpose',
+                operator: 'isAnyOf',
+                rightOperand: 'cx.core.digitalTwinRegistry:1',
+              },
+            ],
+          },
+        ],
+      }
+      : []
+
     const { endpoint: edcEndpoint, headers } = await resolveEdcEndpointByCatalogDataset(
       props.selectedCatalogDataset,
       props.selectedBusinessPartner,
@@ -327,6 +357,7 @@
         setInProgress: value => emit('update:discovering-id', value),
         setStatus: msg => emit('update:edc-status', msg),
       },
+      usePermission,
     )
 
     if (!edcEndpoint) return

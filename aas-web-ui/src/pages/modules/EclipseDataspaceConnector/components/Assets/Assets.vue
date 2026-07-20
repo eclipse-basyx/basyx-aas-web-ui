@@ -62,7 +62,7 @@
                       </v-list-item>
                     </template>
 
-                    <span>Create a new asset from an AAS and its SMs</span>
+                    <span>Create a new asset</span>
                   </v-tooltip>
 
                   <!-- Create Asset AAS/SMs Dialog -->

@@ -553,6 +553,7 @@
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
   import { useEdcDataTransfer } from '@/pages/modules/EclipseDataspaceConnector/composables/useEdcDataTransfer'
+  import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { useAASStore } from '@/store/AASDataStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { extractVersionRevision } from '@/utils/AAS/SemanticIdUtils'
@@ -576,6 +577,7 @@
 
   // Stores
   const navigationStore = useNavigationStore()
+  const edcStore = useEdcStore()
   const aasStore = useAASStore()
 
   // Props
@@ -674,6 +676,7 @@
   const debouncedFilterAasList = debounce(filterAasList, 300)
 
   // Computed
+  const isEdcV0_12_1 = computed(() => edcStore.getEdcType === 'Tractus-X EDC v0.12.1')
   const primaryColor = computed(() => theme.current.value.colors.primary)
   const isDark = computed(() => theme.current.value.dark)
   const selectedAAS = computed(() => aasStore.getSelectedAAS)
@@ -1020,6 +1023,33 @@
   async function pushData (): Promise<void> {
     if (!props.selectedBusinessPartner || !props.selectedCatalogDataset) return
 
+    const usePermission = isEdcV0_12_1.value
+      ? {
+        action: 'use',
+        constraint: [
+          {
+            and: [
+              {
+                leftOperand: 'FrameworkAgreement',
+                operator: 'eq',
+                rightOperand: 'DataExchangeGovernance:1.0',
+              },
+              {
+                leftOperand: 'Membership',
+                operator: 'eq',
+                rightOperand: 'active',
+              },
+              {
+                leftOperand: 'UsagePurpose',
+                operator: 'isAnyOf',
+                rightOperand: 'rwx.core.pushEndpoint:1',
+              },
+            ],
+          },
+        ],
+      }
+      : []
+
     const { endpoint, headers } = await resolveEdcEndpointByCatalogDataset(
       props.selectedCatalogDataset,
       props.selectedBusinessPartner,
@@ -1028,6 +1058,7 @@
         setInProgress: value => emit('update:pushing-asset', value),
         setStatus: msg => emit('update:edc-status', msg),
       },
+      usePermission,
     )
 
     if (!endpoint) return

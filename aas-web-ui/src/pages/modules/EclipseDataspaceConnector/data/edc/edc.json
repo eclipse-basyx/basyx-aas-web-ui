@@ -12,11 +12,11 @@
     }
   },
   {
-    "id": "Tractus-X EDC v0.11.2",
-    "github_url": "https://github.com/eclipse-tractusx/tractusx-edc/tree/release/0.11.2",
+    "id": "Tractus-X EDC v0.12.1",
+    "github_url": "https://github.com/eclipse-tractusx/tractusx-edc/tree/release/0.12.1",
     "edc_original": {
-      "id": "EDC v0.14.0",
-      "github_url": "https://github.com/eclipse-edc/Connector/tree/release/0.14.0"
+      "id": "EDC v0.15.1",
+      "github_url": "https://github.com/eclipse-edc/Connector/tree/bugfix/0.15.1"
     },
     "dataspace_protocol": {
       "version": "2025-01",

@@ -13,6 +13,7 @@ export const useEdcStore = defineStore('edcStore', () => {
   const getControlplaneEndpoint = computed(() => config.value?.controlplane.endpoint || '')
   const getControlplaneMgmtEndpoint = computed(() => config.value?.controlplane.managementEndpoint || '')
   const getControlplaneDspEndpoint = computed(() => config.value?.controlplane.dspEndpoint || '')
+  const getDataspaceSsiHost = computed(() => config.value?.dataspace?.ssiHost || '')
   const getControlplaneApiAuthKey = computed(() => config.value?.security.config?.key || '')
   const getControlplaneTokenServerEndpoint = computed(() => config.value?.security.config?.url || '')
   const getControlplaneTokenClientId = computed(() => config.value?.security.config?.clientId || '')
@@ -79,6 +80,15 @@ export const useEdcStore = defineStore('edcStore', () => {
     }
   }
 
+  function setDataspaceSsiHost (ssiHost: string): void {
+    if (config.value) {
+      if (!config.value.dataspace) {
+        config.value.dataspace = {}
+      }
+      config.value.dataspace.ssiHost = ssiHost
+    }
+  }
+
   function setControlplaneKey (key: string): void {
     if (config.value) {
       if (!config.value.security.config) {
@@ -122,6 +132,7 @@ export const useEdcStore = defineStore('edcStore', () => {
     getControlplaneEndpoint,
     getControlplaneMgmtEndpoint,
     getControlplaneDspEndpoint,
+    getDataspaceSsiHost,
     getControlplaneApiAuthKey,
     getControlplaneTokenServerEndpoint,
     getControlplaneTokenClientId,
@@ -134,6 +145,7 @@ export const useEdcStore = defineStore('edcStore', () => {
     setControlplaneEndpoint,
     setControlplaneMgmtEndpoint,
     setControlplaneDspEndpoint,
+    setDataspaceSsiHost,
     setControlplaneKey,
     setSecurityConfigUrl,
     setSecurityConfigClientId,

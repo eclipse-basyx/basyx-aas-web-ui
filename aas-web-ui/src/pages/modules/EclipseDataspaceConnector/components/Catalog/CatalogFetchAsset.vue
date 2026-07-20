@@ -95,6 +95,7 @@
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { useEdcDataTransfer } from '@/pages/modules/EclipseDataspaceConnector/composables/useEdcDataTransfer'
+  import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { formatJSON } from '@/utils/JsonUtils'
@@ -118,6 +119,7 @@
   // Stores
   const navigationStore = useNavigationStore()
   const infrastructureStore = useInfrastructureStore()
+  const edcStore = useEdcStore()
 
   const asset = ref<any>(null)
   const assetJson = ref<string>('')
@@ -135,6 +137,7 @@
   const { postSubmodel } = useSMRepositoryClient()
 
   // Computed
+  const isEdcV0_12_1 = computed(() => edcStore.getEdcType === 'Tractus-X EDC v0.12.1')
   const isValidAAS = computed(() => {
     const parsed = assetJsonParsed.value
     if (
@@ -192,6 +195,33 @@
     if (!props.selectedBusinessPartner || !props.selectedCatalogDataset)
       return
 
+    const usePermission = isEdcV0_12_1.value
+      ? {
+        action: 'use',
+        constraint: [
+          {
+            and: [
+              {
+                leftOperand: 'FrameworkAgreement',
+                operator: 'eq',
+                rightOperand: 'DataExchangeGovernance:1.0',
+              },
+              {
+                leftOperand: 'Membership',
+                operator: 'eq',
+                rightOperand: 'active',
+              },
+              {
+                leftOperand: 'UsagePurpose',
+                operator: 'isAnyOf',
+                rightOperand: 'cx.core.industrycore:1',
+              },
+            ],
+          },
+        ],
+      }
+      : []
+
     const { endpoint, headers } = await resolveEdcEndpointByCatalogDataset(
       props.selectedCatalogDataset,
       props.selectedBusinessPartner,
@@ -200,6 +230,7 @@
         setInProgress: value => emit('update:fetching-asset', value),
         setStatus: msg => emit('update:edc-status', msg),
       },
+      usePermission,
     )
 
     if (!endpoint) return

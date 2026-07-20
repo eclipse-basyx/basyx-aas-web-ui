@@ -1,8 +1,42 @@
 <template>
-  <v-dialog v-model="createPolicyDialog" max-height="90%" :width="800">
+  <v-dialog
+    v-model="createPolicyDialog
+    "
+    style="min-height: 190px; max-height:90%"
+    width="800px"
+  >
     <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">
-      <v-card-title class="bg-cardHeader">
+      <v-card-title class="bg-cardHeader d-flex align-center">
         Create Policy
+
+        <v-spacer />
+
+        <v-tooltip location="bottom" open-delay="600">
+          <template #activator="{ props: tooltipProps }">
+            <v-btn
+              v-bind="tooltipProps"
+              density="compact"
+              :icon="wordWrap ? 'mdi-wrap-disabled' : 'mdi-wrap'"
+              variant="plain"
+              @click="wordWrap = !wordWrap"
+            />
+          </template>
+
+          <span>{{ wordWrap ? 'Disable word wrap' : 'Enable word wrap' }}</span>
+        </v-tooltip>
+
+        <v-btn
+          v-tooltip="'Open Catena-X Policy Builder'"
+          color="text-medium-emphasis"
+          href="https://eclipse-tractusx.github.io/tractusx-edc-dashboard/policy-builder/"
+          icon
+          rel="noopener noreferrer"
+          size="small"
+          target="_blank"
+          variant="text"
+        >
+          <v-icon icon="mdi-information-outline" />
+        </v-btn>
       </v-card-title>
 
       <v-divider />
@@ -10,14 +44,16 @@
       <v-card-text class="flex-grow-1 overflow-y-auto">
         <v-form ref="form" class="d-flex flex-column gap-4">
 
-          <!-- Template Selection -->
+          <!-- Policy Type Selection -->
           <v-select
-            v-model="selectedTemplate"
+            v-model="selectedType"
             dense
+            :hint="selectedPolicyTypeDescription"
             item-title="name"
             item-value="value"
-            :items="policyTemplates"
-            label="Select Policy Template"
+            :items="policyTypes"
+            label="Select Policy Type"
+            persistent-hint
             required
             variant="outlined"
           >
@@ -39,7 +75,7 @@
           </v-select>
 
           <!-- Dynamic Placeholder Fields -->
-          <div v-if="selectedTemplate" class="d-flex flex-column gap-3">
+          <div class="d-flex flex-column gap-3 pt-2">
             <v-text-field
               v-for="(placeholder, index) in placeholders"
               :key="placeholder.label"
@@ -57,14 +93,50 @@
           </div>
 
           <!-- Policy Preview -->
-          <div v-if="selectedTemplate">
+          <div>
             <p class="text-caption text-medium-emphasis font-weight-bold mb-2">
               Policy Preview:
             </p>
 
-            <pre class="json-content bg-surface rounded border overflow-x-auto" style="max-height: 500px; overflow-y: auto">
-              <code v-html="previewJsonFormatted" />
-            </pre>
+            <!-- Error banner -->
+            <v-alert
+              v-if="jsonError"
+              class="mb-2"
+              density="compact"
+              :text="jsonError"
+              type="error"
+              variant="tonal"
+            />
+
+            <!-- Code editor -->
+            <div class="editor-container" :class="{ 'editor-error': !!jsonError }">
+              <!-- Line numbers -->
+              <div ref="lineNumbersRef" class="line-numbers" @scroll.passive="syncScroll">
+                <div
+                  v-for="(height, idx) in lineHeights"
+                  :key="idx"
+                  :style="{ height: height + 'px' }"
+                >
+                  {{ idx + 1 }}
+                </div>
+              </div>
+
+              <!-- Hidden single-line measurer (word-wrap mode only) -->
+              <div v-if="wordWrap" ref="measurerRef" aria-hidden="true" class="line-measurer" />
+
+              <!-- Editable content: do NOT bind content via template — Vue must never
+                   overwrite textContent of a contenteditable element or the caret resets. -->
+              <pre
+                ref="editorRef"
+                class="editor-content"
+                :class="{ 'word-wrap': wordWrap }"
+                contenteditable="true"
+                spellcheck="false"
+                @input="onEditorInput"
+                @keydown="onEditorKeydown"
+                @scroll.passive="syncLineNumbers"
+              />
+            </div>
           </div>
         </v-form>
       </v-card-text>
@@ -81,7 +153,7 @@
         <v-btn
           class="text-buttonText"
           color="primary"
-          :disabled="!selectedTemplate || !allPlaceholdersFilled()"
+          :disabled="!allPlaceholdersFilled() || !!jsonError || !jsonText.trim()"
           rounded="lg"
           text="Create"
           variant="flat"
@@ -93,13 +165,10 @@
 </template>
 
 <script lang="ts" setup>
-  import * as Prism from 'prismjs'
+  import { nextTick } from 'vue'
   import { type PolicyDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
-  import AccessBpnPolicy from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_bpn_policy___tractus-x_edc_v0.9.json'
-  import AccessPolicy from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_policy___tractus-x_edc_v0.9.json'
-  import UsagePolicy from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy___tractus-x_edc_v0.9.json'
+  import Policy_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/policy___tractus-x_edc_v0.12.1.json'
   import { formatJSON } from '@/utils/JsonUtils'
-  import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
 
   const props = defineProps<{
     modelValue: boolean
@@ -115,40 +184,39 @@
 
   // Data
   const createPolicyDialog = ref(false)
-  const selectedTemplate = ref<'access' | 'usage' | 'bpn' | ''>('')
+  const selectedType = ref<'access' | 'usage'>('usage')
   const form = ref<any>(null)
   const placeholderValues = ref<Record<string, string>>({})
+  const wordWrap = ref(false)
+  const jsonText = ref('')
+  const jsonError = ref<string | null>(null)
+  const editorRef = ref<HTMLElement | null>(null)
+  const lineNumbersRef = ref<HTMLElement | null>(null)
+  const measurerRef = ref<HTMLElement | null>(null)
+  const lineHeights = ref<number[]>([])
 
-  // Policy Templates
-  const policyTemplates = [
+  const LINE_HEIGHT = 21
+
+  // Computed properties
+  const policyTypes = computed(() => [
     {
       value: 'access',
       name: 'Access Policy',
-      description: 'Basic policy allowing usage with unrestricted access',
-      policy: AccessPolicy,
+      description: 'Determines whether a particular consumer is offered an asset or not.',
     },
     {
       value: 'usage',
       name: 'Usage Policy',
-      description: 'Policy with permissions, prohibitions, and obligations for complex usage scenarios',
-      policy: UsagePolicy,
+      description: 'Determines the conditions for initiating a contract negotiation for a particular asset.',
     },
-    {
-      value: 'bpn',
-      name: 'Access BPN Policy',
-      description: 'Policy restricting access based on Business Partner Number (BPN) constraint',
-      policy: AccessBpnPolicy,
-    },
-  ]
+  ])
 
-  // Computed properties
+  const selectedPolicyTypeDescription = computed(() => {
+    return policyTypes.value.find(policyType => policyType.value === selectedType.value)?.description || ''
+  })
+
   const placeholders = computed(() => {
-    if (!selectedTemplate.value) return []
-
-    const template = policyTemplates.find(t => t.value === selectedTemplate.value)
-    if (!template) return []
-
-    const policyStr = JSON.stringify(template.policy)
+    const policyStr = JSON.stringify(Policy_v0_12_1)
     const matches = policyStr.match(/\{\{([^}]+)\}\}/g) || []
 
     const placeholderList = matches.map(match => {
@@ -171,35 +239,14 @@
     })
   })
 
-  const previewJsonFormatted = computed(() => {
-    if (!selectedTemplate.value) return ''
-
-    const template = policyTemplates.find(t => t.value === selectedTemplate.value)
-    if (!template) return ''
-
-    try {
-      let policyJson = JSON.stringify(template.policy)
-      policyJson = replacePlaceholders(policyJson)
-
-      const policy = JSON.parse(policyJson)
-      const formatted = formatJSON(JSON.stringify(policy))
-
-      if (Prism && Prism.highlight) {
-        return Prism.highlight(formatted, getPrismJsonLanguage(), 'json')
-      }
-      return formatted
-    } catch (error_) {
-      console.error('Error highlighting JSON:', error_)
-      return JSON.stringify(template.policy, null, 2)
-    }
-  })
-
   // Watchers
   watch(
     () => props.modelValue,
     value => {
       createPolicyDialog.value = value
-      if (!value) {
+      if (value) {
+        refreshPreview()
+      } else {
         resetForm()
       }
     },
@@ -213,24 +260,32 @@
   )
 
   watch(
-    () => selectedTemplate.value,
-    () => {
-      // Reset placeholder values when template changes
-      placeholderValues.value = {}
-    },
+    () => selectedType.value,
+    () => refreshPreview(),
+  )
+
+  watch(
+    placeholderValues,
+    () => refreshPreview(),
+    { deep: true },
+  )
+
+  watch(
+    () => wordWrap.value,
+    () => nextTick(() => recalcLineHeights()),
   )
 
   // Methods
   function resetForm (): void {
-    selectedTemplate.value = ''
     placeholderValues.value = {}
+    jsonText.value = ''
+    jsonError.value = null
     if (form.value) {
       form.value.reset()
     }
   }
 
   function allPlaceholdersFilled (): boolean {
-    if (!selectedTemplate.value) return false
     return placeholders.value.every(placeholder => placeholderValues.value[placeholder.label])
   }
 
@@ -253,23 +308,128 @@
     return result
   }
 
-  async function createPolicy (): Promise<void> {
-    if (!selectedTemplate.value || !allPlaceholdersFilled()) {
-      console.warn('Template not selected or placeholders not filled')
+  function buildPolicy (): PolicyDefinition {
+    let policyJson = JSON.stringify(Policy_v0_12_1)
+    policyJson = replacePlaceholders(policyJson)
+
+    const policy = JSON.parse(policyJson) as PolicyDefinition
+
+    if (policy.policy) {
+      if (selectedType.value === 'access') {
+        (policy.policy as any).permission = [
+          {
+            action: 'access',
+            constraint: [],
+          },
+        ]
+      } else if (selectedType.value === 'usage') {
+        (policy.policy as any).permission = [
+          {
+            action: 'use',
+            constraint: [],
+          },
+        ]
+      }
+    }
+
+    return policy
+  }
+
+  function refreshPreview (): void {
+    try {
+      const policy = buildPolicy()
+      jsonText.value = formatJSON(JSON.stringify(policy))
+      jsonError.value = null
+    } catch (error_) {
+      jsonText.value = JSON.stringify(Policy_v0_12_1, null, 2)
+      jsonError.value = error_ instanceof Error ? error_.message : 'Invalid JSON'
+    }
+    // Sync DOM content after Vue updates the template
+    nextTick(() => {
+      if (editorRef.value) {
+        editorRef.value.textContent = jsonText.value
+      }
+      recalcLineHeights()
+    })
+  }
+
+  function recalcLineHeights (): void {
+    const lines = jsonText.value.split('\n')
+
+    if (!wordWrap.value || !measurerRef.value) {
+      // Simple case: every line is exactly one row
+      lineHeights.value = lines.map(() => LINE_HEIGHT)
       return
     }
 
-    const template = policyTemplates.find(t => t.value === selectedTemplate.value)
-    if (!template) {
-      console.warn('Template not found')
-      return
+    const measurer = measurerRef.value
+    const heights: number[] = []
+
+    for (const line of lines) {
+      measurer.textContent = line || '\u00A0' // non-breaking space keeps empty lines measurable
+      heights.push(measurer.offsetHeight)
     }
+
+    lineHeights.value = heights
+  }
+
+  function onEditorInput (): void {
+    const value = editorRef.value?.textContent ?? ''
+    jsonText.value = value
 
     try {
-      let policyJson = JSON.stringify(template.policy)
-      policyJson = replacePlaceholders(policyJson)
+      JSON.parse(value)
+      jsonError.value = null
+    } catch (error_) {
+      jsonError.value = error_ instanceof Error ? error_.message : 'Invalid JSON'
+    }
 
-      const finalPolicy = JSON.parse(policyJson) as PolicyDefinition
+    // Recalc line heights only — the browser keeps the caret intact because
+    // we never touch editorRef.value.textContent here.
+    nextTick(() => recalcLineHeights())
+  }
+
+  function onEditorKeydown (event: KeyboardEvent): void {
+    if (event.key !== 'Tab') return
+
+    // Insert spaces instead of moving focus to the next element
+    event.preventDefault()
+
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0) return
+
+    const tabSpaces = '  '
+    const range = selection.getRangeAt(0)
+    range.deleteContents()
+    const textNode = document.createTextNode(tabSpaces)
+    range.insertNode(textNode)
+
+    // Move caret to the end of the inserted spaces
+    range.setStartAfter(textNode)
+    range.setEndAfter(textNode)
+    selection.removeAllRanges()
+    selection.addRange(range)
+
+    onEditorInput()
+  }
+
+  function syncScroll (): void {
+    if (lineNumbersRef.value && editorRef.value) {
+      editorRef.value.scrollTop = lineNumbersRef.value.scrollTop
+    }
+  }
+
+  function syncLineNumbers (): void {
+    if (lineNumbersRef.value && editorRef.value) {
+      lineNumbersRef.value.scrollTop = editorRef.value.scrollTop
+    }
+  }
+
+  async function createPolicy (): Promise<void> {
+    if (jsonError.value || !jsonText.value.trim()) return
+
+    try {
+      const finalPolicy = JSON.parse(jsonText.value) as PolicyDefinition
 
       // Create the policy via EDC API
       const response = await createPolicyDefinitionInEdc(finalPolicy)
@@ -282,56 +442,82 @@
       }
     } catch (error_) {
       console.error('Error creating policy:', error_)
+      jsonError.value = error_ instanceof Error ? error_.message : 'Invalid JSON'
     }
   }
 
 </script>
 
 <style scoped>
-    :deep(.token) {
+    .editor-container {
+        position: relative;
+        display: flex;
+        min-height: 200px;
+        max-height: 400px;
+        overflow: hidden;
+        font-family: monospace;
+        font-size: 13px;
         line-height: 21px;
+        border: 1px solid rgba(0, 0, 0, 0.38);
+        border-radius: 4px;
     }
 
-    :deep(code) {
-        line-height: 21px;
+    .editor-error {
+        border-color: rgb(var(--v-theme-error));
     }
 
-    .json-content {
+    .line-numbers {
+        padding: 8px 8px;
+        text-align: right;
+        background-color: #e0e0e0;
+        border-right: 1px solid #ccc;
+        color: #666;
+        user-select: none;
+        min-width: 40px;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .line-numbers > div {
+        height: 21px;
+        line-height: 21px;
+        display: flex;
+        align-items: flex-start;
+        padding-top: 0;
+    }
+
+    .editor-content {
+        flex: 1 1 auto;
         margin: 0;
-        padding: 0 20px 0 20px;
+        padding: 8px 16px;
+        white-space: pre;
         word-wrap: normal;
-        font-size: 14px;
-        line-height: 21px;
-        flex-grow: 0;
         overflow: auto;
-        background-color: #f5f5f5;
+        outline: none;
+        background: transparent;
+        color: inherit;
+        caret-color: currentColor;
     }
 
-    .json-content code {
-        display: block;
+    .editor-content.word-wrap {
+        white-space: pre-wrap;
+        word-break: break-all;
+        overflow-x: hidden;
     }
 
-    :deep(.token.punctuation) {
-        color: #999;
-    }
-
-    :deep(.token.property) {
-        color: #905;
-    }
-
-    :deep(.token.string) {
-        color: #690;
-    }
-
-    :deep(.token.number) {
-        color: #07a;
-    }
-
-    :deep(.token.boolean) {
-        color: #07a;
-    }
-
-    :deep(.token.null) {
-        color: #999;
+    /* invisible single-line box used to measure wrapped line heights */
+    .line-measurer {
+        position: absolute;
+        visibility: hidden;
+        pointer-events: none;
+        white-space: pre-wrap;
+        word-break: break-all;
+        font-family: monospace;
+        font-size: 13px;
+        line-height: 21px;
+        padding: 0;
+        margin: 0;
+        left: 48px;
+        right: 0;
     }
 </style>

@@ -70,7 +70,9 @@
 <script lang="ts" setup>
   import * as Prism from 'prismjs'
   import { type Asset, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
-  import AssetTemplate from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.9.json'
+  import AssetTemplate_v0_9 from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.9.json'
+  import AssetTemplate_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.12.1.json'
+  import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { formatJSON } from '@/utils/JsonUtils'
   import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
 
@@ -83,6 +85,9 @@
     (event: 'assets-created', assetId: string): void
   }>()
 
+  // Stores
+  const edcStore = useEdcStore()
+
   // Composables
   const { createAsset: createAssetInEdc } = useEdcClient()
 
@@ -92,8 +97,12 @@
   const placeholderValues = ref<Record<string, string>>({})
 
   // Computed properties
+  const activeAssetTemplate = computed(() =>
+    edcStore.getEdcType === 'Tractus-X EDC v0.12.1' ? AssetTemplate_v0_12_1 : AssetTemplate_v0_9,
+  )
+
   const placeholders = computed(() => {
-    const templateStr = JSON.stringify(AssetTemplate)
+    const templateStr = JSON.stringify(activeAssetTemplate.value)
     const matches = [...templateStr.matchAll(/"([^"]+)":\s*"(\{\{[^}]+\}\})"/g)]
 
     const placeholderList = matches.map(match => {
@@ -120,7 +129,7 @@
 
   const previewJsonFormatted = computed(() => {
     try {
-      let assetJson = JSON.stringify(AssetTemplate)
+      let assetJson = JSON.stringify(activeAssetTemplate.value)
       assetJson = replacePlaceholders(assetJson)
 
       const asset = JSON.parse(assetJson)
@@ -132,7 +141,7 @@
       return formatted
     } catch (error_) {
       console.error('Error highlighting JSON:', error_)
-      return JSON.stringify(AssetTemplate, null, 2)
+      return JSON.stringify(activeAssetTemplate.value, null, 2)
     }
   })
 
@@ -226,7 +235,7 @@
     }
 
     try {
-      let assetJson = JSON.stringify(AssetTemplate)
+      let assetJson = JSON.stringify(activeAssetTemplate.value)
       assetJson = replacePlaceholders(assetJson)
 
       const finalAsset = removeUnfilledPlaceholders(JSON.parse(assetJson)) as Asset

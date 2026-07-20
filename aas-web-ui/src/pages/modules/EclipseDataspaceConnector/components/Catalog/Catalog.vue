@@ -473,7 +473,8 @@
   const selectedView = ref<'json' | 'tree'>('tree')
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null)
 
-  // Computed
+  // Computed properties
+  const isEdcV0_12_1 = computed(() => edcStore.getEdcType === 'Tractus-X EDC v0.12.1')
   const businessPartners = computed(
     () => edcStore.getEdcConfig?.businessPartners ?? [],
   )
@@ -489,16 +490,16 @@
     return id.includes('dt-registry') || id.includes('digitaltwin-registry') || id.includes('digital-twin-registry')
   })
   const isHttpDataPull = computed(() => {
-    const distributions = selectedCatalogDataset.value?.['dcat:distribution']
+    const distributions = selectedCatalogDataset.value?.['dcat:distribution'] ?? selectedCatalogDataset.value?.distribution
     if (!distributions) return false
     const distArray = Array.isArray(distributions)
       ? distributions
       : [distributions]
-    return distArray.some(
-      (dist: any) =>
-        dist['@type'] === 'dcat:Distribution'
-        && dist['dct:format']?.['@id'] === 'HttpData-PULL',
-    )
+    return distArray.some((dist: any) => {
+      const type = String(dist['@type'] ?? '').toLowerCase()
+      const format = dist['dct:format']?.['@id'] ?? dist.format
+      return ['dcat:distribution', 'distribution'].includes(type) && format === 'HttpData-PULL'
+    })
   })
   const aasSmDataToPushIsEmpty = computed(() => {
     return (
@@ -572,17 +573,25 @@
     edcStatus.value = ''
 
     if (selectedBusinessPartner.value?.dsp) {
+      const dspAddress = selectedBusinessPartner.value.dsp
+
       const catalogRequest: CatalogRequest = {
-        counterPartyId: selectedBusinessPartner.value.bpn,
-        counterPartyAddress: selectedBusinessPartner.value.dsp,
-        protocol: 'dataspace-protocol-http',
+        '@context': {
+          '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
+        },
+        '@type': 'CatalogRequest',
+        'counterPartyId': (isEdcV0_12_1.value ? 'did:web:' + edcStore.getDataspaceSsiHost + ':' : '') + selectedBusinessPartner.value.bpn,
+        'counterPartyAddress': dspAddress + (isEdcV0_12_1.value && !dspAddress.endsWith('/2025-1') ? '/2025-1' : ''),
+        'protocol': isEdcV0_12_1.value ? 'dataspace-protocol-http:2025-1' : 'dataspace-protocol-http',
       }
       const catalog = await queryCatalog(catalogRequest)
 
-      if (catalog && catalog['dcat:dataset']) {
-        const datasets = Array.isArray(catalog['dcat:dataset'])
-          ? catalog['dcat:dataset']
-          : [catalog['dcat:dataset']]
+      const catalogDataset = catalog?.['dcat:dataset'] ?? catalog?.dataset
+
+      if (catalog && catalogDataset) {
+        const datasets = Array.isArray(catalogDataset)
+          ? catalogDataset
+          : [catalogDataset]
 
         const datasetsSorted = datasets.toSorted(
           (datasetA: any, datasetB: any) =>

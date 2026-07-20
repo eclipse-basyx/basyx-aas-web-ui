@@ -1,5 +1,6 @@
 {
   "@context": {
+    "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
     "edc": "https://w3id.org/edc/v0.0.1/ns/"
   },
   "@id": "{{Contract ID|Enter a unique contract identifier|This will be the @id of your contract}}",

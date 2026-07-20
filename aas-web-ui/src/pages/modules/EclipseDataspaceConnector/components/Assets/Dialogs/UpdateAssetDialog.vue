@@ -62,6 +62,7 @@
             contenteditable="true"
             spellcheck="false"
             @input="onEditorInput"
+            @keydown="onEditorKeydown"
             @scroll.passive="syncLineNumbers"
           />
         </div>
@@ -204,6 +205,30 @@
     // Recalc line heights only — the browser keeps the caret intact because
     // we never touch editorRef.value.textContent here.
     nextTick(() => recalcLineHeights())
+  }
+
+  function onEditorKeydown (event: KeyboardEvent): void {
+    if (event.key !== 'Tab') return
+
+    // Insert spaces instead of moving focus to the next element
+    event.preventDefault()
+
+    const selection = window.getSelection()
+    if (!selection || selection.rangeCount === 0) return
+
+    const tabSpaces = '  '
+    const range = selection.getRangeAt(0)
+    range.deleteContents()
+    const textNode = document.createTextNode(tabSpaces)
+    range.insertNode(textNode)
+
+    // Move caret to the end of the inserted spaces
+    range.setStartAfter(textNode)
+    range.setEndAfter(textNode)
+    selection.removeAllRanges()
+    selection.addRange(range)
+
+    onEditorInput()
   }
 
   function syncScroll (): void {

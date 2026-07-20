@@ -16,6 +16,8 @@
 #     type: Key
 #     config:
 #       key: "xApiKey"
+#   dataspace:
+#     ssi_host: "ssi.datasapce.host"
 #   business-partners:
 #     - name: "BP Name"
 #       bpn: "BPN"
@@ -34,6 +36,8 @@
 #       url: "http://localhost:5432"
 #       clientId: "clientId"
 #       clientSecret: "clientSecret"
+#   dataspace:
+#     ssi_host: "ssi.datasapce.host"
 #   business-partners:
 #     - name: "BP Name"
 #       bpn: "BPN"

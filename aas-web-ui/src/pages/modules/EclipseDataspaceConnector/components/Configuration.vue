@@ -72,6 +72,32 @@
       </v-card-text>
     </v-card>
 
+    <!-- Dataspace Settings -->
+    <v-card class="mb-6" elevation="2" rounded="lg">
+      <v-card-item prepend-icon="mdi-hexagon-multiple-outline">
+        <v-card-title>Dataspace Settings</v-card-title>
+      </v-card-item>
+
+      <v-divider />
+
+      <v-card-text>
+        <v-row>
+          <v-col cols="12" md="4">
+            <v-text-field
+              v-model="edcDataspaceSsiHost"
+              clearable
+              flat
+              hide-details="auto"
+              hint="e.g. ssi.dataspace.host (optional for Tractus-X EDC v0.9)"
+              label="SSI Host"
+              prepend-inner-icon="mdi-web"
+              variant="solo-filled"
+            />
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+
     <!-- Controlplane Settings -->
     <v-card class="mb-6" elevation="2" rounded="lg">
       <v-card-item prepend-icon="mdi-server-network">
@@ -412,6 +438,7 @@
   )
   const edcControlplaneApiEndpoint = ref(edcStore.getControlplaneEndpoint)
   const edcControlplaneDspEndpoint = ref(edcStore.getControlplaneDspEndpoint)
+  const edcDataspaceSsiHost = ref(edcStore.getDataspaceSsiHost)
   const edcControlplaneManagementApiEndpoint = ref(edcStore.getControlplaneMgmtEndpoint)
   const edcControlplaneManagementApiAuthKey = ref(edcStore.getControlplaneApiAuthKey)
   const showEdcControlplaneManagementApiAuthKey = ref(false)
@@ -536,6 +563,13 @@
   )
 
   watch(
+    () => edcStore.getDataspaceSsiHost,
+    value => {
+      edcDataspaceSsiHost.value = value
+    },
+  )
+
+  watch(
     () => edcStore.getControlplaneApiAuthKey,
     value => {
       edcControlplaneManagementApiAuthKey.value = value
@@ -594,6 +628,13 @@
     () => edcControlplaneDspEndpoint.value,
     value => {
       edcStore.setControlplaneDspEndpoint(value)
+    },
+  )
+
+  watch(
+    () => edcDataspaceSsiHost.value,
+    value => {
+      edcStore.setDataspaceSsiHost(value)
     },
   )
 

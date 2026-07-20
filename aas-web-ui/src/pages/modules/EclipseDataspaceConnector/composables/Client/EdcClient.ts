@@ -27,6 +27,16 @@ export function useEdcClient () {
   const defaultTransferProcessesPath = '/transferprocesses'
   const defaultEdrsPath = '/edrs'
 
+  const defaultQuerySpec: QuerySpec = {
+    '@context': {
+      '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
+    },
+    '@type': 'QuerySpecDto',
+    'offset': 0,
+    'sortOrder': 'ASC',
+    'sortField': 'id',
+  }
+
   const defaultControlplaneEndpointHealthPath = '/check/health'
   const defaultControlplaneEndpointLivenessPath = '/check/liveness'
   const defaultControlplaneEndpointReadinessPath = '/check/readiness'
@@ -190,13 +200,18 @@ export function useEdcClient () {
   /**
    * Queries all policy definitions from the EDC controlplane according to a query specification.
    * Based on OpenAPI spec: POST /v3/policydefinitions/request
+   * @param querySpec Optional query specification to filter/sort/paginate the results. If not provided or null, uses the default query specification
    * @param endpoint Optional custom endpoint to query. If not provided, uses configured controlplane endpoint
    * @returns Array of PolicyDefinition objects matching the query, or null if query fails
    */
-  async function queryPolicyDefinitions (endpoint?: string): Promise<Array<PolicyDefinition> | null> {
+  async function queryPolicyDefinitions (querySpec?: QuerySpec | null, endpoint?: string): Promise<Array<PolicyDefinition> | null> {
     const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
     if (baseUrl === '') {
       return null
+    }
+
+    if (!querySpec) {
+      querySpec = defaultQuerySpec
     }
 
     const path = `${baseUrl}${defaultPolicyDefinitionsRequestPath}`
@@ -206,16 +221,8 @@ export function useEdcClient () {
     headers.append('Content-Type', 'application/json')
     const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
     headers.append(authKey, authValue)
-    const bodyString: QuerySpec = {
-      '@context': {
-        edc: 'https://w3id.org/edc/v0.0.1/ns/',
-      },
-      '@type': 'QuerySpecDto',
-      'offset': 0,
-      'sortOrder': 'ASC',
-      'sortField': 'id',
-    }
-    const body = JSON.stringify(bodyString)
+
+    const body = JSON.stringify(querySpec)
 
     try {
       const response = await postRequest(path, body, headers, context, disableMessage)
@@ -367,13 +374,18 @@ export function useEdcClient () {
   /**
    * Queries all assets from the EDC controlplane according to a query specification.
    * Based on OpenAPI spec: POST /v3/assets/request
+   * @param querySpec Optional query specification to filter/sort/paginate the results. If not provided or null, uses the default query specification
    * @param endpoint Optional custom endpoint. If not provided, uses configured controlplane management endpoint
    * @returns Array of Asset objects matching the query, or null if query fails
    */
-  async function queryAssets (endpoint?: string): Promise<Array<Asset> | null> {
+  async function queryAssets (querySpec?: QuerySpec | null, endpoint?: string): Promise<Array<Asset> | null> {
     const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
     if (baseUrl === '') {
       return null
+    }
+
+    if (!querySpec) {
+      querySpec = defaultQuerySpec
     }
 
     const path = `${baseUrl}${defaultAssetsRequestPath}`
@@ -383,16 +395,8 @@ export function useEdcClient () {
     headers.append('Content-Type', 'application/json')
     const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
     headers.append(authKey, authValue)
-    const bodySpec: QuerySpec = {
-      '@context': {
-        edc: 'https://w3id.org/edc/v0.0.1/ns/',
-      },
-      '@type': 'QuerySpec',
-      'offset': 0,
-      'sortOrder': 'ASC',
-      'sortField': '@id',
-    }
-    const body = JSON.stringify(bodySpec)
+
+    const body = JSON.stringify(querySpec)
 
     try {
       const response = await postRequest(path, body, headers, context, disableMessage)
@@ -548,13 +552,18 @@ export function useEdcClient () {
   /**
    * Queries all contract agreements from the EDC controlplane according to a query specification.
    * Based on OpenAPI spec: POST /v3/contractagreements/request
+   * @param querySpec Optional query specification to filter/sort/paginate the results. If not provided or null, uses the default query specification
    * @param endpoint Optional custom endpoint to query. If not provided, uses configured controlplane management endpoint
    * @returns Array of ContractAgreement objects matching the query, or null if query fails
    */
-  async function queryContractAgreements (endpoint?: string): Promise<Array<ContractAgreement> | null> {
+  async function queryContractAgreements (querySpec?: QuerySpec | null, endpoint?: string): Promise<Array<ContractAgreement> | null> {
     const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
     if (baseUrl === '') {
       return null
+    }
+
+    if (!querySpec) {
+      querySpec = defaultQuerySpec
     }
 
     const path = `${baseUrl}${defaultContractAgreementsRequestPath}`
@@ -564,16 +573,8 @@ export function useEdcClient () {
     headers.append('Content-Type', 'application/json')
     const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
     headers.append(authKey, authValue)
-    const bodyString: QuerySpec = {
-      '@context': {
-        edc: 'https://w3id.org/edc/v0.0.1/ns/',
-      },
-      '@type': 'QuerySpec',
-      'offset': 0,
-      'sortOrder': 'ASC',
-      'sortField': 'id',
-    }
-    const body = JSON.stringify(bodyString)
+
+    const body = JSON.stringify(querySpec)
 
     try {
       const response = await postRequest(path, body, headers, context, disableMessage)
@@ -623,13 +624,18 @@ export function useEdcClient () {
   /**
    * Queries all contract definitions from the EDC controlplane according to a query specification.
    * Based on OpenAPI spec: POST /v3/contractdefinitions/request
+   * @param querySpec Optional query specification to filter/sort/paginate the results. If not provided or null, uses the default query specification
    * @param endpoint Optional custom endpoint to query. If not provided, uses configured controlplane endpoint
    * @returns Array of ContractDefinition objects matching the query, or null if query fails
    */
-  async function queryContractDefinitions (endpoint?: string): Promise<Array<ContractDefinition> | null> {
+  async function queryContractDefinitions (querySpec?: QuerySpec | null, endpoint?: string): Promise<Array<ContractDefinition> | null> {
     const baseUrl = resolveEdcControlplaneMgmtEndpoint(endpoint)
     if (baseUrl === '') {
       return null
+    }
+
+    if (!querySpec) {
+      querySpec = defaultQuerySpec
     }
 
     const path = `${baseUrl}${defaultContractDefinitionsRequestPath}`
@@ -639,16 +645,8 @@ export function useEdcClient () {
     headers.append('Content-Type', 'application/json')
     const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
     headers.append(authKey, authValue)
-    const bodyString: QuerySpec = {
-      '@context': {
-        edc: 'https://w3id.org/edc/v0.0.1/ns/',
-      },
-      '@type': 'QuerySpecDto',
-      'offset': 0,
-      'sortOrder': 'ASC',
-      'sortField': 'id',
-    }
-    const body = JSON.stringify(bodyString)
+
+    const body = JSON.stringify(querySpec)
 
     try {
       const response = await postRequest(path, body, headers, context, disableMessage)
@@ -818,15 +816,7 @@ export function useEdcClient () {
     const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
     headers.append(authKey, authValue)
 
-    // Ensure @context and @type are set if not provided
-    const bodyObj = {
-      '@context': {
-        '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
-      },
-      '@type': 'CatalogRequest',
-      ...catalogRequest,
-    }
-    const body = JSON.stringify(bodyObj)
+    const body = JSON.stringify(catalogRequest)
 
     try {
       const response = await postRequest(path, body, headers, context, disableMessage)
@@ -862,14 +852,7 @@ export function useEdcClient () {
     headers.append(authKey, authValue)
 
     // Ensure @context and @type are set if not provided
-    const bodyObj = {
-      '@context': {
-        '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
-      },
-      '@type': 'DatasetRequest',
-      ...datasetRequest,
-    }
-    const body = JSON.stringify(bodyObj)
+    const body = JSON.stringify(datasetRequest)
 
     try {
       const response = await postRequest(path, body, headers, context, disableMessage)
@@ -904,18 +887,7 @@ export function useEdcClient () {
     const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
     headers.append(authKey, authValue)
 
-    // Ensure @context and @type are set if not provided
-    const bodyObj = {
-      '@context': [
-        // eslint-disable-next-line unicorn/prefer-https -- exact identifier, not fetch URL.
-        'http://www.w3.org/ns/odrl.jsonld', {
-          '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
-        },
-      ],
-      '@type': 'ContractRequest',
-      ...contractRequest,
-    }
-    const body = JSON.stringify(bodyObj)
+    const body = JSON.stringify(contractRequest)
 
     try {
       const response = await postRequest(path, body, headers, context, disableMessage)
@@ -1016,15 +988,7 @@ export function useEdcClient () {
     const [authKey, authValue] = await edcStore.getControlplaneAuthHeader
     headers.append(authKey, authValue)
 
-    // Ensure @context and @type are set if not provided
-    const bodyObj = {
-      '@context': {
-        '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
-      },
-      '@type': 'TransferRequest',
-      ...transferRequest,
-    }
-    const body = JSON.stringify(bodyObj)
+    const body = JSON.stringify(transferRequest)
 
     try {
       const response = await postRequest(path, body, headers, context, disableMessage)
@@ -1213,14 +1177,19 @@ export interface OdrlOperator {
 }
 
 export interface OdrlConstraint {
-  'odrl:leftOperand': OdrlOperant
-  'odrl:operator': OdrlOperator
-  'odrl:rightOperand': string
+  'odrl:leftOperand'?: OdrlOperant
+  'leftOperand'?: OdrlOperant
+  'odrl:operator'?: OdrlOperator
+  'operator'?: OdrlOperator
+  'odrl:rightOperand'?: string
+  'rightOperand'?: string
 }
 
 export interface OdrlPermission {
   'odrl:action'?: OdrlAction
+  'action'?: OdrlAction
   'odrl:constraint'?: OdrlConstraint
+  'constraint'?: OdrlConstraint
 }
 
 export interface OdrlProhibition {
@@ -1232,7 +1201,9 @@ export interface OdrlObligation {
 export interface Policy {
   '@id'?: string
   'odrl:permission'?: OdrlPermission
+  'permission'?: OdrlPermission
   'odrl:prohibition'?: OdrlProhibition
+  'prohibition'?: OdrlProhibition
   'odlr:obligation'?: OdrlObligation
 }
 
@@ -1321,12 +1292,16 @@ export interface Catalog {
   '@id'?: string
   '@type'?: string
   'dcat:dataset'?: any | any[]
+  'dataset'?: any | any[]
   'dcat:service'?: any | any[]
+  'service'?: any | any[]
   'dspace:participantId'?: string
+  'participantId'?: string
   '@context'?: Record<string, unknown>
 }
 
 export interface DatasetRequest {
+  '@id'?: string
   '@context'?: Record<string, unknown>
   '@type'?: string
   'counterPartyAddress': string
@@ -1340,7 +1315,8 @@ export interface Dataset {
   '@type'?: string
   'odrl:hasPolicy'?: any | any[]
   'dcat:distribution'?: any | any[]
-  '@context'?: Record<string, unknown>
+  'distribution'?: any | any[]
+  '@context'?: JsonLdContext
 }
 
 export interface Offer {
@@ -1348,13 +1324,13 @@ export interface Offer {
   '@type'?: string
   'assigner': string
   'target': string
-  'permission'?: any[]
-  'prohibition'?: any[]
-  'obligation'?: any[]
+  'permission'?: any[] | Record<string, unknown>
+  'prohibition'?: any[] | Record<string, unknown>
+  'obligation'?: any[] | Record<string, unknown>
 }
 
 export interface ContractRequest {
-  '@context'?: Record<string, unknown>
+  '@context'?: JsonLdContext
   '@type'?: string
   'counterPartyAddress': string
   'protocol': string
@@ -1391,6 +1367,7 @@ export interface TransferRequest {
   'callbackAddresses'?: CallbackAddress[]
   'contractId': string
   'counterPartyAddress': string
+  'counterPartyId': string
   'dataDestination'?: AssetDataAddress
   'privateProperties'?: AssetProperties
   'protocol': string
@@ -1412,12 +1389,20 @@ export interface TransferProcess {
   'type'?: 'CONSUMER' | 'PROVIDER'
 }
 
+// JSON-LD '@context' can be a string, an object (vocab map) or an array mixing both,
+// e.g. ['https://www.w3.org/ns/odrl.jsonld', { '@vocab': '...' }]. The EDC OpenAPI specs
+// are inconsistent in how they narrow this (array of strings in some v0.12.1 schemas,
+// object in v0.9.0 examples), so this permissive union covers all versions/endpoints.
+export type JsonLdContext = string | Record<string, unknown> | Array<string | Record<string, unknown>>
+
 export interface NegotiationState {
+  '@context'?: JsonLdContext
   '@type'?: string
   'state': string
 }
 
 export interface TransferState {
+  '@context'?: JsonLdContext
   '@type'?: string
   'state': string
 }

@@ -51,7 +51,7 @@
               <v-sheet border>
                 <v-list class="py-0" density="compact">
                   <!-- Create Policy Dialog -->
-                  <v-tooltip location="bottom" open-delay="600">
+                  <v-tooltip v-if="isEdcV0_12_1" location="bottom" open-delay="600">
                     <template #activator="{ props }">
                       <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="createPolicyDialog = true">
                         <template #prepend>
@@ -62,6 +62,19 @@
                     </template>
 
                     <span>Create a new Policy</span>
+                  </v-tooltip>
+
+                  <v-tooltip location="bottom" open-delay="600">
+                    <template #activator="{ props }">
+                      <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="createPolicyFromTemplateDialog = true">
+                        <template #prepend>
+                          <v-icon size="small">mdi-plus</v-icon>
+                        </template>
+                        Create Policy from Template
+                      </v-list-item>
+                    </template>
+
+                    <span>Create a new Policy from Template</span>
                   </v-tooltip>
 
                 </v-list>
@@ -308,6 +321,7 @@
   </v-container>
 
   <CreatePolicyDialog v-model="createPolicyDialog" @policy-created="onPolicyCreated" />
+  <CreatePolicyFromTemplateDialog v-model="createPolicyFromTemplateDialog" @policy-created="onPolicyCreated" />
 
   <UpdatePolicyDialog v-model="updatePolicyDialog" :policy="policyToUpdate" @policy-updated="onPolicyUpdated" />
 
@@ -320,6 +334,7 @@
   import JsonTreeView from '@/components/UIComponents/JsonTreeView.vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import CreatePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Policies/Dialogs/CreatePolicyDialog.vue'
+  import CreatePolicyFromTemplateDialog from '@/pages/modules/EclipseDataspaceConnector/components/Policies/Dialogs/CreatePolicyFromTemplateDialog.vue'
   import DeletePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Policies/Dialogs/DeletePolicyDialog.vue'
   import UpdatePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Policies/Dialogs/UpdatePolicyDialog.vue'
   import { type PolicyDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
@@ -356,6 +371,7 @@
   const selectedPolicyJson = ref<string>('')
   const selectedPolicyJsonFormatted = ref<string>('')
   const createPolicyDialog = ref(false) // Variable to store if the Create Policy Dialog should be shown
+  const createPolicyFromTemplateDialog = ref(false) // Variable to store if the Create Policy from Template Dialog should be shown
   const updatePolicyDialog = ref(false) // Variable to store if the Update Policy Dialog should be shown
   const policyToUpdate = ref<any>({}) // Variable to store the policy to be updated
   const deletePolicyDialog = ref(false) // Variable to store if the Delete Policy Dialog should be shown
@@ -363,6 +379,7 @@
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
 
   // Computed properties
+  const isEdcV0_12_1 = computed(() => edcStore.getEdcType === 'Tractus-X EDC v0.12.1')
   const isDark = computed(() => theme.global.current.value.dark)
   const primaryColor = computed(() => theme.current.value.colors.primary)
   const copyIconAsRef = computed(() => copyIcon)
@@ -537,18 +554,23 @@
   }
 
   function getPolicyType (policyDefinition: PolicyDefinition): string {
-    if (!policyDefinition?.policy
-      || !policyDefinition?.policy['odrl:permission']
-      || !policyDefinition?.policy['odrl:permission']['odrl:action']
-      || !policyDefinition?.policy['odrl:permission']['odrl:action']['@id']
-    )
+    const permission = policyDefinition?.policy?.['odrl:permission'] ?? policyDefinition?.policy?.permission
+    const action = permission?.['odrl:action'] ?? permission?.action
+    const actionId = action?.['@id']
+
+    if (!actionId)
       return ''
 
-    switch (policyDefinition?.policy['odrl:permission']['odrl:action']['@id']) {
-      case 'odrl:use': {
+    switch (actionId) {
+      case 'odrl:use':
+      case 'use':
+      {
         return 'Usage'
       }
-      case 'odrl:access': {
+      case 'odrl:access':
+      case 'access':
+      case 'cx-policy:access':
+      {
         return 'Access'
       }
     }

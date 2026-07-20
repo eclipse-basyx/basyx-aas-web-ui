@@ -555,7 +555,8 @@
   import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
   import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
   import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
-  import assetTemplate from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.9.json'
+  import assetTemplate_v0_9 from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.9.json'
+  import assetTemplate_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.12.1.json'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { useAASStore } from '@/store/AASDataStore'
   import { useNavigationStore } from '@/store/NavigationStore'
@@ -686,6 +687,10 @@
   const primaryColor = computed(() => theme.current.value.colors.primary) // returns the primary color of the current theme
 
   const selectedAAS = computed(() => aasStore.getSelectedAAS) // Get the selected AAS from Store
+
+  const activeAssetTemplate = computed(() =>
+    edcStore.getEdcType === 'Tractus-X EDC v0.12.1' ? assetTemplate_v0_12_1 : assetTemplate_v0_9,
+  )
 
   const isSearchLimited = computed(() => aasSearchValue.value.trim() !== '' && hasMorePages.value)
 
@@ -1005,7 +1010,7 @@
     const assetDescription = descriptionToDisplay(identifiable, 'en')
     const assetEndpoint = identifiable.path
 
-    let templateStr = JSON.stringify(assetTemplate)
+    let templateStr = JSON.stringify(activeAssetTemplate.value)
     templateStr = templateStr.replace(/\{\{EDC Asset ID(?:\|[^}]*)?\}\}/g, base64Encode(identifiable.id))
     templateStr = templateStr.replace(/\{\{Asset ID(?:\|[^}]*)?\}\}/g, base64Encode(identifiable.id))
     templateStr = templateStr.replace(/\{\{Asset Display Name(?:\|[^}]*)?\}\}/g, assetDisplayName)

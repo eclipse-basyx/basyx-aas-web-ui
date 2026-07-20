@@ -306,7 +306,7 @@
     'Policy and Asset Management',
     'Policy-based access control',
     'Business Partner Management',
-    'Tractus-X EDC v0.9 & v0.11.2 support',
+    'Tractus-X EDC v0.9 & v0.12.1 support',
     'API key & OAuth2 token authentication',
   ]
 </script>
