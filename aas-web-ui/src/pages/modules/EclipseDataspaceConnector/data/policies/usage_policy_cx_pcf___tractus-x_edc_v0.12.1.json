@@ -18,8 +18,8 @@
             "and": [
               {
                 "leftOperand": "FrameworkAgreement",
-                "operator": "isAnyOf",
-                "rightOperand": ["DataExchangeGovernance:1.0", "circulareconomy:1.0"]
+                "operator": "eq",
+                "rightOperand": "DataExchangeGovernance:1.0"
               },
               {
                 "leftOperand": "Membership",
@@ -28,8 +28,8 @@
               },
               {
                 "leftOperand": "UsagePurpose",
-                "operator": "isAnyOf",
-                "rightOperand": ["cx.core.industrycore:1", "cx.circular.dpp:1", "cx.pcf.base:1"]
+                "operator": "eq",
+                "rightOperand": "cx.pcf.base:1"
               }
             ]
           }

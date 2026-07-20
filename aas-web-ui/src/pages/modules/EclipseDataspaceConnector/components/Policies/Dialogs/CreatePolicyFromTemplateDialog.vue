@@ -101,7 +101,9 @@
   import AccessPolicy_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_policy___tractus-x_edc_v0.12.1.json'
   import UsagePolicy_v0_9 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy___tractus-x_edc_v0.9.json'
   import UsagePolicy_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy___tractus-x_edc_v0.12.1.json'
+  import UsagePolicyCxDppDbp_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_cx_dpp_dbp___tractus-x_edc_v0.12.1.json'
   import UsagePolicyCxDtr_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_cx_dtr___tractus-x_edc_v0.12.1.json'
+  import UsagePolicyCxPcf_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_cx_pcf___tractus-x_edc_v0.12.1.json'
   import UsagePolicyRwXPush_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_rwx_push___tractus-x_edc_v0.12.1.json'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { formatJSON } from '@/utils/JsonUtils'
@@ -144,6 +146,18 @@
       name: 'Usage Policy',
       description: 'Policy with permissions, prohibitions, and obligations for complex usage scenarios',
       policy: isEdcV0_12_1.value ? UsagePolicy_v0_12_1 : UsagePolicy_v0_9,
+    },
+    {
+      value: 'usageCxPcf',
+      name: 'Usage Policy for PCF Use Case (Catena-X)',
+      description: 'Policy with permissions for the PCF Use Case (Catena-X)',
+      policy: isEdcV0_12_1.value ? UsagePolicyCxPcf_v0_12_1 : null,
+    },
+    {
+      value: 'usageCxDppDbp',
+      name: 'Usage Policy for PCF DPP/DBP Use Case (Catena-X)',
+      description: 'Policy with permissions for the DPP/DBP Use Case (Catena-X)',
+      policy: isEdcV0_12_1.value ? UsagePolicyCxDppDbp_v0_12_1 : null,
     },
     {
       value: 'usageCxDtr',
