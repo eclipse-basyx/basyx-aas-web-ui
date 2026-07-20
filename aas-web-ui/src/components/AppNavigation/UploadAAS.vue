@@ -187,8 +187,7 @@
 
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
   const serverUploadSupported = computed(() =>
-    aasFiles.value.length > 0
-    && aasFiles.value.every(file => detectImportFileKind(file.name) === 'aasx'),
+    aasFiles.value.every(file => detectImportFileKind(file.name) === 'aasx'),
   )
   const uploadMode = computed<InfrastructureAasUploadMode>(() => {
     if (!serverUploadSupported.value) return 'client'
