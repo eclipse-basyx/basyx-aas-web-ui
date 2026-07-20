@@ -1,6 +1,6 @@
 import type { jsonization } from '@aas-core-works/aas-core3.1-typescript'
 import { computed } from 'vue'
-import { useRequestHandling } from '@/composables/RequestHandling'
+import { type RequestErrorHandlingOptions, useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import * as descriptorTypes from '@/types/Descriptors'
 import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils'
@@ -82,7 +82,11 @@ export function useSMRegistryClient () {
    * @param {string} smId - The ID of the SM Descriptor to fetch.
    * @returns {Promise<any>} A promise that resolves to a SM Descriptor.
    */
-  async function fetchSmDescriptorById (smId: string, endpoint?: string): Promise<any> {
+  async function fetchSmDescriptorById (
+    smId: string,
+    endpoint?: string,
+    suppressNotFound = false,
+  ): Promise<any> {
     const failResponse = {} as any
 
     if (!smId) {
@@ -109,8 +113,17 @@ export function useSMRegistryClient () {
     const smRegistryPath = smRegistryUrl + '/' + base64Encode(smId)
     const smRegistryContext = 'retrieving SM Descriptor'
     const disableMessage = false
+    const errorHandlingOptions: RequestErrorHandlingOptions = suppressNotFound
+      ? { suppressStatuses: [404] }
+      : {}
     try {
-      const smRegistryResponse = await getRequest(smRegistryPath, smRegistryContext, disableMessage)
+      const smRegistryResponse = await getRequest(
+        smRegistryPath,
+        smRegistryContext,
+        disableMessage,
+        new Headers(),
+        errorHandlingOptions,
+      )
       if (
         smRegistryResponse?.success
         && smRegistryResponse?.data
@@ -132,7 +145,11 @@ export function useSMRegistryClient () {
    * @param {string} smId - The ID of the SM to retrieve the endpoint for.
    * @returns {Promise<string>} A promise that resolves to an SM endpoint.
    */
-  async function getSmEndpointById (smId: string, endpoint?: string): Promise<string> {
+  async function getSmEndpointById (
+    smId: string,
+    endpoint?: string,
+    suppressNotFound = false,
+  ): Promise<string> {
     const failResponse = ''
 
     if (!smId) {
@@ -145,7 +162,7 @@ export function useSMRegistryClient () {
       return failResponse
     }
 
-    const smDescriptor = await fetchSmDescriptorById(smId, endpoint)
+    const smDescriptor = await fetchSmDescriptorById(smId, endpoint, suppressNotFound)
     const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0')
 
     return smEndpoint || failResponse

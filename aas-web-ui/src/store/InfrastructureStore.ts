@@ -309,6 +309,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       return
     }
 
+    if (selectedInfrastructureId.value !== infrastructureId) {
+      navigationStore.dispatchDismissInfrastructureSnackbar()
+    }
     selectedInfrastructureId.value = infrastructureId
 
     saveInfrastructuresToStorage()

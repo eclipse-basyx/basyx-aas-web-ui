@@ -184,6 +184,8 @@
   const statusCheckInterval = ref<number | undefined>(undefined)
   const downloadAASDialog = ref(false) // Variable to store if the DownloadAAS Dialog should be shown
   const aasToDownload = ref({}) // Variable to store the AAS to be downloaded
+  let viewGeneration = 0
+  let isUnmounted = false
 
   // Computed Properties
   const isMobile = computed(() => navigationStore.getIsMobile)
@@ -191,6 +193,7 @@
   const selectedAAS = computed(() => aasStore.getSelectedAAS) // Get the selected AAS from Store
   const aasRegistryURL = computed(() => infrastructureStore.getAASRegistryURL) // Get AAS Registry URL from Store
   const aasRepoURL = computed(() => infrastructureStore.getAASRepoURL) // Get the AAS Repository URL from the Store
+  const selectedInfrastructureId = computed(() => infrastructureStore.getSelectedInfrastructureId)
   const detailsListHeight = computed(() => {
     if (isMobile.value) {
       return singleAas.value
@@ -209,6 +212,7 @@
   watch(
     () => aasRegistryURL.value,
     async () => {
+      invalidatePendingRequests()
       initializeView()
     },
   )
@@ -216,6 +220,7 @@
   watch(
     () => aasRepoURL.value,
     async () => {
+      invalidatePendingRequests()
       initializeView()
     },
   )
@@ -223,11 +228,12 @@
   watch(
     () => selectedAAS.value,
     async () => {
+      invalidatePendingRequests()
       window.clearInterval(autoSyncInterval.value) // clear old interval
       if (autoSync.value.state && selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
         // create new interval
         autoSyncInterval.value = window.setInterval(async () => {
-          assetAdministrationShellData.value = await fetchAas(selectedAAS.value.path) // update AAS data
+          await updateAasData()
         }, autoSync.value.interval)
       }
 
@@ -249,13 +255,14 @@
   watch(
     () => autoSync.value,
     async autoSyncValue => {
+      invalidatePendingRequests()
       window.clearInterval(autoSyncInterval.value) // clear old interval
       if (autoSyncValue.state === true && selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
-        assetAdministrationShellData.value = await fetchAas(selectedAAS.value.path) // update AAS data
+        await updateAasData()
 
         // create new interval
         autoSyncInterval.value = window.setInterval(async () => {
-          assetAdministrationShellData.value = await fetchAas(selectedAAS.value.path) // update AAS data
+          await updateAasData()
         }, autoSyncValue.interval)
       }
     },
@@ -265,6 +272,7 @@
   watch(
     () => statusCheck.value,
     async statusCheckValue => {
+      invalidatePendingRequests()
       window.clearInterval(statusCheckInterval.value) // clear old interval
       if (statusCheckValue.state === true) {
         assetAdministrationShellData.value.status = 'status loading'
@@ -279,8 +287,11 @@
         assetAdministrationShellData.value.status = 'check disabled'
 
         // Reset status icon after 2 seconds
+        const generation = viewGeneration
         setTimeout(() => {
-          assetAdministrationShellData.value.status = ''
+          if (generation === viewGeneration && !isUnmounted) {
+            assetAdministrationShellData.value.status = ''
+          }
         }, 2000)
       }
     },
@@ -292,7 +303,7 @@
       // create new interval
       autoSyncInterval.value = window.setInterval(async () => {
         if (selectedAAS.value && Object.keys(selectedAAS.value).length > 0) {
-          assetAdministrationShellData.value = await fetchAas(selectedAAS.value.path) // update AAS data
+          await updateAasData()
         }
       }, autoSync.value.interval)
     }
@@ -310,11 +321,29 @@
   })
 
   onBeforeUnmount(() => {
+    isUnmounted = true
+    invalidatePendingRequests()
     window.clearInterval(autoSyncInterval.value)
     window.clearInterval(statusCheckInterval.value)
   })
 
+  function invalidatePendingRequests (): void {
+    viewGeneration += 1
+  }
+
+  function isCurrentRequest (
+    generation: number,
+    aasId: string,
+    infrastructureId: string | null | undefined,
+  ): boolean {
+    return !isUnmounted
+      && generation === viewGeneration
+      && selectedAAS.value?.id === aasId
+      && selectedInfrastructureId.value === infrastructureId
+  }
+
   async function initializeView (init = false): Promise<void> {
+    invalidatePendingRequests()
     if (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0) {
       assetAdministrationShellData.value = {}
       assetInformation.value = {}
@@ -322,16 +351,30 @@
     }
 
     assetAdministrationShellData.value = { ...selectedAAS.value } // create local copy
-    updateAssetInformation()
+    const generation = viewGeneration
+    const aasId = selectedAAS.value.id
+    const infrastructureId = selectedInfrastructureId.value
+    void updateAssetInformation(generation, aasId, infrastructureId)
 
-    updateStatusOfAas(init)
+    void updateStatusOfAas(init, generation)
   }
 
-  async function updateStatusOfAas (init = false): Promise<void> {
-    if (assetAdministrationShellData.value && Object.keys(assetAdministrationShellData.value).length > 0) {
+  async function updateStatusOfAas (init = false, generation = viewGeneration): Promise<void> {
+    const aasId = selectedAAS.value?.id
+    const infrastructureId = selectedInfrastructureId.value
+
+    if (typeof aasId === 'string' && aasId !== '' && isCurrentRequest(generation, aasId, infrastructureId)) {
       await new Promise(resolve => setTimeout(resolve, 600)) // Give the UI the chance to refresh status icons
 
-      const aasIsAvailable = await aasIsAvailableById(assetAdministrationShellData.value.id)
+      if (!isCurrentRequest(generation, aasId, infrastructureId)) {
+        return
+      }
+
+      const aasIsAvailable = await aasIsAvailableById(aasId)
+
+      if (!isCurrentRequest(generation, aasId, infrastructureId)) {
+        return
+      }
 
       if (aasIsAvailable) {
         assetAdministrationShellData.value.status
@@ -343,10 +386,31 @@
     }
   }
 
-  async function updateAssetInformation (): Promise<void> {
-    assetInformation.value = await fetchAssetInformation(
-      extractEndpointHref(assetAdministrationShellData.value, 'AAS-3.0'),
-    )
+  async function updateAasData (): Promise<void> {
+    const generation = viewGeneration
+    const aasId = selectedAAS.value?.id
+    const infrastructureId = selectedInfrastructureId.value
+    const path = selectedAAS.value?.path
+    if (typeof aasId !== 'string' || typeof path !== 'string') {
+      return
+    }
+
+    const aas = await fetchAas(path)
+    if (isCurrentRequest(generation, aasId, infrastructureId)) {
+      assetAdministrationShellData.value = aas
+    }
+  }
+
+  async function updateAssetInformation (
+    generation: number,
+    aasId: string,
+    infrastructureId: string | null | undefined,
+  ): Promise<void> {
+    const endpoint = extractEndpointHref(assetAdministrationShellData.value, 'AAS-3.0')
+    const information = await fetchAssetInformation(endpoint)
+    if (isCurrentRequest(generation, aasId, infrastructureId)) {
+      assetInformation.value = information
+    }
   }
 
   function gotoSubmodelList (): void {

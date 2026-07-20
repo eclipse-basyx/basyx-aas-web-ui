@@ -83,6 +83,11 @@
               :is-editable="false"
             />
 
+            <SubmodelElementSummary
+              v-else-if="['BasicEventElement', 'Capability'].includes(submodelElement.modelType)"
+              :element="submodelElement"
+            />
+
             <InvalidElement v-else :invalid-element-object="submodelElement" />
           </v-list>
         </v-expansion-panel-text>

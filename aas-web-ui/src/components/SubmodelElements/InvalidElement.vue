@@ -1,6 +1,10 @@
 <template>
   <v-container class="pa-0" fluid>
-    <v-card v-if="invalidElementObject" class="mt-4" color="elevatedCard">
+    <v-card
+      v-if="invalidElementObject"
+      :class="localIsOperationVariable ? '' : 'mt-4'"
+      color="elevatedCard"
+    >
       <v-list class="pt-0" :class="localIsOperationVariable ? '' : 'bg-elevatedCard'" nav>
         <!-- Alert when SubmodelElement is invalid -->
         <v-list-item v-if="!localIsOperationVariable">

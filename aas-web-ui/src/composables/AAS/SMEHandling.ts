@@ -1,6 +1,11 @@
 import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling'
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
 import { useAASStore } from '@/store/AASDataStore'
+import {
+  decorateResolvedOperationNode,
+  parseOperationLocator,
+  resolveOperationLocator,
+} from '@/utils/AAS/OperationTreeUtils'
 import { formatDate } from '@/utils/DateUtils'
 import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
@@ -21,7 +26,11 @@ export function useSMEHandling () {
    * @param {boolean} withConceptDescriptions - Flag to specify if SME should be fetched with ConceptDescriptions (CDs)
    * @returns {Promise<any>} A promise that resolves to a SME.
    */
-  async function fetchAndDispatchSme (smePath: string, withConceptDescriptions = false): Promise<any> {
+  async function fetchAndDispatchSme (
+    smePath: string,
+    withConceptDescriptions = false,
+    operationFragment?: string,
+  ): Promise<any> {
     const failResponse = {}
 
     if (!smePath) {
@@ -34,7 +43,7 @@ export function useSMEHandling () {
       return failResponse
     }
 
-    const smOrSme = await fetchSme(smePath, withConceptDescriptions)
+    const smOrSme = await fetchSme(smePath, withConceptDescriptions, operationFragment)
 
     if (!smOrSme || Object.keys(smOrSme).length === 0) {
       return failResponse
@@ -53,7 +62,11 @@ export function useSMEHandling () {
    * @param {boolean} withConceptDescriptions - Flag to specify if SME should be fetched with ConceptDescriptions (CDs)
    * @returns {Promise<any>} A promise that resolves to a SME.
    */
-  async function fetchSme (smePath: string, withConceptDescriptions = false): Promise<any> {
+  async function fetchSme (
+    smePath: string,
+    withConceptDescriptions = false,
+    operationFragment?: string,
+  ): Promise<any> {
     const failResponse = {}
 
     if (!smePath) {
@@ -67,7 +80,7 @@ export function useSMEHandling () {
     }
 
     // No valid SME path means this is likely an SM endpoint.
-    const smOrSme: any = smePath.includes('/submodel-elements/')
+    let smOrSme: any = smePath.includes('/submodel-elements/')
       ? await fetchSmeFromRepo(smePath)
       : await fetchSmFromRepo(smePath)
 
@@ -79,8 +92,21 @@ export function useSMEHandling () {
       return failResponse
     }
 
+    if (operationFragment !== undefined && operationFragment !== '') {
+      const locator = parseOperationLocator(operationFragment)
+      const resolved = locator ? resolveOperationLocator(smOrSme, locator) : null
+      if (!locator || !resolved) {
+        console.warn(`Resolving Operation fragment '${operationFragment}' failed!`)
+        return failResponse
+      }
+      smOrSme = decorateResolvedOperationNode(resolved, smePath, locator)
+    } else {
+      smOrSme.path = smePath
+      smOrSme.selectionKey = smePath
+      smOrSme.persistence = { kind: 'repository', repositoryPath: smePath }
+    }
+
     smOrSme.timestamp = formatDate(new Date())
-    smOrSme.path = smePath
 
     smOrSme.conceptDescriptions = withConceptDescriptions ? (await fetchCds(smOrSme)) : []
 

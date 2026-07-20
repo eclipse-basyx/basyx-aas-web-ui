@@ -1,163 +1,86 @@
 # Combined Feature Showcase
 
-This example provides a comprehensive showcase setup for the BaSyx AAS Web UI. It combines as many major UI features as possible in one ready-to-run environment and is intended for demos, workshops, and end-to-end validation.
+This example runs the BaSyx AAS Web UI against two independent BaSyx Go AAS Environments. It is intended for local feature exploration and for exercising the OAuth return-to-selection flow without a reverse proxy or external identity provider.
 
-## Overview
+## Topology
 
-The setup includes two preconfigured BaSyx infrastructures:
+- **Infrastructure 1 — Secured BaSyx**: a BaSyx Go AAS Environment in `mono-all` mode, protected by Keycloak and ABAC.
+- **Infrastructure 2 — Local BaSyx**: an independent, unsecured BaSyx Go AAS Environment in `mono-all` mode.
+- Each environment has its own PostgreSQL 18.4 database and one-shot BaSyx configuration service, so their persisted data and schema setup are isolated.
+- Keycloak 26.6.4 is exposed directly at `http://keycloak.localhost:8080`; no reverse proxy or `*.basyx.localhost` host entries are required.
+- InfluxDB, Telegraf, MQTT, and Node-RED remain available for the time-series and live-sensor portions of the showcase.
+- Infrastructure 1 preloads the IESE Drive Motor package alongside protected showcase packages. Anonymous visitors see only the Motor shell plus its Nameplate and Technical Data submodels.
+- Infrastructure 2 preloads five Go-compatible showcase packages, including the IESE Drive Motor package from the BaSyx Go minimal example in place of the incompatible PFC200 package.
 
-- **Infrastructure 1 (Secured BaSyx)**: OAuth2-secured environment with Keycloak
-- **Infrastructure 2 (Local BaSyx)**: Unsecured environment without authentication
-
-The Web UI is preconfigured to connect to both infrastructures and demonstrate cross-infrastructure workflows.
-
-## Showcased Features
-
-- Multi infrastructure handling
-- OAuth2 support (Keycloak)
-- File management with the File Explorer submodel plugin
-- Live sensor data integration via Node-RED (including auto-sync behavior)
-- Time series data plugin with InfluxDB integration and chart visualization
-- IFC file rendering for BIM use cases
-- PCF Process module for carbon footprint calculation from materials and quantities
-- Digital Product Passport module for AAS-based DPP visualization
-- Submodel plugin showcase: technical data, handover documentation, digital nameplate, contact information
-- Bill of Materials submodel plugin with graphical editing capabilities (dynamic flow chart)
-
-## Architecture
-
-The example includes:
-
-- A single **AAS Web UI** instance
-- **Infrastructure 1** with secured BaSyx services (AAS Environment, Registry, Submodel Registry, Discovery), Keycloak, reverse proxy, InfluxDB, Telegraf, and MQTT publisher
-- **Infrastructure 2** with unsecured BaSyx services, Node-RED, MQTT broker, and MQTT client
-- A shared **MongoDB** database for both infrastructures
+The UI service uses the published `eclipsebasyx/aas-gui:SNAPSHOT` image.
 
 ## Prerequisites
 
-- Docker and Docker Compose installed
-- Available ports including: `80`, `3000`, `8086`, `1880`, `1883`, `1884`, `8081-8084`, `9081-9084`, `9097`
-- Host entries for `*.basyx.localhost` domains
+- Docker Engine and Docker Compose
+- Available ports: `3000`, `8080`, `8081`, `8086`, `9081`, `1880`, `1883`, and `1884`
 
-Add the following entries to your hosts file (for example `/etc/hosts`):
+Modern browsers resolve `keycloak.localhost` to the local machine automatically. If yours does not, add this one hosts-file entry:
 
 ```text
-127.0.0.1 aasgui.basyx.localhost
-127.0.0.1 keycloak.basyx.localhost
-127.0.0.1 discovery.basyx.localhost
-127.0.0.1 aasreg.basyx.localhost
-127.0.0.1 smreg.basyx.localhost
-127.0.0.1 aasenv.basyx.localhost
+127.0.0.1 keycloak.localhost
 ```
 
-## Getting Started
+## Start
 
-1. Start all services from this folder:
+From this directory:
 
 ```bash
 docker compose up -d
 ```
 
-2. Open the AAS Web UI:
+Open the UI at [http://localhost:3000](http://localhost:3000).
 
-http://localhost:3000
+Supporting endpoints:
 
-3. (Optional) Open supporting tools:
+- Keycloak: [http://keycloak.localhost:8080](http://keycloak.localhost:8080)
+- InfluxDB: [http://localhost:8086](http://localhost:8086)
+- Node-RED: [http://localhost:1880](http://localhost:1880)
 
-- InfluxDB UI: http://localhost:8086
-- Node-RED: http://localhost:1880
-- Keycloak admin console: http://keycloak.basyx.localhost
+Keycloak administrator credentials are `admin` / `admin`. The secured UI test account is `admin` / `pwd` and has full access to Infrastructure 1.
 
-Keycloak admin credentials:
+## Verify anonymous filtered access
 
-- Username: `admin`
-- Password: `keycloak-admin`
+1. Open **Secured BaSyx** without logging in, or log out after selecting it.
+2. The AAS list must contain only **IESEDriveMotorDM3000** even though Infra 1 preloads further AASX packages.
+3. Open the Motor AAS. Only **Nameplate** and **TechnicalData** must be visible and readable.
+4. Log in as `admin` / `pwd` to see all preloaded AASs and all submodels.
 
-## Usage
+The policy grants anonymous `READ` access to both the descriptors and the actual AAS/Submodel identifiables. The Motor AAS is selected by its AAS ID; the two public submodels are selected by semantic ID and constrained to their matching Motor IDs. All Concept Descriptions are also readable anonymously, which lets the UI resolve standard semantic IDs without prompting for login. The UI omits references that resolve to an intentional privacy-preserving `404` instead of rendering them as failed tree entries. Filtering `$aas#submodels[]` directly is currently disabled because it triggers a BaSyx Go SQL error; see [BaSyx Go issue #496](https://github.com/eclipse-basyx/basyx-go-components/issues/496).
 
-### Infrastructure Switching
+The compose setup uses `ABAC_POLICY_FILE_IMPORT=always`, so restarting Infra 1 reapplies the checked-in policy. This is intentional for a reproducible example; do not use this setting where policies are managed at runtime.
 
-1. Open the Web UI at http://localhost:3000
-2. Open the settings menu
-3. Navigate to Infrastructure Management
-4. Switch between:
-	- **Secured BaSyx** (OAuth2)
-	- **Local BaSyx** (no auth)
+## Verify the OAuth deep-link fix
 
-### OAuth2 Flow (Secured Infrastructure)
+1. Select **Secured BaSyx** in Infrastructure Management and sign in as `admin` / `pwd`.
+2. Open any AAS, then copy its `/aasviewer?aas=...` URL.
+3. Log out, or open that URL in a fresh browser profile.
+4. Complete the Keycloak login again.
 
-1. Select **Secured BaSyx**
-2. Access secured AAS content
-3. Complete login in Keycloak when redirected
-4. Return to the UI with an authenticated session
+After login, the browser must return to the same AAS viewer location, including its `aas` query parameter. Logout restores the same location when the selected AAS remains anonymously readable; otherwise, the unavailable AAS and Submodel selection is cleared. The Keycloak redirect URI remains the canonical `http://localhost:3000/`; the UI restores and revalidates the exact in-app route from its per-tab transaction state.
 
-### Suggested Feature Tour
+## Feature tour
 
-Use this sequence for a complete showcase:
+- Infrastructure switching and OAuth2 authentication
+- File handling, IFC rendering, PCF, and Digital Product Passport submodels
+- Time-series charts backed by InfluxDB
+- Live sensor updates backed by MQTT and Node-RED
+- Bill of Materials editing
 
-1. Start in **Secured BaSyx** and demonstrate OAuth2 login
-2. Open AAS/Submodels that contain technical data, handover documentation, digital nameplate, and contact information plugins
-3. Demonstrate file upload/download via the File Explorer plugin
-4. Show IFC file rendering for BIM-related AAS data
-5. Open the Time Series submodel plugin and visualize linked data from InfluxDB
-6. Switch to **Local BaSyx** and demonstrate live sensor updates (Node-RED + MQTT + auto-sync)
-7. Open the Bill of Materials plugin and edit structures using the dynamic flow chart editor
-8. Launch the **PCF Process** module and calculate a product footprint from selected materials/quantities
-9. Launch the **Digital Product Passport** module to visualize DPP-related AAS content
-
-## Configuration Notes
-
-- Infrastructure definitions are stored in `basyx-infra.yml`
-- Endpoint editing is enabled (`ENDPOINT_CONFIG_AVAILABLE=true`), so users can add or modify infrastructures in the UI
-- The InfluxDB token is preconfigured through the Web UI container environment
-
-## Stopping the Setup
-
-Stop all services:
+## Stop or reset
 
 ```bash
 docker compose down
 ```
 
-Stop and remove volumes:
+To remove the containers and any named volumes:
 
 ```bash
 docker compose down -v
 ```
 
-## Troubleshooting
-
-### Secured infrastructure is unreachable
-
-1. Verify host entries for `*.basyx.localhost`
-2. Check that the reverse proxy is running (`proxy` container)
-3. Check service health:
-
-```bash
-docker compose ps
-```
-
-### OAuth2 login issues
-
-1. Verify Keycloak status and logs
-2. Confirm the selected infrastructure is **Secured BaSyx**
-3. Ensure `keycloak.basyx.localhost` resolves on your machine
-
-### Time series charts show no data
-
-1. Verify InfluxDB is running and reachable at http://localhost:8086
-2. Check Telegraf and MQTT publisher containers for incoming data
-3. Re-run data fetch in the plugin after waiting for fresh data points
-
-### Live sensor values are not updating
-
-1. Verify Node-RED and MQTT services in Infrastructure 2
-2. Check MQTT client/publisher container logs
-3. Confirm auto-sync is enabled in the BaSyx UI settings
-
-## Related Documentation
-
-- [Main README](../../README.md)
-- [MultiInfrastructure Example](../MultiInfrastructure/README.md)
-- [TimeSeriesData Example](../TimeSeriesData/README.md)
-- [PcfCalculation Example](../PcfCalculation/README.md)
+If the AAS Environment cannot reach Keycloak, check the `keycloak` and `secured-aas-env` logs. Its OIDC trust list and ABAC model are in `Infrastructure1/security_env/`.

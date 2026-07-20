@@ -1,4 +1,5 @@
 import type { OAuth2ConnectionData } from '@/types/Infrastructure'
+import { discoverOpenIdConfiguration } from '@/composables/Auth/OpenIdConnect'
 
 interface OAuth2TokenResponse {
   access_token: string
@@ -17,6 +18,14 @@ interface OAuth2Token {
   idToken?: string
 }
 
+function getAuthorizationCodeStorageKey (state?: string): string {
+  return state ? `oauth2_code_verifier_${state}` : 'oauth2_code_verifier'
+}
+
+export function clearOAuth2AuthorizationCodeState (state?: string): void {
+  sessionStorage.removeItem(getAuthorizationCodeStorageKey(state))
+}
+
 /**
  * Authenticate using OAuth2 Client Credentials Flow
  * Note: This should only be used if your OAuth2 server allows CORS requests
@@ -29,19 +38,11 @@ export async function authenticateOAuth2ClientCredentials (config: OAuth2Connect
     throw new Error('Missing required OAuth2 configuration')
   }
 
-  // 1. Step - fetch well known OIDC config host/.well-known/openid-configuration
-  const result = await fetch(`${host}/.well-known/openid-configuration`)
-  if (!result.ok) {
-    throw new Error(`Failed to fetch OpenID configuration: ${result.status} ${result.statusText}`)
-  }
-
-  const configData = await result.json()
+  const configData = await discoverOpenIdConfiguration(host)
   if (!configData.token_endpoint) {
     throw new Error('Token endpoint not found in OpenID configuration')
   }
 
-  // 2. Step - use token endpoint from well known config
-  // If the token endpoint is not provided, use the default /token path
   const tokenUrl = configData.token_endpoint
 
   // Prepare request body
@@ -125,21 +126,15 @@ export async function initiateOAuth2AuthorizationCodeFlow (config: {
   scope?: string
   state?: string
 }): Promise<void> {
-  console.warn('[OAuth2] Initiating Authorization Code Flow with PKCE')
   const { authorizationEndpoint, clientId, redirectUri, scope, state } = config
 
   // Generate PKCE
   const { codeVerifier, codeChallenge } = await generatePKCE()
 
-  // Store code verifier in localStorage for later use (survives redirects)
+  // Store the verifier per tab and per state for the redirect round trip.
   // Use state as key to support multiple simultaneous auth flows
-  const storageKey = state ? `oauth2_code_verifier_${state}` : 'oauth2_code_verifier'
-  localStorage.setItem(storageKey, codeVerifier)
-  console.warn(`[OAuth2] Stored code verifier with key: ${storageKey}`)
-  if (state) {
-    localStorage.setItem('oauth2_state', state)
-    console.warn(`[OAuth2] Stored state: ${state}`)
-  }
+  const storageKey = getAuthorizationCodeStorageKey(state)
+  sessionStorage.setItem(storageKey, codeVerifier)
 
   // Build authorization URL
   const params = new URLSearchParams({
@@ -176,20 +171,11 @@ export async function exchangeOAuth2AuthorizationCode (config: {
 }): Promise<OAuth2Token> {
   const { tokenEndpoint, clientId, redirectUri, code, state } = config
 
-  // Retrieve code verifier from localStorage using state as key
-  const storageKey = state ? `oauth2_code_verifier_${state}` : 'oauth2_code_verifier'
-  if (process.env.NODE_ENV === 'development') {
-    console.warn(`[OAuth2] Looking for code verifier with key: ${storageKey}`)
-    console.warn(`[OAuth2] Current localStorage keys:`, Object.keys(localStorage))
-  }
-  const codeVerifier = localStorage.getItem(storageKey)
+  // Retrieve code verifier from sessionStorage using state as key
+  const storageKey = getAuthorizationCodeStorageKey(state)
+  const codeVerifier = sessionStorage.getItem(storageKey)
   if (!codeVerifier) {
-    console.error(`[OAuth2] Code verifier not found in localStorage for key: ${storageKey}`)
     throw new Error('Code verifier not found. Authorization flow may have been interrupted.')
-  }
-  if (process.env.NODE_ENV === 'development') {
-    console.warn(`[OAuth2] Found code verifier, proceeding with token exchange`)
-    console.warn('Code Verifier:', codeVerifier)
   }
   // Prepare request
   const params = new URLSearchParams({
@@ -218,12 +204,6 @@ export async function exchangeOAuth2AuthorizationCode (config: {
 
     const expiresAt = data.expires_in ? Date.now() + data.expires_in * 1000 : undefined
 
-    // Clean up localStorage
-    localStorage.removeItem(storageKey)
-    if (state) {
-      localStorage.removeItem('oauth2_state')
-    }
-
     return {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
@@ -236,6 +216,8 @@ export async function exchangeOAuth2AuthorizationCode (config: {
       throw new Error(`Token exchange error: ${error.message}`, { cause: error })
     }
     throw new Error('Token exchange failed with unknown error', { cause: error })
+  } finally {
+    clearOAuth2AuthorizationCodeState(state)
   }
 }
 

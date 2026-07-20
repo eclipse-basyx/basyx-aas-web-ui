@@ -176,7 +176,7 @@ export function useCarbonFootprint_v1_0Utils () {
     }
 
     const smTechnicalDataId = await getSmIdOfAasIdBySemanticId(aasId, semanticId)
-    const smTechnicalData = await fetchSmById(smTechnicalDataId, withConceptDescriptions)
+    const smTechnicalData = await fetchSmById(smTechnicalDataId, { withConceptDescriptions })
 
     return smTechnicalData
   }

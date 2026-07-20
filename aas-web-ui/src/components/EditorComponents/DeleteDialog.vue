@@ -8,9 +8,9 @@
         <span>Are you sure you want to delete the </span>
         <span class="font-weight-bold">{{ element.modelType }}</span>
         <span> with the</span>
-        {{ element.modelType === 'Submodel' ? 'id' : 'idShort' }}
+        {{ deleteIdentifierLabel }}
         <span class="text-primary font-weight-bold">
-          {{ element.modelType === 'Submodel' ? element.id : element.idShort }}
+          {{ deleteIdentifier }}
         </span>
 
         <span> ?</span>
@@ -35,6 +35,7 @@
 <script lang="ts" setup>
   import { computed, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
+  import { useOperationTreeMutation } from '@/composables/AAS/OperationTreeMutation'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
@@ -44,6 +45,11 @@
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils'
+  import {
+    isOperationOwnedNode,
+    resolveOperationLocator,
+    serializeOperationLocator,
+  } from '@/utils/AAS/OperationTreeUtils'
   import { isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
 
   const aasStore = useAASStore()
@@ -58,6 +64,7 @@
   const { deleteSubmodelDescriptor } = useSMRegistryClient()
   const { deleteSubmodelRef, getAasEndpointById } = useAASRepositoryClient()
   const { getSmEndpointById } = useSMRepositoryClient()
+  const { mutateOperation } = useOperationTreeMutation()
 
   const props = defineProps<{
     modelValue: boolean
@@ -85,6 +92,25 @@
   const manualSubmodelDescriptorSyncRequired = computed(
     () => submodelRegistryActive.value && !submodelRepoHasRegistryIntegration.value,
   )
+  const deleteIdentifierLabel = computed(() => {
+    if (props.element?.modelType === 'Submodel') return 'id'
+    if (props.element?.idShort) return 'idShort'
+    if (props.element?.isDirectOperationVariable) return 'direction/index'
+    if (props.element?.listIndex !== undefined) return 'list index'
+    return 'tree location'
+  })
+  const deleteIdentifier = computed(() => {
+    if (props.element?.modelType === 'Submodel') return props.element.id
+    if (props.element?.idShort) return props.element.idShort
+    if (props.element?.isDirectOperationVariable) {
+      let direction = 'Input'
+      if (props.element.operationVariableDirection === 'inoutputVariables') direction = 'In/Out'
+      if (props.element.operationVariableDirection === 'outputVariables') direction = 'Output'
+      return `${direction} [${props.element.operationVariableIndex}]`
+    }
+    if (props.element?.listIndex !== undefined) return `[${props.element.listIndex}]`
+    return props.element?.persistence?.fragment || props.element?.modelType
+  })
 
   watch(
     () => props.modelValue,
@@ -102,6 +128,10 @@
 
   async function confirmDelete (): Promise<void> {
     deleteLoading.value = true
+    if (isOperationOwnedNode(props.element)) {
+      await deleteOperationOwnedElement()
+      return
+    }
     let deleteSucceeded = false
     if (props.element.modelType === 'Submodel') {
       let smEndpoint = ''
@@ -215,5 +245,46 @@
       // close the dialog only after a successful deletion chain
       deleteDialog.value = false
     }
+  }
+
+  async function deleteOperationOwnedElement (): Promise<void> {
+    const boundary = props.element.persistence
+    let parentLocator = [...boundary.locator]
+    const result = await mutateOperation(boundary, ({ operation, locator }) => {
+      const lastSegment = locator.at(-1)
+      if (lastSegment === 'value') {
+        const index = locator.at(-2)
+        const direction = locator.at(-3)
+        if (typeof index !== 'number' || typeof direction !== 'string') return false
+        parentLocator = locator.slice(0, -3)
+        const operationParent = resolveOperationLocator(operation, parentLocator)
+        const variables = operationParent?.[direction]
+        if (!Array.isArray(variables) || index >= variables.length) return false
+        variables.splice(index, 1)
+        return true
+      }
+
+      if (typeof lastSegment !== 'number') return false
+      const collectionLocator = locator.slice(0, -1)
+      const collection = resolveOperationLocator(operation, collectionLocator)
+      if (!Array.isArray(collection) || lastSegment >= collection.length) return false
+      collection.splice(lastSegment, 1)
+      parentLocator = locator.slice(0, -2)
+      return true
+    })
+
+    deleteLoading.value = false
+    if (!result.success) return
+
+    const query: Record<string, string | (string | null)[] | null | undefined> = {
+      ...route.query,
+      path: boundary.operationPath,
+    }
+    const parentFragment = serializeOperationLocator(parentLocator)
+    if (parentFragment) query.fragment = parentFragment
+    else delete query.fragment
+    await router.push({ query })
+    navigationStore.dispatchTriggerTreeviewReload()
+    deleteDialog.value = false
   }
 </script>
