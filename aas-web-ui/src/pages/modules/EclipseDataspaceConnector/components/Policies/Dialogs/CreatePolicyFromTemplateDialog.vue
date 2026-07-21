@@ -177,7 +177,7 @@
       value: 'usageRwxAasService',
       name: 'Usage Policy for AAS Service (Catena-X)',
       description: 'Policy with permissions for the AAS Service usage (Railway-X)',
-      policy: isEdcV0_12_1.value ? UsagePolicyCxSmService_v0_12_1 : null,
+      policy: isEdcV0_12_1.value ? UsagePolicyRwxAasService_v0_12_1 : null,
     },
     {
       value: 'usageRwXPush',
