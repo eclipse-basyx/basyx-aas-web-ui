@@ -101,8 +101,54 @@ export function buildShellDescriptorsCurlCommand (
   dtrUrl: string,
   assetIdName: string,
   assetIdValue: string,
+  authorizationHeader?: string,
 ): string {
-  return `curl -X GET ${quoteShellArgument(buildShellDescriptorsRequestUrl(dtrUrl, assetIdName, assetIdValue))}`
+  return [
+    `curl -X GET ${quoteShellArgument(buildShellDescriptorsRequestUrl(dtrUrl, assetIdName, assetIdValue))}`,
+    ...buildAuthorizationHeaderLine(authorizationHeader),
+  ].join(' \\\n')
+}
+
+export function buildEdcShellDescriptorsCurlCommand (
+  endpointUrl: string,
+  counterPartyId: string,
+  counterPartyAddress: string,
+  protocol: string,
+  assetIdName: string,
+  assetIdValue: string,
+  transferProcessId?: string,
+  authorizationHeader?: string,
+): string {
+  const requestBody: Record<string, unknown> = {
+    counterPartyId: toTrimmedString(counterPartyId),
+    counterPartyAddress: toTrimmedString(counterPartyAddress),
+    protocol: toTrimmedString(protocol),
+    limit: 100,
+  }
+  const name = toTrimmedString(assetIdName)
+  const value = toTrimmedString(assetIdValue)
+  if (name !== '' && value !== '') {
+    requestBody.assetIds = [{ name, value }]
+  }
+
+  const normalizedTransferProcessId = toTrimmedString(transferProcessId)
+  if (normalizedTransferProcessId !== '') {
+    requestBody.transferProcessId = normalizedTransferProcessId
+  }
+
+  return [
+    `curl -X POST ${quoteShellArgument(endpointUrl)}`,
+    `  -H ${quoteShellArgument('Content-Type: application/json')}`,
+    ...buildAuthorizationHeaderLine(authorizationHeader),
+    `  --data-raw ${quoteShellArgument(JSON.stringify(requestBody))}`,
+  ].join(' \\\n')
+}
+
+function buildAuthorizationHeaderLine (authorizationHeader?: string): string[] {
+  const normalizedHeader = toTrimmedString(authorizationHeader)
+  return normalizedHeader === ''
+    ? []
+    : [`  -H ${quoteShellArgument(`Authorization: ${normalizedHeader}`)}`]
 }
 
 export function asArray<T = any> (value: unknown): T[] {
