@@ -71,6 +71,7 @@ describe('useInfrastructureStorage.ts', () => {
           AASRepo: { url: 'https://aas-repo.example' },
           SubmodelRepo: { url: '' },
           ConceptDescriptionRepo: { url: '' },
+          CompanyLookup: { url: '' },
         },
         auth: { securityType: 'No Authentication' },
       } as any,
@@ -95,6 +96,7 @@ describe('useInfrastructureStorage.ts', () => {
           AASRepo: { url: '' },
           SubmodelRepo: { url: 'https://submodel-service.example' },
           ConceptDescriptionRepo: { url: '' },
+          CompanyLookup: { url: '' },
         },
         catenaX: {
           edc: {
@@ -116,6 +118,7 @@ describe('useInfrastructureStorage.ts', () => {
           AASRepo: { url: '' },
           SubmodelRepo: { url: '' },
           ConceptDescriptionRepo: { url: '' },
+          CompanyLookup: { url: '' },
         },
         catenaX: {
           edc: { proxyId: 'stale' },

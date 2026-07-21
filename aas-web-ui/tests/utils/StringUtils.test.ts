@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { capitalizeFirstLetter, firstLetterToLowerCase, safeSegment, stripLastCharacter } from '@/utils/StringUtils'
+import { capitalizeFirstLetter, firstLetterToLowerCase, hasContent, safeSegment, stripLastCharacter } from '@/utils/StringUtils'
 
 describe('StringUtils.ts; Tests for \'capitalizeFirstLetter()\'', () => {
   // Define test data for capitalizeFirstLetter()
@@ -180,4 +180,33 @@ describe('StringUtils.ts; Tests for \'safeSegment()\'', () => {
       expect(safeSegment(input, fallback)).toBe(output)
     })
   }
+})
+
+describe('StringUtils.ts; Tests for \'hasContent()\'', () => {
+  describe('hasContent', () => {
+    it('should return true for valid non-empty strings', () => {
+      expect(hasContent('hello')).toBe(true)
+      expect(hasContent('a')).toBe(true)
+      expect(hasContent('  word  ')).toBe(true)
+    })
+
+    it('should return false for empty or whitespace-only strings', () => {
+      expect(hasContent('')).toBe(false)
+      expect(hasContent(' ')).toBe(false)
+      expect(hasContent('   \n\t   ')).toBe(false)
+    })
+
+    it('should return false for null and undefined', () => {
+      expect(hasContent(null)).toBe(false)
+      expect(hasContent(undefined)).toBe(false)
+    })
+
+    it('should act as a type guard', () => {
+      const value: string | null | undefined = 'valid string'
+      if (hasContent(value)) {
+        // This test checks runtime logic, but helps guarantee typescript expectations
+        expect(value.toUpperCase()).toBe('VALID STRING')
+      }
+    })
+  })
 })

@@ -29,17 +29,32 @@ export function useClipboardUtil () {
   // Computed properties
   const selectedAAS = computed(() => aasStore.getSelectedAAS)
 
-  function copyToClipboard (value: string, valueName: string, iconReference: { value: string }): void {
+  async function copyToClipboard (value: string, valueName: string, iconReference: { value: string }): Promise<void> {
     if (!value) {
       return
     }
+
+    // Keep the ORIGINAL icon value
+    const originalIcon = iconReference.value
 
     iconReference.value = 'mdi-check'
 
     // copy value to clipboard
     try {
-      navigator.clipboard.writeText(value)
+      await navigator.clipboard.writeText(value)
+
+      // open Snackbar to inform the user that the path was copied to the clipboard
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 2000,
+        color: 'success',
+        btnColor: 'buttonText',
+        text: (valueName.trim() === '' ? '\'' + value + '\'' : valueName) + ' copied to Clipboard.',
+      })
     } catch {
+      // Revert immediately on failure
+      iconReference.value = originalIcon
+
       navigationStore.dispatchSnackbar({
         status: true,
         timeout: 4000,
@@ -51,24 +66,19 @@ export function useClipboardUtil () {
 
     // set the clipboard tooltip to false after 1.5 seconds
     setTimeout(() => {
-      iconReference.value = 'mdi-clipboard-file-outline'
-    }, 2000)
-
-    // open Snackbar to inform the user that the path was copied to the clipboard
-    navigationStore.dispatchSnackbar({
-      status: true,
-      timeout: 2000,
-      color: 'success',
-      btnColor: 'buttonText',
-      text: (valueName.trim() === '' ? '\'' + value + '\'' : valueName) + ' copied to Clipboard.',
-    })
+      iconReference.value = originalIcon
+    }, 1500)
   }
 
-  function copyJsonToClipboard (value: unknown, valueName: string, iconReference: { value: string }): void {
+  async function copyJsonToClipboard (value: unknown, valueName: string, iconReference: { value: string }): Promise<void> {
     if (!value) {
       return
     }
 
+    // Keep the ORIGINAL icon value
+    const originalIcon = iconReference.value
+
+    // Todo: seems like when copying a company (as object) the endpoints are omitted, since cleanObjectRecursively is removing endpoints
     // Clean the JSON object recursively
     const cleanedValue = cleanObjectRecursively(value)
 
@@ -76,8 +86,25 @@ export function useClipboardUtil () {
 
     // copy value to clipboard
     try {
-      navigator.clipboard.writeText(JSON.stringify(cleanedValue, null, 2))
+      await navigator.clipboard.writeText(JSON.stringify(cleanedValue, null, 2))
+
+      // open Snackbar to inform the user that the path was copied to the clipboard
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 2000,
+        color: 'success',
+        btnColor: 'buttonText',
+        text:
+                (valueName.trim() === ''
+                  ? (typeof cleanedValue === 'object' && cleanedValue !== null && 'modelType' in cleanedValue
+                      ? (cleanedValue as { modelType?: string }).modelType || 'JSON'
+                      : 'JSON')
+                  : valueName) + ' copied to Clipboard.',
+      })
     } catch {
+      // Revert immediately on failure
+      iconReference.value = originalIcon
+
       navigationStore.dispatchSnackbar({
         status: true,
         timeout: 4000,
@@ -87,24 +114,9 @@ export function useClipboardUtil () {
       })
     }
 
-    // set the clipboard tooltip to false after 1.5 seconds
     setTimeout(() => {
-      iconReference.value = 'mdi-clipboard-text-outline'
-    }, 2000)
-
-    // open Snackbar to inform the user that the path was copied to the clipboard
-    navigationStore.dispatchSnackbar({
-      status: true,
-      timeout: 2000,
-      color: 'success',
-      btnColor: 'buttonText',
-      text:
-                (valueName.trim() === ''
-                  ? (typeof cleanedValue === 'object' && cleanedValue !== null && 'modelType' in cleanedValue
-                      ? (cleanedValue as { modelType?: string }).modelType || 'JSON'
-                      : 'JSON')
-                  : valueName) + ' copied to Clipboard.',
-    })
+      iconReference.value = originalIcon
+    }, 1500)
   }
 
   function pasteElement (item?: unknown): void {
