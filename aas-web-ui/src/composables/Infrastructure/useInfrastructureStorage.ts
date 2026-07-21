@@ -55,6 +55,7 @@ export function useInfrastructureStorage (): {
       aasRepoPath?: string
       submodelRepoPath?: string
       conceptDescriptionRepoPath?: string
+      companyLookupPath?: string
       keycloakActive?: boolean
       keycloakUrl?: string
       keycloakRealm?: string
@@ -77,6 +78,7 @@ export function useInfrastructureStorage (): {
       aasRepoPath?: string
       submodelRepoPath?: string
       conceptDescriptionRepoPath?: string
+      companyLookupPath?: string
       keycloakActive?: boolean
       keycloakUrl?: string
       keycloakRealm?: string
@@ -114,6 +116,7 @@ export function useInfrastructureStorage (): {
     aasRepoPath?: string
     submodelRepoPath?: string
     conceptDescriptionRepoPath?: string
+    companyLookupPath?: string
     keycloakUrl?: string
     keycloakRealm?: string
     keycloakClientId?: string
@@ -129,6 +132,7 @@ export function useInfrastructureStorage (): {
       aasRepo: envConfig.aasRepoPath || '',
       submodelRepo: envConfig.submodelRepoPath || '',
       cdRepo: envConfig.conceptDescriptionRepoPath || '',
+      companyLookup: envConfig.companyLookupPath || '',
       keycloakUrl: envConfig.keycloakUrl || '',
       keycloakRealm: envConfig.keycloakRealm || '',
       keycloakClientId: envConfig.keycloakClientId || '',
@@ -169,6 +173,9 @@ export function useInfrastructureStorage (): {
         hasRegistryIntegration: true,
       },
       ConceptDescriptionRepo: {
+        url: '',
+      },
+      CompanyLookup: {
         url: '',
       },
     }
@@ -854,6 +861,7 @@ export function useInfrastructureStorage (): {
       aasRepoPath?: string
       submodelRepoPath?: string
       conceptDescriptionRepoPath?: string
+      companyLookupPath?: string
       keycloakActive?: boolean
       keycloakUrl?: string
       keycloakRealm?: string
@@ -882,6 +890,7 @@ export function useInfrastructureStorage (): {
           || isNonEmptyString(envConfig.aasRepoPath)
           || isNonEmptyString(envConfig.submodelRepoPath)
           || isNonEmptyString(envConfig.conceptDescriptionRepoPath)
+          || isNonEmptyString(envConfig.companyLookupPath)
           || envConfig.keycloakActive === true
           || (isNonEmptyString(envConfig.keycloakUrl)
             && isNonEmptyString(envConfig.keycloakRealm)

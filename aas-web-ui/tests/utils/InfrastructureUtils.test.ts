@@ -24,6 +24,7 @@ function createComponents (): Record<BaSyxComponentKey, ComponentConfig> {
     AASRepo: { url: '' },
     SubmodelRepo: { url: '' },
     ConceptDescriptionRepo: { url: '' },
+    CompanyLookup: { url: '' },
   }
 }
 
