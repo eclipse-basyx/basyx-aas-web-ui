@@ -86,7 +86,7 @@
     "eslint-plugin-vue": "^10.9.2",
     "jsdom": "^29.1.1",
     "npm-run-all2": "^9.0.2",
-    "pnpm": "11.15.0",
+    "pnpm": "11.15.1",
     "sass-embedded": "^1.100.0",
     "typescript": "^6.0.3",
     "unplugin-auto-import": "^21.0.0",
