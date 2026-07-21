@@ -103,8 +103,10 @@
   import AssetTemplateDefault_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.12.1.json'
   import AssetTemplateDTRegistry_v0_9 from '@/pages/modules/EclipseDataspaceConnector/data/assets/templates/digitaltwin_registry_asset___tractus-x_edc_v0.9.json'
   import AssetTemplateDTRegistry_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/assets/templates/digitaltwin_registry_asset___tractus-x_edc_v0.12.1.json'
+  import AssetTemplateAasRepo_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/assets/templates/railway-x_aas_service_asset___tractus-x_edc_v0.12.1.json'
   import AssetTemplateRailwayXPush_v0_9 from '@/pages/modules/EclipseDataspaceConnector/data/assets/templates/railway-x_push_asset___tractus-x_edc_v0.9.json'
   import AssetTemplateRailwayXPush_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/assets/templates/railway-x_push_asset___tractus-x_edc_v0.12.1.json'
+  import AssetTemplateSmRepo_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/assets/templates/submodel_service_asset___tractus-x_edc_v0.12.1.json'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { formatJSON } from '@/utils/JsonUtils'
   import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
@@ -148,12 +150,24 @@
       asset: isEdcV0_12_1.value ? AssetTemplateRailwayXPush_v0_12_1 : AssetTemplateRailwayXPush_v0_9,
     },
     {
-      value: 'railwayxDTRegistry',
-      name: 'Railway-X Digital Twin Registry',
+      value: 'digitalTwinRegistry',
+      name: 'Digital Twin Registry',
       description: 'The Digital Twin Registry enables the discovery and access of Digital Twins',
       asset: isEdcV0_12_1.value ? AssetTemplateDTRegistry_v0_12_1 : AssetTemplateDTRegistry_v0_9,
     },
-  ])
+    {
+      value: 'submodelService',
+      name: 'Submodel Service',
+      description: 'The Submodel service allows to retrieve Submodels of Digital Twins',
+      asset: isEdcV0_12_1.value ? AssetTemplateSmRepo_v0_12_1 : null,
+    },
+    {
+      value: 'aasService',
+      name: 'AAS Service',
+      description: 'The AAS service allows to retrieve AAS',
+      asset: isEdcV0_12_1.value ? AssetTemplateAasRepo_v0_12_1 : null,
+    },
+  ].filter(template => template.asset !== null))
 
   const placeholders = computed(() => {
     if (!selectedTemplate.value) return []
