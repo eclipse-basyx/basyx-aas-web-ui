@@ -5,18 +5,24 @@
     v-model:asset-id-value="assetIdValue"
     :asset-id-name-suggestions="assetIdNameSuggestions"
     :copy-json-icon="copyJsonIcon"
+    :curl-command="descriptorCurlCommand"
+    :curl-note="descriptorCurlNote"
     :descriptors="descriptors"
     :dtr-url="dtrUrl"
     :edc-access-enabled="isEdcAccessMode"
+    :edc-configured-partners="configuredEdcPartners"
     :edc-counter-party-address="edcCounterPartyAddress"
     :edc-counter-party-id="edcCounterPartyId"
     :edc-partner-id="selectedEdcPartnerId"
-    :edc-partners="edcPartnerOptions"
+    :edc-partner-ready="edcPartnerReady"
+    :edc-recent-partners="recentEdcPartnerOptions"
     :has-more-descriptors="hasMoreDescriptors"
+    :infrastructure-editable="infrastructureEditable"
     :inline-error="inlineError"
     :is-loading="isLoading"
     :is-loading-more="isLoadingMoreDescriptors"
     :read-only="isEdcAccessMode"
+    :runtime-partner-loaded="runtimePartnerLoaded"
     :selected-descriptor-id="selectedDescriptorId"
     @clear="clearSearch"
     @copy-json="copyDescriptorAsJson"
@@ -25,6 +31,8 @@
     @duplicate="duplicateDescriptor"
     @edit="openEditDescriptorDialog"
     @load-more="loadMoreDescriptors"
+    @load-partner="loadCurrentEdcPartner"
+    @save-partner="savePartnerDialog = true"
     @search="searchDescriptors"
     @select="handleDescriptorSelect"
     @update:edc-counter-party-address="handleEdcCounterPartyAddressUpdate"
@@ -76,18 +84,24 @@
               :asset-id-name-suggestions="assetIdNameSuggestions"
               :copy-json-icon="copyJsonIcon"
               create-action-placement="fixed"
+              :curl-command="descriptorCurlCommand"
+              :curl-note="descriptorCurlNote"
               :descriptors="descriptors"
               :dtr-url="dtrUrl"
               :edc-access-enabled="isEdcAccessMode"
+              :edc-configured-partners="configuredEdcPartners"
               :edc-counter-party-address="edcCounterPartyAddress"
               :edc-counter-party-id="edcCounterPartyId"
               :edc-partner-id="selectedEdcPartnerId"
-              :edc-partners="edcPartnerOptions"
+              :edc-partner-ready="edcPartnerReady"
+              :edc-recent-partners="recentEdcPartnerOptions"
               :has-more-descriptors="hasMoreDescriptors"
+              :infrastructure-editable="infrastructureEditable"
               :inline-error="inlineError"
               :is-loading="isLoading"
               :is-loading-more="isLoadingMoreDescriptors"
               :read-only="isEdcAccessMode"
+              :runtime-partner-loaded="runtimePartnerLoaded"
               :selected-descriptor-id="selectedDescriptorId"
               @clear="clearSearch"
               @copy-json="copyDescriptorAsJson"
@@ -96,6 +110,8 @@
               @duplicate="duplicateDescriptor"
               @edit="openEditDescriptorDialog"
               @load-more="loadMoreDescriptors"
+              @load-partner="loadCurrentEdcPartner"
+              @save-partner="savePartnerDialog = true"
               @search="searchDescriptors"
               @select="handleDescriptorSelect"
               @update:edc-counter-party-address="handleEdcCounterPartyAddressUpdate"
@@ -139,6 +155,15 @@
         :loading="isDeletingDescriptor"
         @delete="deleteDescriptor"
       />
+
+      <CatenaXPartnerDialog
+        v-model="savePartnerDialog"
+        :default-partner-id="selectedEdcConfig?.defaultPartnerId"
+        :existing-partners="configuredEdcPartners"
+        :partner="currentEdcPartner"
+        title="Save business partner"
+        @save="saveRuntimePartner"
+      />
     </div>
   </v-container>
 </template>
@@ -147,22 +172,26 @@
   import type { AasListPageResult, AssetIdFilter } from '@/composables/Client/AASRegistryClient'
   import type { CatenaXEdcDtrMetadata } from '@/composables/Client/CatenaXEdcClient'
   import type { EdcSubmodelViewState } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
-  import type { CatenaXPartner } from '@/types/Infrastructure'
+  import type { CatenaXPartner, InfrastructureConfig } from '@/types/Infrastructure'
   import { computed, onMounted, ref, toRaw, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useDisplay } from 'vuetify'
+  import CatenaXPartnerDialog from '@/components/AppNavigation/Settings/CatenaXPartnerDialog.vue'
   import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import { parseNextCursor } from '@/composables/Client/PaginationUtils'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { useIDUtils } from '@/composables/IDUtils'
   import {
+    forgetRecentCatenaXPartner,
     getRecentCatenaXPartners,
     rememberRecentCatenaXPartner,
   } from '@/pages/modules/CatenaXplorer/catenaXplorerPartners'
   import {
     buildAssetIdNameSuggestions,
+    buildEdcShellDescriptorsCurlCommand,
     buildShellDescriptorEndpointUrl,
+    buildShellDescriptorsCurlCommand,
     getAssetIdNameSuggestions,
     getDescriptorKey,
     getSubmodelEdcEndpointInfo,
@@ -172,7 +201,14 @@
   import DescriptorBrowser from '@/pages/modules/CatenaXplorer/components/DescriptorBrowser.vue'
   import DescriptorDetails from '@/pages/modules/CatenaXplorer/components/DescriptorDetails.vue'
   import DescriptorEditDialog from '@/pages/modules/CatenaXplorer/components/DescriptorEditDialog.vue'
+  import { useEnvStore } from '@/store/EnvironmentStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
+  import { useNavigationStore } from '@/store/NavigationStore'
+  import {
+    getCatenaXPartnerKey,
+    mergeCatenaXPartners,
+    normalizeCatenaXPartners,
+  } from '@/utils/CatenaXPartnerUtils'
   import { base64Decode } from '@/utils/EncodeDecodeUtils'
   import { getCatenaXAccessMode } from '@/utils/InfrastructureUtils'
 
@@ -193,7 +229,9 @@
   const route = useRoute()
   const router = useRouter()
   const display = useDisplay()
+  const envStore = useEnvStore()
   const infrastructureStore = useInfrastructureStore()
+  const navigationStore = useNavigationStore()
   const {
     deleteAasDescriptor,
     fetchAasDescriptorById,
@@ -241,6 +279,9 @@
   const edcCounterPartyId = ref('')
   const edcCounterPartyAddress = ref('')
   const edcProtocol = ref('dataspace-protocol-http')
+  const runtimePartnerLoaded = ref(false)
+  const edcPartnerReady = ref(false)
+  const savePartnerDialog = ref(false)
 
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
   const isEdcAccessMode = computed(() =>
@@ -264,8 +305,64 @@
     return infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null
   })
   const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? '')
-  const configuredEdcPartners = computed(() => selectedEdcConfig.value?.partners ?? [])
-  const edcPartnerOptions = computed(() => mergePartners(configuredEdcPartners.value, edcRecentPartners.value))
+  const configuredEdcPartners = computed(() => normalizeCatenaXPartners(selectedEdcConfig.value?.partners ?? []))
+  const recentEdcPartnerOptions = computed(() => {
+    const mergedPartners = mergeCatenaXPartners(configuredEdcPartners.value, edcRecentPartners.value)
+    return mergedPartners.slice(configuredEdcPartners.value.length)
+  })
+  const edcPartnerOptions = computed(() => [
+    ...configuredEdcPartners.value,
+    ...recentEdcPartnerOptions.value,
+  ])
+  const infrastructureEditable = computed(() => envStore.getEndpointConfigAvailable)
+  const currentEdcPartner = computed<Partial<CatenaXPartner>>(() => ({
+    id: selectedEdcPartnerId.value,
+    counterPartyId: edcCounterPartyId.value,
+    counterPartyAddress: edcCounterPartyAddress.value,
+  }))
+  const curlAuthorizationHeader = computed(() => {
+    const securityType = selectedInfrastructure.value?.auth?.securityType
+    if (securityType === 'Basic Authentication') {
+      return 'Basic <BASE64_USERNAME_PASSWORD>'
+    }
+    if (securityType === 'Bearer Token' || securityType === 'OAuth2') {
+      const configuredPrefix = envStore.getAuthorizationPrefix.trim()
+      const prefix = configuredPrefix === '' || configuredPrefix.includes('PLACEHOLDER')
+        ? 'Bearer'
+        : configuredPrefix
+      return `${prefix} <ACCESS_TOKEN>`
+    }
+    return undefined
+  })
+  const descriptorCurlCommand = computed(() => {
+    if (!isEdcAccessMode.value) {
+      return buildShellDescriptorsCurlCommand(
+        dtrUrl.value,
+        assetIdName.value,
+        assetIdValue.value,
+        curlAuthorizationHeader.value,
+      )
+    }
+
+    return buildEdcShellDescriptorsCurlCommand(
+      getEdcDtrDescriptorsEndpointUrl(),
+      edcCounterPartyId.value,
+      edcCounterPartyAddress.value,
+      edcProtocol.value,
+      assetIdName.value,
+      assetIdValue.value,
+      getEdcTransferProcessId(edcDtrAssetKey, edcCounterPartyAddress.value),
+      curlAuthorizationHeader.value,
+    )
+  })
+  const descriptorCurlNote = computed(() => {
+    if (curlAuthorizationHeader.value) {
+      return 'Replace the authorization placeholder before running this command. Stored credentials are never shown in the preview.'
+    }
+    return isEdcAccessMode.value
+      ? 'This command calls the CatenaXplorer BFF, which applies its server-side EDC credentials.'
+      : undefined
+  })
 
   onMounted(() => {
     selectedDescriptorId.value = getRouteDescriptorId()
@@ -296,13 +393,13 @@
   watch(
     () => [
       edcProxyId.value,
-      selectedEdcConfig.value?.defaultPartnerId,
-      configuredEdcPartners.value.length,
       edcProtocol.value,
       isEdcAccessMode.value,
     ],
     () => {
       resetEdcSessionState()
+      edcPartnerReady.value = false
+      runtimePartnerLoaded.value = false
       loadRecentEdcPartners()
       selectDefaultEdcPartner()
       selectedDescriptorId.value = getRouteDescriptorId()
@@ -310,11 +407,27 @@
     },
   )
 
+  watch(
+    () => configuredEdcPartners.value.map(partner => [
+      partner.id,
+      partner.name,
+      partner.counterPartyId,
+      partner.counterPartyAddress,
+    ]),
+    () => syncSelectedEdcPartnerAfterConfigChange(),
+    { deep: true },
+  )
+
   async function reloadDescriptors (): Promise<void> {
     await loadDescriptors()
   }
 
   async function searchDescriptors (): Promise<void> {
+    if (isEdcAccessMode.value && !edcPartnerReady.value) {
+      inlineError.value = 'Load descriptors for the selected business partner before searching.'
+      return
+    }
+
     const name = assetIdName.value.trim()
     const value = assetIdValue.value.trim()
 
@@ -329,6 +442,13 @@
   async function clearSearch (): Promise<void> {
     assetIdName.value = defaultAssetIdName
     assetIdValue.value = ''
+    if (isEdcAccessMode.value && !edcPartnerReady.value) {
+      return
+    }
+    await loadDescriptors()
+  }
+
+  async function loadCurrentEdcPartner (): Promise<void> {
     await loadDescriptors()
   }
 
@@ -349,6 +469,7 @@
     try {
       const page = await fetchDescriptorListPage({
         assetIds: activeAssetIds.value,
+        generation,
         limit: descriptorPageLimit,
       })
 
@@ -363,8 +484,11 @@
       if (selectedDescriptorId.value !== '' && getRouteQueryString(legacyDescriptorIdQueryParam) !== '') {
         updateSelectedDescriptorRoute(selectedDescriptorId.value)
       }
-      await ensureSelectedDescriptorLoaded()
+      await ensureSelectedDescriptorLoaded(generation)
     } catch (error) {
+      if (generation !== descriptorPaginationGeneration.value) {
+        return
+      }
       console.warn(error)
       descriptors.value = []
       selectedDescriptorId.value = getRouteDescriptorId()
@@ -390,6 +514,7 @@
       const page = await fetchDescriptorListPage({
         assetIds: activeAssetIds.value,
         cursor: nextDescriptorCursor.value,
+        generation,
         limit: descriptorPageLimit,
       })
 
@@ -400,8 +525,11 @@
       appendDescriptorPageItems(page.items)
       rememberAssetIdNames(page.items)
       updateDescriptorPaginationState(page)
-      await ensureSelectedDescriptorLoaded()
+      await ensureSelectedDescriptorLoaded(generation)
     } catch (error) {
+      if (generation !== descriptorPaginationGeneration.value) {
+        return
+      }
       console.warn(error)
       inlineError.value = getErrorMessage(error, 'Could not load more AAS descriptors from the Digital Twin Registry.')
     } finally {
@@ -414,6 +542,7 @@
   async function fetchDescriptorListPage (options: {
     assetIds?: AssetIdFilter[]
     cursor?: string
+    generation?: number
     limit?: number
   }): Promise<AasListPageResult<any>> {
     if (!isEdcAccessMode.value) {
@@ -437,7 +566,23 @@
       throw new Error(buildEdcFailureMessage('Could not load AAS descriptors through EDC.'))
     }
 
-    rememberCurrentEdcPartner()
+    if (
+      options.generation !== undefined
+      && options.generation !== descriptorPaginationGeneration.value
+    ) {
+      return {
+        items: [],
+        hasMore: false,
+      }
+    }
+
+    const requestPartnerKey = getCatenaXPartnerKey(edcRequest)
+    const wasRuntimePartner = !configuredEdcPartners.value.some(partner =>
+      getCatenaXPartnerKey(partner) === requestPartnerKey,
+    )
+    rememberCurrentEdcPartner(edcRequest)
+    runtimePartnerLoaded.value = runtimePartnerLoaded.value || wasRuntimePartner
+    edcPartnerReady.value = true
     rememberEdcTransferProcessId(edcDtrAssetKey, response.edc, edcRequest.counterPartyAddress)
     const data = response.data as any
     const nextCursor = parseNextCursor(data)
@@ -450,7 +595,7 @@
     }
   }
 
-  async function fetchDescriptorById (descriptorId: string): Promise<any> {
+  async function fetchDescriptorById (descriptorId: string, generation?: number): Promise<any> {
     if (!isEdcAccessMode.value) {
       return fetchAasDescriptorById(descriptorId)
     }
@@ -470,7 +615,11 @@
       return {}
     }
 
-    rememberCurrentEdcPartner()
+    if (generation !== undefined && generation !== descriptorPaginationGeneration.value) {
+      return {}
+    }
+
+    rememberCurrentEdcPartner(edcRequest)
     rememberEdcTransferProcessId(edcDtrAssetKey, response.edc, edcRequest.counterPartyAddress)
     return response.data
   }
@@ -480,6 +629,7 @@
       return
     }
 
+    const generation = descriptorPaginationGeneration.value
     const stateKey = getDescriptorKey(submodelDescriptor)
     const endpoint = getSubmodelEdcEndpointInfo(submodelDescriptor)
     if (!endpoint) {
@@ -508,6 +658,10 @@
         transferProcessId: getEdcTransferProcessId(endpoint.assetId, endpoint.dspEndpoint),
       })
 
+      if (generation !== descriptorPaginationGeneration.value) {
+        return
+      }
+
       if (!response) {
         updateEdcSubmodelState(stateKey, {
           error: buildEdcFailureMessage('Could not load the Submodel through EDC.'),
@@ -524,6 +678,9 @@
         isLoading: false,
       })
     } catch (error) {
+      if (generation !== descriptorPaginationGeneration.value) {
+        return
+      }
       console.warn(error)
       updateEdcSubmodelState(stateKey, {
         error: buildEdcFailureMessage('Could not load the Submodel through EDC.'),
@@ -534,6 +691,9 @@
 
   function buildEdcFailureMessage (fallback: string): string {
     const details = consumeEdcRequestFailureDetails()?.trim()
+    if (details?.includes('counterPartyAddress is not allowed')) {
+      return `${fallback}\n${details}\nAsk the deployment administrator to add this DSP address to CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES.`
+    }
     return details ? `${fallback}\n${details}` : fallback
   }
 
@@ -613,9 +773,39 @@
     ])
   }
 
+  function getEdcDtrDescriptorsEndpointUrl (): string {
+    const configuredBasePath = envStore.getEnvBasePath.trim()
+    let basePath = '/'
+    if (configuredBasePath !== '' && !configuredBasePath.includes('PLACEHOLDER')) {
+      basePath = configuredBasePath.endsWith('/') ? configuredBasePath : `${configuredBasePath}/`
+    }
+    const relativeUrl = `${basePath}api/catena-x/edc/${encodeURIComponent(edcProxyId.value)}/dtr/shell-descriptors`
+    return new URL(relativeUrl, window.location.origin).toString()
+  }
+
   function resetEdcSessionState (): void {
     edcTransferProcessIds.value = {}
     edcSubmodels.value = {}
+  }
+
+  function prepareEdcPartnerChange (): void {
+    const hadSelectedDescriptor = selectedDescriptorId.value !== ''
+      || getRouteQueryString(descriptorEndpointQueryParam) !== ''
+      || getRouteQueryString(legacyDescriptorIdQueryParam) !== ''
+    descriptorPaginationGeneration.value += 1
+    isLoading.value = false
+    isLoadingMoreDescriptors.value = false
+    resetEdcSessionState()
+    runtimePartnerLoaded.value = false
+    edcPartnerReady.value = false
+    descriptors.value = []
+    selectedDescriptorId.value = ''
+    selectedDescriptorFallback.value = null
+    inlineError.value = ''
+    resetDescriptorPaginationState()
+    if (hadSelectedDescriptor) {
+      updateSelectedDescriptorRoute('')
+    }
   }
 
   function updateEdcSubmodelState (key: string, patch: EdcSubmodelViewState): void {
@@ -629,7 +819,16 @@
   }
 
   function loadRecentEdcPartners (): void {
-    edcRecentPartners.value = edcProxyId.value ? getRecentCatenaXPartners(edcProxyId.value) : []
+    const proxyId = edcProxyId.value
+    if (!proxyId) {
+      edcRecentPartners.value = []
+      return
+    }
+
+    for (const partner of configuredEdcPartners.value) {
+      forgetRecentCatenaXPartner(proxyId, partner)
+    }
+    edcRecentPartners.value = getRecentCatenaXPartners(proxyId)
   }
 
   function selectDefaultEdcPartner (): void {
@@ -663,59 +862,113 @@
     selectedEdcPartnerId.value = partnerId
     const partner = edcPartnerOptions.value.find(candidate => candidate.id === partnerId)
     if (!partner) {
-      resetEdcSessionState()
+      edcCounterPartyId.value = ''
+      edcCounterPartyAddress.value = ''
+      prepareEdcPartnerChange()
       return
     }
 
     edcCounterPartyId.value = partner.counterPartyId
     edcCounterPartyAddress.value = partner.counterPartyAddress
-    resetEdcSessionState()
+    prepareEdcPartnerChange()
   }
 
   function handleEdcCounterPartyIdUpdate (value: string): void {
     edcCounterPartyId.value = value
     selectedEdcPartnerId.value = ''
-    resetEdcSessionState()
+    prepareEdcPartnerChange()
   }
 
   function handleEdcCounterPartyAddressUpdate (value: string): void {
     edcCounterPartyAddress.value = value
     selectedEdcPartnerId.value = ''
-    resetEdcSessionState()
+    prepareEdcPartnerChange()
   }
 
-  function rememberCurrentEdcPartner (): void {
+  function rememberCurrentEdcPartner (
+    partner: Pick<CatenaXPartner, 'counterPartyId' | 'counterPartyAddress'> = currentEdcPartner.value as CatenaXPartner,
+  ): void {
+    const partnerKey = getCatenaXPartnerKey(partner)
+    if (configuredEdcPartners.value.some(configuredPartner =>
+      getCatenaXPartnerKey(configuredPartner) === partnerKey,
+    )) {
+      return
+    }
+
     const rememberedPartner = rememberRecentCatenaXPartner(edcProxyId.value, {
-      id: selectedEdcPartnerId.value,
-      counterPartyId: edcCounterPartyId.value,
-      counterPartyAddress: edcCounterPartyAddress.value,
+      id: getCatenaXPartnerKey(currentEdcPartner.value as CatenaXPartner) === partnerKey
+        ? selectedEdcPartnerId.value
+        : '',
+      ...partner,
     })
 
     if (!rememberedPartner) {
       return
     }
 
-    selectedEdcPartnerId.value = rememberedPartner.id
+    if (getCatenaXPartnerKey(currentEdcPartner.value as CatenaXPartner) === partnerKey) {
+      selectedEdcPartnerId.value = rememberedPartner.id
+    }
     loadRecentEdcPartners()
   }
 
-  function mergePartners (...partnerGroups: CatenaXPartner[][]): CatenaXPartner[] {
-    const partnersByKey = new Map<string, CatenaXPartner>()
-    for (const partner of partnerGroups.flat()) {
-      const counterPartyId = partner.counterPartyId.trim()
-      const counterPartyAddress = partner.counterPartyAddress.trim()
-      if (counterPartyId === '' || counterPartyAddress === '') {
-        continue
-      }
-
-      partnersByKey.set(`${counterPartyId}::${counterPartyAddress}`, {
-        ...partner,
-        counterPartyId,
-        counterPartyAddress,
-      })
+  function syncSelectedEdcPartnerAfterConfigChange (): void {
+    const selectedPartner = edcPartnerOptions.value.find(partner => partner.id === selectedEdcPartnerId.value)
+    if (!selectedPartner) {
+      selectDefaultEdcPartner()
+      prepareEdcPartnerChange()
+      return
     }
 
-    return Array.from(partnersByKey.values())
+    const connectionChanged = selectedPartner.counterPartyId !== edcCounterPartyId.value
+      || selectedPartner.counterPartyAddress !== edcCounterPartyAddress.value
+    edcCounterPartyId.value = selectedPartner.counterPartyId
+    edcCounterPartyAddress.value = selectedPartner.counterPartyAddress
+    if (connectionChanged) {
+      prepareEdcPartnerChange()
+    }
+  }
+
+  function saveRuntimePartner (partner: CatenaXPartner, useAsDefault: boolean): void {
+    const infrastructure = selectedInfrastructure.value
+    const edc = infrastructure?.catenaX?.edc
+    if (!infrastructure || !edc || !infrastructureEditable.value) {
+      return
+    }
+
+    const updatedInfrastructure = structuredClone(toRaw(infrastructure))
+    const updatedEdc = updatedInfrastructure.catenaX!.edc!
+    const partnerKey = getCatenaXPartnerKey(partner)
+    const existingPartners = normalizeCatenaXPartners(updatedEdc.partners ?? [])
+    const matchingPartner = existingPartners.find(candidate => getCatenaXPartnerKey(candidate) === partnerKey)
+    const savedPartner = {
+      ...partner,
+      id: matchingPartner?.id ?? partner.id,
+    }
+    updatedEdc.partners = [
+      ...existingPartners.filter(candidate => getCatenaXPartnerKey(candidate) !== partnerKey),
+      savedPartner,
+    ]
+
+    if (useAsDefault || !updatedEdc.defaultPartnerId) {
+      updatedEdc.defaultPartnerId = savedPartner.id
+    }
+    synchronizeLegacyDefaultPartner(updatedEdc)
+    selectedEdcPartnerId.value = savedPartner.id
+    infrastructureStore.dispatchUpdateInfrastructure(updatedInfrastructure)
+    navigationStore.dispatchSnackbar({
+      status: true,
+      timeout: 5000,
+      color: 'success',
+      btnColor: 'buttonText',
+      text: `Saved partner "${savedPartner.name || savedPartner.counterPartyId}".`,
+    })
+  }
+
+  function synchronizeLegacyDefaultPartner (edc: NonNullable<NonNullable<InfrastructureConfig['catenaX']>['edc']>): void {
+    const defaultPartner = edc.partners?.find(partner => partner.id === edc.defaultPartnerId)
+    edc.defaultCounterPartyId = defaultPartner?.counterPartyId
+    edc.defaultCounterPartyAddress = defaultPartner?.counterPartyAddress
   }
 
   function beginDescriptorPagination (assetIds?: AssetIdFilter[]): number {
@@ -784,7 +1037,9 @@
     return normalizedAssetIds && normalizedAssetIds.length > 0 ? normalizedAssetIds : undefined
   }
 
-  async function ensureSelectedDescriptorLoaded (): Promise<void> {
+  async function ensureSelectedDescriptorLoaded (
+    generation = descriptorPaginationGeneration.value,
+  ): Promise<void> {
     const descriptorId = selectedDescriptorId.value.trim()
     if (descriptorId === '') {
       selectedDescriptorFallback.value = null
@@ -805,7 +1060,10 @@
       return
     }
 
-    const descriptor = await fetchDescriptorById(descriptorId)
+    const descriptor = await fetchDescriptorById(descriptorId, generation)
+    if (generation !== descriptorPaginationGeneration.value) {
+      return
+    }
     if (descriptor && Object.keys(descriptor).length > 0) {
       selectedDescriptorFallback.value = descriptor
       rememberAssetIdNames([descriptor])
