@@ -97,7 +97,7 @@
                 <v-btn
                   class="text-buttonText"
                   :color="dataTranserInProgress ? 'error' : 'primary'"
-                  :disabled="dataTranserInProgress || edcAssetIdOfAas == ''"
+                  :disabled="dataTranserInProgress || edcAssetIdOfAasService == ''"
                   :prepend-icon="dataTranserInProgress ? 'mdi-close' : 'mdi-download'"
                   rounded="lg"
                   :text="dataTranserInProgress ? 'Cancel Fetch' : 'Fetch AAS'"
@@ -270,9 +270,11 @@
 
   const heightAssetJson = ref(`calc(${props.fullHeight} - 60px - 16px)`)
 
-  const edcAssetIdOfAas = ref('')
+  const edcAssetIdOfAasService = ref('')
+  const edcAssetEndpointOfAasService = ref('')
   const aas = ref({})
-  const edcAssetIdsOfAasSms = ref([] as Array<string>) as Ref<Array<string>>
+  const edcAssetIdsOfSubmodelServices = ref([] as Array<string>) as Ref<Array<string>>
+  const edcAssetEndpointsOfSubmodelServices = ref([] as Array<string>) as Ref<Array<string>>
   const sms = ref([] as Array<any>) as Ref<Array<any>>
 
   const edcStatus = ref('')
@@ -387,13 +389,13 @@
           )
 
           if (Array.isArray(aasDspEndpoints) && aasDspEndpoints.length > 0) {
-            const edcAssetIdOfAasIdPart = aasDspEndpoints[0].protocolInformation.subprotocolBody
+            edcAssetIdOfAasService.value = aasDspEndpoints[0].protocolInformation.subprotocolBody
               ?.split(';')
               .find((part: string) => part.startsWith('id='))
+              ?.split('=', 2)[1] || ''
+            edcAssetEndpointOfAasService.value = aasDspEndpoints[0].protocolInformation.href
 
-            edcAssetIdOfAas.value = edcAssetIdOfAasIdPart?.split('=', 2)[1] ?? ''
-
-            if (edcAssetIdOfAas.value !== '') {
+            if (edcAssetIdOfAasService.value !== '') {
               const smDspEndpoints = aasDescriptor.submodelDescriptors
                 ? aasDescriptor.submodelDescriptors
                   .flatMap((descriptor: any) => descriptor.endpoints)
@@ -401,11 +403,14 @@
                 : []
 
               if (Array.isArray(smDspEndpoints) && smDspEndpoints.length > 0) {
-                edcAssetIdsOfAasSms.value = smDspEndpoints.map((endpoint: any) => {
+                edcAssetIdsOfSubmodelServices.value = smDspEndpoints.map((endpoint: any) => {
                   return endpoint.protocolInformation.subprotocolBody
                     .split(';')
                     .find((part: string) => part.startsWith('id='))
                     .split('=', 2)[1]
+                })
+                edcAssetEndpointsOfSubmodelServices.value = smDspEndpoints.map((endpoint: any) => {
+                  return endpoint.protocolInformation.href
                 })
               }
             }
@@ -513,7 +518,7 @@
     aasFetchStatus.value = 'Fetch AAS'
 
     const { endpoint: edcEndpoint, headers } = await resolveEdcEndpointByAssetId(
-      edcAssetIdOfAas.value,
+      edcAssetIdOfAasService.value,
       props.selectedBusinessPartner,
       {
         cancelled,
@@ -525,21 +530,23 @@
     if (!edcEndpoint) return
 
     try {
-      const response = await fetch(edcEndpoint, { headers })
+      const response = await fetch(edcAssetEndpointOfAasService.value, { headers })
       const data = await response.json()
       aas.value = data
     } catch (error) {
       console.error('Error fetching Asset Administration Shell data:', error)
     }
 
-    for (let index = 0; index < edcAssetIdsOfAasSms.value.length; index++) {
-      const edcAssetIdOfAasSm = edcAssetIdsOfAasSms.value[index]
-      const progress = Math.round(((index + 1) / edcAssetIdsOfAasSms.value.length) * 100)
+    for (let index = 0; index < edcAssetIdsOfSubmodelServices.value.length; index++) {
+      const edcAssetIdOfSubmodelService = edcAssetIdsOfSubmodelServices.value[index]
+      const edcAssetEndpointOfSubmodelService = edcAssetEndpointsOfSubmodelServices.value[index]
 
-      aasFetchStatus.value = `Fetch SM #${index + 1} of ${edcAssetIdsOfAasSms.value.length} (${progress}%)`
+      const progress = Math.round(((index + 1) / edcAssetIdsOfSubmodelServices.value.length) * 100)
+
+      aasFetchStatus.value = `Fetch SM #${index + 1} of ${edcAssetIdsOfSubmodelServices.value.length} (${progress}%)`
 
       const { endpoint: edcEndpoint, headers } = await resolveEdcEndpointByAssetId(
-        edcAssetIdOfAasSm,
+        edcAssetIdOfSubmodelService,
         props.selectedBusinessPartner,
         {
           cancelled,
@@ -551,7 +558,7 @@
       if (!edcEndpoint) return
 
       try {
-        const response = await fetch(edcEndpoint, { headers })
+        const response = await fetch(edcAssetEndpointOfSubmodelService, { headers })
         const data = await response.json()
         sms.value.push(data)
       } catch (error) {
