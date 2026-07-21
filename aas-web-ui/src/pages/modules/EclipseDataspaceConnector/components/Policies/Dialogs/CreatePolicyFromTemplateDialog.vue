@@ -101,9 +101,11 @@
   import AccessPolicy_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_policy___tractus-x_edc_v0.12.1.json'
   import UsagePolicy_v0_9 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy___tractus-x_edc_v0.9.json'
   import UsagePolicy_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy___tractus-x_edc_v0.12.1.json'
+  import UsagePolicyCxDtr_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_cx_digitaltwin_registry___tractus-x_edc_v0.12.1.json'
   import UsagePolicyCxDppDbp_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_cx_dpp_dbp___tractus-x_edc_v0.12.1.json'
-  import UsagePolicyCxDtr_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_cx_dtr___tractus-x_edc_v0.12.1.json'
   import UsagePolicyCxPcf_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_cx_pcf___tractus-x_edc_v0.12.1.json'
+  import UsagePolicyCxSmService_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_cx_sm_service___tractus-x_edc_v0.12.1.json'
+  import UsagePolicyRwxAasService_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_rwx_aas_service___tractus-x_edc_v0.12.1.json'
   import UsagePolicyRwXPush_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_rwx_push___tractus-x_edc_v0.12.1.json'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { formatJSON } from '@/utils/JsonUtils'
@@ -164,6 +166,18 @@
       name: 'Usage Policy for Digital Twin Registry (Catena-X)',
       description: 'Policy with permissions for the Digital Twin Registry usage (Catena-X)',
       policy: isEdcV0_12_1.value ? UsagePolicyCxDtr_v0_12_1 : null,
+    },
+    {
+      value: 'usageCxSmService',
+      name: 'Usage Policy for Submodel Service (Catena-X)',
+      description: 'Policy with permissions for the Submodel Service usage (Catena-X)',
+      policy: isEdcV0_12_1.value ? UsagePolicyCxSmService_v0_12_1 : null,
+    },
+    {
+      value: 'usageRwxAasService',
+      name: 'Usage Policy for AAS Service (Catena-X)',
+      description: 'Policy with permissions for the AAS Service usage (Railway-X)',
+      policy: isEdcV0_12_1.value ? UsagePolicyCxSmService_v0_12_1 : null,
     },
     {
       value: 'usageRwXPush',
