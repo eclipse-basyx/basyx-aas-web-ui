@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
+  forgetRecentCatenaXPartner,
   getRecentCatenaXPartners,
   rememberRecentCatenaXPartner,
 } from '@/pages/modules/CatenaXplorer/catenaXplorerPartners'
@@ -33,5 +34,19 @@ describe('catenaXplorerPartners.ts', () => {
       },
     ])
     expect(getRecentCatenaXPartners('other')).toHaveLength(1)
+  })
+
+  it('forgets a configured partner using its canonical endpoint identity', () => {
+    rememberRecentCatenaXPartner('default', {
+      counterPartyId: 'TEST_PARTICIPANT_ID',
+      counterPartyAddress: 'https://partner.example:443/dsp/',
+    })
+
+    forgetRecentCatenaXPartner('default', {
+      counterPartyId: 'TEST_PARTICIPANT_ID',
+      counterPartyAddress: 'https://PARTNER.example/dsp',
+    })
+
+    expect(getRecentCatenaXPartners('default')).toEqual([])
   })
 })

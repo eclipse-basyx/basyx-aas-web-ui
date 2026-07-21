@@ -32,6 +32,7 @@ export const useEnvStore = defineStore('envStore', () => {
   const aasRepoPath = ref(withProductionPlaceholder(import.meta.env.VITE_AAS_REPO_PATH, '/__AAS_REPO_PATH_PLACEHOLDER__/'))
   const submodelRepoPath = ref(withProductionPlaceholder(import.meta.env.VITE_SUBMODEL_REPO_PATH, '/__SUBMODEL_REPO_PATH_PLACEHOLDER__/'))
   const conceptDescriptionRepoPath = ref(withProductionPlaceholder(import.meta.env.VITE_CD_REPO_PATH, '/__CD_REPO_PATH_PLACEHOLDER__/'))
+  const companyLookupPath = ref(withProductionPlaceholder(import.meta.env.VITE_COMPANY_LOOKUP_PATH, '/__COMPANY_LOOKUP_PATH_PLACEHOLDER__/'))
   const primaryLightColor = ref(withProductionPlaceholder(import.meta.env.VITE_PRIMARY_LIGHT_COLOR, '/__PRIMARY_LIGHT_COLOR_PLACEHOLDER__/'))
   const primaryDarkColor = ref(withProductionPlaceholder(import.meta.env.VITE_PRIMARY_DARK_COLOR, '/__PRIMARY_DARK_COLOR_PLACEHOLDER__/'))
   const influxdbToken = ref(withProductionPlaceholder(import.meta.env.VITE_INFLUXDB_TOKEN, '/__INFLUXDB_TOKEN_PLACEHOLDER__/'))
@@ -74,6 +75,7 @@ export const useEnvStore = defineStore('envStore', () => {
   const getEnvAASRepoPath = computed(() => aasRepoPath.value)
   const getEnvSubmodelRepoPath = computed(() => submodelRepoPath.value)
   const getEnvConceptDescriptionRepoPath = computed(() => conceptDescriptionRepoPath.value)
+  const getEnvCompanyLookupPath = computed(() => companyLookupPath.value)
   const getEnvPrimaryLightColor = computed(() => primaryLightColor.value)
   const getEnvPrimaryDarkColor = computed(() => primaryDarkColor.value)
   const getEnvInfluxdbToken = computed(() => influxdbToken.value)
@@ -183,6 +185,7 @@ export const useEnvStore = defineStore('envStore', () => {
     getEnvAASRepoPath,
     getEnvSubmodelRepoPath,
     getEnvConceptDescriptionRepoPath,
+    getEnvCompanyLookupPath,
     getEnvPrimaryLightColor,
     getEnvPrimaryDarkColor,
     getEnvInfluxdbToken,

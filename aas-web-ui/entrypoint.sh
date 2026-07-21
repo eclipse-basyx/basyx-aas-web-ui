@@ -13,6 +13,7 @@
 : "${AAS_REPO_PATH:=}"
 : "${SUBMODEL_REPO_PATH:=}"
 : "${CD_REPO_PATH:=}"
+: "${COMPANY_LOOKUP_PATH:=}"
 : "${PRIMARY_COLOR:=}"
 : "${PRIMARY_LIGHT_COLOR:=#0cb2f0}"
 : "${PRIMARY_DARK_COLOR:=#f69222}"
@@ -153,6 +154,7 @@ printf "%-38s %s\n" "Submodel Registry path:" "$SUBMODEL_REGISTRY_PATH"
 printf "%-38s %s\n" "AAS Repository path:" "$AAS_REPO_PATH"
 printf "%-38s %s\n" "Submodel Repository path:" "$SUBMODEL_REPO_PATH"
 printf "%-38s %s\n" "Concept Description Repository path:" "$CD_REPO_PATH"
+printf "%-38s %s\n" "Company Lookup path:" "$COMPANY_LOOKUP_PATH"
 printf "%-38s %s\n" "Primary light color:" "$PRIMARY_LIGHT_COLOR"
 printf "%-38s %s\n" "Primary dark color:" "$PRIMARY_DARK_COLOR"
 printf "%-38s %s\n" "Keycloak active:" "$KEYCLOAK_ACTIVE"
@@ -199,6 +201,7 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__AAS_REPO_PATH_PLACEHOLDER__/|$AAS_REPO_PATH|g" \
     -e "s|/__SUBMODEL_REPO_PATH_PLACEHOLDER__/|$SUBMODEL_REPO_PATH|g" \
     -e "s|/__CD_REPO_PATH_PLACEHOLDER__/|$CD_REPO_PATH|g" \
+    -e "s|/__COMPANY_LOOKUP_PLACEHOLDER__/|$COMPANY_LOOKUP_PATH|g" \
     -e "s|/__PRIMARY_LIGHT_COLOR_PLACEHOLDER__/|$PRIMARY_LIGHT_COLOR|g" \
     -e "s|/__PRIMARY_DARK_COLOR_PLACEHOLDER__/|$PRIMARY_DARK_COLOR|g" \
     -e "s|/__INFLUXDB_TOKEN_PLACEHOLDER__/|$INFLUXDB_TOKEN|g" \

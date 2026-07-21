@@ -8,14 +8,14 @@ import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { removeNullValues } from '@/utils/generalUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
 
+export const SUBMODEL_REGISTRY_ENDPOINT_PATH = '/submodel-descriptors'
+
 export function useSMRegistryClient () {
   // Stores
   const infrastructureStore = useInfrastructureStore()
 
   // Composables
   const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling()
-
-  const endpointPath = '/submodel-descriptors'
 
   // Computed Properties
   const submodelRegistryUrl = computed(() => infrastructureStore.getSubmodelRegistryURL)
@@ -52,8 +52,8 @@ export function useSMRegistryClient () {
     if (smRegistryUrl.endsWith('/')) {
       smRegistryUrl = stripLastCharacter(smRegistryUrl)
     }
-    if (!smRegistryUrl.endsWith(endpointPath)) {
-      smRegistryUrl += endpointPath
+    if (!smRegistryUrl.endsWith(SUBMODEL_REGISTRY_ENDPOINT_PATH)) {
+      smRegistryUrl += SUBMODEL_REGISTRY_ENDPOINT_PATH
     }
 
     const smRegistryPath = smRegistryUrl
@@ -106,8 +106,8 @@ export function useSMRegistryClient () {
     if (smRegistryUrl.endsWith('/')) {
       smRegistryUrl = stripLastCharacter(smRegistryUrl)
     }
-    if (!smRegistryUrl.endsWith(endpointPath)) {
-      smRegistryUrl += endpointPath
+    if (!smRegistryUrl.endsWith(SUBMODEL_REGISTRY_ENDPOINT_PATH)) {
+      smRegistryUrl += SUBMODEL_REGISTRY_ENDPOINT_PATH
     }
 
     const smRegistryPath = smRegistryUrl + '/' + base64Encode(smId)
@@ -207,8 +207,8 @@ export function useSMRegistryClient () {
     if (smRegistryUrl.endsWith('/')) {
       smRegistryUrl = stripLastCharacter(smRegistryUrl)
     }
-    if (!smRegistryUrl.endsWith(endpointPath)) {
-      smRegistryUrl += endpointPath
+    if (!smRegistryUrl.endsWith(SUBMODEL_REGISTRY_ENDPOINT_PATH)) {
+      smRegistryUrl += SUBMODEL_REGISTRY_ENDPOINT_PATH
     }
 
     const context = 'updating Submodel Descriptor'
@@ -233,8 +233,8 @@ export function useSMRegistryClient () {
     if (smRegistryUrl.endsWith('/')) {
       smRegistryUrl = stripLastCharacter(smRegistryUrl)
     }
-    if (!smRegistryUrl.endsWith(endpointPath)) {
-      smRegistryUrl += endpointPath
+    if (!smRegistryUrl.endsWith(SUBMODEL_REGISTRY_ENDPOINT_PATH)) {
+      smRegistryUrl += SUBMODEL_REGISTRY_ENDPOINT_PATH
     }
 
     const context = 'updating Submodel Descriptor'
@@ -269,8 +269,8 @@ export function useSMRegistryClient () {
     if (smRegistryUrl.endsWith('/')) {
       smRegistryUrl = stripLastCharacter(smRegistryUrl)
     }
-    if (!smRegistryUrl.endsWith(endpointPath)) {
-      smRegistryUrl += endpointPath
+    if (!smRegistryUrl.endsWith(SUBMODEL_REGISTRY_ENDPOINT_PATH)) {
+      smRegistryUrl += SUBMODEL_REGISTRY_ENDPOINT_PATH
     }
 
     const context = 'deleting Submodel Descriptor'
@@ -303,7 +303,6 @@ export function useSMRegistryClient () {
   }
 
   return {
-    endpointPath,
     getSmEndpointById,
     fetchSmDescriptorList,
     fetchSmDescriptorById,

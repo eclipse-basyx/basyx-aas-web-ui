@@ -1,33 +1,12 @@
 import type { CatenaXPartner } from '@/types/Infrastructure'
+import {
+  getCatenaXPartnerKey,
+  normalizeCatenaXPartner,
+  normalizeCatenaXPartners,
+} from '@/utils/CatenaXPartnerUtils'
 
 const storageKeyPrefix = 'catenaXplorerRecentPartners:'
 const maxRecentPartners = 8
-
-function normalizeText (value: unknown): string {
-  return typeof value === 'string' ? value.trim() : ''
-}
-
-function createPartnerId (counterPartyId: string, counterPartyAddress: string): string {
-  return `${counterPartyId}-${counterPartyAddress}`
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-}
-
-function normalizePartner (partner: Partial<CatenaXPartner>): CatenaXPartner | null {
-  const counterPartyId = normalizeText(partner.counterPartyId)
-  const counterPartyAddress = normalizeText(partner.counterPartyAddress)
-  if (counterPartyId === '' || counterPartyAddress === '') {
-    return null
-  }
-
-  return {
-    id: normalizeText(partner.id) || createPartnerId(counterPartyId, counterPartyAddress),
-    name: normalizeText(partner.name) || undefined,
-    counterPartyId,
-    counterPartyAddress,
-  }
-}
 
 function getStorageKey (proxyId: string): string {
   return `${storageKeyPrefix}${proxyId.trim()}`
@@ -58,26 +37,7 @@ function writeRecentPartnersToStorage (proxyId: string, partners: CatenaXPartner
   window.localStorage.setItem(getStorageKey(proxyId), JSON.stringify(partners.slice(0, maxRecentPartners)))
 }
 
-export function normalizePartners (partners: unknown): CatenaXPartner[] {
-  if (!Array.isArray(partners)) {
-    return []
-  }
-
-  const uniquePartners = new Map<string, CatenaXPartner>()
-  for (const partner of partners) {
-    const normalizedPartner = normalizePartner(partner as Partial<CatenaXPartner>)
-    if (!normalizedPartner) {
-      continue
-    }
-
-    uniquePartners.set(
-      `${normalizedPartner.counterPartyId}::${normalizedPartner.counterPartyAddress}`,
-      normalizedPartner,
-    )
-  }
-
-  return Array.from(uniquePartners.values())
-}
+export const normalizePartners = normalizeCatenaXPartners
 
 export function getRecentCatenaXPartners (proxyId: string): CatenaXPartner[] {
   if (proxyId.trim() === '') {
@@ -91,20 +51,32 @@ export function rememberRecentCatenaXPartner (
   proxyId: string,
   partner: Partial<CatenaXPartner>,
 ): CatenaXPartner | null {
-  const normalizedPartner = normalizePartner(partner)
+  const normalizedPartner = normalizeCatenaXPartner(partner)
   if (proxyId.trim() === '' || !normalizedPartner) {
     return null
   }
 
   const existingPartners = readRecentPartnersFromStorage(proxyId)
+  const partnerKey = getCatenaXPartnerKey(normalizedPartner)
   const recentPartners = [
     normalizedPartner,
-    ...existingPartners.filter(existingPartner =>
-      existingPartner.counterPartyId !== normalizedPartner.counterPartyId
-      || existingPartner.counterPartyAddress !== normalizedPartner.counterPartyAddress,
-    ),
+    ...existingPartners.filter(existingPartner => getCatenaXPartnerKey(existingPartner) !== partnerKey),
   ]
 
   writeRecentPartnersToStorage(proxyId, recentPartners)
   return normalizedPartner
+}
+
+export function forgetRecentCatenaXPartner (
+  proxyId: string,
+  partner: Pick<CatenaXPartner, 'counterPartyId' | 'counterPartyAddress'>,
+): void {
+  if (proxyId.trim() === '') {
+    return
+  }
+
+  const partnerKey = getCatenaXPartnerKey(partner)
+  const recentPartners = readRecentPartnersFromStorage(proxyId)
+    .filter(existingPartner => getCatenaXPartnerKey(existingPartner) !== partnerKey)
+  writeRecentPartnersToStorage(proxyId, recentPartners)
 }

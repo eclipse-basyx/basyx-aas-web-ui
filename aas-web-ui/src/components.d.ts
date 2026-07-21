@@ -32,6 +32,7 @@ declare module 'vue' {
     CarbonFootprint_v0_9: typeof import('./components/Plugins/Submodels/CarbonFootprint_v0_9.vue')['default']
     CarbonFootprint_v1_0: typeof import('./components/Plugins/Submodels/CarbonFootprint_v1_0.vue')['default']
     CatenaXEdcConfigPanel: typeof import('./components/AppNavigation/Settings/CatenaXEdcConfigPanel.vue')['default']
+    CatenaXPartnerDialog: typeof import('./components/AppNavigation/Settings/CatenaXPartnerDialog.vue')['default']
     CollectionForm: typeof import('./components/EditorComponents/SubmodelElements/CollectionForm.vue')['default']
     CommandPalette: typeof import('./components/AppNavigation/CommandPalette.vue')['default']
     ComponentConfigPanel: typeof import('./components/AppNavigation/Settings/ComponentConfigPanel.vue')['default']

@@ -17,3 +17,4 @@ export type BaSyxComponentKey
     | 'AASRepo'
     | 'SubmodelRepo'
     | 'ConceptDescriptionRepo'
+    | 'CompanyLookup'
