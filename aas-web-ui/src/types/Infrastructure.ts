@@ -230,6 +230,7 @@ export interface YamlInfrastructureConfig {
     aasEnvironment?: YamlComponentConfig
     digitalTwinRegistry?: YamlComponentConfig
     submodelService?: YamlComponentConfig
+    companyLookup?: YamlComponentConfig
   }
   catenaX?: {
     accessMode?: CatenaXAccessMode | string

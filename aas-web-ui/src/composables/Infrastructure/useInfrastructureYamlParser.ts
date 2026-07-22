@@ -10,6 +10,7 @@ import type {
   YamlInfrastructuresConfig,
   YamlSecurityConfig,
 } from '@/types/Infrastructure'
+import { createCatenaXPartnerId } from '@/utils/CatenaXPartnerUtils'
 import {
   getEndpointFieldsForTemplate,
   normalizeInfrastructureTemplate,
@@ -34,6 +35,7 @@ export function useInfrastructureYamlParser (): {
     aasRepository: 'AASRepo',
     submodelRepository: 'SubmodelRepo',
     conceptDescriptionRepository: 'ConceptDescriptionRepo',
+    companyLookup: 'CompanyLookup',
   }
 
   /**
@@ -153,6 +155,9 @@ export function useInfrastructureYamlParser (): {
     const accessMode = normalizeCatenaXAccessMode(yamlConfig.catenaX?.accessMode)
     const proxyId = yamlConfig.catenaX?.edc?.proxyId?.trim()
     const uniquePartners = parseCatenaXPartners(yamlConfig)
+    const requestedDefaultPartnerId = yamlConfig.catenaX?.edc?.defaultPartnerId?.trim()
+    const defaultPartner = uniquePartners.find(partner => partner.id === requestedDefaultPartnerId)
+      ?? uniquePartners[0]
 
     if (accessMode === 'direct') {
       return { accessMode }
@@ -166,11 +171,9 @@ export function useInfrastructureYamlParser (): {
       accessMode: 'edc',
       edc: {
         proxyId,
-        defaultCounterPartyId: yamlConfig.catenaX?.edc?.defaultCounterPartyId?.trim() || undefined,
-        defaultCounterPartyAddress: yamlConfig.catenaX?.edc?.defaultCounterPartyAddress?.trim() || undefined,
-        defaultPartnerId: yamlConfig.catenaX?.edc?.defaultPartnerId?.trim()
-          || uniquePartners[0]?.id
-          || undefined,
+        defaultCounterPartyId: defaultPartner?.counterPartyId,
+        defaultCounterPartyAddress: defaultPartner?.counterPartyAddress,
+        defaultPartnerId: defaultPartner?.id,
         partners: uniquePartners.length > 0 ? uniquePartners : undefined,
       },
     }
@@ -183,7 +186,7 @@ export function useInfrastructureYamlParser (): {
   function parseCatenaXPartners (yamlConfig: YamlInfrastructureConfig): CatenaXPartner[] {
     const partners = yamlConfig.catenaX?.edc?.partners
       ?.map(partner => ({
-        id: partner.id?.trim() || createPartnerId(partner.counterPartyId, partner.counterPartyAddress),
+        id: partner.id?.trim() || createCatenaXPartnerId(partner.counterPartyId ?? '', partner.counterPartyAddress ?? ''),
         name: partner.name?.trim() || undefined,
         counterPartyId: partner.counterPartyId?.trim() ?? '',
         counterPartyAddress: partner.counterPartyAddress?.trim() ?? '',
@@ -214,19 +217,10 @@ export function useInfrastructureYamlParser (): {
     }
 
     return {
-      id: createPartnerId(normalizedCounterPartyId, normalizedCounterPartyAddress),
+      id: createCatenaXPartnerId(normalizedCounterPartyId, normalizedCounterPartyAddress),
       counterPartyId: normalizedCounterPartyId,
       counterPartyAddress: normalizedCounterPartyAddress,
     }
-  }
-
-  function createPartnerId (counterPartyId: string | undefined, counterPartyAddress: string | undefined): string {
-    const rawId = `${counterPartyId?.trim() ?? ''}-${counterPartyAddress?.trim() ?? ''}`
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
-
-    return rawId || ''
   }
 
   /**
@@ -251,6 +245,7 @@ export function useInfrastructureYamlParser (): {
         AASRepo: { url: '' },
         SubmodelRepo: { url: '' },
         ConceptDescriptionRepo: { url: '' },
+        CompanyLookup: { url: '' },
       },
     }
 

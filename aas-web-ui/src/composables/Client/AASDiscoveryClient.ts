@@ -4,14 +4,14 @@ import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
 
+export const ASS_DISCOVERY_ENDPOINT_PATH = '/lookup/shells'
+
 export function useAASDiscoveryClient () {
   // Stores
   const infrastructureStore = useInfrastructureStore()
 
   // Composables
   const { getRequest, postRequest, deleteRequest } = useRequestHandling()
-
-  const endpointPath = '/lookup/shells'
 
   // Computed Properties
   const aasDiscoveryUrl = computed(() => infrastructureStore.getAASDiscoveryURL)
@@ -50,8 +50,8 @@ export function useAASDiscoveryClient () {
     if (aasDiscUrl.endsWith('/')) {
       aasDiscUrl = stripLastCharacter(aasDiscUrl)
     }
-    if (!aasDiscUrl.endsWith(endpointPath)) {
-      aasDiscUrl += endpointPath
+    if (!aasDiscUrl.endsWith(ASS_DISCOVERY_ENDPOINT_PATH)) {
+      aasDiscUrl += ASS_DISCOVERY_ENDPOINT_PATH
     }
 
     const assetIdObject = JSON.stringify({ name: 'globalAssetId', value: globalAssetId })
@@ -86,8 +86,8 @@ export function useAASDiscoveryClient () {
     if (aasDiscUrl.endsWith('/')) {
       aasDiscUrl = stripLastCharacter(aasDiscUrl)
     }
-    if (!aasDiscUrl.endsWith(endpointPath)) {
-      aasDiscUrl += endpointPath
+    if (!aasDiscUrl.endsWith(ASS_DISCOVERY_ENDPOINT_PATH)) {
+      aasDiscUrl += ASS_DISCOVERY_ENDPOINT_PATH
     }
 
     return aasDiscUrl
@@ -208,7 +208,6 @@ export function useAASDiscoveryClient () {
   }
 
   return {
-    endpointPath,
     getAasId,
     getAasIds,
     createAssetLinksFromAssetInformation,
