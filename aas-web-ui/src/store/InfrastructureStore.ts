@@ -693,6 +693,24 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         setValue: string
       }> = [
         {
+          keycloakRole: keycloakFeatureControlRolePrefix + 'endpoint-config-available',
+          feature: 'ENDPOINT_CONFIG_AVAILABLE',
+          setFunction: 'setEndpointConfigAvailable',
+          setValue: 'true',
+        },
+        {
+          keycloakRole: keycloakFeatureControlRolePrefix + 'endpoint-config-unavailable',
+          feature: 'ENDPOINT_CONFIG_AVAILABLE',
+          setFunction: 'setEndpointConfigAvailable',
+          setValue: 'false',
+        },
+        {
+          keycloakRole: keycloakFeatureControlRolePrefix + 'single-aas',
+          feature: 'SINGLE_AAS',
+          setFunction: 'setSingleAas',
+          setValue: 'true',
+        },
+        {
           keycloakRole: keycloakFeatureControlRolePrefix + 'multiple-aas',
           feature: 'SINGLE_AAS',
           setFunction: 'setSingleAas',
@@ -702,6 +720,12 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
           keycloakRole: keycloakFeatureControlRolePrefix + 'sm-viewer-editor',
           feature: 'SM_VIEWER_EDITOR',
           setFunction: 'setSmViewerEditor',
+          setValue: 'true',
+        },
+        {
+          keycloakRole: keycloakFeatureControlRolePrefix + 'single-sm',
+          feature: 'SINGLE_SM',
+          setFunction: 'setSingleSm',
           setValue: 'true',
         },
         {
@@ -717,10 +741,22 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
           setValue: 'true',
         },
         {
+          keycloakRole: keycloakFeatureControlRolePrefix + 'forbid-editing',
+          feature: 'ALLOW_EDITING',
+          setFunction: 'setAllowEditing',
+          setValue: 'false',
+        },
+        {
           keycloakRole: keycloakFeatureControlRolePrefix + 'allow-uploading',
           feature: 'ALLOW_UPLOADING',
           setFunction: 'setAllowUploading',
           setValue: 'true',
+        },
+        {
+          keycloakRole: keycloakFeatureControlRolePrefix + 'forbid-uploading',
+          feature: 'ALLOW_UPLOADING',
+          setFunction: 'setAllowUploading',
+          setValue: 'false',
         },
         {
           keycloakRole: keycloakFeatureControlRolePrefix + 'allow-logout',
@@ -729,10 +765,10 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
           setValue: 'true',
         },
         {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'endpoint-config-available',
-          feature: 'ENDPOINT_CONFIG_AVAILABLE',
-          setFunction: 'setEndpointConfigAvailable',
-          setValue: 'true',
+          keycloakRole: keycloakFeatureControlRolePrefix + 'forbid-logout',
+          feature: 'ALLOW_LOGOUT',
+          setFunction: 'setAllowLogout',
+          setValue: 'false',
         },
       ]
 
