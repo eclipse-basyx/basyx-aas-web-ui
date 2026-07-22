@@ -131,7 +131,6 @@ declare module 'vue' {
     Snackbar: typeof import('./components/AppNavigation/Snackbar.vue')['default']
     SpecificAssetIds: typeof import('./components/UIComponents/SpecificAssetIds.vue')['default']
     StatusSwitch: typeof import('./components/AppNavigation/Settings/StatusSwitch.vue')['default']
-    StringListElement: typeof import('./components/UIComponents/StringListElement.vue')['default']
     StringType: typeof import('./components/SubmodelElements/ValueTypes/StringType.vue')['default']
     Submodel: typeof import('./components/SubmodelElements/Submodel.vue')['default']
     SubmodelElementCollection: typeof import('./components/SubmodelElements/SubmodelElementCollection.vue')['default']
