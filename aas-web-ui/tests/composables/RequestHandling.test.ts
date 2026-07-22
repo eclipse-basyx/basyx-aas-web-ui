@@ -77,7 +77,7 @@ describe('RequestHandling.ts', () => {
     const { useRequestHandling } = await import('@/composables/RequestHandling')
     const { deleteRequest } = useRequestHandling()
 
-    const response = await deleteRequest('/api/submodels/1', 'deleting Submodel', false)
+    const response = await deleteRequest('/api/submodels/1', new Headers(), 'deleting Submodel', false)
 
     expect(response).toEqual({ success: false, status: 401 })
     expect(mockDeps.setAuthenticationStatusForInfrastructure).toHaveBeenCalledWith('infra-1', false)
@@ -95,7 +95,7 @@ describe('RequestHandling.ts', () => {
     const { useRequestHandling } = await import('@/composables/RequestHandling')
     const { deleteRequest, consumeLastRequestFailureStatus } = useRequestHandling()
 
-    const response = await deleteRequest('/api/submodels/1', 'deleting Submodel', false)
+    const response = await deleteRequest('/api/submodels/1', new Headers(), 'deleting Submodel', false)
 
     expect(response).toEqual({ success: false, status: 403 })
     expect(consumeLastRequestFailureStatus()).toBe(403)
@@ -240,7 +240,7 @@ describe('RequestHandling.ts', () => {
     const { useRequestHandling } = await import('@/composables/RequestHandling')
     const { deleteRequest } = useRequestHandling()
 
-    const response = await deleteRequest('/api/submodels/1', 'deleting Submodel', false)
+    const response = await deleteRequest('/api/submodels/1', new Headers(), 'deleting Submodel', false)
 
     expect(response).toEqual({ success: false, status: 500 })
     expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(
