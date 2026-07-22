@@ -106,7 +106,7 @@ export function useCompanyLookupClient (disableMessage = false) {
     return withApiUrl<void>(url => {
       const path = `${url}/${base64Encode(companyDomainIdentifier)}`
 
-      return deleteRequest(path, CONTEXT.DELETE, disableMessage)
+      return deleteRequest(path, new Headers(), CONTEXT.DELETE, disableMessage)
     })
   }
 
