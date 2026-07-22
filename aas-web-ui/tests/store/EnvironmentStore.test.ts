@@ -9,6 +9,7 @@ describe('EnvironmentStore feature control overrides', () => {
 
   it('keeps deployment defaults separate from token-derived overrides', () => {
     const envStore = useEnvStore()
+    const deploymentEndpointConfigAvailable = envStore.getDeploymentEndpointConfigAvailable
     const defaults = {
       endpointConfigAvailable: envStore.getEndpointConfigAvailable,
       singleAas: envStore.getSingleAas,
@@ -36,6 +37,7 @@ describe('EnvironmentStore feature control overrides', () => {
     expect(envStore.getAllowEditing).toBe(!defaults.allowEditing)
     expect(envStore.getAllowUploading).toBe(!defaults.allowUploading)
     expect(envStore.getAllowLogout).toBe(!defaults.allowLogout)
+    expect(envStore.getDeploymentEndpointConfigAvailable).toBe(deploymentEndpointConfigAvailable)
 
     envStore.setFeatureControlOverrides(null)
 
@@ -46,6 +48,7 @@ describe('EnvironmentStore feature control overrides', () => {
     expect(envStore.getAllowEditing).toBe(defaults.allowEditing)
     expect(envStore.getAllowUploading).toBe(defaults.allowUploading)
     expect(envStore.getAllowLogout).toBe(defaults.allowLogout)
+    expect(envStore.getDeploymentEndpointConfigAvailable).toBe(deploymentEndpointConfigAvailable)
   })
 
   it('falls back per feature when a token only controls part of the UI', () => {

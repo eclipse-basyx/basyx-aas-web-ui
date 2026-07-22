@@ -177,8 +177,13 @@ describe('feature evaluation', () => {
     expect(restrictiveFirst).toEqual(permissiveFirst)
   })
 
-  it('does not override deployment defaults for missing or unknown features', () => {
+  it('does not override deployment defaults for an empty feature set', () => {
     expect(evaluateFeatureControl([])).toEqual({})
-    expect(evaluateFeatureControl(['provider-specific-feature'])).toEqual({})
+  })
+
+  it('rejects unsupported feature values instead of silently applying a partial set', () => {
+    expect(() => evaluateFeatureControl(['allow-editing', 'allow-uplaoding'])).toThrow(
+      'Unsupported feature control value "allow-uplaoding"',
+    )
   })
 })

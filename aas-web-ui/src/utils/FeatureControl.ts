@@ -14,6 +14,22 @@ export type FeatureControlOverrides = Partial<{
   allowLogout: boolean
 }>
 
+const supportedFeatureValues = new Set([
+  'endpoint-config-available',
+  'endpoint-config-unavailable',
+  'single-aas',
+  'multiple-aas',
+  'sm-viewer-editor',
+  'single-sm',
+  'multiple-sm',
+  'allow-editing',
+  'forbid-editing',
+  'allow-uploading',
+  'forbid-uploading',
+  'allow-logout',
+  'forbid-logout',
+])
+
 type JsonObject = Record<string, unknown>
 
 export class FeatureControlError extends Error {
@@ -117,6 +133,12 @@ export function extractFeatureClaims (
  * Converts feature values into temporary environment overrides.
  */
 export function evaluateFeatureControl (features: readonly string[]): FeatureControlOverrides {
+  for (const feature of features) {
+    if (!supportedFeatureValues.has(feature)) {
+      throw new FeatureControlError(`Unsupported feature control value "${feature}".`)
+    }
+  }
+
   const availableFeatures = new Set(features)
   const overrides: FeatureControlOverrides = {}
 

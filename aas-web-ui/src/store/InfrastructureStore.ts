@@ -33,7 +33,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   const infrastructureAuth = useInfrastructureAuth()
 
   // Computed Properties from Environment Store
-  const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable)
+  const deploymentEndpointConfigAvailable = computed(() => envStore.getDeploymentEndpointConfigAvailable)
   const EnvAASDiscoveryPath = computed(() => envStore.getEnvAASDiscoveryPath)
   const EnvAASRegistryPath = computed(() => envStore.getEnvAASRegistryPath)
   const EnvSubmodelRegistryPath = computed(() => envStore.getEnvSubmodelRegistryPath)
@@ -146,7 +146,16 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     return infrastructures.value.find(infra => infra.id === selectedInfrastructureId.value) || null
   })
   watchFeatureControlClaims(
-    () => getSelectedInfrastructure.value?.token?.accessToken,
+    () => {
+      const infrastructure = getSelectedInfrastructure.value
+      return infrastructure?.token?.accessToken
+        ? {
+            accessToken: infrastructure.token.accessToken,
+            expiresAt: infrastructure.token.expiresAt,
+            isAuthenticated: infrastructure.isAuthenticated,
+          }
+        : undefined
+    },
     () => envStore.getFeatureControlClaimMappings,
     overrides => envStore.setFeatureControlOverrides(overrides),
   )
@@ -182,7 +191,8 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
     const allowLogout = envStore.getAllowLogout
     const isOAuth2ClientCredentials = infra.auth.oauth2?.authFlow === 'client-credentials'
-    return allowLogout && !isOAuth2ClientCredentials
+    const needsReauthentication = Boolean(infra.token?.accessToken) && infra.isAuthenticated === false
+    return (allowLogout || needsReauthentication) && !isOAuth2ClientCredentials
   })
 
   function getDefaultInfrastructureId (): string {
@@ -217,7 +227,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       oidcClientId: EnvOidcClientId.value,
       preconfiguredAuth: EnvPreconfiguredAuth.value,
       preconfiguredAuthClientSecret: EnvPreconfiguredAuthClientSecret.value,
-      endpointConfigAvailable: endpointConfigAvailable.value,
+      endpointConfigAvailable: deploymentEndpointConfigAvailable.value,
     }
 
     const result = await infrastructureStorage.loadInfrastructuresFromStorage(envConfig)
@@ -650,7 +660,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             console.warn(context + ' (' + path + ') failed!')
 
             // Remove from localStorage if endpoint config is available
-            if (endpointConfigAvailable.value) {
+            if (deploymentEndpointConfigAvailable.value) {
               window.localStorage.removeItem(componentKey + 'URL')
             }
 

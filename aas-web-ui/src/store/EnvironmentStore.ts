@@ -1,6 +1,7 @@
 import type { FeatureControlOverrides } from '@/utils/FeatureControl'
 import { defineStore } from 'pinia'
 import { urlRegex } from '@/composables/UrlUtils'
+import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
 const isProduction = import.meta.env.MODE === 'production'
 
@@ -20,16 +21,16 @@ function withProductionPlaceholder (value: string | undefined, placeholder: stri
   return value || (isProduction ? placeholder : '')
 }
 
-function decodeProductionBase64 (value: string): string {
+export function decodeProductionBase64 (value: string): string {
   if (value === '' || value.includes('PLACEHOLDER')) {
     return ''
   }
-  try {
-    return atob(value)
-  } catch {
+  const decoded = base64Decode(value)
+  if (decoded === '') {
     console.warn('[EnvironmentStore] FEATURE_CONTROL_CLAIM_MAPPINGS could not be decoded.')
     return ''
   }
+  return decoded
 }
 
 export const useEnvStore = defineStore('envStore', () => {
@@ -109,10 +110,11 @@ export const useEnvStore = defineStore('envStore', () => {
       && parseBooleanEnv(preconfiguredAuth.value),
   )
   const getPreconfiguredAuthClientSecret = computed(() => preconfiguredAuthClientSecret.value)
-  const getEndpointConfigAvailable = computed(() => featureControlOverrides.value?.endpointConfigAvailable ?? parseBooleanEnv(endpointConfigAvailable.value))
+  const getDeploymentEndpointConfigAvailable = computed(() => parseBooleanEnv(endpointConfigAvailable.value))
+  const getEndpointConfigAvailable = computed(() => featureControlOverrides.value?.endpointConfigAvailable ?? getDeploymentEndpointConfigAvailable.value)
   const getSingleAas = computed(() => featureControlOverrides.value?.singleAas ?? parseBooleanEnv(singleAas.value))
   const getSingleAasRedirect = computed(() => {
-    if (parseBooleanEnv(singleAas.value) && singleAasRedirect.value) {
+    if (getSingleAas.value && singleAasRedirect.value) {
       if (urlRegex.test(singleAasRedirect.value)) {
         return singleAasRedirect.value
       }
@@ -123,7 +125,7 @@ export const useEnvStore = defineStore('envStore', () => {
   const getSmViewerEditor = computed(() => featureControlOverrides.value?.smViewerEditor ?? parseBooleanEnv(smViewerEditor.value))
   const getSingleSm = computed(() => featureControlOverrides.value?.singleSm ?? parseBooleanEnv(singleSm.value))
   const getSingleSmRedirect = computed(() => {
-    if (parseBooleanEnv(singleSm.value) && singleSmRedirect.value) {
+    if (getSingleSm.value && singleSmRedirect.value) {
       if (urlRegex.test(singleSmRedirect.value)) {
         return singleSmRedirect.value
       }
@@ -190,6 +192,7 @@ export const useEnvStore = defineStore('envStore', () => {
     getOidcClientId,
     getPreconfiguredAuth,
     getPreconfiguredAuthClientSecret,
+    getDeploymentEndpointConfigAvailable,
     getEndpointConfigAvailable,
     getSingleAas,
     getSingleAasRedirect,

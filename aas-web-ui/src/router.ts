@@ -13,6 +13,7 @@ import {
   getOAuth2CallbackUri,
 } from '@/composables/Auth/OAuth2Navigation'
 import { discoverOpenIdConfiguration, oidcIssuersMatch } from '@/composables/Auth/OpenIdConnect'
+import { watchFeatureControlRoutes } from '@/composables/FeatureControl'
 import { useRouteHandling } from '@/composables/routeHandling'
 import AASEditor from '@/pages/AASEditor.vue'
 import AASSubmodelViewer from '@/pages/AASSubmodelViewer.vue'
@@ -1001,6 +1002,16 @@ export async function createAppRouter (): Promise<Router> {
     }
 
     return true
+  })
+
+  watchFeatureControlRoutes(router, allowEditing, smViewerEditor, () => {
+    navigationStore.dispatchSnackbar({
+      status: true,
+      timeout: 5000,
+      color: 'info',
+      btnColor: 'buttonText',
+      text: 'Your available UI features changed. The current view was adjusted.',
+    })
   })
 
   return router
