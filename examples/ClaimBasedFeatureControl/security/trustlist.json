@@ -1,0 +1,18 @@
+[
+  {
+    "issuer": "http://keycloak.localhost:8080/realms/BaSyx",
+    "audience": "basyx-web-ui",
+    "claimMappings": [
+      {
+        "target": "features",
+        "mode": "list",
+        "sources": ["/basyx_features"]
+      },
+      {
+        "target": "role",
+        "mode": "scalar",
+        "sources": ["/basyx_role"]
+      }
+    ]
+  }
+]

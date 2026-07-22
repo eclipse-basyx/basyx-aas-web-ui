@@ -1,0 +1,16 @@
+infrastructures:
+  default: secured
+
+  secured:
+    name: Claim-based feature control
+    template: mono-all
+    components:
+      aasEnvironment:
+        baseUrl: "http://localhost:8081"
+    security:
+      type: oauth2
+      config:
+        flow: auth_code
+        issuer: "http://keycloak.localhost:8080/realms/BaSyx"
+        clientId: "basyx-web-ui"
+        scope: "openid profile email"
