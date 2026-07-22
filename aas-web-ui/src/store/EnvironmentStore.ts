@@ -137,6 +137,7 @@ export const useEnvStore = defineStore('envStore', () => {
   const getAuthorizationDescriptionEndpointExemption = computed(() =>
     parseBooleanEnv(authorizationDescriptionEndpointExemption.value),
   )
+
   const getStartPageRouteName = computed(() => {
     const value = (startPageRouteName.value || '').trim()
     if (value === '' || value.includes('PLACEHOLDER')) {

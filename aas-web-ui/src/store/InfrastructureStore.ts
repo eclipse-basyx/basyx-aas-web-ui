@@ -433,6 +433,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             aasRepoPath: EnvAASRepoPath.value,
             submodelRepoPath: EnvSubmodelRepoPath.value,
             conceptDescriptionRepoPath: EnvConceptDescriptionRepoPath.value,
+            companyLookupPath: EnvCompanyLookupPath.value,
             keycloakActive: EnvKeycloakActive.value,
             keycloakUrl: EnvKeycloakUrl.value,
             keycloakRealm: EnvKeycloakRealm.value,
