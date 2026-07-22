@@ -39,21 +39,71 @@ The UI receives this configuration:
 
 Keycloak maps the multivalued `basyx_features` user attribute into the access token. BaSyx Go independently uses the same source in `security/trustlist.json`, producing the verified canonical claim `basyx.features` inside the backend. Identity providers must not emit `basyx.features` directly because BaSyx Go reserves the `basyx.*` namespace.
 
+Unknown or misspelled feature values invalidate the token-derived feature set and restore the deployment defaults. Expired tokens and infrastructures marked unauthenticated also restore those defaults.
+
 Feature values only change what the UI presents. They are not authorization. This example therefore maps the separate scalar `basyx_role` attribute to `basyx.role`; the ABAC policy grants `viewer` read access and `editor` full access.
 
 ## Microsoft Entra ID
 
-For a stored user attribute, register a multivalued string directory extension such as `basyx_features`, populate it through Microsoft Graph or provisioning, and include it as an optional access-token claim on the BaSyx resource application. Entra emits directory extensions using a claim such as `extn.basyx_features`, so configure both consumers with:
+For a stored user attribute, create a multivalued string directory extension through Microsoft Graph. Use the object ID of the application which owns the extension definition:
 
-```json
+```http
+POST https://graph.microsoft.com/v1.0/applications/{extension-owner-object-id}/extensionProperties
+Content-Type: application/json
+
 {
-  "target": "features",
-  "mode": "list",
-  "sources": ["/extn.basyx_features"]
+  "name": "basyx_features",
+  "dataType": "String",
+  "isMultiValued": true,
+  "targetObjects": ["User"]
 }
 ```
 
-Alternatively, a custom claims provider can return a string array named `basyx_features`; in that case use `/basyx_features`. Access-token claims are configured on the resource application whose audience the UI requests, not only on the SPA registration.
+The response contains the full property name, for example `extension_<appid-without-dashes>_basyx_features`. Populate that property on each user through Microsoft Graph or provisioning. Then add the full property name to the BaSyx resource application's access-token optional claims:
+
+```json
+{
+  "optionalClaims": {
+    "accessToken": [
+      {
+        "name": "extension_<appid-without-dashes>_basyx_features",
+        "source": "user",
+        "essential": false
+      }
+    ]
+  }
+}
+```
+
+Entra emits the directory extension in the JWT as `extn.basyx_features`. Configure the UI with the complete array value:
+
+```json
+[
+  {
+    "target": "features",
+    "mode": "list",
+    "sources": ["/extn.basyx_features"]
+  }
+]
+```
+
+The corresponding BaSyx Go provider entry is:
+
+```json
+{
+  "issuer": "https://login.microsoftonline.com/{tenant-id}/v2.0",
+  "audience": "{basyx-resource-application-id}",
+  "claimMappings": [
+    {
+      "target": "features",
+      "mode": "list",
+      "sources": ["/extn.basyx_features"]
+    }
+  ]
+}
+```
+
+Alternatively, a custom claims provider can return a string array named `basyx_features`; in that case use `/basyx_features` in both mapping entries. Access-token claims are configured on the resource application whose audience the UI requests, not only on the SPA registration.
 
 ## Stop or reset
 

@@ -70,11 +70,11 @@
       "enabled": true,
       "publicClient": true,
       "standardFlowEnabled": true,
-      "directAccessGrantsEnabled": true,
+      "directAccessGrantsEnabled": false,
       "redirectUris": ["http://localhost:3001/"],
       "webOrigins": ["http://localhost:3001"],
       "protocol": "openid-connect",
-      "fullScopeAllowed": true,
+      "fullScopeAllowed": false,
       "attributes": {
         "post.logout.redirect.uris": "http://localhost:3001/"
       },

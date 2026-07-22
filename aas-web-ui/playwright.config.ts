@@ -5,6 +5,7 @@ const runtimeTarget = process.env.IT_TARGET ?? 'preview'
 const basePathInput = process.env.IT_BASE_PATH ?? '/ui/'
 const port = Number(process.env.IT_PORT ?? '4173')
 const timeseriesBaseURL = process.env.IT_TIMESERIES_URL ?? 'http://127.0.0.1:3000'
+const featureControlBaseURL = process.env.IT_FEATURE_CONTROL_URL ?? 'http://localhost:3001'
 const disableWebServer = process.env.IT_DISABLE_WEBSERVER === 'true'
 const isCI = !!process.env.CI
 
@@ -32,9 +33,16 @@ export default defineConfig({
   projects: [
     {
       name: 'integration-core',
-      testIgnore: '**/plugins/**',
+      testIgnore: ['**/feature-control/**', '**/plugins/**'],
       use: {
         baseURL: coreBaseURL,
+      },
+    },
+    {
+      name: 'integration-feature-control',
+      testMatch: '**/feature-control/*.pw.ts',
+      use: {
+        baseURL: featureControlBaseURL,
       },
     },
     {
