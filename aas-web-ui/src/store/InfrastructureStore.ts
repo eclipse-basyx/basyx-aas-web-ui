@@ -9,6 +9,7 @@ import { CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH } from '@/composables/Clie
 import { COMPANY_LOOKUP_ENDPOINT_PATHS } from '@/composables/Client/CompanyLookup/constants/api'
 import { SUBMODEL_REGISTRY_ENDPOINT_PATH } from '@/composables/Client/SMRegistryClient'
 import { SUBMODEL_REPOSITORY_ENDPOINT_PATH } from '@/composables/Client/SMRepositoryClient'
+import { watchFeatureControlClaims } from '@/composables/FeatureControl'
 import { useInfrastructureAuth } from '@/composables/Infrastructure/useInfrastructureAuth'
 import { useInfrastructureStorage } from '@/composables/Infrastructure/useInfrastructureStorage'
 import { useRequestHandling } from '@/composables/RequestHandling'
@@ -144,6 +145,11 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
     return infrastructures.value.find(infra => infra.id === selectedInfrastructureId.value) || null
   })
+  watchFeatureControlClaims(
+    () => getSelectedInfrastructure.value?.token?.accessToken,
+    () => envStore.getFeatureControlClaimMappings,
+    overrides => envStore.setFeatureControlOverrides(overrides),
+  )
   const getOpenInfrastructureEditMode = computed(() => openInfrastructureEditMode.value)
   function getActiveComponentUrl (componentKey: BaSyxComponentKey, url: string): string {
     const selectedInfra = getSelectedInfrastructure.value
