@@ -30,7 +30,7 @@ services:
       - claim-feature-control
 
   keycloak:
-    image: keycloak/keycloak:26.6.4
+    image: keycloak/keycloak:26.7
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://database:5432/basyx
