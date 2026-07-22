@@ -1,19 +1,30 @@
 <script setup lang="ts">
   import { computed, ref, watch } from 'vue'
+  import { useRoute } from 'vue-router'
+  import { useEnvStore } from '@/store/EnvironmentStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
+  import { VIEW, VIEWS, type ViewType } from '../constants/view.ts'
   import { useCompanyLookupI18n } from '../i18n/useCompanyLookupI18n'
   import CompaniesList from './CompaniesList.vue'
   import CompanyLookupConfigurator from './CompanyLookupConfigurator.vue'
   import CompanyDetail from './detail/CompanyDetail.vue'
 
   const { t } = useCompanyLookupI18n()
+  const route = useRoute()
   const navigationStore = useNavigationStore()
+  const envStore = useEnvStore()
 
   const isMobile = computed(() => navigationStore.getIsMobile)
+  const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable)
 
+  const view = ref<ViewType>(
+    VIEWS.includes(route.query.view as string)
+      ? (route.query.view as ViewType)
+      : VIEW.DETAILS,
+  )
   const drawer = ref(false)
-  const listCollapsed = ref(false)
+  const listCollapsed = ref(view.value === VIEW.DETAILSONLY ? true : false)
 
   // Auto-close mobile drawer when leaving mobile
   watch(isMobile, val => {
@@ -56,7 +67,7 @@
 
       <v-spacer />
 
-      <CompanyLookupConfigurator />
+      <CompanyLookupConfigurator v-if="endpointConfigAvailable" />
     </div>
 
     <div class="cl-body d-flex flex-grow-1 overflow-hidden">

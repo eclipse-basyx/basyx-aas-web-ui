@@ -75,7 +75,7 @@
     <v-divider />
 
     <div class="flex-grow-1 overflow-y-auto py-2 px-2">
-      <template v-if="view === VIEW.DETAILS">
+      <template v-if="view === VIEW.DETAILS || view === VIEW.DETAILSONLY">
         <v-card variant="elevated">
           <v-card-text class="pb-1">
             <span class="text-primary text-body-large">{{ company.name ?? t('detail.fallbackName') }}</span>

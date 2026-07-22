@@ -2,6 +2,7 @@
   import type { CompanyDescriptor } from '@/composables/Client/CompanyLookup/types/company'
   import { ref } from 'vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
+  import { useEnvStore } from '@/store/EnvironmentStore'
   import { DEFAULT_COPY_ICON } from '../../constants/icons'
   import { useCompanyLookupI18n } from '../../i18n/useCompanyLookupI18n'
   import CompanyDelete from './CompanyDelete.vue'
@@ -11,10 +12,15 @@
 
   const { t } = useCompanyLookupI18n()
   const { copyToClipboard } = useClipboardUtil()
+
+  const envStore = useEnvStore()
+
   const copyIcon = ref<string>(DEFAULT_COPY_ICON)
 
   const isMenuOpen = ref(false)
   const editDialog = useTemplateRef<InstanceType<typeof CompanyDialog>>('editDialog')
+
+  const allowEditing = computed(() => envStore.getAllowEditing)
 
   function openEdit (): void {
     isMenuOpen.value = false
@@ -49,19 +55,23 @@
     <v-sheet border>
       <v-list class="py-0" dense density="compact" slim>
 
-        <v-list-item @click.stop="openEdit">
-          <template #prepend>
-            <v-icon size="x-small">mdi-pencil</v-icon>
-          </template>
+        <template v-if="allowEditing">
 
-          <v-list-item-subtitle>{{ t('options.edit') }}</v-list-item-subtitle>
-        </v-list-item>
+          <v-list-item @click.stop="openEdit">
+            <template #prepend>
+              <v-icon size="x-small">mdi-pencil</v-icon>
+            </template>
 
-        <div @click.stop>
-          <CompanyDelete :company="company" @deleted="onDelete" />
-        </div>
+            <v-list-item-subtitle>{{ t('options.edit') }}</v-list-item-subtitle>
+          </v-list-item>
 
-        <v-divider />
+          <div @click.stop>
+            <CompanyDelete :company="company" @deleted="onDelete" />
+          </div>
+
+          <v-divider />
+
+        </template>
 
         <v-list-item @click.stop="onCopy">
           <template #prepend>

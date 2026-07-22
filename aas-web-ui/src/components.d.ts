@@ -52,7 +52,6 @@ declare module 'vue' {
     DocumentIdsTable: typeof import('./components/Plugins/Submodels/HandoverDocumentation_v2_0/components/DocumentIdsTable.vue')['default']
     DownloadAAS: typeof import('./components/AppNavigation/DownloadAAS.vue')['default']
     EmbeddedDataSpecificationInput: typeof import('./components/EditorComponents/InputTypes/EmbeddedDataSpecificationInput.vue')['default']
-    EndpointsElement: typeof import('./components/UIComponents/EndpointsElement.vue')['default']
     Entity: typeof import('./components/SubmodelElements/Entity.vue')['default']
     EntityForm: typeof import('./components/EditorComponents/SubmodelElements/EntityForm.vue')['default']
     File: typeof import('./components/SubmodelElements/File.vue')['default']

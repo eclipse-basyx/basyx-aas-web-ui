@@ -98,12 +98,6 @@ const singleComponentEndpointFields: Record<BaSyxComponentKey, InfrastructureEnd
     yamlKey: 'companyLookup',
     componentKeys: ['CompanyLookup'],
   },
-  CompanyLookup: {
-    key: 'CompanyLookup',
-    label: 'Company Lookup',
-    yamlKey: 'companyLookup',
-    componentKeys: ['CompanyLookup'],
-  },
 }
 
 export const INFRASTRUCTURE_TEMPLATE_DEFINITIONS: Record<
