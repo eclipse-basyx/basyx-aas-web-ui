@@ -11,6 +11,10 @@ export interface SnackbarType {
   extendedError?: string
   actionText?: string
   actionCallback?: () => void | Promise<void>
+  /** Infrastructure that owns this notification, if it is infrastructure-specific. */
+  infrastructureId?: string
+  /** Category used to prevent duplicate infrastructure-specific notifications. */
+  kind?: 'authentication-required' | 'access-denied'
 }
 
 export interface AutoSyncType {

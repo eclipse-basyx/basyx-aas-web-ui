@@ -4,6 +4,7 @@
     auto-select-first
     :clearable="clearable"
     density="comfortable"
+    :error-messages="errorMessages"
     hide-no-data
     item-title="title"
     item-value="value"
@@ -28,6 +29,8 @@
     elementType: aasTypes.AasSubmodelElements
     entityType: aasTypes.EntityType
     qualifierKind: aasTypes.QualifierKind
+    direction: aasTypes.Direction
+    stateOfEvent: aasTypes.StateOfEvent
   }
 
   type ValueType<T extends keyof ValueMap> = ValueMap[T]
@@ -42,10 +45,12 @@
       label: string
       type: keyof ValueMap
       clearable?: boolean
+      errorMessages?: string | string[] | null
       modelValue: ValueType<keyof ValueMap> | null
     }>(),
     {
       clearable: false,
+      errorMessages: undefined,
     },
   )
 
@@ -143,6 +148,20 @@
           { title: 'ValueQualifier', value: aasTypes.QualifierKind.ValueQualifier },
           { title: 'ConceptQualifier', value: aasTypes.QualifierKind.ConceptQualifier },
           { title: 'TemplateQualifier', value: aasTypes.QualifierKind.TemplateQualifier },
+        ]
+        break
+      }
+      case 'direction': {
+        options = [
+          { title: 'Input', value: aasTypes.Direction.Input },
+          { title: 'Output', value: aasTypes.Direction.Output },
+        ]
+        break
+      }
+      case 'stateOfEvent': {
+        options = [
+          { title: 'On', value: aasTypes.StateOfEvent.On },
+          { title: 'Off', value: aasTypes.StateOfEvent.Off },
         ]
         break
       }

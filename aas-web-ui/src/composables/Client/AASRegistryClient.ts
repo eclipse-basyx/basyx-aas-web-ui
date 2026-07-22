@@ -9,6 +9,8 @@ import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { removeNullValues } from '@/utils/generalUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
 
+export const ASS_REGISTRY_ENDPOINT_PATH = '/shell-descriptors'
+
 export interface AssetIdFilter {
   name: string
   value: string
@@ -27,7 +29,6 @@ export function useAASRegistryClient () {
   // Composables
   const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling()
 
-  const endpointPath = '/shell-descriptors'
   const compatibilityFetchLimit = 1000
 
   // Computed Properties
@@ -87,8 +88,8 @@ export function useAASRegistryClient () {
     if (aasRegUrl.endsWith('/')) {
       aasRegUrl = stripLastCharacter(aasRegUrl)
     }
-    if (!aasRegUrl.endsWith(endpointPath)) {
-      aasRegUrl += endpointPath
+    if (!aasRegUrl.endsWith(ASS_REGISTRY_ENDPOINT_PATH)) {
+      aasRegUrl += ASS_REGISTRY_ENDPOINT_PATH
     }
 
     const queryParams = new URLSearchParams()
@@ -186,8 +187,8 @@ export function useAASRegistryClient () {
     if (aasRegUrl.endsWith('/')) {
       aasRegUrl = stripLastCharacter(aasRegUrl)
     }
-    if (!aasRegUrl.endsWith(endpointPath)) {
-      aasRegUrl += endpointPath
+    if (!aasRegUrl.endsWith(ASS_REGISTRY_ENDPOINT_PATH)) {
+      aasRegUrl += ASS_REGISTRY_ENDPOINT_PATH
     }
 
     const aasRegistryPath = aasRegUrl + '/' + base64Encode(aasId)
@@ -274,8 +275,8 @@ export function useAASRegistryClient () {
     if (aasRegUrl.endsWith('/')) {
       aasRegUrl = stripLastCharacter(aasRegUrl)
     }
-    if (!aasRegUrl.endsWith(endpointPath)) {
-      aasRegUrl += endpointPath
+    if (!aasRegUrl.endsWith(ASS_REGISTRY_ENDPOINT_PATH)) {
+      aasRegUrl += ASS_REGISTRY_ENDPOINT_PATH
     }
 
     const context = 'updating AAS Descriptor'
@@ -300,8 +301,8 @@ export function useAASRegistryClient () {
     if (aasRegUrl.endsWith('/')) {
       aasRegUrl = stripLastCharacter(aasRegUrl)
     }
-    if (!aasRegUrl.endsWith(endpointPath)) {
-      aasRegUrl += endpointPath
+    if (!aasRegUrl.endsWith(ASS_REGISTRY_ENDPOINT_PATH)) {
+      aasRegUrl += ASS_REGISTRY_ENDPOINT_PATH
     }
 
     const context = 'updating AAS Descriptor'
@@ -335,8 +336,8 @@ export function useAASRegistryClient () {
     if (aasRegUrl.endsWith('/')) {
       aasRegUrl = stripLastCharacter(aasRegUrl)
     }
-    if (!aasRegUrl.endsWith(endpointPath)) {
-      aasRegUrl += endpointPath
+    if (!aasRegUrl.endsWith(ASS_REGISTRY_ENDPOINT_PATH)) {
+      aasRegUrl += ASS_REGISTRY_ENDPOINT_PATH
     }
 
     const context = 'deleting AAS Descriptor'
@@ -371,7 +372,6 @@ export function useAASRegistryClient () {
   }
 
   return {
-    endpointPath,
     getAasEndpointById,
     fetchAasDescriptorListPage,
     fetchAasDescriptorList,

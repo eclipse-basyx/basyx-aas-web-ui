@@ -8,6 +8,9 @@ import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { usesSubmodelSuperpath } from '@/utils/InfrastructureUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
+import { ASS_REPOSITORY_ENDPOINT_PATH } from './AASRepositoryClient'
+
+export const SUBMODEL_REPOSITORY_ENDPOINT_PATH = '/submodels'
 
 export function useSMRepositoryClient () {
   // Stores
@@ -24,9 +27,6 @@ export function useSMRepositoryClient () {
     consumeLastRequestFailureDetails,
   } = useRequestHandling()
   const { generateUUIDFromString } = useIDUtils()
-
-  const endpointPath = '/submodels'
-  const aasEndpointPath = '/shells'
 
   function ensureWriteSuccess (response: any): boolean {
     return response?.success === true
@@ -61,8 +61,8 @@ export function useSMRepositoryClient () {
     if (aasRepoUrl.endsWith('/')) {
       aasRepoUrl = stripLastCharacter(aasRepoUrl)
     }
-    if (!aasRepoUrl.endsWith(aasEndpointPath)) {
-      aasRepoUrl += aasEndpointPath
+    if (!aasRepoUrl.endsWith(ASS_REPOSITORY_ENDPOINT_PATH)) {
+      aasRepoUrl += ASS_REPOSITORY_ENDPOINT_PATH
     }
 
     return aasRepoUrl + '/' + base64Encode(aasId)
@@ -107,7 +107,7 @@ export function useSMRepositoryClient () {
     }
 
     const normalizedAasEndpoint = aasEndpoint.endsWith('/') ? stripLastCharacter(aasEndpoint) : aasEndpoint
-    return normalizedAasEndpoint + endpointPath + '/' + base64Encode(smId)
+    return normalizedAasEndpoint + SUBMODEL_REPOSITORY_ENDPOINT_PATH + '/' + base64Encode(smId)
   }
 
   /**
@@ -127,8 +127,8 @@ export function useSMRepositoryClient () {
     if (smRepoUrl.endsWith('/')) {
       smRepoUrl = stripLastCharacter(smRepoUrl)
     }
-    if (!smRepoUrl.endsWith(endpointPath)) {
-      smRepoUrl += endpointPath
+    if (!smRepoUrl.endsWith(SUBMODEL_REPOSITORY_ENDPOINT_PATH)) {
+      smRepoUrl += SUBMODEL_REPOSITORY_ENDPOINT_PATH
     }
 
     const smRepoPath = smRepoUrl
@@ -215,8 +215,9 @@ export function useSMRepositoryClient () {
       const smRepoNotFoundError = Array.isArray(smRepoResponse.data)
         ? smRepoResponse.data.some((message: any) => Number(message.code) === 404)
         : false
+      const responseStatus = Number(smRepoResponse.status)
 
-      if (smRepoAuthorizationError) {
+      if (smRepoAuthorizationError || [401, 403].includes(responseStatus)) {
         return {
           id: generateUUIDFromString(smEndpoint),
           idShort: 'Submodel Not Authorized!',
@@ -230,7 +231,7 @@ export function useSMRepositoryClient () {
         }
       }
 
-      if (smRepoBadRequestError || smRepoNotFoundError) {
+      if (smRepoBadRequestError || smRepoNotFoundError || [400, 404].includes(responseStatus)) {
         return {}
       }
 
@@ -454,8 +455,8 @@ export function useSMRepositoryClient () {
     if (smRepoUrl.endsWith('/')) {
       smRepoUrl = stripLastCharacter(smRepoUrl)
     }
-    if (!smRepoUrl.endsWith(endpointPath)) {
-      smRepoUrl += endpointPath
+    if (!smRepoUrl.endsWith(SUBMODEL_REPOSITORY_ENDPOINT_PATH)) {
+      smRepoUrl += SUBMODEL_REPOSITORY_ENDPOINT_PATH
     }
 
     const smEndpoint = smRepoUrl + '/' + base64Encode(smId)
@@ -494,8 +495,8 @@ export function useSMRepositoryClient () {
     if (smRepoUrl.endsWith('/')) {
       smRepoUrl = stripLastCharacter(smRepoUrl)
     }
-    if (!smRepoUrl.endsWith(endpointPath)) {
-      smRepoUrl += endpointPath
+    if (!smRepoUrl.endsWith(SUBMODEL_REPOSITORY_ENDPOINT_PATH)) {
+      smRepoUrl += SUBMODEL_REPOSITORY_ENDPOINT_PATH
     }
 
     // Convert Submodel to JSON
@@ -544,8 +545,8 @@ export function useSMRepositoryClient () {
     if (smRepoUrl.endsWith('/')) {
       smRepoUrl = stripLastCharacter(smRepoUrl)
     }
-    if (!smRepoUrl.endsWith(endpointPath)) {
-      smRepoUrl += endpointPath
+    if (!smRepoUrl.endsWith(SUBMODEL_REPOSITORY_ENDPOINT_PATH)) {
+      smRepoUrl += SUBMODEL_REPOSITORY_ENDPOINT_PATH
     }
 
     // Convert Submodel to JSON
@@ -657,8 +658,8 @@ export function useSMRepositoryClient () {
     if (smRepoUrl.endsWith('/')) {
       smRepoUrl = stripLastCharacter(smRepoUrl)
     }
-    if (!smRepoUrl.endsWith(endpointPath)) {
-      smRepoUrl += endpointPath
+    if (!smRepoUrl.endsWith(SUBMODEL_REPOSITORY_ENDPOINT_PATH)) {
+      smRepoUrl += SUBMODEL_REPOSITORY_ENDPOINT_PATH
     }
 
     // Convert SME to JSON
@@ -733,7 +734,6 @@ export function useSMRepositoryClient () {
   }
 
   return {
-    endpointPath,
     fetchSmList,
     fetchSmById,
     fetchSm,

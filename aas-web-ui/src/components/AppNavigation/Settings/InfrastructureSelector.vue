@@ -32,11 +32,13 @@
   import { useRouter } from 'vue-router'
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
+  import { useNavigationStore } from '@/store/NavigationStore'
   import { getActiveComponentKeys } from '@/utils/InfrastructureUtils'
 
   // Stores
   const infrastructureStore = useInfrastructureStore()
   const envStore = useEnvStore()
+  const navigationStore = useNavigationStore()
 
   const router = useRouter()
 
@@ -92,11 +94,21 @@
 
   // Methods
   async function onInfrastructureChange (infrastructureId: string): Promise<void> {
+    // Clear the selected AAS and submodel while their infrastructure is still active.
+    // Selecting an infrastructure reloads data immediately, so doing this afterwards
+    // can request the previous AAS descriptor from the newly selected infrastructure.
+    navigationStore.dispatchRouteTransition('infrastructure-switch')
+    try {
+      await router.replace({
+        query: {},
+      })
+      navigationStore.dispatchUrlQuery({})
+    } finally {
+      navigationStore.dispatchRouteTransition(null)
+    }
+
     // dispatchSelectInfrastructure handles connection checking and data reload internally
     await infrastructureStore.dispatchSelectInfrastructure(infrastructureId)
-    router.push({
-      query: {},
-    })
   }
 
   function openManageDialog (): void {

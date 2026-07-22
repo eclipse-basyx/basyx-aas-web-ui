@@ -2,13 +2,13 @@ import type { BaSyxComponent, BaSyxComponentKey } from '@/types/BaSyx'
 import type { InfrastructureConfig, UserData } from '@/types/Infrastructure'
 import { defineStore } from 'pinia'
 import { computed, nextTick, reactive, ref, watch } from 'vue'
-import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient'
-import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
-import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
-import { useCDRepositoryClient } from '@/composables/Client/CDRepositoryClient'
-import { useCompanyLookupClient } from '@/composables/Client/CompanyLookupClient'
-import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
-import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
+import { ASS_DISCOVERY_ENDPOINT_PATH } from '@/composables/Client/AASDiscoveryClient'
+import { ASS_REGISTRY_ENDPOINT_PATH } from '@/composables/Client/AASRegistryClient'
+import { ASS_REPOSITORY_ENDPOINT_PATH } from '@/composables/Client/AASRepositoryClient'
+import { CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH } from '@/composables/Client/CDRepositoryClient'
+import { COMPANY_LOOKUP_ENDPOINT_PATHS } from '@/composables/Client/CompanyLookup/constants/api'
+import { SUBMODEL_REGISTRY_ENDPOINT_PATH } from '@/composables/Client/SMRegistryClient'
+import { SUBMODEL_REPOSITORY_ENDPOINT_PATH } from '@/composables/Client/SMRepositoryClient'
 import { useInfrastructureAuth } from '@/composables/Infrastructure/useInfrastructureAuth'
 import { useInfrastructureStorage } from '@/composables/Infrastructure/useInfrastructureStorage'
 import { useRequestHandling } from '@/composables/RequestHandling'
@@ -30,13 +30,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   const { getRequest } = useRequestHandling()
   const infrastructureStorage = useInfrastructureStorage()
   const infrastructureAuth = useInfrastructureAuth()
-  const { endpointPath: aasDiscoveryEndpointPath } = useAASDiscoveryClient()
-  const { endpointPath: aasRegistryEndpointPath } = useAASRegistryClient()
-  const { endpointPath: smRegistryEndpointPath } = useSMRegistryClient()
-  const { endpointPath: aasRepoEndpointPath } = useAASRepositoryClient()
-  const { endpointPath: smRepoEndpointPath } = useSMRepositoryClient()
-  const { endpointPath: cdRepoEndpointPath } = useCDRepositoryClient()
-  const { endpointPath: companyLookupEndpointPath } = useCompanyLookupClient()
 
   // Computed Properties from Environment Store
   const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable)
@@ -84,7 +77,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       connected: ref(null),
       connect: () => connectComponent('AASDiscovery'),
       label: 'AAS Discovery URL',
-      pathCheck: aasDiscoveryEndpointPath,
+      pathCheck: ASS_DISCOVERY_ENDPOINT_PATH,
       additionalParams: '?limit=1',
     },
     AASRegistry: {
@@ -93,7 +86,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       connected: ref(null),
       connect: () => connectComponent('AASRegistry'),
       label: 'AAS Registry URL',
-      pathCheck: aasRegistryEndpointPath,
+      pathCheck: ASS_REGISTRY_ENDPOINT_PATH,
       additionalParams: '?limit=1',
     },
     SubmodelRegistry: {
@@ -102,7 +95,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       connected: ref(null),
       connect: () => connectComponent('SubmodelRegistry'),
       label: 'Submodel Registry URL',
-      pathCheck: smRegistryEndpointPath,
+      pathCheck: SUBMODEL_REGISTRY_ENDPOINT_PATH,
       additionalParams: '?limit=1',
     },
     AASRepo: {
@@ -111,7 +104,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       connected: ref(null),
       connect: () => connectComponent('AASRepo'),
       label: 'AAS Repository URL',
-      pathCheck: aasRepoEndpointPath,
+      pathCheck: ASS_REPOSITORY_ENDPOINT_PATH,
       additionalParams: '?limit=1',
     },
     SubmodelRepo: {
@@ -120,7 +113,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       connected: ref(null),
       connect: () => connectComponent('SubmodelRepo'),
       label: 'Submodel Repository URL',
-      pathCheck: smRepoEndpointPath,
+      pathCheck: SUBMODEL_REPOSITORY_ENDPOINT_PATH,
       additionalParams: '?limit=1&level=core',
     },
     ConceptDescriptionRepo: {
@@ -129,7 +122,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       connected: ref(null),
       connect: () => connectComponent('ConceptDescriptionRepo'),
       label: 'Concept Description Repository URL',
-      pathCheck: cdRepoEndpointPath,
+      pathCheck: CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH,
       additionalParams: '?limit=1',
     },
     CompanyLookup: {
@@ -138,7 +131,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       connected: ref(null),
       connect: () => connectComponent('CompanyLookup'),
       label: 'Company Lookup URL',
-      pathCheck: companyLookupEndpointPath,
+      pathCheck: COMPANY_LOOKUP_ENDPOINT_PATHS.COMPANIES,
       additionalParams: '?limit=1',
     },
   })
@@ -226,6 +219,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       aasRepoPath: EnvAASRepoPath.value,
       submodelRepoPath: EnvSubmodelRepoPath.value,
       conceptDescriptionRepoPath: EnvConceptDescriptionRepoPath.value,
+      companyLookupPath: EnvCompanyLookupPath.value,
       keycloakActive: EnvKeycloakActive.value,
       keycloakUrl: EnvKeycloakUrl.value,
       keycloakRealm: EnvKeycloakRealm.value,
@@ -349,6 +343,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       return
     }
 
+    if (selectedInfrastructureId.value !== infrastructureId) {
+      navigationStore.dispatchDismissInfrastructureSnackbar()
+    }
     selectedInfrastructureId.value = infrastructureId
 
     saveInfrastructuresToStorage()
@@ -436,7 +433,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             aasRepoPath: EnvAASRepoPath.value,
             submodelRepoPath: EnvSubmodelRepoPath.value,
             conceptDescriptionRepoPath: EnvConceptDescriptionRepoPath.value,
-            companyLookupEndpointPath: EnvCompanyLookupPath.value,
             keycloakActive: EnvKeycloakActive.value,
             keycloakUrl: EnvKeycloakUrl.value,
             keycloakRealm: EnvKeycloakRealm.value,

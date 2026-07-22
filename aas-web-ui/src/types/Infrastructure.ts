@@ -231,6 +231,7 @@ export interface YamlInfrastructureConfig {
     companyLookup?: YamlComponentConfig
     digitalTwinRegistry?: YamlComponentConfig
     submodelService?: YamlComponentConfig
+    companyLookup?: YamlComponentConfig
   }
   catenaX?: {
     accessMode?: CatenaXAccessMode | string

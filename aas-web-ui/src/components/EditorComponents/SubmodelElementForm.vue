@@ -32,8 +32,8 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref, watch } from 'vue'
-  import { getDataElementModelTypes } from '@/utils/AAS/SubmodelElementPathUtils'
+  import { computed, nextTick, ref, watch } from 'vue'
+  import { allowedChildTypes } from '@/utils/AAS/SubmodelElementRegistry'
 
   const addSMEDialog = ref(false)
 
@@ -45,32 +45,16 @@
   const emit = defineEmits<{
     (event: 'update:model-value', value: boolean): void
     (event: 'open-create-sme-dialog', value: string): void
+    (event: 'cancelled'): void
   }>()
 
-  const allSMEs = [
-    'Property',
-    'SubmodelElementCollection',
-    'SubmodelElementList',
-    'MultiLanguageProperty',
-    'Range',
-    'File',
-    'Blob',
-    'Entity',
-    'ReferenceElement',
-    'RelationshipElement',
-    'AnnotatedRelationshipElement',
-  ]
-
-  const availableSMEs = computed(() => {
-    if (props.parentElement?.modelType === 'AnnotatedRelationshipElement') {
-      return [...getDataElementModelTypes()].toSorted((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
-    }
-
-    return [...allSMEs].toSorted((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+  const availableSMEs = computed<string[]>(() => {
+    return allowedChildTypes(props.parentElement)
+      .toSorted((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
   })
 
-  const selectedSME = ref(availableSMEs.value[0] ?? '')
-  const lastValidSelectedSME = ref(selectedSME.value)
+  const selectedSME = ref<string>(availableSMEs.value[0] ?? '')
+  const lastValidSelectedSME = ref<string>(selectedSME.value)
 
   watch(selectedSME, newValue => {
     if (availableSMEs.value.includes(newValue)) {
@@ -86,6 +70,7 @@
     value => {
       addSMEDialog.value = value
     },
+    { immediate: true },
   )
 
   watch(
@@ -108,11 +93,13 @@
 
   function closeDialog (): void {
     addSMEDialog.value = false
+    emit('cancelled')
   }
 
-  function openCreateSMEDialog (): void {
+  async function openCreateSMEDialog (): Promise<void> {
     if (selectedSME.value == '') return
-    closeDialog()
+    addSMEDialog.value = false
+    await nextTick()
     emit('open-create-sme-dialog', selectedSME.value)
   }
 </script>

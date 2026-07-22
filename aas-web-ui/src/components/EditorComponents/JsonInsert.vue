@@ -42,7 +42,8 @@
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { Endpoint, ProtocolInformation } from '@/types/Descriptors'
-  import { getCreatedSubmodelElementPath, isDataElementModelType } from '@/utils/AAS/SubmodelElementPathUtils'
+  import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils'
+  import { isChildTypeAllowed } from '@/utils/AAS/SubmodelElementRegistry'
   import { base64Decode } from '@/utils/EncodeDecodeUtils'
   import { isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
 
@@ -205,16 +206,16 @@
     }
     const submodelElement = instanceOrError.mustValue()
 
-    if (
-      props.parentElement.modelType === 'AnnotatedRelationshipElement'
-      && !isDataElementModelType(submodelElement.modelType)
-    ) {
+    const childModelType = (json as { modelType?: string }).modelType || ''
+    if (!isChildTypeAllowed(props.parentElement, childModelType)) {
       navigationStore.dispatchSnackbar({
         status: true,
         timeout: 4000,
         color: 'error',
         btnColor: 'buttonText',
-        text: 'Only DataElement types are allowed as AnnotatedRelationshipElement annotations.',
+        text: props.parentElement.modelType === 'AnnotatedRelationshipElement'
+          ? 'Only DataElement types are allowed as AnnotatedRelationshipElement annotations.'
+          : `${childModelType} is not compatible with this parent element.`,
       })
       return
     }

@@ -178,8 +178,8 @@ describe('useInfrastructureYamlParser.ts', () => {
 
     expect(parsed.infrastructures[0].catenaX?.edc).toEqual({
       proxyId: 'default',
-      defaultCounterPartyId: undefined,
-      defaultCounterPartyAddress: undefined,
+      defaultCounterPartyId: 'TEST_PARTICIPANT_ID',
+      defaultCounterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
       defaultPartnerId: 'partner-a',
       partners: [
         {

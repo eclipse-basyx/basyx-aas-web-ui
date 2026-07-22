@@ -9,6 +9,8 @@ import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { downloadFile } from '@/utils/generalUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
 
+export const ASS_REPOSITORY_ENDPOINT_PATH = '/shells'
+
 export type AasListPageOptions = PaginationPageOptions
 
 export type AasListPageResult<T> = PaginationPageResult<T>
@@ -28,7 +30,6 @@ export function useAASRepositoryClient () {
   } = useRequestHandling()
   const { generateUUIDFromString } = useIDUtils()
 
-  const endpointPath = '/shells'
   const compatibilityFetchLimit = 1000
 
   // Computed Properties
@@ -44,7 +45,7 @@ export function useAASRepositoryClient () {
 
     // remove '/shells' AAS Repository URL and add '/upload' to construct the upload URL
     // TODO: This is a workaround, as the AAS Repository does not provide an upload endpoint but rather the AAS Environment. This should be changed in the future.
-    return aasRepoUrl.replace(endpointPath, '') + '/upload'
+    return aasRepoUrl.replace(ASS_REPOSITORY_ENDPOINT_PATH, '') + '/upload'
   })
 
   /**
@@ -67,8 +68,8 @@ export function useAASRepositoryClient () {
     if (aasRepoUrl.endsWith('/')) {
       aasRepoUrl = stripLastCharacter(aasRepoUrl)
     }
-    if (!aasRepoUrl.endsWith(endpointPath)) {
-      aasRepoUrl += endpointPath
+    if (!aasRepoUrl.endsWith(ASS_REPOSITORY_ENDPOINT_PATH)) {
+      aasRepoUrl += ASS_REPOSITORY_ENDPOINT_PATH
     }
 
     const queryParams = new URLSearchParams()
@@ -200,8 +201,9 @@ export function useAASRepositoryClient () {
       const aasRepoNotFoundError = Array.isArray(aasRepoResponse.data)
         ? aasRepoResponse.data.some((message: any) => Number(message.code) === 404)
         : false
+      const responseStatus = Number(aasRepoResponse.status)
 
-      if (aasRepoAuthorizationError) {
+      if (aasRepoAuthorizationError || [401, 403].includes(responseStatus)) {
         return {
           id: generateUUIDFromString(aasEndpoint),
           idShort: 'AAS Not Authorized!',
@@ -214,7 +216,7 @@ export function useAASRepositoryClient () {
         }
       }
 
-      if (aasRepoBadRequestError || aasRepoNotFoundError) {
+      if (aasRepoBadRequestError || aasRepoNotFoundError || [400, 404].includes(responseStatus)) {
         return {}
       }
 
@@ -342,8 +344,8 @@ export function useAASRepositoryClient () {
     if (aasRepoUrl.endsWith('/')) {
       aasRepoUrl = stripLastCharacter(aasRepoUrl)
     }
-    if (!aasRepoUrl.endsWith(endpointPath)) {
-      aasRepoUrl += endpointPath
+    if (!aasRepoUrl.endsWith(ASS_REPOSITORY_ENDPOINT_PATH)) {
+      aasRepoUrl += ASS_REPOSITORY_ENDPOINT_PATH
     }
 
     const aasEndpoint = aasRepoUrl + '/' + base64Encode(aasId)
@@ -458,8 +460,8 @@ export function useAASRepositoryClient () {
     if (aasRepoUrl.endsWith('/')) {
       aasRepoUrl = stripLastCharacter(aasRepoUrl)
     }
-    if (!aasRepoUrl.endsWith(endpointPath)) {
-      aasRepoUrl += endpointPath
+    if (!aasRepoUrl.endsWith(ASS_REPOSITORY_ENDPOINT_PATH)) {
+      aasRepoUrl += ASS_REPOSITORY_ENDPOINT_PATH
     }
 
     // Convert AAS to JSON
@@ -487,8 +489,8 @@ export function useAASRepositoryClient () {
     if (aasRepoUrl.endsWith('/')) {
       aasRepoUrl = stripLastCharacter(aasRepoUrl)
     }
-    if (!aasRepoUrl.endsWith(endpointPath)) {
-      aasRepoUrl += endpointPath
+    if (!aasRepoUrl.endsWith(ASS_REPOSITORY_ENDPOINT_PATH)) {
+      aasRepoUrl += ASS_REPOSITORY_ENDPOINT_PATH
     }
 
     // Convert AAS to JSON
@@ -525,8 +527,8 @@ export function useAASRepositoryClient () {
     if (aasRepoUrl.endsWith('/')) {
       aasRepoUrl = stripLastCharacter(aasRepoUrl)
     }
-    if (!aasRepoUrl.endsWith(endpointPath)) {
-      aasRepoUrl += endpointPath
+    if (!aasRepoUrl.endsWith(ASS_REPOSITORY_ENDPOINT_PATH)) {
+      aasRepoUrl += ASS_REPOSITORY_ENDPOINT_PATH
     }
 
     // Create formData
@@ -786,7 +788,6 @@ export function useAASRepositoryClient () {
   }
 
   return {
-    endpointPath,
     fetchAasListPage,
     fetchAasList,
     fetchAasById,

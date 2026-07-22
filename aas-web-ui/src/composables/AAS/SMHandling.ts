@@ -6,6 +6,13 @@ import { useAASStore } from '@/store/AASDataStore'
 import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils'
 import { formatDate } from '@/utils/DateUtils'
 
+type FetchSmByIdOptions = {
+  withConceptDescriptions?: boolean
+  setData?: boolean
+  aasId?: string
+  suppressNotFound?: boolean
+}
+
 export function useSMHandling () {
   // Composables
   const {
@@ -185,17 +192,12 @@ export function useSMHandling () {
    *
    * @async
    * @param {string} smId - The ID of the SM to fetch.
-   * @param {boolean} withConceptDescriptions - Flag to specify if SM and its Submodel Elements (SME)
-   * should be fetched with ConceptDescriptions (CDs)
-   * @param {boolean} setDataFlag - Flag to specify if data (`path`, `timestamp`, ìd`) should be set to
-   * Submodel Elements (SME) of SM object
+   * @param options Controls enrichment, AAS superpath resolution, and expected 404 handling.
    * @returns {Promise<any>} A promise that resolves to a SM.
    */
   async function fetchSmById (
     smId: string,
-    withConceptDescriptions = false,
-    setDataFlag = false,
-    aasId?: string,
+    options: FetchSmByIdOptions = {},
   ): Promise<any> {
     const failResponse = {}
 
@@ -209,10 +211,10 @@ export function useSMHandling () {
       return failResponse
     }
 
-    const smEndpoint = await getSmEndpointById(smId, aasId)
+    const smEndpoint = await getSmEndpointById(smId, options.aasId, options.suppressNotFound)
 
     return smEndpoint && smEndpoint.trim() !== ''
-      ? fetchSm(smEndpoint.trim(), withConceptDescriptions, setDataFlag)
+      ? fetchSm(smEndpoint.trim(), options.withConceptDescriptions, options.setData)
       : failResponse
   }
 
@@ -278,7 +280,11 @@ export function useSMHandling () {
    * @param {string} smId - The ID of the SM to retrieve the endpoint for.
    * @returns {Promise<string>} A promise that resolves to an SM endpoint.
    */
-  async function getSmEndpointById (smId: string, aasId?: string): Promise<string> {
+  async function getSmEndpointById (
+    smId: string,
+    aasId?: string,
+    suppressNotFound = false,
+  ): Promise<string> {
     const failResponse = ''
 
     if (!smId) {
@@ -292,7 +298,7 @@ export function useSMHandling () {
     }
 
     // First try to determine SM endpoint with the help of the registry
-    let smEndpoint = await getSmEndpointByIdFromRegistry(smId)
+    let smEndpoint = await getSmEndpointByIdFromRegistry(smId, undefined, suppressNotFound)
 
     if (smEndpoint && smEndpoint.trim() !== '') {
       return smEndpoint.trim()

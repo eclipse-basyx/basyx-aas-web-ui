@@ -578,7 +578,7 @@ export function useAASXPackaging (): {
       .filter(submodelId => selectedSubmodelIdSet.has(submodelId))
 
     const fetchedSubmodels = await Promise.all(
-      selectedSubmodelIds.map(async submodelId => await fetchSmById(submodelId, false, true)),
+      selectedSubmodelIds.map(async submodelId => await fetchSmById(submodelId, { setData: true })),
     )
     const rawSubmodels = fetchedSubmodels.filter(submodel => hasKeys(submodel)) as JsonRecord[]
 

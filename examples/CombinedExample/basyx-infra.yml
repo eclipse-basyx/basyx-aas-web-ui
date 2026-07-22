@@ -3,33 +3,21 @@ infrastructures:
 
   infra1:
     name: Secured BaSyx
-    template: mono-repo
+    template: mono-all
     components:
-      aasDiscovery:
-        baseUrl: "http://discovery.basyx.localhost"
-      aasRegistry:
-        baseUrl: "http://aasreg.basyx.localhost"
-      submodelRegistry:
-        baseUrl: "http://smreg.basyx.localhost"
       aasEnvironment:
-        baseUrl: "http://aasenv.basyx.localhost"
+        baseUrl: "http://localhost:8081"
     security:
       type: oauth2
       config:
         flow: auth_code
-        issuer: "http://keycloak.basyx.localhost/realms/BaSyx"
+        issuer: "http://keycloak.localhost:8080/realms/BaSyx"
         clientId: "basyx-web-ui"
 
   infra2:
     name: Local BaSyx
-    template: mono-repo
+    template: mono-all
     components:
-      aasDiscovery:
-        baseUrl: "http://localhost:9084"
-      aasRegistry:
-        baseUrl: "http://localhost:9082"
-      submodelRegistry:
-        baseUrl: "http://localhost:9083"
       aasEnvironment:
         baseUrl: "http://localhost:9081"
     security:

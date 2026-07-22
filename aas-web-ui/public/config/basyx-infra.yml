@@ -48,7 +48,7 @@ infrastructures:
       conceptDescriptionRepository:
         baseUrl: "http://localhost:9081"
       companyLookup:
-        baseUrl: "http://localhost:9085"
+        baseUrl: "http://localhost:5080"
     security:
       type: none
 

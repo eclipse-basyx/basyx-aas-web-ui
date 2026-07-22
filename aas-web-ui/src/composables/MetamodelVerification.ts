@@ -13,6 +13,12 @@ export interface VerificationResult {
   truncated: boolean
   fieldErrors: Map<string, string>
   globalErrors: string[]
+  issues: VerificationIssue[]
+}
+
+export interface VerificationIssue {
+  path: string
+  message: string
 }
 
 const defaultFieldAliases: Record<string, string> = {
@@ -33,6 +39,17 @@ const defaultFieldAliases: Record<string, string> = {
   entityType: 'entityType',
   globalAssetId: 'globalAssetId',
   specificAssetIds: 'specificAssetIds',
+  typeValueListElement: 'typeValueListElement',
+  valueTypeListElement: 'valueTypeListElement',
+  orderRelevant: 'orderRelevant',
+  observed: 'observed',
+  direction: 'direction',
+  state: 'state',
+  messageTopic: 'messageTopic',
+  messageBroker: 'messageBroker',
+  lastUpdate: 'lastUpdate',
+  minInterval: 'minInterval',
+  maxInterval: 'maxInterval',
 }
 
 function normalizePath (path: string | null | undefined): string {
@@ -71,6 +88,7 @@ export function verifyForEditor (element: aasTypes.Class, options?: Verification
 
   const fieldErrors = new Map<string, string>()
   const globalErrors: string[] = []
+  const issues: VerificationIssue[] = []
 
   let totalErrors = 0
   let reportedErrors = 0
@@ -87,6 +105,7 @@ export function verifyForEditor (element: aasTypes.Class, options?: Verification
       reportedErrors += 1
 
       const normalizedPath = normalizePath(String(error.path))
+      issues.push({ path: normalizedPath, message: error.message })
       const mappedField = tryMapField(normalizedPath, fieldAliases)
 
       if (mappedField && !fieldErrors.has(mappedField)) {
@@ -102,6 +121,7 @@ export function verifyForEditor (element: aasTypes.Class, options?: Verification
     reportedErrors = Math.max(reportedErrors, 1)
     const message = error instanceof Error ? error.message : String(error)
     globalErrors.push(`Verification failed unexpectedly: ${message}`)
+    issues.push({ path: '', message: `Verification failed unexpectedly: ${message}` })
   }
 
   return {
@@ -111,6 +131,7 @@ export function verifyForEditor (element: aasTypes.Class, options?: Verification
     truncated: totalErrors > maxErrors,
     fieldErrors,
     globalErrors,
+    issues,
   }
 }
 

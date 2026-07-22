@@ -85,3 +85,28 @@ export function safeSegment (value: string, fallback: string): string {
 
   return dotStripped
 }
+
+/**
+ * Checks if a value is a valid, non-empty string.
+ *
+ * @remarks
+ * This function acts as a TypeScript Type Guard (`val is string`). When used in conditional
+ * branches or array filters, it refines the type, allowing you to safely access string-specific
+ * properties (like `.toLowerCase()`) without further nullish checks.
+ *
+ * @param {string | null} val - The value to examine.
+ * @returns {boolean} true if the value is a string and has a trimmed length greater than 0; otherwise false.
+ *
+ * @example
+ * 1. Standard conditional check
+ * if (hasContent(username)) {
+ * console.log(username.toUpperCase()) // Safely inferred as string
+ * }
+ *
+ * 2. Filtering collections
+ * const names: (string | null | undefined)[] = ['Alice', ' ', null, 'Bob']
+ * const cleanNames: string[] = names.filter(hasContent) // Output: ['Alice', 'Bob']
+ */
+export function hasContent (val?: string | null): val is string {
+  return typeof val === 'string' && val.trim().length > 0
+}

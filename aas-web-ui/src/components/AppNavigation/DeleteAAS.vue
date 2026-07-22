@@ -136,7 +136,7 @@
 
         for (const submodelRef of submodelRefs) {
           // TODO: Optimize by only using the metadata endpoint once it is implemented in BaSyx Go
-          const submodel = await fetchSmById(submodelRef.keys[0].value, false, false, props.aas.id)
+          const submodel = await fetchSmById(submodelRef.keys[0].value, { aasId: props.aas.id })
           submodelIds.value.push({ smId: submodelRef.keys[0].value, smIdShort: submodel.idShort, submodel })
           selected.value.push(submodelRef.keys[0].value)
         }

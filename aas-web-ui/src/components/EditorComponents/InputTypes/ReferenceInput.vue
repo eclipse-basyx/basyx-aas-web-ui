@@ -6,6 +6,8 @@
       <div class="text-title-small">{{ label }}</div>
     </template>
   </v-list-item>
+
+  <v-messages v-if="errorMessages" active color="error" :messages="errorMessages" />
   <!-- Reference Type Selection -->
   <v-list-item v-if="referenceValue !== null" class="px-0 pt-0 mb-4">
     <v-combobox
@@ -92,6 +94,7 @@
     modelValue: aasTypes.Reference | null
     defaultReferenceType?: aasTypes.ReferenceTypes
     defaultKeyType?: aasTypes.KeyTypes
+    errorMessages?: string | string[] | null
   }
 
   const props = withDefaults(defineProps<Props>(), {
@@ -99,6 +102,7 @@
     showRemoveButton: false,
     defaultReferenceType: aasTypes.ReferenceTypes.ModelReference,
     defaultKeyType: aasTypes.KeyTypes.GlobalReference,
+    errorMessages: undefined,
   })
 
   const emit = defineEmits<{

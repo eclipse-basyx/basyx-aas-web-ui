@@ -105,6 +105,7 @@
   // Data
   const newNumberValue = ref<string>('')
   const isFocused = ref<boolean>(false)
+  const lastSubmittedValue = ref<unknown>()
 
   // Computed Properties
   const selectedNode = computed(() => aasStore.getSelectedNode)
@@ -128,16 +129,20 @@
     () => props.numberValue,
     propsNumberValue => {
       newNumberValue.value = propsNumberValue.value
+      lastSubmittedValue.value = propsNumberValue.value
     },
     { deep: true },
   )
 
   onMounted(() => {
     newNumberValue.value = props.numberValue.value
+    lastSubmittedValue.value = props.numberValue.value
   })
 
   function updateValue (): void {
     if (isOperationVariable.value) {
+      if (newNumberValue.value === props.numberValue.value || newNumberValue.value === lastSubmittedValue.value) return
+      lastSubmittedValue.value = newNumberValue.value
       emit('update-value', newNumberValue.value)
       return
     }

@@ -12,10 +12,12 @@
 </template>
 
 <script lang="ts" setup>
+  import { VUE_QUERY_CLIENT } from '@tanstack/vue-query'
   import { onBeforeUnmount, onMounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
+  import { queryClient } from './configs/query'
 
   // Vue Router
   const router = useRouter()
@@ -99,4 +101,8 @@
       router.go(0) // Reloads current route
     }
   }
+
+  // Provide query client
+  // Note: TanStack hooks resolve the client via VUE_QUERY_CLIENT.
+  provide(VUE_QUERY_CLIENT, queryClient)
 </script>
