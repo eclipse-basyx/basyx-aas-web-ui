@@ -21,8 +21,7 @@
 : "${KEYCLOAK_URL:=}"
 : "${KEYCLOAK_REALM:=}"
 : "${KEYCLOAK_CLIENT_ID:=}"
-: "${KEYCLOAK_FEATURE_CONTROL:=false}"
-: "${KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX:=basyx-aas-web-ui-feature-}"
+: "${FEATURE_CONTROL_CLAIM_MAPPINGS:=}"
 : "${OIDC_URL:=}"
 : "${OIDC_SCOPE:=}"
 : "${OIDC_CLIENT_ID:=}"
@@ -48,6 +47,9 @@
 if [ "$CX_EDC_BFF_ENABLED" = "true" ] && [ -z "${CX_EDC_BFF_UPSTREAM_URL+x}" ]; then
     CX_EDC_BFF_UPSTREAM_URL="http://127.0.0.1:${CX_EDC_BFF_PORT}"
 fi
+
+# Encode JSON before inserting it into the compiled JavaScript string.
+FEATURE_CONTROL_CLAIM_MAPPINGS_BASE64=$(printf '%s' "$FEATURE_CONTROL_CLAIM_MAPPINGS" | base64 | tr -d '\n')
 
 : "${CX_EDC_BFF_UPSTREAM_URL:=http://catena-x-edc-bff:3001}"
 
@@ -161,8 +163,7 @@ printf "%-38s %s\n" "Keycloak active:" "$KEYCLOAK_ACTIVE"
 printf "%-38s %s\n" "Keycloak URL:" "$KEYCLOAK_URL"
 printf "%-38s %s\n" "Keycloak realm:" "$KEYCLOAK_REALM"
 printf "%-38s %s\n" "Keycloak client ID:" "$KEYCLOAK_CLIENT_ID"
-printf "%-38s %s\n" "Keycloak feature control:" "$KEYCLOAK_FEATURE_CONTROL"
-printf "%-38s %s\n" "Keycloak feature control, role prefix:" "$KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX"
+printf "%-38s %s\n" "Feature control claim mappings:" "$FEATURE_CONTROL_CLAIM_MAPPINGS"
 printf "%-38s %s\n" "OIDC active:" "$OIDC_ACTIVE"
 printf "%-38s %s\n" "OIDC URL:" "$OIDC_URL"
 printf "%-38s %s\n" "OIDC scope:" "$OIDC_SCOPE"
@@ -209,8 +210,7 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__KEYCLOAK_URL_PLACEHOLDER__/|$KEYCLOAK_URL|g" \
     -e "s|/__KEYCLOAK_REALM_PLACEHOLDER__/|$KEYCLOAK_REALM|g" \
     -e "s|/__KEYCLOAK_CLIENT_ID_PLACEHOLDER__/|$KEYCLOAK_CLIENT_ID|g" \
-    -e "s|/__KEYCLOAK_FEATURE_CONTROL_PLACEHOLDER__/|$KEYCLOAK_FEATURE_CONTROL|g" \
-    -e "s|/__KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX_PLACEHOLDER__/|$KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX|g" \
+    -e "s|/__FEATURE_CONTROL_CLAIM_MAPPINGS_BASE64_PLACEHOLDER__/|$FEATURE_CONTROL_CLAIM_MAPPINGS_BASE64|g" \
     -e "s|/__OIDC_ACTIVE_PLACEHOLDER__/|$OIDC_ACTIVE|g" \
     -e "s|/__OIDC_URL_PLACEHOLDER__/|$OIDC_URL|g" \
     -e "s|/__OIDC_SCOPE_PLACEHOLDER__/|$OIDC_SCOPE|g" \

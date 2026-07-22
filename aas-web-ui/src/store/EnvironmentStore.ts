@@ -1,3 +1,4 @@
+import type { FeatureControlOverrides } from '@/utils/FeatureControl'
 import { defineStore } from 'pinia'
 import { urlRegex } from '@/composables/UrlUtils'
 
@@ -17,6 +18,18 @@ function parseBooleanEnv (value: string): boolean {
 
 function withProductionPlaceholder (value: string | undefined, placeholder: string): string {
   return value || (isProduction ? placeholder : '')
+}
+
+function decodeProductionBase64 (value: string): string {
+  if (value === '' || value.includes('PLACEHOLDER')) {
+    return ''
+  }
+  try {
+    return atob(value)
+  } catch {
+    console.warn('[EnvironmentStore] FEATURE_CONTROL_CLAIM_MAPPINGS could not be decoded.')
+    return ''
+  }
 }
 
 export const useEnvStore = defineStore('envStore', () => {
@@ -40,8 +53,9 @@ export const useEnvStore = defineStore('envStore', () => {
   const keycloakUrl = ref(withProductionPlaceholder(import.meta.env.VITE_KEYCLOAK_URL, '/__KEYCLOAK_URL_PLACEHOLDER__/'))
   const keycloakRealm = ref(withProductionPlaceholder(import.meta.env.VITE_KEYCLOAK_REALM, '/__KEYCLOAK_REALM_PLACEHOLDER__/'))
   const keycloakClientId = ref(withProductionPlaceholder(import.meta.env.VITE_KEYCLOAK_CLIENT_ID, '/__KEYCLOAK_CLIENT_ID_PLACEHOLDER__/'))
-  const keycloakFeatureControl = ref(withProductionPlaceholder(import.meta.env.VITE_KEYCLOAK_FEATURE_CONTROL, '/__KEYCLOAK_FEATURE_CONTROL_PLACEHOLDER__/'))
-  const keycloakFeatureControlRolePrefix = ref(withProductionPlaceholder(import.meta.env.VITE_KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX, '/__KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX_PLACEHOLDER__/'))
+  const featureControlClaimMappings = ref(isProduction
+    ? decodeProductionBase64('/__FEATURE_CONTROL_CLAIM_MAPPINGS_BASE64_PLACEHOLDER__/')
+    : (import.meta.env.VITE_FEATURE_CONTROL_CLAIM_MAPPINGS || ''))
   const oidcActive = ref(withProductionPlaceholder(import.meta.env.VITE_OIDC_ACTIVE, '/__OIDC_ACTIVE_PLACEHOLDER__/'))
   const oidcUrl = ref(withProductionPlaceholder(import.meta.env.VITE_OIDC_URL, '/__OIDC_URL_PLACEHOLDER__/'))
   const oidcScope = ref(withProductionPlaceholder(import.meta.env.VITE_OIDC_SCOPE, '/__OIDC_SCOPE_PLACEHOLDER__/'))
@@ -64,6 +78,7 @@ export const useEnvStore = defineStore('envStore', () => {
   const authorizationPrefix = ref(withProductionPlaceholder(import.meta.env.VITE_AUTHORIZATION_HEADER_PREFIX, '/__AUTHORIZATION_HEADER_PREFIX_PLACEHOLDER__/'))
   const authorizationDescriptionEndpointExemption = ref(withProductionPlaceholder(import.meta.env.VITE_AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION, '/__AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION_PLACEHOLDER__/'))
   const startPageRouteName = ref(withProductionPlaceholder(import.meta.env.VITE_START_PAGE_ROUTE_NAME, '/__START_PAGE_ROUTE_NAME_PLACEHOLDER__/'))
+  const featureControlOverrides = ref<FeatureControlOverrides | null>(null)
 
   // Getters
   const getEnvBasePath = computed(() => basePath.value)
@@ -83,8 +98,7 @@ export const useEnvStore = defineStore('envStore', () => {
   const getKeycloakUrl = computed(() => keycloakUrl.value)
   const getKeycloakRealm = computed(() => keycloakRealm.value)
   const getKeycloakClientId = computed(() => keycloakClientId.value)
-  const getKeycloakFeatureControl = computed(() => parseBooleanEnv(keycloakFeatureControl.value))
-  const getKeycloakFeatureControlRolePrefix = computed(() => keycloakFeatureControlRolePrefix.value)
+  const getFeatureControlClaimMappings = computed(() => featureControlClaimMappings.value)
   const getOidcActive = computed(() => parseBooleanEnv(oidcActive.value))
   const getOidcUrl = computed(() => oidcUrl.value)
   const getOidcScope = computed(() => oidcScope.value)
@@ -95,8 +109,8 @@ export const useEnvStore = defineStore('envStore', () => {
       && parseBooleanEnv(preconfiguredAuth.value),
   )
   const getPreconfiguredAuthClientSecret = computed(() => preconfiguredAuthClientSecret.value)
-  const getEndpointConfigAvailable = computed(() => parseBooleanEnv(endpointConfigAvailable.value))
-  const getSingleAas = computed(() => parseBooleanEnv(singleAas.value))
+  const getEndpointConfigAvailable = computed(() => featureControlOverrides.value?.endpointConfigAvailable ?? parseBooleanEnv(endpointConfigAvailable.value))
+  const getSingleAas = computed(() => featureControlOverrides.value?.singleAas ?? parseBooleanEnv(singleAas.value))
   const getSingleAasRedirect = computed(() => {
     if (parseBooleanEnv(singleAas.value) && singleAasRedirect.value) {
       if (urlRegex.test(singleAasRedirect.value)) {
@@ -106,8 +120,8 @@ export const useEnvStore = defineStore('envStore', () => {
     }
     return undefined
   })
-  const getSmViewerEditor = computed(() => parseBooleanEnv(smViewerEditor.value))
-  const getSingleSm = computed(() => parseBooleanEnv(singleSm.value))
+  const getSmViewerEditor = computed(() => featureControlOverrides.value?.smViewerEditor ?? parseBooleanEnv(smViewerEditor.value))
+  const getSingleSm = computed(() => featureControlOverrides.value?.singleSm ?? parseBooleanEnv(singleSm.value))
   const getSingleSmRedirect = computed(() => {
     if (parseBooleanEnv(singleSm.value) && singleSmRedirect.value) {
       if (urlRegex.test(singleSmRedirect.value)) {
@@ -117,9 +131,9 @@ export const useEnvStore = defineStore('envStore', () => {
     }
     return undefined
   })
-  const getAllowEditing = computed(() => parseBooleanEnv(allowEditing.value))
-  const getAllowUploading = computed(() => parseBooleanEnv(allowUploading.value))
-  const getAllowLogout = computed(() => parseBooleanEnv(allowLogout.value))
+  const getAllowEditing = computed(() => featureControlOverrides.value?.allowEditing ?? parseBooleanEnv(allowEditing.value))
+  const getAllowUploading = computed(() => featureControlOverrides.value?.allowUploading ?? parseBooleanEnv(allowUploading.value))
+  const getAllowLogout = computed(() => featureControlOverrides.value?.allowLogout ?? parseBooleanEnv(allowLogout.value))
   const getBasicAuthActive = computed(() => parseBooleanEnv(basicAuthActive.value))
   const getBasicAuthUsername = computed(() => basicAuthUsername.value)
   const getBasicAuthPassword = computed(() => basicAuthPassword.value)
@@ -146,32 +160,8 @@ export const useEnvStore = defineStore('envStore', () => {
   })
 
   // Actions
-  function setSingleAas (singleAasValue: string): void {
-    singleAas.value = singleAasValue
-  }
-
-  function setSingleSm (singleSmValue: string): void {
-    singleSm.value = singleSmValue
-  }
-
-  function setSmViewerEditor (smViewerEditorValue: string): void {
-    smViewerEditor.value = smViewerEditorValue
-  }
-
-  function setAllowEditing (allowEditingValue: string): void {
-    allowEditing.value = allowEditingValue
-  }
-
-  function setAllowUploading (allowUploadingValue: string): void {
-    allowUploading.value = allowUploadingValue
-  }
-
-  function setAllowLogout (allowLogoutValue: string): void {
-    allowLogout.value = allowLogoutValue
-  }
-
-  function setEndpointConfigAvailable (endpointConfigAvailableValue: string): void {
-    endpointConfigAvailable.value = endpointConfigAvailableValue
+  function setFeatureControlOverrides (overrides: FeatureControlOverrides | null): void {
+    featureControlOverrides.value = overrides
   }
 
   return {
@@ -193,8 +183,7 @@ export const useEnvStore = defineStore('envStore', () => {
     getKeycloakUrl,
     getKeycloakRealm,
     getKeycloakClientId,
-    getKeycloakFeatureControl,
-    getKeycloakFeatureControlRolePrefix,
+    getFeatureControlClaimMappings,
     getOidcActive,
     getOidcUrl,
     getOidcScope,
@@ -219,12 +208,6 @@ export const useEnvStore = defineStore('envStore', () => {
     getStartPageRouteName,
 
     // Actions
-    setSingleAas,
-    setSingleSm,
-    setSmViewerEditor,
-    setAllowEditing,
-    setAllowUploading,
-    setAllowLogout,
-    setEndpointConfigAvailable,
+    setFeatureControlOverrides,
   }
 })

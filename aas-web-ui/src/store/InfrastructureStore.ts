@@ -1,5 +1,5 @@
 import type { BaSyxComponent, BaSyxComponentKey } from '@/types/BaSyx'
-import type { InfrastructureConfig, UserData } from '@/types/Infrastructure'
+import type { InfrastructureConfig } from '@/types/Infrastructure'
 import { defineStore } from 'pinia'
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { ASS_DISCOVERY_ENDPOINT_PATH } from '@/composables/Client/AASDiscoveryClient'
@@ -55,7 +55,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   const infrastructures = ref<InfrastructureConfig[]>([])
   const selectedInfrastructureId = ref<string | null>(null)
   const openInfrastructureEditMode = ref(false)
-  const user = ref<UserData | null>(null)
   const isAuthenticating = ref(false)
   const isTestingConnections = ref(false)
 
@@ -666,124 +665,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
   }
 
-  function setUser (userValue: UserData | null): void {
-    user.value = userValue || null
-
-    const envStore = useEnvStore()
-
-    if (
-      envStore.getKeycloakFeatureControl === true
-      && userValue?.roles
-      && Array.isArray(userValue.roles)
-      && userValue.roles.length > 0
-    ) {
-      const keycloakFeatureControlRolePrefix = envStore.getKeycloakFeatureControlRolePrefix
-      type KeycloakFeatureSetter = 'setSingleAas'
-        | 'setSingleSm'
-        | 'setSmViewerEditor'
-        | 'setAllowEditing'
-        | 'setAllowUploading'
-        | 'setAllowLogout'
-        | 'setEndpointConfigAvailable'
-
-      const keycloak_roles_features: Array<{
-        keycloakRole: string
-        feature: string
-        setFunction: KeycloakFeatureSetter
-        setValue: string
-      }> = [
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'endpoint-config-available',
-          feature: 'ENDPOINT_CONFIG_AVAILABLE',
-          setFunction: 'setEndpointConfigAvailable',
-          setValue: 'true',
-        },
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'endpoint-config-unavailable',
-          feature: 'ENDPOINT_CONFIG_AVAILABLE',
-          setFunction: 'setEndpointConfigAvailable',
-          setValue: 'false',
-        },
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'single-aas',
-          feature: 'SINGLE_AAS',
-          setFunction: 'setSingleAas',
-          setValue: 'true',
-        },
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'multiple-aas',
-          feature: 'SINGLE_AAS',
-          setFunction: 'setSingleAas',
-          setValue: 'false',
-        },
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'sm-viewer-editor',
-          feature: 'SM_VIEWER_EDITOR',
-          setFunction: 'setSmViewerEditor',
-          setValue: 'true',
-        },
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'single-sm',
-          feature: 'SINGLE_SM',
-          setFunction: 'setSingleSm',
-          setValue: 'true',
-        },
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'multiple-sm',
-          feature: 'SINGLE_SM',
-          setFunction: 'setSingleSm',
-          setValue: 'false',
-        },
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'allow-editing',
-          feature: 'ALLOW_EDITING',
-          setFunction: 'setAllowEditing',
-          setValue: 'true',
-        },
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'forbid-editing',
-          feature: 'ALLOW_EDITING',
-          setFunction: 'setAllowEditing',
-          setValue: 'false',
-        },
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'allow-uploading',
-          feature: 'ALLOW_UPLOADING',
-          setFunction: 'setAllowUploading',
-          setValue: 'true',
-        },
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'forbid-uploading',
-          feature: 'ALLOW_UPLOADING',
-          setFunction: 'setAllowUploading',
-          setValue: 'false',
-        },
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'allow-logout',
-          feature: 'ALLOW_LOGOUT',
-          setFunction: 'setAllowLogout',
-          setValue: 'true',
-        },
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'forbid-logout',
-          feature: 'ALLOW_LOGOUT',
-          setFunction: 'setAllowLogout',
-          setValue: 'false',
-        },
-      ]
-
-      for (const keycloak_roles_feature of keycloak_roles_features) {
-        const key = keycloak_roles_feature.setFunction
-        if (
-          userValue?.roles?.includes(keycloak_roles_feature.keycloakRole)
-          && typeof envStore[key] === 'function'
-        ) {
-          envStore[key](keycloak_roles_feature.setValue)
-        }
-      }
-    }
-  }
-
   return {
     // Getters
     getInfrastructures,
@@ -819,7 +700,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     waitForInitialization,
     connectComponents,
     connectComponent,
-    setUser,
     dispatchIsTestingConnections,
   }
 })
