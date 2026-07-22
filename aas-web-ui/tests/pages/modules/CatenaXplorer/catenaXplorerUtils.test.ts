@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildAssetIdNameSuggestions,
+  buildEdcShellDescriptorsCurlCommand,
   buildShellDescriptorEndpointUrl,
   buildShellDescriptorsCurlCommand,
   buildShellDescriptorsRequestUrl,
@@ -56,6 +57,42 @@ describe('catenaXplorerUtils.ts', () => {
       'manufacturerPartId',
       '',
     )).toBe('curl -X GET \'http://localhost:5004/api/v3/shell-descriptors?limit=100\'')
+  })
+
+  it('builds an effective EDC BFF cURL command with the current asset filter', () => {
+    expect(buildEdcShellDescriptorsCurlCommand(
+      'https://ui.example/api/catena-x/edc/default/dtr/shell-descriptors',
+      'BPNL0001',
+      'https://partner.example/api/v1/dsp',
+      'dataspace-protocol-http',
+      'manufacturerPartId',
+      'PART-001',
+      'transfer-123',
+    )).toBe(
+      'curl -X POST \'https://ui.example/api/catena-x/edc/default/dtr/shell-descriptors\' \\\n'
+      + '  -H \'Content-Type: application/json\' \\\n'
+      + '  --data-raw \'{"counterPartyId":"BPNL0001","counterPartyAddress":"https://partner.example/api/v1/dsp","protocol":"dataspace-protocol-http","limit":100,"assetIds":[{"name":"manufacturerPartId","value":"PART-001"}],"transferProcessId":"transfer-123"}\'',
+    )
+  })
+
+  it('adds safe authorization placeholders to cURL commands', () => {
+    expect(buildShellDescriptorsCurlCommand(
+      'https://registry.example/api/v3',
+      'manufacturerPartId',
+      'PART-001',
+      'Bearer <ACCESS_TOKEN>',
+    )).toContain('-H \'Authorization: Bearer <ACCESS_TOKEN>\'')
+
+    expect(buildEdcShellDescriptorsCurlCommand(
+      'https://ui.example/api/catena-x/edc/default/dtr/shell-descriptors',
+      'BPNL0001',
+      'https://partner.example/dsp',
+      'dataspace-protocol-http',
+      'manufacturerPartId',
+      'PART-001',
+      undefined,
+      'Basic <BASE64_USERNAME_PASSWORD>',
+    )).toContain('-H \'Authorization: Basic <BASE64_USERNAME_PASSWORD>\'')
   })
 
   it('extracts unique asset ID name suggestions from descriptors', () => {

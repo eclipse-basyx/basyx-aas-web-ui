@@ -84,4 +84,90 @@ describe('Operation.vue', () => {
       'https://example.test/submodels/sm/submodel-elements/op-b/invoke?async=true',
     )
   })
+
+  it('sends Boolean operation arguments as AAS strings', async () => {
+    const booleanProperty = {
+      modelType: 'Property',
+      idShort: 'Enabled',
+      valueType: 'xs:boolean',
+      value: 'false',
+    }
+    const wrapper = mount(Operation, {
+      props: {
+        isEditable: true,
+        operationObject: {
+          path: 'https://example.test/submodels/sm/submodel-elements/boolean-op',
+          modelType: 'Operation',
+          idShort: 'BooleanOperation',
+          inputVariables: [{ value: booleanProperty }],
+          inoutputVariables: [],
+          outputVariables: [],
+        },
+      },
+      global: {
+        stubs: {
+          'v-container': true,
+          'v-card': true,
+          'v-list': true,
+          'v-list-item': true,
+          'v-list-item-title': true,
+          'v-btn': true,
+          'v-divider': true,
+          'v-alert': true,
+          'Property': true,
+          'ReferenceElement': true,
+          'InvalidElement': true,
+          'DescriptionElement': true,
+        },
+      },
+    })
+
+    ;(wrapper.vm as any).updateOperationVariable(true, booleanProperty)
+    await (wrapper.vm as any).executeOperation()
+    await Promise.resolve()
+
+    const requestBody = JSON.parse(postRequestMock.mock.calls[0][1])
+    expect(requestBody.inputArguments[0].value.value).toBe('true')
+    expect(typeof requestBody.inputArguments[0].value.value).toBe('string')
+  })
+
+  it('renders nested Operation variables as read-only when invocation is unavailable', async () => {
+    const wrapper = mount(Operation, {
+      props: {
+        isEditable: true,
+        invocationAvailable: false,
+        operationObject: {
+          modelType: 'Operation',
+          idShort: 'Nested',
+          inputVariables: [{
+            value: { modelType: 'Property', idShort: 'input', valueType: 'xs:string', value: 'value' },
+          }],
+          inoutputVariables: [],
+          outputVariables: [],
+        },
+      },
+      global: {
+        stubs: {
+          'v-container': { template: '<div><slot /></div>' },
+          'v-card': { template: '<div><slot /></div>' },
+          'v-list': { template: '<div><slot /></div>' },
+          'v-list-item': { template: '<div><slot /></div>' },
+          'v-list-item-title': { template: '<div><slot /></div>' },
+          'v-divider': true,
+          'v-alert': { template: '<div><slot /></div>' },
+          'DescriptionElement': true,
+          'ReferenceElement': true,
+          'SubmodelElementSummary': true,
+          'Property': {
+            props: ['isEditable'],
+            template: '<span data-test="property-editable">{{ String(isEditable) }}</span>',
+          },
+        },
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.get('[data-test="property-editable"]').text()).toBe('false')
+  })
 })

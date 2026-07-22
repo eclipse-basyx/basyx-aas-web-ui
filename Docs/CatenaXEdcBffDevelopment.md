@@ -106,7 +106,9 @@ CX_EDC_BFF_UPSTREAM_URL=http://localhost:3002 pnpm dev
 
 The UI calls `/api/catena-x/edc/...`; Vite proxies those requests to the local BFF.
 
-Open the UI, select the Catena-X infrastructure, open CatenaXplorer, choose a counterparty, and load descriptors through the descriptor search.
+Open the UI, select the Catena-X infrastructure, and open CatenaXplorer. Choose a configured business partner or select **Use another partner…** and enter its counterparty ID and DSP address. Select **Load descriptors** to make the EDC request; changing the selection alone deliberately sends no request.
+
+With editable endpoint configuration enabled, use **Settings → Manage Infrastructures** to manage multiple partners and their default. A successfully loaded runtime partner also offers **Save partner** in CatenaXplorer. Partner details are browser-local configuration, while Management API credentials and `CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES` remain server-side.
 
 ## 4. Smoke Test Without a Real EDC
 

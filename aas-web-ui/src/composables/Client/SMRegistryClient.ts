@@ -1,6 +1,6 @@
 import type { jsonization } from '@aas-core-works/aas-core3.1-typescript'
 import { computed } from 'vue'
-import { useRequestHandling } from '@/composables/RequestHandling'
+import { type RequestErrorHandlingOptions, useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import * as descriptorTypes from '@/types/Descriptors'
 import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils'
@@ -8,14 +8,14 @@ import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { removeNullValues } from '@/utils/generalUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
 
+export const SUBMODEL_REGISTRY_ENDPOINT_PATH = '/submodel-descriptors'
+
 export function useSMRegistryClient () {
   // Stores
   const infrastructureStore = useInfrastructureStore()
 
   // Composables
   const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling()
-
-  const endpointPath = '/submodel-descriptors'
 
   // Computed Properties
   const submodelRegistryUrl = computed(() => infrastructureStore.getSubmodelRegistryURL)
@@ -52,8 +52,8 @@ export function useSMRegistryClient () {
     if (smRegistryUrl.endsWith('/')) {
       smRegistryUrl = stripLastCharacter(smRegistryUrl)
     }
-    if (!smRegistryUrl.endsWith(endpointPath)) {
-      smRegistryUrl += endpointPath
+    if (!smRegistryUrl.endsWith(SUBMODEL_REGISTRY_ENDPOINT_PATH)) {
+      smRegistryUrl += SUBMODEL_REGISTRY_ENDPOINT_PATH
     }
 
     const smRegistryPath = smRegistryUrl
@@ -82,7 +82,11 @@ export function useSMRegistryClient () {
    * @param {string} smId - The ID of the SM Descriptor to fetch.
    * @returns {Promise<any>} A promise that resolves to a SM Descriptor.
    */
-  async function fetchSmDescriptorById (smId: string, endpoint?: string): Promise<any> {
+  async function fetchSmDescriptorById (
+    smId: string,
+    endpoint?: string,
+    suppressNotFound = false,
+  ): Promise<any> {
     const failResponse = {} as any
 
     if (!smId) {
@@ -102,15 +106,24 @@ export function useSMRegistryClient () {
     if (smRegistryUrl.endsWith('/')) {
       smRegistryUrl = stripLastCharacter(smRegistryUrl)
     }
-    if (!smRegistryUrl.endsWith(endpointPath)) {
-      smRegistryUrl += endpointPath
+    if (!smRegistryUrl.endsWith(SUBMODEL_REGISTRY_ENDPOINT_PATH)) {
+      smRegistryUrl += SUBMODEL_REGISTRY_ENDPOINT_PATH
     }
 
     const smRegistryPath = smRegistryUrl + '/' + base64Encode(smId)
     const smRegistryContext = 'retrieving SM Descriptor'
     const disableMessage = false
+    const errorHandlingOptions: RequestErrorHandlingOptions = suppressNotFound
+      ? { suppressStatuses: [404] }
+      : {}
     try {
-      const smRegistryResponse = await getRequest(smRegistryPath, smRegistryContext, disableMessage)
+      const smRegistryResponse = await getRequest(
+        smRegistryPath,
+        smRegistryContext,
+        disableMessage,
+        new Headers(),
+        errorHandlingOptions,
+      )
       if (
         smRegistryResponse?.success
         && smRegistryResponse?.data
@@ -132,7 +145,11 @@ export function useSMRegistryClient () {
    * @param {string} smId - The ID of the SM to retrieve the endpoint for.
    * @returns {Promise<string>} A promise that resolves to an SM endpoint.
    */
-  async function getSmEndpointById (smId: string, endpoint?: string): Promise<string> {
+  async function getSmEndpointById (
+    smId: string,
+    endpoint?: string,
+    suppressNotFound = false,
+  ): Promise<string> {
     const failResponse = ''
 
     if (!smId) {
@@ -145,7 +162,7 @@ export function useSMRegistryClient () {
       return failResponse
     }
 
-    const smDescriptor = await fetchSmDescriptorById(smId, endpoint)
+    const smDescriptor = await fetchSmDescriptorById(smId, endpoint, suppressNotFound)
     const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0')
 
     return smEndpoint || failResponse
@@ -190,8 +207,8 @@ export function useSMRegistryClient () {
     if (smRegistryUrl.endsWith('/')) {
       smRegistryUrl = stripLastCharacter(smRegistryUrl)
     }
-    if (!smRegistryUrl.endsWith(endpointPath)) {
-      smRegistryUrl += endpointPath
+    if (!smRegistryUrl.endsWith(SUBMODEL_REGISTRY_ENDPOINT_PATH)) {
+      smRegistryUrl += SUBMODEL_REGISTRY_ENDPOINT_PATH
     }
 
     const context = 'updating Submodel Descriptor'
@@ -216,8 +233,8 @@ export function useSMRegistryClient () {
     if (smRegistryUrl.endsWith('/')) {
       smRegistryUrl = stripLastCharacter(smRegistryUrl)
     }
-    if (!smRegistryUrl.endsWith(endpointPath)) {
-      smRegistryUrl += endpointPath
+    if (!smRegistryUrl.endsWith(SUBMODEL_REGISTRY_ENDPOINT_PATH)) {
+      smRegistryUrl += SUBMODEL_REGISTRY_ENDPOINT_PATH
     }
 
     const context = 'updating Submodel Descriptor'
@@ -252,8 +269,8 @@ export function useSMRegistryClient () {
     if (smRegistryUrl.endsWith('/')) {
       smRegistryUrl = stripLastCharacter(smRegistryUrl)
     }
-    if (!smRegistryUrl.endsWith(endpointPath)) {
-      smRegistryUrl += endpointPath
+    if (!smRegistryUrl.endsWith(SUBMODEL_REGISTRY_ENDPOINT_PATH)) {
+      smRegistryUrl += SUBMODEL_REGISTRY_ENDPOINT_PATH
     }
 
     const context = 'deleting Submodel Descriptor'
@@ -286,7 +303,6 @@ export function useSMRegistryClient () {
   }
 
   return {
-    endpointPath,
     getSmEndpointById,
     fetchSmDescriptorList,
     fetchSmDescriptorById,

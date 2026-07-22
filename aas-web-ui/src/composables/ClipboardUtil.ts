@@ -7,7 +7,8 @@ import { useIDUtils } from '@/composables/IDUtils'
 import { useAASStore } from '@/store/AASDataStore'
 import { useClipboardStore } from '@/store/ClipboardStore'
 import { useNavigationStore } from '@/store/NavigationStore'
-import { getCreatedSubmodelElementPath, isDataElementModelType } from '@/utils/AAS/SubmodelElementPathUtils'
+import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils'
+import { isChildTypeAllowed } from '@/utils/AAS/SubmodelElementRegistry'
 import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
 export function useClipboardUtil () {
@@ -28,17 +29,32 @@ export function useClipboardUtil () {
   // Computed properties
   const selectedAAS = computed(() => aasStore.getSelectedAAS)
 
-  function copyToClipboard (value: string, valueName: string, iconReference: { value: string }): void {
+  async function copyToClipboard (value: string, valueName: string, iconReference: { value: string }): Promise<void> {
     if (!value) {
       return
     }
+
+    // Keep the ORIGINAL icon value
+    const originalIcon = iconReference.value
 
     iconReference.value = 'mdi-check'
 
     // copy value to clipboard
     try {
-      navigator.clipboard.writeText(value)
+      await navigator.clipboard.writeText(value)
+
+      // open Snackbar to inform the user that the path was copied to the clipboard
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 2000,
+        color: 'success',
+        btnColor: 'buttonText',
+        text: (valueName.trim() === '' ? '\'' + value + '\'' : valueName) + ' copied to Clipboard.',
+      })
     } catch {
+      // Revert immediately on failure
+      iconReference.value = originalIcon
+
       navigationStore.dispatchSnackbar({
         status: true,
         timeout: 4000,
@@ -50,24 +66,19 @@ export function useClipboardUtil () {
 
     // set the clipboard tooltip to false after 1.5 seconds
     setTimeout(() => {
-      iconReference.value = 'mdi-clipboard-file-outline'
-    }, 2000)
-
-    // open Snackbar to inform the user that the path was copied to the clipboard
-    navigationStore.dispatchSnackbar({
-      status: true,
-      timeout: 2000,
-      color: 'success',
-      btnColor: 'buttonText',
-      text: (valueName.trim() === '' ? '\'' + value + '\'' : valueName) + ' copied to Clipboard.',
-    })
+      iconReference.value = originalIcon
+    }, 1500)
   }
 
-  function copyJsonToClipboard (value: unknown, valueName: string, iconReference: { value: string }): void {
+  async function copyJsonToClipboard (value: unknown, valueName: string, iconReference: { value: string }): Promise<void> {
     if (!value) {
       return
     }
 
+    // Keep the ORIGINAL icon value
+    const originalIcon = iconReference.value
+
+    // Todo: seems like when copying a company (as object) the endpoints are omitted, since cleanObjectRecursively is removing endpoints
     // Clean the JSON object recursively
     const cleanedValue = cleanObjectRecursively(value)
 
@@ -75,8 +86,25 @@ export function useClipboardUtil () {
 
     // copy value to clipboard
     try {
-      navigator.clipboard.writeText(JSON.stringify(cleanedValue, null, 2))
+      await navigator.clipboard.writeText(JSON.stringify(cleanedValue, null, 2))
+
+      // open Snackbar to inform the user that the path was copied to the clipboard
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 2000,
+        color: 'success',
+        btnColor: 'buttonText',
+        text:
+                (valueName.trim() === ''
+                  ? (typeof cleanedValue === 'object' && cleanedValue !== null && 'modelType' in cleanedValue
+                      ? (cleanedValue as { modelType?: string }).modelType || 'JSON'
+                      : 'JSON')
+                  : valueName) + ' copied to Clipboard.',
+      })
     } catch {
+      // Revert immediately on failure
+      iconReference.value = originalIcon
+
       navigationStore.dispatchSnackbar({
         status: true,
         timeout: 4000,
@@ -86,24 +114,9 @@ export function useClipboardUtil () {
       })
     }
 
-    // set the clipboard tooltip to false after 1.5 seconds
     setTimeout(() => {
-      iconReference.value = 'mdi-clipboard-text-outline'
-    }, 2000)
-
-    // open Snackbar to inform the user that the path was copied to the clipboard
-    navigationStore.dispatchSnackbar({
-      status: true,
-      timeout: 2000,
-      color: 'success',
-      btnColor: 'buttonText',
-      text:
-                (valueName.trim() === ''
-                  ? (typeof cleanedValue === 'object' && cleanedValue !== null && 'modelType' in cleanedValue
-                      ? (cleanedValue as { modelType?: string }).modelType || 'JSON'
-                      : 'JSON')
-                  : valueName) + ' copied to Clipboard.',
-    })
+      iconReference.value = originalIcon
+    }, 1500)
   }
 
   function pasteElement (item?: unknown): void {
@@ -168,16 +181,16 @@ export function useClipboardUtil () {
     }
     const submodelElement = instanceOrError.mustValue()
 
-    if (
-      parentElement.modelType === 'AnnotatedRelationshipElement'
-      && !isDataElementModelType(submodelElement.modelType)
-    ) {
+    const childModelType = (json as { modelType?: string }).modelType || ''
+    if (!isChildTypeAllowed(parentElement, childModelType)) {
       navigationStore.dispatchSnackbar({
         status: true,
         timeout: 4000,
         color: 'error',
         btnColor: 'buttonText',
-        text: 'Only DataElement types are allowed as AnnotatedRelationshipElement annotations.',
+        text: parentElement.modelType === 'AnnotatedRelationshipElement'
+          ? 'Only DataElement types are allowed as AnnotatedRelationshipElement annotations.'
+          : `${childModelType} is not compatible with this parent element.`,
       })
       return
     }
@@ -266,6 +279,11 @@ export function useClipboardUtil () {
       delete cleaned.showChildren
       delete cleaned.parent
       delete cleaned.path
+      delete cleaned.selectionKey
+      delete cleaned.persistence
+      delete cleaned.operationVariableDirection
+      delete cleaned.operationVariableIndex
+      delete cleaned.isDirectOperationVariable
       delete cleaned.timestamp
       delete cleaned.listIndex
       delete cleaned.conceptDescriptions
@@ -274,6 +292,7 @@ export function useClipboardUtil () {
       delete cleaned.nameLower
       delete cleaned.descLower
       delete cleaned.endpoints
+      delete cleaned.validationError
 
       // Remove id property for all elements except Submodels
       if (cleaned.modelType !== 'Submodel') {
@@ -295,6 +314,12 @@ export function useClipboardUtil () {
       } else if (cleaned.modelType === 'Entity' && Array.isArray(cleaned.children)) {
         // For Entities, children should go back to statements
         cleaned.statements = cleanObjectRecursively(cleaned.children)
+        delete cleaned.children
+      } else if (
+        cleaned.modelType === 'AnnotatedRelationshipElement'
+        && Array.isArray(cleaned.children)
+      ) {
+        cleaned.annotations = cleanObjectRecursively(cleaned.children)
         delete cleaned.children
       } else {
         // Remove children property if it exists but doesn't match any known pattern

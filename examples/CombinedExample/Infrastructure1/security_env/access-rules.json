@@ -1,0 +1,151 @@
+{
+  "AllAccessPermissionRules": {
+    "DEFATTRIBUTES": [
+      { "name": "anonymous_attr", "attributes": [{ "GLOBAL": "ANONYMOUS" }] },
+      { "name": "role_attr", "attributes": [{ "CLAIM": "role" }] }
+    ],
+    "DEFOBJECTS": [
+      {
+        "name": "public_description",
+        "objects": [
+          { "ROUTE": "/description" },
+          { "ROUTE": "/health" }
+        ]
+      },
+      {
+        "name": "all_aas_identifiables",
+        "objects": [{ "IDENTIFIABLE": "$aas(\"*\")" }]
+      },
+      {
+        "name": "all_aas_descriptors",
+        "objects": [{ "DESCRIPTOR": "$aasdesc(\"*\")" }]
+      },
+      {
+        "name": "all_submodel_identifiables",
+        "objects": [{ "IDENTIFIABLE": "$sm(\"*\")" }]
+      },
+      {
+        "name": "all_submodel_descriptors",
+        "objects": [{ "DESCRIPTOR": "$smdesc(\"*\")" }]
+      },
+      {
+        "name": "all_concept_description_identifiables",
+        "objects": [{ "IDENTIFIABLE": "$cd(\"*\")" }]
+      },
+      {
+        "name": "all_api",
+        "objects": [
+          { "ROUTE": "/description" },
+          { "ROUTE": "/health" },
+          { "ROUTE": "/serialization" },
+          { "ROUTE": "/upload" },
+          { "ROUTE": "/lookup/shells" },
+          { "ROUTE": "/lookup/shells/*" },
+          { "ROUTE": "/lookup/shellsByAssetLink" },
+          { "DESCRIPTOR": "$aasdesc(\"*\")" },
+          { "DESCRIPTOR": "$smdesc(\"*\")" },
+          { "IDENTIFIABLE": "$aas(\"*\")" },
+          { "IDENTIFIABLE": "$sm(\"*\")" },
+          { "IDENTIFIABLE": "$cd(\"*\")" }
+        ]
+      }
+    ],
+    "DEFACLS": [
+      { "name": "anonymous_read", "acl": { "USEATTRIBUTES": "anonymous_attr", "RIGHTS": ["READ"], "ACCESS": "ALLOW" } },
+      { "name": "admin_full", "acl": { "USEATTRIBUTES": "role_attr", "RIGHTS": ["ALL"], "ACCESS": "ALLOW" } }
+    ],
+    "DEFFORMULAS": [
+      { "name": "always_true", "formula": { "$boolean": true } },
+      { "name": "is_admin", "formula": { "$eq": [{ "$attribute": { "CLAIM": "role" } }, { "$strVal": "admin" }] } },
+      {
+        "name": "is_public_aas",
+        "formula": {
+          "$eq": [{ "$field": "$aas#id" }, { "$strVal": "urn:fraunhofer:iese:dte:aas:drivemotor-dm3000:001" }]
+        }
+      },
+      {
+        "name": "is_public_aas_descriptor",
+        "formula": {
+          "$eq": [{ "$field": "$aasdesc#id" }, { "$strVal": "urn:fraunhofer:iese:dte:aas:drivemotor-dm3000:001" }]
+        }
+      },
+      {
+        "name": "is_public_submodel",
+        "formula": {
+          "$or": [
+            {
+              "$and": [
+                { "$eq": [{ "$field": "$sm#semanticId.keys[].value" }, { "$strVal": "https://admin-shell.io/idta/nameplate/3/0/Nameplate" }] },
+                { "$eq": [{ "$field": "$sm#id" }, { "$strVal": "urn:fraunhofer:iese:dte:sm:nameplate:drivemotor-dm3000:001" }] }
+              ]
+            },
+            {
+              "$and": [
+                { "$eq": [{ "$field": "$sm#semanticId.keys[].value" }, { "$strVal": "0173-1#01-AHX837#002" }] },
+                { "$eq": [{ "$field": "$sm#id" }, { "$strVal": "urn:fraunhofer:iese:dte:sm:technicaldata:drivemotor-dm3000:001" }] }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "is_public_submodel_descriptor",
+        "formula": {
+          "$or": [
+            {
+              "$and": [
+                { "$eq": [{ "$field": "$smdesc#semanticId.keys[].value" }, { "$strVal": "https://admin-shell.io/idta/nameplate/3/0/Nameplate" }] },
+                { "$eq": [{ "$field": "$smdesc#id" }, { "$strVal": "urn:fraunhofer:iese:dte:sm:nameplate:drivemotor-dm3000:001" }] }
+              ]
+            },
+            {
+              "$and": [
+                { "$eq": [{ "$field": "$smdesc#semanticId.keys[].value" }, { "$strVal": "0173-1#01-AHX837#002" }] },
+                { "$eq": [{ "$field": "$smdesc#id" }, { "$strVal": "urn:fraunhofer:iese:dte:sm:technicaldata:drivemotor-dm3000:001" }] }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "name": "is_public_nested_submodel_descriptor",
+        "formula": {
+          "$or": [
+            {
+              "$and": [
+                { "$eq": [{ "$field": "$aasdesc#submodelDescriptors[].semanticId.keys[].value" }, { "$strVal": "https://admin-shell.io/idta/nameplate/3/0/Nameplate" }] },
+                { "$eq": [{ "$field": "$aasdesc#submodelDescriptors[].id" }, { "$strVal": "urn:fraunhofer:iese:dte:sm:nameplate:drivemotor-dm3000:001" }] }
+              ]
+            },
+            {
+              "$and": [
+                { "$eq": [{ "$field": "$aasdesc#submodelDescriptors[].semanticId.keys[].value" }, { "$strVal": "0173-1#01-AHX837#002" }] },
+                { "$eq": [{ "$field": "$aasdesc#submodelDescriptors[].id" }, { "$strVal": "urn:fraunhofer:iese:dte:sm:technicaldata:drivemotor-dm3000:001" }] }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "rules": [
+      { "USEACL": "anonymous_read", "USEOBJECTS": ["public_description"], "USEFORMULA": "always_true" },
+      { "USEACL": "anonymous_read", "USEOBJECTS": ["all_aas_identifiables"], "USEFORMULA": "is_public_aas" },
+      {
+        "USEACL": "anonymous_read",
+        "USEOBJECTS": ["all_aas_descriptors"],
+        "USEFORMULA": "is_public_aas_descriptor",
+        "FILTERLIST": [
+          {
+            "FRAGMENT": "$aasdesc#submodelDescriptors[]",
+            "USEFORMULA": "is_public_nested_submodel_descriptor",
+            "MATCH": true
+          }
+        ]
+      },
+      { "USEACL": "anonymous_read", "USEOBJECTS": ["all_submodel_identifiables"], "USEFORMULA": "is_public_submodel" },
+      { "USEACL": "anonymous_read", "USEOBJECTS": ["all_submodel_descriptors"], "USEFORMULA": "is_public_submodel_descriptor" },
+      { "USEACL": "anonymous_read", "USEOBJECTS": ["all_concept_description_identifiables"], "USEFORMULA": "always_true" },
+      { "USEACL": "admin_full", "USEOBJECTS": ["all_api"], "USEFORMULA": "is_admin" }
+    ]
+  }
+}

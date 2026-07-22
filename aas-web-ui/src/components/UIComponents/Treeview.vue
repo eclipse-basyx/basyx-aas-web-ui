@@ -106,6 +106,31 @@
             <template #append>
               <div class="d-flex align-center" style="position: relative; min-height: 24px">
                 <v-chip
+                  v-if="item.isDirectOperationVariable"
+                  class="mr-1"
+                  color="secondary"
+                  size="x-small"
+                  variant="tonal"
+                >{{ operationDirectionLabel(item.operationVariableDirection) }}</v-chip>
+
+                <v-tooltip v-if="item.validationError" location="bottom">
+                  <template #activator="{ props: validationProps }">
+                    <v-icon
+                      v-bind="validationProps"
+                      :aria-label="item.validationError"
+                      class="mr-1"
+                      color="error"
+                      role="img"
+                      size="small"
+                      tabindex="0"
+                    >
+                      mdi-alert-circle
+                    </v-icon>
+                  </template>
+                  {{ item.validationError }}
+                </v-tooltip>
+
+                <v-chip
                   v-if="item.modelType"
                   color="primary"
                   size="x-small"
@@ -123,7 +148,7 @@
                 <div class="icon-placeholder">
                   <!-- Button to add a submodel Element -->
                   <v-tooltip
-                    v-if="editorMode && canElementAddSubmodelElement(item)"
+                    v-if="editorMode && canElementAddSubmodelElement(item) && item.modelType !== 'Operation'"
                     location="bottom"
                     :open-delay="600"
                     text="Add Submodel Element"
@@ -145,6 +170,28 @@
                       />
                     </template>
                   </v-tooltip>
+
+                  <v-menu v-else-if="editorMode && item.modelType === 'Operation'">
+                    <template #activator="{ props: operationAddMenuProps }">
+                      <v-btn
+                        v-bind="operationAddMenuProps"
+                        class="ml-1"
+                        color="subtitleText"
+                        icon="mdi-plus"
+                        size="small"
+                        :style="{
+                          display: isHovering ? 'block' : 'none',
+                          pointerEvents: isHovering ? 'auto' : 'none',
+                        }"
+                        variant="plain"
+                        @click.stop
+                      />
+                    </template>
+
+                    <v-list class="py-0" density="compact">
+                      <OperationVariableAddMenu :operation="item" @add="emitOperationVariableAdd" />
+                    </v-list>
+                  </v-menu>
                   <!-- Button to Copy the Path to the clipboard -->
                   <v-tooltip
                     v-if="!editorMode"
@@ -165,7 +212,7 @@
                           pointerEvents: isHovering ? 'auto' : 'none',
                         }"
                         variant="plain"
-                        @click.stop="copyToClipboard(item.path, 'Path', copyIconAsRef)"
+                        @click.stop="copyItemEndpoint(item)"
                       />
                     </template>
                   </v-tooltip>
@@ -292,6 +339,12 @@
                   <v-sheet border>
                     <v-list class="py-0" dense density="compact" slim>
                       <!-- Open Add SubmodelElement dialog -->
+                      <OperationVariableAddMenu
+                        v-if="item.modelType === 'Operation'"
+                        :operation="item"
+                        @add="payload => openOperationVariableDialog(payload, isActive)"
+                      />
+
                       <v-list-item
                         v-if="
                           item.modelType === 'SubmodelElementCollection' ||
@@ -349,6 +402,41 @@
                         <v-list-item-subtitle>Delete {{ item.modelType }}</v-list-item-subtitle>
                       </v-list-item>
 
+                      <template v-if="item.isDirectOperationVariable">
+                        <v-divider />
+
+                        <v-list-item
+                          :disabled="item.operationVariableIndex === 0"
+                          @click="moveOperationVariable(item, { offset: -1 }, isActive)"
+                        >
+                          <template #prepend><v-icon size="x-small">mdi-arrow-up</v-icon></template>
+                          <v-list-item-subtitle>Move up</v-list-item-subtitle>
+                        </v-list-item>
+
+                        <v-list-item
+                          :disabled="!canMoveOperationVariableDown(item)"
+                          @click="moveOperationVariable(item, { offset: 1 }, isActive)"
+                        >
+                          <template #prepend><v-icon size="x-small">mdi-arrow-down</v-icon></template>
+                          <v-list-item-subtitle>Move down</v-list-item-subtitle>
+                        </v-list-item>
+
+                        <v-list-subheader>Change direction</v-list-subheader>
+
+                        <v-list-item
+                          v-for="direction in operationVariableDirections"
+                          :key="direction"
+                          :disabled="direction === item.operationVariableDirection"
+                          @click="moveOperationVariable(item, { direction }, isActive)"
+                        >
+                          <template #prepend><v-icon size="x-small">mdi-swap-horizontal</v-icon></template>
+
+                          <v-list-item-subtitle>
+                            Move to {{ operationDirectionLongLabel(direction) }}
+                          </v-list-item-subtitle>
+                        </v-list-item>
+                      </template>
+
                       <v-divider />
                       <!-- Copy SME to internal clipboard -->
                       <v-list-item
@@ -361,12 +449,16 @@
                         <v-list-item-subtitle>Copy {{ item.modelType }}</v-list-item-subtitle>
                       </v-list-item>
                       <!-- Copy SME endpoint to clipboard -->
-                      <v-list-item @click="copyToClipboard(item.path, 'Path', copyIconAsRef)">
+                      <v-list-item @click="copyItemEndpoint(item)">
                         <template #prepend>
                           <v-icon size="x-small">{{ copyIcon }} </v-icon>
                         </template>
 
-                        <v-list-item-subtitle>Copy {{ item.modelType }} Endpoint</v-list-item-subtitle>
+                        <v-list-item-subtitle>
+                          {{ isOperationOwnedNode(item)
+                            ? 'Copy owning Operation endpoint'
+                            : `Copy ${item.modelType} Endpoint` }}
+                        </v-list-item-subtitle>
                       </v-list-item>
                       <!-- Copy SME as JSON -->
                       <v-list-item
@@ -398,7 +490,7 @@
                             item.modelType === 'AnnotatedRelationshipElement'
                         "
                         :disabled="!canPasteElement(item)"
-                        @click="pasteElement(item)"
+                        @click="pasteItem(item)"
                       >
                         <template #prepend>
                           <v-icon size="x-small">{{ pasteIcon }} </v-icon>
@@ -425,12 +517,15 @@
     <template v-if="item.showChildren">
       <Treeview
         v-for="innerItem in item.children"
-        :key="innerItem.id"
+        :key="innerItem.selectionKey || innerItem.id || innerItem.path"
         :depth="depth + 1"
         :item="innerItem"
+        @move-operation-variable="$emit('move-operation-variable', $event)"
+        @open-add-operation-variable-dialog="$emit('open-add-operation-variable-dialog', $event)"
         @open-add-submodel-element-dialog="$emit('open-add-submodel-element-dialog', $event)"
         @open-edit-submodel-element-dialog="$emit('open-edit-submodel-element-dialog', $event)"
         @open-json-insert-dialog="$emit('open-json-insert-dialog', $event)"
+        @paste-operation-owned-element="$emit('paste-operation-owned-element', $event)"
         @show-delete-dialog="$emit('show-delete-dialog', $event)"
       />
     </template>
@@ -446,7 +541,9 @@
   import { useAASStore } from '@/store/AASDataStore'
   import { useClipboardStore } from '@/store/ClipboardStore'
   import { useNavigationStore } from '@/store/NavigationStore'
-  import { isDataElementModelType } from '@/utils/AAS/SubmodelElementPathUtils'
+  import { operationVariableDirections } from '@/types/OperationTree'
+  import { isOperationOwnedNode } from '@/utils/AAS/OperationTreeUtils'
+  import { isChildTypeAllowed } from '@/utils/AAS/SubmodelElementRegistry'
 
   // Vue Router
   const route = useRoute()
@@ -478,8 +575,11 @@
     'open-edit-dialog': [item: any]
     'show-delete-dialog': [item: any]
     'open-add-submodel-element-dialog': [item: any]
+    'open-add-operation-variable-dialog': [payload: any]
     'open-json-insert-dialog': [item: any]
     'open-edit-submodel-element-dialog': [item: any]
+    'move-operation-variable': [payload: any]
+    'paste-operation-owned-element': [item: any]
   }>()
 
   // Data
@@ -530,10 +630,18 @@
       // Deselect submodel: remove the path query
       const query = structuredClone(route.query)
       delete query.path
+      delete query.fragment
       router.push({ query: query })
     } else {
       // Select submodel/submodel element: add smePath to path query
-      const query = { ...route.query, path: smOrSme.path }
+      const query = { ...route.query }
+      if (isOperationOwnedNode(smOrSme)) {
+        query.path = smOrSme.persistence.operationPath
+        query.fragment = smOrSme.persistence.fragment
+      } else {
+        query.path = smOrSme.path
+        delete query.fragment
+      }
       if (isMobile.value) {
         // Go to Visualization
         router.push({
@@ -559,7 +667,9 @@
     ) {
       return false
     }
-    return selectedNode.value.path === smOrSme.path
+    const selectedKey = selectedNode.value.selectionKey || selectedNode.value.path
+    const itemKey = smOrSme.selectionKey || smOrSme.path
+    return selectedKey === itemKey
   }
 
   function canElementAddSubmodelElement (item: any): boolean {
@@ -569,6 +679,7 @@
       'SubmodelElementList',
       'Entity',
       'AnnotatedRelationshipElement',
+      'Operation',
     ].includes(item.modelType)
   }
 
@@ -577,15 +688,14 @@
       return false
     }
 
-    if (item?.modelType === 'AnnotatedRelationshipElement') {
-      return isDataElementModelType(clipboardElementContentType.value)
-    }
-
-    return true
+    return isChildTypeAllowed(item, clipboardElementContentType.value)
   }
 
   function displayNameWithIndex (item: any): string {
-    const baseName = nameToDisplay(item)
+    const baseName = nameToDisplay(item) || item?.modelType || 'SubmodelElement'
+    if (item?.isDirectOperationVariable && item?.operationVariableIndex !== undefined) {
+      return `[${item.operationVariableIndex}] ${baseName}`
+    }
     // Prepend index for direct children of SubmodelElementList
     if (item?.parent?.modelType === 'SubmodelElementList' && item?.listIndex !== undefined) {
       return `[${item.listIndex}] ${baseName}`
@@ -618,6 +728,55 @@
     emit('open-add-submodel-element-dialog', item)
   }
 
+  function emitOperationVariableAdd (payload: any): void {
+    emit('open-add-operation-variable-dialog', payload)
+  }
+
+  function openOperationVariableDialog (payload: any, isActive: Ref<boolean>): void {
+    isActive.value = false
+    emitOperationVariableAdd(payload)
+  }
+
+  function operationDirectionLabel (direction: string): string {
+    if (direction === 'inputVariables') return 'IN'
+    if (direction === 'inoutputVariables') return 'IN/OUT'
+    return 'OUT'
+  }
+
+  function operationDirectionLongLabel (direction: string): string {
+    if (direction === 'inputVariables') return 'Input'
+    if (direction === 'inoutputVariables') return 'In/Out'
+    return 'Output'
+  }
+
+  function canMoveOperationVariableDown (item: any): boolean {
+    const variables = item?.parent?.[item.operationVariableDirection]
+    return Array.isArray(variables) && item.operationVariableIndex < variables.length - 1
+  }
+
+  function moveOperationVariable (
+    item: any,
+    change: { direction?: string, offset?: number },
+    isActive: Ref<boolean>,
+  ): void {
+    isActive.value = false
+    emit('move-operation-variable', { item, ...change })
+  }
+
+  function copyItemEndpoint (item: any): void {
+    const endpoint = isOperationOwnedNode(item) ? item.persistence.operationPath : item.path
+    const label = isOperationOwnedNode(item) ? 'Owning Operation endpoint' : 'Path'
+    copyToClipboard(endpoint, label, copyIconAsRef.value)
+  }
+
+  function pasteItem (item: any): void {
+    if (isOperationOwnedNode(item)) {
+      emit('paste-operation-owned-element', item)
+      return
+    }
+    pasteElement(item)
+  }
+
   function openJsonInsertDialog (item: any, isActive: Ref<boolean>): void {
     isActive.value = false
     emit('open-json-insert-dialog', item)
@@ -640,11 +799,11 @@
 </script>
 
 <style scoped>
-    .icon-placeholder {
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+  .icon-placeholder {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 </style>

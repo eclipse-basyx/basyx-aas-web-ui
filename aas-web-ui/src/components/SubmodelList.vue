@@ -226,11 +226,12 @@
 
 <script lang="ts" setup>
   import type { ComponentPublicInstance, Ref } from 'vue'
-  import { computed, onActivated, onMounted, ref, watch } from 'vue'
+  import { computed, onActivated, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
+  import { useLoadGeneration } from '@/composables/LoadGeneration'
   import { useAASStore } from '@/store/AASDataStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
@@ -261,7 +262,8 @@
   // Data
   const submodelList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the SM Data
   const submodelListUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the SM Data before filtering
-  const listLoading = ref(false) // Variable to store if the AAS List is loading
+  const listLoad = useLoadGeneration()
+  const listLoading = listLoad.loading // Variable to store if the Submodel List is loading
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null) // Reference to the Virtual Scroll Component
 
   // Computed Properties
@@ -277,21 +279,27 @@
   watch(
     () => aasRegistryURL.value,
     () => {
+      listLoad.invalidate()
       submodelList.value = []
+      submodelListUnfiltered.value = []
     },
   )
 
   watch(
     () => submodelRegistryURL.value,
     () => {
+      listLoad.invalidate()
       submodelList.value = []
+      submodelListUnfiltered.value = []
     },
   )
 
   watch(
     () => selectedAAS.value,
     () => {
+      listLoad.invalidate()
       submodelList.value = []
+      submodelListUnfiltered.value = []
       initialize()
     },
   )
@@ -311,15 +319,25 @@
     scrollToSelectedSubmodel()
   })
 
-  function initialize (): void {
-    if (!selectedAAS.value || Object.keys(selectedAAS).length === 0) {
+  onBeforeUnmount(() => {
+    listLoad.invalidate()
+  })
+
+  async function initialize (): Promise<void> {
+    if (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0) {
+      listLoad.invalidate()
       submodelList.value = []
+      submodelListUnfiltered.value = []
       return
     }
 
-    listLoading.value = true
+    const generation = listLoad.start()
 
-    fetchAasSmListById(selectedAAS.value.id).then((submodels: Array<any>) => {
+    try {
+      const submodels = await fetchAasSmListById(selectedAAS.value.id)
+      if (!listLoad.isCurrent(generation)) {
+        return
+      }
       const submodelsSorted = submodels.toSorted((smA: any, smB: any) => {
         // Sort SMs with respect to displayed title and version
         return smTitleToDisplay(smA) + '|' + smVersionToDisplay(smA)
@@ -333,9 +351,9 @@
       submodelListUnfiltered.value = [...submodelsSorted]
 
       scrollToSelectedSubmodel()
-
-      listLoading.value = false
-    })
+    } finally {
+      listLoad.finish(generation)
+    }
   }
 
   function filterSubmodelList (value: string): void {

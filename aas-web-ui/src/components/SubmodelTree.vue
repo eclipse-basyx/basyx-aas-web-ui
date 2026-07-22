@@ -225,10 +225,13 @@
                 class="root"
                 :depth="0"
                 :item="item"
+                @move-operation-variable="moveOperationVariable"
+                @open-add-operation-variable-dialog="openAddOperationVariableDialog"
                 @open-add-submodel-element-dialog="openAddSubmodelElementDialog"
                 @open-edit-dialog="openEditDialog(false, $event)"
                 @open-edit-submodel-element-dialog="openEditSubmodelElementDialogForElement"
                 @open-json-insert-dialog="openJsonInsertDialog('SubmodelElement', $event)"
+                @paste-operation-owned-element="pasteOperationOwnedElement"
                 @show-delete-dialog="openDeleteDialog"
               />
             </template>
@@ -264,6 +267,7 @@
   <SubmodelElementForm
     v-model="selectSMETypeToAddDialog"
     :parent-element="elementToAddSME"
+    @cancelled="resetPendingAdd"
     @open-create-sme-dialog="openSMEFormDialog"
   />
   <!-- Dialog for creating/editing Properties -->
@@ -358,34 +362,78 @@
   <SubmodelForm v-model="editDialog" :new-sm="newSubmodel" :submodel="submodelToEdit" />
   <!-- Dialog for inserting JSON -->
   <JsonInsert v-model="jsonInsertDialog" :parent-element="elementToAddSME" :type="jsonInsertType" />
+
+  <OperationVariableJsonInsert
+    v-if="operationVariableTarget"
+    v-model="operationVariableJsonDialog"
+    :direction="operationVariableTarget.direction"
+    :operation="operationVariableTarget.operation"
+  />
+
+  <OperationOwnedJsonInsert
+    v-if="operationOwnedJsonParent"
+    v-model="operationOwnedJsonDialog"
+    :parent-element="operationOwnedJsonParent"
+  />
+
+  <SubmodelElementDraftForm
+    v-model="draftFormDialog"
+    :detached="draftFormDetached"
+    :element="submodelElementToEdit"
+    :id-short-optional="Boolean(pendingOperationVariable)"
+    :is-new="draftFormIsNew"
+    :model-type="draftFormType"
+    :parent-element="elementToAddSME"
+    :path="submodelElementPath"
+    @saved="saveDetachedOperationElement"
+  />
   <!-- Dialog for deleting SM/SME -->
   <DeleteDialog v-model="deleteDialog" :element="elementToDelete" />
 </template>
 
 <script lang="ts" setup>
+  import type { OperationNodeLocator, OperationVariableDirection } from '@/types/OperationTree'
+  import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization'
   import type { Ref } from 'vue'
-  import { computed, onMounted, ref, watch } from 'vue'
-  import { useRoute } from 'vue-router'
+  import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
+  import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
+  import { useOperationTreeMutation } from '@/composables/AAS/OperationTreeMutation'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
+  import { useLoadGeneration } from '@/composables/LoadGeneration'
+  import { verifyForEditor } from '@/composables/MetamodelVerification'
   import { useAASStore } from '@/store/AASDataStore'
   import { useClipboardStore } from '@/store/ClipboardStore'
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
+  import {
+    createOperationPersistenceBoundary,
+    getOperationChildCollectionKey,
+    isOperationOwnedNode,
+    resolveOperationLocator,
+    serializeOperationLocator,
+    stripTreeMetadata,
+    synchronizeOperationOwnedTreeNode,
+    verificationPathToOperationLocator,
+  } from '@/utils/AAS/OperationTreeUtils'
+  import { isChildTypeAllowed } from '@/utils/AAS/SubmodelElementRegistry'
   import { debounce } from '@/utils/generalUtils'
   import { isEmptyString } from '@/utils/StringUtils'
 
   // Vue Router
   const route = useRoute()
+  const router = useRouter()
 
   // Composables
   const { fetchAasSmListById } = useAASHandling()
   const { fetchSmList } = useSMHandling()
   const { nameToDisplay, descriptionToDisplay } = useReferableUtils()
   const { pasteElement } = useClipboardUtil()
+  const { mutateOperation } = useOperationTreeMutation()
 
   // Stores
   const navigationStore = useNavigationStore()
@@ -398,7 +446,8 @@
   const submodelTree = ref([] as Array<any>) as Ref<Array<any>> // Submodel Treeview Data
   const submodelTreeUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the unfiltere Submodel Treeview Data before filtering
   const debouncedFilterSubmodelTree = debounce(filterSubmodelTree, 300) // Debounced function to filter the AAS List
-  const treeLoading = ref(false) // Variable to store if the AAS List is loading
+  const treeLoad = useLoadGeneration()
+  const treeLoading = treeLoad.loading // Variable to store if the Submodel Tree is loading
   const selectSMETypeToAddDialog = ref(false) // Variable to store if the Add SubmodelElement Dialog should be shown
   const propertyDialog = ref(false) // Variable to store if the PropertyForm Dialog should be shown
   const mlpDialog = ref(false) // Variable to store if the MultiLanguagePropertyForm Dialog should be shown
@@ -432,6 +481,22 @@
   const submodelElementToEdit = ref<any | undefined>(undefined) // Variable to store the Element where the new SME is added inside
   const jsonInsertDialog = ref(false) // Variable to store if the JSON Insert Dialog should be shown
   const jsonInsertType = ref<'Submodel' | 'SubmodelElement'>('Submodel') // Variable to store the ModelType of the JSON to be inserted
+  const operationVariableJsonDialog = ref(false)
+  const operationOwnedJsonDialog = ref(false)
+  const operationOwnedJsonParent = ref<any | null>(null)
+  const operationVariableTarget = ref<{
+    operation: any
+    direction: OperationVariableDirection
+  } | null>(null)
+  const pendingOperationVariable = ref<{
+    operation: any
+    direction: OperationVariableDirection
+  } | null>(null)
+  const pendingOperationChild = ref<any | null>(null)
+  const draftFormDialog = ref(false)
+  const draftFormType = ref('')
+  const draftFormDetached = ref(false)
+  const draftFormIsNew = ref(false)
 
   // Computed Properties
   const isMobile = computed(() => navigationStore.getIsMobile) // Check if the current Device is a Mobile Device
@@ -465,8 +530,10 @@
   watch(
     () => aasRegistryURL.value,
     () => {
+      treeLoad.invalidate()
       if (!['SMViewer', 'SMEditor'].includes(route.name as string)) {
         submodelTree.value = []
+        submodelTreeUnfiltered.value = []
       }
     },
   )
@@ -474,15 +541,19 @@
   watch(
     () => submodelRegistryURL.value,
     () => {
+      treeLoad.invalidate()
       submodelTree.value = []
+      submodelTreeUnfiltered.value = []
     },
   )
 
   watch(
     () => selectedAAS.value,
     () => {
+      treeLoad.invalidate()
       if (!['SMViewer', 'SMEditor'].includes(route.name as string)) {
         submodelTree.value = []
+        submodelTreeUnfiltered.value = []
         if (!isAuthenticating.value) {
           initialize()
         }
@@ -500,19 +571,41 @@
   )
 
   watch(
+    () => selectedNode.value,
+    updatedNode => {
+      if (!isOperationOwnedNode(updatedNode)) {
+        return
+      }
+
+      synchronizeOperationOwnedTreeNode(submodelTreeUnfiltered.value, updatedNode)
+      if (submodelTree.value !== submodelTreeUnfiltered.value) {
+        synchronizeOperationOwnedTreeNode(submodelTree.value, updatedNode)
+      }
+    },
+  )
+
+  watch(
     () => clearTreeview.value,
     () => {
+      treeLoad.invalidate()
       submodelTree.value = []
       submodelTreeUnfiltered.value = []
     },
   )
+
+  watch(draftFormDialog, value => {
+    if (!value) {
+      pendingOperationVariable.value = null
+      pendingOperationChild.value = null
+    }
+  })
 
   watch([() => selectedNode.value?.path, () => route.query.path, () => submodelTree.value.length], () => {
     if (!activeTreePath.value || isEmptyString(activeTreePath.value) || submodelTree.value.length === 0) {
       return
     }
 
-    expandTree()
+    revealSelectedBranch()
   })
 
   onMounted(() => {
@@ -521,21 +614,31 @@
     }
   })
 
+  onBeforeUnmount(() => {
+    treeLoad.invalidate()
+  })
+
   async function initialize (): Promise<void> {
     if (
       !['SMEditor', 'SMViewer'].includes(route.name as string)
       && (!selectedAAS.value || Object.keys(selectedAAS.value).length === 0)
     ) {
+      treeLoad.invalidate()
       submodelTree.value = []
+      submodelTreeUnfiltered.value = []
       return
     }
 
-    treeLoading.value = true
+    const generation = treeLoad.start()
 
     try {
       let submodels: Array<any> = []
 
       submodels = await (['SMEditor', 'SMViewer'].includes(route.name as string) ? fetchSmList() : fetchAasSmListById(selectedAAS.value.id))
+
+      if (!treeLoad.isCurrent(generation)) {
+        return
+      }
 
       // Handle empty objects and sort
       const validSubmodels: Array<any> = []
@@ -596,7 +699,7 @@
         expandTree()
       }
     } finally {
-      treeLoading.value = false
+      treeLoad.finish(generation)
     }
   }
 
@@ -640,6 +743,12 @@
       ) {
         newItem.statements = deepMap(newItem.statements, fn) // Recursively map entity statements
         newItem.children = newItem.statements
+      } else if (
+        newItem.modelType === 'Operation'
+        && newItem.children
+        && Array.isArray(newItem.children)
+      ) {
+        newItem.children = deepMap(newItem.children, fn)
       }
       return fn(newItem)
     })
@@ -692,9 +801,173 @@
       ) {
         sme.children = prepareForTree(sme.statements, sme)
         sme.showChildren = expand
+      } else if (sme.modelType === 'Operation') {
+        sme.children = prepareOperationVariableChildren(sme, sme.path, [])
+        if (sme.children.length === 0) delete sme.children
+        sme.showChildren = expand || hasInvalidDescendant(sme.children)
       }
       return sme
     })
+  }
+
+  function prepareOperationVariableChildren (
+    operation: any,
+    operationPath: string,
+    operationLocator: OperationNodeLocator,
+    validationErrors: Map<string, string[]> = collectOperationValidationErrors(operation),
+  ): Array<any> {
+    const children: Array<any> = []
+    const directions: Array<OperationVariableDirection> = [
+      'inputVariables',
+      'inoutputVariables',
+      'outputVariables',
+    ]
+    const idShortCounts = new Map<string, number>()
+    for (const direction of directions) {
+      const variables = Array.isArray(operation[direction]) ? operation[direction] : []
+      for (const variable of variables) {
+        const idShort = variable?.value?.idShort
+        if (typeof idShort === 'string' && idShort !== '') {
+          idShortCounts.set(idShort, (idShortCounts.get(idShort) || 0) + 1)
+        }
+      }
+    }
+
+    for (const direction of directions) {
+      const variables = Array.isArray(operation[direction]) ? operation[direction] : []
+      for (const [index, variable] of variables.entries()) {
+        if (!variable?.value || typeof variable.value !== 'object') continue
+        const locator: OperationNodeLocator = [...operationLocator, direction, index, 'value']
+        const child = prepareOperationOwnedElement(variable.value, operation, operationPath, locator, {
+          direction,
+          index,
+        }, validationErrors)
+        if (variable.value.idShort && (idShortCounts.get(variable.value.idShort) || 0) > 1) {
+          const duplicateMessage = `Duplicate Operation variable idShort: ${variable.value.idShort}`
+          child.validationError = child.validationError
+            ? `${child.validationError}\n${duplicateMessage}`
+            : duplicateMessage
+        }
+        children.push(child)
+      }
+    }
+
+    return children
+  }
+
+  function prepareOperationOwnedElement (
+    element: any,
+    parent: any,
+    operationPath: string,
+    locator: OperationNodeLocator,
+    directVariable?: { direction: OperationVariableDirection, index: number },
+    validationErrors: Map<string, string[]> = new Map(),
+  ): any {
+    const fragment = serializeOperationLocator(locator)
+    element.parent = parent
+    element.path = `${operationPath}#${fragment}`
+    element.selectionKey = element.path
+    element.persistence = createOperationPersistenceBoundary(operationPath, locator, element)
+
+    if (directVariable) {
+      element.operationVariableDirection = directVariable.direction
+      element.operationVariableIndex = directVariable.index
+      element.isDirectOperationVariable = true
+    }
+
+    let children: Array<any> = []
+    if (['SubmodelElementCollection', 'SubmodelElementList'].includes(element.modelType)) {
+      children = prepareOperationOwnedCollection(element.value, element, operationPath, [...locator, 'value'], validationErrors)
+    } else switch (element.modelType) {
+      case 'Entity': {
+        children = prepareOperationOwnedCollection(
+          element.statements,
+          element,
+          operationPath,
+          [...locator, 'statements'],
+          validationErrors,
+        )
+
+        break
+      }
+      case 'AnnotatedRelationshipElement': {
+        children = prepareOperationOwnedCollection(
+          element.annotations,
+          element,
+          operationPath,
+          [...locator, 'annotations'],
+          validationErrors,
+        )
+
+        break
+      }
+      case 'Operation': {
+        children = prepareOperationVariableChildren(element, operationPath, locator, validationErrors)
+
+        break
+      }
+      // No default
+    }
+
+    if (children.length > 0) {
+      element.children = children
+      const containsInvalidDescendant = [...validationErrors.keys()]
+        .some(errorFragment => errorFragment.startsWith(`${fragment}/`))
+      element.showChildren = shouldExpandNode(element.path) || containsInvalidDescendant
+    } else {
+      delete element.children
+    }
+
+    const nodeErrors = validationErrors.get(fragment)
+    if (nodeErrors?.length) element.validationError = nodeErrors.join('\n')
+
+    return element
+  }
+
+  function prepareOperationOwnedCollection (
+    values: unknown,
+    parent: any,
+    operationPath: string,
+    collectionLocator: OperationNodeLocator,
+    validationErrors: Map<string, string[]>,
+  ): Array<any> {
+    if (!Array.isArray(values)) return []
+    return values.map((value, index) => {
+      const child = prepareOperationOwnedElement(
+        value,
+        parent,
+        operationPath,
+        [...collectionLocator, index],
+        undefined,
+        validationErrors,
+      )
+      if (parent.modelType === 'SubmodelElementList') child.listIndex = index
+      return child
+    })
+  }
+
+  function collectOperationValidationErrors (operation: any): Map<string, string[]> {
+    const errors = new Map<string, string[]>()
+    const operationJson = stripTreeMetadata(operation)
+    const parsed = jsonization.operationFromJsonable(operationJson)
+    if (parsed.error !== null) {
+      errors.set('', [parsed.error.message || String(parsed.error)])
+      return errors
+    }
+
+    const result = verifyForEditor(parsed.mustValue(), { maxErrors: 50 })
+    for (const issue of result.issues) {
+      const locator = verificationPathToOperationLocator(operationJson, issue.path)
+      const fragment = serializeOperationLocator(locator)
+      const messages = errors.get(fragment) ?? []
+      messages.push(issue.message)
+      errors.set(fragment, messages)
+    }
+    return errors
+  }
+
+  function hasInvalidDescendant (children: any[] | undefined): boolean {
+    return Boolean(children?.some(child => child.validationError || hasInvalidDescendant(child.children)))
   }
 
   // Collapse the entire tree recursively
@@ -719,6 +992,19 @@
     }
   }
 
+  // Reveal the selected node without resetting expansion state elsewhere in the tree.
+  function revealSelectedBranch (submodelElements: Array<any> = submodelTree.value): void {
+    for (const sme of submodelElements) {
+      if (shouldExpandNode(sme.path)) {
+        sme.showChildren = true
+      }
+
+      if (sme.children && Array.isArray(sme.children) && sme.children.length > 0) {
+        revealSelectedBranch(sme.children)
+      }
+    }
+  }
+
   function openEditDialog (createNew: boolean, submodel?: any): void {
     editDialog.value = true
     newSubmodel.value = createNew
@@ -728,6 +1014,11 @@
   }
 
   function openJsonInsertDialog (type: 'Submodel' | 'SubmodelElement', element?: any): void {
+    if (type === 'SubmodelElement' && isOperationOwnedNode(element)) {
+      operationOwnedJsonParent.value = element
+      operationOwnedJsonDialog.value = true
+      return
+    }
     jsonInsertDialog.value = true
     jsonInsertType.value = type
     if (type === 'SubmodelElement' && element) {
@@ -763,6 +1054,11 @@
     const selectedPathNormalized = normalizePath(activeTreePath.value)
     const nodePathNormalized = normalizePath(nodePath)
 
+    if (nodePathNormalized.includes('#')) {
+      return selectedPathNormalized === nodePathNormalized
+        || selectedPathNormalized.startsWith(`${nodePathNormalized}/`)
+    }
+
     return (
       selectedPathNormalized !== ''
       && nodePathNormalized !== ''
@@ -771,11 +1067,41 @@
   }
 
   function openAddSubmodelElementDialog (element: any): void {
+    resetPendingAdd()
+    if (isOperationOwnedNode(element)) pendingOperationChild.value = element
     elementToAddSME.value = element
     selectSMETypeToAddDialog.value = true
   }
 
+  function openAddOperationVariableDialog (payload: {
+    operation: any
+    direction: OperationVariableDirection
+    fromJson: boolean
+  }): void {
+    resetPendingAdd()
+    if (payload.fromJson) {
+      operationVariableTarget.value = { operation: payload.operation, direction: payload.direction }
+      operationVariableJsonDialog.value = true
+      return
+    }
+
+    pendingOperationVariable.value = { operation: payload.operation, direction: payload.direction }
+    elementToAddSME.value = payload.operation
+    selectSMETypeToAddDialog.value = true
+  }
+
   function openEditSubmodelElementDialogForElement (element: any): void {
+    if (isOperationOwnedNode(element)) {
+      draftFormType.value = element.modelType || 'Property'
+      draftFormDetached.value = true
+      draftFormIsNew.value = false
+      elementToAddSME.value = element.parent
+      submodelElementToEdit.value = element
+      submodelElementPath.value = undefined
+      draftFormDialog.value = true
+      return
+    }
+
     switch (element.modelType) {
       case 'Property': {
         propertyDialog.value = true
@@ -876,6 +1202,18 @@
 
         break
       }
+      case 'Operation':
+      case 'BasicEventElement':
+      case 'Capability': {
+        draftFormType.value = element.modelType
+        draftFormDetached.value = false
+        draftFormIsNew.value = false
+        elementToAddSME.value = element.parent
+        submodelElementToEdit.value = element
+        submodelElementPath.value = element.path
+        draftFormDialog.value = true
+        break
+      }
       default: {
         console.error(`Specified invalid SubmodelElement Type "${element.modelType}"`)
       }
@@ -883,6 +1221,15 @@
   }
 
   function openSMEFormDialog (smeType: string): void {
+    if (pendingOperationVariable.value || pendingOperationChild.value) {
+      draftFormType.value = smeType
+      draftFormDetached.value = true
+      draftFormIsNew.value = true
+      submodelElementToEdit.value = undefined
+      draftFormDialog.value = true
+      return
+    }
+
     switch (smeType) {
       case 'Property': {
         newProperty.value = true
@@ -961,11 +1308,227 @@
         annotatedRelationshipElementDialog.value = true
         break
       }
+      case 'Operation':
+      case 'BasicEventElement':
+      case 'Capability': {
+        draftFormType.value = smeType
+        draftFormDetached.value = false
+        draftFormIsNew.value = true
+        submodelElementToEdit.value = undefined
+        submodelElementPath.value = undefined
+        draftFormDialog.value = true
+        break
+      }
       default: {
         console.error(`Specified invalid SubmodelElement Type "${smeType}"`)
         break
       }
     }
+  }
+
+  function resetPendingAdd (): void {
+    pendingOperationVariable.value = null
+    pendingOperationChild.value = null
+  }
+
+  function mutationFailureMessages (result: { issues?: Array<{ path: string, message: string }> }): string[] {
+    return result.issues?.map(issue => issue.path ? `${issue.path}: ${issue.message}` : issue.message)
+      ?? ['The owning Operation could not be updated.']
+  }
+
+  async function saveDetachedOperationElement (
+    element: JsonValue,
+    complete: (success: boolean, messages?: string[]) => void = () => undefined,
+  ): Promise<void> {
+    if (isOperationOwnedNode(submodelElementToEdit.value)) {
+      const editedNode = submodelElementToEdit.value
+      const result = await mutateOperation(editedNode.persistence, ({ target }) => {
+        for (const key of Object.keys(target)) delete target[key]
+        Object.assign(target, structuredClone(stripTreeMetadata(element)))
+      })
+      if (!result.success) {
+        complete(false, mutationFailureMessages(result))
+        return
+      }
+      complete(true)
+      navigationStore.dispatchTriggerTreeviewReload()
+      router.push({
+        query: {
+          ...route.query,
+          path: editedNode.persistence.operationPath,
+          fragment: editedNode.persistence.fragment,
+        },
+      })
+      return
+    }
+
+    if (isOperationOwnedNode(pendingOperationChild.value)) {
+      const parent = pendingOperationChild.value
+      const childKey = getOperationChildCollectionKey(parent)
+      if (!childKey) {
+        complete(false, ['This element cannot contain SubmodelElements.'])
+        return
+      }
+      let addedLocator: OperationNodeLocator | null = null
+      const result = await mutateOperation(parent.persistence, ({ target }) => {
+        const children = Array.isArray(target[childKey]) ? target[childKey] : []
+        const index = children.length
+        children.push(structuredClone(stripTreeMetadata(element)))
+        target[childKey] = children
+        addedLocator = [...parent.persistence.locator, childKey, index]
+      })
+      if (!result.success || !addedLocator) {
+        complete(false, mutationFailureMessages(result))
+        return
+      }
+      pendingOperationChild.value = null
+      complete(true)
+      navigationStore.dispatchTriggerTreeviewReload()
+      router.push({
+        query: {
+          ...route.query,
+          path: parent.persistence.operationPath,
+          fragment: serializeOperationLocator(addedLocator),
+        },
+      })
+      return
+    }
+
+    if (!pendingOperationVariable.value) {
+      complete(false, ['The Operation variable target is no longer available.'])
+      return
+    }
+    const { operation, direction } = pendingOperationVariable.value
+    const boundary = isOperationOwnedNode(operation)
+      ? operation.persistence
+      : createOperationPersistenceBoundary(operation.path, [], operation)
+    let addedLocator: OperationNodeLocator | null = null
+    const result = await mutateOperation(boundary, ({ target }) => {
+      const variables = Array.isArray(target[direction]) ? target[direction] : []
+      const index = variables.length
+      variables.push({ value: structuredClone(stripTreeMetadata(element)) })
+      target[direction] = variables
+      addedLocator = [...boundary.locator, direction, index, 'value']
+    }, { checkExpectedTarget: isOperationOwnedNode(operation) })
+
+    if (!result.success || !addedLocator) {
+      complete(false, mutationFailureMessages(result))
+      return
+    }
+    pendingOperationVariable.value = null
+    complete(true)
+    navigationStore.dispatchTriggerTreeviewReload()
+    const query = { ...route.query, path: boundary.operationPath, fragment: serializeOperationLocator(addedLocator) }
+    router.push({ query })
+  }
+
+  async function moveOperationVariable (payload: {
+    item: any
+    direction?: OperationVariableDirection
+    offset?: number
+  }): Promise<void> {
+    const { item } = payload
+    if (!isOperationOwnedNode(item) || !item.isDirectOperationVariable) return
+
+    const locator = item.persistence.locator
+    if (locator.length < 3) return
+    const sourceDirection = locator.at(-3)
+    const sourceIndex = locator.at(-2)
+    if (typeof sourceDirection !== 'string' || typeof sourceIndex !== 'number') return
+
+    const operationLocator = locator.slice(0, -3)
+    let destinationLocator: OperationNodeLocator | null = null
+    const result = await mutateOperation(item.persistence, ({ operation }) => {
+      const owningOperation = resolveOperationLocator(operation, operationLocator)
+      if (!owningOperation || owningOperation.modelType !== 'Operation') return false
+
+      const sourceVariables = owningOperation[sourceDirection]
+      if (!Array.isArray(sourceVariables) || sourceIndex >= sourceVariables.length) return false
+
+      if (payload.direction && payload.direction !== sourceDirection) {
+        const destinationVariables = Array.isArray(owningOperation[payload.direction])
+          ? owningOperation[payload.direction]
+          : []
+        const [variable] = sourceVariables.splice(sourceIndex, 1)
+        const destinationIndex = destinationVariables.length
+        destinationVariables.push(variable)
+        owningOperation[payload.direction] = destinationVariables
+        destinationLocator = [...operationLocator, payload.direction, destinationIndex, 'value']
+        return
+      }
+
+      const destinationIndex = sourceIndex + (payload.offset || 0)
+      if (destinationIndex < 0 || destinationIndex >= sourceVariables.length) return false
+      const [variable] = sourceVariables.splice(sourceIndex, 1)
+      sourceVariables.splice(destinationIndex, 0, variable)
+      destinationLocator = [...operationLocator, sourceDirection as OperationVariableDirection, destinationIndex, 'value']
+    })
+
+    if (!result.success || !destinationLocator) return
+    navigationStore.dispatchTriggerTreeviewReload()
+    await router.push({
+      query: {
+        ...route.query,
+        path: item.persistence.operationPath,
+        fragment: serializeOperationLocator(destinationLocator),
+      },
+    })
+  }
+
+  async function pasteOperationOwnedElement (parent: any): Promise<void> {
+    if (!isOperationOwnedNode(parent)) return
+    const childKey = getOperationChildCollectionKey(parent)
+    if (!childKey) return
+
+    const clipboardValue = stripTreeMetadata(clipboardStore.getClipboardContent())
+    if (!clipboardValue || typeof clipboardValue !== 'object' || Array.isArray(clipboardValue)) return
+    const parsed = jsonization.submodelElementFromJsonable(clipboardValue)
+    if (parsed.error !== null) {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 5000,
+        color: 'error',
+        btnColor: 'buttonText',
+        text: `The copied value is not a valid SubmodelElement: ${parsed.error.message}`,
+      })
+      return
+    }
+
+    const copiedModelType = (clipboardValue as { modelType?: string }).modelType || ''
+    if (!isChildTypeAllowed(parent, copiedModelType)) {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 5000,
+        color: 'error',
+        btnColor: 'buttonText',
+        text: `${copiedModelType} is not compatible with this parent element.`,
+      })
+      return
+    }
+
+    const copied = jsonization.toJsonable(parsed.mustValue())
+    if (copied && typeof copied === 'object' && !Array.isArray(copied) && copied.idShort) {
+      copied.idShort += '_copy'
+    }
+
+    let addedLocator: OperationNodeLocator | null = null
+    const result = await mutateOperation(parent.persistence, ({ target }) => {
+      const children = Array.isArray(target[childKey]) ? target[childKey] : []
+      const index = children.length
+      children.push(structuredClone(copied))
+      target[childKey] = children
+      addedLocator = [...parent.persistence.locator, childKey, index]
+    })
+    if (!result.success || !addedLocator) return
+
+    navigationStore.dispatchTriggerTreeviewReload()
+    await router.push({
+      query: {
+        ...route.query,
+        path: parent.persistence.operationPath,
+        fragment: serializeOperationLocator(addedLocator),
+      },
+    })
   }
 
   function filterSubmodelTree (value: string): void {
@@ -1016,6 +1579,13 @@
           && item.statements.length > 0
         ) {
           childrenKey = 'statements'
+        } else if (
+          item.modelType === 'Operation'
+          && item.children
+          && Array.isArray(item.children)
+          && item.children.length > 0
+        ) {
+          childrenKey = 'children'
         }
 
         if (childrenKey !== '' && Object.hasOwn(item, childrenKey)) {

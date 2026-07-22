@@ -36,6 +36,7 @@ export function getComponentLabel (key: BaSyxComponentKey): string {
     AASRepo: 'AAS Repository',
     SubmodelRepo: 'Submodel Repository',
     ConceptDescriptionRepo: 'Concept Description Repository',
+    CompanyLookup: 'Company Lookup',
   }
   return labels[key]
 }
@@ -50,6 +51,7 @@ export const BASYX_COMPONENT_KEYS: BaSyxComponentKey[] = [
   'AASRepo',
   'SubmodelRepo',
   'ConceptDescriptionRepo',
+  'CompanyLookup',
 ]
 
 const singleComponentEndpointFields: Record<BaSyxComponentKey, InfrastructureEndpointField> = {
@@ -88,6 +90,12 @@ const singleComponentEndpointFields: Record<BaSyxComponentKey, InfrastructureEnd
     label: 'Concept Description Repository',
     yamlKey: 'conceptDescriptionRepository',
     componentKeys: ['ConceptDescriptionRepo'],
+  },
+  CompanyLookup: {
+    key: 'CompanyLookup',
+    label: 'Company Lookup',
+    yamlKey: 'companyLookup',
+    componentKeys: ['CompanyLookup'],
   },
 }
 
@@ -326,11 +334,4 @@ export function getInfrastructureSummary (infra: InfrastructureConfig): string {
  */
 export function requiredRule (value: string): string | boolean {
   return !!value || 'This field is required'
-}
-
-/**
- * Get OAuth2 redirect URI for the current application
- */
-export function getRedirectUri (): string {
-  return `${window.location.origin}${window.location.pathname}/oauth2/callback`
 }

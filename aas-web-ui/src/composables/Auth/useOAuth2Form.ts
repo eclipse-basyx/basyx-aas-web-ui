@@ -2,8 +2,14 @@ import type { AuthTokenState, InfrastructureConfig, OAuth2FormData } from '@/typ
 import { type Ref, ref } from 'vue'
 import {
   authenticateOAuth2ClientCredentials,
+  clearOAuth2AuthorizationCodeState,
   initiateOAuth2AuthorizationCodeFlow,
 } from '@/composables/Auth/OAuth2Auth'
+import {
+  clearAuthorizationTransaction,
+  startAuthorizationTransaction,
+} from '@/composables/Auth/OAuth2Navigation'
+import { discoverOpenIdConfiguration } from '@/composables/Auth/OpenIdConnect'
 import { useNavigationStore } from '@/store/NavigationStore'
 
 /**
@@ -97,7 +103,7 @@ export function useOAuth2Form (): {
 
   /**
    * Authenticate with OAuth2
-   * @param infrastructureId - The ID of the infrastructure being authenticated (used as state parameter for auth-code flow)
+   * @param infrastructureId - The ID of the infrastructure being authenticated
    */
   async function authenticate (infrastructureId: string): Promise<void> {
     if (!formData.value.host || !formData.value.clientId) {
@@ -165,46 +171,30 @@ export function useOAuth2Form (): {
     } else if (authFlow.value === 'auth-code') {
       // Authorization Code Flow with PKCE
       loading.value = true
+      let authorizationState: string | undefined
       try {
-        // Fetch well-known configuration to get authorization endpoint
-        const wellKnownUrl = `${formData.value.host}/.well-known/openid-configuration`
-        let authorizationEndpoint
-
-        try {
-          const wellKnownResponse = await fetch(wellKnownUrl)
-
-          if (wellKnownResponse.ok) {
-            const wellKnownConfig = await wellKnownResponse.json()
-            authorizationEndpoint = wellKnownConfig.authorization_endpoint
-          }
-        } catch (error) {
-          console.warn('[useOAuth2Form] Failed to fetch .well-known configuration, using fallback', error)
-        }
-
-        // Fallback to host + /authorize if well-known config is not available
+        const openIdConfiguration = await discoverOpenIdConfiguration(formData.value.host)
+        const authorizationEndpoint = openIdConfiguration.authorization_endpoint
         if (!authorizationEndpoint) {
-          const normalizedHost = formData.value.host.endsWith('/')
-            ? formData.value.host.slice(0, -1)
-            : formData.value.host
-          authorizationEndpoint = `${normalizedHost}/authorize`
+          throw new Error('Authorization endpoint not found in OpenID configuration')
         }
 
-        // Use infrastructure ID as state parameter so router can find the infrastructure after callback
-        const state = infrastructureId
-
-        // Normalize redirect URI (remove trailing slash for root path)
-        const pathname = window.location.pathname
-        const redirectUri = `${window.location.origin}${pathname}`
+        const transaction = startAuthorizationTransaction(infrastructureId)
+        authorizationState = transaction.state
 
         // Initiate authorization code flow (will redirect to OAuth2 provider)
         await initiateOAuth2AuthorizationCodeFlow({
           authorizationEndpoint,
           clientId: formData.value.clientId,
-          redirectUri,
+          redirectUri: transaction.redirectUri,
           scope: formData.value.scope || 'openid profile email',
-          state,
+          state: transaction.state,
         })
       } catch (error) {
+        if (authorizationState) {
+          clearAuthorizationTransaction(authorizationState)
+          clearOAuth2AuthorizationCodeState(authorizationState)
+        }
         loading.value = false
         navigationStore.dispatchSnackbar({
           status: true,

@@ -10,8 +10,19 @@
           Object.keys(submodelElementData).length > 0
       "
     >
+      <v-alert
+        v-if="submodelElementData.modelType === 'File' && operationOwned"
+        class="ma-3"
+        density="compact"
+        type="info"
+        variant="tonal"
+      >
+        This File is owned by an Operation variable and has no attachment endpoint. Its metadata and
+        value remain available in Element Details.
+      </v-alert>
+
       <!-- File / Blob Visualizations -->
-      <template v-if="['File', 'Blob'].includes(submodelElementData.modelType)">
+      <template v-else-if="['File', 'Blob'].includes(submodelElementData.modelType)">
         <ImagePreview
           v-if="submodelElementData?.contentType && submodelElementData.contentType.includes('image')"
           :submodel-element-data="submodelElementData"
@@ -161,6 +172,7 @@
   })
   const visualizationMode = computed(() => routesToVisualization.has(route.name as RouteRecordNameGeneric))
   const aasSubmodelViewerMode = computed(() => route.name === 'AASSubmodelViewer')
+  const operationOwned = computed(() => submodelElementData.value?.persistence?.kind === 'operation')
 
   // Watchers
   watch(

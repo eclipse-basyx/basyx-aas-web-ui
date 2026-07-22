@@ -138,6 +138,10 @@ partners:
 
 The provider DSP endpoint in `basyx-infra.yml` must match one of the prefixes in `CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES`.
 
+When `VITE_ENDPOINT_CONFIG_AVAILABLE=true`, partners can also be managed from **Settings → Manage Infrastructures**. Edit the Catena-X EDC infrastructure, then add, edit, remove, or choose the default business partner. These UI changes are stored in the current browser; server credentials and the DSP address allowlist remain deployment settings.
+
+In CatenaXplorer, selecting a partner prepares the new context and clears results from the previous provider. Select **Load descriptors** to start the EDC request. To use an unconfigured provider, select **Use another partner…**, enter its counterparty ID and DSP address, and load it. After a successful request, the partner is remembered in that browser and can be saved to the editable infrastructure.
+
 ## Optional User Authentication
 
 If your company does have an identity provider and wants the backend to validate browser users before EDC access, switch from `none` to `jwt`.
@@ -200,8 +204,8 @@ In the browser:
 
 1. Open the UI.
 2. The CatenaXplorer page should open by default.
-3. Select the configured partner or enter an allowed runtime partner.
-4. Load descriptors.
+3. Select the configured partner or choose **Use another partner…** and enter an allowed runtime partner.
+4. Select **Load descriptors**.
 
 ## Troubleshooting
 

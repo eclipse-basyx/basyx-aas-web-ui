@@ -10,6 +10,10 @@ import type {
 import { authenticateOAuth2ClientCredentials } from '@/composables/Auth/OAuth2Auth'
 import { useInfrastructureConfigLoader } from '@/composables/Infrastructure/useInfrastructureConfigLoader'
 import { useNavigationStore } from '@/store/NavigationStore'
+import {
+  createCatenaXPartnerId,
+  normalizeCatenaXPartners,
+} from '@/utils/CatenaXPartnerUtils'
 import { normalizeInfrastructureTemplate } from '@/utils/InfrastructureUtils'
 
 /**
@@ -51,6 +55,7 @@ export function useInfrastructureStorage (): {
       aasRepoPath?: string
       submodelRepoPath?: string
       conceptDescriptionRepoPath?: string
+      companyLookupPath?: string
       keycloakActive?: boolean
       keycloakUrl?: string
       keycloakRealm?: string
@@ -73,6 +78,7 @@ export function useInfrastructureStorage (): {
       aasRepoPath?: string
       submodelRepoPath?: string
       conceptDescriptionRepoPath?: string
+      companyLookupPath?: string
       keycloakActive?: boolean
       keycloakUrl?: string
       keycloakRealm?: string
@@ -110,6 +116,7 @@ export function useInfrastructureStorage (): {
     aasRepoPath?: string
     submodelRepoPath?: string
     conceptDescriptionRepoPath?: string
+    companyLookupPath?: string
     keycloakUrl?: string
     keycloakRealm?: string
     keycloakClientId?: string
@@ -125,6 +132,7 @@ export function useInfrastructureStorage (): {
       aasRepo: envConfig.aasRepoPath || '',
       submodelRepo: envConfig.submodelRepoPath || '',
       cdRepo: envConfig.conceptDescriptionRepoPath || '',
+      companyLookup: envConfig.companyLookupPath || '',
       keycloakUrl: envConfig.keycloakUrl || '',
       keycloakRealm: envConfig.keycloakRealm || '',
       keycloakClientId: envConfig.keycloakClientId || '',
@@ -165,6 +173,9 @@ export function useInfrastructureStorage (): {
         hasRegistryIntegration: true,
       },
       ConceptDescriptionRepo: {
+        url: '',
+      },
+      CompanyLookup: {
         url: '',
       },
     }
@@ -220,14 +231,16 @@ export function useInfrastructureStorage (): {
       ...(edc?.partners ?? []),
       ...(legacyDefaultPartner ? [legacyDefaultPartner] : []),
     ])
+    const defaultPartnerId = edc?.defaultPartnerId?.trim() || partners[0]?.id
+    const defaultPartner = partners.find(partner => partner.id === defaultPartnerId) ?? partners[0]
 
     infrastructure.catenaX = {
       accessMode: 'edc',
       edc: {
         proxyId,
-        defaultCounterPartyId: edc?.defaultCounterPartyId?.trim() || undefined,
-        defaultCounterPartyAddress: edc?.defaultCounterPartyAddress?.trim() || undefined,
-        defaultPartnerId: edc?.defaultPartnerId?.trim() || partners[0]?.id || undefined,
+        defaultCounterPartyId: defaultPartner?.counterPartyId,
+        defaultCounterPartyAddress: defaultPartner?.counterPartyAddress,
+        defaultPartnerId: defaultPartner?.id,
         partners: partners.length > 0 ? partners : undefined,
       },
     }
@@ -242,32 +255,6 @@ export function useInfrastructureStorage (): {
     return infrastructure.catenaX?.edc?.proxyId?.trim() ? 'edc' : 'direct'
   }
 
-  function normalizeCatenaXPartners (partners: CatenaXPartner[]): CatenaXPartner[] {
-    const uniquePartners = new Map<string, CatenaXPartner>()
-
-    for (const partner of partners) {
-      const counterPartyId = partner.counterPartyId?.trim() ?? ''
-      const counterPartyAddress = partner.counterPartyAddress?.trim() ?? ''
-      if (counterPartyId === '' || counterPartyAddress === '') {
-        continue
-      }
-
-      const id = partner.id?.trim() || createPartnerId(counterPartyId, counterPartyAddress)
-      if (id === '') {
-        continue
-      }
-
-      uniquePartners.set(`${counterPartyId}::${counterPartyAddress}`, {
-        id,
-        name: partner.name?.trim() || undefined,
-        counterPartyId,
-        counterPartyAddress,
-      })
-    }
-
-    return Array.from(uniquePartners.values())
-  }
-
   function createLegacyDefaultPartner (
     counterPartyId: string | undefined,
     counterPartyAddress: string | undefined,
@@ -279,17 +266,10 @@ export function useInfrastructureStorage (): {
     }
 
     return {
-      id: createPartnerId(normalizedCounterPartyId, normalizedCounterPartyAddress),
+      id: createCatenaXPartnerId(normalizedCounterPartyId, normalizedCounterPartyAddress),
       counterPartyId: normalizedCounterPartyId,
       counterPartyAddress: normalizedCounterPartyAddress,
     }
-  }
-
-  function createPartnerId (counterPartyId: string, counterPartyAddress: string): string {
-    return `${counterPartyId}-${counterPartyAddress}`
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
   }
 
   /**
@@ -881,6 +861,7 @@ export function useInfrastructureStorage (): {
       aasRepoPath?: string
       submodelRepoPath?: string
       conceptDescriptionRepoPath?: string
+      companyLookupPath?: string
       keycloakActive?: boolean
       keycloakUrl?: string
       keycloakRealm?: string
@@ -909,6 +890,7 @@ export function useInfrastructureStorage (): {
           || isNonEmptyString(envConfig.aasRepoPath)
           || isNonEmptyString(envConfig.submodelRepoPath)
           || isNonEmptyString(envConfig.conceptDescriptionRepoPath)
+          || isNonEmptyString(envConfig.companyLookupPath)
           || envConfig.keycloakActive === true
           || (isNonEmptyString(envConfig.keycloakUrl)
             && isNonEmptyString(envConfig.keycloakRealm)

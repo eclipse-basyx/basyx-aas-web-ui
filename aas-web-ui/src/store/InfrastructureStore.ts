@@ -2,12 +2,13 @@ import type { BaSyxComponent, BaSyxComponentKey } from '@/types/BaSyx'
 import type { InfrastructureConfig, UserData } from '@/types/Infrastructure'
 import { defineStore } from 'pinia'
 import { computed, nextTick, reactive, ref, watch } from 'vue'
-import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient'
-import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
-import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
-import { useCDRepositoryClient } from '@/composables/Client/CDRepositoryClient'
-import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
-import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
+import { ASS_DISCOVERY_ENDPOINT_PATH } from '@/composables/Client/AASDiscoveryClient'
+import { ASS_REGISTRY_ENDPOINT_PATH } from '@/composables/Client/AASRegistryClient'
+import { ASS_REPOSITORY_ENDPOINT_PATH } from '@/composables/Client/AASRepositoryClient'
+import { CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH } from '@/composables/Client/CDRepositoryClient'
+import { COMPANY_LOOKUP_ENDPOINT_PATHS } from '@/composables/Client/CompanyLookup/constants/api'
+import { SUBMODEL_REGISTRY_ENDPOINT_PATH } from '@/composables/Client/SMRegistryClient'
+import { SUBMODEL_REPOSITORY_ENDPOINT_PATH } from '@/composables/Client/SMRepositoryClient'
 import { useInfrastructureAuth } from '@/composables/Infrastructure/useInfrastructureAuth'
 import { useInfrastructureStorage } from '@/composables/Infrastructure/useInfrastructureStorage'
 import { useRequestHandling } from '@/composables/RequestHandling'
@@ -29,12 +30,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   const { getRequest } = useRequestHandling()
   const infrastructureStorage = useInfrastructureStorage()
   const infrastructureAuth = useInfrastructureAuth()
-  const { endpointPath: aasDiscoveryEndpointPath } = useAASDiscoveryClient()
-  const { endpointPath: aasRegistryEndpointPath } = useAASRegistryClient()
-  const { endpointPath: smRegistryEndpointPath } = useSMRegistryClient()
-  const { endpointPath: aasRepoEndpointPath } = useAASRepositoryClient()
-  const { endpointPath: smRepoEndpointPath } = useSMRepositoryClient()
-  const { endpointPath: cdRepoEndpointPath } = useCDRepositoryClient()
 
   // Computed Properties from Environment Store
   const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable)
@@ -44,6 +39,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   const EnvAASRepoPath = computed(() => envStore.getEnvAASRepoPath)
   const EnvSubmodelRepoPath = computed(() => envStore.getEnvSubmodelRepoPath)
   const EnvConceptDescriptionRepoPath = computed(() => envStore.getEnvConceptDescriptionRepoPath)
+  const EnvCompanyLookupPath = computed(() => envStore.getEnvCompanyLookupPath)
   const EnvKeycloakActive = computed(() => envStore.getKeycloakActive)
   const EnvKeycloakUrl = computed(() => envStore.getKeycloakUrl)
   const EnvKeycloakRealm = computed(() => envStore.getKeycloakRealm)
@@ -71,6 +67,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   const AASRepoURL = ref<string>('')
   const SubmodelRepoURL = ref<string>('')
   const ConceptDescriptionRepoURL = ref<string>('')
+  const CompanyLookupURL = ref<string>('')
 
   // Reactive BaSyx Components Configurations
   const basyxComponents = reactive<Record<BaSyxComponentKey, BaSyxComponent>>({
@@ -80,7 +77,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       connected: ref(null),
       connect: () => connectComponent('AASDiscovery'),
       label: 'AAS Discovery URL',
-      pathCheck: aasDiscoveryEndpointPath,
+      pathCheck: ASS_DISCOVERY_ENDPOINT_PATH,
       additionalParams: '?limit=1',
     },
     AASRegistry: {
@@ -89,7 +86,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       connected: ref(null),
       connect: () => connectComponent('AASRegistry'),
       label: 'AAS Registry URL',
-      pathCheck: aasRegistryEndpointPath,
+      pathCheck: ASS_REGISTRY_ENDPOINT_PATH,
       additionalParams: '?limit=1',
     },
     SubmodelRegistry: {
@@ -98,7 +95,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       connected: ref(null),
       connect: () => connectComponent('SubmodelRegistry'),
       label: 'Submodel Registry URL',
-      pathCheck: smRegistryEndpointPath,
+      pathCheck: SUBMODEL_REGISTRY_ENDPOINT_PATH,
       additionalParams: '?limit=1',
     },
     AASRepo: {
@@ -107,7 +104,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       connected: ref(null),
       connect: () => connectComponent('AASRepo'),
       label: 'AAS Repository URL',
-      pathCheck: aasRepoEndpointPath,
+      pathCheck: ASS_REPOSITORY_ENDPOINT_PATH,
       additionalParams: '?limit=1',
     },
     SubmodelRepo: {
@@ -116,7 +113,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       connected: ref(null),
       connect: () => connectComponent('SubmodelRepo'),
       label: 'Submodel Repository URL',
-      pathCheck: smRepoEndpointPath,
+      pathCheck: SUBMODEL_REPOSITORY_ENDPOINT_PATH,
       additionalParams: '?limit=1&level=core',
     },
     ConceptDescriptionRepo: {
@@ -125,7 +122,16 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       connected: ref(null),
       connect: () => connectComponent('ConceptDescriptionRepo'),
       label: 'Concept Description Repository URL',
-      pathCheck: cdRepoEndpointPath,
+      pathCheck: CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH,
+      additionalParams: '?limit=1',
+    },
+    CompanyLookup: {
+      url: CompanyLookupURL,
+      loading: ref(false),
+      connected: ref(null),
+      connect: () => connectComponent('CompanyLookup'),
+      label: 'Company Lookup URL',
+      pathCheck: COMPANY_LOOKUP_ENDPOINT_PATHS.COMPANIES,
       additionalParams: '?limit=1',
     },
   })
@@ -157,6 +163,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   const getSubmodelRepoURL = computed(() => getActiveComponentUrl('SubmodelRepo', SubmodelRepoURL.value))
   const getConceptDescriptionRepoURL = computed(() =>
     getActiveComponentUrl('ConceptDescriptionRepo', ConceptDescriptionRepoURL.value),
+  )
+  const getCompanyLookupURL = computed(() =>
+    getActiveComponentUrl('CompanyLookup', CompanyLookupURL.value),
   )
   const getBasyxComponents = computed(() => basyxComponents)
   const getIsAuthenticating = computed(() => isAuthenticating.value)
@@ -192,6 +201,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       aasRepoPath: EnvAASRepoPath.value,
       submodelRepoPath: EnvSubmodelRepoPath.value,
       conceptDescriptionRepoPath: EnvConceptDescriptionRepoPath.value,
+      companyLookupPath: EnvCompanyLookupPath.value,
       keycloakActive: EnvKeycloakActive.value,
       keycloakUrl: EnvKeycloakUrl.value,
       keycloakRealm: EnvKeycloakRealm.value,
@@ -239,6 +249,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       AASRepoURL.value = initialInfra.components.AASRepo.url
       SubmodelRepoURL.value = initialInfra.components.SubmodelRepo.url
       ConceptDescriptionRepoURL.value = initialInfra.components.ConceptDescriptionRepo.url
+      CompanyLookupURL.value = initialInfra.components.CompanyLookup.url
     }
 
     // Connect components after infrastructure is loaded and synced
@@ -259,6 +270,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       AASRepoURL.value = infra.components.AASRepo.url
       SubmodelRepoURL.value = infra.components.SubmodelRepo.url
       ConceptDescriptionRepoURL.value = infra.components.ConceptDescriptionRepo.url
+      CompanyLookupURL.value = infra.components.CompanyLookup.url
     }
   })
 
@@ -289,6 +301,10 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         ConceptDescriptionRepoURL.value = url
         break
       }
+      case 'CompanyLookup': {
+        CompanyLookupURL.value = url
+        break
+      }
       default: {
         console.warn(`Unknown component key: ${componentKey}`)
         break
@@ -309,6 +325,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       return
     }
 
+    if (selectedInfrastructureId.value !== infrastructureId) {
+      navigationStore.dispatchDismissInfrastructureSnackbar()
+    }
     selectedInfrastructureId.value = infrastructureId
 
     saveInfrastructuresToStorage()
@@ -371,6 +390,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         AASRepoURL.value = infrastructure.components.AASRepo.url
         SubmodelRepoURL.value = infrastructure.components.SubmodelRepo.url
         ConceptDescriptionRepoURL.value = infrastructure.components.ConceptDescriptionRepo.url
+        CompanyLookupURL.value = infrastructure.components.CompanyLookup.url
       }
     }
   }
@@ -395,6 +415,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             aasRepoPath: EnvAASRepoPath.value,
             submodelRepoPath: EnvSubmodelRepoPath.value,
             conceptDescriptionRepoPath: EnvConceptDescriptionRepoPath.value,
+            companyLookupPath: EnvCompanyLookupPath.value,
             keycloakActive: EnvKeycloakActive.value,
             keycloakUrl: EnvKeycloakUrl.value,
             keycloakRealm: EnvKeycloakRealm.value,
@@ -465,6 +486,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       AASRepoURL.value = selectedInfra.components.AASRepo.url
       SubmodelRepoURL.value = selectedInfra.components.SubmodelRepo.url
       ConceptDescriptionRepoURL.value = selectedInfra.components.ConceptDescriptionRepo.url
+      CompanyLookupURL.value = selectedInfra.components.CompanyLookup.url
     }
 
     // Clear AAS list and treeview
@@ -739,6 +761,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     getAASRepoURL,
     getSubmodelRepoURL,
     getConceptDescriptionRepoURL,
+    getCompanyLookupURL,
     getBasyxComponents,
     getDefaultInfrastructureId,
     getIsAuthenticating,

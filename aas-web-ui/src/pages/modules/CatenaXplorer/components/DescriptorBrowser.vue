@@ -8,56 +8,32 @@
     }"
     :rounded="embedded ? false : 'lg'"
   >
-    <div v-if="edcAccessEnabled" class="pa-3 pb-0">
-      <v-row density="compact">
-        <v-col cols="12" md="4">
-          <v-select
-            v-model="edcPartnerIdModel"
-            bg-color="surface-light"
-            density="compact"
-            flat
-            hide-details
-            :items="edcPartnerItems"
-            label="EDC Partner"
-            variant="outlined"
-          />
-        </v-col>
-
-        <v-col cols="12" md="4">
-          <v-text-field
-            v-model="edcCounterPartyIdModel"
-            bg-color="surface-light"
-            density="compact"
-            flat
-            hide-details
-            label="Counterparty ID"
-            placeholder="Counterparty ID"
-            variant="outlined"
-          />
-        </v-col>
-
-        <v-col cols="12" md="4">
-          <v-text-field
-            v-model="edcCounterPartyAddressModel"
-            bg-color="surface-light"
-            density="compact"
-            flat
-            hide-details
-            label="Counterparty DSP Address"
-            placeholder="https://<counterparty-dsp-endpoint>"
-            variant="outlined"
-          />
-        </v-col>
-      </v-row>
-    </div>
+    <EdcPartnerSelector
+      v-if="edcAccessEnabled"
+      v-model:counter-party-address="edcCounterPartyAddressModel"
+      v-model:counter-party-id="edcCounterPartyIdModel"
+      v-model:partner-id="edcPartnerIdModel"
+      :configured-partners="edcConfiguredPartners"
+      :has-load-error="Boolean(inlineError)"
+      :infrastructure-editable="infrastructureEditable"
+      :is-loading="isBusy"
+      :partner-ready="edcPartnerReady"
+      :recent-partners="edcRecentPartners"
+      :runtime-partner-loaded="runtimePartnerLoaded"
+      @load="emit('load-partner')"
+      @save="emit('save-partner')"
+    />
 
     <DescriptorSearchForm
       v-model:asset-id-name="assetIdNameModel"
       v-model:asset-id-value="assetIdValueModel"
       :asset-id-name-suggestions="assetIdNameSuggestions"
+      :curl-command="curlCommand"
+      :curl-note="curlNote"
+      :disabled="isBusy || (edcAccessEnabled && !edcPartnerReady)"
       :dtr-url="dtrUrl"
-      :is-loading="isLoading"
-      :show-curl="!edcAccessEnabled"
+      :is-loading="isBusy"
+      show-curl
       @clear="emit('clear')"
       @search="emit('search')"
     />
@@ -117,6 +93,7 @@
   import DescriptorCreateAction from '@/pages/modules/CatenaXplorer/components/DescriptorCreateAction.vue'
   import DescriptorList from '@/pages/modules/CatenaXplorer/components/DescriptorList.vue'
   import DescriptorSearchForm from '@/pages/modules/CatenaXplorer/components/DescriptorSearchForm.vue'
+  import EdcPartnerSelector from '@/pages/modules/CatenaXplorer/components/EdcPartnerSelector.vue'
 
   const props = defineProps<{
     assetIdName: string
@@ -124,19 +101,25 @@
     assetIdValue: string
     copyJsonIcon: string
     createActionPlacement?: 'fixed' | 'footer'
+    curlCommand?: string
+    curlNote?: string
     descriptors: any[]
     dtrUrl: string
     edcAccessEnabled?: boolean
+    edcConfiguredPartners?: CatenaXPartner[]
     edcCounterPartyAddress?: string
     edcCounterPartyId?: string
     edcPartnerId?: string
-    edcPartners?: CatenaXPartner[]
+    edcPartnerReady?: boolean
+    edcRecentPartners?: CatenaXPartner[]
     embedded?: boolean
     hasMoreDescriptors?: boolean
     inlineError: string
     isLoading: boolean
     isLoadingMore?: boolean
+    infrastructureEditable?: boolean
     readOnly?: boolean
+    runtimePartnerLoaded?: boolean
     selectedDescriptorId: string
   }>()
 
@@ -148,6 +131,8 @@
     'duplicate': [descriptor: any]
     'edit': [descriptor: any]
     'load-more': []
+    'load-partner': []
+    'save-partner': []
     'search': []
     'select': [descriptor: any]
     'update:asset-id-name': [value: string]
@@ -182,15 +167,8 @@
     set: value => emit('update:edc-counter-party-address', value),
   })
 
-  const edcPartnerItems = computed(() => [
-    ...(props.edcPartners ?? []).map(partner => ({
-      title: partner.name || partner.counterPartyId,
-      value: partner.id,
-    })),
-    { title: 'Runtime Partner', value: '' },
-  ])
-
   const isFixedCreateAction = computed(() => props.createActionPlacement === 'fixed')
+  const isBusy = computed(() => props.isLoading || Boolean(props.isLoadingMore))
 </script>
 
 <style scoped>

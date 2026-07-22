@@ -16,11 +16,18 @@
         <!-- Options -->
         <v-label class="mt-5">Options</v-label>
 
-        <v-radio-group v-model="uploadMode" class="mt-4" density="compact" hide-details>
+        <v-radio-group
+          class="mt-4"
+          density="compact"
+          hide-details
+          :model-value="uploadMode"
+          @update:model-value="selectUploadMode"
+        >
           <v-radio
             v-for="mode in uploadModes"
             :key="mode.value"
             class="ml-2"
+            :disabled="mode.value === 'server' && !serverUploadSupported"
             :label="mode.title"
             :value="mode.value"
           />
@@ -147,7 +154,7 @@
   const ignoreDuplicates = ref(true)
   const uploadProgress = ref(0)
   const currentFileLabel = ref('')
-  const uploadMode = ref<InfrastructureAasUploadMode>('client')
+  const preferredUploadMode = ref<InfrastructureAasUploadMode | null>(null)
 
   const uploadModes = [
     { title: 'Client-side Import', value: 'client' },
@@ -179,14 +186,12 @@
   })
 
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
-  function allSelectedFilesAreAasx (): boolean {
-    return aasFiles.value.length > 0
-      && aasFiles.value.every(file => detectImportFileKind(file.name) === 'aasx')
-  }
-
-  const defaultUploadMode = computed<InfrastructureAasUploadMode>(() => {
-    const infrastructureDefault = getDefaultAasUploadMode(selectedInfrastructure.value)
-    return infrastructureDefault === 'server' && allSelectedFilesAreAasx() ? 'server' : 'client'
+  const serverUploadSupported = computed(() =>
+    aasFiles.value.every(file => detectImportFileKind(file.name) === 'aasx'),
+  )
+  const uploadMode = computed<InfrastructureAasUploadMode>(() => {
+    if (!serverUploadSupported.value) return 'client'
+    return preferredUploadMode.value ?? getDefaultAasUploadMode(selectedInfrastructure.value)
   })
   const aasRegistryActive = computed(() =>
     isComponentActiveForTemplate(selectedInfrastructure.value, 'AASRegistry'),
@@ -222,7 +227,7 @@
     () => props.modelValue,
     value => {
       if (value) {
-        uploadMode.value = defaultUploadMode.value
+        preferredUploadMode.value = null
       }
       uploadAASDialog.value = value
     },
@@ -235,18 +240,16 @@
     },
   )
 
-  watch(
-    () => aasFiles.value.map(file => file.name),
-    () => {
-      if (uploadAASDialog.value && !loadingUpload.value) {
-        uploadMode.value = defaultUploadMode.value
-      }
-    },
-  )
+  function selectUploadMode (mode: InfrastructureAasUploadMode | null): void {
+    if (mode === null) return
+
+    preferredUploadMode.value = mode
+  }
 
   async function uploadAASFiles (): Promise<void> {
     if (aasFiles.value.length === 0) return
 
+    const resolvedUploadMode = uploadMode.value
     loadingUpload.value = true
     uploadProgress.value = 0
 
@@ -288,7 +291,7 @@
         const aasFile = aasFiles.value[index]
         currentFileLabel.value = aasFile.name
 
-        if (uploadMode.value === 'server') {
+        if (resolvedUploadMode === 'server') {
           const response = await uploadAas(aasFile, ignoreDuplicates.value)
 
           if (response?.success) {
@@ -409,7 +412,7 @@
     loadingUpload.value = false
     uploadProgress.value = 0
     currentFileLabel.value = ''
-    uploadMode.value = defaultUploadMode.value
+    preferredUploadMode.value = null
   }
 
   function createEndpoints (href: string, type: string): Array<Endpoint> {

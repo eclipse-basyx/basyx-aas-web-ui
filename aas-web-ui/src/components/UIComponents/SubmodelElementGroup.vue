@@ -13,69 +13,14 @@
         <div v-for="(SubmodelElement, i) in submodelElementData[smeLocator]" :key="i">
           <v-list-item class="pt-0">
             <v-list-item-title class="pt-2">
-              <!-- SubmodelElementCollection -->
-              <v-alert
-                v-if="SubmodelElement.modelType == 'SubmodelElementCollection'"
-                border="start"
-                density="compact"
-                :text="nameToDisplay(SubmodelElement)"
-                variant="outlined"
-              >
-                <template #prepend>
-                  <v-chip border color="primary" label size="x-small">{{
-                    SubmodelElement.modelType
-                  }}</v-chip>
-                </template>
-
-                <template #append>
-                  <v-badge
-                    :content="SubmodelElement.value ? SubmodelElement.value.length : 0"
-                    inline
-                  />
-                </template>
-              </v-alert>
-              <!-- SubmodelElementList -->
-              <v-alert
-                v-else-if="SubmodelElement.modelType == 'SubmodelElementList'"
-                border="start"
-                density="compact"
-                :text="nameToDisplay(SubmodelElement)"
-                variant="outlined"
-              >
-                <template #prepend>
-                  <v-chip border color="primary" label size="x-small">{{
-                    SubmodelElement.modelType
-                  }}</v-chip>
-                </template>
-
-                <template #append>
-                  <v-badge
-                    :content="SubmodelElement.value ? SubmodelElement.value.length : 0"
-                    inline
-                  />
-                </template>
-              </v-alert>
-              <!-- Entity -->
-              <v-alert
-                v-else-if="SubmodelElement.modelType == 'Entity'"
-                border="start"
-                density="compact"
-                :text="nameToDisplay(SubmodelElement)"
-                variant="outlined"
-              >
-                <template #prepend>
-                  <v-chip border color="primary" label size="x-small">{{
-                    SubmodelElement.modelType
-                  }}</v-chip>
-                </template>
-
-                <template #append>
-                  <v-badge
-                    :content="SubmodelElement.statements ? SubmodelElement.statements.length : 0"
-                    inline
-                  />
-                </template>
-              </v-alert>
+              <SubmodelElementSummary
+                v-if="[
+                  'SubmodelElementCollection',
+                  'SubmodelElementList',
+                  'Entity',
+                ].includes(SubmodelElement.modelType)"
+                :element="SubmodelElement"
+              />
               <!-- Property -->
               <v-text-field
                 v-else-if="SubmodelElement.modelType == 'Property'"
@@ -117,24 +62,11 @@
                   </v-list-item-subtitle>
                 </v-list-item>
               </template>
-              <!-- Operation -->
-              <v-alert
-                v-else-if="SubmodelElement.modelType == 'Operation'"
-                border="start"
-                density="compact"
-                :text="nameToDisplay(SubmodelElement)"
-                variant="tonal"
-              >
-                <template #prepend>
-                  <v-chip border color="primary" label size="x-small">{{
-                    SubmodelElement.modelType
-                  }}</v-chip>
-                </template>
 
-                <template #append>
-                  <v-icon style="margin-right: 5px">mdi-lightning-bolt-circle</v-icon>
-                </template>
-              </v-alert>
+              <SubmodelElementSummary
+                v-else-if="SubmodelElement.modelType == 'Operation'"
+                :element="SubmodelElement"
+              />
               <!-- File -->
               <v-text-field
                 v-else-if="SubmodelElement.modelType == 'File'"
@@ -288,6 +220,11 @@
                   }}</v-chip>
                 </div>
               </div>
+
+              <SubmodelElementSummary
+                v-else-if="['BasicEventElement', 'Capability'].includes(SubmodelElement.modelType)"
+                :element="SubmodelElement"
+              />
               <!-- InvalidElement -->
               <v-alert
                 v-else

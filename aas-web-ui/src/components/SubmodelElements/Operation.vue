@@ -37,41 +37,28 @@
 
               <v-divider v-if="variable.value && variable.value.description" class="mt-1" />
               <!-- Variable Value -->
-              <v-list-item class="px-0 pb-0">
-                <v-list-item-title class="pt-1">
-                  <!-- <pre class="mx-4 mt-2 mb-1 pa-3" style="border: solid; border-radius: 3px; border-width: 1px">{{ variable }}</pre> -->
-                  <!-- Value Representation depending on the ModelType -->
-                  <Property
-                    v-if="variable.value.modelType === 'Property'"
-                    :is-editable="isEditable"
-                    :is-operation-variable="true"
-                    :property-object="variable.value"
-                    :variable-type="variableType.type"
-                    @update-value="updateOperationVariable($event, variable.value)"
-                  />
+              <!-- Value Representation depending on the ModelType -->
+              <Property
+                v-if="variable.value.modelType === 'Property'"
+                :is-editable="variablesEditable"
+                :is-operation-variable="true"
+                :property-object="variable.value"
+                :variable-type="variableType.type"
+                @update-value="updateOperationVariable($event, variable.value)"
+              />
 
-                  <ReferenceElement
-                    v-else-if="variable.value.modelType === 'ReferenceElement'"
-                    :is-editable="isEditable"
-                    :is-operation-variable="true"
-                    :reference-element-object="variable.value"
-                    :variable-type="variableType.type"
-                    @update-value="
-                      updateOperationVariable($event, variable.value)
-                    "
-                  />
+              <ReferenceElement
+                v-else-if="variable.value.modelType === 'ReferenceElement'"
+                :is-editable="variablesEditable"
+                :is-operation-variable="true"
+                :reference-element-object="variable.value"
+                :variable-type="variableType.type"
+                @update-value="
+                  updateOperationVariable($event, variable.value)
+                "
+              />
 
-                  <InvalidElement
-                    v-else
-                    :invalid-element-object="variable.value"
-                    :is-operation-variable="true"
-                    :variable-type="variableType.type"
-                    @update-value="
-                      updateOperationVariable($event, variable.value)
-                    "
-                  />
-                </v-list-item-title>
-              </v-list-item>
+              <SubmodelElementSummary v-else :element="variable.value" />
             </v-card>
           </template>
         </v-container>
@@ -92,7 +79,7 @@
 
       <v-divider />
       <!-- Action Buttons for the Operation -->
-      <v-list class="bg-elevatedCard pa-0" nav>
+      <v-list v-if="invocationAvailable" class="bg-elevatedCard pa-0" nav>
         <v-list-item>
           <template #append>
             <!-- Clear-Button -->
@@ -115,12 +102,23 @@
           </template>
         </v-list-item>
       </v-list>
+
+      <v-alert
+        v-else
+        class="ma-3"
+        density="compact"
+        type="info"
+        variant="tonal"
+      >
+        This nested Operation is owned by another Operation. Invoke the repository-backed owning
+        Operation instead.
+      </v-alert>
     </v-card>
   </v-container>
 </template>
 
 <script lang="ts" setup>
-  import { onMounted, ref, watch } from 'vue'
+  import { computed, onMounted, ref, watch } from 'vue'
   import { useRequestHandling } from '@/composables/RequestHandling'
   import { useNavigationStore } from '@/store/NavigationStore'
 
@@ -139,6 +137,10 @@
       type: Boolean,
       default: true,
     },
+    invocationAvailable: {
+      type: Boolean,
+      default: true,
+    },
   })
 
   const localOperationObject = ref({} as any)
@@ -148,6 +150,7 @@
     { type: 'outputVariables', name: 'Output Variables', id: 2 },
   ])
   const loading = ref(false)
+  const variablesEditable = computed(() => props.isEditable && props.invocationAvailable)
 
   // Watchers
   watch(
@@ -258,7 +261,7 @@
 
   function updateOperationVariable (e: any, variable: any): void {
     // console.log('updateOperationVariable: ', 'new Value: ', e, ' Variable: ', variable);
-    variable.value = e
+    variable.value = variable.valueType === 'xs:boolean' && typeof e === 'boolean' ? e.toString() : e
   }
 
   function refreshWebUi (): void {

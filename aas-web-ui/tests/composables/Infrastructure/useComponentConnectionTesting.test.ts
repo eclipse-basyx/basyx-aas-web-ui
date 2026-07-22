@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => {
     'AASRepo',
     'SubmodelRepo',
     'ConceptDescriptionRepo',
+    'CompanyLookup',
   ] as const
 
   const components = Object.fromEntries(
@@ -48,6 +49,7 @@ function createComponents (): Record<BaSyxComponentKey, ComponentConfig> {
     AASRepo: { url: 'https://aas-env.example' },
     SubmodelRepo: { url: '' },
     ConceptDescriptionRepo: { url: '' },
+    CompanyLookup: { url: '' },
   }
 }
 

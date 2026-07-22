@@ -6,14 +6,14 @@ import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
 
+export const CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH = '/concept-descriptions'
+
 export function useCDRepositoryClient () {
   // Stores
   const infrastructureStore = useInfrastructureStore()
 
   // Composables
   const { getRequest, postRequest, putRequest } = useRequestHandling()
-
-  const endpointPath = '/concept-descriptions'
 
   // Computed Properties
   const conceptDescriptionRepoUrl = computed(() => infrastructureStore.getConceptDescriptionRepoURL)
@@ -39,8 +39,8 @@ export function useCDRepositoryClient () {
     if (cdRepoUrl.endsWith('/')) {
       cdRepoUrl = stripLastCharacter(cdRepoUrl)
     }
-    if (!cdRepoUrl.endsWith(endpointPath)) {
-      cdRepoUrl += endpointPath
+    if (!cdRepoUrl.endsWith(CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH)) {
+      cdRepoUrl += CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH
     }
 
     const cdRepoPath = cdRepoUrl
@@ -90,8 +90,8 @@ export function useCDRepositoryClient () {
     if (cdRepoUrl.endsWith('/')) {
       cdRepoUrl = stripLastCharacter(cdRepoUrl)
     }
-    if (!cdRepoUrl.endsWith(endpointPath)) {
-      cdRepoUrl += endpointPath
+    if (!cdRepoUrl.endsWith(CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH)) {
+      cdRepoUrl += CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH
     }
 
     const cdEndpoint = cdRepoUrl + '/' + base64Encode(cdId)
@@ -236,8 +236,8 @@ export function useCDRepositoryClient () {
     if (cdRepoUrl.endsWith('/')) {
       cdRepoUrl = stripLastCharacter(cdRepoUrl)
     }
-    if (!cdRepoUrl.endsWith(endpointPath)) {
-      cdRepoUrl += endpointPath
+    if (!cdRepoUrl.endsWith(CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH)) {
+      cdRepoUrl += CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH
     }
 
     const cdEndpoint = cdRepoUrl + '/' + base64Encode(cdId)
@@ -255,8 +255,8 @@ export function useCDRepositoryClient () {
     if (cdRepoUrl.endsWith('/')) {
       cdRepoUrl = stripLastCharacter(cdRepoUrl)
     }
-    if (!cdRepoUrl.endsWith(endpointPath)) {
-      cdRepoUrl += endpointPath
+    if (!cdRepoUrl.endsWith(CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH)) {
+      cdRepoUrl += CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH
     }
 
     const jsonConceptDescription = jsonization.toJsonable(conceptDescription)
@@ -294,8 +294,8 @@ export function useCDRepositoryClient () {
     if (cdRepoUrl.endsWith('/')) {
       cdRepoUrl = stripLastCharacter(cdRepoUrl)
     }
-    if (!cdRepoUrl.endsWith(endpointPath)) {
-      cdRepoUrl += endpointPath
+    if (!cdRepoUrl.endsWith(CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH)) {
+      cdRepoUrl += CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH
     }
 
     const jsonConceptDescription = jsonization.toJsonable(conceptDescription)
@@ -312,7 +312,6 @@ export function useCDRepositoryClient () {
   }
 
   return {
-    endpointPath,
     fetchCdList,
     fetchCdById,
     fetchCd,

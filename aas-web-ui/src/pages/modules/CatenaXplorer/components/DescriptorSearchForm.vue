@@ -6,6 +6,7 @@
       class="asset-id-search-field"
       clearable
       density="compact"
+      :disabled="disabled"
       flat
       hide-details
       label="Search asset ID"
@@ -24,6 +25,7 @@
           bg-color="surface-light"
           class="asset-id-key-select ms-n3"
           density="compact"
+          :disabled="disabled"
           flat
           hide-details
           :items="assetIdNameSuggestions"
@@ -38,8 +40,9 @@
         <v-divider class="asset-id-key-divider mx-1" vertical />
       </template>
 
-      <template v-if="showCurl" #append-inner>
+      <template #append-inner>
         <v-menu
+          v-if="showCurl"
           v-model="curlMenu"
           :close-on-content-click="false"
           location="bottom"
@@ -47,18 +50,7 @@
           open-on-hover
         >
           <template #activator="{ props: menuProps }">
-            <v-btn
-              v-bind="menuProps"
-              aria-label="Search descriptors"
-              class="search-action-button text-buttonText"
-              color="primary"
-              icon="mdi-magnify"
-              :loading="isLoading"
-              rounded="lg"
-              size="x-small"
-              variant="flat"
-              @click.stop="search"
-            />
+            <SearchButton v-bind="menuProps" :disabled="disabled" :is-loading="isLoading" @search="search" />
           </template>
 
           <v-sheet
@@ -88,8 +80,14 @@
             <v-sheet class="pa-2 mt-2" color="surface-light" rounded="lg">
               <code class="curl-preview__code text-label-small text-break">{{ curlCommand }}</code>
             </v-sheet>
+
+            <div v-if="curlNote" class="mt-2 text-caption text-medium-emphasis">
+              {{ curlNote }}
+            </div>
           </v-sheet>
         </v-menu>
+
+        <SearchButton v-else :disabled="disabled" :is-loading="isLoading" @search="search" />
       </template>
 
       <template #clear="{ props: clearProps }">
@@ -103,11 +101,15 @@
   import { computed, ref } from 'vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { buildShellDescriptorsCurlCommand } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
+  import SearchButton from '@/pages/modules/CatenaXplorer/components/SearchButton.vue'
 
   const props = defineProps<{
     assetIdName: string
     assetIdNameSuggestions: string[]
     assetIdValue: string
+    curlCommand?: string
+    curlNote?: string
+    disabled?: boolean
     dtrUrl: string
     isLoading: boolean
     showCurl?: boolean
@@ -125,16 +127,25 @@
 
   const assetIdNameModel = computed({
     get: () => props.assetIdName,
-    set: value => emit('update:asset-id-name', value),
+    set: value => {
+      if (!props.disabled) {
+        emit('update:asset-id-name', value)
+      }
+    },
   })
 
   const assetIdValueModel = computed({
     get: () => props.assetIdValue,
-    set: value => emit('update:asset-id-value', value ?? ''),
+    set: value => {
+      if (!props.disabled) {
+        emit('update:asset-id-value', value ?? '')
+      }
+    },
   })
 
   const curlCommand = computed(() => {
-    return buildShellDescriptorsCurlCommand(props.dtrUrl, props.assetIdName, props.assetIdValue)
+    return props.curlCommand
+      || buildShellDescriptorsCurlCommand(props.dtrUrl, props.assetIdName, props.assetIdValue)
   })
 
   const assetIdSelectMenuProps = {
@@ -143,11 +154,16 @@
   } as const
 
   function search (): void {
+    if (props.disabled) {
+      return
+    }
     emit('search')
   }
 
   function clear (): void {
-    emit('clear')
+    if (!props.disabled) {
+      emit('clear')
+    }
   }
 
   function copyCurlCommand (): void {
