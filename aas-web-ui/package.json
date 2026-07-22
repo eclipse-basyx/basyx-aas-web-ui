@@ -33,7 +33,7 @@
     "@fontsource/roboto": "^5.3.0",
     "@mdi/font": "^7.4.47",
     "@plantuml/core": "1.2026.6",
-    "@tanstack/vue-query": "^5.101.2",
+    "@tanstack/vue-query": "^5.101.3",
     "@thatopen/components": "^3.4.6",
     "@thatopen/components-front": "^3.4.3",
     "@thatopen/fragments": "^3.4.6",
