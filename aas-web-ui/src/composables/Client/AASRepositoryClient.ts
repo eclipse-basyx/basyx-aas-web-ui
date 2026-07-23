@@ -614,7 +614,7 @@ export function useAASRepositoryClient () {
     const path = aasPath.trim() + '/submodel-refs/' + base64Encode(submodelId.trim())
     const context = 'deleting Submodel Reference'
     const disableMessage = false
-    const response = await deleteRequest(path, context, disableMessage)
+    const response = await deleteRequest(path, new Headers(), context, disableMessage)
     return response.success
   }
 
@@ -753,7 +753,7 @@ export function useAASRepositoryClient () {
       const path = aasEndpoint
       const context = 'deleting AAS'
       const disableMessage = false
-      const response = await deleteRequest(path, context, disableMessage)
+      const response = await deleteRequest(path, new Headers(), context, disableMessage)
       return response.success
     }
 
@@ -783,7 +783,7 @@ export function useAASRepositoryClient () {
     const path = aasEndpoint
     const context = 'deleting AAS'
     const disableMessage = false
-    const response = await deleteRequest(path, context, disableMessage)
+    const response = await deleteRequest(path, new Headers(), context, disableMessage)
     return response.success
   }
 

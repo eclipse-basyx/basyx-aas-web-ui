@@ -74,7 +74,22 @@
                     density="compact"
                   >
                     <v-list-item-title>{{ action.title }}</v-list-item-title>
-                    <v-list-item-subtitle>{{ action.machineName }}</v-list-item-subtitle>
+
+                    <v-list-item-subtitle>
+                      <v-btn
+                        v-if="action.machineRefAasId"
+                        class="pa-0"
+                        density="compact"
+                        size="small"
+                        variant="text"
+                        @click.stop="navigateToMachine(action.machineRefAasId)"
+                      >
+                        <v-icon size="x-small" start>mdi-open-in-new</v-icon>
+                        {{ action.machineName }}
+                      </v-btn>
+
+                      <span v-else>{{ action.machineName }}</span>
+                    </v-list-item-subtitle>
 
                     <template #append>
                       <v-chip :color="statusChipColor(action.statusKind)" size="x-small" variant="tonal">
@@ -102,6 +117,7 @@
 <script lang="ts" setup>
   import { computed, onMounted, ref, watch } from 'vue'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
+  import { useJumpHandling } from '@/composables/JumpHandling'
   import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils'
 
   // Options
@@ -116,6 +132,7 @@
     key: string
     title: string
     machineName: string
+    machineRefAasId?: string
     status: string
     statusKind: StatusKind
   }
@@ -140,10 +157,12 @@
     action: 'https://smartfactory.de/semantics/submodel-element/Step/Actions/Action',
     actionTitle: 'https://smartfactory.de/semantics/submodel-element/Step/Actions/Action/ActionTitle',
     machineName: 'https://smartfactory.de/semantics/submodel-element/Step/Actions/Action/MachineName',
+    machineRef: 'https://smartfactory.de/semantics/submodel-element/Step/Actions/Action/MachineRef',
   }
 
   // Composables
   const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils()
+  const { jumpToAasById } = useJumpHandling()
 
   // Properties
   const props = defineProps({
@@ -285,6 +304,7 @@
           key: actionElement?.idShort || `action-${index + 1}`,
           title: withFallback(getSmeValue(actionTitleElement), nameToDisplay(actionElement, 'en', `Action ${index + 1}`)),
           machineName: withFallback(getSmeValue(actionMachineNameElement), 'No machine name'),
+          machineRefAasId: getMachineRefAasId(actionElement),
           status,
           statusKind: mapStatusKind(status),
         }
@@ -397,6 +417,23 @@
 
     const parsed = Number.parseInt(numericSuffix[1], 10)
     return Number.isNaN(parsed) ? null : parsed
+  }
+
+  function getMachineRefAasId (actionElement: any): string | undefined {
+    const machineRefElement = findChildBySemanticOrIdShort(actionElement, semanticIds.machineRef, 'MachineRef')
+    if (!machineRefElement || machineRefElement.modelType !== 'ReferenceElement') {
+      return undefined
+    }
+    const keys = machineRefElement?.value?.keys
+    if (!Array.isArray(keys)) {
+      return undefined
+    }
+    const aasKey = keys.find((k: any) => k.type === 'AssetAdministrationShell')
+    return aasKey?.value || undefined
+  }
+
+  async function navigateToMachine (aasId: string): Promise<void> {
+    await jumpToAasById(aasId)
   }
 
   function withFallback (value: string, fallback: string): string {
