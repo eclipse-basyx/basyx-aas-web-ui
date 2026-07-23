@@ -225,7 +225,7 @@
   import type { AASDescriptor } from '@/types/Descriptors'
   import { types as aasTypes, jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { BaSyxEnvironment } from 'basyx-typescript-sdk'
-  import * as Prism from 'prismjs'
+  import Prism from 'prismjs'
   import { ref } from 'vue'
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'

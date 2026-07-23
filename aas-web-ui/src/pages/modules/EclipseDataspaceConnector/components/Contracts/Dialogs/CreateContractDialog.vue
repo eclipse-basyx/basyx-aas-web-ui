@@ -100,7 +100,7 @@
 </template>
 
 <script lang="ts" setup>
-  import * as Prism from 'prismjs'
+  import Prism from 'prismjs'
   import { type ContractDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import ContractTemplate_v0_9 from '@/pages/modules/EclipseDataspaceConnector/data/contracts/contract___tractux-x_edc_v0.9.json'
   import ContractTemplate_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/contracts/contract___tractux-x_edc_v0.12.1.json'

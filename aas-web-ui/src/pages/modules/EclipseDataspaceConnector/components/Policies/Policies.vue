@@ -329,7 +329,7 @@
 </template>
 
 <script lang="ts" setup>
-  import * as Prism from 'prismjs'
+  import Prism from 'prismjs'
   import { useTheme } from 'vuetify'
   import JsonTreeView from '@/components/UIComponents/JsonTreeView.vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'

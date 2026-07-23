@@ -89,7 +89,7 @@
 
 <script lang="ts" setup>
   import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
-  import * as Prism from 'prismjs'
+  import Prism from 'prismjs'
   import { computed, ref, watch } from 'vue'
   import JsonTreeView from '@/components/UIComponents/JsonTreeView.vue'
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'

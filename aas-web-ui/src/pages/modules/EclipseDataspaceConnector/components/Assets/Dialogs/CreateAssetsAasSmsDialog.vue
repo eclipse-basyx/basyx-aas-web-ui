@@ -543,7 +543,7 @@
 
 <script lang="ts" setup>
   import { base64Decode } from 'basyx-typescript-sdk'
-  import * as Prism from 'prismjs'
+  import Prism from 'prismjs'
   import { computed, onMounted, ref } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'

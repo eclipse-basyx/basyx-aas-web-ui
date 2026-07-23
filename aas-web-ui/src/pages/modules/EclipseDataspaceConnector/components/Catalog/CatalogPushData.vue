@@ -533,7 +533,7 @@
 </template>
 
 <script lang="ts" setup>
-  import * as Prism from 'prismjs'
+  import Prism from 'prismjs'
   import {
     type ComponentPublicInstance,
     computed,

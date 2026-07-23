@@ -68,7 +68,7 @@
 </template>
 
 <script lang="ts" setup>
-  import * as Prism from 'prismjs'
+  import Prism from 'prismjs'
   import { type Asset, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import AssetTemplate_v0_9 from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.9.json'
   import AssetTemplate_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.12.1.json'

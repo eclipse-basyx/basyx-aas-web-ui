@@ -132,7 +132,7 @@
 </template>
 
 <script lang="ts" setup>
-  import * as Prism from 'prismjs'
+  import Prism from 'prismjs'
   import { computed, nextTick, onMounted, ref, toRaw, watch } from 'vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { useAASStore } from '@/store/AASDataStore'
