@@ -14,6 +14,8 @@ export type ModuleRouteMeta = {
   visibleOnRoutes?: Array<string>
   supportedInfrastructureTemplates?: InfrastructureTemplate[]
   preserveRouteQuery?: boolean
+  needsInfrastructureEndpoints?: Array<string>
+  needsEnvVariables?: Array<string>
 }
 
 export type ModuleChildRouteDefinition = {
@@ -97,6 +99,7 @@ export function buildValidatedModuleChildRoutes (moduleName: string,
         isVisibleModule: parentMeta.isVisibleModule,
         isOnlyVisibleWithSelectedAas: parentMeta.isOnlyVisibleWithSelectedAas,
         isOnlyVisibleWithSelectedNode: parentMeta.isOnlyVisibleWithSelectedNode,
+        visibleOnRoutes: parentMeta.visibleOnRoutes,
         supportedInfrastructureTemplates:
           childRouteDefinition.meta && Object.hasOwn(childRouteDefinition.meta, 'supportedInfrastructureTemplates')
             ? childRouteDefinition.meta.supportedInfrastructureTemplates
@@ -105,6 +108,8 @@ export function buildValidatedModuleChildRoutes (moduleName: string,
                     childRouteDefinition.meta && Object.hasOwn(childRouteDefinition.meta, 'preserveRouteQuery')
                       ? childRouteDefinition.meta.preserveRouteQuery
                       : parentMeta.preserveRouteQuery,
+        needsInfrastructureEndpoints: parentMeta.needsInfrastructureEndpoints,
+        needsEnvVariables: parentMeta.needsEnvVariables,
       },
       component: childRouteDefinition.component,
     }
