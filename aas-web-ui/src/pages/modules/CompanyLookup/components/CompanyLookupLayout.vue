@@ -28,6 +28,8 @@
     if (val) {
       drawer.value = false
       listCollapsed.value = true
+    } else {
+      listCollapsed.value = false
     }
   })
 
