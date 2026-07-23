@@ -1,3 +1,4 @@
+import type { BaSyxComponentKey } from '@/types/BaSyx'
 import type { InfrastructureTemplate } from '@/types/Infrastructure'
 import type { RouteRecordRaw, RouteRecordSingleView } from 'vue-router'
 
@@ -14,7 +15,7 @@ export type ModuleRouteMeta = {
   visibleOnRoutes?: Array<string>
   supportedInfrastructureTemplates?: InfrastructureTemplate[]
   preserveRouteQuery?: boolean
-  needsInfrastructureEndpoints?: Array<string>
+  needsInfrastructureEndpoints?: Array<BaSyxComponentKey>
   needsEnvVariables?: Array<string>
 }
 
@@ -27,6 +28,35 @@ export type ModuleChildRouteDefinition = {
 
 export type ModuleRouteManifest = {
   children?: Array<ModuleChildRouteDefinition>
+}
+
+export function buildModuleRouteMeta (
+  moduleName: string,
+  moduleOptions: ModuleRouteMeta | undefined,
+): ModuleRouteMeta {
+  const isOnlyVisibleWithSelectedAas = moduleOptions?.isOnlyVisibleWithSelectedAas ?? false
+  const isOnlyVisibleWithSelectedNode = moduleOptions?.isOnlyVisibleWithSelectedNode ?? false
+  const preserveRouteQuery = (
+    moduleOptions?.preserveRouteQuery
+    || isOnlyVisibleWithSelectedAas
+    || isOnlyVisibleWithSelectedNode
+  )
+
+  return {
+    name: moduleName,
+    title: moduleOptions?.moduleTitle || moduleName,
+    subtitle: 'Module',
+    isDesktopModule: moduleOptions?.isDesktopModule ?? true,
+    isMobileModule: moduleOptions?.isMobileModule ?? false,
+    isVisibleModule: moduleOptions?.isVisibleModule ?? true,
+    isOnlyVisibleWithSelectedAas,
+    isOnlyVisibleWithSelectedNode,
+    visibleOnRoutes: moduleOptions?.visibleOnRoutes ?? [],
+    supportedInfrastructureTemplates: moduleOptions?.supportedInfrastructureTemplates ?? [],
+    needsInfrastructureEndpoints: moduleOptions?.needsInfrastructureEndpoints ?? [],
+    needsEnvVariables: moduleOptions?.needsEnvVariables ?? [],
+    preserveRouteQuery,
+  }
 }
 
 function sanitizeChildRouteSegment (pathSegment: string): string {

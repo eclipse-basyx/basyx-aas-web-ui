@@ -10,29 +10,21 @@
   import CompanyJsonView from './CompanyJsonView.vue'
   import CompanyProperty from './CompanyProperty.vue'
 
+  const props = withDefaults(defineProps<{
+    detailsOnly?: boolean
+  }>(), {
+    detailsOnly: false,
+  })
+
   const { t } = useCompanyLookupI18n()
   const route = useRoute()
   const router = useRouter()
 
   const view = ref<ViewType>(
-    VIEWS.includes(route.query.view as string)
+    !props.detailsOnly && VIEWS.includes(route.query.view as string)
       ? (route.query.view as ViewType)
       : VIEW.DETAILS,
   )
-
-  watch(
-    () => route.query.view,
-    v => {
-      if (v && VIEWS.includes(v as string)) {
-        view.value = v as ViewType
-      }
-    },
-  )
-
-  function onChangeView (value: string): void {
-    if (route.query.view === value) return
-    router.replace({ query: { ...route.query, view: value } })
-  }
 
   const selectedId = computed(() => {
     const paramId = route.query.id as string | undefined
@@ -41,6 +33,23 @@
 
   const { data: company, isLoading } = useGetCompany(selectedId)
 
+  watch(
+    [() => route.query.view, () => props.detailsOnly],
+    ([v, detailsOnly]) => {
+      if (detailsOnly) {
+        view.value = VIEW.DETAILS
+      } else if (v && VIEWS.includes(v as string)) {
+        view.value = v as ViewType
+      } else {
+        view.value = VIEW.DETAILS
+      }
+    },
+  )
+
+  function onChangeView (value: string): void {
+    if (route.query.view === value) return
+    router.replace({ query: { ...route.query, view: value } })
+  }
 </script>
 
 <template>
@@ -48,6 +57,7 @@
     <v-card class="h-100 d-flex flex-column" variant="flat">
       <v-card-title class="d-flex align-center justify-space-between" style="gap: 12px; height: 64px;">
         <v-btn-toggle
+          v-if="!props.detailsOnly"
           v-model="view"
           color="primary"
           density="compact"
@@ -68,14 +78,14 @@
           </v-btn>
         </v-btn-toggle>
 
-        <CompanyOptions :company="company" />
+        <CompanyOptions :company="company" :read-only="props.detailsOnly" />
       </v-card-title>
     </v-card>
 
     <v-divider />
 
     <div class="flex-grow-1 overflow-y-auto py-2 px-2">
-      <template v-if="view === VIEW.DETAILS || view === VIEW.DETAILSONLY">
+      <template v-if="view === VIEW.DETAILS">
         <v-card variant="elevated">
           <v-card-text class="pb-1">
             <span class="text-primary text-body-large">{{ company.name ?? t('detail.fallbackName') }}</span>

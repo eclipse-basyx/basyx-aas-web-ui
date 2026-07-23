@@ -8,7 +8,12 @@
   import CompanyDelete from './CompanyDelete.vue'
   import CompanyDialog from './CompanyDialog.vue'
 
-  const { company } = defineProps<{ company: CompanyDescriptor }>()
+  const props = withDefaults(defineProps<{
+    company: CompanyDescriptor
+    readOnly?: boolean
+  }>(), {
+    readOnly: false,
+  })
 
   const { t } = useCompanyLookupI18n()
   const { copyToClipboard } = useClipboardUtil()
@@ -20,7 +25,7 @@
   const isMenuOpen = ref(false)
   const editDialog = useTemplateRef<InstanceType<typeof CompanyDialog>>('editDialog')
 
-  const allowEditing = computed(() => envStore.getAllowEditing)
+  const allowEditing = computed(() => envStore.getAllowEditing && !props.readOnly)
 
   function openEdit (): void {
     isMenuOpen.value = false
@@ -28,7 +33,7 @@
   }
 
   function onCopy (): void {
-    copyToClipboard(company.domain, t('options.domain'), copyIcon)
+    copyToClipboard(props.company.domain, t('options.domain'), copyIcon)
     isMenuOpen.value = false
   }
 
@@ -66,7 +71,7 @@
           </v-list-item>
 
           <div @click.stop>
-            <CompanyDelete :company="company" @deleted="onDelete" />
+            <CompanyDelete :company="props.company" @deleted="onDelete" />
           </div>
 
           <v-divider />
@@ -84,5 +89,5 @@
     </v-sheet>
   </v-menu>
 
-  <CompanyDialog ref="editDialog" :company="company" />
+  <CompanyDialog v-if="!props.readOnly" ref="editDialog" :company="props.company" />
 </template>

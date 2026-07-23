@@ -1,10 +1,9 @@
 <script setup lang="ts">
   import { computed, ref, watch } from 'vue'
   import { useRoute } from 'vue-router'
-  import { useEnvStore } from '@/store/EnvironmentStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
-  import { VIEW, VIEWS, type ViewType } from '../constants/view.ts'
+  import { VIEW } from '../constants/view'
   import { useCompanyLookupI18n } from '../i18n/useCompanyLookupI18n'
   import CompaniesList from './CompaniesList.vue'
   import CompanyLookupConfigurator from './CompanyLookupConfigurator.vue'
@@ -13,22 +12,23 @@
   const { t } = useCompanyLookupI18n()
   const route = useRoute()
   const navigationStore = useNavigationStore()
-  const envStore = useEnvStore()
+
+  const drawer = ref(false)
+  const listCollapsed = ref(route.query.view === VIEW.DETAILSONLY)
 
   const isMobile = computed(() => navigationStore.getIsMobile)
-  const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable)
-
-  const view = ref<ViewType>(
-    VIEWS.includes(route.query.view as string)
-      ? (route.query.view as ViewType)
-      : VIEW.DETAILS,
-  )
-  const drawer = ref(false)
-  const listCollapsed = ref(view.value === VIEW.DETAILSONLY ? true : false)
+  const isDetailsOnly = computed(() => route.query.view === VIEW.DETAILSONLY)
 
   // Auto-close mobile drawer when leaving mobile
   watch(isMobile, val => {
     if (!val) drawer.value = false
+  })
+
+  watch(isDetailsOnly, val => {
+    if (val) {
+      drawer.value = false
+      listCollapsed.value = true
+    }
   })
 
   function onSelect (id?: string): void {
@@ -40,7 +40,7 @@
   <div class="h-100 w-100 d-flex flex-column">
     <div class="flex-shrink-0 d-flex align-center px-4 py-2 border-b">
       <v-btn
-        v-if="isMobile"
+        v-if="isMobile && !isDetailsOnly"
         class="mr-2"
         icon="mdi-menu"
         size="small"
@@ -49,7 +49,7 @@
       />
 
       <v-btn
-        v-else
+        v-else-if="!isDetailsOnly"
         class="mr-2"
         :icon="listCollapsed ? 'mdi-chevron-double-right' : 'mdi-chevron-double-left'"
         size="small"
@@ -67,12 +67,12 @@
 
       <v-spacer />
 
-      <CompanyLookupConfigurator v-if="endpointConfigAvailable" />
+      <CompanyLookupConfigurator />
     </div>
 
     <div class="cl-body d-flex flex-grow-1 overflow-hidden">
       <v-navigation-drawer
-        v-if="isMobile"
+        v-if="isMobile && !isDetailsOnly"
         v-model="drawer"
         temporary
         width="320"
@@ -80,12 +80,12 @@
         <CompaniesList @select="onSelect" />
       </v-navigation-drawer>
 
-      <div v-if="!isMobile && !listCollapsed" class="list">
+      <div v-if="!isMobile && !isDetailsOnly && !listCollapsed" class="list">
         <CompaniesList @select="onSelect" />
       </div>
 
       <div class="cl-detail flex-grow-1 overflow-y-auto">
-        <CompanyDetail />
+        <CompanyDetail :details-only="isDetailsOnly" />
       </div>
     </div>
   </div>
