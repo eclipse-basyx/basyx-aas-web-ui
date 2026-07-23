@@ -170,6 +170,24 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   const getBasyxComponents = computed(() => basyxComponents)
   const getIsAuthenticating = computed(() => isAuthenticating.value)
   const getIsTestingConnections = computed(() => isTestingConnections.value)
+
+  // Maps BaSyx component keys to their corresponding active-URL getter, so
+  // e.g. `ModuleNavigationRouteMeta.needsInfrastructureEndpoints` can check readiness generically.
+  const basyxComponentUrlGetters: Record<BaSyxComponentKey, ComputedRef<string>> = {
+    AASDiscovery: getAASDiscoveryURL,
+    AASRegistry: getAASRegistryURL,
+    SubmodelRegistry: getSubmodelRegistryURL,
+    AASRepo: getAASRepoURL,
+    SubmodelRepo: getSubmodelRepoURL,
+    ConceptDescriptionRepo: getConceptDescriptionRepoURL,
+    CompanyLookup: getCompanyLookupURL,
+  }
+
+  function isEndpointSet (componentKey: BaSyxComponentKey): boolean {
+    const activeComponentUrl = basyxComponentUrlGetters[componentKey]?.value
+    return !!activeComponentUrl && activeComponentUrl.trim() !== ''
+  }
+
   const getIsLoginAvailable = computed(() => {
     const infra = getSelectedInfrastructure.value
     if (!infra || !infra.auth || infra.auth.securityType === 'No Authentication') {
@@ -769,6 +787,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     getIsLoginAvailable,
 
     // Actions
+    isEndpointSet,
     dispatchComponentURL,
     dispatchSelectInfrastructure,
     dispatchAddInfrastructure,

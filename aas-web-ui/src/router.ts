@@ -27,6 +27,7 @@ import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { useNavigationStore } from '@/store/NavigationStore'
 import { supportsInfrastructureTemplate } from '@/utils/InfrastructureUtils'
 import {
+  buildModuleRouteMeta,
   buildValidatedModuleChildRoutes,
   type ModuleRouteManifest,
   type ModuleRouteMeta,
@@ -218,38 +219,7 @@ async function generateModuleRoutes (): Promise<Array<RouteRecordRaw>> {
     // Define the route path, e.g., '/modules/module-a' if needed
     const routePath = `/modules/${moduleName.toLowerCase()}`
 
-    let moduleTitle = moduleName
-    if (moduleComponent.default?.moduleTitle && moduleComponent.default?.moduleTitle !== '') {
-      moduleTitle = moduleComponent.default?.moduleTitle
-    }
-
-    const isDesktopModule = moduleComponent.default?.isDesktopModule ?? true // Modules are per default available in desktop view
-    const isMobileModule = moduleComponent.default?.isMobileModule ?? false // Modules are per default not available in mobile view
-    const isVisibleModule = moduleComponent.default?.isVisibleModule ?? true // Modules are per default visible
-    const isOnlyVisibleWithSelectedAas = moduleComponent.default?.isOnlyVisibleWithSelectedAas ?? false
-    const isOnlyVisibleWithSelectedNode = moduleComponent.default?.isOnlyVisibleWithSelectedNode ?? false
-    const visibleOnRoutes = moduleComponent.default?.visibleOnRoutes ?? []
-    const supportedInfrastructureTemplates = moduleComponent.default?.supportedInfrastructureTemplates ?? []
-    let preserveRouteQuery = moduleComponent.default?.preserveRouteQuery ?? false
-
-    // Overwrite preserveRouteQuery
-    if (isOnlyVisibleWithSelectedAas || isOnlyVisibleWithSelectedNode) {
-      preserveRouteQuery = true
-    }
-
-    const parentMeta: ModuleRouteMeta = {
-      name: moduleName,
-      title: moduleTitle,
-      subtitle: 'Module',
-      isDesktopModule,
-      isMobileModule,
-      isVisibleModule,
-      isOnlyVisibleWithSelectedAas,
-      isOnlyVisibleWithSelectedNode,
-      visibleOnRoutes,
-      supportedInfrastructureTemplates,
-      preserveRouteQuery,
-    }
+    const parentMeta = buildModuleRouteMeta(moduleName, moduleComponent.default)
 
     const moduleChildren = buildValidatedModuleChildRoutes(moduleName, routePath, parentMeta, moduleManifest)
 

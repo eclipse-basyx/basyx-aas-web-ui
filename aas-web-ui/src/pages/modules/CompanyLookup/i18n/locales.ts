@@ -38,6 +38,7 @@ export const en = {
     fallbackName: 'Company',
     view: {
       details: 'Details',
+      detailsOnly: 'Details',
       json: 'JSON',
     },
     fields: fieldsEN,
@@ -157,6 +158,7 @@ export const de: CompanyLookupI18NSchema = {
     fallbackName: 'Unternehmen',
     view: {
       details: 'Details',
+      detailsOnly: 'Details',
       json: 'JSON',
     },
     fields: fieldsDE,
