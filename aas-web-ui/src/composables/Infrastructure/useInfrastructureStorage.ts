@@ -937,7 +937,16 @@ export function useInfrastructureStorage (): {
         selectedInfrastructureId,
       }
 
-      localStorage.setItem('basyxInfrastructures', JSON.stringify(storage))
+      const sanitizedStorage = {
+        ...storage,
+        infrastructures: storage.infrastructures.map(infra => ({
+          ...infra,
+          auth: infra.auth?.oauth2
+            ? { ...infra.auth, oauth2: { ...infra.auth.oauth2, clientSecret: undefined } }
+            : infra.auth,
+        })),
+      }
+      localStorage.setItem('basyxInfrastructures', JSON.stringify(sanitizedStorage))
     } catch (error) {
       console.error('Error saving infrastructures to storage:', error)
     }
