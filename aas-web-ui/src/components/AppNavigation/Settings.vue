@@ -3,6 +3,7 @@
     <template #activator="{ props }">
       <v-btn
         v-bind="props"
+        aria-label="Settings"
         icon
         size="small"
         style="padding-right: 28px; padding-left: 28px"

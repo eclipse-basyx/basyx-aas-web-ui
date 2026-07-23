@@ -201,7 +201,7 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__AAS_REPO_PATH_PLACEHOLDER__/|$AAS_REPO_PATH|g" \
     -e "s|/__SUBMODEL_REPO_PATH_PLACEHOLDER__/|$SUBMODEL_REPO_PATH|g" \
     -e "s|/__CD_REPO_PATH_PLACEHOLDER__/|$CD_REPO_PATH|g" \
-    -e "s|/__COMPANY_LOOKUP_PLACEHOLDER__/|$COMPANY_LOOKUP_PATH|g" \
+    -e "s|/__COMPANY_LOOKUP_PATH_PLACEHOLDER__/|$COMPANY_LOOKUP_PATH|g" \
     -e "s|/__PRIMARY_LIGHT_COLOR_PLACEHOLDER__/|$PRIMARY_LIGHT_COLOR|g" \
     -e "s|/__PRIMARY_DARK_COLOR_PLACEHOLDER__/|$PRIMARY_DARK_COLOR|g" \
     -e "s|/__INFLUXDB_TOKEN_PLACEHOLDER__/|$INFLUXDB_TOKEN|g" \
