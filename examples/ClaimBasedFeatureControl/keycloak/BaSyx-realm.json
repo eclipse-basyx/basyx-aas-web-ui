@@ -1,0 +1,131 @@
+{
+  "realm": "BaSyx",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": false,
+  "accessTokenLifespan": 300,
+  "users": [
+    {
+      "username": "viewer",
+      "enabled": true,
+      "firstName": "View",
+      "lastName": "Only",
+      "email": "viewer@example.com",
+      "emailVerified": true,
+      "requiredActions": [],
+      "attributes": {
+        "basyx_role": ["viewer"],
+        "basyx_features": [
+          "endpoint-config-unavailable",
+          "multiple-aas",
+          "multiple-sm",
+          "forbid-editing",
+          "forbid-uploading",
+          "allow-logout"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "pwd",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "editor",
+      "enabled": true,
+      "firstName": "Example",
+      "lastName": "Editor",
+      "email": "editor@example.com",
+      "emailVerified": true,
+      "requiredActions": [],
+      "attributes": {
+        "basyx_role": ["editor"],
+        "basyx_features": [
+          "endpoint-config-available",
+          "multiple-aas",
+          "sm-viewer-editor",
+          "multiple-sm",
+          "allow-editing",
+          "allow-uploading",
+          "allow-logout"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "pwd",
+          "temporary": false
+        }
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "basyx-web-ui",
+      "name": "BaSyx AAS Web UI",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:3001/"],
+      "webOrigins": ["http://localhost:3001"],
+      "protocol": "openid-connect",
+      "fullScopeAllowed": false,
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:3001/"
+      },
+      "protocolMappers": [
+        {
+          "name": "BaSyx features",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "aggregate.attrs": "false",
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "user.attribute": "basyx_features",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true",
+            "claim.name": "basyx_features",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "BaSyx authorization role",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "aggregate.attrs": "false",
+            "multivalued": "false",
+            "userinfo.token.claim": "true",
+            "user.attribute": "basyx_role",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true",
+            "claim.name": "basyx_role",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "BaSyx API audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "basyx-web-ui",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ]
+}

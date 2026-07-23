@@ -1,5 +1,5 @@
 import type { BaSyxComponent, BaSyxComponentKey } from '@/types/BaSyx'
-import type { InfrastructureConfig, UserData } from '@/types/Infrastructure'
+import type { InfrastructureConfig } from '@/types/Infrastructure'
 import { defineStore } from 'pinia'
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { ASS_DISCOVERY_ENDPOINT_PATH } from '@/composables/Client/AASDiscoveryClient'
@@ -9,6 +9,7 @@ import { CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH } from '@/composables/Clie
 import { COMPANY_LOOKUP_ENDPOINT_PATHS } from '@/composables/Client/CompanyLookup/constants/api'
 import { SUBMODEL_REGISTRY_ENDPOINT_PATH } from '@/composables/Client/SMRegistryClient'
 import { SUBMODEL_REPOSITORY_ENDPOINT_PATH } from '@/composables/Client/SMRepositoryClient'
+import { watchFeatureControlClaims } from '@/composables/FeatureControl'
 import { useInfrastructureAuth } from '@/composables/Infrastructure/useInfrastructureAuth'
 import { useInfrastructureStorage } from '@/composables/Infrastructure/useInfrastructureStorage'
 import { useRequestHandling } from '@/composables/RequestHandling'
@@ -32,7 +33,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   const infrastructureAuth = useInfrastructureAuth()
 
   // Computed Properties from Environment Store
-  const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable)
+  const deploymentEndpointConfigAvailable = computed(() => envStore.getDeploymentEndpointConfigAvailable)
   const EnvAASDiscoveryPath = computed(() => envStore.getEnvAASDiscoveryPath)
   const EnvAASRegistryPath = computed(() => envStore.getEnvAASRegistryPath)
   const EnvSubmodelRegistryPath = computed(() => envStore.getEnvSubmodelRegistryPath)
@@ -55,7 +56,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   const infrastructures = ref<InfrastructureConfig[]>([])
   const selectedInfrastructureId = ref<string | null>(null)
   const openInfrastructureEditMode = ref(false)
-  const user = ref<UserData | null>(null)
   const isAuthenticating = ref(false)
   const isTestingConnections = ref(false)
 
@@ -145,6 +145,20 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
     return infrastructures.value.find(infra => infra.id === selectedInfrastructureId.value) || null
   })
+  watchFeatureControlClaims(
+    () => {
+      const infrastructure = getSelectedInfrastructure.value
+      return infrastructure?.token?.accessToken
+        ? {
+            accessToken: infrastructure.token.accessToken,
+            expiresAt: infrastructure.token.expiresAt,
+            isAuthenticated: infrastructure.isAuthenticated,
+          }
+        : undefined
+    },
+    () => envStore.getFeatureControlClaimMappings,
+    overrides => envStore.setFeatureControlOverrides(overrides),
+  )
   const getOpenInfrastructureEditMode = computed(() => openInfrastructureEditMode.value)
   function getActiveComponentUrl (componentKey: BaSyxComponentKey, url: string): string {
     const selectedInfra = getSelectedInfrastructure.value
@@ -195,7 +209,8 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
     const allowLogout = envStore.getAllowLogout
     const isOAuth2ClientCredentials = infra.auth.oauth2?.authFlow === 'client-credentials'
-    return allowLogout && !isOAuth2ClientCredentials
+    const needsReauthentication = Boolean(infra.token?.accessToken) && infra.isAuthenticated === false
+    return (allowLogout || needsReauthentication) && !isOAuth2ClientCredentials
   })
 
   function getDefaultInfrastructureId (): string {
@@ -230,7 +245,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       oidcClientId: EnvOidcClientId.value,
       preconfiguredAuth: EnvPreconfiguredAuth.value,
       preconfiguredAuthClientSecret: EnvPreconfiguredAuthClientSecret.value,
-      endpointConfigAvailable: endpointConfigAvailable.value,
+      endpointConfigAvailable: deploymentEndpointConfigAvailable.value,
     }
 
     const result = await infrastructureStorage.loadInfrastructuresFromStorage(envConfig)
@@ -663,7 +678,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             console.warn(context + ' (' + path + ') failed!')
 
             // Remove from localStorage if endpoint config is available
-            if (endpointConfigAvailable.value) {
+            if (deploymentEndpointConfigAvailable.value) {
               window.localStorage.removeItem(componentKey + 'URL')
             }
 
@@ -681,88 +696,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     } else {
       basyxComponent.connected = false
       console.warn(`Repository URL for ${componentKey} is not defined or empty.`)
-    }
-  }
-
-  function setUser (userValue: UserData | null): void {
-    user.value = userValue || null
-
-    const envStore = useEnvStore()
-
-    if (
-      envStore.getKeycloakFeatureControl === true
-      && userValue?.roles
-      && Array.isArray(userValue.roles)
-      && userValue.roles.length > 0
-    ) {
-      const keycloakFeatureControlRolePrefix = envStore.getKeycloakFeatureControlRolePrefix
-      type KeycloakFeatureSetter = 'setSingleAas'
-        | 'setSingleSm'
-        | 'setSmViewerEditor'
-        | 'setAllowEditing'
-        | 'setAllowUploading'
-        | 'setAllowLogout'
-        | 'setEndpointConfigAvailable'
-
-      const keycloak_roles_features: Array<{
-        keycloakRole: string
-        feature: string
-        setFunction: KeycloakFeatureSetter
-        setValue: string
-      }> = [
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'multiple-aas',
-          feature: 'SINGLE_AAS',
-          setFunction: 'setSingleAas',
-          setValue: 'false',
-        },
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'sm-viewer-editor',
-          feature: 'SM_VIEWER_EDITOR',
-          setFunction: 'setSmViewerEditor',
-          setValue: 'true',
-        },
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'multiple-sm',
-          feature: 'SINGLE_SM',
-          setFunction: 'setSingleSm',
-          setValue: 'false',
-        },
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'allow-editing',
-          feature: 'ALLOW_EDITING',
-          setFunction: 'setAllowEditing',
-          setValue: 'true',
-        },
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'allow-uploading',
-          feature: 'ALLOW_UPLOADING',
-          setFunction: 'setAllowUploading',
-          setValue: 'true',
-        },
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'allow-logout',
-          feature: 'ALLOW_LOGOUT',
-          setFunction: 'setAllowLogout',
-          setValue: 'true',
-        },
-        {
-          keycloakRole: keycloakFeatureControlRolePrefix + 'endpoint-config-available',
-          feature: 'ENDPOINT_CONFIG_AVAILABLE',
-          setFunction: 'setEndpointConfigAvailable',
-          setValue: 'true',
-        },
-      ]
-
-      for (const keycloak_roles_feature of keycloak_roles_features) {
-        const key = keycloak_roles_feature.setFunction
-        if (
-          userValue?.roles?.includes(keycloak_roles_feature.keycloakRole)
-          && typeof envStore[key] === 'function'
-        ) {
-          envStore[key](keycloak_roles_feature.setValue)
-        }
-      }
     }
   }
 
@@ -802,7 +735,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     waitForInitialization,
     connectComponents,
     connectComponent,
-    setUser,
     dispatchIsTestingConnections,
   }
 })

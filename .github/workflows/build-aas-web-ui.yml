@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "aas-web-ui/**"
+      - "examples/ClaimBasedFeatureControl/**"
       - "examples/TimeSeriesData/**"
       - ".github/scripts/setup-pnpm.sh"
       - ".github/workflows/build-aas-web-ui.yml"
@@ -14,6 +15,7 @@ on:
     branches: [main]
     paths:
       - "aas-web-ui/**"
+      - "examples/ClaimBasedFeatureControl/**"
       - "examples/TimeSeriesData/**"
       - ".github/scripts/setup-pnpm.sh"
       - ".github/workflows/build-aas-web-ui.yml"
@@ -264,3 +266,81 @@ jobs:
         run: |
           cd examples/TimeSeriesData
           docker compose -f docker-compose.yaml -f docker-compose.ci.override.yaml down
+
+  integration-feature-control:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+
+      - name: Enable and verify pnpm
+        working-directory: aas-web-ui
+        run: bash ../.github/scripts/setup-pnpm.sh
+
+      - name: Restore pnpm store
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-${{ runner.arch }}-pnpm-store-${{ hashFiles('aas-web-ui/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-pnpm-store-
+
+      - name: Install Dependencies
+        working-directory: aas-web-ui
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Browser
+        working-directory: aas-web-ui
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Start Claim-based Feature Control Example
+        working-directory: examples/ClaimBasedFeatureControl
+        run: docker compose up -d --build
+
+      - name: Wait for Claim-based Feature Control UI
+        run: |
+          set -euo pipefail
+          for i in {1..120}; do
+            if curl -fsS http://127.0.0.1:3001/ | grep -q '<div id="app"></div>'; then
+              echo "Claim-based feature control UI is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Claim-based feature control UI did not become ready"
+          cd examples/ClaimBasedFeatureControl
+          docker compose ps
+          docker compose logs --no-color --tail=300
+          exit 1
+
+      - name: Run Claim-based Feature Control Integration Tests
+        working-directory: aas-web-ui
+        run: IT_FEATURE_CONTROL_URL=http://localhost:3001 pnpm test:integration:feature-control
+
+      - name: Dump Claim-based Feature Control Logs On Failure
+        if: failure()
+        working-directory: examples/ClaimBasedFeatureControl
+        run: |
+          docker compose ps
+          docker compose logs --no-color --tail=300
+
+      - name: Upload Claim-based Feature Control Artifacts
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: integration-feature-control-artifacts
+          path: |
+            aas-web-ui/playwright-report
+            aas-web-ui/test-results
+
+      - name: Stop Claim-based Feature Control Example
+        if: always()
+        working-directory: examples/ClaimBasedFeatureControl
+        run: docker compose down

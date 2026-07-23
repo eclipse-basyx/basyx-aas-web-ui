@@ -52,7 +52,7 @@
           <v-spacer />
 
           <v-btn
-            v-if="currentInfrastructure?.token?.accessToken"
+            v-if="currentInfrastructure?.token?.accessToken && !needsReauthentication"
             append-icon="mdi-logout"
 
             color="primary"
@@ -99,7 +99,7 @@
     if (!infra) return false
 
     // Check if authenticated via token
-    if (infra.token?.accessToken) {
+    if (infra.token?.accessToken && infra.isAuthenticated !== false) {
       return true
     }
 
@@ -126,7 +126,7 @@
     }
 
     // Check if authenticated via token
-    if (infra.token?.accessToken) {
+    if (infra.token?.accessToken && infra.isAuthenticated !== false) {
       return 'Authenticated'
     }
 
@@ -156,7 +156,7 @@
     if (!infra || !infra.auth || infra.auth.securityType === 'No Authentication') {
       return false
     }
-    return allowLogout.value && !isOAuth2ClientCredentials.value
+    return (allowLogout.value || needsReauthentication.value) && !isOAuth2ClientCredentials.value
   })
 
   const isAuthEnabled = computed(() => {
@@ -195,6 +195,10 @@
     return ''
   })
   const allowLogout = computed(() => envStore.getAllowLogout)
+  const needsReauthentication = computed(() => {
+    const infra = currentInfrastructure.value
+    return Boolean(infra?.token?.accessToken) && infra?.isAuthenticated === false
+  })
   const isOAuth2ClientCredentials = computed(() => {
     const infra = currentInfrastructure.value
     return infra?.auth?.oauth2?.authFlow === 'client-credentials'

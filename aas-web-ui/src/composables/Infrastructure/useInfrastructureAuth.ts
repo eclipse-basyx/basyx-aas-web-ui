@@ -49,9 +49,6 @@ export function useInfrastructureAuth (): {
         continue
       }
 
-      // Token needs refresh - set to false
-      infrastructure.isAuthenticated = false
-
       // Attempt token refresh
       try {
         if (!token.refreshToken) {
@@ -80,6 +77,7 @@ export function useInfrastructureAuth (): {
             infraName: infrastructure.name,
             error: 'No refresh token available - re-authentication required',
           })
+          infrastructure.isAuthenticated = false
           continue
         // Handle OAuth2 token refresh
         } else if (auth.securityType === 'OAuth2') {
@@ -89,6 +87,7 @@ export function useInfrastructureAuth (): {
               infraName: infrastructure.name,
               error: 'Missing OAuth2 configuration',
             })
+            infrastructure.isAuthenticated = false
             continue
           }
 
@@ -119,6 +118,7 @@ export function useInfrastructureAuth (): {
           }
         }
       } catch (error) {
+        infrastructure.isAuthenticated = false
         failures.push({
           infraId: infrastructure.id,
           infraName: infrastructure.name,
