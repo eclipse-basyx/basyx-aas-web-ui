@@ -322,6 +322,7 @@ export function useInfrastructureStorage (): {
       aasRepoPath?: string
       submodelRepoPath?: string
       conceptDescriptionRepoPath?: string
+      companyLookupPath?: string
       keycloakActive?: boolean
       keycloakUrl?: string
       keycloakRealm?: string
@@ -359,6 +360,9 @@ export function useInfrastructureStorage (): {
     }
     if (envConfig.conceptDescriptionRepoPath) {
       infrastructure.components.ConceptDescriptionRepo.url = envConfig.conceptDescriptionRepoPath
+    }
+    if (envConfig.companyLookupPath) {
+      infrastructure.components.CompanyLookup.url = envConfig.companyLookupPath
     }
 
     // Precedence logic: Keycloak takes precedence over generic OIDC if both are configured
@@ -463,6 +467,7 @@ export function useInfrastructureStorage (): {
     aasRepoPath?: string
     submodelRepoPath?: string
     conceptDescriptionRepoPath?: string
+    companyLookupPath?: string
     keycloakActive?: boolean
     keycloakUrl?: string
     keycloakRealm?: string
@@ -485,6 +490,7 @@ export function useInfrastructureStorage (): {
       || isNonEmptyUrl(envConfig.aasRepoPath)
       || isNonEmptyUrl(envConfig.submodelRepoPath)
       || isNonEmptyUrl(envConfig.conceptDescriptionRepoPath)
+      || isNonEmptyUrl(envConfig.companyLookupPath)
   }
 
   function matchesConfiguredUrl (expected?: string, actual?: string): boolean {
@@ -501,6 +507,7 @@ export function useInfrastructureStorage (): {
         envConfig.conceptDescriptionRepoPath,
         infra.components.ConceptDescriptionRepo.url,
       )
+      && matchesConfiguredUrl(envConfig.companyLookupPath, infra.components.CompanyLookup.url)
   }
 
   function hasKeycloakConfig (envConfig: MatchingEnvConfig): boolean {
@@ -740,6 +747,7 @@ export function useInfrastructureStorage (): {
       aasRepoPath?: string
       submodelRepoPath?: string
       conceptDescriptionRepoPath?: string
+      companyLookupPath?: string
       keycloakActive?: boolean
       keycloakUrl?: string
       keycloakRealm?: string
