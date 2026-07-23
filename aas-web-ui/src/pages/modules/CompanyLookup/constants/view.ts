@@ -1,5 +1,6 @@
 export const VIEW = {
   DETAILS: 'details',
+  DETAILSONLY: 'detailsOnly',
   JSON: 'json',
 } as const
 
