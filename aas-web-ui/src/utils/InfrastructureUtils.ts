@@ -90,7 +90,6 @@ const singleComponentEndpointFields: Record<BaSyxComponentKey, InfrastructureEnd
     label: 'Concept Description Repository',
     yamlKey: 'conceptDescriptionRepository',
     componentKeys: ['ConceptDescriptionRepo'],
-
   },
   CompanyLookup: {
     key: 'CompanyLookup',

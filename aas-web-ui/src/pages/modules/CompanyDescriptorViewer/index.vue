@@ -21,7 +21,7 @@
 
   onMounted(() => {
     if (companyId.value) {
-      router.push({
+      router.replace({
         path: '/modules/companylookup',
         query: {
           id: companyId.value,
