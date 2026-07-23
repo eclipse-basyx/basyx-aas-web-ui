@@ -248,7 +248,7 @@
             headers,
             { suppressStatuses: [400] },
           )
-          status = statusResponse.data.executionState ?? 'Finished'
+          status = statusResponse.data.executionState ?? 'Completed'
           delay = Math.max(delay * 2, 100)
         }
 
