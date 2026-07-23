@@ -98,7 +98,7 @@ infrastructures:
   #       flow: client_credentials
   #       issuer: "https://keycloak.service.com/auth/realms/BaSyx"
   #       clientId: "basyx-service-client"
-  #       clientSecret: "your-client-secret-here"
+#       # clientSecret: Do NOT store secrets here; use VITE_CLIENT_SECRET env var instead
   #       scope: ""
 
   # # Infrastructure with Basic Authentication
