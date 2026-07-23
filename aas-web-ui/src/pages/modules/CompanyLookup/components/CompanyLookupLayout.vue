@@ -38,9 +38,9 @@
 
 <template>
   <div class="h-100 w-100 d-flex flex-column">
-    <div class="flex-shrink-0 d-flex align-center px-4 py-2 border-b">
+    <div v-if="!isDetailsOnly" class="flex-shrink-0 d-flex align-center px-4 py-2 border-b">
       <v-btn
-        v-if="isMobile && !isDetailsOnly"
+        v-if="isMobile"
         class="mr-2"
         icon="mdi-menu"
         size="small"
@@ -49,7 +49,6 @@
       />
 
       <v-btn
-        v-else-if="!isDetailsOnly"
         class="mr-2"
         :icon="listCollapsed ? 'mdi-chevron-double-right' : 'mdi-chevron-double-left'"
         size="small"
