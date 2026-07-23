@@ -51,6 +51,7 @@
       />
 
       <v-btn
+        v-else
         class="mr-2"
         :icon="listCollapsed ? 'mdi-chevron-double-right' : 'mdi-chevron-double-left'"
         size="small"

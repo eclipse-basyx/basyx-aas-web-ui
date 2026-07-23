@@ -124,4 +124,20 @@ describe('Company Lookup details-only mode', () => {
     expect(wrapper.findComponent(CompaniesList).exists()).toBe(true)
     expect(wrapper.findComponent(CompanyDetail).props('detailsOnly')).toBe(false)
   })
+
+  it('shows only the drawer toggle on mobile', () => {
+    mockState.isMobile = true
+    mockState.query = {
+      id: 'example.com',
+      view: 'details',
+    }
+
+    const wrapper = mount(CompanyLookupLayout, {
+      shallow: true,
+    })
+    const buttons = wrapper.findAll('v-btn-stub')
+
+    expect(buttons).toHaveLength(1)
+    expect(buttons[0].attributes('icon')).toBe('mdi-menu')
+  })
 })
