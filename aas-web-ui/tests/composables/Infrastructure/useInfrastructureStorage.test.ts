@@ -81,6 +81,43 @@ describe('useInfrastructureStorage.ts', () => {
     expect(stored.infrastructures[0].template).toBe('full')
   })
 
+  it('ignores unresolved production placeholders when deciding whether env config overrides YAML', async () => {
+    mockDeps.loadInfrastructureConfig.mockResolvedValue({
+      infrastructures: [
+        {
+          id: 'yaml_production',
+          name: 'Production',
+          template: 'full',
+          components: {
+            AASDiscovery: { url: 'https://discovery.example' },
+            AASRegistry: { url: 'https://aas-registry.example' },
+            SubmodelRegistry: { url: 'https://submodel-registry.example' },
+            AASRepo: { url: 'https://aas-repository.example' },
+            SubmodelRepo: { url: 'https://submodel-repository.example' },
+            ConceptDescriptionRepo: { url: 'https://cd-repository.example' },
+            CompanyLookup: { url: 'https://company-lookup.example' },
+          },
+          auth: { securityType: 'No Authentication' },
+        },
+      ],
+      defaultInfrastructureId: 'yaml_production',
+    })
+
+    const { loadInfrastructuresFromStorage } = useInfrastructureStorage()
+    const result = await loadInfrastructuresFromStorage({
+      companyLookupPath: '/__COMPANY_LOOKUP_PATH_PLACEHOLDER__/',
+      endpointConfigAvailable: false,
+    })
+
+    expect(mockDeps.loadInfrastructureConfig).toHaveBeenCalledOnce()
+    expect(result.selectedInfrastructureId).toBe('yaml_production')
+    expect(result.infrastructures[0].components).toMatchObject({
+      AASDiscovery: { url: 'https://discovery.example' },
+      AASRepo: { url: 'https://aas-repository.example' },
+      CompanyLookup: { url: 'https://company-lookup.example' },
+    })
+  })
+
   it('persists Catena-X EDC proxy metadata only for Catena-X infrastructures', () => {
     const { saveInfrastructuresToStorage } = useInfrastructureStorage()
 

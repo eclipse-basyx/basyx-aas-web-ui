@@ -879,24 +879,30 @@ export function useInfrastructureStorage (): {
     try {
       // Check if environment variables are configured (backwards compatibility)
       // Environment variables take precedence over YAML to avoid breaking existing deployments
-      function isNonEmptyString (value: unknown): value is string {
-        return typeof value === 'string' && value.trim().length > 0
+      function isConfiguredString (value: unknown): value is string {
+        if (typeof value !== 'string') {
+          return false
+        }
+
+        const trimmedValue = value.trim()
+        return trimmedValue.length > 0
+          && !/^\/?__[A-Z0-9_]+_PLACEHOLDER__\/?$/.test(trimmedValue)
       }
 
       const hasEnvVars
-        = isNonEmptyString(envConfig.aasDiscoveryPath)
-          || isNonEmptyString(envConfig.aasRegistryPath)
-          || isNonEmptyString(envConfig.submodelRegistryPath)
-          || isNonEmptyString(envConfig.aasRepoPath)
-          || isNonEmptyString(envConfig.submodelRepoPath)
-          || isNonEmptyString(envConfig.conceptDescriptionRepoPath)
-          || isNonEmptyString(envConfig.companyLookupPath)
+        = isConfiguredString(envConfig.aasDiscoveryPath)
+          || isConfiguredString(envConfig.aasRegistryPath)
+          || isConfiguredString(envConfig.submodelRegistryPath)
+          || isConfiguredString(envConfig.aasRepoPath)
+          || isConfiguredString(envConfig.submodelRepoPath)
+          || isConfiguredString(envConfig.conceptDescriptionRepoPath)
+          || isConfiguredString(envConfig.companyLookupPath)
           || envConfig.keycloakActive === true
-          || (isNonEmptyString(envConfig.keycloakUrl)
-            && isNonEmptyString(envConfig.keycloakRealm)
-            && isNonEmptyString(envConfig.keycloakClientId))
+          || (isConfiguredString(envConfig.keycloakUrl)
+            && isConfiguredString(envConfig.keycloakRealm)
+            && isConfiguredString(envConfig.keycloakClientId))
           || envConfig.oidcActive === true
-          || (isNonEmptyString(envConfig.oidcUrl) && isNonEmptyString(envConfig.oidcClientId))
+          || (isConfiguredString(envConfig.oidcUrl) && isConfiguredString(envConfig.oidcClientId))
       // If environment variables are configured, use traditional configuration (backwards compatibility)
       if (hasEnvVars) {
         return await handleTraditionalConfiguration(envConfig, refreshTokensCallback)
