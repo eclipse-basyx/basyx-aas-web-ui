@@ -72,7 +72,7 @@ describe('Company Lookup details-only mode', () => {
     mockState.replace.mockReset()
   })
 
-  it('suppresses company navigation and keeps configuration preferences available', () => {
+  it('suppresses company navigation and hides configuration preferences', () => {
     mockState.query = {
       id: 'example.com',
       view: 'detailsOnly',
@@ -83,12 +83,12 @@ describe('Company Lookup details-only mode', () => {
     })
 
     expect(wrapper.findComponent(CompaniesList).exists()).toBe(false)
-    expect(wrapper.findComponent(CompanyLookupConfigurator).exists()).toBe(true)
+    expect(wrapper.findComponent(CompanyLookupConfigurator).exists()).toBe(false)
     expect(wrapper.findComponent(CompanyDetail).props('detailsOnly')).toBe(true)
     expect(wrapper.find('v-btn-stub').exists()).toBe(false)
   })
 
-  it('marks company actions as read-only and hides the view toggle', () => {
+  it('hides company actions and the view toggle', () => {
     mockState.query = {
       id: 'example.com',
       view: 'detailsOnly',
@@ -107,7 +107,7 @@ describe('Company Lookup details-only mode', () => {
       },
     })
 
-    expect(wrapper.findComponent(CompanyOptions).props('readOnly')).toBe(true)
+    expect(wrapper.findComponent(CompanyOptions).exists()).toBe(false)
     expect(wrapper.find('v-btn-toggle-stub').exists()).toBe(false)
   })
 
