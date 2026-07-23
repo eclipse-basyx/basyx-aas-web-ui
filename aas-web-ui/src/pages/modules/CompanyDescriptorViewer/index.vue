@@ -24,7 +24,7 @@
       router.replace({
         path: '/modules/companylookup',
         query: {
-          id: companyId.value,
+          id: encodeURIComponent(companyId.value),
           view: 'detailsOnly',
         },
       })
