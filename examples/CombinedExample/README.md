@@ -7,7 +7,7 @@ This example runs the BaSyx AAS Web UI against two independent BaSyx Go AAS Envi
 - **Infrastructure 1 — Secured BaSyx**: a BaSyx Go AAS Environment in `mono-all` mode, protected by Keycloak and ABAC.
 - **Infrastructure 2 — Local BaSyx**: an independent, unsecured BaSyx Go AAS Environment in `mono-all` mode.
 - Each environment has its own PostgreSQL 18.4 database and one-shot BaSyx configuration service, so their persisted data and schema setup are isolated.
-- Keycloak 26.6.4 is exposed directly at `http://keycloak.localhost:8080`; no reverse proxy or `*.basyx.localhost` host entries are required.
+- Keycloak 26.7 is exposed directly at `http://keycloak.localhost:8080`; no reverse proxy or `*.basyx.localhost` host entries are required.
 - InfluxDB, Telegraf, MQTT, and Node-RED remain available for the time-series and live-sensor portions of the showcase.
 - Infrastructure 1 preloads the IESE Drive Motor package alongside protected showcase packages. Anonymous visitors see only the Motor shell plus its Nameplate and Technical Data submodels.
 - Infrastructure 2 preloads five Go-compatible showcase packages, including the IESE Drive Motor package from the BaSyx Go minimal example in place of the incompatible PFC200 package.
@@ -42,6 +42,8 @@ Supporting endpoints:
 - Node-RED: [http://localhost:1880](http://localhost:1880)
 
 Keycloak administrator credentials are `admin` / `admin`. The secured UI test account is `admin` / `pwd` and has full access to Infrastructure 1.
+The checked-in realm defines only this test account, the UI client, and its role and audience mappers; Keycloak supplies its built-in clients and authentication flows.
+For portability, the showcase client accepts any login redirect URI, web origin, and post-logout redirect URI. Restrict these wildcards when adapting the setup for a non-demo deployment.
 
 ## Verify anonymous filtered access
 
