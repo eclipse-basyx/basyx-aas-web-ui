@@ -2,6 +2,32 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "aas-web-ui: install",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "install"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "group": "build",
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "aas-web-ui: build",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "build"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "group": "build",
+      "problemMatcher": "$tsc"
+    },
+    {
       "label": "aas-web-ui: bff:build",
       "type": "shell",
       "command": "pnpm",
@@ -13,6 +39,183 @@
       },
       "group": "build",
       "problemMatcher": "$tsc"
-    }
+    },
+    {
+      "label": "aas-web-ui: build & install",
+      "dependsOn": [
+        "aas-web-ui: install",
+        "aas-web-ui: build"
+      ],
+      "dependsOrder": "sequence",
+      "group": "build",
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "aas-web-ui: dev",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "dev"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "group": "none",
+      "isBackground": true,
+    },
+    {
+      "label": "aas-web-ui: preview",
+      "type": "shell",
+      "dependsOn": [
+        "aas-web-ui: build"
+      ],
+      "dependsOrder": "sequence",
+      "command": "pnpm",
+      "args": [
+        "preview"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "group": "none",
+      "isBackground": true,
+    },
+    {
+      "label": "aas-web-ui: build-only",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "build-only"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "group": "build",
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "aas-web-ui: type-check",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "type-check"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "group": "test",
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "aas-web-ui: lint",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "lint"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "group": "test",
+      "problemMatcher": "$eslint-stylish"
+    },
+    {
+      "label": "aas-web-ui: lint:fix",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "lint:fix"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "group": "test",
+      "problemMatcher": "$eslint-stylish"
+    },
+    {
+      "label": "aas-web-ui: lint:check",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "lint:check"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "group": "test",
+      "problemMatcher": "$eslint-stylish"
+    },
+    {
+      "label": "aas-web-ui: bff:start",
+      "type": "shell",
+      "dependsOn": [
+        "aas-web-ui: bff:build"
+      ],
+      "dependsOrder": "sequence",
+      "command": "pnpm",
+      "args": [
+        "bff:start"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "group": "none",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "aas-web-ui: test",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "test"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "group": "test",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "aas-web-ui: test:run",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "test:run"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "aas-web-ui: test:coverage",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "test:coverage"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "aas-web-ui: test:ui",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "test:ui"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui"
+      },
+      "group": "test",
+      "isBackground": true,
+      "problemMatcher": []
+    },
   ]
 }
