@@ -67,6 +67,10 @@
     {
       "label": "aas-web-ui: preview",
       "type": "shell",
+      "dependsOn": [
+        "aas-web-ui: build"
+      ],
+      "dependsOrder": "sequence",
       "command": "pnpm",
       "args": [
         "preview"
