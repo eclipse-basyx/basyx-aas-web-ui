@@ -126,7 +126,7 @@
   const navigationStore = useNavigationStore()
 
   // Composables
-  const { postRequest, errorHandler } = useRequestHandling()
+  const { postRequest, getRequest, errorHandler } = useRequestHandling()
 
   const props = defineProps({
     operationObject: {
@@ -205,58 +205,91 @@
   }
 
   // Function to execute the Operation
-  function executeOperation (): void {
+  async function executeOperation (): Promise<void> {
     // create Array containing the Input Variables which will will be send to the Server
     const inputArguments = localOperationObject.value.inputVariables
     // create Array containing the In-/Output Variables which will will be send to the Server
     const inoutputArguments = localOperationObject.value.inoutputVariables
     // console.log('executeOperation: ', inputVariables, inoutputVariables);
     const path = localOperationObject.value.path + '/invoke?async=true'
+    const timeout = 60 // 60 second timeout
     const content = {
       inputArguments: inputArguments,
       inoutputArguments: inoutputArguments,
-      clientTimeoutDuration: 'PT60S', // 60 second timeout
+      clientTimeoutDuration: `PT${timeout}S`,
     }
     const body = JSON.stringify(content)
     const headers = new Headers()
     headers.append('accept', 'application/json')
     headers.append('Content-Type', 'application/json')
     const context
-      = 'invoking ' + localOperationObject.value.modelType + ' "' + localOperationObject.value.idShort + '"'
+      = `invoking ${localOperationObject.value.modelType} "${localOperationObject.value.idShort}"`
     const disableMessage = false
 
     loading.value = true
 
-    postRequest(path, body, headers, context, disableMessage).then((response: any) => {
-      loading.value = false
+    let response
 
-      if (response.success) {
-        // fill the operationVariables with the new values
-        if (response.data.inoutputArguments) {
-          localOperationObject.value.inoutputVariables = response.data.inoutputArguments
+    const invokeResponse = await postRequest(path, body, headers, context, disableMessage)
+
+    if (invokeResponse.success) {
+      // AAS repository supports async operations
+      if (invokeResponse.data.handleId) {
+        let delay = 0
+        let status = 'Running'
+        let statusResponse
+
+        while (delay < timeout * 1000 && status === 'Running') {
+          await new Promise(r => setTimeout(r, delay))
+          statusResponse = await getRequest(
+            `${localOperationObject.value.path}/operation-status/${invokeResponse.data.handleId}`,
+            `requesting operation status for ${localOperationObject.value.modelType} "${localOperationObject.value.idShort}"`,
+            false,
+            headers,
+            { suppressStatuses: [400] },
+          )
+          status = statusResponse.data.executionState ?? 'Completed'
+          delay = Math.max(delay * 2, 100)
         }
 
-        if (response.data.outputArguments) {
-          localOperationObject.value.outputVariables = response.data.outputArguments
+        loading.value = false
+
+        if (delay >= timeout * 1000) {
+          return errorHandler(`Timeout exceeded (${timeout}s)`, context)
+        } else if (status === 'Failed') {
+          return errorHandler(statusResponse.data.messages, context)
         }
 
-        // check the operationResult, if success is false, show an error message
-        if (response.data.operationResult && !response.data.operationResult.success) {
-          errorHandler(response.data.operationResult, context)
-        } else {
-          navigationStore.dispatchSnackbar({
-            status: true,
-            timeout: 4000,
-            color: 'success',
-            btnColor: 'buttonText',
-            text: 'Operation executed successfully.',
-          })
-
-          // Check if refreshWebUi qualifier is set (to true) and reload AASList and SubmodelTreeview
-          refreshWebUi()
-        }
+        response = statusResponse
+      } else {
+        response = invokeResponse
       }
-    })
+
+      // fill the operationVariables with the new values
+      if (response.data.inoutputArguments) {
+        localOperationObject.value.inoutputVariables = response.data.inoutputArguments
+      }
+
+      if (response.data.outputArguments) {
+        localOperationObject.value.outputVariables = response.data.outputArguments
+      }
+
+      // check the operationResult, if success is false, show an error message
+      if (response.data.operationResult && !response.data.operationResult.success) {
+        errorHandler(response.data.operationResult, context)
+      } else {
+        navigationStore.dispatchSnackbar({
+          status: true,
+          timeout: 4000,
+          color: 'success',
+          btnColor: 'buttonText',
+          text: 'Operation executed successfully.',
+        })
+
+        // Check if refreshWebUi qualifier is set (to true) and reload AASList and SubmodelTreeview
+        refreshWebUi()
+      }
+    }
   }
 
   function updateOperationVariable (e: any, variable: any): void {

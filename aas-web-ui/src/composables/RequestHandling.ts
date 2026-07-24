@@ -278,7 +278,7 @@ export function useRequestHandling () {
     disableMessage: boolean,
     errorHandlingOptions: RequestErrorHandlingOptions = {},
     requestOwnerId: string | undefined = getRequestOwnerId(),
-  ): { success: false, status: number } {
+  ): { success: false, status: number, data?: any } {
     const details = buildErrorDetailsFromPayload(data)
     setLastRequestFailureStatus(status)
     setLastRequestFailureDetails(details)
@@ -294,11 +294,13 @@ export function useRequestHandling () {
       return { success: false, status }
     }
 
-    if (!disableMessage && !shouldSuppressStatus(status, errorHandlingOptions)) {
+    const suppressStatus = shouldSuppressStatus(status, errorHandlingOptions)
+
+    if (!disableMessage && !suppressStatus) {
       errorHandler(data, context)
     }
 
-    return { success: false, status }
+    return { success: false, status, data: suppressStatus ? data : undefined }
   }
 
   function getRequest (
