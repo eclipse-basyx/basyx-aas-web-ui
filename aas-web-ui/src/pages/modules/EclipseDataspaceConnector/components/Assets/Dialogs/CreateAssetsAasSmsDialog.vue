@@ -542,7 +542,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { base64Decode } from 'basyx-typescript-sdk'
+  // import { base64Decode } from 'basyx-typescript-sdk'
   import Prism from 'prismjs'
   import { computed, onMounted, ref } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
@@ -552,15 +552,15 @@
   import { useAASListPagination } from '@/composables/AAS/AASListPagination'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
-  import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
-  import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
+  // import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
+  // import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
   import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import assetTemplate_v0_9 from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.9.json'
   import assetTemplate_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.12.1.json'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { useAASStore } from '@/store/AASDataStore'
   import { useNavigationStore } from '@/store/NavigationStore'
-  import { extractEndpointHref, getEndpointProtocol } from '@/utils/AAS/DescriptorUtils'
+  // import { extractEndpointHref, getEndpointProtocol } from '@/utils/AAS/DescriptorUtils'
   import { extractVersionRevision } from '@/utils/AAS/SemanticIdUtils'
   import { smts } from '@/utils/AAS/SubmodelTemplateUtils'
   import { base64Encode } from '@/utils/EncodeDecodeUtils'
@@ -596,8 +596,8 @@
   const { fetchAasShellListPage, fetchAasById, fetchAasSmListById } = useAASHandling()
   const { fetchSmById } = useSMHandling()
   const { nameToDisplay, descriptionToDisplay } = useReferableUtils()
-  const { fetchAasDescriptorById, putAasDescriptor } = useAASRegistryClient()
-  const { fetchSmDescriptorById, putSubmodelDescriptor } = useSMRegistryClient()
+  // const { fetchAasDescriptorById, putAasDescriptor } = useAASRegistryClient()
+  // const { fetchSmDescriptorById, putSubmodelDescriptor } = useSMRegistryClient()
 
   // Vuetify
   const theme = useTheme()
