@@ -1,0 +1,36 @@
+{
+  "@context": {
+    "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+    "edc": "https://w3id.org/edc/v0.0.1/ns/",
+    "tx": "https://w3id.org/tractusx/v0.0.1/ns/",
+    "tx-auth": "https://w3id.org/tractusx/auth/",
+    "cx-policy": "https://w3id.org/catenax/policy/",
+    "odrl": "http://www.w3.org/ns/odrl/2/",
+    "dct": "http://purl.org/dc/terms/"
+  },
+  "@id": "{{Asset Administration Shell (AAS) Service Asset ID|Enter a unique asset identifier, e.g. a UUID|This will be the @id of your asset}}",
+  "@type": "Asset",
+  "properties": {
+    "id": "{{Asset Administration Shell (AAS) Service Asset ID|Enter a unique asset identifier, e.g. a UUID|This will be the @id of your asset}}",
+    "name": "AAS Service",
+    "description": "The AAS service allows to retrieve Asset Administration Shells",
+    "dct:type": {
+      "@id": "https://w3id.org/railwayx/taxonomy#AssetAdministrationShell"
+    },
+    "cx-common:version": "3.0"
+  },
+  "privateProperties": {},
+  "dataAddress": {
+    "@type": "DataAddress",
+    "type": "HttpData",
+    "baseUrl": "{{AAS Service Endpoint||}}",
+    "proxyBody": "true",
+    "proxyMethod": "true",
+    "proxyPath": "true",
+    "proxyQueryParams": "true",
+    "oauth2:clientId": "{{AAS Service client ID||}}",
+    "oauth2:clientSecretKey": "{{AAS Service client secret key||}}",
+    "oauth2:tokenUrl": "{{AAS Service token endpoint||}}",
+    "oauth2:scope": "{{AAS Service Token scope||}}"
+  }
+}
