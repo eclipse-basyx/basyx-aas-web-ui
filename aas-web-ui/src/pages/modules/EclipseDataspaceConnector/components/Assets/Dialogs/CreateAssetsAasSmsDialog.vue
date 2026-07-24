@@ -511,13 +511,13 @@
       <v-card-actions>
         <v-spacer />
 
-        <v-checkbox
+        <!-- <v-checkbox
           v-model="updateEndpoints"
           class="m-0"
           density="compact"
           hide-details
           label="Add DSP Endpoint to AAS/SM descriptors"
-        />
+        /> -->
 
         <v-spacer />
 
@@ -645,7 +645,7 @@
 
   const selectedSmIds = ref<string[]>([])
 
-  const updateEndpoints = ref(false)
+  // const updateEndpoints = ref(false)
 
   const {
     hasMorePages,
@@ -1088,64 +1088,66 @@
 
     const succeededResults = results.filter(r => r.success)
     const failedResults = results.filter(r => !r.success)
-    if (updateEndpoints.value)
-      for (const succeededResult of succeededResults) {
-        const base64Id = succeededResult?.data?.['@id']
-        const id = (base64Id && base64Id !== '' ? base64Decode(base64Id) : '')
-        if (id !== '') {
-          const dpsEndpoint = edcStore.getControlplaneDspEndpoint
-          const aasDescriptor = await fetchAasDescriptorById(selectedAAS.value.id)
-          const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0')
-          if (id === selectedAAS.value.id) {
-            // Add DSP endpoint to AAS descriptor
-            const aasDspEndpoint = {
-              interface: 'AAS-3.0',
-              protocolInformation: {
-                href: `${aasEndpoint}`,
-                endpointProtocol: getEndpointProtocol(aasEndpoint),
-                subprotocol: 'DSP',
-                subprotocolBody: `id=${base64Id};dspEndpoint=${dpsEndpoint}`,
-              },
-            }
-            aasDescriptor.endpoints.push(aasDspEndpoint)
-            await putAasDescriptor(aasDescriptor)
-          } else {
-            // Add DSP endpoint to SM descriptor
-            const smDescriptor = await fetchSmDescriptorById(id)
-            const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0')
-            const smDspEndpoint = {
-              interface: 'SUBMODEL-3.0',
-              protocolInformation: {
-                href: `${smEndpoint}`,
-                endpointProtocol: getEndpointProtocol(smEndpoint),
-                subprotocol: 'DSP',
-                subprotocolBody: `id=${base64Id};dspEndpoint=${dpsEndpoint}`,
-              },
-            }
-            smDescriptor.endpoints.push(smDspEndpoint)
-            await putSubmodelDescriptor(smDescriptor)
+    // TODO Updating resp. adding endpoints for DSP
+    // EDC Asset ID for AAS/SM Repo needed
+    // if (updateEndpoints.value)
+    //   for (const succeededResult of succeededResults) {
+    //     const base64Id = succeededResult?.data?.['@id']
+    //     const id = (base64Id && base64Id !== '' ? base64Decode(base64Id) : '')
+    //     if (id !== '') {
+    //       const dpsEndpoint = edcStore.getControlplaneDspEndpoint
+    //       const aasDescriptor = await fetchAasDescriptorById(selectedAAS.value.id)
+    //       const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0')
+    //       if (id === selectedAAS.value.id) {
+    //         // Add DSP endpoint to AAS descriptor
+    //         const aasDspEndpoint = {
+    //           interface: 'AAS-3.0',
+    //           protocolInformation: {
+    //             href: `${aasEndpoint}`,
+    //             endpointProtocol: getEndpointProtocol(aasEndpoint),
+    //             subprotocol: 'DSP',
+    //             subprotocolBody: `id=${base64Id};dspEndpoint=${dpsEndpoint}`,
+    //           },
+    //         }
+    //         aasDescriptor.endpoints.push(aasDspEndpoint)
+    //         await putAasDescriptor(aasDescriptor)
+    //       } else {
+    //         // Add DSP endpoint to SM descriptor
+    //         const smDescriptor = await fetchSmDescriptorById(id)
+    //         const smEndpoint = extractEndpointHref(smDescriptor, 'SUBMODEL-3.0')
+    //         const smDspEndpoint = {
+    //           interface: 'SUBMODEL-3.0',
+    //           protocolInformation: {
+    //             href: `${smEndpoint}`,
+    //             endpointProtocol: getEndpointProtocol(smEndpoint),
+    //             subprotocol: 'DSP',
+    //             subprotocolBody: `id=${base64Id};dspEndpoint=${dpsEndpoint}`,
+    //           },
+    //         }
+    //         smDescriptor.endpoints.push(smDspEndpoint)
+    //         await putSubmodelDescriptor(smDescriptor)
 
-            // Add DSP endpoint to SM descriptor in AAS descriptor
-            const aasDescriptorsmDescriptor = aasDescriptor.submodelDescriptors.find(
-              (descriptor: any) => descriptor.id === id,
-            )
-            if (aasDescriptorsmDescriptor) {
-              const endpoint = extractEndpointHref(aasDescriptorsmDescriptor, 'SUBMODEL-3.0')
-              const dspEndpoint = {
-                interface: 'SUBMODEL-3.0',
-                protocolInformation: {
-                  href: `${endpoint}`,
-                  endpointProtocol: getEndpointProtocol(endpoint),
-                  subprotocol: 'DSP',
-                  subprotocolBody: `id=${base64Id};dspEndpoint=${dpsEndpoint}`,
-                },
-              }
-              aasDescriptorsmDescriptor.endpoints.push(dspEndpoint)
-              await putAasDescriptor(aasDescriptor)
-            }
-          }
-        }
-      }
+    //         // Add DSP endpoint to SM descriptor in AAS descriptor
+    //         const aasDescriptorsmDescriptor = aasDescriptor.submodelDescriptors.find(
+    //           (descriptor: any) => descriptor.id === id,
+    //         )
+    //         if (aasDescriptorsmDescriptor) {
+    //           const endpoint = extractEndpointHref(aasDescriptorsmDescriptor, 'SUBMODEL-3.0')
+    //           const dspEndpoint = {
+    //             interface: 'SUBMODEL-3.0',
+    //             protocolInformation: {
+    //               href: `${endpoint}`,
+    //               endpointProtocol: getEndpointProtocol(endpoint),
+    //               subprotocol: 'DSP',
+    //               subprotocolBody: `id=${base64Id};dspEndpoint=${dpsEndpoint}`,
+    //             },
+    //           }
+    //           aasDescriptorsmDescriptor.endpoints.push(dspEndpoint)
+    //           await putAasDescriptor(aasDescriptor)
+    //         }
+    //       }
+    //     }
+    //   }
 
     const errors = failedResults
       .map(r => r.errorMessage)
