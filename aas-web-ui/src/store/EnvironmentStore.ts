@@ -1,5 +1,7 @@
+import type { FeatureControlOverrides } from '@/utils/FeatureControl'
 import { defineStore } from 'pinia'
 import { urlRegex } from '@/composables/UrlUtils'
+import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
 const isProduction = import.meta.env.MODE === 'production'
 
@@ -17,6 +19,18 @@ function parseBooleanEnv (value: string): boolean {
 
 function withProductionPlaceholder (value: string | undefined, placeholder: string): string {
   return value || (isProduction ? placeholder : '')
+}
+
+export function decodeProductionBase64 (value: string): string {
+  if (value === '' || value.includes('PLACEHOLDER')) {
+    return ''
+  }
+  const decoded = base64Decode(value)
+  if (decoded === '') {
+    console.warn('[EnvironmentStore] FEATURE_CONTROL_CLAIM_MAPPINGS could not be decoded.')
+    return ''
+  }
+  return decoded
 }
 
 export const useEnvStore = defineStore('envStore', () => {
@@ -40,8 +54,9 @@ export const useEnvStore = defineStore('envStore', () => {
   const keycloakUrl = ref(withProductionPlaceholder(import.meta.env.VITE_KEYCLOAK_URL, '/__KEYCLOAK_URL_PLACEHOLDER__/'))
   const keycloakRealm = ref(withProductionPlaceholder(import.meta.env.VITE_KEYCLOAK_REALM, '/__KEYCLOAK_REALM_PLACEHOLDER__/'))
   const keycloakClientId = ref(withProductionPlaceholder(import.meta.env.VITE_KEYCLOAK_CLIENT_ID, '/__KEYCLOAK_CLIENT_ID_PLACEHOLDER__/'))
-  const keycloakFeatureControl = ref(withProductionPlaceholder(import.meta.env.VITE_KEYCLOAK_FEATURE_CONTROL, '/__KEYCLOAK_FEATURE_CONTROL_PLACEHOLDER__/'))
-  const keycloakFeatureControlRolePrefix = ref(withProductionPlaceholder(import.meta.env.VITE_KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX, '/__KEYCLOAK_FEATURE_CONTROL_ROLE_PREFIX_PLACEHOLDER__/'))
+  const featureControlClaimMappings = ref(isProduction
+    ? decodeProductionBase64('/__FEATURE_CONTROL_CLAIM_MAPPINGS_BASE64_PLACEHOLDER__/')
+    : (import.meta.env.VITE_FEATURE_CONTROL_CLAIM_MAPPINGS || ''))
   const oidcActive = ref(withProductionPlaceholder(import.meta.env.VITE_OIDC_ACTIVE, '/__OIDC_ACTIVE_PLACEHOLDER__/'))
   const oidcUrl = ref(withProductionPlaceholder(import.meta.env.VITE_OIDC_URL, '/__OIDC_URL_PLACEHOLDER__/'))
   const oidcScope = ref(withProductionPlaceholder(import.meta.env.VITE_OIDC_SCOPE, '/__OIDC_SCOPE_PLACEHOLDER__/'))
@@ -64,6 +79,8 @@ export const useEnvStore = defineStore('envStore', () => {
   const authorizationPrefix = ref(withProductionPlaceholder(import.meta.env.VITE_AUTHORIZATION_HEADER_PREFIX, '/__AUTHORIZATION_HEADER_PREFIX_PLACEHOLDER__/'))
   const authorizationDescriptionEndpointExemption = ref(withProductionPlaceholder(import.meta.env.VITE_AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION, '/__AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION_PLACEHOLDER__/'))
   const startPageRouteName = ref(withProductionPlaceholder(import.meta.env.VITE_START_PAGE_ROUTE_NAME, '/__START_PAGE_ROUTE_NAME_PLACEHOLDER__/'))
+  const featureControlOverrides = ref<FeatureControlOverrides | null>(null)
+  const companyLookupDomain = ref(withProductionPlaceholder(import.meta.env.VITE_COMPANY_LOOKUP_DOMAIN, '/__COMPANY_LOOKUP_DOMAIN_PLACEHOLDER__/'))
 
   // Getters
   const getEnvBasePath = computed(() => basePath.value)
@@ -83,8 +100,7 @@ export const useEnvStore = defineStore('envStore', () => {
   const getKeycloakUrl = computed(() => keycloakUrl.value)
   const getKeycloakRealm = computed(() => keycloakRealm.value)
   const getKeycloakClientId = computed(() => keycloakClientId.value)
-  const getKeycloakFeatureControl = computed(() => parseBooleanEnv(keycloakFeatureControl.value))
-  const getKeycloakFeatureControlRolePrefix = computed(() => keycloakFeatureControlRolePrefix.value)
+  const getFeatureControlClaimMappings = computed(() => featureControlClaimMappings.value)
   const getOidcActive = computed(() => parseBooleanEnv(oidcActive.value))
   const getOidcUrl = computed(() => oidcUrl.value)
   const getOidcScope = computed(() => oidcScope.value)
@@ -95,10 +111,11 @@ export const useEnvStore = defineStore('envStore', () => {
       && parseBooleanEnv(preconfiguredAuth.value),
   )
   const getPreconfiguredAuthClientSecret = computed(() => preconfiguredAuthClientSecret.value)
-  const getEndpointConfigAvailable = computed(() => parseBooleanEnv(endpointConfigAvailable.value))
-  const getSingleAas = computed(() => parseBooleanEnv(singleAas.value))
+  const getDeploymentEndpointConfigAvailable = computed(() => parseBooleanEnv(endpointConfigAvailable.value))
+  const getEndpointConfigAvailable = computed(() => featureControlOverrides.value?.endpointConfigAvailable ?? getDeploymentEndpointConfigAvailable.value)
+  const getSingleAas = computed(() => featureControlOverrides.value?.singleAas ?? parseBooleanEnv(singleAas.value))
   const getSingleAasRedirect = computed(() => {
-    if (parseBooleanEnv(singleAas.value) && singleAasRedirect.value) {
+    if (getSingleAas.value && singleAasRedirect.value) {
       if (urlRegex.test(singleAasRedirect.value)) {
         return singleAasRedirect.value
       }
@@ -106,10 +123,10 @@ export const useEnvStore = defineStore('envStore', () => {
     }
     return undefined
   })
-  const getSmViewerEditor = computed(() => parseBooleanEnv(smViewerEditor.value))
-  const getSingleSm = computed(() => parseBooleanEnv(singleSm.value))
+  const getSmViewerEditor = computed(() => featureControlOverrides.value?.smViewerEditor ?? parseBooleanEnv(smViewerEditor.value))
+  const getSingleSm = computed(() => featureControlOverrides.value?.singleSm ?? parseBooleanEnv(singleSm.value))
   const getSingleSmRedirect = computed(() => {
-    if (parseBooleanEnv(singleSm.value) && singleSmRedirect.value) {
+    if (getSingleSm.value && singleSmRedirect.value) {
       if (urlRegex.test(singleSmRedirect.value)) {
         return singleSmRedirect.value
       }
@@ -117,9 +134,9 @@ export const useEnvStore = defineStore('envStore', () => {
     }
     return undefined
   })
-  const getAllowEditing = computed(() => parseBooleanEnv(allowEditing.value))
-  const getAllowUploading = computed(() => parseBooleanEnv(allowUploading.value))
-  const getAllowLogout = computed(() => parseBooleanEnv(allowLogout.value))
+  const getAllowEditing = computed(() => featureControlOverrides.value?.allowEditing ?? parseBooleanEnv(allowEditing.value))
+  const getAllowUploading = computed(() => featureControlOverrides.value?.allowUploading ?? parseBooleanEnv(allowUploading.value))
+  const getAllowLogout = computed(() => featureControlOverrides.value?.allowLogout ?? parseBooleanEnv(allowLogout.value))
   const getBasicAuthActive = computed(() => parseBooleanEnv(basicAuthActive.value))
   const getBasicAuthUsername = computed(() => basicAuthUsername.value)
   const getBasicAuthPassword = computed(() => basicAuthPassword.value)
@@ -144,8 +161,75 @@ export const useEnvStore = defineStore('envStore', () => {
     }
     return value
   })
+  const getCompanyLookupDomain = computed(() => companyLookupDomain.value)
+
+  // Maps env variable names to their corresponding getter, so
+  // e.g. `ModuleNavigationRouteMeta.needsEnvVariables` can check readiness generically.
+  const envVariableGetters: Record<string, ComputedRef<string | boolean | undefined>> = {
+    BASE_PATH: getEnvBasePath,
+    LOGO_LIGHT_PATH: getEnvLogoLightPath,
+    LOGO_DARK_PATH: getEnvLogoDarkPath,
+    AAS_DISCOVERY_PATH: getEnvAASDiscoveryPath,
+    AAS_REGISTRY_PATH: getEnvAASRegistryPath,
+    SUBMODEL_REGISTRY_PATH: getEnvSubmodelRegistryPath,
+    AAS_REPO_PATH: getEnvAASRepoPath,
+    SUBMODEL_REPO_PATH: getEnvSubmodelRepoPath,
+    CD_REPO_PATH: getEnvConceptDescriptionRepoPath,
+    COMPANY_LOOKUP_PATH: getEnvCompanyLookupPath,
+    PRIMARY_LIGHT_COLOR: getEnvPrimaryLightColor,
+    PRIMARY_DARK_COLOR: getEnvPrimaryDarkColor,
+    INFLUXDB_TOKEN: getEnvInfluxdbToken,
+    KEYCLOAK_ACTIVE: getKeycloakActive,
+    KEYCLOAK_URL: getKeycloakUrl,
+    KEYCLOAK_REALM: getKeycloakRealm,
+    KEYCLOAK_CLIENT_ID: getKeycloakClientId,
+    FEATURE_CONTROL_CLAIM_MAPPINGS: getFeatureControlClaimMappings,
+    OIDC_ACTIVE: getOidcActive,
+    OIDC_URL: getOidcUrl,
+    OIDC_SCOPE: getOidcScope,
+    OIDC_CLIENT_ID: getOidcClientId,
+    PRECONFIGURED_AUTH: getPreconfiguredAuth,
+    PRECONFIGURED_AUTH_CLIENT_SECRET: getPreconfiguredAuthClientSecret,
+    ENDPOINT_CONFIG_AVAILABLE: getEndpointConfigAvailable,
+    SINGLE_AAS: getSingleAas,
+    SINGLE_AAS_REDIRECT: getSingleAasRedirect,
+    SM_VIEWER_EDITOR: getSmViewerEditor,
+    SINGLE_SM: getSingleSm,
+    SINGLE_SM_REDIRECT: getSingleSmRedirect,
+    ALLOW_EDITING: getAllowEditing,
+    ALLOW_UPLOADING: getAllowUploading,
+    ALLOW_LOGOUT: getAllowLogout,
+    BASIC_AUTH_ACTIVE: getBasicAuthActive,
+    BASIC_AUTH_USERNAME: getBasicAuthUsername,
+    BASIC_AUTH_PASSWORD: getBasicAuthPassword,
+    EDITOR_ID_PREFIX: getEditorIdPrefix,
+    AUTHORIZATION_HEADER_PREFIX: getAuthorizationPrefix,
+    AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION: getAuthorizationDescriptionEndpointExemption,
+    START_PAGE_ROUTE_NAME: getStartPageRouteName,
+    COMPANY_LOOKUP_DOMAIN: getCompanyLookupDomain,
+  }
 
   // Actions
+  function setFeatureControlOverrides (overrides: FeatureControlOverrides | null): void {
+    featureControlOverrides.value = overrides
+  }
+
+  function isEnvVariableSet (envVariableName: string): boolean {
+    const envVariableGetter = envVariableGetters[envVariableName]
+    if (!envVariableGetter) {
+      return false
+    }
+    const value = envVariableGetter.value
+
+    // Boolean-flag env variables (e.g. VITE_KEYCLOAK_ACTIVE) are considered "set" per default
+    if (typeof value === 'boolean') {
+      return true
+    }
+
+    const trimmedValue = (value || '').trim()
+    return trimmedValue !== '' && !trimmedValue.includes('PLACEHOLDER')
+  }
+
   function setSingleAas (singleAasValue: string): void {
     singleAas.value = singleAasValue
   }
@@ -193,14 +277,14 @@ export const useEnvStore = defineStore('envStore', () => {
     getKeycloakUrl,
     getKeycloakRealm,
     getKeycloakClientId,
-    getKeycloakFeatureControl,
-    getKeycloakFeatureControlRolePrefix,
+    getFeatureControlClaimMappings,
     getOidcActive,
     getOidcUrl,
     getOidcScope,
     getOidcClientId,
     getPreconfiguredAuth,
     getPreconfiguredAuthClientSecret,
+    getDeploymentEndpointConfigAvailable,
     getEndpointConfigAvailable,
     getSingleAas,
     getSingleAasRedirect,
@@ -217,8 +301,11 @@ export const useEnvStore = defineStore('envStore', () => {
     getAuthorizationPrefix,
     getAuthorizationDescriptionEndpointExemption,
     getStartPageRouteName,
+    getCompanyLookupDomain,
 
     // Actions
+    setFeatureControlOverrides,
+    isEnvVariableSet,
     setSingleAas,
     setSingleSm,
     setSmViewerEditor,

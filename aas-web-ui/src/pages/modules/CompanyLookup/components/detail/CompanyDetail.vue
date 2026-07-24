@@ -10,29 +10,21 @@
   import CompanyJsonView from './CompanyJsonView.vue'
   import CompanyProperty from './CompanyProperty.vue'
 
+  const props = withDefaults(defineProps<{
+    detailsOnly?: boolean
+  }>(), {
+    detailsOnly: false,
+  })
+
   const { t } = useCompanyLookupI18n()
   const route = useRoute()
   const router = useRouter()
 
   const view = ref<ViewType>(
-    VIEWS.includes(route.query.view as string)
+    !props.detailsOnly && VIEWS.includes(route.query.view as string)
       ? (route.query.view as ViewType)
       : VIEW.DETAILS,
   )
-
-  watch(
-    () => route.query.view,
-    v => {
-      if (v && VIEWS.includes(v as string)) {
-        view.value = v as ViewType
-      }
-    },
-  )
-
-  function onChangeView (value: string): void {
-    if (route.query.view === value) return
-    router.replace({ query: { ...route.query, view: value } })
-  }
 
   const selectedId = computed(() => {
     const paramId = route.query.id as string | undefined
@@ -41,38 +33,59 @@
 
   const { data: company, isLoading } = useGetCompany(selectedId)
 
+  watch(
+    [() => route.query.view, () => props.detailsOnly],
+    ([v, detailsOnly]) => {
+      if (detailsOnly) {
+        view.value = VIEW.DETAILS
+      } else if (v && VIEWS.includes(v as string)) {
+        view.value = v as ViewType
+      } else {
+        view.value = VIEW.DETAILS
+      }
+    },
+  )
+
+  function onChangeView (value: string): void {
+    if (route.query.view === value) return
+    router.replace({ query: { ...route.query, view: value } })
+  }
 </script>
 
 <template>
   <div v-if="company">
-    <v-card class="h-100 d-flex flex-column" variant="flat">
-      <v-card-title class="d-flex align-center justify-space-between" style="gap: 12px; height: 64px;">
-        <v-btn-toggle
-          v-model="view"
-          color="primary"
-          density="compact"
-          divided
-          mandatory
-          style="height: 32px"
-          variant="outlined"
-          @update:model-value="onChangeView"
-        >
-          <v-btn :value="VIEW.DETAILS">
-            <v-icon start>mdi-folder-edit-outline</v-icon>
-            <span class="hidden-sm-and-down">{{ t('detail.view.details') }}</span>
-          </v-btn>
 
-          <v-btn :value="VIEW.JSON">
-            <v-icon start>mdi-code-block-braces</v-icon>
-            <span class="hidden-sm-and-down">{{ t('detail.view.json') }}</span>
-          </v-btn>
-        </v-btn-toggle>
+    <template v-if="!props.detailsOnly">
+      <v-card class="h-100 d-flex flex-column" variant="flat">
 
-        <CompanyOptions :company="company" />
-      </v-card-title>
-    </v-card>
+        <v-card-title class="d-flex align-center justify-space-between" style="gap: 12px; height: 64px;">
+          <v-btn-toggle
+            v-model="view"
+            color="primary"
+            density="compact"
+            divided
+            mandatory
+            style="height: 32px"
+            variant="outlined"
+            @update:model-value="onChangeView"
+          >
+            <v-btn :value="VIEW.DETAILS">
+              <v-icon start>mdi-folder-edit-outline</v-icon>
+              <span class="hidden-sm-and-down">{{ t('detail.view.details') }}</span>
+            </v-btn>
 
-    <v-divider />
+            <v-btn :value="VIEW.JSON">
+              <v-icon start>mdi-code-block-braces</v-icon>
+              <span class="hidden-sm-and-down">{{ t('detail.view.json') }}</span>
+            </v-btn>
+          </v-btn-toggle>
+
+          <CompanyOptions :company="company" :read-only="props.detailsOnly" />
+        </v-card-title>
+      </v-card>
+
+      <v-divider />
+    </template>
 
     <div class="flex-grow-1 overflow-y-auto py-2 px-2">
       <template v-if="view === VIEW.DETAILS">

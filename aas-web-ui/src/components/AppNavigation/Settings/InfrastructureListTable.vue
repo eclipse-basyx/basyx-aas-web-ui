@@ -43,6 +43,7 @@
             <td style="width: 120px">
               <div class="d-flex justify-end">
                 <v-btn
+                  :aria-label="`Edit ${infra.name}`"
                   icon="mdi-pencil"
                   size="x-small"
                   variant="plain"
@@ -50,6 +51,7 @@
                 />
 
                 <v-btn
+                  :aria-label="`Delete ${infra.name}`"
                   class="ml-n2 mr-n2"
                   :disabled="infrastructures.length === 1 || infra.isDefault"
                   icon="mdi-delete"

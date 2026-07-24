@@ -18,7 +18,13 @@
       </template>
 
       <template v-if="endpointConfigAvailable" #append>
-        <v-btn icon="mdi-cog" size="small" variant="text" @click="openManageDialog">
+        <v-btn
+          aria-label="Manage Infrastructures"
+          icon="mdi-cog"
+          size="small"
+          variant="text"
+          @click="openManageDialog"
+        >
           <v-icon>mdi-cog</v-icon>
           <v-tooltip activator="parent" location="bottom" :open-delay="600">Manage Infrastructures</v-tooltip>
         </v-btn>

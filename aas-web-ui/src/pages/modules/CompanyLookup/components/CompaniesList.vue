@@ -4,6 +4,7 @@
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'
   import { useGetAllCompanies } from '@/composables/Client/CompanyLookup/queries/useGetAllCompanies'
+  import { useEnvStore } from '@/store/EnvironmentStore'
   import { hasContent } from '@/utils/StringUtils'
   import { useCompanyLookupI18n } from '../i18n/useCompanyLookupI18n'
   import { debouncedRef } from '../utils/debounce'
@@ -20,6 +21,8 @@
   const route = useRoute()
   const router = useRouter()
 
+  const envStore = useEnvStore()
+
   const search = ref('')
   const debouncedSearch = debouncedRef(search, 400)
 
@@ -27,6 +30,8 @@
     data, isLoading, isError, isFetching, isFetchingNextPage,
     hasNextPage, fetchNextPage, refetch,
   } = useGetAllCompanies({ name: debouncedSearch })
+
+  const allowEditing = computed(() => envStore.getAllowEditing)
 
   const companies = computed<CompanyDescriptor[]>(() =>
     data.value?.pages.flatMap(p => p.result ?? []) ?? [],
@@ -98,7 +103,7 @@
         variant="outlined"
       />
 
-      <v-menu v-model="isMenuOpen">
+      <v-menu v-if="allowEditing" v-model="isMenuOpen">
         <template #activator="{ props: menuProps }">
           <v-btn v-bind="menuProps" icon="mdi-dots-vertical" variant="plain" />
         </template>

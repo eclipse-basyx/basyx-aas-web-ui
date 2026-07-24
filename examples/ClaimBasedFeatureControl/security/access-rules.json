@@ -1,0 +1,107 @@
+{
+  "AllAccessPermissionRules": {
+    "DEFATTRIBUTES": [
+      {
+        "name": "anonymous_attr",
+        "attributes": [{ "GLOBAL": "ANONYMOUS" }]
+      },
+      {
+        "name": "role_attr",
+        "attributes": [{ "CLAIM": "basyx.role" }]
+      }
+    ],
+    "DEFOBJECTS": [
+      {
+        "name": "public_endpoints",
+        "objects": [
+          { "ROUTE": "/description" },
+          { "ROUTE": "/health" }
+        ]
+      },
+      {
+        "name": "all_api",
+        "objects": [
+          { "ROUTE": "/description" },
+          { "ROUTE": "/health" },
+          { "ROUTE": "/serialization" },
+          { "ROUTE": "/upload" },
+          { "ROUTE": "/lookup/shells" },
+          { "ROUTE": "/lookup/shells/*" },
+          { "ROUTE": "/lookup/shellsByAssetLink" },
+          { "DESCRIPTOR": "$aasdesc(\"*\")" },
+          { "DESCRIPTOR": "$smdesc(\"*\")" },
+          { "IDENTIFIABLE": "$aas(\"*\")" },
+          { "IDENTIFIABLE": "$sm(\"*\")" },
+          { "IDENTIFIABLE": "$cd(\"*\")" }
+        ]
+      }
+    ],
+    "DEFACLS": [
+      {
+        "name": "anonymous_read",
+        "acl": {
+          "USEATTRIBUTES": "anonymous_attr",
+          "RIGHTS": ["READ"],
+          "ACCESS": "ALLOW"
+        }
+      },
+      {
+        "name": "viewer_read",
+        "acl": {
+          "USEATTRIBUTES": "role_attr",
+          "RIGHTS": ["READ"],
+          "ACCESS": "ALLOW"
+        }
+      },
+      {
+        "name": "editor_full",
+        "acl": {
+          "USEATTRIBUTES": "role_attr",
+          "RIGHTS": ["ALL"],
+          "ACCESS": "ALLOW"
+        }
+      }
+    ],
+    "DEFFORMULAS": [
+      {
+        "name": "always_true",
+        "formula": { "$boolean": true }
+      },
+      {
+        "name": "is_viewer",
+        "formula": {
+          "$eq": [
+            { "$attribute": { "CLAIM": "basyx.role" } },
+            { "$strVal": "viewer" }
+          ]
+        }
+      },
+      {
+        "name": "is_editor",
+        "formula": {
+          "$eq": [
+            { "$attribute": { "CLAIM": "basyx.role" } },
+            { "$strVal": "editor" }
+          ]
+        }
+      }
+    ],
+    "rules": [
+      {
+        "USEACL": "anonymous_read",
+        "USEOBJECTS": ["public_endpoints"],
+        "USEFORMULA": "always_true"
+      },
+      {
+        "USEACL": "viewer_read",
+        "USEOBJECTS": ["all_api"],
+        "USEFORMULA": "is_viewer"
+      },
+      {
+        "USEACL": "editor_full",
+        "USEOBJECTS": ["all_api"],
+        "USEFORMULA": "is_editor"
+      }
+    ]
+  }
+}

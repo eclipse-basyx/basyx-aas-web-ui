@@ -1,0 +1,135 @@
+services:
+  database:
+    image: postgres:18.4
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: basyx
+    command: ["postgres", "-c", "listen_addresses=*"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d basyx"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - claim-feature-control
+
+  basyx-configuration:
+    image: eclipsebasyx/basyxconfigurationservice-go:SNAPSHOT
+    pull_policy: always
+    environment:
+      POSTGRES_HOST: database
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DBNAME: basyx
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - claim-feature-control
+
+  keycloak:
+    image: keycloak/keycloak:26.7
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://database:5432/basyx
+      KC_DB_USERNAME: admin
+      KC_DB_PASSWORD: admin123
+      KC_HOSTNAME: keycloak.localhost
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_BACKCHANNEL: "false"
+      KC_HTTP_MANAGEMENT_ENABLED: "true"
+    command: ["start-dev", "--import-realm", "--health-enabled=true"]
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import:ro
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - claim-feature-control
+
+  keycloak-healthcheck:
+    image: curlimages/curl:8.17.0
+    command: >-
+      sh -c "until curl -sf http://keycloak:9000/health/ready; do sleep 5; done"
+    depends_on:
+      - keycloak
+    networks:
+      - claim-feature-control
+
+  aas-environment:
+    image: eclipsebasyx/aasenvironment-go:SNAPSHOT
+    pull_policy: always
+    command: ["/app/aasenvironmentservice"]
+    ports:
+      - "8081:8081"
+    environment:
+      SERVER_PORT: 8081
+      CORS_ALLOWEDORIGINS: http://localhost:3001
+      CORS_ALLOWEDHEADERS: "*"
+      CORS_ALLOWEDCREDENTIALS: "true"
+      CORS_ALLOWEDMETHODS: GET,POST,PUT,PATCH,DELETE,OPTIONS
+      POSTGRES_HOST: database
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DBNAME: basyx
+      ABAC_ENABLED: "true"
+      ABAC_MODELPATH: /security/access-rules.json
+      ABAC_POLICY_FILE_IMPORT: always
+      OIDC_TRUSTLISTPATH: /security/trustlist.json
+      GENERAL_AASREGISTRYINTEGRATION: "true"
+      GENERAL_SUBMODELREGISTRYINTEGRATION: "true"
+      GENERAL_DISCOVERYINTEGRATION: "true"
+      GENERAL_EXTERNALURL: http://localhost:8081
+      GENERAL_AAS_PRECONFIG_PATHS: /app/preconfiguration
+    volumes:
+      - ../CombinedExample/Infrastructure2/aas/BOMAAS.aasx:/app/preconfiguration/BOMAAS.aasx:ro
+      - ../CombinedExample/Infrastructure2/aas/SensorExampleComplete.aasx:/app/preconfiguration/SensorExampleComplete.aasx:ro
+      - ./security:/security:ro
+    depends_on:
+      basyx-configuration:
+        condition: service_completed_successfully
+      keycloak-healthcheck:
+        condition: service_completed_successfully
+    extra_hosts:
+      - "keycloak.localhost:host-gateway"
+    networks:
+      - claim-feature-control
+
+  aas-web-ui:
+    build:
+      context: ../../aas-web-ui
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./basyx-infra.yml:/basyx-infra.yml:ro
+    environment:
+      FEATURE_CONTROL_CLAIM_MAPPINGS: >-
+        [{"target":"features","mode":"list","sources":["/basyx_features"]}]
+      ENDPOINT_CONFIG_AVAILABLE: "true"
+      SINGLE_AAS: "false"
+      SM_VIEWER_EDITOR: "true"
+      SINGLE_SM: "false"
+      ALLOW_EDITING: "true"
+      ALLOW_UPLOADING: "true"
+      ALLOW_LOGOUT: "true"
+    depends_on:
+      keycloak-healthcheck:
+        condition: service_completed_successfully
+      aas-environment:
+        condition: service_started
+    networks:
+      - claim-feature-control
+
+networks:
+  claim-feature-control:
+    driver: bridge

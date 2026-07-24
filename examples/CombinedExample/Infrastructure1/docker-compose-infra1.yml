@@ -36,7 +36,7 @@ services:
       - multiple-infrastructures
 
   keycloak:
-    image: keycloak/keycloak:26.6.4
+    image: keycloak/keycloak:26.7
     container_name: keycloak
     environment:
       KC_DB: postgres
@@ -47,10 +47,7 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_HTTP_ENABLED: "true"
-      KC_HTTPS_ENABLED: "false"
       KC_HEALTH_ENABLED: "true"
-      KC_HOSTNAME_STRICT: "false"
-      KC_HOSTNAME_STRICT_BACKCHANNEL: "false"
       KC_HTTP_MANAGEMENT_ENABLED: "true"
     command: ["start-dev", "--import-realm", "--health-enabled=true"]
     ports:

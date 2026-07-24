@@ -69,6 +69,8 @@ infrastructures:
   #       baseUrl: "https://aasenv.basyx.example.com"
   #     conceptDescriptionRepository:
   #       baseUrl: "https://aasenv.basyx.example.com"
+  #     companyLookup:
+  #       baseUrl: "https://companylookup.basyx.example.com"
   #   security:
   #     type: oauth2
   #     config:
@@ -112,6 +114,11 @@ infrastructures:
   #       baseUrl: "https://dtr.staging.basyx.com"
   #     submodelService:
   #       baseUrl: "https://submodel-service.staging.basyx.com"
+  #   security:
+  #     type: basic
+  #     config:
+  #       username: "admin"
+  #       password: "admin123"
 
   # # Catena-X EDC infrastructure
   # edc:
