@@ -146,6 +146,10 @@
     {
       "label": "aas-web-ui: bff:start",
       "type": "shell",
+      "dependsOn": [
+        "aas-web-ui: bff:build"
+      ],
+      "dependsOrder": "sequence",
       "command": "pnpm",
       "args": [
         "bff:start"
