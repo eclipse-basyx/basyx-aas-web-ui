@@ -62,7 +62,6 @@
       },
       "group": "none",
       "isBackground": true,
-      "problemMatcher": "$tsc"
     },
     {
       "label": "aas-web-ui: preview",
@@ -80,7 +79,6 @@
       },
       "group": "none",
       "isBackground": true,
-      "problemMatcher": "$tsc"
     },
     {
       "label": "aas-web-ui: build-only",
