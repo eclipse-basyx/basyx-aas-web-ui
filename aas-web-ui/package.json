@@ -92,7 +92,7 @@
     "npm-run-all2": "^9.0.2",
     "pnpm": "11.16.0",
     "sass-embedded": "^1.100.0",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "unplugin-auto-import": "^21.0.0",
     "unplugin-fonts": "^2.0.0",
     "unplugin-vue-components": "^32.1.0",
