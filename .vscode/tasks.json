@@ -185,20 +185,6 @@
       "problemMatcher": []
     },
     {
-      "label": "aas-web-ui: test:watch",
-      "type": "shell",
-      "command": "pnpm",
-      "args": [
-        "test:watch"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}/aas-web-ui"
-      },
-      "group": "test",
-      "isBackground": true,
-      "problemMatcher": []
-    },
-    {
       "label": "aas-web-ui: test:coverage",
       "type": "shell",
       "command": "pnpm",
