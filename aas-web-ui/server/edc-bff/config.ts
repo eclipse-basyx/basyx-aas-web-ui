@@ -79,6 +79,7 @@ export function loadProxyConfigMap (
   for (const [id, rawProxy] of readConfiguredProxyEntries(env, readFile)) {
     rawProxies.set(id, rawProxy)
   }
+
   const shorthandProxy = readShorthandProxyConfig(env)
   if (shorthandProxy) {
     rawProxies.set(defaultProxyId, {

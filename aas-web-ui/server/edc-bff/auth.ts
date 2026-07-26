@@ -37,6 +37,7 @@ export async function authorizeRequest (
   if (!token) {
     throw createAuthError('Missing bearer token', 401)
   }
+
   await validateJwt(token, authConfig)
 }
 
