@@ -49,6 +49,7 @@ if [ "$TARGET" = "preview" ]; then
   export VITE_LOGO_DARK_PATH="${VITE_LOGO_DARK_PATH:-Logo_dark.svg}"
   export VITE_PRIMARY_LIGHT_COLOR="${VITE_PRIMARY_LIGHT_COLOR:-#0cb2f0}"
   export VITE_PRIMARY_DARK_COLOR="${VITE_PRIMARY_DARK_COLOR:-#f69222}"
+  export VITE_ENDPOINT_CONFIG_AVAILABLE="${VITE_ENDPOINT_CONFIG_AVAILABLE:-true}"
 
   if [ "$LOGO_MODE" = "env" ]; then
     export VITE_LOGO_LIGHT_PATH="custom-logo.svg"

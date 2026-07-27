@@ -55,6 +55,49 @@ test('infrastructure YAML endpoint is reachable under base path', async ({ reque
   expect(yamlBody).toContain('infrastructures:')
 })
 
+test('infrastructure YAML endpoints are loaded into the production UI', async ({ page }) => {
+  await page.goto(normalizedBasePath, { waitUntil: 'networkidle' })
+
+  await expect.poll(async () => {
+    return page.evaluate(() => {
+      const stored = localStorage.getItem('basyxInfrastructures')
+      if (!stored) {
+        return null
+      }
+
+      const infrastructure = JSON.parse(stored).infrastructures?.[0]
+      return infrastructure
+        ? {
+            id: infrastructure.id,
+            name: infrastructure.name,
+            aasDiscovery: infrastructure.components?.AASDiscovery?.url,
+            aasRepository: infrastructure.components?.AASRepo?.url,
+            companyLookup: infrastructure.components?.CompanyLookup?.url,
+          }
+        : null
+    })
+  }).toEqual({
+    id: 'yaml_local',
+    name: 'Local BaSyx',
+    aasDiscovery: 'http://localhost:9084',
+    aasRepository: 'http://localhost:9081',
+    companyLookup: 'http://localhost:5080',
+  })
+
+  await page.getByRole('button', { name: 'Settings' }).click()
+  await expect(page.getByRole('combobox', { name: 'Select Infrastructure' }))
+    .toHaveValue('Local BaSyx (Default)')
+  await page.getByRole('button', { name: 'Manage Infrastructures' }).click()
+  await page.getByRole('button', { name: 'Edit Local BaSyx' }).click()
+
+  await expect(page.getByRole('textbox', { name: 'AAS Discovery Endpoint URL' }))
+    .toHaveValue('http://localhost:9084')
+  await expect(page.getByRole('textbox', { name: 'AAS Repository Endpoint URL' }))
+    .toHaveValue('http://localhost:9081')
+  await expect(page.getByRole('textbox', { name: 'Company Lookup Endpoint URL' }))
+    .toHaveValue('http://localhost:5080')
+})
+
 test('custom logo via LOGO_PATH works under non-root base path', async ({ page, request }) => {
   test.skip(logoMode !== 'env', 'LOGO_PATH scenario only')
   test.skip(normalizedBasePath === '/', 'Custom non-root logo scenario requires a non-root base path')

@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { defineComponent } from 'vue'
 import { createMemoryHistory, createRouter, type RouteRecordRaw } from 'vue-router'
-import { buildValidatedModuleChildRoutes } from '../../src/utils/ModuleRouteUtils'
+import CompanyDescriptorViewer from '@/pages/modules/CompanyDescriptorViewer/index.vue'
+import {
+  buildModuleRouteMeta,
+  buildValidatedModuleChildRoutes,
+  type ModuleRouteMeta,
+} from '../../src/utils/ModuleRouteUtils'
 
 const DummyView = defineComponent({
   name: 'DummyView',
@@ -19,6 +24,8 @@ describe('module manifest child routes', () => {
         isVisibleModule: true,
         isOnlyVisibleWithSelectedAas: true,
         isOnlyVisibleWithSelectedNode: false,
+        needsInfrastructureEndpoints: ['CompanyLookup'],
+        needsEnvVariables: ['COMPANY_LOOKUP_DOMAIN'],
         supportedInfrastructureTemplates: ['full', 'mono-all'],
         preserveRouteQuery: true,
       },
@@ -38,8 +45,20 @@ describe('module manifest child routes', () => {
     expect(children[0].name).toBe('Dpp__TechnicalData')
     expect(children[0].meta?.isDesktopModule).toBe(true)
     expect(children[0].meta?.isOnlyVisibleWithSelectedAas).toBe(true)
+    expect(children[0].meta?.needsInfrastructureEndpoints).toEqual(['CompanyLookup'])
+    expect(children[0].meta?.needsEnvVariables).toEqual(['COMPANY_LOOKUP_DOMAIN'])
     expect(children[0].meta?.supportedInfrastructureTemplates).toEqual(['full', 'mono-all'])
     expect(children[0].meta?.preserveRouteQuery).toBe(true)
+  })
+
+  it('copies readiness prerequisites from module options into generated route metadata', () => {
+    const routeMeta = buildModuleRouteMeta(
+      'CompanyDescriptorViewer',
+      CompanyDescriptorViewer as unknown as ModuleRouteMeta,
+    )
+
+    expect(routeMeta.needsInfrastructureEndpoints).toEqual(['CompanyLookup'])
+    expect(routeMeta.needsEnvVariables).toEqual(['COMPANY_LOOKUP_DOMAIN'])
   })
 
   it('keeps child-specific preserveRouteQuery override', () => {

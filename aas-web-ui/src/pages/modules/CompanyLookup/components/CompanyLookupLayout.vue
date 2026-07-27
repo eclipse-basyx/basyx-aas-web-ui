@@ -1,23 +1,36 @@
 <script setup lang="ts">
   import { computed, ref, watch } from 'vue'
+  import { useRoute } from 'vue-router'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
+  import { VIEW } from '../constants/view'
   import { useCompanyLookupI18n } from '../i18n/useCompanyLookupI18n'
   import CompaniesList from './CompaniesList.vue'
   import CompanyLookupConfigurator from './CompanyLookupConfigurator.vue'
   import CompanyDetail from './detail/CompanyDetail.vue'
 
   const { t } = useCompanyLookupI18n()
+  const route = useRoute()
   const navigationStore = useNavigationStore()
 
-  const isMobile = computed(() => navigationStore.getIsMobile)
-
   const drawer = ref(false)
-  const listCollapsed = ref(false)
+  const listCollapsed = ref(route.query.view === VIEW.DETAILSONLY)
+
+  const isMobile = computed(() => navigationStore.getIsMobile)
+  const isDetailsOnly = computed(() => route.query.view === VIEW.DETAILSONLY)
 
   // Auto-close mobile drawer when leaving mobile
   watch(isMobile, val => {
     if (!val) drawer.value = false
+  })
+
+  watch(isDetailsOnly, val => {
+    if (val) {
+      drawer.value = false
+      listCollapsed.value = true
+    } else {
+      listCollapsed.value = false
+    }
   })
 
   function onSelect (id?: string): void {
@@ -27,7 +40,7 @@
 
 <template>
   <div class="h-100 w-100 d-flex flex-column">
-    <div class="flex-shrink-0 d-flex align-center px-4 py-2 border-b">
+    <div v-if="!isDetailsOnly" class="flex-shrink-0 d-flex align-center px-4 py-2 border-b">
       <v-btn
         v-if="isMobile"
         class="mr-2"
@@ -61,7 +74,7 @@
 
     <div class="cl-body d-flex flex-grow-1 overflow-hidden">
       <v-navigation-drawer
-        v-if="isMobile"
+        v-if="isMobile && !isDetailsOnly"
         v-model="drawer"
         temporary
         width="320"
@@ -69,12 +82,12 @@
         <CompaniesList @select="onSelect" />
       </v-navigation-drawer>
 
-      <div v-if="!isMobile && !listCollapsed" class="list">
+      <div v-if="!isMobile && !isDetailsOnly && !listCollapsed" class="list">
         <CompaniesList @select="onSelect" />
       </div>
 
       <div class="cl-detail flex-grow-1 overflow-y-auto">
-        <CompanyDetail />
+        <CompanyDetail :details-only="isDetailsOnly" />
       </div>
     </div>
   </div>
