@@ -27,8 +27,8 @@ importers:
         specifier: ^3.4.6
         version: 3.4.6(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
       '@thatopen/components-front':
-        specifier: ^3.4.3
-        version: 3.4.3(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
+        specifier: ^3.4.4
+        version: 3.4.4(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
       '@thatopen/fragments':
         specifier: ^3.4.6
         version: 3.4.6(three@0.185.1)(web-ifc@0.0.77)
@@ -37,7 +37,7 @@ importers:
         version: 3.4.10
       '@thatopen/ui-obc':
         specifier: ^3.4.2
-        version: 3.4.2(@thatopen/components-front@3.4.3(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/components@3.4.6(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(three@0.185.1)(web-ifc@0.0.77)
+        version: 3.4.2(@thatopen/components-front@3.4.4(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/components@3.4.6(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(three@0.185.1)(web-ifc@0.0.77)
       '@vue-flow/background':
         specifier: ^1.3.2
         version: 1.3.2(@vue-flow/core@1.48.2(vue@3.5.40(typescript@6.0.3)))(vue@3.5.40(typescript@6.0.3))
@@ -828,8 +828,8 @@ packages:
       '@vue/composition-api':
         optional: true
 
-  '@thatopen/components-front@3.4.3':
-    resolution: {integrity: sha512-R/70QQPPtqZcMXOL72ZzI+Tj4IIJV4ehPvyHVTd0yZLFdW0zSKCQqSa7PpUqTVPDnmzFMkkXTnZFKwk6tMdCHQ==}
+  '@thatopen/components-front@3.4.4':
+    resolution: {integrity: sha512-uwJmT76CNaIU5fQuKK37OtV7qPyJdWs46oxRqGEPemhI84NudchPKZOCFdKLTlgLBvzXilPg6fszO5oB3wT5+A==}
     peerDependencies:
       '@thatopen/fragments': ~3.4.0
       three: '>=0.182.0'
@@ -839,6 +839,14 @@ packages:
     resolution: {integrity: sha512-CZjJWnmldZnw/RaoSeEkFpkgJBSBuzofqd7xh6jGQtS2vALbQkoKaRvQIPXdGuikmc/X89MxELo+OKw1S9QZ5Q==}
     peerDependencies:
       '@thatopen/fragments': ~3.4.0
+      camera-controls: '>=3.1.2'
+      three: '>=0.182.0'
+      web-ifc: '>=0.0.77'
+
+  '@thatopen/components@3.4.8':
+    resolution: {integrity: sha512-eil8zla7W45WI1Pf/xAcY4oQpmb7pDJnyN9jWP2rkuboGIol+RyGCo9XHR2GnL9Ckgb+Jd595oXhyiotQ8lVAA==}
+    peerDependencies:
+      '@thatopen/fragments': ~3.4.7
       camera-controls: '>=3.1.2'
       three: '>=0.182.0'
       web-ifc: '>=0.0.77'
@@ -1478,11 +1486,11 @@ packages:
   dijkstrajs@1.0.3:
     resolution: {integrity: sha512-qiSlmBq9+BCdCA/L46dw8Uy93mloxsPSbwnm5yrKn2vMPiy8KyAskTF6zuV/j5BMsmOGZDPs7KjU+mjb670kfA==}
 
-  earcut@3.0.2:
-    resolution: {integrity: sha512-X7hshQbLyMJ/3RPhyObLARM2sNxxmRALLKx1+NVFFnQ9gKzmCrxm9+uLIAdBcvc8FNLpctqlQ2V6AE92Ol9UDQ==}
-
   earcut@3.2.2:
     resolution: {integrity: sha512-PDQoCIlNXct9iyAL03C1TbTURwQ+DGkJsNSW3Aai+VRrW4uA3XKDdV3OwQUAGsdZyVZwB9FjW5O/Jag36Y7NmA==}
+
+  earcut@3.2.3:
+    resolution: {integrity: sha512-vnS4AVwp1KHAF13i1vp1/2D5evWy3k5u/iW/B81QVsUZtV8cv2tU0b2VNFlqvh4kYwrFMDdjPCfAmfyJW9y14Q==}
 
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
@@ -3842,17 +3850,27 @@ snapshots:
       vue: 3.5.40(typescript@6.0.3)
       vue-demi: 0.14.10(vue@3.5.40(typescript@6.0.3))
 
-  '@thatopen/components-front@3.4.3(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)':
+  '@thatopen/components-front@3.4.4(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)':
     dependencies:
-      '@thatopen/components': 3.4.6(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
+      '@thatopen/components': 3.4.8(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
       '@thatopen/fragments': 3.4.6(three@0.185.1)(web-ifc@0.0.77)
-      earcut: 3.0.2
+      earcut: 3.2.3
       three: 0.185.1
       web-ifc: 0.0.77
     transitivePeerDependencies:
       - camera-controls
 
   '@thatopen/components@3.4.6(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)':
+    dependencies:
+      '@thatopen/fragments': 3.4.6(three@0.185.1)(web-ifc@0.0.77)
+      camera-controls: 3.1.2(three@0.185.1)
+      fast-xml-parser: 5.7.2
+      jszip: 3.10.1
+      three: 0.185.1
+      three-mesh-bvh: 0.9.9(three@0.185.1)
+      web-ifc: 0.0.77
+
+  '@thatopen/components@3.4.8(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)':
     dependencies:
       '@thatopen/fragments': 3.4.6(three@0.185.1)(web-ifc@0.0.77)
       camera-controls: 3.1.2(three@0.185.1)
@@ -3871,10 +3889,10 @@ snapshots:
       three: 0.185.1
       web-ifc: 0.0.77
 
-  '@thatopen/ui-obc@3.4.2(@thatopen/components-front@3.4.3(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/components@3.4.6(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(three@0.185.1)(web-ifc@0.0.77)':
+  '@thatopen/ui-obc@3.4.2(@thatopen/components-front@3.4.4(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/components@3.4.6(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(three@0.185.1)(web-ifc@0.0.77)':
     dependencies:
       '@thatopen/components': 3.4.6(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
-      '@thatopen/components-front': 3.4.3(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
+      '@thatopen/components-front': 3.4.4(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
       '@thatopen/fragments': 3.4.6(three@0.185.1)(web-ifc@0.0.77)
       '@thatopen/ui': 3.4.10
       lit: 3.3.1
@@ -4557,9 +4575,9 @@ snapshots:
 
   dijkstrajs@1.0.3: {}
 
-  earcut@3.0.2: {}
-
   earcut@3.2.2: {}
+
+  earcut@3.2.3: {}
 
   eastasianwidth@0.2.0: {}
 
