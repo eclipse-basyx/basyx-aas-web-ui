@@ -9,6 +9,10 @@ export interface RequestErrorHandlingOptions {
    * Authentication and authorization failures are never suppressed.
    */
   suppressStatuses?: ReadonlyArray<number>
+  /**
+   * Cancels the request without showing an error message.
+   */
+  signal?: AbortSignal
 }
 
 export function useRequestHandling () {
@@ -134,7 +138,14 @@ export function useRequestHandling () {
     disableMessage: boolean,
     errorHandlingOptions: RequestErrorHandlingOptions = {},
     requestOwnerId: string | undefined = getRequestOwnerId(),
-  ): { success: false, status?: number } {
+  ): { success: false, status?: number, aborted?: true } {
+    if (
+      (error instanceof DOMException && error.name === 'AbortError')
+      || (error instanceof Error && error.name === 'AbortError')
+    ) {
+      return { success: false, aborted: true }
+    }
+
     const errorMessage = error instanceof Error ? error.message : String(error)
     const statusCode = extractStatusCode(errorMessage)
     const is401Error = statusCode === 401
@@ -315,7 +326,7 @@ export function useRequestHandling () {
       // No Authorization needed for the /description endpoint.
       headers = addAuthorizationHeader(headers) // Add the Authorization header
     }
-    return fetch(path, { method: 'GET', headers })
+    return fetch(path, { method: 'GET', headers, signal: errorHandlingOptions.signal })
       .then(async response => {
         const contentType = getResponseContentType(response)
         // Check if the Server responded with content.
@@ -399,12 +410,13 @@ export function useRequestHandling () {
     context: string,
     disableMessage: boolean,
     isTSRequest = false,
+    errorHandlingOptions: RequestErrorHandlingOptions = {},
   ): any {
     const requestOwnerId = getRequestOwnerId()
     if (!isTSRequest) {
       headers = addAuthorizationHeader(headers) // Add the Authorization header
     }
-    return fetch(path, { method: 'POST', body, headers })
+    return fetch(path, { method: 'POST', body, headers, signal: errorHandlingOptions.signal })
       .then(async response => {
         const contentType = getResponseContentType(response)
         // Check if the Server responded with content
@@ -429,30 +441,46 @@ export function useRequestHandling () {
         // Check if the Server responded with an error
         const payloadStatus = extractErrorStatusFromPayload(data)
         if (payloadStatus !== undefined) {
-          return handlePayloadFailure(payloadStatus, data, context, disableMessage, {}, requestOwnerId)
+          return handlePayloadFailure(
+            payloadStatus,
+            data,
+            context,
+            disableMessage,
+            errorHandlingOptions,
+            requestOwnerId,
+          )
         } else if (!response.ok) {
           setLastRequestFailureStatus(response.status)
           setLastRequestFailureDetails(buildErrorDetailsFromPayload(data) || undefined)
-          if (isCurrentRequestOwner(requestOwnerId) && !disableMessage && data) {
+          if (
+            isCurrentRequestOwner(requestOwnerId)
+            && !disableMessage
+            && !shouldSuppressStatus(response.status, errorHandlingOptions)
+            && data
+          ) {
             errorHandler(data, context)
           }
-          return { success: false, status: response.status }
+          return {
+            success: false,
+            status: response.status,
+            data: shouldSuppressStatus(response.status, errorHandlingOptions) ? data : undefined,
+          }
         } else if (data) {
           setLastRequestFailureStatus(undefined)
           setLastRequestFailureDetails(undefined)
           // Successful response from the server
-          return { success: true, data }
+          return { success: true, data, status: response.status, raw: response }
         } else if (data === null || data === undefined) {
           setLastRequestFailureStatus(undefined)
           setLastRequestFailureDetails(undefined)
           // in this case no content is expected
-          return { success: true }
+          return { success: true, status: response.status, raw: response }
         } else {
           // Unexpected response format
           throw new Error('Unexpected response format')
         }
       })
-      .catch(error => handleRequestError(error, disableMessage, {}, requestOwnerId))
+      .catch(error => handleRequestError(error, disableMessage, errorHandlingOptions, requestOwnerId))
   }
 
   function putRequest (path: string, body: any, headers: Headers, context: string, disableMessage: boolean): any {
