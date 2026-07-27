@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { capitalizeFirstLetter, firstLetterToLowerCase, hasContent, safeSegment, stripLastCharacter } from '@/utils/StringUtils'
+import { capitalizeFirstLetter, firstLetterToLowerCase, hasContent, safeSegment, stripLastCharacter } from '../../shared/utils/StringUtils'
 
 describe('StringUtils.ts; Tests for \'capitalizeFirstLetter()\'', () => {
   // Define test data for capitalizeFirstLetter()

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { base64Decode, base64Encode } from '@/utils/EncodeDecodeUtils'
+import { base64Decode, base64Encode } from '@/../shared/utils/EncodeDecodeUtils'
 
 // Define test data
 const testData = [

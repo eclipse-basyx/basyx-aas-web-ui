@@ -2,8 +2,8 @@ import type { InfrastructureConfig } from '@/types/Infrastructure'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
+import { base64Encode } from '@/../shared/utils/EncodeDecodeUtils'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
-import { base64Encode } from '@/utils/EncodeDecodeUtils'
 
 const mocks = vi.hoisted(() => ({
   appliedOverrides: [] as unknown[],

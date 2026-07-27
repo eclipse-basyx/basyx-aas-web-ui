@@ -110,3 +110,17 @@ export function safeSegment (value: string, fallback: string): string {
 export function hasContent (val?: string | null): val is string {
   return typeof val === 'string' && val.trim().length > 0
 }
+
+/**
+ * Trim a string value and return an empty string for non-string inputs.
+ *
+ * This helper lives under `shared/` so it can be imported both by the
+ * Vue app (`src/`) and the BFF server (`server/`) without duplicating
+ * the implementation or violating either project's `rootDir` constraint.
+ *
+ * @param value - The value to normalize.
+ * @returns A trimmed string, or an empty string when the input is not a string.
+ */
+export function trimString (value: unknown): string {
+  return typeof value === 'string' ? value.trim() : ''
+}

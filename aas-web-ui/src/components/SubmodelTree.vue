@@ -398,6 +398,7 @@
   import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
+  import { isEmptyString } from '@/../shared/utils/StringUtils'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
   import { useOperationTreeMutation } from '@/composables/AAS/OperationTreeMutation'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
@@ -422,7 +423,6 @@
   } from '@/utils/AAS/OperationTreeUtils'
   import { isChildTypeAllowed } from '@/utils/AAS/SubmodelElementRegistry'
   import { debounce } from '@/utils/generalUtils'
-  import { isEmptyString } from '@/utils/StringUtils'
 
   // Vue Router
   const route = useRoute()

@@ -2,6 +2,7 @@ import type { BaSyxComponent, BaSyxComponentKey } from '@/types/BaSyx'
 import type { InfrastructureConfig } from '@/types/Infrastructure'
 import { defineStore } from 'pinia'
 import { computed, nextTick, reactive, ref, watch } from 'vue'
+import { stripLastCharacter } from '@/../shared/utils/StringUtils'
 import { ASS_DISCOVERY_ENDPOINT_PATH } from '@/composables/Client/AASDiscoveryClient'
 import { ASS_REGISTRY_ENDPOINT_PATH } from '@/composables/Client/AASRegistryClient'
 import { ASS_REPOSITORY_ENDPOINT_PATH } from '@/composables/Client/AASRepositoryClient'
@@ -16,7 +17,6 @@ import { useRequestHandling } from '@/composables/RequestHandling'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useNavigationStore } from '@/store/NavigationStore'
 import { getActiveComponentKeys, isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
-import { stripLastCharacter } from '@/utils/StringUtils'
 
 export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   // Stores

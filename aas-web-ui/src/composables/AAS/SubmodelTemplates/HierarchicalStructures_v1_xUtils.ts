@@ -1,6 +1,6 @@
 import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
+import { base64Decode } from '@/../shared/utils/EncodeDecodeUtils'
 import { getSemanticIdValue } from '@/utils/AAS/SemanticIdUtils'
-import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
 export function useHierarchicalStructure_v1_xUtils () {
   /**

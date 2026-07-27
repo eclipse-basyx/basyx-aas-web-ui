@@ -33,6 +33,7 @@
   import { types as aasTypes, jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { computed, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
+  import { base64Decode } from '@/../shared/utils/EncodeDecodeUtils'
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
@@ -44,7 +45,6 @@
   import { Endpoint, ProtocolInformation } from '@/types/Descriptors'
   import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils'
   import { isChildTypeAllowed } from '@/utils/AAS/SubmodelElementRegistry'
-  import { base64Decode } from '@/utils/EncodeDecodeUtils'
   import { isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
 
   const props = defineProps<{

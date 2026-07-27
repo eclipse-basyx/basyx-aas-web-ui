@@ -1,6 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { base64Encode } from '@/utils/EncodeDecodeUtils'
+import { base64Encode } from '@/../shared/utils/EncodeDecodeUtils'
 
 describe('EnvironmentStore feature-control configuration', () => {
   afterEach(() => {

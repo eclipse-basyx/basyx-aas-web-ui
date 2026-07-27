@@ -1,8 +1,8 @@
 <script setup lang="ts">
   import { computed, ref, watch } from 'vue'
   import { useRoute } from 'vue-router'
+  import { hasContent } from '@/../shared/utils/StringUtils'
   import { useNavigationStore } from '@/store/NavigationStore'
-  import { hasContent } from '@/utils/StringUtils'
   import { VIEW } from '../constants/view'
   import { useCompanyLookupI18n } from '../i18n/useCompanyLookupI18n'
   import CompaniesList from './CompaniesList.vue'

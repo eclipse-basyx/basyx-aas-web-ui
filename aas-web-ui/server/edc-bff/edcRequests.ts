@@ -6,6 +6,8 @@ import type {
   EdcProxyConfig,
   EdcSubmodelFetchRequest,
 } from './types.js'
+import { base64Encode } from '../../shared/utils/EncodeDecodeUtils.js'
+import { trimString } from '../../shared/utils/StringUtils.js'
 import { isCounterPartyAddressAllowed, joinManagementUrl } from './config.js'
 
 export interface EdcForwardResult {
@@ -335,7 +337,7 @@ export async function fetchDtrShellDescriptors (
     const name = trimString(assetId.name)
     const value = trimString(assetId.value)
     if (name !== '' && value !== '') {
-      queryParams.append('assetIds', base64UrlEncode(JSON.stringify({ name, value })))
+      queryParams.append('assetIds', base64Encode(JSON.stringify({ name, value })))
     }
   }
 
@@ -355,7 +357,7 @@ export async function fetchDtrShellDescriptorById (
   const access = await ensureDtrAccess(proxy, request, options)
   return fetchDtrData(
     access,
-    `/shell-descriptors/${base64UrlEncode(descriptorId)}`,
+    `/shell-descriptors/${base64Encode(descriptorId)}`,
     new URLSearchParams(),
     options.fetchFn ?? fetch,
   )
@@ -869,10 +871,6 @@ function cloneRecord (record: Record<string, unknown>): Record<string, unknown> 
   return structuredClone(record)
 }
 
-function base64UrlEncode (value: string): string {
-  return Buffer.from(value.trim(), 'utf8').toString('base64url')
-}
-
 function delay (durationMs: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, Math.max(0, durationMs)))
 }
@@ -889,8 +887,4 @@ async function parseResponseBody (response: Response): Promise<unknown> {
   }
 
   return text
-}
-
-function trimString (value: unknown): string {
-  return typeof value === 'string' ? value.trim() : ''
 }

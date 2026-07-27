@@ -1,6 +1,6 @@
 <script setup lang="ts">
+  import { hasContent } from '@/../shared/utils/StringUtils'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
-  import { hasContent } from '@/utils/StringUtils'
   import { DEFAULT_COPY_ICON } from '../../constants/icons'
   import { hasItems } from '../../utils/array'
 

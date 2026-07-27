@@ -236,6 +236,7 @@
   import { computed, h, nextTick, onMounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'
+  import { base64Decode } from '@/../shared/utils/EncodeDecodeUtils'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
   import { useHierarchicalStructure_v1_xUtils } from '@/composables/AAS/SubmodelTemplates/HierarchicalStructures_v1_xUtils'
@@ -246,7 +247,6 @@
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { getSubmodelElementBySemanticId } from '@/utils/AAS/SemanticIdUtils'
-  import { base64Decode } from '@/utils/EncodeDecodeUtils'
   import '@vue-flow/core/dist/style.css'
   import '@vue-flow/core/dist/theme-default.css'
 

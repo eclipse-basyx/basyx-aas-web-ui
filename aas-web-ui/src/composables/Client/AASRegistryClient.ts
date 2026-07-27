@@ -1,13 +1,13 @@
 import type { jsonization } from '@aas-core-works/aas-core3.1-typescript'
 import { computed } from 'vue'
+import { base64Encode } from '@/../shared/utils/EncodeDecodeUtils'
+import { stripLastCharacter } from '@/../shared/utils/StringUtils'
 import { appendQueryParams, normalizeLimit, type PaginationPageOptions, type PaginationPageResult, parseNextCursor } from '@/composables/Client/PaginationUtils'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import * as descriptorTypes from '@/types/Descriptors'
 import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils'
-import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { removeNullValues } from '@/utils/generalUtils'
-import { stripLastCharacter } from '@/utils/StringUtils'
 
 export const ASS_REGISTRY_ENDPOINT_PATH = '/shell-descriptors'
 

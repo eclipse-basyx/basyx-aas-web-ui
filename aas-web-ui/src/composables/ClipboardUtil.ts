@@ -1,6 +1,7 @@
 import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization'
 import { types as aasTypes, jsonization } from '@aas-core-works/aas-core3.1-typescript'
 import { useRoute, useRouter } from 'vue-router'
+import { base64Decode } from '@/../shared/utils/EncodeDecodeUtils'
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
 import { useIDUtils } from '@/composables/IDUtils'
@@ -9,7 +10,6 @@ import { useClipboardStore } from '@/store/ClipboardStore'
 import { useNavigationStore } from '@/store/NavigationStore'
 import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils'
 import { isChildTypeAllowed } from '@/utils/AAS/SubmodelElementRegistry'
-import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
 export function useClipboardUtil () {
   // Vue Router
