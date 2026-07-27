@@ -607,6 +607,7 @@ export function useRequestHandling () {
   }
 
   function addAuthorizationHeader (headers: Headers): Headers {
+    const requestHeaders = new Headers(headers)
     // Try to find which infrastructure component this request is for
     const selectedInfra = infrastructureStore.getSelectedInfrastructure
 
@@ -616,22 +617,22 @@ export function useRequestHandling () {
       const authorizationPrefix = environmentStore.getAuthorizationPrefix
       if (auth && auth.securityType !== 'No Authentication') {
         if (auth.securityType === 'Bearer Token' && auth.bearerToken?.token) {
-          headers.set('Authorization', authorizationPrefix + ' ' + auth.bearerToken.token)
-          return headers
+          requestHeaders.set('Authorization', authorizationPrefix + ' ' + auth.bearerToken.token)
+          return requestHeaders
         } else if (auth.securityType === 'Basic Authentication' && auth.basicAuth) {
-          headers.set(
+          requestHeaders.set(
             'Authorization',
             'Basic ' + btoa(auth.basicAuth.username + ':' + auth.basicAuth.password),
           )
-          return headers
+          return requestHeaders
         } else if (auth.securityType === 'OAuth2' && selectedInfra.token?.accessToken) {
-          headers.set('Authorization', authorizationPrefix + ' ' + selectedInfra.token.accessToken)
-          return headers
+          requestHeaders.set('Authorization', authorizationPrefix + ' ' + selectedInfra.token.accessToken)
+          return requestHeaders
         }
       }
     }
 
-    return headers
+    return requestHeaders
   }
 
   function errorHandler (errorData: any, context: string): void {

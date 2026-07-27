@@ -129,6 +129,25 @@ describe('Operation.vue', () => {
     expect(dispatchSnackbarMock).toHaveBeenCalledWith(expect.objectContaining({ color: 'success' }))
   })
 
+  it('accepts a synchronous result without an executionState', async () => {
+    const wrapper = mountOperation()
+    postRequestMock.mockResolvedValue({
+      success: true,
+      status: 200,
+      data: {
+        success: true,
+        outputArguments: [{ value: { modelType: 'Property', value: 'result' } }],
+      },
+    })
+    ;(wrapper.vm as any).invokeAsynchronously = false
+
+    await (wrapper.vm as any).executeOperation()
+
+    expect((wrapper.vm as any).localOperationObject.outputVariables[0].value.value).toBe('result')
+    expect(dispatchSnackbarMock).toHaveBeenCalledWith(expect.objectContaining({ color: 'success' }))
+    expect(errorHandlerMock).not.toHaveBeenCalled()
+  })
+
   it('sends Boolean operation arguments as AAS strings', async () => {
     const booleanProperty = {
       modelType: 'Property',
@@ -271,6 +290,30 @@ describe('Operation.vue', () => {
     expect(getRequestMock).not.toHaveBeenCalled()
   })
 
+  it('rejects a cross-origin async Location before adding credentials to the status request', async () => {
+    const wrapper = mountOperation()
+    postRequestMock.mockResolvedValue(acceptedResponse('https://attacker.test/operation-status/handle-1'))
+
+    await (wrapper.vm as any).executeOperation()
+
+    expect(errorHandlerMock).toHaveBeenCalledWith(
+      'The asynchronous invocation returned a Location on a different origin.',
+      expect.any(String),
+    )
+    expect(getRequestMock).not.toHaveBeenCalled()
+  })
+
+  it('reports a malformed nonempty async Location', async () => {
+    const wrapper = mountOperation()
+    postRequestMock.mockResolvedValue(acceptedResponse('http://['))
+
+    await expect((wrapper.vm as any).executeOperation()).resolves.toBeUndefined()
+
+    expect(errorHandlerMock).toHaveBeenCalledWith(expect.any(String), expect.any(String))
+    expect(getRequestMock).not.toHaveBeenCalled()
+    expect((wrapper.vm as any).loading).toBe(false)
+  })
+
   it('aborts and ignores an old invocation when the selected operation changes', async () => {
     let resolveStatus!: (value: unknown) => void
     getRequestMock.mockReturnValue(new Promise(resolve => {
@@ -337,6 +380,27 @@ describe('Operation.vue', () => {
     expect(errorHandlerMock).toHaveBeenCalledWith('Timeout exceeded (60s)', expect.any(String))
     expect(dispatchSnackbarMock).not.toHaveBeenCalled()
     expect((wrapper.vm as any).loading).toBe(false)
+  })
+
+  it('rejects a result received after the wall-clock deadline before the timeout task runs', async () => {
+    vi.useFakeTimers()
+    let now = 0
+    const performanceNowSpy = vi.spyOn(performance, 'now').mockImplementation(() => now)
+    getRequestMock.mockImplementation(() => {
+      now = 60_001
+      return Promise.resolve({
+        success: true,
+        data: { executionState: 'Completed', success: true },
+      })
+    })
+    const wrapper = mountOperation()
+
+    await (wrapper.vm as any).executeOperation()
+
+    expect(errorHandlerMock).toHaveBeenCalledWith('Timeout exceeded (60s)', expect.any(String))
+    expect(dispatchSnackbarMock).not.toHaveBeenCalled()
+    expect((wrapper.vm as any).loading).toBe(false)
+    performanceNowSpy.mockRestore()
   })
 
   it('renders nested Operation variables as read-only when invocation is unavailable', async () => {

@@ -239,12 +239,16 @@
     }
     const timeoutSeconds = 60
     const timeoutMilliseconds = timeoutSeconds * 1000
-    const startedAt = performance.now()
+    const deadline = performance.now() + timeoutMilliseconds
     let timedOut = false
-    const timeoutId = window.setTimeout(() => {
+    const markTimedOut = () => {
+      if (timedOut || !isCurrentInvocation(generation, controller)) {
+        return
+      }
       timedOut = true
       controller.abort()
-    }, timeoutMilliseconds)
+    }
+    const timeoutId = window.setTimeout(markTimedOut, timeoutMilliseconds)
     const content = {
       inputArguments: operation.inputArguments,
       inoutputArguments: operation.inoutputArguments,
@@ -260,7 +264,16 @@
 
     try {
       if (!operation.invokeAsynchronously) {
-        await invokeSynchronously(operation.path, body, headers, context, generation, controller)
+        await invokeSynchronously(
+          operation.path,
+          body,
+          headers,
+          context,
+          generation,
+          controller,
+          deadline,
+          markTimedOut,
+        )
         return
       }
 
@@ -277,13 +290,25 @@
         },
       )
 
-      if (!isCurrentInvocation(generation, controller)) {
+      if (
+        expireInvocationIfDeadlineReached(deadline, controller, markTimedOut)
+        || !isCurrentInvocation(generation, controller)
+      ) {
         return
       }
 
       if (!invokeResponse.success) {
         if ([404, 405, 501].includes(invokeResponse.status)) {
-          await invokeSynchronously(operation.path, body, headers, context, generation, controller)
+          await invokeSynchronously(
+            operation.path,
+            body,
+            headers,
+            context,
+            generation,
+            controller,
+            deadline,
+            markTimedOut,
+          )
         }
         return
       }
@@ -299,16 +324,29 @@
         return
       }
 
-      const statusUrl = resolveLocation(location, invokeResponse.raw?.url, `${operation.path}/invoke-async`)
+      let statusUrl: string
+      try {
+        statusUrl = resolveTrustedLocation(
+          location,
+          invokeResponse.raw?.url,
+          `${operation.path}/invoke-async`,
+        )
+      } catch (error) {
+        errorHandler(
+          error instanceof Error ? error.message : 'The asynchronous invocation returned an invalid Location header.',
+          context,
+        )
+        return
+      }
       await pollOperationStatus(
         statusUrl,
-        headers,
+        createRequestHeaders(),
         context,
         `requesting operation status for ${operation.modelType} "${operation.idShort}"`,
         generation,
         controller,
-        startedAt,
-        timeoutMilliseconds,
+        deadline,
+        markTimedOut,
       )
     } finally {
       window.clearTimeout(timeoutId)
@@ -329,6 +367,8 @@
     context: string,
     generation: number,
     controller: AbortController,
+    deadline: number,
+    markTimedOut: () => void,
   ): Promise<void> {
     const response = await postRequest(
       `${operationPath}/invoke`,
@@ -340,7 +380,11 @@
       { signal: controller.signal },
     )
 
-    if (isCurrentInvocation(generation, controller) && response.success) {
+    if (
+      !expireInvocationIfDeadlineReached(deadline, controller, markTimedOut)
+      && isCurrentInvocation(generation, controller)
+      && response.success
+    ) {
       handleOperationResult(response.data, context)
     }
   }
@@ -352,20 +396,23 @@
     statusContext: string,
     generation: number,
     controller: AbortController,
-    startedAt: number,
-    timeoutMilliseconds: number,
+    deadline: number,
+    markTimedOut: () => void,
   ): Promise<void> {
     let pollingDelay = 0
 
     while (isCurrentInvocation(generation, controller)) {
-      const remainingTime = timeoutMilliseconds - (performance.now() - startedAt)
-      if (remainingTime <= 0) {
+      const remainingTime = deadline - performance.now()
+      if (expireInvocationIfDeadlineReached(deadline, controller, markTimedOut)) {
         return
       }
 
       if (pollingDelay > 0) {
         await waitForNextPoll(Math.min(pollingDelay, remainingTime), controller.signal)
-        if (!isCurrentInvocation(generation, controller)) {
+        if (
+          expireInvocationIfDeadlineReached(deadline, controller, markTimedOut)
+          || !isCurrentInvocation(generation, controller)
+        ) {
           return
         }
       }
@@ -378,7 +425,11 @@
         { signal: controller.signal },
       )
 
-      if (!isCurrentInvocation(generation, controller) || !response.success) {
+      if (
+        expireInvocationIfDeadlineReached(deadline, controller, markTimedOut)
+        || !isCurrentInvocation(generation, controller)
+        || !response.success
+      ) {
         return
       }
 
@@ -409,7 +460,10 @@
       return
     }
 
-    if (result.executionState !== 'Completed' || result.success === false) {
+    if (
+      (result.executionState !== undefined && result.executionState !== 'Completed')
+      || result.success === false
+    ) {
       const state = result.executionState ?? 'unknown'
       errorHandler(result.messages ?? `Operation finished with execution state "${state}".`, context)
       return
@@ -432,9 +486,33 @@
     refreshWebUi()
   }
 
-  function resolveLocation (location: string, responseUrl: string | undefined, requestUrl: string): string {
+  function resolveTrustedLocation (location: string, responseUrl: string | undefined, requestUrl: string): string {
     const baseUrl = responseUrl || new URL(requestUrl, window.location.href).href
-    return new URL(location, baseUrl).href
+    const trustedOrigin = new URL(baseUrl).origin
+    const resolvedLocation = new URL(location, baseUrl)
+    if (!['http:', 'https:'].includes(resolvedLocation.protocol)) {
+      throw new Error('The asynchronous invocation returned a Location with an unsupported protocol.')
+    }
+    if (resolvedLocation.origin !== trustedOrigin) {
+      throw new Error('The asynchronous invocation returned a Location on a different origin.')
+    }
+    return resolvedLocation.href
+  }
+
+  function createRequestHeaders (): Headers {
+    return new Headers({ Accept: 'application/json' })
+  }
+
+  function expireInvocationIfDeadlineReached (
+    deadline: number,
+    controller: AbortController,
+    markTimedOut: () => void,
+  ): boolean {
+    if (performance.now() < deadline) {
+      return false
+    }
+    markTimedOut()
+    return controller.signal.aborted
   }
 
   function waitForNextPoll (delay: number, signal: AbortSignal): Promise<void> {
