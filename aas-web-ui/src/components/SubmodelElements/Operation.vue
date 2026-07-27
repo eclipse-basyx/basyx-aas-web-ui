@@ -239,7 +239,7 @@
         let fetchCount = 0
         let status = 'Running'
         let statusResponse
-        let noTimeout = false
+        let noTimeout = true
 
         // delay is a geometric sequence with a_1 = initialDelay and q = 2, thus the sum for total delay is S(round) = a_1 * (2^q - 1)
         while ((noTimeout = (initialDelay * (Math.pow(2, fetchCount) - 1)) < timeout * 1000) && status === 'Running') {
