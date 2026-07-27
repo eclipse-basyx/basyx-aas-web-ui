@@ -239,10 +239,10 @@
         let fetchCount = 0
         let status = 'Running'
         let statusResponse
-        let timeoutHit = false
+        let noTimeout = false
 
         // delay is a geometric sequence with a_1 = initialDelay and q = 2, thus the sum for total delay is S(round) = a_1 * (2^q - 1)
-        while ((timeoutHit = (initialDelay * (Math.pow(2, fetchCount) - 1)) < timeout * 1000) && status === 'Running') {
+        while ((noTimeout = (initialDelay * (Math.pow(2, fetchCount) - 1)) < timeout * 1000) && status === 'Running') {
           const delay = fetchCount == 0 ? 0 : initialDelay * Math.pow(2, fetchCount - 1)
           await new Promise(r => setTimeout(r, delay))
           statusResponse = await getRequest(
@@ -258,7 +258,7 @@
 
         loading.value = false
 
-        if (timeoutHit) {
+        if (!noTimeout) {
           return errorHandler(`Timeout exceeded (${timeout}s)`, context)
         } else if (status === 'Failed') {
           return errorHandler(statusResponse.data.messages, context)
