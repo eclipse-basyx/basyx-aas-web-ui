@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { capitalizeFirstLetter, firstLetterToLowerCase, hasContent, safeSegment, stripLastCharacter } from '@/utils/StringUtils'
+import { capitalizeFirstLetter, firstLetterToLowerCase, hasContent, safeSegment, stripLastCharacter, trimString } from '../../shared/utils/StringUtils'
 
 describe('StringUtils.ts; Tests for \'capitalizeFirstLetter()\'', () => {
   // Define test data for capitalizeFirstLetter()
@@ -209,4 +209,62 @@ describe('StringUtils.ts; Tests for \'hasContent()\'', () => {
       }
     })
   })
+})
+
+describe('StringUtils.ts; Tests for \'trimString()\'', () => {
+  // Define test data for trimString()
+  const trimStringTestCombinations: { testId: string, input: unknown, output: string }[] = [
+    {
+      testId: '54991c68-ee12-498a-95bd-71c99a1b38bc',
+      input: '  hello  ',
+      output: 'hello',
+    },
+    {
+      testId: '519b438a-6188-42c2-a0be-95db21fba544',
+      input: 'hello',
+      output: 'hello',
+    },
+    {
+      testId: '4d826174-e33d-4c33-83b2-967965d3b310',
+      input: '',
+      output: '',
+    },
+    {
+      testId: '1ef8da74-0026-4387-b554-b7c345a436cd',
+      input: ' '.repeat(3),
+      output: '',
+    },
+    {
+      testId: 'd8b53335-04df-4900-9324-150a04dd6cb1',
+      input: null,
+      output: '',
+    },
+    {
+      testId: 'a0d8445c-b5d2-4cc0-975a-d7d2c428ca83',
+      input: undefined,
+      output: '',
+    },
+    {
+      testId: 'af7ef77f-de87-4251-b456-c9264bc6ce1e',
+      input: 123,
+      output: '',
+    },
+    {
+      testId: '2bb7b3eb-5b13-4720-8d22-13c74447fcf6',
+      input: { toString: () => 'obj' },
+      output: '',
+    },
+  ]
+
+  // Tests for trimString()
+  for (const trimStringTestCombination of trimStringTestCombinations) {
+    // Define test data
+    const input = trimStringTestCombination.input
+    const output = trimStringTestCombination.output
+
+    it(`${trimStringTestCombination.testId}: trimString(${JSON.stringify(input)}) should be '${output}'`, () => {
+      // Perform the assertion
+      expect(trimString(input)).toBe(output)
+    })
+  }
 })

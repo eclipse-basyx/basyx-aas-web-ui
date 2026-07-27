@@ -81,9 +81,9 @@
 
 <script lang="ts" setup>
   import { computed, ref, watch } from 'vue'
+  import { capitalizeFirstLetter } from '@/../shared/utils/StringUtils'
   import { useReferenceComposable } from '@/composables/AAS/ReferenceComposable'
   import { useJumpHandling } from '@/composables/JumpHandling'
-  import { capitalizeFirstLetter } from '@/utils/StringUtils'
 
   type RelationshipReferenceKey = 'first' | 'second'
 

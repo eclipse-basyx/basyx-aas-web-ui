@@ -110,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-  import { isEmptyString } from '@/utils/StringUtils'
+  import { isEmptyString } from '@/../shared/utils/StringUtils'
 
   // Props
   defineProps({

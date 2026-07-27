@@ -211,6 +211,7 @@
   import { computed, onMounted, ref, toRaw } from 'vue'
   import { useRouter } from 'vue-router'
   import { useDisplay } from 'vuetify'
+  import { base64Encode } from '@/../shared/utils/EncodeDecodeUtils'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
@@ -220,7 +221,6 @@
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils'
-  import { base64Encode } from '@/utils/EncodeDecodeUtils'
   import PCF_TEMPLATE from './PCF_V1_0_Template.json'
 
   const router = useRouter()

@@ -1,7 +1,8 @@
 {
   "extends": "@tsconfig/node22/tsconfig.json",
   "include": [
-    "server/**/*.ts"
+    "server/**/*.ts",
+    "shared/**/*.ts"
   ],
   "compilerOptions": {
     "composite": true,
@@ -10,7 +11,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "dist-bff",
-    "rootDir": "server",
+    "rootDir": ".",
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.bff.tsbuildinfo",
     "lib": [
       "ES2023",

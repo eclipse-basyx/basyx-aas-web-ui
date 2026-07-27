@@ -1,8 +1,8 @@
 import type { LocationQuery, RouteLocationNormalizedGeneric, RouteLocationRaw } from 'vue-router'
+import { base64Decode } from '@/../shared/utils/EncodeDecodeUtils'
 import { useAASHandling } from '@/composables/AAS/AASHandling'
 import { useSMHandling } from '@/composables/AAS/SMHandling'
 import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient'
-import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
 export function useRouteHandling () {
   // Composables

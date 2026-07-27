@@ -1,4 +1,4 @@
-import { base64Encode } from '@/utils/EncodeDecodeUtils'
+import { base64Encode } from '@/../shared/utils/EncodeDecodeUtils'
 
 export interface AssetIdFilterOption {
   name: string

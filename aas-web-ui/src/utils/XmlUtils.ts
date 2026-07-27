@@ -1,4 +1,4 @@
-import { isEmptyString } from '@/utils/StringUtils'
+import { isEmptyString } from '@/../shared/utils/StringUtils'
 
 type XsValidationResult = [valid: boolean, errorMessage: string]
 
