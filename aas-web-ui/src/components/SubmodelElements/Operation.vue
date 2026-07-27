@@ -212,6 +212,7 @@
     const inoutputArguments = localOperationObject.value.inoutputVariables
     // console.log('executeOperation: ', inputVariables, inoutputVariables);
     const path = localOperationObject.value.path + '/invoke?async=true'
+    const initialDelay = 100 // 100 millisecond delay
     const timeout = 60 // 60 second timeout
     const content = {
       inputArguments: inputArguments,
@@ -235,11 +236,14 @@
     if (invokeResponse.success) {
       // AAS repository supports async operations
       if (invokeResponse.data.handleId) {
-        let delay = 0
+        let fetchCount = 0
         let status = 'Running'
         let statusResponse
+        let timeoutHit = false
 
-        while (delay < timeout * 1000 && status === 'Running') {
+        // delay is a geometric sequence with a_1 = initialDelay and q = 2, thus the sum for total delay is S(round) = a_1 * (2^q - 1)
+        while ((timeoutHit = (initialDelay * (Math.pow(2, fetchCount) - 1)) < timeout * 1000) && status === 'Running') {
+          const delay = fetchCount == 0 ? 0 : initialDelay * Math.pow(2, fetchCount - 1)
           await new Promise(r => setTimeout(r, delay))
           statusResponse = await getRequest(
             `${localOperationObject.value.path}/operation-status/${invokeResponse.data.handleId}`,
@@ -249,12 +253,12 @@
             { suppressStatuses: [400] },
           )
           status = statusResponse.data.executionState ?? 'Completed'
-          delay = Math.max(delay * 2, 100)
+          fetchCount++
         }
 
         loading.value = false
 
-        if (delay >= timeout * 1000) {
+        if (timeoutHit) {
           return errorHandler(`Timeout exceeded (${timeout}s)`, context)
         } else if (status === 'Failed') {
           return errorHandler(statusResponse.data.messages, context)
