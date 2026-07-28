@@ -7,7 +7,7 @@
     "dev": "vite",
     "prebuild": "run-s lint:check test:run type-check",
     "build": "vite build",
-    "bff:build": "tsc -p tsconfig.bff.json",
+    "bff:build": "tsc --build tsconfig.bff.json --force",
     "bff:build:watch": "tsc -p tsconfig.bff.json --watch --preserveWatchOutput",
     "bff:start": "node dist-bff/edc-bff/server.js",
     "bff:start:watch": "node --watch dist-bff/edc-bff/server.js",
