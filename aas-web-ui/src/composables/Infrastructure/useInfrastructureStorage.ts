@@ -630,9 +630,12 @@ export function useInfrastructureStorage (): {
           }
         }
 
+        const storedDefaultInfrastructureId
+          = storage.defaultInfrastructureId === undefined
+            ? storage.infrastructures.find(infra => infra.isDefault)?.id ?? null
+            : storage.defaultInfrastructureId
         const defaultInfrastructureUnchanged
-          = storage.defaultInfrastructureId !== undefined
-            && storage.defaultInfrastructureId === yamlConfig.defaultInfrastructureId
+          = storedDefaultInfrastructureId === yamlConfig.defaultInfrastructureId
 
         if (
           defaultInfrastructureUnchanged

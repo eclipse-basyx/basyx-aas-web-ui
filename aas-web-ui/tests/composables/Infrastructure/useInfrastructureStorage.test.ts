@@ -229,6 +229,30 @@ describe('useInfrastructureStorage.ts', () => {
     expect(result.selectedInfrastructureId).toBe(yamlFoo.id)
   })
 
+  it('preserves a legacy stored selection while the locked YAML default is unchanged', async () => {
+    const storedFoo = createInfrastructure('yaml_foo', false)
+    const storedBar = createInfrastructure('yaml_bar', true)
+
+    window.localStorage.setItem('basyxInfrastructures', JSON.stringify({
+      selectedInfrastructureId: storedFoo.id,
+      infrastructures: [storedFoo, storedBar],
+    }))
+
+    const yamlFoo = createInfrastructure('yaml_foo', false)
+    const yamlBar = createInfrastructure('yaml_bar', true)
+    mockDeps.loadInfrastructureConfig.mockResolvedValue({
+      infrastructures: [yamlFoo, yamlBar],
+      defaultInfrastructureId: yamlBar.id,
+    })
+
+    const { loadInfrastructuresFromStorage } = useInfrastructureStorage()
+    const result = await loadInfrastructuresFromStorage({
+      endpointConfigAvailable: false,
+    })
+
+    expect(result.selectedInfrastructureId).toBe(yamlFoo.id)
+  })
+
   it('persists Catena-X EDC proxy metadata only for Catena-X infrastructures', () => {
     const { saveInfrastructuresToStorage } = useInfrastructureStorage()
 
