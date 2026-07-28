@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
-import { ref } from 'vue'
+import { defineComponent, h, ref } from 'vue'
 import Treeview from '@/components/UIComponents/Treeview.vue'
 
 const state = vi.hoisted(() => ({
@@ -49,15 +49,21 @@ vi.mock('@/store/NavigationStore', () => ({
 
 const slotStub = { template: '<div><slot /></div>' }
 const listItemStub = {
-  template: '<div><slot name="prepend" /><slot /><slot name="append" /></div>',
+  name: 'VListItem',
+  template: '<div data-test="list-item"><slot name="prepend" /><slot /><slot name="append" /></div>',
 }
 const hoverStub = {
   template: '<div><slot :is-hovering="true" :props="{}" /></div>',
 }
-const menuStub = {
-  template: '<div><slot name="activator" :props="{}" /><slot :is-active="isActive" /></div>',
-  setup: () => ({ isActive: ref(true) }),
-}
+const menuStub = defineComponent({
+  setup (_props, { slots }) {
+    const isActive = ref(true)
+    return () => h('div', [
+      slots.activator?.({ props: {} }),
+      slots.default?.({ isActive }),
+    ])
+  },
+})
 
 function mountTreeview (kind: 'Template' | 'Instance') {
   return mount(Treeview, {
@@ -104,15 +110,16 @@ describe('Treeview Submodel conversion action', () => {
     expect(mountTreeview('Template').text()).not.toContain('Convert to Instance')
   })
 
-  it('closes the menu and emits the selected Submodel', () => {
+  it('closes the menu and emits the selected Submodel when the action is clicked', async () => {
     state.routeName = 'AASEditor'
     const wrapper = mountTreeview('Template')
     const item = wrapper.props('item')
-    const isActive = ref(true)
+    const action = wrapper.findAll('*')
+      .find(element => element.text() === 'Convert to Instance')
 
-    ;(wrapper.vm as any).openConversionDialog(item, isActive)
+    expect(action).toBeDefined()
+    await action!.trigger('click')
 
-    expect(isActive.value).toBe(false)
     expect(wrapper.emitted('convert-to-instance')).toEqual([[item]])
   })
 })

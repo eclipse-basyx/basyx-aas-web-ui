@@ -1,7 +1,7 @@
 <template>
-  <v-dialog v-model="conversionDialog" max-width="560px">
-    <v-card>
-      <v-card-title>Convert Submodel to Instance</v-card-title>
+  <v-dialog v-model="conversionDialog" max-width="560px" :persistent="conversionLoading">
+    <v-sheet border rounded="lg">
+      <v-card-title class="bg-cardHeader">Convert Submodel to Instance</v-card-title>
       <v-divider />
 
       <v-card-text v-if="submodel" class="pb-0">
@@ -17,21 +17,30 @@
         </p>
       </v-card-text>
 
+      <v-divider />
+
       <v-card-actions>
         <v-spacer />
-        <v-btn :disabled="conversionLoading" @click="conversionDialog = false">Cancel</v-btn>
 
         <v-btn
+          :disabled="conversionLoading"
+          rounded="lg"
+          text="Cancel"
+          @click="conversionDialog = false"
+        />
+
+        <v-btn
+          class="text-buttonText"
           color="primary"
           :loading="conversionLoading"
           prepend-icon="mdi-swap-horizontal"
-          variant="tonal"
+          rounded="lg"
+          text="Convert to Instance"
+          variant="flat"
           @click="confirmConversion"
-        >
-          Convert to Instance
-        </v-btn>
+        />
       </v-card-actions>
-    </v-card>
+    </v-sheet>
   </v-dialog>
 </template>
 
@@ -42,7 +51,6 @@
   import { useSMEHandling } from '@/composables/AAS/SMEHandling'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { appendHttpStatusFailureReason } from '@/composables/HttpStatusMessages'
-  import { useAASStore } from '@/store/AASDataStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { convertSubmodelTemplateToInstance } from '@/utils/AAS/SubmodelTemplateConversion'
 
@@ -59,28 +67,23 @@
 
   const {
     fetchSm,
-    putSubmodel,
+    putSubmodelAtPath,
     consumeLastRequestFailureStatus,
     consumeLastRequestFailureDetails,
   } = useSMRepositoryClient()
   const { fetchAndDispatchSme } = useSMEHandling()
 
-  const aasStore = useAASStore()
   const navigationStore = useNavigationStore()
 
   const conversionDialog = ref(props.modelValue)
   const conversionLoading = ref(false)
 
-  const selectedAAS = computed(() => aasStore.getSelectedAAS)
   const submodelName = computed(() => props.submodel?.idShort || props.submodel?.id || 'the selected Submodel')
 
   watch(
     () => props.modelValue,
     value => {
       conversionDialog.value = value
-      if (value) {
-        conversionLoading.value = false
-      }
     },
   )
 
@@ -92,16 +95,24 @@
   )
 
   async function confirmConversion (): Promise<void> {
-    if (!props.submodel?.path) {
+    if (conversionLoading.value) {
+      return
+    }
+
+    const target = {
+      id: typeof props.submodel?.id === 'string' ? props.submodel.id : '',
+      path: typeof props.submodel?.path === 'string' ? props.submodel.path : '',
+    }
+    if (!target.id || !target.path) {
       showConversionError('The Submodel endpoint is unavailable. Reload the tree and try again.')
       return
     }
 
     conversionLoading.value = true
     try {
-      const fetchedSubmodel = await fetchSm(props.submodel.path)
+      const fetchedSubmodel = await fetchSm(target.path)
       if (!fetchedSubmodel || Object.keys(fetchedSubmodel).length === 0) {
-        showConversionError('The latest Submodel could not be fetched from the repository.')
+        showConversionError(requestFailureDetails('The latest Submodel could not be fetched from the repository.'))
         return
       }
 
@@ -112,8 +123,12 @@
       }
 
       const submodel = submodelOrError.mustValue()
+      if (submodel.id !== target.id) {
+        showConversionError(requestFailureDetails('The latest Submodel could not be fetched from the repository.'))
+        return
+      }
       if (submodel.kind !== aasTypes.ModellingKind.Template) {
-        conversionDialog.value = false
+        closeDialogForTarget(target.path)
         navigationStore.dispatchTriggerTreeviewReload()
         navigationStore.dispatchSnackbar({
           status: true,
@@ -126,26 +141,27 @@
       }
 
       const removedQualifierCount = convertSubmodelTemplateToInstance(submodel)
-      const aasId = typeof selectedAAS.value?.id === 'string' ? selectedAAS.value.id : undefined
-      const updated = await putSubmodel(submodel, true, aasId)
+      const updated = await putSubmodelAtPath(submodel, target.path, true)
       if (!updated) {
-        const failureStatus = consumeLastRequestFailureStatus()
-        const failureDetails = consumeLastRequestFailureDetails()
-        const baseFailure = appendHttpStatusFailureReason(
-          `Submodel '${submodel.id}' was not updated in the repository.`,
-          failureStatus,
-        )
-        showConversionError(failureDetails ? `${baseFailure}\n${failureDetails}` : baseFailure)
+        showConversionError(requestFailureDetails(`Submodel '${submodel.id}' was not updated in the repository.`))
         return
       }
 
-      conversionDialog.value = false
+      closeDialogForTarget(target.path)
       navigationStore.dispatchTriggerTreeviewReload()
-      try {
-        await refreshSelectedNode()
-      } catch (error) {
-        console.warn('Failed to refresh the selected node after converting its Submodel:', error)
+      const selectedNodeRefreshed = await refreshSelectedNode(target.path)
+      if (!selectedNodeRefreshed) {
+        navigationStore.dispatchSnackbar({
+          status: true,
+          timeout: 8000,
+          color: 'warning',
+          btnColor: 'buttonText',
+          baseError: 'Submodel converted with refresh warning.',
+          extendedError: 'The Submodel was updated, but the selected node could not be refreshed. Reload the tree to display the latest data.',
+        })
+        return
       }
+
       navigationStore.dispatchSnackbar({
         status: true,
         timeout: 5000,
@@ -160,22 +176,39 @@
     }
   }
 
-  async function refreshSelectedNode (): Promise<void> {
+  async function refreshSelectedNode (submodelPath: string): Promise<boolean> {
     const selectedPath = route.query.path
-    const submodelPath = props.submodel?.path
     if (
       typeof selectedPath !== 'string'
-      || typeof submodelPath !== 'string'
       || (
         selectedPath !== submodelPath
         && !selectedPath.startsWith(`${submodelPath}/submodel-elements/`)
       )
     ) {
-      return
+      return true
     }
 
     const fragment = typeof route.query.fragment === 'string' ? route.query.fragment : undefined
-    await fetchAndDispatchSme(selectedPath, false, fragment)
+    try {
+      const refreshedNode = await fetchAndDispatchSme(selectedPath, false, fragment)
+      return Boolean(refreshedNode && Object.keys(refreshedNode).length > 0)
+    } catch (error) {
+      console.warn('Failed to refresh the selected node after converting its Submodel:', error)
+      return false
+    }
+  }
+
+  function closeDialogForTarget (targetPath: string): void {
+    if (props.submodel?.path === targetPath) {
+      conversionDialog.value = false
+    }
+  }
+
+  function requestFailureDetails (fallback: string): string {
+    const failureStatus = consumeLastRequestFailureStatus()
+    const failureDetails = consumeLastRequestFailureDetails()
+    const failure = appendHttpStatusFailureReason(fallback, failureStatus)
+    return failureDetails ? `${failure}\n${failureDetails}` : failure
   }
 
   function showConversionError (extendedError: string): void {
