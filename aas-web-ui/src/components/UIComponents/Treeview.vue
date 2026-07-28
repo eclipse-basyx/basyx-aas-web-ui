@@ -259,6 +259,17 @@
 
                         <v-list-item-subtitle>Edit Submodel</v-list-item-subtitle>
                       </v-list-item>
+                      <!-- Convert Submodel template to an instance -->
+                      <v-list-item
+                        v-if="item.kind === 'Template'"
+                        @click="openConversionDialog(item, isActive)"
+                      >
+                        <template #prepend>
+                          <v-icon size="x-small">mdi-swap-horizontal</v-icon>
+                        </template>
+
+                        <v-list-item-subtitle>Convert to Instance</v-list-item-subtitle>
+                      </v-list-item>
                       <!-- Delete Submodel -->
                       <v-list-item @click="openDeleteDialog(item, isActive)">
                         <template #prepend>
@@ -520,6 +531,7 @@
         :key="innerItem.selectionKey || innerItem.id || innerItem.path"
         :depth="depth + 1"
         :item="innerItem"
+        @convert-to-instance="$emit('convert-to-instance', $event)"
         @move-operation-variable="$emit('move-operation-variable', $event)"
         @open-add-operation-variable-dialog="$emit('open-add-operation-variable-dialog', $event)"
         @open-add-submodel-element-dialog="$emit('open-add-submodel-element-dialog', $event)"
@@ -572,6 +584,7 @@
 
   // Emits
   const emit = defineEmits<{
+    'convert-to-instance': [item: any]
     'open-edit-dialog': [item: any]
     'show-delete-dialog': [item: any]
     'open-add-submodel-element-dialog': [item: any]
@@ -795,6 +808,11 @@
   function openDeleteDialog (item: any, isActive: Ref<boolean>): void {
     isActive.value = false
     emit('show-delete-dialog', item)
+  }
+
+  function openConversionDialog (item: any, isActive: Ref<boolean>): void {
+    isActive.value = false
+    emit('convert-to-instance', item)
   }
 </script>
 

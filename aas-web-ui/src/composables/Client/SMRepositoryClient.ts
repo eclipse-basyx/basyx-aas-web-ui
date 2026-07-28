@@ -519,28 +519,19 @@ export function useSMRepositoryClient () {
     suppressRequestErrorMessage = false,
     aasId?: string,
   ): Promise<boolean> {
-    const failResponse = false
-
     if (shouldUseAasSuperpath()) {
       const path = getSuperpathSmEndpointById(submodel.id, aasId)
-      if (path === '') {
-        return failResponse
-      }
-
-      const jsonSubmodel = jsonization.toJsonable(submodel)
-      const context = 'updating Submodel via AAS superpath'
-      const disableMessage = suppressRequestErrorMessage
-      const headers = new Headers()
-      headers.append('Content-Type', 'application/json')
-      const body = JSON.stringify(jsonSubmodel)
-
-      const response = await putRequest(path, body, headers, context, disableMessage)
-      return response.success
+      return putSubmodelAtResolvedPath(
+        submodel,
+        path,
+        suppressRequestErrorMessage,
+        'updating Submodel via AAS superpath',
+      )
     }
 
     let smRepoUrl = submodelRepoUrl.value.trim()
     if (smRepoUrl === '') {
-      return failResponse
+      return false
     }
     if (smRepoUrl.endsWith('/')) {
       smRepoUrl = stripLastCharacter(smRepoUrl)
@@ -549,19 +540,44 @@ export function useSMRepositoryClient () {
       smRepoUrl += SUBMODEL_REPOSITORY_ENDPOINT_PATH
     }
 
-    // Convert Submodel to JSON
-    const jsonSubmodel = jsonization.toJsonable(submodel)
-    // console.log('putSubmodel()', jsonSubmodel);
+    return putSubmodelAtPath(
+      submodel,
+      smRepoUrl + '/' + base64Encode(submodel.id),
+      suppressRequestErrorMessage,
+    )
+  }
 
-    const context = 'updating Submodel'
-    const disableMessage = suppressRequestErrorMessage
-    const path = smRepoUrl + '/' + base64Encode(submodel.id)
+  async function putSubmodelAtPath (
+    submodel: aasTypes.Submodel,
+    smEndpoint: string,
+    suppressRequestErrorMessage = false,
+  ): Promise<boolean> {
+    return putSubmodelAtResolvedPath(
+      submodel,
+      smEndpoint,
+      suppressRequestErrorMessage,
+      'updating Submodel',
+    )
+  }
+
+  async function putSubmodelAtResolvedPath (
+    submodel: aasTypes.Submodel,
+    smEndpoint: string,
+    suppressRequestErrorMessage: boolean,
+    context: string,
+  ): Promise<boolean> {
+    const path = smEndpoint?.trim()
+    if (!path) {
+      return false
+    }
+
+    const jsonSubmodel = jsonization.toJsonable(submodel)
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
     const body = JSON.stringify(jsonSubmodel)
 
-    const response = await putRequest(path, body, headers, context, disableMessage)
-    return response.success
+    const response = await putRequest(path, body, headers, context, suppressRequestErrorMessage)
+    return ensureWriteSuccess(response)
   }
 
   /**
@@ -744,6 +760,7 @@ export function useSMRepositoryClient () {
     getSmEndpointById,
     postSubmodel,
     putSubmodel,
+    putSubmodelAtPath,
     deleteSubmodelById,
     deleteSubmodel,
     postSubmodelElement,

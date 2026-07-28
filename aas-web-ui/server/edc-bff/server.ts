@@ -9,6 +9,7 @@ import type {
 } from './types.js'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import { pathToFileURL } from 'node:url'
+import { EnvHttpProxyAgent, setGlobalDispatcher } from 'undici'
 import { authorizeRequest, createAuthError } from './auth.js'
 import { loadRuntimeConfig, redactProxyConfig } from './config.js'
 import {
@@ -21,6 +22,12 @@ import {
   fetchSubmodel,
   forwardJsonToEdc,
 } from './edcRequests.js'
+
+const proxyUrl = process.env.HTTPS_PROXY ?? process.env.HTTP_PROXY
+if (proxyUrl) {
+  setGlobalDispatcher(new EnvHttpProxyAgent())
+  console.log(`Catena-X EDC BFF using proxy: ${proxyUrl}`)
+}
 
 const apiBasePath = '/api/catena-x/edc'
 const maxBodyBytes = 64 * 1024

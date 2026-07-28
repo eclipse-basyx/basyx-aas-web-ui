@@ -446,4 +446,96 @@ describe('RequestHandling.ts', () => {
       }),
     )
   })
+
+  it('exposes status and raw response headers for an empty accepted POST response', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      new Response('', {
+        status: 202,
+        headers: { Location: '/operation-status/handle-1' },
+      }),
+    ) as unknown as typeof fetch
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { postRequest } = useRequestHandling()
+
+    const response = await postRequest('/operation/invoke-async', '{}', new Headers(), 'invoking Operation', false)
+
+    expect(response).toEqual(expect.objectContaining({
+      success: true,
+      status: 202,
+      raw: expect.any(Response),
+    }))
+    expect(response.raw.headers.get('Location')).toBe('/operation-status/handle-1')
+  })
+
+  it('does not mutate caller-owned headers when adding authorization', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response('', { status: 202 })) as unknown as typeof fetch
+    const requestHeaders = new Headers({ Accept: 'application/json' })
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { postRequest } = useRequestHandling()
+    await postRequest('/operation/invoke-async', '{}', requestHeaders, 'invoking Operation', false)
+
+    expect(requestHeaders.has('Authorization')).toBe(false)
+    const fetchHeaders = (vi.mocked(global.fetch).mock.calls[0][1]?.headers) as Headers
+    expect(fetchHeaders.get('Authorization')).toBe('Bearer token-1')
+  })
+
+  it('suppresses only configured unsupported POST statuses so a caller can fall back', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      Response.json([{ code: 405, text: 'Method not allowed' }], {
+        status: 405,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    ) as unknown as typeof fetch
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { postRequest } = useRequestHandling()
+
+    const response = await postRequest(
+      '/operation/invoke-async',
+      '{}',
+      new Headers(),
+      'invoking Operation',
+      false,
+      false,
+      { suppressStatuses: [404, 405, 501] },
+    )
+
+    expect(response).toEqual(expect.objectContaining({
+      success: false,
+      status: 405,
+      data: [{ code: 405, text: 'Method not allowed' }],
+    }))
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalled()
+  })
+
+  it('passes an AbortSignal to fetch and does not show an error for cancellation', async () => {
+    const controller = new AbortController()
+    global.fetch = vi.fn((_path, init) => new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => {
+        reject(new DOMException('The operation was aborted.', 'AbortError'))
+      })
+    })) as unknown as typeof fetch
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { getRequest } = useRequestHandling()
+    const request = getRequest(
+      '/operation/operation-status/handle-1',
+      'requesting operation status',
+      false,
+      new Headers(),
+      { signal: controller.signal },
+    )
+
+    controller.abort()
+    const response = await request
+
+    expect(response).toEqual({ success: false, aborted: true })
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/operation/operation-status/handle-1',
+      expect.objectContaining({ signal: controller.signal }),
+    )
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalled()
+  })
 })

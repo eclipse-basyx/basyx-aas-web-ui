@@ -225,6 +225,7 @@
                 class="root"
                 :depth="0"
                 :item="item"
+                @convert-to-instance="openConversionDialog"
                 @move-operation-variable="moveOperationVariable"
                 @open-add-operation-variable-dialog="openAddOperationVariableDialog"
                 @open-add-submodel-element-dialog="openAddSubmodelElementDialog"
@@ -389,6 +390,11 @@
   />
   <!-- Dialog for deleting SM/SME -->
   <DeleteDialog v-model="deleteDialog" :element="elementToDelete" />
+  <!-- Dialog for converting a Submodel template to an instance -->
+  <ConvertSubmodelToInstanceDialog
+    v-model="conversionDialog"
+    :submodel="submodelToConvert"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -398,6 +404,7 @@
   import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
+  import ConvertSubmodelToInstanceDialog from '@/components/EditorComponents/ConvertSubmodelToInstanceDialog.vue'
   import { isEmptyString } from '@/../shared/utils/StringUtils'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
   import { useOperationTreeMutation } from '@/composables/AAS/OperationTreeMutation'
@@ -476,6 +483,8 @@
   const submodelToEdit = ref<any | undefined>(undefined) // Variable to store the Submodel to be edited
   const deleteDialog = ref(false) // Variable to store if the Delete Dialog should be shown
   const elementToDelete = ref<any | undefined>(undefined) // Variable to store the Element to be deleted
+  const conversionDialog = ref(false)
+  const submodelToConvert = ref<any | undefined>(undefined)
   const elementToAddSME = ref<any | undefined>(undefined) // Variable to store the Element where the new SME is added inside
   const submodelElementPath = ref<string | undefined>(undefined) // Variable to store the Element where the new SME is added inside
   const submodelElementToEdit = ref<any | undefined>(undefined) // Variable to store the Element where the new SME is added inside
@@ -1029,6 +1038,11 @@
   function openDeleteDialog (element: any): void {
     deleteDialog.value = true
     elementToDelete.value = element
+  }
+
+  function openConversionDialog (submodel: any): void {
+    submodelToConvert.value = submodel
+    conversionDialog.value = true
   }
 
   function computePath (sme: any, parent: any, index: number): string {

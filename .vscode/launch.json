@@ -13,7 +13,7 @@
         "<node_internals>/**"
       ],
       "env": {
-        "CX_EDC_BFF_PORT": "3001",
+        "CX_EDC_BFF_PORT": "${input:bffPort}",
         "CX_EDC_BFF_AUTH_MODE": "none",
         "CX_EDC_DEFAULT_MANAGEMENT_URL": "${input:catenaXEdcManagementUrl}",
         "CX_EDC_DEFAULT_API_KEY": "${input:catenaXEdcApiKey}",
@@ -55,6 +55,12 @@
   ],
   "inputs": [
     {
+      "id": "bffPort",
+      "type": "promptString",
+      "description": "Port of the BFF, for example 3001",
+      "default": "3001"
+    },
+    {
       "id": "catenaXEdcManagementUrl",
       "type": "promptString",
       "description": "Consumer EDC Management API URL, for example https://<consumer-edc-host>/management"
@@ -68,7 +74,8 @@
     {
       "id": "catenaXEdcAllowedCounterPartyAddresses",
       "type": "promptString",
-      "description": "Allowed provider DSP endpoint prefixes, comma-separated or *"
+      "description": "Allowed provider DSP endpoint prefixes, comma-separated or *",
+      "default": "*"
     }
   ]
 }

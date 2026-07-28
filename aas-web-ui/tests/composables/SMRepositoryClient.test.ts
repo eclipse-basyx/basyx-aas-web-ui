@@ -103,6 +103,26 @@ describe('SMRepositoryClient.ts write contract', () => {
     )
   })
 
+  it('updates a complete Submodel at the exact resolved endpoint', async () => {
+    mockDeps.putRequest.mockResolvedValueOnce({ success: true })
+
+    const { useSMRepositoryClient } = await import('@/composables/Client/SMRepositoryClient')
+    const { putSubmodelAtPath } = useSMRepositoryClient()
+    const submodel = { id: 'submodel-id', kind: 'Instance' } as any
+
+    await expect(
+      putSubmodelAtPath(submodel, 'https://remote.example/submodels/resolved-id', true),
+    ).resolves.toBe(true)
+
+    expect(mockDeps.putRequest).toHaveBeenCalledWith(
+      'https://remote.example/submodels/resolved-id',
+      JSON.stringify(submodel),
+      expect.any(Headers),
+      'updating Submodel',
+      true,
+    )
+  })
+
   it('resolves identifiable Submodels through AAS superpath endpoints', async () => {
     mockState.selectedInfrastructure = { template: 'identifiable' }
     mockDeps.putRequest.mockResolvedValueOnce({ success: true })
