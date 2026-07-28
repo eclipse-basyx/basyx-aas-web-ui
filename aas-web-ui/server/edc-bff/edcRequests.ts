@@ -451,6 +451,13 @@ export async function forwardJsonToEdc (
       },
       data,
     }
+  } catch (error) {
+    console.error('Error forwarding JSON to EDC:', error)
+    return {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+      data: null,
+    }
   } finally {
     clearTimeout(timeout)
   }
@@ -481,6 +488,13 @@ export async function forwardGetToEdc (
         'content-type': response.headers.get('content-type') ?? 'application/json',
       },
       data,
+    }
+  } catch (error) {
+    console.error('Error forwarding GET to EDC:', error)
+    return {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+      data: null,
     }
   } finally {
     clearTimeout(timeout)
