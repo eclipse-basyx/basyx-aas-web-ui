@@ -157,7 +157,10 @@
         "bff:start"
       ],
       "options": {
-        "cwd": "${workspaceFolder}/aas-web-ui"
+        "cwd": "${workspaceFolder}/aas-web-ui",
+        "env": {
+          "CX_EDC_BFF_AUTH_MODE": "none"
+        }
       },
       "group": "none",
       "isBackground": true,
