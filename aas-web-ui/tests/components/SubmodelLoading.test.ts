@@ -1,6 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { nextTick, ref } from 'vue'
+import { defineComponent, nextTick, ref } from 'vue'
 import SubmodelList from '@/components/SubmodelList.vue'
 import SubmodelTree from '@/components/SubmodelTree.vue'
 
@@ -111,6 +111,24 @@ vi.mock('@/store/NavigationStore', () => ({
   }),
 }))
 
+const treeviewStub = defineComponent({
+  name: 'Treeview',
+  props: ['item'],
+  emits: ['convert-to-instance'],
+  template: '<button data-test="convert-submodel" @click="$emit(\'convert-to-instance\', item)">Convert</button>',
+})
+
+const conversionDialogStub = defineComponent({
+  name: 'ConvertSubmodelToInstanceDialog',
+  props: ['modelValue', 'submodel'],
+  emits: ['update:model-value'],
+  template: '<div />',
+})
+
+const slotStub = {
+  template: '<div><slot /></div>',
+}
+
 describe('Submodel loading invalidation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -147,5 +165,41 @@ describe('Submodel loading invalidation', () => {
     resolveLoad([])
     await flushPromises()
     expect((wrapper.vm as any)[loadingProperty]).toBe(false)
+  })
+
+  it('opens the conversion dialog for the Submodel emitted by the tree action', async () => {
+    const template = {
+      id: 'urn:example:template',
+      idShort: 'Template',
+      kind: 'Template',
+      modelType: 'Submodel',
+      path: 'https://example.test/submodels/template',
+    }
+    state.routeName.value = 'AASEditor'
+    mocks.fetchAasSmListById.mockResolvedValue([template])
+    const wrapper = mount(SubmodelTree, {
+      shallow: true,
+      global: {
+        stubs: {
+          'Treeview': treeviewStub,
+          'ConvertSubmodelToInstanceDialog': conversionDialogStub,
+          'v-container': slotStub,
+          'v-card': slotStub,
+          'v-card-title': slotStub,
+          'v-card-text': slotStub,
+        },
+      },
+    })
+    await flushPromises()
+
+    await wrapper.get('[data-test="convert-submodel"]').trigger('click')
+    await nextTick()
+
+    const dialog = wrapper.findComponent(conversionDialogStub)
+    expect(dialog.props('modelValue')).toBe(true)
+    expect(dialog.props('submodel')).toEqual(expect.objectContaining({
+      id: 'urn:example:template',
+      path: 'https://example.test/submodels/template',
+    }))
   })
 })

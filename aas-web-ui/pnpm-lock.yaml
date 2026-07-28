@@ -27,8 +27,8 @@ importers:
         specifier: ^3.4.6
         version: 3.4.6(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
       '@thatopen/components-front':
-        specifier: ^3.4.3
-        version: 3.4.3(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
+        specifier: ^3.4.4
+        version: 3.4.4(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
       '@thatopen/fragments':
         specifier: ^3.4.6
         version: 3.4.6(three@0.185.1)(web-ifc@0.0.77)
@@ -37,7 +37,7 @@ importers:
         version: 3.4.10
       '@thatopen/ui-obc':
         specifier: ^3.4.2
-        version: 3.4.2(@thatopen/components-front@3.4.3(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/components@3.4.6(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(three@0.185.1)(web-ifc@0.0.77)
+        version: 3.4.2(@thatopen/components-front@3.4.4(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/components@3.4.6(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(three@0.185.1)(web-ifc@0.0.77)
       '@vue-flow/background':
         specifier: ^1.3.2
         version: 1.3.2(@vue-flow/core@1.48.2(vue@3.5.40(typescript@6.0.3)))(vue@3.5.40(typescript@6.0.3))
@@ -72,8 +72,8 @@ importers:
         specifier: ^3.1.6
         version: 3.1.6
       js-yaml:
-        specifier: ^5.2.1
-        version: 5.2.1
+        specifier: ^5.2.2
+        version: 5.2.2
       leaflet:
         specifier: ^1.9.4
         version: 1.9.4
@@ -124,8 +124,8 @@ importers:
         specifier: ^0.3.44
         version: 0.3.44
       '@playwright/test':
-        specifier: ^1.61.1
-        version: 1.61.1
+        specifier: ^1.62.0
+        version: 1.62.0
       '@tsconfig/node22':
         specifier: ^22.0.5
         version: 22.0.5
@@ -172,8 +172,8 @@ importers:
         specifier: ^4.7.2
         version: 4.7.2(eslint@10.7.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3)
       eslint-plugin-jsdoc:
-        specifier: ^63.2.0
-        version: 63.2.0(eslint@10.7.0(supports-color@8.1.1))(supports-color@8.1.1)
+        specifier: ^63.2.2
+        version: 63.2.2(eslint@10.7.0(supports-color@8.1.1))(supports-color@8.1.1)
       eslint-plugin-vue:
         specifier: ^10.10.0
         version: 10.10.0(@stylistic/eslint-plugin@5.10.0(eslint@10.7.0(supports-color@8.1.1)))(@typescript-eslint/parser@8.62.1(eslint@10.7.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@10.7.0(supports-color@8.1.1))(vue-eslint-parser@10.4.1(eslint@10.7.0(supports-color@8.1.1))(supports-color@8.1.1))
@@ -395,8 +395,8 @@ packages:
   '@emnapi/wasi-threads@1.2.2':
     resolution: {integrity: sha512-c95qOXkHdydNKhscBTebqEC1CVAZpyqOfVfBzQ1qgzyl3gfeldUjIggDbIZgDKsHLgnsM+igH7TJ/eAasaVuMA==}
 
-  '@es-joy/jsdoccomment@0.88.0':
-    resolution: {integrity: sha512-GK/HL/claLLNo5KG705auIlZMwEtmn88ofSGuLsmVZwKBqMPJhW9DiznYNq07QEqz9BPtA3LBfYImtZmhVvRAw==}
+  '@es-joy/jsdoccomment@0.90.0':
+    resolution: {integrity: sha512-51x9KxyTAN6guZOCd+lmcDdkhgdMdP/6iMMtg9dyhCWDc3+iSUyoB7f/9WAM/yGHmGFq25Vd6bXRR7CZcB+tog==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
   '@es-joy/resolve.exports@1.2.0':
@@ -693,9 +693,9 @@ packages:
   '@plantuml/core@1.2026.6':
     resolution: {integrity: sha512-e+s8jtAKT6kb7yvOCXv0exXOp7FvyKYDcpv+aQrThwXUQgdTGP+fb9hPZQr7jbeEMuUHbxjH1HYLwNZZxw3hJg==}
 
-  '@playwright/test@1.61.1':
-    resolution: {integrity: sha512-8nKv6+0RJSL9FE4jYOEGXnPeM/Hg12qZpmqzZjRh3qM0Y7c3z1mrOTfFLids72RDQYVh9WpLEfR5WdpNX4fkig==}
-    engines: {node: '>=18'}
+  '@playwright/test@1.62.0':
+    resolution: {integrity: sha512-9zOJ6ZQRAena31MpOH9VSzIz8Ou3YJ/wtY/eQm5T2uhfhG7/U3COrMS8xOtUrZrp9OgdmzEnIYODye3nY1VqzA==}
+    engines: {node: '>=20'}
     hasBin: true
 
   '@polka/url@1.0.0-next.29':
@@ -828,8 +828,8 @@ packages:
       '@vue/composition-api':
         optional: true
 
-  '@thatopen/components-front@3.4.3':
-    resolution: {integrity: sha512-R/70QQPPtqZcMXOL72ZzI+Tj4IIJV4ehPvyHVTd0yZLFdW0zSKCQqSa7PpUqTVPDnmzFMkkXTnZFKwk6tMdCHQ==}
+  '@thatopen/components-front@3.4.4':
+    resolution: {integrity: sha512-uwJmT76CNaIU5fQuKK37OtV7qPyJdWs46oxRqGEPemhI84NudchPKZOCFdKLTlgLBvzXilPg6fszO5oB3wT5+A==}
     peerDependencies:
       '@thatopen/fragments': ~3.4.0
       three: '>=0.182.0'
@@ -839,6 +839,14 @@ packages:
     resolution: {integrity: sha512-CZjJWnmldZnw/RaoSeEkFpkgJBSBuzofqd7xh6jGQtS2vALbQkoKaRvQIPXdGuikmc/X89MxELo+OKw1S9QZ5Q==}
     peerDependencies:
       '@thatopen/fragments': ~3.4.0
+      camera-controls: '>=3.1.2'
+      three: '>=0.182.0'
+      web-ifc: '>=0.0.77'
+
+  '@thatopen/components@3.4.8':
+    resolution: {integrity: sha512-eil8zla7W45WI1Pf/xAcY4oQpmb7pDJnyN9jWP2rkuboGIol+RyGCo9XHR2GnL9Ckgb+Jd595oXhyiotQ8lVAA==}
+    peerDependencies:
+      '@thatopen/fragments': ~3.4.7
       camera-controls: '>=3.1.2'
       three: '>=0.182.0'
       web-ifc: '>=0.0.77'
@@ -963,8 +971,8 @@ packages:
     resolution: {integrity: sha512-ooCzJFaf+Hg+uG6fA3NRFGuFjlfNlDhBthbv4ZPU/0elCAFUfnyXUvf/WOpHz/jYwSmvU2GkR2LtyUfy1AxZ1Q==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@typescript-eslint/types@8.64.0':
-    resolution: {integrity: sha512-qjhfuTfLXjA4IOzXvz0rTjT01BqEiIgPoUeMwiEjnaHKJMTNo8rH5pYW1a2L/0Dnux2fPC85AeyJoWaGa8WxTA==}
+  '@typescript-eslint/types@8.65.0':
+    resolution: {integrity: sha512-JSSwWNy+H0E/01jJEM+hrX6N0OFDzFzeIhHFSAS01tlVaevpG8cFyYRPhS5yjGOvBUx3sqQHVMjCL1CAZZMxBg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@typescript-eslint/typescript-estree@8.62.1':
@@ -1478,11 +1486,11 @@ packages:
   dijkstrajs@1.0.3:
     resolution: {integrity: sha512-qiSlmBq9+BCdCA/L46dw8Uy93mloxsPSbwnm5yrKn2vMPiy8KyAskTF6zuV/j5BMsmOGZDPs7KjU+mjb670kfA==}
 
-  earcut@3.0.2:
-    resolution: {integrity: sha512-X7hshQbLyMJ/3RPhyObLARM2sNxxmRALLKx1+NVFFnQ9gKzmCrxm9+uLIAdBcvc8FNLpctqlQ2V6AE92Ol9UDQ==}
-
   earcut@3.2.2:
     resolution: {integrity: sha512-PDQoCIlNXct9iyAL03C1TbTURwQ+DGkJsNSW3Aai+VRrW4uA3XKDdV3OwQUAGsdZyVZwB9FjW5O/Jag36Y7NmA==}
+
+  earcut@3.2.3:
+    resolution: {integrity: sha512-vnS4AVwp1KHAF13i1vp1/2D5evWy3k5u/iW/B81QVsUZtV8cv2tU0b2VNFlqvh4kYwrFMDdjPCfAmfyJW9y14Q==}
 
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
@@ -1586,8 +1594,8 @@ packages:
     peerDependencies:
       eslint: ^9.0.0 || ^10.0.0
 
-  eslint-plugin-jsdoc@63.2.0:
-    resolution: {integrity: sha512-tccz9igEV5mTKVAwo/KwXqKP7ENqa3a+LpRFuEPAP3k/+SXG4T0sOvA+c2wwTD/TLNrH9MCW4LIu4xEExkJdzg==}
+  eslint-plugin-jsdoc@63.2.2:
+    resolution: {integrity: sha512-xCoHKeaRwAhZ+i2ZUY11few2Lmy9qpJLDsY139c4KNJLMSZYoFJ5UMYkDjdTkO9PfkFOKmVO+7i4Yjx+x7VQWQ==}
     engines: {node: ^22.13.0 || >=24}
     peerDependencies:
       eslint: ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0
@@ -1967,12 +1975,16 @@ packages:
     resolution: {integrity: sha512-1td788aAnnZ5qs7V2QIRl1owjtYpbKt749Y3xauqQgwIIGF/xXWz1wMTEBx5O3LK3lXLVuqXPdPxj2BoFHaW9Q==}
     hasBin: true
 
-  js-yaml@5.2.1:
-    resolution: {integrity: sha512-zfLtNfQqxVqq3uaTqSkh4x4hZw3KHobGUA0fJUj4wawW8bsQLTVqpHdXSIzidh7o+4lEW36tANuAGdaFx6Zgnw==}
+  js-yaml@5.2.2:
+    resolution: {integrity: sha512-dayzUzKkJ1MkuUtZglSebU43utNXH0OWQByK9rKOOuYIO8M5TV1y+n8ALMdG0rdzBnfNkOmZEqrURepb0ejqBw==}
     hasBin: true
 
   jsdoc-type-pratt-parser@7.2.0:
     resolution: {integrity: sha512-dh140MMgjyg3JhJZY/+iEzW+NO5xR2gpbDFKHqotCmexElVntw7GjWjt511+C/Ef02RU5TKYrJo/Xlzk+OLaTw==}
+    engines: {node: '>=20.0.0'}
+
+  jsdoc-type-pratt-parser@7.3.0:
+    resolution: {integrity: sha512-DoyJXo7x/n48M3NsGOs9QnEws0ft0tV3YsSgvWMNxz2hZtz+Q6fpqUD96lVYX4a+jcEkzHeFNDJOn68TzXfbdA==}
     engines: {node: '>=20.0.0'}
 
   jsdom@29.1.1:
@@ -2395,14 +2407,14 @@ packages:
   pkg-types@2.3.1:
     resolution: {integrity: sha512-y+ichcgc2LrADuhLNAx8DFjVfgz91pRxfZdI3UDhxHvcVEZsenLO+7XaU5vOp0u/7V/wZ+plyuQxtrDlZJ+yeg==}
 
-  playwright-core@1.61.1:
-    resolution: {integrity: sha512-h7Qlt6m4REp25qvIdvbDtVmD4LqVXfpRxhORv9L0jzETM05p4fuPJ3dKyuSXQxDSbXnmS79HAgi9589lGSpLkg==}
-    engines: {node: '>=18'}
+  playwright-core@1.62.0:
+    resolution: {integrity: sha512-nsNRyq0r2zsG8AcRHWknc9QRA5XCueC7gWMrs+Gx2tlZn9hcl8zudfh00lhJPY1DE7NmZ6bDsT9g2yey8mXljA==}
+    engines: {node: '>=20'}
     hasBin: true
 
-  playwright@1.61.1:
-    resolution: {integrity: sha512-DWnY5o3YbLWK4GovuAVwpqL+1VwGNdUGrRr++8j8PtQQzvAVZUIMjKQ90fY689sEJZJBbZVw1rXaOKSTitkzPQ==}
-    engines: {node: '>=18'}
+  playwright@1.62.0:
+    resolution: {integrity: sha512-Z14dG305dgaLu6foB1TXQagFiW8JfSUIUaUuPaKQ6NtBPKF1P/qXcqfh6c6K/icPqdy37JmjbiBXf6JNg6Sylw==}
+    engines: {node: '>=20'}
     hasBin: true
 
   pluralize@8.0.0:
@@ -2709,8 +2721,8 @@ packages:
   spdx-exceptions@2.5.0:
     resolution: {integrity: sha512-PiU42r+xO4UbUS1buo3LPJkjlO7430Xn5SVAhdpzzsPHsjbYVflnnFdATgabnLude+Cqu25p6N+g2lw/PFsa4w==}
 
-  spdx-expression-parse@4.0.0:
-    resolution: {integrity: sha512-Clya5JIij/7C6bRR22+tnGXbc4VKlibKSVj2iHvVeX5iMW7s1SIQlqu699JkODJJIhh/pUu8L0/VLh8xflD+LQ==}
+  spdx-expression-parse@5.0.0:
+    resolution: {integrity: sha512-vngmw3Rgn+o2arXNbnZaj5UtOEBuWBfvaI+Wc8GFfykIhA5/vdK9/Sp/XkLv63dykz2rxKDvKEHupF5P0FORcQ==}
 
   spdx-license-ids@3.0.23:
     resolution: {integrity: sha512-CWLcCCH7VLu13TgOH+r8p1O/Znwhqv/dbb6lqWy67G+pT1kHmeD/+V36AVb/vq8QMIQwVShJ6Ssl5FPh0fuSdw==}
@@ -3494,13 +3506,13 @@ snapshots:
       tslib: 2.8.1
     optional: true
 
-  '@es-joy/jsdoccomment@0.88.0':
+  '@es-joy/jsdoccomment@0.90.0':
     dependencies:
       '@types/estree': 1.0.9
-      '@typescript-eslint/types': 8.64.0
+      '@typescript-eslint/types': 8.65.0
       comment-parser: 1.4.7
       esquery: 1.7.0
-      jsdoc-type-pratt-parser: 7.2.0
+      jsdoc-type-pratt-parser: 7.3.0
 
   '@es-joy/resolve.exports@1.2.0': {}
 
@@ -3757,9 +3769,9 @@ snapshots:
 
   '@plantuml/core@1.2026.6': {}
 
-  '@playwright/test@1.61.1':
+  '@playwright/test@1.62.0':
     dependencies:
-      playwright: 1.61.1
+      playwright: 1.62.0
 
   '@polka/url@1.0.0-next.29': {}
 
@@ -3821,7 +3833,7 @@ snapshots:
   '@stylistic/eslint-plugin@5.10.0(eslint@10.7.0(supports-color@8.1.1))':
     dependencies:
       '@eslint-community/eslint-utils': 4.9.1(eslint@10.7.0(supports-color@8.1.1))
-      '@typescript-eslint/types': 8.64.0
+      '@typescript-eslint/types': 8.65.0
       eslint: 10.7.0(supports-color@8.1.1)
       eslint-visitor-keys: 4.2.1
       espree: 10.4.0
@@ -3842,17 +3854,27 @@ snapshots:
       vue: 3.5.40(typescript@6.0.3)
       vue-demi: 0.14.10(vue@3.5.40(typescript@6.0.3))
 
-  '@thatopen/components-front@3.4.3(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)':
+  '@thatopen/components-front@3.4.4(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)':
     dependencies:
-      '@thatopen/components': 3.4.6(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
+      '@thatopen/components': 3.4.8(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
       '@thatopen/fragments': 3.4.6(three@0.185.1)(web-ifc@0.0.77)
-      earcut: 3.0.2
+      earcut: 3.2.3
       three: 0.185.1
       web-ifc: 0.0.77
     transitivePeerDependencies:
       - camera-controls
 
   '@thatopen/components@3.4.6(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)':
+    dependencies:
+      '@thatopen/fragments': 3.4.6(three@0.185.1)(web-ifc@0.0.77)
+      camera-controls: 3.1.2(three@0.185.1)
+      fast-xml-parser: 5.7.2
+      jszip: 3.10.1
+      three: 0.185.1
+      three-mesh-bvh: 0.9.9(three@0.185.1)
+      web-ifc: 0.0.77
+
+  '@thatopen/components@3.4.8(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)':
     dependencies:
       '@thatopen/fragments': 3.4.6(three@0.185.1)(web-ifc@0.0.77)
       camera-controls: 3.1.2(three@0.185.1)
@@ -3871,10 +3893,10 @@ snapshots:
       three: 0.185.1
       web-ifc: 0.0.77
 
-  '@thatopen/ui-obc@3.4.2(@thatopen/components-front@3.4.3(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/components@3.4.6(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(three@0.185.1)(web-ifc@0.0.77)':
+  '@thatopen/ui-obc@3.4.2(@thatopen/components-front@3.4.4(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/components@3.4.6(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(three@0.185.1)(web-ifc@0.0.77)':
     dependencies:
       '@thatopen/components': 3.4.6(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
-      '@thatopen/components-front': 3.4.3(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
+      '@thatopen/components-front': 3.4.4(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
       '@thatopen/fragments': 3.4.6(three@0.185.1)(web-ifc@0.0.77)
       '@thatopen/ui': 3.4.10
       lit: 3.3.1
@@ -3979,7 +4001,7 @@ snapshots:
   '@typescript-eslint/project-service@8.62.1(supports-color@8.1.1)(typescript@6.0.3)':
     dependencies:
       '@typescript-eslint/tsconfig-utils': 8.62.1(typescript@6.0.3)
-      '@typescript-eslint/types': 8.64.0
+      '@typescript-eslint/types': 8.65.0
       debug: 4.4.3(supports-color@8.1.1)
       typescript: 6.0.3
     transitivePeerDependencies:
@@ -4008,7 +4030,7 @@ snapshots:
 
   '@typescript-eslint/types@8.62.1': {}
 
-  '@typescript-eslint/types@8.64.0': {}
+  '@typescript-eslint/types@8.65.0': {}
 
   '@typescript-eslint/typescript-estree@8.62.1(supports-color@8.1.1)(typescript@6.0.3)':
     dependencies:
@@ -4557,9 +4579,9 @@ snapshots:
 
   dijkstrajs@1.0.3: {}
 
-  earcut@3.0.2: {}
-
   earcut@3.2.2: {}
+
+  earcut@3.2.3: {}
 
   eastasianwidth@0.2.0: {}
 
@@ -4653,9 +4675,9 @@ snapshots:
     dependencies:
       eslint: 10.7.0(supports-color@8.1.1)
 
-  eslint-plugin-jsdoc@63.2.0(eslint@10.7.0(supports-color@8.1.1))(supports-color@8.1.1):
+  eslint-plugin-jsdoc@63.2.2(eslint@10.7.0(supports-color@8.1.1))(supports-color@8.1.1):
     dependencies:
-      '@es-joy/jsdoccomment': 0.88.0
+      '@es-joy/jsdoccomment': 0.90.0
       '@es-joy/resolve.exports': 1.2.0
       are-docs-informative: 0.0.2
       comment-parser: 1.4.7
@@ -4668,7 +4690,7 @@ snapshots:
       object-deep-merge: 2.0.1
       parse-imports-exports: 0.2.4
       semver: 7.8.5
-      spdx-expression-parse: 4.0.0
+      spdx-expression-parse: 5.0.0
       to-valid-identifier: 1.0.0
     transitivePeerDependencies:
       - supports-color
@@ -5077,11 +5099,13 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
-  js-yaml@5.2.1:
+  js-yaml@5.2.2:
     dependencies:
       argparse: 2.0.1
 
   jsdoc-type-pratt-parser@7.2.0: {}
+
+  jsdoc-type-pratt-parser@7.3.0: {}
 
   jsdom@29.1.1:
     dependencies:
@@ -5485,11 +5509,11 @@ snapshots:
       exsolve: 1.1.0
       pathe: 2.0.3
 
-  playwright-core@1.61.1: {}
+  playwright-core@1.62.0: {}
 
-  playwright@1.61.1:
+  playwright@1.62.0:
     dependencies:
-      playwright-core: 1.61.1
+      playwright-core: 1.62.0
     optionalDependencies:
       fsevents: 2.3.2
 
@@ -5753,7 +5777,7 @@ snapshots:
 
   spdx-exceptions@2.5.0: {}
 
-  spdx-expression-parse@4.0.0:
+  spdx-expression-parse@5.0.0:
     dependencies:
       spdx-exceptions: 2.5.0
       spdx-license-ids: 3.0.23
