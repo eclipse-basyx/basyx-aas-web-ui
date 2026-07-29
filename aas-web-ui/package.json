@@ -39,7 +39,7 @@
     "@mdi/font": "^7.4.47",
     "@plantuml/core": "1.2026.6",
     "@tanstack/vue-query": "^5.101.4",
-    "@thatopen/components": "^3.4.6",
+    "@thatopen/components": "^3.4.8",
     "@thatopen/components-front": "^3.4.4",
     "@thatopen/fragments": "^3.4.6",
     "@thatopen/ui": "^3.4.10",
@@ -78,7 +78,7 @@
     "@tsconfig/node22": "^22.0.5",
     "@types/leaflet": "^1.9.21",
     "@types/md5": "^2.3.6",
-    "@types/node": "^26.1.1",
+    "@types/node": "^26.1.2",
     "@types/prismjs": "^1.26.6",
     "@types/qrcode": "^1.5.6",
     "@types/three": "^0.185.1",
@@ -89,13 +89,13 @@
     "@vue/test-utils": "^2.4.11",
     "@vue/tsconfig": "^0.9.1",
     "esbuild": "^0.28.0",
-    "eslint": "^10.7.0",
+    "eslint": "^10.8.0",
     "eslint-config-vuetify": "^4.7.2",
-    "eslint-plugin-jsdoc": "^63.2.2",
+    "eslint-plugin-jsdoc": "^63.3.1",
     "eslint-plugin-vue": "^10.10.0",
-    "jsdom": "^29.1.1",
+    "jsdom": "^30.0.0",
     "npm-run-all2": "^9.0.2",
-    "pnpm": "11.16.0",
+    "pnpm": "11.17.0",
     "sass-embedded": "^1.100.0",
     "typescript": "^6.0.3",
     "undici": "^8.9.0",
@@ -107,5 +107,5 @@
     "vitest": "^4.1.10",
     "vue-tsc": "^3.3.8"
   },
-  "packageManager": "pnpm@11.16.0+sha512.b767e9a98fc87aec0f42daefcd0e84941c2cdb45d73c4e1e68860fb2bdfdbe032ab592105479e5e05c237f740c8a5ffdbbb52385797ddc2296745a1bbb883e8d"
+  "packageManager": "pnpm@11.17.0+sha512.cca3cea332ad254bb84145f966d19f4879615210346fc92c79a047f23a0d7b3cca3c3792f0076ba1f1831d277efbcf0a9119b31a9a60eca7fb3d6231f331ef72"
 }
