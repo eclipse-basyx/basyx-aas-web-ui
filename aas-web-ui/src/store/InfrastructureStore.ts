@@ -213,7 +213,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     return (allowLogout || needsReauthentication) && !isOAuth2ClientCredentials
   })
 
-  const getIsAuthenticated = computed(() => {
+  const getHasAuthenticationCredentials = computed(() => {
     const infra = getSelectedInfrastructure.value
     if (!infra || !infra.auth || infra.auth.securityType === 'No Authentication') {
       return false
@@ -743,7 +743,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     getIsAuthenticating,
     getIsTestingConnections,
     getIsLoginAvailable,
-    getIsAuthenticated,
+    getHasAuthenticationCredentials,
 
     // Actions
     isEndpointSet,

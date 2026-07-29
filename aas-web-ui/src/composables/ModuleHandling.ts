@@ -79,7 +79,7 @@ export function useModuleHandling (): ModuleHandling {
 
   function matchesNeedsAuthentication (moduleRoute: ModuleNavigationRoute): boolean {
     const needsAuthentication = moduleRoute?.meta?.needsAuthentication
-    if (needsAuthentication && !infrastructureStore.getIsAuthenticated) {
+    if (needsAuthentication && !infrastructureStore.getHasAuthenticationCredentials) {
       return false
     }
     return true

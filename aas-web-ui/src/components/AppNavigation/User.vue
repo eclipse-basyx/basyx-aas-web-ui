@@ -4,7 +4,7 @@
       <v-btn
         v-if="isAuthEnabled"
         v-bind="menuProps"
-        :icon="isAuthenticated ? 'mdi-account-lock' : 'mdi-lock-remove'"
+        :icon="hasAuthenticationCredentials ? 'mdi-account-lock' : 'mdi-lock-remove'"
         size="small"
         variant="tonal"
       />
@@ -25,7 +25,7 @@
       rounded="lg"
       style="border-style: solid; border-width: 1px"
     >
-      <v-list v-if="isAuthenticated" class="bg-navigationMenu" nav>
+      <v-list v-if="hasAuthenticationCredentials" class="bg-navigationMenu" nav>
         <v-list-item
           :active="false"
           class="py-2"
@@ -94,8 +94,8 @@
     return infrastructureStore.getSelectedInfrastructure
   })
 
-  const isAuthenticated = computed(() => {
-    return infrastructureStore.getIsAuthenticated
+  const hasAuthenticationCredentials = computed(() => {
+    return infrastructureStore.getHasAuthenticationCredentials
   })
 
   const authStatus = computed(() => {
@@ -106,7 +106,7 @@
       return 'Authentication disabled'
     }
 
-    if (!isAuthenticated.value) {
+    if (!hasAuthenticationCredentials.value) {
       return 'Not Authenticated'
     }
 

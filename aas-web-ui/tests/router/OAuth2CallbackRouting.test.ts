@@ -36,6 +36,7 @@ const mockDeps = vi.hoisted(() => ({
   infrastructureStore: {
     getInfrastructures: [] as Array<any>,
     getSelectedInfrastructure: null as any,
+    getHasAuthenticationCredentials: true,
     getIsLoginAvailable: true,
     waitForInitialization: vi.fn(),
     dispatchUpdateInfrastructure: vi.fn(),
@@ -106,6 +107,7 @@ describe('OAuth2 callback routing', () => {
 
     mockDeps.infrastructureStore.getInfrastructures = [mockDeps.infrastructure]
     mockDeps.infrastructureStore.getSelectedInfrastructure = mockDeps.infrastructure
+    mockDeps.infrastructureStore.getHasAuthenticationCredentials = true
     mockDeps.infrastructure.auth.oauth2.host = 'https://idp.example'
     mockDeps.infrastructureStore.waitForInitialization.mockResolvedValue(undefined)
     mockDeps.aasStore.getSelectedAAS = {}
@@ -113,6 +115,7 @@ describe('OAuth2 callback routing', () => {
     mockDeps.navigationStore.getRouteTransition = null
     mockDeps.envStore.getSingleAas = true
     mockDeps.envStore.getSingleSm = false
+    mockDeps.envStore.getStartPageRouteName = ''
     mockDeps.exchangeOAuth2AuthorizationCode.mockResolvedValue({
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
@@ -237,6 +240,42 @@ describe('OAuth2 callback routing', () => {
 
     expect(router.currentRoute.value.name).toBe('SMViewer')
     expect(router.currentRoute.value.query).not.toHaveProperty('path')
+  })
+
+  it('redirects direct navigation to an authentication-required module', async () => {
+    mockDeps.infrastructureStore.getHasAuthenticationCredentials = false
+    mockDeps.envStore.getSingleAas = false
+    const router = await createAppRouter()
+
+    await router.push('/modules/testvisibleonauthentication')
+
+    expect(router.currentRoute.value.name).toBe('AASViewer')
+    expect(mockDeps.navigationStore.dispatchSnackbar).toHaveBeenCalledWith(
+      expect.objectContaining({
+        baseError: 'Authentication required!',
+        kind: 'authentication-required',
+      }),
+    )
+  })
+
+  it('allows direct navigation to an authentication-required module with credentials', async () => {
+    const router = await createAppRouter()
+
+    await router.push('/modules/testvisibleonauthentication')
+
+    expect(router.currentRoute.value.name).toBe('TestVisibleOnAuthentication')
+  })
+
+  it('does not use an authentication-required module as the unauthenticated start route', async () => {
+    mockDeps.infrastructureStore.getHasAuthenticationCredentials = false
+    mockDeps.envStore.getSingleAas = false
+    mockDeps.envStore.getStartPageRouteName = 'TestVisibleOnAuthentication'
+    window.history.replaceState({}, '', '/')
+    const router = await createAppRouter()
+
+    await router.push('/')
+
+    expect(router.currentRoute.value.name).toBe('AASViewer')
   })
 
   it('rejects an issuer injected into the authorization response', async () => {

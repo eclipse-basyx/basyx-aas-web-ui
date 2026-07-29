@@ -13,6 +13,7 @@ import {
   getOAuth2CallbackUri,
 } from '@/composables/Auth/OAuth2Navigation'
 import { discoverOpenIdConfiguration, oidcIssuersMatch } from '@/composables/Auth/OpenIdConnect'
+import { useAuth } from '@/composables/Auth/useAuth'
 import { watchFeatureControlRoutes } from '@/composables/FeatureControl'
 import { useRouteHandling } from '@/composables/routeHandling'
 import AASEditor from '@/pages/AASEditor.vue'
@@ -349,8 +350,14 @@ export async function createAppRouter (): Promise<Router> {
     history: createWebHistory(base),
     routes,
   })
+  const { showLoginRequiredSnackbar } = useAuth(router)
 
   let infrastructureInitializationEnsured = false
+
+  const lacksRequiredAuthenticationCredentials = (meta: Record<string, unknown>): boolean => {
+    return meta.needsAuthentication === true
+      && !infrastructureStore.getHasAuthenticationCredentials
+  }
 
   const tryResolveRouteByName = (name: string): RouteRecordRaw | undefined => {
     const direct = findRouteByName(routes, name)
@@ -389,6 +396,9 @@ export async function createAppRouter (): Promise<Router> {
     // Module constraints / visibility
     const meta = (record.meta || {}) as Record<string, unknown>
     if (meta.isVisibleModule === false) {
+      return 'AASViewer'
+    }
+    if (lacksRequiredAuthenticationCredentials(meta)) {
       return 'AASViewer'
     }
     if (
@@ -931,6 +941,11 @@ export async function createAppRouter (): Promise<Router> {
     if (to.path === '/' && from.matched.length === 0) {
       const startRouteName = resolveStartRouteName(to.query as Record<string, unknown>)
       return { name: startRouteName, query: to.query, replace: true }
+    }
+
+    if (lacksRequiredAuthenticationCredentials(to.meta)) {
+      showLoginRequiredSnackbar()
+      return { name: 'AASViewer', replace: true }
     }
 
     saveUrlQueryForSameRoute(to, from)

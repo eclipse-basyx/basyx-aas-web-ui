@@ -26,6 +26,7 @@ describe('module manifest child routes', () => {
         isOnlyVisibleWithSelectedNode: false,
         needsInfrastructureEndpoints: ['CompanyLookup'],
         needsEnvVariables: ['COMPANY_LOOKUP_DOMAIN'],
+        needsAuthentication: true,
         supportedInfrastructureTemplates: ['full', 'mono-all'],
         preserveRouteQuery: true,
       },
@@ -47,6 +48,7 @@ describe('module manifest child routes', () => {
     expect(children[0].meta?.isOnlyVisibleWithSelectedAas).toBe(true)
     expect(children[0].meta?.needsInfrastructureEndpoints).toEqual(['CompanyLookup'])
     expect(children[0].meta?.needsEnvVariables).toEqual(['COMPANY_LOOKUP_DOMAIN'])
+    expect(children[0].meta?.needsAuthentication).toBe(true)
     expect(children[0].meta?.supportedInfrastructureTemplates).toEqual(['full', 'mono-all'])
     expect(children[0].meta?.preserveRouteQuery).toBe(true)
   })

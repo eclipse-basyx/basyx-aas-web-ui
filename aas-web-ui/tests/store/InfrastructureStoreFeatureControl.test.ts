@@ -244,7 +244,7 @@ describe('InfrastructureStore', () => {
         isAuthenticated: scenario.isAuthenticated,
       })
 
-      expect(store.getIsAuthenticated, scenario.name).toBe(scenario.expected)
+      expect(store.getHasAuthenticationCredentials, scenario.name).toBe(scenario.expected)
     }
   })
 })

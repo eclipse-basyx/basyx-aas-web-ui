@@ -22,7 +22,7 @@ const mockState = {
   selectedInfrastructure: ref<{ template: string } | null>({ template: 'full' }),
   setEnvVariables: ref<Array<string>>([]),
   setInfrastructureEndpoints: ref<Array<string>>([]),
-  isAuthenticated: ref(false),
+  hasAuthenticationCredentials: ref(false),
 }
 
 async function importUseModuleHandling () {
@@ -62,8 +62,8 @@ async function importUseModuleHandling () {
         return mockState.selectedInfrastructure.value
       },
       isEndpointSet: (componentKey: string) => mockState.setInfrastructureEndpoints.value.includes(componentKey),
-      get getIsAuthenticated () {
-        return mockState.isAuthenticated.value
+      get getHasAuthenticationCredentials () {
+        return mockState.hasAuthenticationCredentials.value
       },
     }),
   }))
@@ -89,7 +89,7 @@ describe('ModuleHandling.ts', () => {
     mockState.selectedInfrastructure.value = { template: 'full' }
     mockState.setEnvVariables.value = []
     mockState.setInfrastructureEndpoints.value = []
-    mockState.isAuthenticated.value = false
+    mockState.hasAuthenticationCredentials.value = false
     mockState.moduleRoutes.value = [
       createModuleRoute({
         path: '/modules/test-module',
@@ -304,7 +304,7 @@ describe('ModuleHandling.ts', () => {
   })
 
   it('excludes a module when needsAuthentication is true and user is not authenticated', async () => {
-    mockState.isAuthenticated.value = false
+    mockState.hasAuthenticationCredentials.value = false
     mockState.moduleRoutes.value = [
       createModuleRoute({
         path: '/modules/needs-auth',
@@ -326,7 +326,7 @@ describe('ModuleHandling.ts', () => {
   })
 
   it('includes a module when needsAuthentication is true and user is authenticated', async () => {
-    mockState.isAuthenticated.value = true
+    mockState.hasAuthenticationCredentials.value = true
     mockState.moduleRoutes.value = [
       createModuleRoute({
         path: '/modules/needs-auth',
@@ -349,7 +349,7 @@ describe('ModuleHandling.ts', () => {
   })
 
   it('includes a module when needsAuthentication is not set regardless of authentication state', async () => {
-    mockState.isAuthenticated.value = false
+    mockState.hasAuthenticationCredentials.value = false
     mockState.moduleRoutes.value = [
       createModuleRoute({
         path: '/modules/no-auth-requirement',
