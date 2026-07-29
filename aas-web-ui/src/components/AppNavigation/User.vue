@@ -102,27 +102,23 @@
     const infra = currentInfrastructure.value
     if (!infra) return 'Not Authenticated'
 
-    // Check if no authentication is configured
     if (!infra.auth || infra.auth.securityType === 'No Authentication') {
       return 'Authentication disabled'
     }
 
-    // Check if authenticated via token
-    if (infra.token?.accessToken && infra.isAuthenticated !== false) {
-      return 'Authenticated'
+    if (!isAuthenticated.value) {
+      return 'Not Authenticated'
     }
 
-    // Check if authenticated via basic auth
-    if (infra.auth?.basicAuth) {
+    if (infra.auth.securityType === 'Basic Authentication') {
       return 'Basic Authentication active'
     }
 
-    // Check legacy isAuthenticated flag
-    if (infra.isAuthenticated) {
-      return 'Authenticated'
+    if (infra.auth.securityType === 'Bearer Token') {
+      return 'Bearer Token active'
     }
 
-    return 'Not Authenticated'
+    return 'Authenticated'
   })
 
   const authStatusIcon = computed(() => {

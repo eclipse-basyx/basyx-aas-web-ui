@@ -219,22 +219,23 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       return false
     }
 
-    // Check if authenticated via token
-    if (infra.token?.accessToken && infra.isAuthenticated !== false) {
-      return true
+    switch (infra.auth.securityType) {
+      case 'Basic Authentication': {
+        return Boolean(
+          infra.auth.basicAuth
+          && (infra.auth.basicAuth.username.trim() !== '' || infra.auth.basicAuth.password !== ''),
+        )
+      }
+      case 'Bearer Token': {
+        return Boolean(infra.auth.bearerToken?.token.trim())
+      }
+      case 'OAuth2': {
+        return Boolean(infra.token?.accessToken) && infra.isAuthenticated !== false
+      }
+      default: {
+        return false
+      }
     }
-
-    // Check if authenticated via basic auth
-    if (infra.auth?.basicAuth) {
-      return true
-    }
-
-    // Check legacy isAuthenticated flag
-    if (infra.isAuthenticated) {
-      return true
-    }
-
-    return false
   })
 
   function getDefaultInfrastructureId (): string {
