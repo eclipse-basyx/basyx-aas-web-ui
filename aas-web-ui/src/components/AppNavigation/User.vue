@@ -4,7 +4,7 @@
       <v-btn
         v-if="isAuthEnabled"
         v-bind="menuProps"
-        :icon="isAuthenticated ? 'mdi-account-lock' : 'mdi-lock-remove'"
+        :icon="hasAuthenticationCredentials ? 'mdi-account-lock' : 'mdi-lock-remove'"
         size="small"
         variant="tonal"
       />
@@ -25,7 +25,7 @@
       rounded="lg"
       style="border-style: solid; border-width: 1px"
     >
-      <v-list v-if="isAuthenticated" class="bg-navigationMenu" nav>
+      <v-list v-if="hasAuthenticationCredentials" class="bg-navigationMenu" nav>
         <v-list-item
           :active="false"
           class="py-2"
@@ -94,53 +94,31 @@
     return infrastructureStore.getSelectedInfrastructure
   })
 
-  const isAuthenticated = computed(() => {
-    const infra = currentInfrastructure.value
-    if (!infra) return false
-
-    // Check if authenticated via token
-    if (infra.token?.accessToken && infra.isAuthenticated !== false) {
-      return true
-    }
-
-    // Check if authenticated via basic auth
-    if (infra.auth?.basicAuth) {
-      return true
-    }
-
-    // Check legacy isAuthenticated flag
-    if (infra.isAuthenticated) {
-      return true
-    }
-
-    return false
+  const hasAuthenticationCredentials = computed(() => {
+    return infrastructureStore.getHasAuthenticationCredentials
   })
 
   const authStatus = computed(() => {
     const infra = currentInfrastructure.value
     if (!infra) return 'Not Authenticated'
 
-    // Check if no authentication is configured
     if (!infra.auth || infra.auth.securityType === 'No Authentication') {
       return 'Authentication disabled'
     }
 
-    // Check if authenticated via token
-    if (infra.token?.accessToken && infra.isAuthenticated !== false) {
-      return 'Authenticated'
+    if (!hasAuthenticationCredentials.value) {
+      return 'Not Authenticated'
     }
 
-    // Check if authenticated via basic auth
-    if (infra.auth?.basicAuth) {
+    if (infra.auth.securityType === 'Basic Authentication') {
       return 'Basic Authentication active'
     }
 
-    // Check legacy isAuthenticated flag
-    if (infra.isAuthenticated) {
-      return 'Authenticated'
+    if (infra.auth.securityType === 'Bearer Token') {
+      return 'Bearer Token active'
     }
 
-    return 'Not Authenticated'
+    return 'Authenticated'
   })
 
   const authStatusIcon = computed(() => {

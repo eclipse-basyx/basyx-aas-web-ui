@@ -68,6 +68,7 @@ export interface ModuleNavigationRouteMeta {
   needsEnvVariables?: Array<string>
   needsInfrastructureEndpoints?: Array<BaSyxComponentKey>
   supportedInfrastructureTemplates?: InfrastructureTemplate[]
+  needsAuthentication?: boolean
   preserveRouteQuery?: boolean
 }
 
