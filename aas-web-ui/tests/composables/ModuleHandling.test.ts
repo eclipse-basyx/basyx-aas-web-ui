@@ -22,6 +22,7 @@ const mockState = {
   selectedInfrastructure: ref<{ template: string } | null>({ template: 'full' }),
   setEnvVariables: ref<Array<string>>([]),
   setInfrastructureEndpoints: ref<Array<string>>([]),
+  isAuthenticated: ref(false),
 }
 
 async function importUseModuleHandling () {
@@ -61,6 +62,9 @@ async function importUseModuleHandling () {
         return mockState.selectedInfrastructure.value
       },
       isEndpointSet: (componentKey: string) => mockState.setInfrastructureEndpoints.value.includes(componentKey),
+      get getIsAuthenticated () {
+        return mockState.isAuthenticated.value
+      },
     }),
   }))
 
@@ -85,6 +89,7 @@ describe('ModuleHandling.ts', () => {
     mockState.selectedInfrastructure.value = { template: 'full' }
     mockState.setEnvVariables.value = []
     mockState.setInfrastructureEndpoints.value = []
+    mockState.isAuthenticated.value = false
     mockState.moduleRoutes.value = [
       createModuleRoute({
         path: '/modules/test-module',
@@ -296,6 +301,73 @@ describe('ModuleHandling.ts', () => {
 
     expect(filteredRoutes).toHaveLength(1)
     expect(filteredRoutes[0].name).toBe('BaSyxComponentEndpointModule')
+  })
+
+  it('excludes a module when needsAuthentication is true and user is not authenticated', async () => {
+    mockState.isAuthenticated.value = false
+    mockState.moduleRoutes.value = [
+      createModuleRoute({
+        path: '/modules/needs-auth',
+        name: 'NeedsAuthModule',
+        meta: {
+          isDesktopModule: true,
+          isMobileModule: true,
+          isVisibleModule: true,
+          needsAuthentication: true,
+        },
+      }),
+    ]
+
+    const { useModuleHandling } = await importUseModuleHandling()
+    const { determineFilteredAndOrderedModuleRoutes } = useModuleHandling()
+    const filteredRoutes = determineFilteredAndOrderedModuleRoutes()
+
+    expect(filteredRoutes).toHaveLength(0)
+  })
+
+  it('includes a module when needsAuthentication is true and user is authenticated', async () => {
+    mockState.isAuthenticated.value = true
+    mockState.moduleRoutes.value = [
+      createModuleRoute({
+        path: '/modules/needs-auth',
+        name: 'NeedsAuthModule',
+        meta: {
+          isDesktopModule: true,
+          isMobileModule: true,
+          isVisibleModule: true,
+          needsAuthentication: true,
+        },
+      }),
+    ]
+
+    const { useModuleHandling } = await importUseModuleHandling()
+    const { determineFilteredAndOrderedModuleRoutes } = useModuleHandling()
+    const filteredRoutes = determineFilteredAndOrderedModuleRoutes()
+
+    expect(filteredRoutes).toHaveLength(1)
+    expect(filteredRoutes[0].name).toBe('NeedsAuthModule')
+  })
+
+  it('includes a module when needsAuthentication is not set regardless of authentication state', async () => {
+    mockState.isAuthenticated.value = false
+    mockState.moduleRoutes.value = [
+      createModuleRoute({
+        path: '/modules/no-auth-requirement',
+        name: 'NoAuthRequirementModule',
+        meta: {
+          isDesktopModule: true,
+          isMobileModule: true,
+          isVisibleModule: true,
+        },
+      }),
+    ]
+
+    const { useModuleHandling } = await importUseModuleHandling()
+    const { determineFilteredAndOrderedModuleRoutes } = useModuleHandling()
+    const filteredRoutes = determineFilteredAndOrderedModuleRoutes()
+
+    expect(filteredRoutes).toHaveLength(1)
+    expect(filteredRoutes[0].name).toBe('NoAuthRequirementModule')
   })
 
   it('reacts to route name and store changes when wrapped in computed by callers', async () => {

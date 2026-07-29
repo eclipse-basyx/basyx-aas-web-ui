@@ -213,6 +213,30 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     return (allowLogout || needsReauthentication) && !isOAuth2ClientCredentials
   })
 
+  const getIsAuthenticated = computed(() => {
+    const infra = getSelectedInfrastructure.value
+    if (!infra || !infra.auth || infra.auth.securityType === 'No Authentication') {
+      return false
+    }
+
+    // Check if authenticated via token
+    if (infra.token?.accessToken && infra.isAuthenticated !== false) {
+      return true
+    }
+
+    // Check if authenticated via basic auth
+    if (infra.auth?.basicAuth) {
+      return true
+    }
+
+    // Check legacy isAuthenticated flag
+    if (infra.isAuthenticated) {
+      return true
+    }
+
+    return false
+  })
+
   function getDefaultInfrastructureId (): string {
     // Look for infrastructure marked as default
     const defaultInfra = infrastructures.value.find(infra => infra.isDefault)
@@ -718,6 +742,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     getIsAuthenticating,
     getIsTestingConnections,
     getIsLoginAvailable,
+    getIsAuthenticated,
 
     // Actions
     isEndpointSet,
