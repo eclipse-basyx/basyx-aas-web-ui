@@ -20,5 +20,5 @@
     needsAuthentication: true,
   })
 
-  const moduleName = ref('TestVisibleOnRoutes')
+  const moduleName = ref('TestVisibleOnAuthentication')
 </script>
