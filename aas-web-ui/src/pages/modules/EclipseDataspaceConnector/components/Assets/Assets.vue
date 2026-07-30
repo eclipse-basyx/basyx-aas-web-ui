@@ -177,7 +177,7 @@
                       </v-tooltip>
 
                       <v-list-item-title class="text-primary">
-                        {{ item?.properties?.name || item?.properties?.description }}
+                        {{ item?.properties?.displayName || item?.properties?.name || item?.properties?.description }}
                       </v-list-item-title>
 
                       <v-list-item-subtitle class="text-listItemText">
