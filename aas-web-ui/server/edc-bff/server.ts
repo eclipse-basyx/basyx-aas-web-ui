@@ -9,7 +9,6 @@ import type {
 } from './types.js'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import { pathToFileURL } from 'node:url'
-import { EnvHttpProxyAgent, setGlobalDispatcher } from 'undici'
 import { authorizeRequest, createAuthError } from './auth.js'
 import { loadRuntimeConfig, redactProxyConfig } from './config.js'
 import {
@@ -23,10 +22,19 @@ import {
   forwardJsonToEdc,
 } from './edcRequests.js'
 
+// Proxy support (HTTP_PROXY/HTTPS_PROXY/NO_PROXY) for outgoing fetch() calls is
+// provided natively by Node.js when the process is started with
+// NODE_USE_ENV_PROXY=1 (or --use-env-proxy). See start.ts / entrypoint.sh.
 const proxyUrl = process.env.HTTPS_PROXY ?? process.env.HTTP_PROXY
 if (proxyUrl) {
-  setGlobalDispatcher(new EnvHttpProxyAgent())
-  console.log(`Catena-X EDC BFF using proxy: ${proxyUrl}`)
+  if (process.env.NODE_USE_ENV_PROXY === '1') {
+    console.log(`Catena-X EDC BFF using proxy: ${proxyUrl}`)
+  } else {
+    console.warn(
+      `Catena-X EDC BFF: HTTP(S)_PROXY is set (${proxyUrl}) but NODE_USE_ENV_PROXY=1 is not. `
+      + 'Outgoing EDC requests will not be routed through the proxy.',
+    )
+  }
 }
 
 const apiBasePath = '/api/catena-x/edc'

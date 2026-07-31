@@ -37,6 +37,9 @@ ENV NODE_ENV=production
 ENV CX_EDC_BFF_PORT=3001
 COPY --from=build-stage /app/dist-bff/edc-bff/server.bundle.cjs /usr/src/app/dist-bff/edc-bff/server.bundle.cjs
 EXPOSE 3001
+# NODE_USE_ENV_PROXY=1 makes Node.js natively honor HTTP_PROXY/HTTPS_PROXY/NO_PROXY
+# for outgoing EDC requests (requires Node.js >= 24.5.0 / 22.21.0).
+ENV NODE_USE_ENV_PROXY=1
 CMD ["node", "/usr/src/app/dist-bff/edc-bff/server.bundle.cjs"]
 
 # Production Stage

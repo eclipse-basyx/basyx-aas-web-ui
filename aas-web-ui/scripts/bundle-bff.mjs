@@ -1,8 +1,8 @@
 // Bundles the compiled Catena-X EDC BFF server into a single, self-contained
 // JavaScript file using esbuild's JS API (instead of the esbuild CLI binary).
 //
-// This avoids shipping node_modules (e.g. undici) to the Docker runtime
-// stages: the bundle embeds all of its runtime dependencies.
+// This avoids shipping node_modules to the Docker runtime stages: the bundle
+// embeds all of its runtime dependencies.
 import { build } from 'esbuild'
 
 await build({
@@ -11,8 +11,6 @@ await build({
   bundle: true,
   platform: 'node',
   target: 'node22',
-  // CommonJS output: undici (bundled as a runtime dependency) relies on
-  // dynamic `require()` of Node builtins, which only works reliably in CJS.
   format: 'cjs',
   packages: 'bundle',
   logLevel: 'info',

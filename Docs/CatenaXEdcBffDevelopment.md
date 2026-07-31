@@ -194,6 +194,7 @@ CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES=true
 | `CX_EDC_REQUEST_TIMEOUT_MS` | Upstream EDC request timeout, default `30000`. |
 | `CX_EDC_EDR_POLLING_ATTEMPTS` | EDR polling attempts, default `30`. |
 | `CX_EDC_EDR_POLLING_INTERVAL_MS` | Delay between EDR polling attempts in milliseconds, default `2000`. |
+| `NODE_USE_ENV_PROXY` | Set to `1` to make Node.js honor `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` for outgoing EDC requests. Already set by default in the Docker image; set it manually when running the BFF locally (e.g. `pnpm bff:start` / `pnpm bff:dev`) behind a proxy. |
 
 For multiple proxy IDs, use `CX_EDC_PROXY_CONFIG_JSON` or `CX_EDC_PROXY_CONFIG_FILE`:
 
