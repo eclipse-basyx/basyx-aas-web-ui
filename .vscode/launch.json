@@ -7,13 +7,15 @@
       "request": "launch",
       "cwd": "${workspaceFolder}/aas-web-ui",
       "program": "${workspaceFolder}/aas-web-ui/dist-bff/edc-bff/server.js",
+      "runtimeArgs": [
+        "${input:envProxyFlag}"
+      ],
       "preLaunchTask": "aas-web-ui: bff:build",
       "console": "integratedTerminal",
       "skipFiles": [
         "<node_internals>/**"
       ],
       "env": {
-        "NODE_USE_ENV_PROXY": "${input:useEnvProxy}",
         "CX_EDC_BFF_PORT": "${input:bffPort}",
         "CX_EDC_BFF_AUTH_MODE": "none",
         "CX_EDC_DEFAULT_MANAGEMENT_URL": "${input:catenaXEdcManagementUrl}",
@@ -56,10 +58,20 @@
   ],
   "inputs": [
     {
-      "id": "useEnvProxy",
-      "type": "promptString",
-      "description": "Use HTTP(S)_PROXY for BFF requests (1 to enable, 0 to disable)",
-      "default": "1"
+      "id": "envProxyFlag",
+      "type": "pickString",
+      "description": "Use HTTP(S)_PROXY for BFF requests",
+      "options": [
+        {
+          "label": "Disabled (direct requests)",
+          "value": "--no-use-env-proxy"
+        },
+        {
+          "label": "Enabled (use environment proxy)",
+          "value": "--use-env-proxy"
+        }
+      ],
+      "default": "--no-use-env-proxy"
     },
     {
       "id": "bffPort",

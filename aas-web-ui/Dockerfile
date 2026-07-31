@@ -36,7 +36,6 @@ ENV NODE_ENV=production
 ENV CX_EDC_BFF_PORT=3001
 COPY --from=build-stage /app/dist-bff /usr/src/app/dist-bff
 EXPOSE 3001
-ENV NODE_USE_ENV_PROXY=1
 CMD ["node", "/usr/src/app/dist-bff/edc-bff/server.js"]
 
 # Production Stage
