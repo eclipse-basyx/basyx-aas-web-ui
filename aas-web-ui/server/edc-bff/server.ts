@@ -24,7 +24,7 @@ import {
 
 // Proxy support (HTTP_PROXY/HTTPS_PROXY/NO_PROXY) for outgoing fetch() calls is
 // provided natively by Node.js when the process is started with
-// NODE_USE_ENV_PROXY=1 (or --use-env-proxy). See start.ts / entrypoint.sh.
+// NODE_USE_ENV_PROXY=1 (or --use-env-proxy). See package.json / entrypoint.sh.
 const proxyUrl = process.env.HTTPS_PROXY ?? process.env.HTTP_PROXY
 if (proxyUrl) {
   if (process.env.NODE_USE_ENV_PROXY === '1') {

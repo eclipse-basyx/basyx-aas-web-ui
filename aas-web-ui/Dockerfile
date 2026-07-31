@@ -26,7 +26,6 @@ COPY . .
 ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN pnpm build
 RUN pnpm bff:build
-RUN pnpm bff:bundle
 
 # Catena-X EDC BFF Stage
 FROM node:lts-slim AS edc-bff-stage
@@ -35,12 +34,12 @@ ARG HTTPS_PROXY
 WORKDIR /usr/src/app
 ENV NODE_ENV=production
 ENV CX_EDC_BFF_PORT=3001
-COPY --from=build-stage /app/dist-bff/edc-bff/server.bundle.cjs /usr/src/app/dist-bff/edc-bff/server.bundle.cjs
+COPY --from=build-stage /app/dist-bff /usr/src/app/dist-bff
 EXPOSE 3001
 # NODE_USE_ENV_PROXY=1 makes Node.js natively honor HTTP_PROXY/HTTPS_PROXY/NO_PROXY
 # for outgoing EDC requests (requires Node.js >= 24.5.0 / 22.21.0).
 ENV NODE_USE_ENV_PROXY=1
-CMD ["node", "/usr/src/app/dist-bff/edc-bff/server.bundle.cjs"]
+CMD ["node", "/usr/src/app/dist-bff/edc-bff/server.js"]
 
 # Production Stage
 FROM nginx:mainline-alpine-slim AS production-stage
@@ -55,8 +54,8 @@ RUN addgroup -g 1000 -S mygroup && \
   adduser -u 1000 -D -S -G mygroup myuser
 # Copy the dist folder from the build stage to the production stage
 COPY --from=build-stage /app/dist /usr/src/app/dist
-# Copy the bundled Catena-X EDC BFF so the UI container can optionally run it internally
-COPY --from=build-stage /app/dist-bff/edc-bff/server.bundle.cjs /usr/src/app/dist-bff/edc-bff/server.bundle.cjs
+# Copy the compiled Catena-X EDC BFF so the UI container can optionally run it internally
+COPY --from=build-stage /app/dist-bff /usr/src/app/dist-bff
 # Replace the default Nginx configuration file with a custom one
 COPY nginx.conf /etc/nginx/nginx.conf.template
 # Copy the entrypoint script and make it executable

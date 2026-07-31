@@ -256,7 +256,7 @@ if [ "$CX_EDC_BFF_ENABLED" = "true" ]; then
     echo "Starting integrated Catena-X EDC BFF on port $CX_EDC_BFF_PORT"
     # NODE_USE_ENV_PROXY=1 makes Node.js natively honor HTTP_PROXY/HTTPS_PROXY/NO_PROXY
     # for outgoing EDC requests (requires Node.js >= 24.5.0 / 22.21.0).
-    NODE_USE_ENV_PROXY=1 node /usr/src/app/dist-bff/edc-bff/server.bundle.cjs &
+    NODE_USE_ENV_PROXY=1 node /usr/src/app/dist-bff/edc-bff/server.js &
     BFF_PID="$!"
 fi
 
