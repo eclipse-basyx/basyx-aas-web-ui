@@ -9,7 +9,6 @@ import type {
 } from './types.js'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import { pathToFileURL } from 'node:url'
-import { EnvHttpProxyAgent, setGlobalDispatcher } from 'undici'
 import { authorizeRequest, createAuthError } from './auth.js'
 import { loadRuntimeConfig, redactProxyConfig } from './config.js'
 import {
@@ -23,10 +22,33 @@ import {
   forwardJsonToEdc,
 } from './edcRequests.js'
 
+process.env.NODE_USE_ENV_PROXY ??= '1'
+
 const proxyUrl = process.env.HTTPS_PROXY ?? process.env.HTTP_PROXY
 if (proxyUrl) {
-  setGlobalDispatcher(new EnvHttpProxyAgent())
-  console.log(`Catena-X EDC BFF using proxy: ${proxyUrl}`)
+  const redactedProxyUrl = redactCredentials(proxyUrl)
+  if (process.env.NODE_USE_ENV_PROXY === '1') {
+    console.log(`Catena-X EDC BFF using proxy: ${redactedProxyUrl}`)
+  } else {
+    console.warn(
+      `Catena-X EDC BFF: HTTP(S)_PROXY is set (${redactedProxyUrl}) but NODE_USE_ENV_PROXY has been `
+      + `explicitly disabled (${process.env.NODE_USE_ENV_PROXY}). `
+      + 'Outgoing EDC requests will not be routed through the proxy.',
+    )
+  }
+}
+
+function redactCredentials (url: string): string {
+  try {
+    const parsed = new URL(url)
+    if (parsed.username || parsed.password) {
+      parsed.username = '***'
+      parsed.password = '***'
+    }
+    return parsed.toString()
+  } catch {
+    return url.replace(/\/\/[^@/]+@/, '//***:***@')
+  }
 }
 
 const apiBasePath = '/api/catena-x/edc'

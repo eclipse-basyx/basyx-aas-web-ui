@@ -454,11 +454,15 @@ export async function forwardJsonToEdc (
       data,
     }
   } catch (error) {
+    if (isAbortError(error)) {
+      throw error
+    }
+
     console.error('Error forwarding JSON to EDC:', error)
     return {
       status: 500,
       headers: { 'content-type': 'application/json' },
-      data: null,
+      data: { error: describeFetchError(error) },
     }
   } finally {
     clearTimeout(timeout)
@@ -492,15 +496,30 @@ export async function forwardGetToEdc (
       data,
     }
   } catch (error) {
+    if (isAbortError(error)) {
+      throw error
+    }
+
     console.error('Error forwarding GET to EDC:', error)
     return {
       status: 500,
       headers: { 'content-type': 'application/json' },
-      data: null,
+      data: { error: describeFetchError(error) },
     }
   } finally {
     clearTimeout(timeout)
   }
+}
+
+function isAbortError (error: unknown): boolean {
+  return error instanceof Error && error.name === 'AbortError'
+}
+
+function describeFetchError (error: unknown): string {
+  if (error instanceof Error) {
+    return error.name === 'AbortError' ? 'Request to EDC timed out' : error.message
+  }
+  return 'Unknown error while forwarding request to EDC'
 }
 
 export function createHttpError (message: string, status: number): Error & { status: number } {

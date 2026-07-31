@@ -129,6 +129,11 @@ export interface InfrastructureConfig {
 export interface InfrastructureStorage {
   infrastructures: InfrastructureConfig[]
   selectedInfrastructureId: string | null
+  /**
+   * Default infrastructure when this storage entry was written.
+   * Used to distinguish a changed configured default from a persisted user selection.
+   */
+  defaultInfrastructureId?: string | null
 }
 
 export type UserData = {

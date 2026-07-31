@@ -213,6 +213,31 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     return (allowLogout || needsReauthentication) && !isOAuth2ClientCredentials
   })
 
+  const getHasAuthenticationCredentials = computed(() => {
+    const infra = getSelectedInfrastructure.value
+    if (!infra || !infra.auth || infra.auth.securityType === 'No Authentication') {
+      return false
+    }
+
+    switch (infra.auth.securityType) {
+      case 'Basic Authentication': {
+        return Boolean(
+          infra.auth.basicAuth
+          && (infra.auth.basicAuth.username.trim() !== '' || infra.auth.basicAuth.password !== ''),
+        )
+      }
+      case 'Bearer Token': {
+        return Boolean(infra.auth.bearerToken?.token.trim())
+      }
+      case 'OAuth2': {
+        return Boolean(infra.token?.accessToken) && infra.isAuthenticated !== false
+      }
+      default: {
+        return false
+      }
+    }
+  })
+
   function getDefaultInfrastructureId (): string {
     // Look for infrastructure marked as default
     const defaultInfra = infrastructures.value.find(infra => infra.isDefault)
@@ -718,6 +743,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     getIsAuthenticating,
     getIsTestingConnections,
     getIsLoginAvailable,
+    getHasAuthenticationCredentials,
 
     // Actions
     isEndpointSet,

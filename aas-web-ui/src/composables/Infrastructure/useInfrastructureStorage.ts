@@ -630,8 +630,16 @@ export function useInfrastructureStorage (): {
           }
         }
 
+        const storedDefaultInfrastructureId
+          = storage.defaultInfrastructureId === undefined
+            ? storage.infrastructures.find(infra => infra.isDefault)?.id ?? null
+            : storage.defaultInfrastructureId
+        const defaultInfrastructureUnchanged
+          = storedDefaultInfrastructureId === yamlConfig.defaultInfrastructureId
+
         if (
-          storage.selectedInfrastructureId
+          defaultInfrastructureUnchanged
+          && storage.selectedInfrastructureId
           && yamlConfig.infrastructures.some(infra => infra.id === storage.selectedInfrastructureId)
         ) {
           selectedId = storage.selectedInfrastructureId
@@ -949,6 +957,7 @@ export function useInfrastructureStorage (): {
       const storage: InfrastructureStorage = {
         infrastructures: infrastructures.map(infra => normalizeInfrastructureConfig(infra)),
         selectedInfrastructureId,
+        defaultInfrastructureId: infrastructures.find(infra => infra.isDefault)?.id ?? null,
       }
 
       localStorage.setItem('basyxInfrastructures', JSON.stringify(storage))
