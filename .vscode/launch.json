@@ -39,7 +39,7 @@
         "<node_internals>/**"
       ],
       "env": {
-        "CX_EDC_BFF_UPSTREAM_URL": "http://localhost:3001"
+        "CX_EDC_BFF_UPSTREAM_URL": "http://localhost:${input:bffPort}"
       }
     }
   ],
