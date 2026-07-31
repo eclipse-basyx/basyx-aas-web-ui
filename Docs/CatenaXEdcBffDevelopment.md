@@ -4,6 +4,8 @@ This guide explains how to run the Catena-X EDC backend-for-frontend (BFF) local
 
 The important security rule is: the browser only knows an EDC `proxyId`. The EDC Management API URL and `x-api-key` stay in the local BFF process.
 
+Local BFF development requires Node.js 24 LTS. Native environment proxy support is enabled by default by the provided pnpm scripts and VS Code launch configuration. Set `NODE_USE_ENV_PROXY=0` before running a pnpm script, or select `0` in the VS Code launch prompt, to disable it explicitly.
+
 ## 1. Configure a Catena-X Infrastructure
 
 Use a Catena-X infrastructure in `aas-web-ui/public/config/basyx-infra.yml` or configure it in the UI:
@@ -194,7 +196,7 @@ CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES=true
 | `CX_EDC_REQUEST_TIMEOUT_MS` | Upstream EDC request timeout, default `30000`. |
 | `CX_EDC_EDR_POLLING_ATTEMPTS` | EDR polling attempts, default `30`. |
 | `CX_EDC_EDR_POLLING_INTERVAL_MS` | Delay between EDR polling attempts in milliseconds, default `2000`. |
-| `NODE_USE_ENV_PROXY` | Set to `1` to make Node.js honor `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` for outgoing EDC requests. Already set by default in the Docker image; set it manually when running the BFF locally (e.g. `pnpm bff:start` / `pnpm bff:dev`) behind a proxy. |
+| `NODE_USE_ENV_PROXY` | Set to `1` before Node.js starts to honor `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` and their lowercase equivalents for outgoing EDC requests. The Docker image, pnpm scripts, and VS Code launch configuration default to `1` while preserving an explicit `0`. |
 
 For multiple proxy IDs, use `CX_EDC_PROXY_CONFIG_JSON` or `CX_EDC_PROXY_CONFIG_FILE`:
 

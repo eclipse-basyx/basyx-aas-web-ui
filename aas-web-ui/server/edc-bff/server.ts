@@ -22,20 +22,51 @@ import {
   forwardJsonToEdc,
 } from './edcRequests.js'
 
-process.env.NODE_USE_ENV_PROXY ??= '1'
-
-const proxyUrl = process.env.HTTPS_PROXY ?? process.env.HTTP_PROXY
-if (proxyUrl) {
-  const redactedProxyUrl = redactCredentials(proxyUrl)
-  if (process.env.NODE_USE_ENV_PROXY === '1') {
-    console.log(`Catena-X EDC BFF using proxy: ${redactedProxyUrl}`)
+const proxyUrls = getProxyUrls()
+if (proxyUrls.length > 0) {
+  const redactedProxyUrls = proxyUrls
+    .map(([name, url]) => `${name}=${redactCredentials(url)}`)
+    .join(', ')
+  if (isEnvProxyEnabled()) {
+    console.log(`Catena-X EDC BFF using proxy configuration: ${redactedProxyUrls}`)
   } else {
     console.warn(
-      `Catena-X EDC BFF: HTTP(S)_PROXY is set (${redactedProxyUrl}) but NODE_USE_ENV_PROXY has been `
-      + `explicitly disabled (${process.env.NODE_USE_ENV_PROXY}). `
+      `Catena-X EDC BFF: HTTP(S)_PROXY is set (${redactedProxyUrls}) but environment proxy support `
+      + 'was not enabled before Node.js started. '
       + 'Outgoing EDC requests will not be routed through the proxy.',
     )
   }
+}
+
+function getProxyUrls (): Array<[string, string]> {
+  const proxyUrls: Array<[string, string]> = []
+  const httpsProxy = process.env.https_proxy ?? process.env.HTTPS_PROXY
+  const httpProxy = process.env.http_proxy ?? process.env.HTTP_PROXY
+
+  if (httpsProxy) {
+    proxyUrls.push(['HTTPS_PROXY', httpsProxy])
+  }
+  if (httpProxy) {
+    proxyUrls.push(['HTTP_PROXY', httpProxy])
+  }
+
+  return proxyUrls
+}
+
+function isEnvProxyEnabled (): boolean {
+  let enabled = process.env.NODE_USE_ENV_PROXY === '1'
+  const nodeOptionArguments = process.env.NODE_OPTIONS
+    ?.match(/(?:^|\s)--(?:no-)?use-env-proxy(?:=(?:true|false))?(?=\s|$)/g)
+    ?.map(argument => argument.trim()) ?? []
+
+  for (const argument of [...nodeOptionArguments, ...process.execArgv]) {
+    const match = /^--(no-)?use-env-proxy(?:=(?:true|false))?$/.exec(argument)
+    if (match) {
+      enabled = match[1] !== 'no-'
+    }
+  }
+
+  return enabled
 }
 
 function redactCredentials (url: string): string {

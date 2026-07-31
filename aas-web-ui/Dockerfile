@@ -1,5 +1,5 @@
 # Build Stage
-FROM --platform=$BUILDPLATFORM node:lts-slim AS build-stage
+FROM --platform=$BUILDPLATFORM node:24-slim AS build-stage
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 ARG NODE_OPTIONS=--max-old-space-size=8192
@@ -28,7 +28,7 @@ RUN pnpm build
 RUN pnpm bff:build
 
 # Catena-X EDC BFF Stage
-FROM node:lts-slim AS edc-bff-stage
+FROM node:24-slim AS edc-bff-stage
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 WORKDIR /usr/src/app
@@ -46,7 +46,7 @@ ARG HTTPS_PROXY
 # Set working directory
 WORKDIR /usr/src/app
 # Install jq, gettext for envsubst, and nodejs for the optional integrated Catena-X EDC BFF
-RUN apk add --no-cache jq gettext nodejs
+RUN apk add --no-cache jq gettext 'nodejs~24'
 # Create a non-root user and group
 RUN addgroup -g 1000 -S mygroup && \
   adduser -u 1000 -D -S -G mygroup myuser

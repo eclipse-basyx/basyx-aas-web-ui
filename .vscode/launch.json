@@ -13,6 +13,7 @@
         "<node_internals>/**"
       ],
       "env": {
+        "NODE_USE_ENV_PROXY": "${input:useEnvProxy}",
         "CX_EDC_BFF_PORT": "${input:bffPort}",
         "CX_EDC_BFF_AUTH_MODE": "none",
         "CX_EDC_DEFAULT_MANAGEMENT_URL": "${input:catenaXEdcManagementUrl}",
@@ -54,6 +55,12 @@
     }
   ],
   "inputs": [
+    {
+      "id": "useEnvProxy",
+      "type": "promptString",
+      "description": "Use HTTP(S)_PROXY for BFF requests (1 to enable, 0 to disable)",
+      "default": "1"
+    },
     {
       "id": "bffPort",
       "type": "promptString",
