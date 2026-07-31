@@ -25,19 +25,19 @@ importers:
         version: 5.101.4(vue@3.5.40(typescript@6.0.3))
       '@thatopen/components':
         specifier: ^3.4.8
-        version: 3.4.8(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
+        version: 3.4.8(@thatopen/fragments@3.4.7(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
       '@thatopen/components-front':
         specifier: ^3.4.4
-        version: 3.4.4(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
+        version: 3.4.4(@thatopen/fragments@3.4.7(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
       '@thatopen/fragments':
-        specifier: ^3.4.6
-        version: 3.4.6(three@0.185.1)(web-ifc@0.0.77)
+        specifier: ^3.4.7
+        version: 3.4.7(three@0.185.1)(web-ifc@0.0.77)
       '@thatopen/ui':
         specifier: ^3.4.10
         version: 3.4.10
       '@thatopen/ui-obc':
         specifier: ^3.4.2
-        version: 3.4.2(@thatopen/components-front@3.4.4(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/components@3.4.8(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(three@0.185.1)(web-ifc@0.0.77)
+        version: 3.4.2(@thatopen/components-front@3.4.4(@thatopen/fragments@3.4.7(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/components@3.4.8(@thatopen/fragments@3.4.7(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/fragments@3.4.7(three@0.185.1)(web-ifc@0.0.77))(three@0.185.1)(web-ifc@0.0.77)
       '@vue-flow/background':
         specifier: ^1.3.2
         version: 1.3.2(@vue-flow/core@1.48.2(vue@3.5.40(typescript@6.0.3)))(vue@3.5.40(typescript@6.0.3))
@@ -178,14 +178,14 @@ importers:
         specifier: ^10.10.0
         version: 10.10.0(@stylistic/eslint-plugin@5.10.0(eslint@10.8.0(supports-color@8.1.1)))(@typescript-eslint/parser@8.62.1(eslint@10.8.0(supports-color@8.1.1))(supports-color@8.1.1)(typescript@6.0.3))(eslint@10.8.0(supports-color@8.1.1))(vue-eslint-parser@10.4.1(eslint@10.8.0(supports-color@8.1.1))(supports-color@8.1.1))
       jsdom:
-        specifier: ^30.0.0
-        version: 30.0.0
+        specifier: ^30.0.1
+        version: 30.0.1
       npm-run-all2:
-        specifier: ^9.0.2
-        version: 9.0.2
+        specifier: ^9.0.3
+        version: 9.0.3
       pnpm:
-        specifier: 11.17.0
-        version: 11.17.0
+        specifier: 11.18.0
+        version: 11.18.0
       sass-embedded:
         specifier: ^1.100.0
         version: 1.100.0
@@ -209,7 +209,7 @@ importers:
         version: 2.1.3(supports-color@8.1.1)(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))(vue@3.5.40(typescript@6.0.3))(vuetify@4.1.6)
       vitest:
         specifier: ^4.1.10
-        version: 4.1.10(@types/node@26.1.2)(@vitest/coverage-istanbul@4.1.10)(@vitest/ui@4.1.10)(jsdom@30.0.0)(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
+        version: 4.1.10(@types/node@26.1.2)(@vitest/coverage-istanbul@4.1.10)(@vitest/ui@4.1.10)(jsdom@30.0.1)(vite@8.1.5(@types/node@26.1.2)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
       vue-tsc:
         specifier: ^3.3.8
         version: 3.3.8(typescript@6.0.3)
@@ -1007,8 +1007,9 @@ packages:
       three: '>=0.182.0'
       web-ifc: '>=0.0.77'
 
-  '@thatopen/fragments@3.4.6':
-    resolution: {integrity: sha512-uoX5geHJyP5nzCibQxevGddOmB+xeObgnjFVMI6zKUyAzLBy/27lhJM9wFAjosBB6mtv1Dps5c6VVyJ0HnJ9MA==}
+  '@thatopen/fragments@3.4.7':
+    resolution: {integrity: sha512-tGuS7LVf0BkN5qQISG3VAGeMyqiZYwkvcHGYZ+eA5emr+v8aIjEKZvM/eYrGhJKUv/eZ+N5qeevEftfcmoBc+g==}
+    engines: {node: '>=20.11.0'}
     peerDependencies:
       three: '>=0.182.0'
       web-ifc: '>=0.0.77'
@@ -1372,6 +1373,13 @@ packages:
     resolution: {integrity: sha512-4Dj6M28JB+oAH8kFkTLUo+a2jwOFkuqb3yucU0CANcRRUbxS0cP0nZYCGjcc3BNXwRIsUVmDGgzawme7zvJHvg==}
     engines: {node: '>=12'}
 
+  ansi-styles@7.0.0:
+    resolution: {integrity: sha512-kKvt3m4uwzqL0wlkPd09CmljPJGOZZ4D0fP65sqFSvPkMRKhNi+74MgIJ5QxE6SxqB4t4KyUFGg8+n5zjo6hew==}
+    engines: {node: '>=22'}
+
+  anynum@1.0.1:
+    resolution: {integrity: sha512-N6//FLET/tXYNM/F6ABca1oH6fWB+KlTt909Le28WMDBk8oaT4vY17DCrwg2MvmuqUKt3Ni4N5dGJ/EoBgcO6A==}
+
   apexcharts@6.6.1:
     resolution: {integrity: sha512-958NXryBp9mtyqGQK1c8J2wzTHivc7L/lS/nsHOw13L52V2mGxbmjCfVu8oPHIbBCeBe26dYR2ZU1GjIqJkxIA==}
 
@@ -1646,9 +1654,6 @@ packages:
 
   dijkstrajs@1.0.3:
     resolution: {integrity: sha512-qiSlmBq9+BCdCA/L46dw8Uy93mloxsPSbwnm5yrKn2vMPiy8KyAskTF6zuV/j5BMsmOGZDPs7KjU+mjb670kfA==}
-
-  earcut@3.2.2:
-    resolution: {integrity: sha512-PDQoCIlNXct9iyAL03C1TbTURwQ+DGkJsNSW3Aai+VRrW4uA3XKDdV3OwQUAGsdZyVZwB9FjW5O/Jag36Y7NmA==}
 
   earcut@3.2.3:
     resolution: {integrity: sha512-vnS4AVwp1KHAF13i1vp1/2D5evWy3k5u/iW/B81QVsUZtV8cv2tU0b2VNFlqvh4kYwrFMDdjPCfAmfyJW9y14Q==}
@@ -2156,8 +2161,8 @@ packages:
     resolution: {integrity: sha512-uQu/fXVqVaMg6gM8/E5G5+eygVcZ1NV0Z51CvqhNa2bDWxvHMl484ETr6vph4oPyC+KUcbP/w2W2pewfCiR9aQ==}
     engines: {node: '>=20.0.0'}
 
-  jsdom@30.0.0:
-    resolution: {integrity: sha512-JQHfRGmmKmaZoUAvIgff5jjG/0SzTQlGz8c7t72KzBzo8ZULEjAjnYE0sNwBOUA4QtWwYE2xoYitg8NFsmiYxA==}
+  jsdom@30.0.1:
+    resolution: {integrity: sha512-52v7mUVUfNQVYYqE1lcdaymWL0njO7lTLUog6ZvW2U5KsbiLk/GnZlVJ+qx0xfNJZ6Gn+KSpPNE52vurbxZwrA==}
     engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
     peerDependencies:
       canvas: ^3.2.3
@@ -2433,8 +2438,8 @@ packages:
     resolution: {integrity: sha512-tdt4aFn9QamlhdN3HV2D2ccpBwO5/fyjjbXUxYA6uBjyekMZcZvDq0aSj9t5Jo+tih6AYFnt/cuIRn9013e0Uw==}
     engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
 
-  npm-run-all2@9.0.2:
-    resolution: {integrity: sha512-+dd4SO2jAlLE06OzmJKzIe6QvvjXezcbmobnh8usR0a8BzQCABTdqTXqVPji0ICOhSQpIIrkGd7IzNl5iDaRSA==}
+  npm-run-all2@9.0.3:
+    resolution: {integrity: sha512-BQAEdU1PtYc48qYRdghW2BVTQT3VqWCoFQmO87NlM1h1PYwMCKQpUWaNyB20V26caNzFsXQDfyOdznLlHCih6g==}
     engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0, npm: '>= 10'}
     hasBin: true
 
@@ -2597,8 +2602,8 @@ packages:
   pnpm-workspace-yaml@1.6.1:
     resolution: {integrity: sha512-yTeZntGWi8m9WNuhoVsP0DpFc4sC1U0+rr/qR6Zi9n2g3sxXY+JfccjXjjruNz96tM8I09yaJUA86doRnNLkbg==}
 
-  pnpm@11.17.0:
-    resolution: {integrity: sha512-zKPOozKtJUu4QUX5ZtGfSHlhUhA0b8kseaBH8joNezzKPDeS8AdrofGDHSd++88KkRmzGppg7Kf7PWIx8zHvcg==}
+  pnpm@11.18.0:
+    resolution: {integrity: sha512-M9g8d9qC9J+6g2klxvG4QRgewxMrZwY5vQEvcHX1x89jTF+HAUfBmq50ePrAHfCdiJLogEVIlu3SPumzN1dWPA==}
     engines: {node: '>=22.13'}
     hasBin: true
 
@@ -2865,8 +2870,8 @@ packages:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
 
-  shell-quote@1.8.4:
-    resolution: {integrity: sha512-VsC6n6vz1ihYYyZZwX7YZSF5l5x36ca17OC+a69h94YqB7X6XLwf+5MOgynYir2SLFUbl8gIYvBo8K8RoNQ6bQ==}
+  shell-quote@1.10.0:
+    resolution: {integrity: sha512-w1aiOKwKuRgtwAReIIj89puqg+I7GvX4IbLrvmhXbzQsj1+Zwi4VO3+fa6ZF91TWSjIxoEkKnMeHcLEODK5ZXA==}
     engines: {node: '>= 0.4'}
 
   siginfo@2.0.0:
@@ -4107,19 +4112,19 @@ snapshots:
       vue: 3.5.40(typescript@6.0.3)
       vue-demi: 0.14.10(vue@3.5.40(typescript@6.0.3))
 
-  '@thatopen/components-front@3.4.4(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)':
+  '@thatopen/components-front@3.4.4(@thatopen/fragments@3.4.7(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)':
     dependencies:
-      '@thatopen/components': 3.4.8(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
-      '@thatopen/fragments': 3.4.6(three@0.185.1)(web-ifc@0.0.77)
+      '@thatopen/components': 3.4.8(@thatopen/fragments@3.4.7(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
+      '@thatopen/fragments': 3.4.7(three@0.185.1)(web-ifc@0.0.77)
       earcut: 3.2.3
       three: 0.185.1
       web-ifc: 0.0.77
     transitivePeerDependencies:
       - camera-controls
 
-  '@thatopen/components@3.4.8(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)':
+  '@thatopen/components@3.4.8(@thatopen/fragments@3.4.7(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)':
     dependencies:
-      '@thatopen/fragments': 3.4.6(three@0.185.1)(web-ifc@0.0.77)
+      '@thatopen/fragments': 3.4.7(three@0.185.1)(web-ifc@0.0.77)
       camera-controls: 3.1.2(three@0.185.1)
       fast-xml-parser: 5.7.2
       jszip: 3.10.1
@@ -4127,20 +4132,20 @@ snapshots:
       three-mesh-bvh: 0.9.9(three@0.185.1)
       web-ifc: 0.0.77
 
-  '@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77)':
+  '@thatopen/fragments@3.4.7(three@0.185.1)(web-ifc@0.0.77)':
     dependencies:
-      earcut: 3.2.2
+      earcut: 3.2.3
       flatbuffers: 25.2.10
       lru-cache: 11.1.0
       pako: 2.1.0
       three: 0.185.1
       web-ifc: 0.0.77
 
-  '@thatopen/ui-obc@3.4.2(@thatopen/components-front@3.4.4(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/components@3.4.8(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(three@0.185.1)(web-ifc@0.0.77)':
+  '@thatopen/ui-obc@3.4.2(@thatopen/components-front@3.4.4(@thatopen/fragments@3.4.7(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/components@3.4.8(@thatopen/fragments@3.4.7(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77))(@thatopen/fragments@3.4.7(three@0.185.1)(web-ifc@0.0.77))(three@0.185.1)(web-ifc@0.0.77)':
     dependencies:
-      '@thatopen/components': 3.4.8(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
-      '@thatopen/components-front': 3.4.4(@thatopen/fragments@3.4.6(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
-      '@thatopen/fragments': 3.4.6(three@0.185.1)(web-ifc@0.0.77)
+      '@thatopen/components': 3.4.8(@thatopen/fragments@3.4.7(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
+      '@thatopen/components-front': 3.4.4(@thatopen/fragments@3.4.7(three@0.185.1)(web-ifc@0.0.77))(camera-controls@3.1.2(three@0.185.1))(three@0.185.1)(web-ifc@0.0.77)
+      '@thatopen/fragments': 3.4.7(three@0.185.1)(web-ifc@0.0.77)
       '@thatopen/ui': 3.4.10
       lit: 3.3.1
       three: 0.185.1
@@ -4328,7 +4333,7 @@ snapshots:
       magicast: 0.5.3
       obug: 2.1.3
       tinyrainbow: 3.1.0
-      vitest: 4.1.10(@types/node@26.1.2)(@vitest/coverage-istanbul@4.1.10)(@vitest/ui@4.1.10)(jsdom@30.0.0)(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
+      vitest: 4.1.10(@types/node@26.1.2)(@vitest/coverage-istanbul@4.1.10)(@vitest/ui@4.1.10)(jsdom@30.0.1)(vite@8.1.5(@types/node@26.1.2)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
     transitivePeerDependencies:
       - supports-color
 
@@ -4376,7 +4381,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.17
       tinyrainbow: 3.1.0
-      vitest: 4.1.10(@types/node@26.1.2)(@vitest/coverage-istanbul@4.1.10)(@vitest/ui@4.1.10)(jsdom@30.0.0)(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
+      vitest: 4.1.10(@types/node@26.1.2)(@vitest/coverage-istanbul@4.1.10)(@vitest/ui@4.1.10)(jsdom@30.0.1)(vite@8.1.5(@types/node@26.1.2)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
 
   '@vitest/utils@4.1.10':
     dependencies:
@@ -4589,6 +4594,10 @@ snapshots:
       color-convert: 2.0.1
 
   ansi-styles@6.2.3: {}
+
+  ansi-styles@7.0.0: {}
+
+  anynum@1.0.1: {}
 
   apexcharts@6.6.1: {}
 
@@ -4823,8 +4832,6 @@ snapshots:
   diff-sequences@29.6.3: {}
 
   dijkstrajs@1.0.3: {}
-
-  earcut@3.2.2: {}
 
   earcut@3.2.3: {}
 
@@ -5384,7 +5391,7 @@ snapshots:
 
   jsdoc-type-pratt-parser@8.0.0: {}
 
-  jsdom@30.0.0:
+  jsdom@30.0.1:
     dependencies:
       '@asamuzakjp/css-color': 6.0.5
       '@asamuzakjp/dom-selector': 8.3.0
@@ -5653,15 +5660,15 @@ snapshots:
 
   npm-normalize-package-bin@6.0.0: {}
 
-  npm-run-all2@9.0.2:
+  npm-run-all2@9.0.3:
     dependencies:
-      ansi-styles: 6.2.3
+      ansi-styles: 7.0.0
       cross-spawn: 7.0.6
       memorystream: 0.3.1
-      picomatch: 4.0.4
+      picomatch: 4.0.5
       pidtree: 1.0.0
       read-package-json-fast: 6.0.0
-      shell-quote: 1.8.4
+      shell-quote: 1.10.0
       which: 7.0.0
 
   nth-check@2.1.1:
@@ -5802,7 +5809,7 @@ snapshots:
     dependencies:
       yaml: 2.9.0
 
-  pnpm@11.17.0: {}
+  pnpm@11.18.0: {}
 
   postcss-selector-parser@7.1.4:
     dependencies:
@@ -6036,7 +6043,7 @@ snapshots:
 
   shebang-regex@3.0.0: {}
 
-  shell-quote@1.8.4: {}
+  shell-quote@1.10.0: {}
 
   siginfo@2.0.0: {}
 
@@ -6341,7 +6348,7 @@ snapshots:
       sass-embedded: 1.100.0
       yaml: 2.9.0
 
-  vitest@4.1.10(@types/node@26.1.2)(@vitest/coverage-istanbul@4.1.10)(@vitest/ui@4.1.10)(jsdom@30.0.0)(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0)):
+  vitest@4.1.10(@types/node@26.1.2)(@vitest/coverage-istanbul@4.1.10)(@vitest/ui@4.1.10)(jsdom@30.0.1)(vite@8.1.5(@types/node@26.1.2)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0)):
     dependencies:
       '@vitest/expect': 4.1.10
       '@vitest/mocker': 4.1.10(vite@8.1.5(@types/node@26.1.2)(esbuild@0.28.1)(sass-embedded@1.100.0)(sass@1.100.0)(yaml@2.9.0))
@@ -6367,7 +6374,7 @@ snapshots:
       '@types/node': 26.1.2
       '@vitest/coverage-istanbul': 4.1.10(supports-color@8.1.1)(vitest@4.1.10)
       '@vitest/ui': 4.1.10(vitest@4.1.10)
-      jsdom: 30.0.0
+      jsdom: 30.0.1
     transitivePeerDependencies:
       - msw
 
