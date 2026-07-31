@@ -26,8 +26,6 @@ COPY . .
 ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN pnpm build
 RUN pnpm bff:build
-# Bundle the BFF server (and its runtime deps, e.g. undici) into a single file,
-# so no node_modules need to be shipped to the runtime stages
 RUN pnpm bff:bundle
 
 # Catena-X EDC BFF Stage
