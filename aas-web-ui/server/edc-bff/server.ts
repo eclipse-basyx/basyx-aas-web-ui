@@ -22,6 +22,8 @@ import {
   forwardJsonToEdc,
 } from './edcRequests.js'
 
+process.env.NODE_USE_ENV_PROXY ??= '1'
+
 const proxyUrl = process.env.HTTPS_PROXY ?? process.env.HTTP_PROXY
 if (proxyUrl) {
   const redactedProxyUrl = redactCredentials(proxyUrl)
@@ -29,7 +31,8 @@ if (proxyUrl) {
     console.log(`Catena-X EDC BFF using proxy: ${redactedProxyUrl}`)
   } else {
     console.warn(
-      `Catena-X EDC BFF: HTTP(S)_PROXY is set (${redactedProxyUrl}) but NODE_USE_ENV_PROXY=1 is not. `
+      `Catena-X EDC BFF: HTTP(S)_PROXY is set (${redactedProxyUrl}) but NODE_USE_ENV_PROXY has been `
+      + `explicitly disabled (${process.env.NODE_USE_ENV_PROXY}). `
       + 'Outgoing EDC requests will not be routed through the proxy.',
     )
   }
