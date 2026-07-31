@@ -41,7 +41,7 @@
       "problemMatcher": "$tsc"
     },
     {
-      "label": "aas-web-ui: build & install",
+      "label": "aas-web-ui: install & build",
       "dependsOn": [
         "aas-web-ui: install",
         "aas-web-ui: build"
@@ -157,11 +157,30 @@
         "bff:start"
       ],
       "options": {
-        "cwd": "${workspaceFolder}/aas-web-ui"
+        "cwd": "${workspaceFolder}/aas-web-ui",
+        "env": {
+          "CX_EDC_BFF_AUTH_MODE": "none"
+        }
       },
       "group": "none",
       "isBackground": true,
       "problemMatcher": []
+    },
+    {
+      "label": "aas-web-ui: bff:dev",
+      "type": "shell",
+      "command": "pnpm",
+      "args": [
+        "bff:dev"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/aas-web-ui",
+        "env": {
+          "CX_EDC_BFF_AUTH_MODE": "none"
+        }
+      },
+      "group": "none",
+      "isBackground": true,
     },
     {
       "label": "aas-web-ui: test",
