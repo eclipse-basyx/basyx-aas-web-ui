@@ -22,18 +22,29 @@ import {
   forwardJsonToEdc,
 } from './edcRequests.js'
 
-// Proxy support (HTTP_PROXY/HTTPS_PROXY/NO_PROXY) for outgoing fetch() calls is
-// provided natively by Node.js when the process is started with
-// NODE_USE_ENV_PROXY=1 (or --use-env-proxy). See package.json / entrypoint.sh.
 const proxyUrl = process.env.HTTPS_PROXY ?? process.env.HTTP_PROXY
 if (proxyUrl) {
+  const redactedProxyUrl = redactCredentials(proxyUrl)
   if (process.env.NODE_USE_ENV_PROXY === '1') {
-    console.log(`Catena-X EDC BFF using proxy: ${proxyUrl}`)
+    console.log(`Catena-X EDC BFF using proxy: ${redactedProxyUrl}`)
   } else {
     console.warn(
-      `Catena-X EDC BFF: HTTP(S)_PROXY is set (${proxyUrl}) but NODE_USE_ENV_PROXY=1 is not. `
+      `Catena-X EDC BFF: HTTP(S)_PROXY is set (${redactedProxyUrl}) but NODE_USE_ENV_PROXY=1 is not. `
       + 'Outgoing EDC requests will not be routed through the proxy.',
     )
+  }
+}
+
+function redactCredentials (url: string): string {
+  try {
+    const parsed = new URL(url)
+    if (parsed.username || parsed.password) {
+      parsed.username = '***'
+      parsed.password = '***'
+    }
+    return parsed.toString()
+  } catch {
+    return url.replace(/\/\/[^@/]+@/, '//***:***@')
   }
 }
 
