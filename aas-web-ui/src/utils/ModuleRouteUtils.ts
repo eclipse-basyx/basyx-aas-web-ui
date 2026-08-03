@@ -17,6 +17,7 @@ export type ModuleRouteMeta = {
   preserveRouteQuery?: boolean
   needsInfrastructureEndpoints?: Array<BaSyxComponentKey>
   needsEnvVariables?: Array<string>
+  needsAuthentication?: boolean
 }
 
 export type ModuleChildRouteDefinition = {
@@ -55,6 +56,7 @@ export function buildModuleRouteMeta (
     supportedInfrastructureTemplates: moduleOptions?.supportedInfrastructureTemplates ?? [],
     needsInfrastructureEndpoints: moduleOptions?.needsInfrastructureEndpoints ?? [],
     needsEnvVariables: moduleOptions?.needsEnvVariables ?? [],
+    needsAuthentication: moduleOptions?.needsAuthentication ?? false,
     preserveRouteQuery,
   }
 }
@@ -140,6 +142,7 @@ export function buildValidatedModuleChildRoutes (moduleName: string,
                       : parentMeta.preserveRouteQuery,
         needsInfrastructureEndpoints: parentMeta.needsInfrastructureEndpoints,
         needsEnvVariables: parentMeta.needsEnvVariables,
+        needsAuthentication: parentMeta.needsAuthentication,
       },
       component: childRouteDefinition.component,
     }

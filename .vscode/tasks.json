@@ -157,16 +157,16 @@
         "bff:start"
       ],
       "options": {
-        "cwd": "${workspaceFolder}/aas-web-ui"
+        "cwd": "${workspaceFolder}/aas-web-ui",
+        "env": {
+          "CX_EDC_BFF_AUTH_MODE": "none"
+        }
       },
       "group": "none",
       "isBackground": true,
       "problemMatcher": []
     },
     {
-      // Rebuilds the BFF on every change under server/edc-bff (tsc --watch)
-      // and automatically restarts the server on top of the rebuilt output
-      // (node --watch). No manual re-run of bff:build/bff:start needed.
       "label": "aas-web-ui: bff:dev",
       "type": "shell",
       "command": "pnpm",
@@ -174,7 +174,10 @@
         "bff:dev"
       ],
       "options": {
-        "cwd": "${workspaceFolder}/aas-web-ui"
+        "cwd": "${workspaceFolder}/aas-web-ui",
+        "env": {
+          "CX_EDC_BFF_AUTH_MODE": "none"
+        }
       },
       "group": "none",
       "isBackground": true,

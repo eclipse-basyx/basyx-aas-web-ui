@@ -20,5 +20,5 @@
     visibleOnRoutes: ['AASEditor', 'SMEditor'],
   })
 
-  const moduleName = ref('TestVisibleForRoutes')
+  const moduleName = ref('TestVisibleOnRoutes')
 </script>

@@ -82,6 +82,16 @@
       <v-list v-if="invocationAvailable" class="bg-elevatedCard pa-0" nav>
         <v-list-item>
           <template #append>
+            <v-switch
+              v-model="invokeAsynchronously"
+              class="mr-3"
+              color="primary"
+              density="compact"
+              :disabled="loading"
+              hide-details
+              label="Run asynchronously"
+              title="Run in the background and poll for the result"
+            />
             <!-- Clear-Button -->
             <v-btn
               v-if="isEditable"
@@ -118,7 +128,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onMounted, ref, watch } from 'vue'
+  import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import { useRequestHandling } from '@/composables/RequestHandling'
   import { useNavigationStore } from '@/store/NavigationStore'
 
@@ -126,7 +136,7 @@
   const navigationStore = useNavigationStore()
 
   // Composables
-  const { postRequest, errorHandler } = useRequestHandling()
+  const { postRequest, getRequest, errorHandler } = useRequestHandling()
 
   const props = defineProps({
     operationObject: {
@@ -150,12 +160,16 @@
     { type: 'outputVariables', name: 'Output Variables', id: 2 },
   ])
   const loading = ref(false)
+  const invokeAsynchronously = ref(true)
   const variablesEditable = computed(() => props.isEditable && props.invocationAvailable)
+  let invocationController: AbortController | undefined
+  let invocationGeneration = 0
 
   // Watchers
   watch(
     () => props.operationObject,
     () => {
+      cancelInvocation()
       initOperation()
     },
     { deep: true },
@@ -165,12 +179,16 @@
     initOperation()
   })
 
+  onBeforeUnmount(() => {
+    cancelInvocation()
+  })
+
   // Function to initialize the Operation
   function initOperation (): void {
-    // create local copy of the Operation Object
-    const operationObjectCopy = { ...props.operationObject }
-    delete operationObjectCopy.parent
-    localOperationObject.value = operationObjectCopy
+    // Create an independent local copy without the circular tree parent links.
+    localOperationObject.value = JSON.parse(
+      JSON.stringify(props.operationObject, (key, value) => key === 'parent' ? undefined : value),
+    )
 
     // check if inputVariables, inoutputVariables or outputVariables exist (if not, create them as empty arrays)
     if (!localOperationObject.value.inputVariables) {
@@ -205,58 +223,319 @@
   }
 
   // Function to execute the Operation
-  function executeOperation (): void {
-    // create Array containing the Input Variables which will will be send to the Server
-    const inputArguments = localOperationObject.value.inputVariables
-    // create Array containing the In-/Output Variables which will will be send to the Server
-    const inoutputArguments = localOperationObject.value.inoutputVariables
-    // console.log('executeOperation: ', inputVariables, inoutputVariables);
-    const path = localOperationObject.value.path + '/invoke?async=true'
+  async function executeOperation (): Promise<void> {
+    cancelInvocation()
+
+    const generation = ++invocationGeneration
+    const controller = new AbortController()
+    invocationController = controller
+    const operation = {
+      path: localOperationObject.value.path,
+      modelType: localOperationObject.value.modelType,
+      idShort: localOperationObject.value.idShort,
+      inputArguments: localOperationObject.value.inputVariables,
+      inoutputArguments: localOperationObject.value.inoutputVariables,
+      invokeAsynchronously: invokeAsynchronously.value,
+    }
+    const timeoutSeconds = 60
+    const timeoutMilliseconds = timeoutSeconds * 1000
+    const deadline = performance.now() + timeoutMilliseconds
+    let timedOut = false
+    const markTimedOut = () => {
+      if (timedOut || !isCurrentInvocation(generation, controller)) {
+        return
+      }
+      timedOut = true
+      controller.abort()
+    }
+    const timeoutId = window.setTimeout(markTimedOut, timeoutMilliseconds)
     const content = {
-      inputArguments: inputArguments,
-      inoutputArguments: inoutputArguments,
-      clientTimeoutDuration: 'PT60S', // 60 second timeout
+      inputArguments: operation.inputArguments,
+      inoutputArguments: operation.inoutputArguments,
+      clientTimeoutDuration: `PT${timeoutSeconds}S`,
     }
     const body = JSON.stringify(content)
     const headers = new Headers()
-    headers.append('accept', 'application/json')
-    headers.append('Content-Type', 'application/json')
-    const context
-      = 'invoking ' + localOperationObject.value.modelType + ' "' + localOperationObject.value.idShort + '"'
-    const disableMessage = false
+    headers.set('Accept', 'application/json')
+    headers.set('Content-Type', 'application/json')
+    const context = `invoking ${operation.modelType} "${operation.idShort}"`
 
     loading.value = true
 
-    postRequest(path, body, headers, context, disableMessage).then((response: any) => {
-      loading.value = false
+    try {
+      if (!operation.invokeAsynchronously) {
+        await invokeSynchronously(
+          operation.path,
+          body,
+          headers,
+          context,
+          generation,
+          controller,
+          deadline,
+          markTimedOut,
+        )
+        return
+      }
 
-      if (response.success) {
-        // fill the operationVariables with the new values
-        if (response.data.inoutputArguments) {
-          localOperationObject.value.inoutputVariables = response.data.inoutputArguments
+      const invokeResponse = await postRequest(
+        `${operation.path}/invoke-async`,
+        body,
+        headers,
+        context,
+        false,
+        false,
+        {
+          signal: controller.signal,
+          suppressStatuses: [404, 405, 501],
+        },
+      )
+
+      if (
+        expireInvocationIfDeadlineReached(deadline, controller, markTimedOut)
+        || !isCurrentInvocation(generation, controller)
+      ) {
+        return
+      }
+
+      if (!invokeResponse.success) {
+        if ([404, 405, 501].includes(invokeResponse.status)) {
+          await invokeSynchronously(
+            operation.path,
+            body,
+            headers,
+            context,
+            generation,
+            controller,
+            deadline,
+            markTimedOut,
+          )
         }
+        return
+      }
 
-        if (response.data.outputArguments) {
-          localOperationObject.value.outputVariables = response.data.outputArguments
-        }
+      if (invokeResponse.status !== 202) {
+        errorHandler(`Expected HTTP 202 from the asynchronous invocation, received ${invokeResponse.status}.`, context)
+        return
+      }
 
-        // check the operationResult, if success is false, show an error message
-        if (response.data.operationResult && !response.data.operationResult.success) {
-          errorHandler(response.data.operationResult, context)
-        } else {
-          navigationStore.dispatchSnackbar({
-            status: true,
-            timeout: 4000,
-            color: 'success',
-            btnColor: 'buttonText',
-            text: 'Operation executed successfully.',
-          })
+      const location = invokeResponse.raw?.headers.get('Location')
+      if (!location) {
+        errorHandler('The asynchronous invocation response did not include a Location header.', context)
+        return
+      }
 
-          // Check if refreshWebUi qualifier is set (to true) and reload AASList and SubmodelTreeview
-          refreshWebUi()
+      let statusUrl: string
+      try {
+        statusUrl = resolveTrustedLocation(
+          location,
+          invokeResponse.raw?.url,
+          `${operation.path}/invoke-async`,
+        )
+      } catch (error) {
+        errorHandler(
+          error instanceof Error ? error.message : 'The asynchronous invocation returned an invalid Location header.',
+          context,
+        )
+        return
+      }
+      await pollOperationStatus(
+        statusUrl,
+        createRequestHeaders(),
+        context,
+        `requesting operation status for ${operation.modelType} "${operation.idShort}"`,
+        generation,
+        controller,
+        deadline,
+        markTimedOut,
+      )
+    } finally {
+      window.clearTimeout(timeoutId)
+      if (generation === invocationGeneration) {
+        invocationController = undefined
+        loading.value = false
+        if (timedOut) {
+          errorHandler(`Timeout exceeded (${timeoutSeconds}s)`, context)
         }
       }
+    }
+  }
+
+  async function invokeSynchronously (
+    operationPath: string,
+    body: string,
+    headers: Headers,
+    context: string,
+    generation: number,
+    controller: AbortController,
+    deadline: number,
+    markTimedOut: () => void,
+  ): Promise<void> {
+    const response = await postRequest(
+      `${operationPath}/invoke`,
+      body,
+      headers,
+      context,
+      false,
+      false,
+      { signal: controller.signal },
+    )
+
+    if (
+      !expireInvocationIfDeadlineReached(deadline, controller, markTimedOut)
+      && isCurrentInvocation(generation, controller)
+      && response.success
+    ) {
+      handleOperationResult(response.data, context)
+    }
+  }
+
+  async function pollOperationStatus (
+    statusUrl: string,
+    headers: Headers,
+    context: string,
+    statusContext: string,
+    generation: number,
+    controller: AbortController,
+    deadline: number,
+    markTimedOut: () => void,
+  ): Promise<void> {
+    let pollingDelay = 0
+
+    while (isCurrentInvocation(generation, controller)) {
+      const remainingTime = deadline - performance.now()
+      if (expireInvocationIfDeadlineReached(deadline, controller, markTimedOut)) {
+        return
+      }
+
+      if (pollingDelay > 0) {
+        await waitForNextPoll(Math.min(pollingDelay, remainingTime), controller.signal)
+        if (
+          expireInvocationIfDeadlineReached(deadline, controller, markTimedOut)
+          || !isCurrentInvocation(generation, controller)
+        ) {
+          return
+        }
+      }
+
+      const response = await getRequest(
+        statusUrl,
+        statusContext,
+        false,
+        headers,
+        { signal: controller.signal },
+      )
+
+      if (
+        expireInvocationIfDeadlineReached(deadline, controller, markTimedOut)
+        || !isCurrentInvocation(generation, controller)
+        || !response.success
+      ) {
+        return
+      }
+
+      const result = response.data
+      if (!result || typeof result !== 'object') {
+        errorHandler('The operation status response did not contain an OperationResult.', context)
+        return
+      }
+
+      if (result.success === false) {
+        errorHandler(result.messages ?? result, context)
+        return
+      }
+
+      if (result.executionState === 'Initiated' || result.executionState === 'Running') {
+        pollingDelay = pollingDelay === 0 ? 100 : Math.min(pollingDelay * 2, 5000)
+        continue
+      }
+
+      handleOperationResult(result, context)
+      return
+    }
+  }
+
+  function handleOperationResult (result: any, context: string): void {
+    if (!result || typeof result !== 'object') {
+      errorHandler('The server did not return an OperationResult.', context)
+      return
+    }
+
+    if (
+      (result.executionState !== undefined && result.executionState !== 'Completed')
+      || result.success === false
+    ) {
+      const state = result.executionState ?? 'unknown'
+      errorHandler(result.messages ?? `Operation finished with execution state "${state}".`, context)
+      return
+    }
+
+    if (result.inoutputArguments) {
+      localOperationObject.value.inoutputVariables = result.inoutputArguments
+    }
+    if (result.outputArguments) {
+      localOperationObject.value.outputVariables = result.outputArguments
+    }
+
+    navigationStore.dispatchSnackbar({
+      status: true,
+      timeout: 4000,
+      color: 'success',
+      btnColor: 'buttonText',
+      text: 'Operation executed successfully.',
     })
+    refreshWebUi()
+  }
+
+  function resolveTrustedLocation (location: string, responseUrl: string | undefined, requestUrl: string): string {
+    const baseUrl = responseUrl || new URL(requestUrl, window.location.href).href
+    const trustedOrigin = new URL(baseUrl).origin
+    const resolvedLocation = new URL(location, baseUrl)
+    if (!['http:', 'https:'].includes(resolvedLocation.protocol)) {
+      throw new Error('The asynchronous invocation returned a Location with an unsupported protocol.')
+    }
+    if (resolvedLocation.origin !== trustedOrigin) {
+      throw new Error('The asynchronous invocation returned a Location on a different origin.')
+    }
+    return resolvedLocation.href
+  }
+
+  function createRequestHeaders (): Headers {
+    return new Headers({ Accept: 'application/json' })
+  }
+
+  function expireInvocationIfDeadlineReached (
+    deadline: number,
+    controller: AbortController,
+    markTimedOut: () => void,
+  ): boolean {
+    if (performance.now() < deadline) {
+      return false
+    }
+    markTimedOut()
+    return controller.signal.aborted
+  }
+
+  function waitForNextPoll (delay: number, signal: AbortSignal): Promise<void> {
+    return new Promise(resolve => {
+      const finish = () => {
+        window.clearTimeout(timeoutId)
+        signal.removeEventListener('abort', finish)
+        resolve()
+      }
+      const timeoutId = window.setTimeout(finish, delay)
+      signal.addEventListener('abort', finish, { once: true })
+    })
+  }
+
+  function isCurrentInvocation (generation: number, controller: AbortController): boolean {
+    return generation === invocationGeneration && !controller.signal.aborted
+  }
+
+  function cancelInvocation (): void {
+    invocationGeneration++
+    invocationController?.abort()
+    invocationController = undefined
+    loading.value = false
   }
 
   function updateOperationVariable (e: any, variable: any): void {

@@ -110,7 +110,7 @@ function infrastructure (id: string, features: string[]): InfrastructureConfig {
   }
 }
 
-describe('InfrastructureStore feature-control lifecycle', () => {
+describe('InfrastructureStore', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.appliedOverrides.length = 0
@@ -148,5 +148,103 @@ describe('InfrastructureStore feature-control lifecycle', () => {
     store.dispatchUpdateInfrastructure({ ...store.getSelectedInfrastructure!, token: undefined })
     await nextTick()
     expect(mocks.appliedOverrides.at(-1)).toBeNull()
+  })
+
+  it('derives authentication from credentials for the active security type only', async () => {
+    const store = useInfrastructureStore()
+    await store.waitForInitialization()
+
+    const selectedInfrastructure = store.getSelectedInfrastructure!
+    const scenarios: Array<{
+      name: string
+      auth: InfrastructureConfig['auth']
+      token?: InfrastructureConfig['token']
+      isAuthenticated?: boolean
+      expected: boolean
+    }> = [
+      {
+        name: 'no authentication ignores stale credentials and state',
+        auth: {
+          securityType: 'No Authentication',
+          basicAuth: { username: 'stale-user', password: 'stale-password' },
+        },
+        token: { accessToken: 'stale-token' },
+        isAuthenticated: true,
+        expected: false,
+      },
+      {
+        name: 'basic authentication accepts configured credentials',
+        auth: {
+          securityType: 'Basic Authentication',
+          basicAuth: { username: 'user', password: '' },
+        },
+        expected: true,
+      },
+      {
+        name: 'basic authentication rejects empty credentials',
+        auth: {
+          securityType: 'Basic Authentication',
+          basicAuth: { username: '', password: '' },
+        },
+        expected: false,
+      },
+      {
+        name: 'bearer authentication accepts a configured token',
+        auth: {
+          securityType: 'Bearer Token',
+          bearerToken: { token: 'static-token' },
+        },
+        expected: true,
+      },
+      {
+        name: 'bearer authentication ignores stale basic credentials',
+        auth: {
+          securityType: 'Bearer Token',
+          basicAuth: { username: 'stale-user', password: 'stale-password' },
+          bearerToken: { token: ' '.repeat(3) },
+        },
+        expected: false,
+      },
+      {
+        name: 'OAuth2 accepts a valid runtime token',
+        auth: {
+          securityType: 'OAuth2',
+          oauth2: { host: 'https://idp.example', clientId: 'ui' },
+        },
+        token: { accessToken: 'oauth-token' },
+        expected: true,
+      },
+      {
+        name: 'OAuth2 rejects an invalidated runtime token',
+        auth: {
+          securityType: 'OAuth2',
+          oauth2: { host: 'https://idp.example', clientId: 'ui' },
+        },
+        token: { accessToken: 'oauth-token' },
+        isAuthenticated: false,
+        expected: false,
+      },
+      {
+        name: 'OAuth2 ignores stale credentials and authentication state without a token',
+        auth: {
+          securityType: 'OAuth2',
+          basicAuth: { username: 'stale-user', password: 'stale-password' },
+          oauth2: { host: 'https://idp.example', clientId: 'ui' },
+        },
+        isAuthenticated: true,
+        expected: false,
+      },
+    ]
+
+    for (const scenario of scenarios) {
+      store.dispatchUpdateInfrastructure({
+        ...selectedInfrastructure,
+        auth: scenario.auth,
+        token: scenario.token,
+        isAuthenticated: scenario.isAuthenticated,
+      })
+
+      expect(store.getHasAuthenticationCredentials, scenario.name).toBe(scenario.expected)
+    }
   })
 })

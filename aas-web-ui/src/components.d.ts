@@ -39,6 +39,7 @@ declare module 'vue' {
     ComponentVisualization: typeof import('./components/ComponentVisualization.vue')['default']
     ConceptDescription: typeof import('./components/UIComponents/ConceptDescription.vue')['default']
     ContactInformations_v1_0: typeof import('./components/Plugins/Submodels/ContactInformations_v1_0.vue')['default']
+    ConvertSubmodelToInstanceDialog: typeof import('./components/EditorComponents/ConvertSubmodelToInstanceDialog.vue')['default']
     DataSpecificationContent: typeof import('./components/UIComponents/DataSpecificationContent.vue')['default']
     DateTimeStampType: typeof import('./components/SubmodelElements/ValueTypes/DateTimeStampType.vue')['default']
     DateType: typeof import('./components/SubmodelElements/ValueTypes/DateType.vue')['default']

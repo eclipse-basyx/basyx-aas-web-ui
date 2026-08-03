@@ -77,6 +77,14 @@ export function useModuleHandling (): ModuleHandling {
     return needsInfrastructureEndpoints.every(componentKey => infrastructureStore.isEndpointSet(componentKey))
   }
 
+  function matchesNeedsAuthentication (moduleRoute: ModuleNavigationRoute): boolean {
+    const needsAuthentication = moduleRoute?.meta?.needsAuthentication
+    if (needsAuthentication && !infrastructureStore.getHasAuthenticationCredentials) {
+      return false
+    }
+    return true
+  }
+
   function isModuleRouteVisible (
     moduleRoute: ModuleNavigationRoute,
     currentRouteName: string | undefined,
@@ -105,6 +113,9 @@ export function useModuleHandling (): ModuleHandling {
       return false
     }
     if (!matchesNeedsInfrastructureEndpoints(moduleRoute)) {
+      return false
+    }
+    if (!matchesNeedsAuthentication(moduleRoute)) {
       return false
     }
     return (
