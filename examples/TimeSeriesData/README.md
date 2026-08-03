@@ -1,6 +1,6 @@
 # AAS TimeSeries
 
-This example includes a demo for the time series data plugin. It is designed to to be used with the time series data submodel template specified by the IDTA. The specification can be found [here](https://industrialdigitaltwin.org/wp-content/uploads/2023/03/IDTA-02008-1-1_Submodel_TimeSeriesData.pdf).
+This example includes a demo for the time series data plugin. It uses a BaSyx Go AAS Environment in `mono-all` mode with PostgreSQL, following the topology of the Combined Example. It is designed to be used with the time series data submodel template specified by the IDTA. The specification can be found [here](https://industrialdigitaltwin.org/wp-content/uploads/2023/03/IDTA-02008-1-1_Submodel_TimeSeriesData.pdf).
 
 The plugin supports the following segment types:
 
@@ -21,6 +21,8 @@ The plugin supports the following segment types:
 
 You can now access the AAS Web UI (http://localhost:3000) and InfluxDB UI (http://localhost:8086) in your browser.
 The username and password for InfluxDB are `admin` and `influxpassword`.
+
+The BaSyx Go configuration service initializes the PostgreSQL schema and exits before the AAS Environment starts. The AASX package in `aas/` is then preloaded into the Go environment. To reset the persisted BaSyx data, run `docker compose down -v` before starting the example again.
 
 ## Usage
 
