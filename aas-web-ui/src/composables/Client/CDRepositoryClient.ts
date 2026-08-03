@@ -1,10 +1,10 @@
 import type { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
 import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
 import { computed } from 'vue'
-import { base64Encode } from '@/utils/EncodeDecodeUtils'
-import { stripLastCharacter } from '@/utils/StringUtils'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
+import { base64Encode } from '@/utils/EncodeDecodeUtils'
+import { stripLastCharacter } from '@/utils/StringUtils'
 
 export const CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH = '/concept-descriptions'
 

@@ -1,4 +1,3 @@
-import { base64Decode } from '@/utils/EncodeDecodeUtils'
 import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling'
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
 import { useAASStore } from '@/store/AASDataStore'
@@ -8,6 +7,7 @@ import {
   resolveOperationLocator,
 } from '@/utils/AAS/OperationTreeUtils'
 import { formatDate } from '@/utils/DateUtils'
+import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
 export function useSMEHandling () {
   // Composables

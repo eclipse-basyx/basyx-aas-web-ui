@@ -2,12 +2,12 @@ import type { FeatureControlOverrides } from '@/utils/FeatureControl'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { nextTick, ref } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
-import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import {
   type FeatureControlToken,
   watchFeatureControlClaims,
   watchFeatureControlRoutes,
 } from '@/composables/FeatureControl'
+import { base64Encode } from '@/utils/EncodeDecodeUtils'
 
 const mappings = JSON.stringify([
   { target: 'features', mode: 'list', sources: ['/basyx_features'] },

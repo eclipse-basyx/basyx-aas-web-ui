@@ -160,7 +160,6 @@
   import { types as aasTypes, jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { computed, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
-  import { base64Decode } from '@/utils/EncodeDecodeUtils'
   import { useSMEHandling } from '@/composables/AAS/SMEHandling'
   import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
@@ -169,6 +168,7 @@
   import { clearOptionalIdShort } from '@/utils/AAS/OptionalPropertyUtils'
   import { getCreatedSubmodelElementPath } from '@/utils/AAS/SubmodelElementPathUtils'
   import { keyDown, keyUp } from '@/utils/EditorUtils'
+  import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
   const props = defineProps<{
     modelValue: boolean

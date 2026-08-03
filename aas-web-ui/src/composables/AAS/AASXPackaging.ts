@@ -2,8 +2,6 @@ import * as aasCore from '@aas-core-works/aas-core3.1-typescript'
 import { NewPackaging, type ReadWriteSeeker } from 'aas-package3-typescript'
 import { BaSyxEnvironment, serializeXml } from 'basyx-typescript-sdk'
 import mime from 'mime'
-import { base64Encode } from '@/utils/EncodeDecodeUtils'
-import { safeSegment } from '@/utils/StringUtils'
 import { useAASHandling } from '@/composables/AAS/AASHandling'
 import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling'
 import { getSerializationFormatConfig, type SerializationFormat } from '@/composables/AAS/SerializationFormats'
@@ -13,6 +11,8 @@ import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil'
+import { base64Encode } from '@/utils/EncodeDecodeUtils'
+import { safeSegment } from '@/utils/StringUtils'
 
 type JsonRecord = Record<string, unknown>
 

@@ -176,7 +176,6 @@
   import { computed, onMounted, ref, toRaw, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useDisplay } from 'vuetify'
-  import { base64Decode } from '@/utils/EncodeDecodeUtils'
   import CatenaXPartnerDialog from '@/components/AppNavigation/Settings/CatenaXPartnerDialog.vue'
   import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
@@ -210,6 +209,7 @@
     mergeCatenaXPartners,
     normalizeCatenaXPartners,
   } from '@/utils/CatenaXPartnerUtils'
+  import { base64Decode } from '@/utils/EncodeDecodeUtils'
   import { getCatenaXAccessMode } from '@/utils/InfrastructureUtils'
 
   defineOptions({

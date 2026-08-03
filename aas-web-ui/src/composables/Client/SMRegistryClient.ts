@@ -1,12 +1,12 @@
 import type { jsonization } from '@aas-core-works/aas-core3.1-typescript'
 import { computed } from 'vue'
-import { base64Encode } from '@/utils/EncodeDecodeUtils'
-import { stripLastCharacter } from '@/utils/StringUtils'
 import { type RequestErrorHandlingOptions, useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import * as descriptorTypes from '@/types/Descriptors'
 import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils'
+import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { removeNullValues } from '@/utils/generalUtils'
+import { stripLastCharacter } from '@/utils/StringUtils'
 
 export const SUBMODEL_REGISTRY_ENDPOINT_PATH = '/submodel-descriptors'
 

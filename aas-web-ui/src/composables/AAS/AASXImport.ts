@@ -2,13 +2,13 @@ import * as aasCore from '@aas-core-works/aas-core3.1-typescript'
 import { NewPackaging, type Part } from 'aas-package3-typescript'
 import { deserializeXml } from 'basyx-typescript-sdk'
 import mime from 'mime'
-import { safeSegment } from '@/utils/StringUtils'
 import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
 import { useCDRepositoryClient } from '@/composables/Client/CDRepositoryClient'
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { isComponentActiveForTemplate, usesSubmodelSuperpath } from '@/utils/InfrastructureUtils'
+import { safeSegment } from '@/utils/StringUtils'
 
 type JsonRecord = Record<string, unknown>
 

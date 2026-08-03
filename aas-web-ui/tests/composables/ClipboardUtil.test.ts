@@ -1,7 +1,7 @@
 import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { useClipboardUtil } from '@/composables/ClipboardUtil'
+import { base64Encode } from '@/utils/EncodeDecodeUtils'
 
 const mockState = vi.hoisted(() => ({
   routeQuery: {} as Record<string, unknown>,
