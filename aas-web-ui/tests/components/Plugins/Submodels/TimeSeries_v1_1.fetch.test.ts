@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 import TimeSeries from '@/components/Plugins/Submodels/TimeSeries_v1_1.vue'
 import { createTimeSeriesSubmodelData } from './fixtures/timeseries-sample-data'
 
@@ -73,6 +74,9 @@ function createWrapper () {
         'v-col': true,
         'v-text-field': true,
         'v-btn': true,
+        'v-empty-state': true,
+        'AutoRefreshSelector': true,
+        'TimeRangeSelector': true,
         'LineChart': true,
         'AreaChart': true,
         'ScatterChart': true,
@@ -82,6 +86,14 @@ function createWrapper () {
       },
     },
   })
+}
+
+function deferred<T> () {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>(resolvePromise => {
+    resolve = resolvePromise
+  })
+  return { promise, resolve }
 }
 
 describe('TimeSeries_v1_1.vue fetch behavior', () => {
@@ -94,6 +106,10 @@ describe('TimeSeries_v1_1.vue fetch behavior', () => {
     fetchCdsMock.mockResolvedValue(undefined)
     getRequestMock.mockResolvedValue({ success: true, data: '' })
     postRequestMock.mockResolvedValue({ success: true, data: '' })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('extracts InternalSegment values into chart datasets', () => {
@@ -126,6 +142,49 @@ describe('TimeSeries_v1_1.vue fetch behavior', () => {
     vm.fetchInternalData()
 
     expect(vm.timeSeriesValues).toEqual([{ time: 'existing', value: '1' }])
+  })
+
+  it('anchors a relative InternalSegment range to the latest record', () => {
+    const wrapper = createWrapper()
+    const vm = wrapper.vm as any
+
+    vm.selectedSegment = createTimeSeriesSubmodelData().submodelElements[0].value.find((segment: any) => segment.idShort === 'InternalSegment')
+    vm.timeVariable = { idShort: 'time' }
+    vm.yVariables = [{ idShort: 'AirQuality' }]
+    vm.timeRangeSelection = { mode: 'relative', value: 500, unit: 'milliseconds' }
+
+    vm.fetchInternalData()
+
+    expect(vm.timeSeriesValues).toEqual([[
+      {
+        time: '2026-05-13T19:15:54.345702712Z',
+        value: '264.02',
+      },
+    ]])
+    expect(vm.resolvedTimeRange.stop).toBe('2026-05-13T19:15:54.345Z')
+  })
+
+  it('commits an empty absolute range and emits its selection', () => {
+    const wrapper = createWrapper()
+    const vm = wrapper.vm as any
+
+    vm.selectedSegment = createTimeSeriesSubmodelData().submodelElements[0].value.find((segment: any) => segment.idShort === 'InternalSegment')
+    vm.timeVariable = { idShort: 'time' }
+    vm.yVariables = [{ idShort: 'AirQuality' }]
+    vm.timeRangeSelection = {
+      mode: 'absolute',
+      start: '2026-05-14T00:00:00.000Z',
+      stop: '2026-05-14T01:00:00.000Z',
+    }
+
+    vm.fetchInternalData()
+
+    expect(vm.hasFetched).toBe(true)
+    expect(vm.hasTimeSeriesValues).toBe(false)
+    expect(vm.timeSeriesValues).toEqual([[]])
+    expect(wrapper.emitted('new-options')?.at(-1)?.[0]).toEqual({
+      timeRange: vm.timeRangeSelection,
+    })
   })
 
   it('warns for HTML payload on ExternalSegment fetch', async () => {
@@ -171,12 +230,137 @@ describe('TimeSeries_v1_1.vue fetch behavior', () => {
     vm.selectedSegment = createTimeSeriesSubmodelData().submodelElements[0].value.find((segment: any) => segment.idShort === 'ExternalSegment')
     vm.timeVariable = { idShort: 'time' }
     vm.yVariables = [{ idShort: 'AirQuality' }]
+    vm.timeSeriesValues = [[{ time: '2026-05-13T19:15:00Z', value: 100 }]]
+    vm.hasFetched = true
 
     vm.fetchExternalData()
     await Promise.resolve()
 
     expect(dispatchSnackbarMock).toHaveBeenCalledTimes(1)
     expect(dispatchSnackbarMock.mock.calls[0][0].text).toContain('Content-Length: 0')
+    expect(vm.timeSeriesValues).toEqual([[]])
+    expect(vm.hasTimeSeriesValues).toBe(false)
+  })
+
+  it('ignores an older ExternalSegment response and preserves each click-time range', async () => {
+    const wrapper = createWrapper()
+    const vm = wrapper.vm as any
+    const firstRequest = deferred<any>()
+    const secondRequest = deferred<any>()
+
+    getRequestMock
+      .mockReturnValueOnce(firstRequest.promise)
+      .mockReturnValueOnce(secondRequest.promise)
+
+    vm.selectedSegment = createTimeSeriesSubmodelData().submodelElements[0].value.find((segment: any) => segment.idShort === 'ExternalSegment')
+    vm.timeVariable = { idShort: 'time' }
+    vm.yVariables = [{ idShort: 'AirQuality' }]
+    vm.timeRangeSelection = {
+      mode: 'absolute',
+      start: '2026-05-13T19:00:00.000Z',
+      stop: '2026-05-13T20:00:00.000Z',
+    }
+    vm.fetchExternalData()
+
+    vm.timeRangeSelection = {
+      mode: 'absolute',
+      start: '2026-05-13T20:00:00.000Z',
+      stop: '2026-05-13T21:00:00.000Z',
+    }
+    vm.fetchExternalData()
+
+    secondRequest.resolve({
+      success: true,
+      data: 'time,AirQuality\n2026-05-13T20:15:00.000Z,2',
+      raw: { headers: new Headers({ 'Content-Type': 'text/csv' }), redirected: false },
+    })
+    await vi.waitFor(() => expect(vm.timeSeriesValues[0]?.[0]?.value).toBe(2))
+
+    firstRequest.resolve({
+      success: true,
+      data: 'time,AirQuality\n2026-05-13T19:15:00.000Z,1',
+      raw: { headers: new Headers({ 'Content-Type': 'text/csv' }), redirected: false },
+    })
+    await Promise.resolve()
+
+    expect(vm.timeSeriesValues[0][0].value).toBe(2)
+    expect(wrapper.emitted('new-options')?.at(-1)?.[0]).toEqual({
+      timeRange: {
+        mode: 'absolute',
+        start: '2026-05-13T20:00:00.000Z',
+        stop: '2026-05-13T21:00:00.000Z',
+      },
+    })
+  })
+
+  it('does not commit a Blob after its ExternalSegment request is invalidated', async () => {
+    const wrapper = createWrapper()
+    const vm = wrapper.vm as any
+    const blobText = deferred<string>()
+    const responseBlob = new Blob([])
+    const textSpy = vi.spyOn(responseBlob, 'text').mockReturnValue(blobText.promise)
+
+    getRequestMock.mockResolvedValue({
+      success: true,
+      data: responseBlob,
+      raw: { headers: new Headers({ 'Content-Type': 'text/csv' }), redirected: false },
+    })
+    vm.selectedSegment = createTimeSeriesSubmodelData().submodelElements[0].value.find((segment: any) => segment.idShort === 'ExternalSegment')
+    vm.timeVariable = { idShort: 'time' }
+    vm.yVariables = [{ idShort: 'AirQuality' }]
+    vm.timeSeriesValues = [[{ time: '2026-05-13T19:10:00.000Z', value: 99 }]]
+
+    vm.fetchExternalData()
+    await vi.waitFor(() => expect(textSpy).toHaveBeenCalledOnce())
+
+    vm.yVariables = [{ idShort: 'Temperature' }]
+    blobText.resolve('time,AirQuality\n2026-05-13T19:15:00.000Z,1')
+    await blobText.promise
+    await Promise.resolve()
+
+    expect(vm.timeSeriesValues).toEqual([[
+      { time: '2026-05-13T19:10:00.000Z', value: 99 },
+    ]])
+  })
+
+  it('skips auto-refresh ticks while an asynchronous fetch is running', async () => {
+    vi.useFakeTimers()
+    const wrapper = createWrapper()
+    const vm = wrapper.vm as any
+
+    postRequestMock.mockImplementation(() => new Promise(() => {}))
+    vm.selectedSegment = createTimeSeriesSubmodelData().submodelElements[0].value.find((segment: any) => segment.idShort === 'LinkedSegment')
+    vm.timeVariable = { idShort: 'time' }
+    vm.yVariables = [{ idShort: 'AirQuality' }]
+    vm.autoRefreshSelection = { enabled: true, value: 1, unit: 'seconds' }
+    await nextTick()
+
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(postRequestMock).toHaveBeenCalledTimes(1)
+    expect(vm.isFetching).toBe(true)
+
+    await vi.advanceTimersByTimeAsync(3000)
+    expect(postRequestMock).toHaveBeenCalledTimes(1)
+
+    wrapper.unmount()
+    vi.useRealTimers()
+  })
+
+  it('stops auto refresh when the component unmounts', async () => {
+    vi.useFakeTimers()
+    const wrapper = createWrapper()
+    const vm = wrapper.vm as any
+
+    vm.selectedSegment = createTimeSeriesSubmodelData().submodelElements[0].value.find((segment: any) => segment.idShort === 'LinkedSegment')
+    vm.timeVariable = { idShort: 'time' }
+    vm.yVariables = [{ idShort: 'AirQuality' }]
+    vm.autoRefreshSelection = { enabled: true, value: 1, unit: 'seconds' }
+    await nextTick()
+
+    wrapper.unmount()
+    await vi.advanceTimersByTimeAsync(3000)
+
+    expect(postRequestMock).not.toHaveBeenCalled()
   })
 
   it('converts ExternalSegment CSV payload into chart datasets', async () => {
@@ -282,7 +466,7 @@ describe('TimeSeries_v1_1.vue fetch behavior', () => {
     expect(dispatchSnackbarMock.mock.calls[0][0].text).toContain('No valid file path available for ExternalSegment Data')
   })
 
-  it('warns when external request fails', async () => {
+  it('does not replace request-handler details when an external request fails', async () => {
     const wrapper = createWrapper()
     const vm = wrapper.vm as any
 
@@ -295,8 +479,7 @@ describe('TimeSeries_v1_1.vue fetch behavior', () => {
     vm.fetchExternalData()
     await Promise.resolve()
 
-    expect(dispatchSnackbarMock).toHaveBeenCalledTimes(1)
-    expect(dispatchSnackbarMock.mock.calls[0][0].text).toContain('Fetching ExternalSegment data failed')
+    expect(dispatchSnackbarMock).not.toHaveBeenCalled()
   })
 
   it('warns when time column is missing in external CSV', async () => {
@@ -345,7 +528,7 @@ describe('TimeSeries_v1_1.vue fetch behavior', () => {
 
     expect(dispatchSnackbarMock).toHaveBeenCalledTimes(1)
     expect(dispatchSnackbarMock.mock.calls[0][0].text).toContain('y-value AirQuality not available in ExternalSegment Data')
-    expect(vm.timeSeriesValues).toEqual([])
+    expect(vm.timeSeriesValues).toEqual([[]])
   })
 
   it('handles Blob external CSV payload', async () => {

@@ -40,7 +40,10 @@ export function createTimeSeriesSubmodelData (): any {
     semanticId: { keys: [{ value: LINKED_SEGMENT_SEMANTIC_ID }] },
     value: [
       { idShort: 'Endpoint', value: 'http://localhost:8086/api/v2/query?org=basyx' },
-      { idShort: 'Query', value: 'from(bucket: "basyx") |> range(start: -10m) |> filter(fn: (r) => r["_field"] == "{{y-value}}")' },
+      {
+        idShort: 'Query',
+        value: 'from(bucket: "basyx") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r["_field"] == "{{y-value}}") |> aggregateWindow(every: v.windowPeriod, fn: mean)',
+      },
     ],
   }
 

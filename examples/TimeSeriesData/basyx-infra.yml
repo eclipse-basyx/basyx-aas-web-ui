@@ -1,0 +1,11 @@
+infrastructures:
+  default: local
+
+  local:
+    name: Local BaSyx
+    template: mono-all
+    components:
+      aasEnvironment:
+        baseUrl: "http://localhost:8081"
+    security:
+      type: none

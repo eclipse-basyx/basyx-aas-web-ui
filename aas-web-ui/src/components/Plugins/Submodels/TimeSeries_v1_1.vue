@@ -80,6 +80,13 @@
           label="API Token"
           variant="outlined"
         />
+
+        <div class="d-flex justify-end mt-2">
+          <v-btn-group border density="compact">
+            <TimeRangeSelector v-model="timeRangeSelection" />
+            <AutoRefreshSelector v-model="autoRefreshSelection" />
+          </v-btn-group>
+        </div>
       </v-card-text>
 
       <v-divider />
@@ -91,6 +98,8 @@
               v-if="segmentType == 'LinkedSegment'"
               class="text-buttonText"
               color="primary"
+              :disabled="Boolean(timeRangeError)"
+              :loading="isFetching"
               size="small"
               @click="fetchLinkedData()"
             >Fetch Data</v-btn>
@@ -99,6 +108,8 @@
               v-if="segmentType == 'InternalSegment'"
               class="text-buttonText"
               color="primary"
+              :disabled="Boolean(timeRangeError)"
+              :loading="isFetching"
               size="small"
               @click="fetchInternalData()"
             >Fetch Data</v-btn>
@@ -107,6 +118,8 @@
               v-if="segmentType == 'ExternalSegment'"
               class="text-buttonText"
               color="primary"
+              :disabled="Boolean(timeRangeError)"
+              :loading="isFetching"
               size="small"
               @click="fetchExternalData()"
             >Fetch Data</v-btn>
@@ -139,36 +152,49 @@
           variant="outlined"
           @update:model-value="clearChartOptions"
         />
+
+        <v-empty-state
+          v-if="hasFetched && !hasTimeSeriesValues"
+          icon="mdi-chart-line-variant"
+          text="Choose another time range or fetch the data again."
+          title="No data in the selected time range"
+        />
         <!-- Chart Preview -->
         <LineChart
-          v-if="selectedChartType && selectedChartType.id == 1"
+          v-if="selectedChartType && selectedChartType.id == 1 && hasTimeSeriesValues"
           :chart-data="timeSeriesValues"
           :chart-options-external="chartOptions"
+          :time-range="resolvedTimeRange"
           :time-variable="timeVariable"
+          :viewport-reset-key="viewportResetKey"
           :y-variables="yVariables"
           @chart-options="getChartOptions"
         />
 
         <AreaChart
-          v-if="selectedChartType && selectedChartType.id == 2"
+          v-if="selectedChartType && selectedChartType.id == 2 && hasTimeSeriesValues"
           :chart-data="timeSeriesValues"
           :chart-options-external="chartOptions"
+          :time-range="resolvedTimeRange"
           :time-variable="timeVariable"
+          :viewport-reset-key="viewportResetKey"
           :y-variables="yVariables"
           @chart-options="getChartOptions"
         />
 
         <ScatterChart
-          v-if="selectedChartType && selectedChartType.id == 3"
+          v-if="selectedChartType && selectedChartType.id == 3 && hasTimeSeriesValues"
           :chart-data="timeSeriesValues"
           :chart-options-external="chartOptions"
+          :time-range="resolvedTimeRange"
           :time-variable="timeVariable"
+          :viewport-reset-key="viewportResetKey"
           :y-variables="yVariables"
           @chart-options="getChartOptions"
         />
 
         <Histogram
-          v-if="selectedChartType && selectedChartType.id == 4"
+          v-if="selectedChartType && selectedChartType.id == 4 && hasTimeSeriesValues"
           :chart-data="timeSeriesValues"
           :chart-options-external="chartOptions"
           :time-variable="timeVariable"
@@ -177,7 +203,7 @@
         />
 
         <Gauge
-          v-if="selectedChartType && selectedChartType.id == 5"
+          v-if="selectedChartType && selectedChartType.id == 5 && hasTimeSeriesValues"
           :chart-data="timeSeriesValues"
           :chart-options-external="chartOptions"
           :time-variable="timeVariable"
@@ -186,7 +212,7 @@
         />
 
         <DisplayField
-          v-if="selectedChartType && selectedChartType.id == 6"
+          v-if="selectedChartType && selectedChartType.id == 6 && hasTimeSeriesValues"
           :chart-data="timeSeriesValues"
           :y-variables="yVariables"
         />
@@ -196,7 +222,27 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onMounted, ref, watch } from 'vue'
+  import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+  import {
+    autoRefreshIntervalMs,
+    type AutoRefreshSelection,
+    cloneAutoRefreshSelection,
+    DEFAULT_AUTO_REFRESH,
+    validateAutoRefreshSelection,
+  } from '@/components/Plugins/Submodels/TimeSeries/autoRefresh'
+  import AutoRefreshSelector from '@/components/Plugins/Submodels/TimeSeries/AutoRefreshSelector.vue'
+  import {
+    cloneTimeRangeSelection,
+    DEFAULT_TIME_RANGE,
+    filterTimeSeriesData,
+    findLatestTimestamp,
+    interpolateFluxTimeRange,
+    type ResolvedTimeRange,
+    resolveTimeRange,
+    type TimeRangeSelection,
+    validateTimeRangeSelection,
+  } from '@/components/Plugins/Submodels/TimeSeries/timeRange'
+  import TimeRangeSelector from '@/components/Plugins/Submodels/TimeSeries/TimeRangeSelector.vue'
   import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'
@@ -259,6 +305,14 @@
   ]) // Array to store the chart types
   const selectedChartType = ref(null as any) // Object to store the selected chart type
   const chartOptions = ref({} as any) // Object to store the chart options
+  const timeRangeSelection = ref<TimeRangeSelection>(cloneTimeRangeSelection(DEFAULT_TIME_RANGE))
+  const autoRefreshSelection = ref<AutoRefreshSelection>(cloneAutoRefreshSelection(DEFAULT_AUTO_REFRESH))
+  const committedTimeRangeSelection = ref<TimeRangeSelection>(cloneTimeRangeSelection(DEFAULT_TIME_RANGE))
+  const resolvedTimeRange = ref<ResolvedTimeRange | null>(null)
+  const hasFetched = ref(false)
+  const isFetching = ref(false)
+  let autoRefreshTimer: ReturnType<typeof setInterval> | null = null
+  let activeRequestId = 0
 
   // Computed properties
   const segmentType = computed(() => {
@@ -288,6 +342,17 @@
     return null
   })
 
+  const timeRangeError = computed(() => validateTimeRangeSelection(timeRangeSelection.value))
+  const autoRefreshError = computed(() => validateAutoRefreshSelection(autoRefreshSelection.value))
+  const hasTimeSeriesValues = computed(() => timeSeriesValues.value.some(dataset => dataset.length > 0))
+  const viewportResetKey = computed(() => JSON.stringify(committedTimeRangeSelection.value))
+  const canFetch = computed(() => [
+    selectedSegment.value,
+    timeVariable.value,
+    yVariables.value.length > 0,
+    !timeRangeError.value,
+  ].every(Boolean))
+
   watch(
     () => props.loadTrigger,
     () => {
@@ -296,16 +361,65 @@
     { immediate: true },
   )
 
+  watch(
+    autoRefreshSelection,
+    value => {
+      configureAutoRefresh()
+      emit('new-options', { autoRefresh: cloneAutoRefreshSelection(value) })
+    },
+    { deep: true },
+  )
+
+  watch(canFetch, configureAutoRefresh)
+
+  watch([selectedSegment, timeVariable, yVariables], () => {
+    invalidatePendingRequest()
+  }, { flush: 'sync' })
+
   onMounted(() => {
     initComponent()
   })
 
+  onUnmounted(() => {
+    clearAutoRefreshTimer()
+    invalidatePendingRequest()
+  })
+
   function initComponent (): void {
     initializeTimeSeriesData()
+    initializeTimeRange()
+    initializeAutoRefresh()
     const influxDBToken = envStore.getEnvInfluxdbToken
     if (influxDBToken && influxDBToken !== '') {
       apiToken.value = influxDBToken
       showTokenInput.value = false
+    }
+  }
+
+  function initializeAutoRefresh (): void {
+    const configuredAutoRefresh = props.configData?.configObject?.autoRefresh
+    if (!validateAutoRefreshSelection(configuredAutoRefresh)) {
+      autoRefreshSelection.value = cloneAutoRefreshSelection(configuredAutoRefresh)
+      return
+    }
+
+    autoRefreshSelection.value = cloneAutoRefreshSelection(DEFAULT_AUTO_REFRESH)
+  }
+
+  function initializeTimeRange (): void {
+    const configuredTimeRange = props.configData?.configObject?.timeRange
+    if (configuredTimeRange && !validateTimeRangeSelection(configuredTimeRange)) {
+      timeRangeSelection.value = cloneTimeRangeSelection(configuredTimeRange)
+      return
+    }
+
+    const legacyRange = Number(props.configData?.configObject?.chartOptions?.xaxis?.range)
+    if (Number.isFinite(legacyRange) && legacyRange > 0) {
+      timeRangeSelection.value = {
+        mode: 'relative',
+        value: legacyRange,
+        unit: 'milliseconds',
+      }
     }
   }
 
@@ -351,60 +465,58 @@
       return
     }
 
-    getRecordValues()
+    getRecordValues(cloneTimeRangeSelection(timeRangeSelection.value))
   }
 
-  function getRecordValues (): void {
+  function getRecordValues (selection: TimeRangeSelection): void {
     // console.log('Selected Segment: ', selectedSegment.value);
     // get the records submodel element collection
     const recordsSMC = selectedSegment.value.value.find((smc: any) => checkIdShort(smc, 'Records'))
     // save the records in an array
     const records = recordsSMC.value
     // console.log('Records: ', records, ' Time Variable: ', timeVariable.value, ' Y Variables: ', yVariables.value);
-    const transformedArray = yVariables.value
-      .filter(
-        yVar =>
-          // Check if yVarEntry exists in all records
-          records.every((item: any) => item.value.some((entry: any) => checkIdShort(entry, yVar.idShort)))
-          // display an alert if the yVariable is not available in the records (specify the yVariable name)
-          || navigationStore.dispatchSnackbar({
+    const transformedArray = yVariables.value.map(yVar => {
+      const isAvailable = records.every((item: any) => item.value.some((entry: any) => checkIdShort(entry, yVar.idShort)))
+      if (!isAvailable) {
+        navigationStore.dispatchSnackbar({
+          status: true,
+          timeout: 4000,
+          color: 'warning',
+          btnColor: 'buttonText',
+          text: 'y-value ' + yVar.idShort + ' not available in InternalSegment Records!',
+        })
+        return []
+      }
+
+      // For each yVariable, go through each item in the original array
+      return records.map((item: any) => {
+        // Extract the time value
+        const timeEntry = item.value.find((entry: any) => checkIdShort(entry, timeVariable.value.idShort))
+        // display an alert if the timeVariable is not available the Records
+        if (!timeEntry) {
+          navigationStore.dispatchSnackbar({
             status: true,
             timeout: 4000,
             color: 'warning',
             btnColor: 'buttonText',
-            text: 'y-value ' + yVar.idShort + ' not available in InternalSegment Records!',
-          }),
-      )
-      .map(yVar => {
-        // For each yVariable, go through each item in the original array
-        return records.map((item: any) => {
-          // Extract the time value
-          const timeEntry = item.value.find((entry: any) => checkIdShort(entry, timeVariable.value.idShort))
-          // display an alert if the timeVariable is not available the Records
-          if (!timeEntry) {
-            navigationStore.dispatchSnackbar({
-              status: true,
-              timeout: 4000,
-              color: 'warning',
-              btnColor: 'buttonText',
-              text:
-                'time-value '
-                + timeVariable.value.idShort
-                + ' not available in InternalSegment Records!',
-            })
-          }
-          const time = timeEntry ? timeEntry.value : null
+            text:
+              'time-value '
+              + timeVariable.value.idShort
+              + ' not available in InternalSegment Records!',
+          })
+        }
+        const time = timeEntry ? timeEntry.value : null
 
-          // Extract the yVariable value
-          const yVarEntry = item.value.find((entry: any) => checkIdShort(entry, yVar.idShort))
-          const yVarValue = yVarEntry ? yVarEntry.value : null
+        // Extract the yVariable value
+        const yVarEntry = item.value.find((entry: any) => checkIdShort(entry, yVar.idShort))
+        const yVarValue = yVarEntry ? yVarEntry.value : null
 
-          // Return an object with time and the yVariable value
-          return { time, value: yVarValue }
-        })
+        // Return an object with time and the yVariable value
+        return { time, value: yVarValue }
       })
+    })
 
-    timeSeriesValues.value = transformedArray
+    applyTimeRange(transformedArray, selection)
   }
 
   function fetchExternalData (): void {
@@ -412,10 +524,21 @@
       return
     }
 
-    getFileData()
+    const selection = cloneTimeRangeSelection(timeRangeSelection.value)
+    if (validateTimeRangeSelection(selection)) {
+      return
+    }
+
+    const requestId = beginAsyncRequest()
+    void getFileData(requestId, selection, timeVariable.value.idShort, [...yVariables.value])
   }
 
-  function getFileData (): void {
+  async function getFileData (
+    requestId: number,
+    selection: TimeRangeSelection,
+    timeVariableId: string,
+    selectedYVariables: any[],
+  ): Promise<void> {
     // console.log('Selected Segment: ', selectedSegment.value);
     // get the Data File/Blob submodel element
     const dataFile = selectedSegment.value.value.find((smc: any) => checkIdShort(smc, 'Data'))
@@ -444,13 +567,19 @@
         btnColor: 'buttonText',
         text: 'No valid file path available for ExternalSegment Data.',
       })
+      finishAsyncRequest(requestId)
       return
     }
     // console.log('Path: ', path);
     // get the file contents
     const context = 'retrieving File Contents'
     const disableMessage = false
-    getRequest(path, context, disableMessage).then(async (response: any) => {
+    try {
+      const response = await getRequest(path, context, disableMessage)
+      if (!isCurrentRequest(requestId)) {
+        return
+      }
+
       if (response.success) {
         const contentType = response?.raw?.headers?.get('Content-Type') || ''
         const contentLength = response?.raw?.headers?.get('Content-Length')
@@ -486,24 +615,31 @@
             btnColor: 'buttonText',
             text: 'Attachment endpoint returned empty response body (Content-Length: 0).',
           })
+          applyTimeRange(selectedYVariables.map(() => []), selection)
           return
         }
 
         // console.log('File Contents: ', response.data);
-        await convertPlainCSVtoArray(response.data)
-      } else {
-        navigationStore.dispatchSnackbar({
-          status: true,
-          timeout: 6000,
-          color: 'warning',
-          btnColor: 'buttonText',
-          text: 'Fetching ExternalSegment data failed. Check authentication and attachment endpoint permissions.',
-        })
+        await convertPlainCSVtoArray(
+          response.data,
+          selection,
+          timeVariableId,
+          selectedYVariables,
+          requestId,
+        )
       }
-    })
+    } finally {
+      finishAsyncRequest(requestId)
+    }
   }
 
-  async function convertPlainCSVtoArray (csvData: any): Promise<void> {
+  async function convertPlainCSVtoArray (
+    csvData: any,
+    selection: TimeRangeSelection = cloneTimeRangeSelection(timeRangeSelection.value),
+    timeVariableId: string = timeVariable.value?.idShort,
+    selectedYVariables: any[] = [...yVariables.value],
+    requestId?: number,
+  ): Promise<void> {
     let csvString = ''
     if (typeof csvData === 'string') {
       csvString = csvData
@@ -511,6 +647,10 @@
       csvString = await csvData.text()
     } else if (csvData !== null && csvData !== undefined) {
       csvString = String(csvData)
+    }
+
+    if (requestId !== undefined && !isCurrentRequest(requestId)) {
+      return
     }
 
     if (!csvString || csvString.trim() === '') {
@@ -521,6 +661,7 @@
         btnColor: 'buttonText',
         text: 'No CSV data available in ExternalSegment response!',
       })
+      applyTimeRange(selectedYVariables.map(() => []), selection)
       return
     }
 
@@ -538,7 +679,7 @@
     }
 
     const { headers, data } = parseCSV(normalizedCsv)
-    const timeIndex = headers.indexOf(timeVariable.value.idShort)
+    const timeIndex = headers.indexOf(timeVariableId)
     // handle the case where timeIndex is -1
     if (timeIndex === -1) {
       navigationStore.dispatchSnackbar({
@@ -546,11 +687,11 @@
         timeout: 4000,
         color: 'warning',
         btnColor: 'buttonText',
-        text: 'time-value ' + timeVariable.value.idShort + ' not available in ExternalSegment Data!',
+        text: 'time-value ' + timeVariableId + ' not available in ExternalSegment Data!',
       })
       return
     }
-    let yIndexes = yVariables.value.map(yVar => headers.indexOf(yVar.idShort))
+    const yIndexes = selectedYVariables.map(yVar => headers.indexOf(yVar.idShort))
     // display an alert if the yVariable is not available in the records (specify the yVariable name)
     for (const [index, yIndex] of yIndexes.entries()) {
       if (yIndex === -1) {
@@ -559,20 +700,18 @@
           timeout: 4000,
           color: 'warning',
           btnColor: 'buttonText',
-          text: 'y-value ' + yVariables.value[index].idShort + ' not available in ExternalSegment Data!',
+          text: 'y-value ' + selectedYVariables[index].idShort + ' not available in ExternalSegment Data!',
         })
       }
     }
-    // handle the case where yIndexes contains -1 (remove only the -1 values)
-    yIndexes = yIndexes.filter(index => index !== -1)
-    const datasets = yIndexes.map(yIndex =>
-      data.map((row: any) => ({
+    const datasets = yIndexes.map(yIndex => yIndex === -1
+      ? []
+      : data.map((row: any) => ({
         time: row[timeIndex],
         value: Number(row[yIndex]),
-      })),
-    )
+      })))
     // console.log('Datasets: ', datasets);
-    timeSeriesValues.value = datasets
+    applyTimeRange(datasets, selection)
   }
 
   function parseCSV (csvString: string): { headers: Array<string>, data: Array<Array<string>> } {
@@ -594,11 +733,29 @@
       console.warn('No Segment selected')
       return
     }
+    const selection = cloneTimeRangeSelection(timeRangeSelection.value)
+    const range = resolveSelectedTimeRange(new Date(), selection)
+    if (!range) {
+      return
+    }
+
     // get the Endpoint from the selected Segment
-    const endpoint = selectedSegment.value.value.find((smc: any) => checkIdShort(smc, 'Endpoint')).value
+    const endpoint = selectedSegment.value.value.find((smc: any) => checkIdShort(smc, 'Endpoint'))?.value
     // get the query from the selected Segment
-    let query = selectedSegment.value.value.find((smc: any) => checkIdShort(smc, 'Query')).value
-    if (yVariables.value.length > 0) query = query.replace(yVariableTemplate.value, yVariables.value[0].idShort)
+    let query = selectedSegment.value.value.find((smc: any) => checkIdShort(smc, 'Query'))?.value
+    if (!endpoint || !query) {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 6000,
+        color: 'warning',
+        btnColor: 'buttonText',
+        text: 'LinkedSegment requires both Endpoint and Query values.',
+      })
+      return
+    }
+    const selectedYVariables = [...yVariables.value]
+    if (selectedYVariables.length > 0) query = query.replace(yVariableTemplate.value, selectedYVariables[0].idShort)
+    query = interpolateFluxTimeRange(query, range)
 
     // console.log('Endpoint: ', endpoint, ' Query: ', query);
     // construct the headers for the request
@@ -613,14 +770,22 @@
     const context = 'fetching data from Time Series Database'
     const disableMessage = false
     // send the request
-    postRequest(path, content, headers, context, disableMessage, true).then((response: any) => {
-      if (response.success) {
-        convertInfluxCSVtoArray(response.data)
-      }
-    })
+    const requestId = beginAsyncRequest()
+    void postRequest(path, content, headers, context, disableMessage, true)
+      .then((response: any) => {
+        if (isCurrentRequest(requestId) && response.success) {
+          convertInfluxCSVtoArray(response.data, range, selection, selectedYVariables)
+        }
+      })
+      .finally(() => finishAsyncRequest(requestId))
   }
 
-  function convertInfluxCSVtoArray (csvData: any): void {
+  function convertInfluxCSVtoArray (
+    csvData: any,
+    range?: ResolvedTimeRange,
+    selection: TimeRangeSelection = cloneTimeRangeSelection(timeRangeSelection.value),
+    selectedYVariables: any[] = [...yVariables.value],
+  ): void {
     const csvString = typeof csvData === 'string' ? csvData : String(csvData)
     const lines = csvString.trim().split('\n')
     const datasets: Record<string, Array<{ time: string, value: number }>> = {}
@@ -668,7 +833,7 @@
     const allKeys = Object.keys(datasets)
 
     // Find missing y-vars by exact match
-    const missingYVars = yVariables.value
+    const missingYVars = selectedYVariables
       .filter((yVar: any) => !allKeys.includes(yVar.idShort))
       .map((yVar: any) => yVar.idShort)
 
@@ -683,11 +848,109 @@
     }
 
     // Order datasets by yVariables and drop the missing ones
-    const newDatasets = yVariables.value
-      .map((yVar: any) => datasets[yVar.idShort])
-      .filter((ds: any) => Array.isArray(ds))
+    const newDatasets = selectedYVariables.map((yVar: any) => datasets[yVar.idShort] || [])
 
-    timeSeriesValues.value = newDatasets
+    applyTimeRange(newDatasets, selection, range)
+  }
+
+  function applyTimeRange (
+    datasets: Array<Array<{ time: string, value: unknown }>>,
+    selection: TimeRangeSelection = cloneTimeRangeSelection(timeRangeSelection.value),
+    range?: ResolvedTimeRange,
+  ): void {
+    const relativeAnchor = findLatestTimestamp(datasets) || new Date()
+    const resolvedRange = range || resolveSelectedTimeRange(relativeAnchor, selection)
+    if (!resolvedRange) {
+      return
+    }
+
+    committedTimeRangeSelection.value = cloneTimeRangeSelection(selection)
+    resolvedTimeRange.value = resolvedRange
+    timeSeriesValues.value = filterTimeSeriesData(datasets, resolvedRange)
+    hasFetched.value = true
+    emit('new-options', {
+      timeRange: cloneTimeRangeSelection(selection),
+    })
+  }
+
+  function resolveSelectedTimeRange (
+    relativeStop: Date,
+    selection: TimeRangeSelection = timeRangeSelection.value,
+  ): ResolvedTimeRange | null {
+    try {
+      return resolveTimeRange(selection, relativeStop)
+    } catch (error) {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 6000,
+        color: 'warning',
+        btnColor: 'buttonText',
+        text: error instanceof Error ? error.message : 'Invalid time range.',
+      })
+      return null
+    }
+  }
+
+  function configureAutoRefresh (): void {
+    clearAutoRefreshTimer()
+    if (
+      !autoRefreshSelection.value.enabled
+      || autoRefreshError.value
+      || !canFetch.value
+    ) {
+      return
+    }
+
+    autoRefreshTimer = setInterval(() => {
+      if (!isFetching.value) {
+        fetchSelectedData()
+      }
+    }, autoRefreshIntervalMs(autoRefreshSelection.value))
+  }
+
+  function clearAutoRefreshTimer (): void {
+    if (autoRefreshTimer) {
+      clearInterval(autoRefreshTimer)
+      autoRefreshTimer = null
+    }
+  }
+
+  function fetchSelectedData (): void {
+    switch (segmentType.value) {
+      case 'ExternalSegment': {
+        fetchExternalData()
+        break
+      }
+      case 'InternalSegment': {
+        fetchInternalData()
+        break
+      }
+      case 'LinkedSegment': {
+        fetchLinkedData()
+        break
+      }
+    }
+  }
+
+  function beginAsyncRequest (): number {
+    activeRequestId += 1
+    isFetching.value = true
+    return activeRequestId
+  }
+
+  function finishAsyncRequest (requestId: number): void {
+    if (isCurrentRequest(requestId)) {
+      isFetching.value = false
+    }
+  }
+
+  function invalidatePendingRequest (): void {
+    activeRequestId += 1
+    isFetching.value = false
+  }
+
+  function isCurrentRequest (requestId: number): boolean {
+    return requestId === activeRequestId
   }
 
   function finalizeDataset (

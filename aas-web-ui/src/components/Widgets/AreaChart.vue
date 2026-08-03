@@ -11,20 +11,6 @@
 
     <v-row align="center">
       <v-col cols="auto">
-        <v-text-field
-          v-model="range"
-          density="compact"
-          hide-details
-          label="Range"
-          suffix="ms"
-          type="number"
-          variant="outlined"
-          @blur="changeRange()"
-          @keydown.enter="changeRange()"
-        />
-      </v-col>
-
-      <v-col cols="auto">
         <v-select
           v-model="interpolation"
           density="compact"
@@ -47,6 +33,8 @@
   import ApexCharts, { type ApexOptions } from 'apexcharts'
   import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
   import { useTheme } from 'vuetify'
+  import { type ResolvedTimeRange, toApexTimeRange } from '@/components/Plugins/Submodels/TimeSeries/timeRange'
+  import { mergeTemporalChartControls } from '@/components/Widgets/temporalChartOptions'
   import { useChartHandling } from '@/composables/ChartHandling'
 
   const props = defineProps<{
@@ -54,6 +42,8 @@
     timeVariable: any
     yVariables: any
     chartOptionsExternal: any
+    timeRange: ResolvedTimeRange | null
+    viewportResetKey?: string
   }>()
 
   const emit = defineEmits<{
@@ -66,9 +56,10 @@
 
   const areaChart = ref<HTMLElement | null>(null)
   let chartInstance: ApexCharts | null = null
+  let isViewportZoomed = false
+  let lastViewportResetKey = props.viewportResetKey
 
   const localChartOptions = ref({} as any)
-  const range = ref(60_000) // Default range in milliseconds
   type InterpolationCurve = 'smooth' | 'straight' | 'stepline' | 'linestep' | 'monotoneCubic'
   const interpolationOptions: InterpolationCurve[] = ['smooth', 'straight', 'stepline']
   const interpolation = ref<InterpolationCurve>('smooth') // Default interpolation type
@@ -101,6 +92,27 @@
         updateChartData()
       } else {
         renderChart()
+      }
+    },
+    { deep: true },
+  )
+
+  watch(
+    [() => props.timeRange, () => props.viewportResetKey],
+    ([value]) => {
+      if (chartInstance) {
+        const xaxis = toApexTimeRange(value)
+        const shouldResetViewport = props.viewportResetKey !== lastViewportResetKey
+        lastViewportResetKey = props.viewportResetKey
+        if (shouldResetViewport || !isViewportZoomed) {
+          isViewportZoomed = false
+          chartInstance.resetSeries(false, true)
+          chartInstance.updateOptions({ xaxis })
+        }
+        localChartOptions.value = {
+          ...localChartOptions.value,
+          xaxis: { ...localChartOptions.value.xaxis, ...xaxis },
+        }
       }
     },
     { deep: true },
@@ -144,8 +156,39 @@
           type: 'area',
           height: 350,
           background: '#ffffff00',
+          events: {
+            beforeResetZoom: () => {
+              isViewportZoomed = false
+              queueMicrotask(() => chartInstance?.updateOptions({ xaxis: toApexTimeRange(props.timeRange) }))
+            },
+            scrolled: () => {
+              isViewportZoomed = true
+            },
+            zoomed: () => {
+              isViewportZoomed = true
+            },
+          },
+          selection: {
+            enabled: true,
+            type: 'x',
+          },
+          toolbar: {
+            show: true,
+            autoSelected: 'zoom',
+            tools: {
+              selection: true,
+              zoom: true,
+              zoomin: true,
+              zoomout: true,
+              pan: true,
+              reset: true,
+            },
+          },
           zoom: {
-            enabled: false,
+            enabled: true,
+            type: 'x',
+            autoScaleYaxis: true,
+            allowMouseWheelZoom: false,
           },
         },
         legend: legend,
@@ -154,7 +197,7 @@
         },
         xaxis: {
           type: 'datetime',
-          range: 60_000,
+          ...toApexTimeRange(props.timeRange),
           tickAmount: 10,
           labels: {
             datetimeFormatter: {
@@ -195,10 +238,15 @@
 
       // Override chart options with external options
       if (props.chartOptionsExternal) {
+        const controlledChartOptions = chartOptions.chart
         Object.assign(chartOptions, props.chartOptionsExternal)
 
-        // Save the range and interpolation from external options
-        range.value = chartOptions.xaxis.range || 60_000
+        chartOptions.chart = mergeTemporalChartControls(controlledChartOptions, chartOptions.chart)
+
+        chartOptions.xaxis = {
+          ...chartOptions.xaxis,
+          ...toApexTimeRange(props.timeRange),
+        }
         const curve = chartOptions?.stroke?.curve
         interpolation.value = typeof curve === 'string' ? (curve as InterpolationCurve) : 'smooth'
       }
@@ -231,28 +279,6 @@
         },
         legend: legend,
       })
-    }
-  }
-
-  function changeRange (): void {
-    const rangeValue = Number(range.value)
-
-    if (!rangeValue || rangeValue <= 0) {
-      range.value = 60_000 // Reset to default if invalid
-      return
-    }
-
-    if (chartInstance) {
-      chartInstance.updateOptions({
-        xaxis: {
-          range: rangeValue,
-        },
-      })
-
-      localChartOptions.value = { ...localChartOptions.value, xaxis: { range: rangeValue } }
-
-      // Emit the updated options
-      emit('chart-options', localChartOptions.value)
     }
   }
 
