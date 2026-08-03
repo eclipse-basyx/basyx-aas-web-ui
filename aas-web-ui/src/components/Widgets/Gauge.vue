@@ -1,17 +1,43 @@
 <template>
   <v-container class="pa-0" fluid>
-    <div class="chart-container">
-      <div ref="gaugeChart" />
-    </div>
+    <v-row justify="center">
+      <v-col
+        v-for="(item, index) in gaugeItems"
+        :key="item.key"
+        cols="12"
+        md="6"
+        xl="4"
+      >
+        <div
+          :aria-label="gaugeAccessibleLabel(item)"
+          class="text-center"
+          role="group"
+        >
+          <div :ref="element => setGaugeChartRef(element, index)" />
+          <div class="text-title-medium">{{ item.label }}</div>
+
+          <div class="text-headline-small text-primary">
+            {{ formatGaugeValue(item.value) }}<span v-if="item.unit"> {{ item.unit }}</span>
+          </div>
+        </div>
+      </v-col>
+    </v-row>
   </v-container>
 </template>
 
 <script lang="ts" setup>
   import ApexCharts, { type ApexOptions } from 'apexcharts'
-  import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+  import { type ComponentPublicInstance, computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
   import { useTheme } from 'vuetify'
   import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
+
+  type GaugeItem = {
+    key: string
+    value: number
+    label: string
+    unit: string
+  }
 
   const props = defineProps<{
     chartData: any
@@ -30,50 +56,70 @@
   const { unitSuffix } = useConceptDescriptionHandling()
   const { nameToDisplay } = useReferableUtils()
 
-  const gaugeChart = ref<HTMLElement | null>(null)
-  let chartInstance: ApexCharts | null = null
+  const gaugeChartElements = ref<Array<HTMLElement | null>>([])
+  const chartInstances: ApexCharts[] = []
 
   const localChartOptions = ref({} as any)
-  const currentUnits = ref<string[]>([]) // Store units for each gauge
 
   // Computed properties
   const currentTheme = computed(() => {
     return theme.global.current.value.dark
   })
 
-  onMounted(async () => {
-    await nextTick() // Ensure the DOM is updated
-    if (gaugeChart.value) {
-      renderChart()
-    } else {
-      console.error('Gauge element is not available.')
+  const gaugeItems = computed<GaugeItem[]>(() => {
+    if (!Array.isArray(props.chartData)) {
+      return []
     }
+
+    return props.chartData.flatMap((series: any, index: number) => {
+      const lastDataPoint = Array.isArray(series) ? series.at(-1) : undefined
+      if (
+        !lastDataPoint
+        || lastDataPoint.value === null
+        || lastDataPoint.value === undefined
+        || lastDataPoint.value === ''
+      ) {
+        return []
+      }
+
+      const value = Number(lastDataPoint.value)
+      if (!Number.isFinite(value)) {
+        return []
+      }
+
+      const yVariable = props.yVariables?.[index]
+      return [{
+        key: yVariable?.idShort || `gauge-${index}`,
+        value,
+        label: yVariable ? nameToDisplay(yVariable) : `Value ${index + 1}`,
+        unit: yVariable ? unitSuffix(yVariable) : '',
+      }]
+    })
+  })
+
+  onMounted(async () => {
+    await nextTick()
+    renderCharts()
   })
 
   onUnmounted(() => {
-    if (chartInstance) {
-      chartInstance.destroy()
-      chartInstance = null
-    }
+    destroyCharts()
   })
 
   watch(
-    () => props.chartData,
-    () => {
-      if (chartInstance) {
-        updateChartData()
-      } else {
-        renderChart()
-      }
+    [() => props.chartData, () => props.yVariables],
+    async () => {
+      await nextTick()
+      renderCharts()
     },
     { deep: true },
   )
 
-  // Watch for theme changes and update the chart
+  // Watch for theme changes and update the charts
   watch(
     () => currentTheme.value,
     newVal => {
-      if (chartInstance) {
+      for (const chartInstance of chartInstances) {
         chartInstance.updateOptions(
           {
             theme: {
@@ -87,150 +133,95 @@
     },
   )
 
-  function prepareGaugeData (): { values: number[], labels: string[], units: string[] } {
-    if (!props.chartData || !Array.isArray(props.chartData)) {
-      return { values: [], labels: [], units: [] }
-    }
-
-    // Extract the last object of each array in the chartData array
-    const values = props.chartData.map((data: any) => {
-      return data.at(-1)
-    })
-
-    // Extract the values from the objects
-    const chartValues = values.map((element: any) => {
-      return Number(element.value)
-    })
-
-    // Determine the labels for each value
-    const chartLabels = values.map((element: any, index: number) => {
-      let name = 'Value ' + Number(index + 1)
-      // Check if the yVariable exists
-      if (props.yVariables.length > index) {
-        name = nameToDisplay(props.yVariables[index])
-      }
-      return name
-    })
-
-    // Extract units for each value
-    const chartUnits = values.map((_element: any, index: number) => {
-      let unit = ''
-      if (props.yVariables.length > index && props.yVariables[index]) {
-        unit = unitSuffix(props.yVariables[index])
-      }
-      return unit
-    })
-
-    return { values: chartValues, labels: chartLabels, units: chartUnits }
+  function setGaugeChartRef (element: Element | ComponentPublicInstance | null, index: number): void {
+    gaugeChartElements.value[index] = element instanceof HTMLElement ? element : null
   }
 
-  function renderChart (): void {
-    if (!props.chartData || props.chartData.length === 0) {
-      console.warn('No chart data available to render.')
+  function renderCharts (): void {
+    destroyCharts()
+
+    if (gaugeItems.value.length === 0) {
       return
     }
 
-    if (gaugeChart.value) {
-      const { values, labels, units } = prepareGaugeData()
-
-      if (values.length === 0) {
-        console.warn('No gauge data available to render.')
-        return
+    let firstChartOptions: ApexOptions | null = null
+    for (const [index, item] of gaugeItems.value.entries()) {
+      const chartElement = gaugeChartElements.value[index]
+      if (!chartElement) {
+        continue
       }
 
-      // Store units for use in formatter
-      currentUnits.value = units
-
-      const chartOptions = {
+      const chartOptions: ApexOptions = {
         chart: {
-          id: 'gauge',
+          id: `gauge-${index}`,
           type: 'radialBar',
-          height: 350,
+          height: 280,
           background: '#ffffff00',
         },
         plotOptions: {
           radialBar: {
-            offsetY: 0,
             startAngle: -140,
             endAngle: 140,
             hollow: {
               margin: 5,
-              size: '40%',
+              size: '45%',
               background: 'transparent',
-              image: undefined,
             },
             dataLabels: {
               name: {
-                fontSize: '16px',
-                color: undefined,
-                offsetY: 120,
+                show: false,
               },
               value: {
-                offsetY: 76,
-                fontSize: '22px',
-                color: undefined,
-                formatter: function (val: any) {
-                  let index = 0
-                  const currentVal = Number(val)
-
-                  // Find the index by matching the value with the stored values
-                  for (const [i, value] of values.entries()) {
-                    if (Math.abs(value - currentVal) < 0.001) {
-                      index = i
-                      break
-                    }
-                  }
-
-                  const unit = currentUnits.value[index] || ''
-                  const unitDisplay = unit ? ' ' + unit : ''
-                  return Number(val).toFixed(2) + unitDisplay
-                },
+                show: false,
               },
             },
           },
         },
-        labels: labels,
+        labels: [item.label],
         theme: {
           mode: currentTheme.value ? 'dark' : 'light',
         },
-        series: values,
+        series: [item.value],
       }
 
-      // Override chart options with external options
       if (props.chartOptionsExternal) {
         Object.assign(chartOptions, props.chartOptionsExternal)
+        chartOptions.chart = {
+          ...chartOptions.chart,
+          id: `gauge-${index}`,
+          type: 'radialBar',
+        }
       }
 
-      // Create and render the chart
-      chartInstance = new ApexCharts(gaugeChart.value, chartOptions as ApexOptions)
+      // Values and labels belong to each individual gauge and must not be
+      // overwritten by options emitted for a previously rendered gauge.
+      chartOptions.labels = [item.label]
+      chartOptions.series = [item.value]
+
+      const chartInstance = new ApexCharts(chartElement, chartOptions)
+      chartInstances.push(chartInstance)
       chartInstance.render()
+      firstChartOptions ||= chartOptions
+    }
 
-      // Store the chart options
-      localChartOptions.value = { ...chartOptions }
-
-      // Emit the initial chart options
+    if (firstChartOptions) {
+      localChartOptions.value = { ...firstChartOptions }
       emit('chart-options', localChartOptions.value)
     }
   }
 
-  function updateChartData (): void {
-    if (chartInstance) {
-      const { values, labels, units } = prepareGaugeData()
-
-      if (values.length === 0) {
-        return
-      }
-
-      // Update stored units
-      currentUnits.value = units
-
-      // Update series data
-      chartInstance.updateSeries(values, true)
-
-      // Update labels
-      chartInstance.updateOptions({
-        labels: labels,
-      })
+  function destroyCharts (): void {
+    for (const chartInstance of chartInstances.splice(0)) {
+      chartInstance.destroy()
     }
+  }
+
+  function formatGaugeValue (value: number): string {
+    return value.toFixed(2)
+  }
+
+  function gaugeAccessibleLabel (item: GaugeItem): string {
+    const unit = item.unit ? ` ${item.unit}` : ''
+    return `${item.label}: ${formatGaugeValue(item.value)}${unit}`
   }
 </script>

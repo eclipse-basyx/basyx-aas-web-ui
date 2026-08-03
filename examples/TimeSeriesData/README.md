@@ -14,6 +14,8 @@ The plugin supports the following segment types:
 
 - Docker
 
+This stack is intended for local demonstration only. It uses fixed demo credentials, a preconfigured InfluxDB administration token, and published host ports. Do not expose it to an untrusted network.
+
 ### Installing
 
 1. Clone the repository
@@ -21,6 +23,8 @@ The plugin supports the following segment types:
 
 You can now access the AAS Web UI (http://localhost:3000) and InfluxDB UI (http://localhost:8086) in your browser.
 The username and password for InfluxDB are `admin` and `influxpassword`.
+
+The example uses the BaSyx Go and Web UI `SNAPSHOT` images and InfluxDB 2.7. Services with `pull_policy: always` are refreshed when the stack starts.
 
 The BaSyx Go configuration service initializes the PostgreSQL schema and exits before the AAS Environment starts. The AASX package in `aas/` is then preloaded into the Go environment. To reset the persisted BaSyx data, run `docker compose down -v` before starting the example again.
 
@@ -31,7 +35,7 @@ The BaSyx Go configuration service initializes the PostgreSQL schema and exits b
 1. Open the AAS Web UI in your browser (http://localhost:3000)
 2. Select the `SensorExampleAAS` AAS and click on the `TimeSeries` submodel in the treeview
 3. In the `Visualization`-window select the `InternalSegment` in the Segment dropdown
-4. Select `time` as time-value and for example`temperature` as y-value
+4. Select `time` as time-value and, for example, `Temperature` as y-value
 5. Click on `Fetch Data`
 6. In the `Preview Chart`-window select a chart type
 7. You should now see a chart with the time series data
@@ -41,7 +45,7 @@ The BaSyx Go configuration service initializes the PostgreSQL schema and exits b
 1. Open the AAS Web UI in your browser (http://localhost:3000)
 2. Select the `SensorExampleAAS` AAS and click on the `TimeSeries` submodel in the treeview
 3. In the `Visualization`-window select the `ExternalSegment` in the Segment dropdown
-4. Select `time` as time-value and for example `temperature` as y-value
+4. Select `time` as time-value and, for example, `Temperature` as y-value
 5. Click on `Fetch Data`
 6. In the `Preview Chart`-window select a chart type
 7. You should now see a chart with the time series data
@@ -57,7 +61,8 @@ Prerequisites:
    ```flux
    from(bucket: "basyx")
      |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
-     |> filter(fn: (r) => r["_measurement"] == "float_metric")
+     |> filter(fn: (r) => r["_measurement"] == "machine_metric")
+     |> filter(fn: (r) => r["_field"] == "{{y-value}}")
      |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
    ```
 
@@ -69,7 +74,7 @@ Prerequisites:
 1. Open the AAS Web UI in your browser (http://localhost:3000)
 2. Select the `SensorExampleAAS` AAS and click on the `TimeSeries` submodel in the treeview
 3. In the `Visualization`-window select the `LinkedSegment` in the Segment dropdown
-4. Select `time` as time-value and for example `temperature` as y-value
+4. Select `time` as time-value and, for example, `pressure` as y-value
 5. If you see an input field for the InfluxDB Token, copy the token from the docker-compose.yaml file
 6. Select a relative time range or enter an absolute start and end time
 7. Click on `Fetch Data`
@@ -77,6 +82,12 @@ Prerequisites:
 9. You should now see a chart with the time series data
 
 You can always press the `Fetch Data` button again to update the chart with the latest data from the database.
+
+### Auto Refresh
+
+Auto refresh is disabled by default and initially uses a 30-second interval. Enable it in **Preview Configuration** and choose a positive interval in seconds, minutes, or hours. It starts once a segment, time variable, y-variable, and valid time range are selected, and it skips a tick while an earlier request is still running.
+
+Each refresh resolves a relative LinkedSegment range against the current time, so the selected window advances with incoming data. Absolute ranges retain their exact start and end. InternalSegment relative ranges remain anchored to their newest available record, while ExternalSegment data is requested again and anchored to the newest timestamp returned by the file.
 
 ## Visualization Options
 
@@ -87,6 +98,7 @@ You can choose between the following chart types:
 - Scatter Chart
 - Histogram
 - Gauge
+- Display Field
 
 For most of the chart types you can also alter some options. Those include:
 
@@ -94,6 +106,10 @@ For most of the chart types you can also alter some options. Those include:
 - Interpolation Mode
 - Number of Bins (for Histogram)
 - If Bars should be stacked (for Histogram)
+
+Line, Area, and Scatter charts provide x-axis selection, zoom in/out, pan, and reset controls in the chart toolbar. Hovered values include their configured units, and the y-axis automatically scales to the visible data. Scrolling the page while the pointer is over a chart does not zoom it; zooming requires an explicit chart action. Auto refresh preserves a manual zoom so that an inspected section does not jump on every tick. Fetching a changed time range resets the viewport; the chart's reset control returns to the latest committed range.
+
+Gauge values and labels remain visible without hovering. Selecting multiple y-values creates separate responsive gauges. Display Field rounds numeric values to two decimal places.
 
 ## Disclaimer
 

@@ -34,10 +34,10 @@
 
   interface ChartDataPoint {
     time: string
-    value: string
+    value: unknown
   }
 
-  type DisplayElement = ChartDataPoint & aasTypes.Property
+  type DisplayElement = Omit<aasTypes.Property, 'value'> & ChartDataPoint
 
   const props = defineProps<{
     chartData: Array<Array<ChartDataPoint>>
@@ -79,39 +79,18 @@
     })
   }
 
-  // Format the Value of the Property
-  function formatValue (prop: aasTypes.Property): string | undefined {
-    if (!prop.value) {
+  // Format numeric chart values consistently while preserving non-numeric values.
+  function formatValue (prop: DisplayElement): string | undefined {
+    const value = prop.value == null ? '' : String(prop.value)
+    if (!value) {
       return undefined
     }
 
-    // Floating-point types (with decimal places)
-    if ([6, 7, 9].includes(prop.valueType)) {
-      // Decimal (6), Double (7), Float (9)
-      const numberValue = Number.parseFloat(prop.value)
+    const numberValue = Number(value)
+    if (Number.isFinite(numberValue)) {
       return numberValue.toFixed(2)
-    } else if (
-      // Integer types (no decimal places)
-      [
-        3, // Byte
-        16, // Int
-        17, // Integer
-        18, // Long (moved from floating-point)
-        19, // NegativeInteger
-        20, // NonNegativeInteger
-        21, // NonPositiveInteger
-        22, // PositiveInteger
-        23, // Short
-        26, // UnsignedByte
-        27, // UnsignedInt
-        28, // UnsignedLong
-        29, // UnsignedShort
-      ].includes(prop.valueType)
-    ) {
-      const numberValue = Number.parseInt(prop.value, 10)
-      return numberValue.toFixed(0)
-    } else {
-      return prop.value
     }
+
+    return value
   }
 </script>

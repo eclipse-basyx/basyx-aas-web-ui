@@ -22,6 +22,7 @@ declare module 'vue' {
     AreaChart: typeof import('./components/Widgets/AreaChart.vue')['default']
     AssetIdInput: typeof import('./components/EditorComponents/InputTypes/AssetIdInput.vue')['default']
     AssetInformation: typeof import('./components/UIComponents/AssetInformation.vue')['default']
+    AutoRefreshSelector: typeof import('./components/Plugins/Submodels/TimeSeries/AutoRefreshSelector.vue')['default']
     AutoSync: typeof import('./components/AppNavigation/AutoSync.vue')['default']
     Blob: typeof import('./components/SubmodelElements/Blob.vue')['default']
     BlobForm: typeof import('./components/EditorComponents/SubmodelElements/BlobForm.vue')['default']

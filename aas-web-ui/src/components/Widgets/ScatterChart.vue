@@ -11,6 +11,7 @@
   import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
   import { useTheme } from 'vuetify'
   import { type ResolvedTimeRange, toApexTimeRange } from '@/components/Plugins/Submodels/TimeSeries/timeRange'
+  import { mergeTemporalChartControls } from '@/components/Widgets/temporalChartOptions'
   import { useChartHandling } from '@/composables/ChartHandling'
 
   const props = defineProps<{
@@ -19,6 +20,7 @@
     yVariables: any
     chartOptionsExternal: any
     timeRange: ResolvedTimeRange | null
+    viewportResetKey?: string
   }>()
 
   const emit = defineEmits<{
@@ -31,6 +33,8 @@
 
   const scatterChart = ref<HTMLElement | null>(null)
   let chartInstance: ApexCharts | null = null
+  let isViewportZoomed = false
+  let lastViewportResetKey = props.viewportResetKey
 
   const localChartOptions = ref({} as any)
 
@@ -68,10 +72,21 @@
   )
 
   watch(
-    () => props.timeRange,
-    value => {
+    [() => props.timeRange, () => props.viewportResetKey],
+    ([value]) => {
       if (chartInstance) {
-        chartInstance.updateOptions({ xaxis: toApexTimeRange(value) })
+        const xaxis = toApexTimeRange(value)
+        const shouldResetViewport = props.viewportResetKey !== lastViewportResetKey
+        lastViewportResetKey = props.viewportResetKey
+        if (shouldResetViewport || !isViewportZoomed) {
+          isViewportZoomed = false
+          chartInstance.resetSeries(false, true)
+          chartInstance.updateOptions({ xaxis })
+        }
+        localChartOptions.value = {
+          ...localChartOptions.value,
+          xaxis: { ...localChartOptions.value.xaxis, ...xaxis },
+        }
       }
     },
     { deep: true },
@@ -115,8 +130,39 @@
           type: 'scatter',
           height: 350,
           background: '#ffffff00',
+          events: {
+            beforeResetZoom: () => {
+              isViewportZoomed = false
+              queueMicrotask(() => chartInstance?.updateOptions({ xaxis: toApexTimeRange(props.timeRange) }))
+            },
+            scrolled: () => {
+              isViewportZoomed = true
+            },
+            zoomed: () => {
+              isViewportZoomed = true
+            },
+          },
+          selection: {
+            enabled: true,
+            type: 'x',
+          },
+          toolbar: {
+            show: true,
+            autoSelected: 'zoom',
+            tools: {
+              selection: true,
+              zoom: true,
+              zoomin: true,
+              zoomout: true,
+              pan: true,
+              reset: true,
+            },
+          },
           zoom: {
-            enabled: false,
+            enabled: true,
+            type: 'x',
+            autoScaleYaxis: true,
+            allowMouseWheelZoom: false,
           },
         },
         legend: legend,
@@ -166,7 +212,10 @@
 
       // Override chart options with external options
       if (props.chartOptionsExternal) {
+        const controlledChartOptions = chartOptions.chart
         Object.assign(chartOptions, props.chartOptionsExternal)
+
+        chartOptions.chart = mergeTemporalChartControls(controlledChartOptions, chartOptions.chart)
 
         chartOptions.xaxis = {
           ...chartOptions.xaxis,

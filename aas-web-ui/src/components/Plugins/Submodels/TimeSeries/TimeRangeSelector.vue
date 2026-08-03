@@ -1,84 +1,138 @@
 <template>
-  <div>
-    <div class="text-title-small mb-2">Time Range</div>
-
-    <v-btn-toggle
-      v-model="mode"
-      class="mb-3"
-      color="primary"
-      density="compact"
-      divided
-      mandatory
-      variant="outlined"
-    >
-      <v-btn value="relative">Relative</v-btn>
-      <v-btn value="absolute">Absolute</v-btn>
-    </v-btn-toggle>
-
-    <template v-if="mode === 'relative'">
-      <v-select
-        v-model="selectedPreset"
-        density="compact"
-        item-title="title"
-        item-value="id"
-        :items="presets"
-        label="Time range"
-        variant="outlined"
-      />
-
-      <v-row v-if="selectedPreset === 'custom'">
-        <v-col cols="12" md="6">
-          <v-text-field
-            v-model.number="relativeValue"
-            density="compact"
-            label="Range"
-            min="0"
-            step="any"
-            type="number"
-            variant="outlined"
-          />
-        </v-col>
-
-        <v-col cols="12" md="6">
-          <v-select
-            v-model="relativeUnit"
-            density="compact"
-            item-title="title"
-            item-value="value"
-            :items="relativeUnits"
-            label="Unit"
-            variant="outlined"
-          />
-        </v-col>
-      </v-row>
+  <v-menu
+    v-model="menuOpen"
+    :close-on-content-click="false"
+    location="bottom end"
+    width="min(400px, calc(100vw - 32px))"
+  >
+    <template #activator="{ props: menuProps }">
+      <v-btn
+        :aria-label="`Time range: ${buttonLabel}`"
+        :color="validationError ? 'error' : undefined"
+        prepend-icon="mdi-clock-outline"
+        size="small"
+        variant="tonal"
+        v-bind="menuProps"
+      >
+        {{ buttonLabel }}
+        <v-icon end>mdi-menu-down</v-icon>
+      </v-btn>
     </template>
 
-    <v-row v-else>
-      <v-col cols="12" md="6">
-        <v-text-field
-          v-model="absoluteStart"
-          density="compact"
-          label="From"
-          type="datetime-local"
-          variant="outlined"
-        />
-      </v-col>
+    <v-card border>
+      <v-card-title class="d-flex align-center text-title-small">
+        <span>Time Range</span>
+        <v-spacer />
 
-      <v-col cols="12" md="6">
-        <v-text-field
-          v-model="absoluteStop"
-          density="compact"
-          label="To"
-          type="datetime-local"
-          variant="outlined"
+        <v-btn
+          aria-label="Close time range menu"
+          icon="mdi-close"
+          size="x-small"
+          variant="text"
+          @click="menuOpen = false"
         />
-      </v-col>
-    </v-row>
+      </v-card-title>
 
-    <div v-if="validationError" class="text-error text-caption mt-n2 mb-2" role="alert">
-      {{ validationError }}
-    </div>
-  </div>
+      <v-card-text>
+        <v-btn-toggle
+          v-model="mode"
+          class="d-flex mb-3"
+          color="primary"
+          density="compact"
+          divided
+          mandatory
+          variant="outlined"
+        >
+          <v-btn class="flex-grow-1" value="relative">Relative</v-btn>
+          <v-btn class="flex-grow-1" value="absolute">Absolute</v-btn>
+        </v-btn-toggle>
+
+        <template v-if="mode === 'relative'">
+          <v-row class="mb-2" dense>
+            <v-col v-for="preset in presets" :key="preset.id" cols="3">
+              <v-btn
+                :active="selectedPreset === preset.id"
+                :aria-label="preset.title"
+                block
+                :color="selectedPreset === preset.id ? 'primary' : undefined"
+                size="small"
+                variant="outlined"
+                @click="selectedPreset = preset.id"
+              >
+                {{ preset.id === 'custom' ? 'Custom' : preset.id }}
+              </v-btn>
+            </v-col>
+          </v-row>
+
+          <v-row v-if="selectedPreset === 'custom'" dense>
+            <v-col cols="7">
+              <div class="text-caption mb-1">Range</div>
+
+              <v-text-field
+                v-model.number="relativeValue"
+                aria-label="Range"
+                density="compact"
+                hide-details="auto"
+                min="0"
+                step="any"
+                type="number"
+                variant="outlined"
+              />
+            </v-col>
+
+            <v-col cols="5">
+              <div class="text-caption mb-1">Unit</div>
+
+              <v-row dense>
+                <v-col v-for="unit in relativeUnits" :key="unit.value" cols="3">
+                  <v-btn
+                    :active="relativeUnit === unit.value"
+                    :aria-label="unit.title"
+                    block
+                    :color="relativeUnit === unit.value ? 'primary' : undefined"
+                    size="small"
+                    slim
+                    variant="outlined"
+                    @click="relativeUnit = unit.value"
+                  >
+                    {{ unit.shortTitle }}
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </v-col>
+          </v-row>
+        </template>
+
+        <v-row v-else>
+          <v-col cols="12">
+            <v-text-field
+              v-model="absoluteStart"
+              density="compact"
+              hide-details="auto"
+              label="From"
+              type="datetime-local"
+              variant="outlined"
+            />
+          </v-col>
+
+          <v-col cols="12">
+            <v-text-field
+              v-model="absoluteStop"
+              density="compact"
+              hide-details="auto"
+              label="To"
+              type="datetime-local"
+              variant="outlined"
+            />
+          </v-col>
+        </v-row>
+
+        <div v-if="validationError" class="text-error text-caption mt-2" role="alert">
+          {{ validationError }}
+        </div>
+      </v-card-text>
+    </v-card>
+  </v-menu>
 </template>
 
 <script lang="ts" setup>
@@ -119,18 +173,19 @@
     { id: 'custom', title: 'Custom relative range' },
   ]
 
-  const relativeUnits: Array<{ title: string, value: RelativeTimeUnit }> = [
-    { title: 'Milliseconds', value: 'milliseconds' },
-    { title: 'Seconds', value: 'seconds' },
-    { title: 'Minutes', value: 'minutes' },
-    { title: 'Hours', value: 'hours' },
-    { title: 'Days', value: 'days' },
-    { title: 'Weeks', value: 'weeks' },
-    { title: 'Months', value: 'months' },
-    { title: 'Years', value: 'years' },
+  const relativeUnits: Array<{ shortTitle: string, title: string, value: RelativeTimeUnit }> = [
+    { shortTitle: 'ms', title: 'Milliseconds', value: 'milliseconds' },
+    { shortTitle: 's', title: 'Seconds', value: 'seconds' },
+    { shortTitle: 'm', title: 'Minutes', value: 'minutes' },
+    { shortTitle: 'h', title: 'Hours', value: 'hours' },
+    { shortTitle: 'd', title: 'Days', value: 'days' },
+    { shortTitle: 'w', title: 'Weeks', value: 'weeks' },
+    { shortTitle: 'mo', title: 'Months', value: 'months' },
+    { shortTitle: 'y', title: 'Years', value: 'years' },
   ]
 
   const mode = ref<TimeRangeSelection['mode']>(props.modelValue.mode)
+  const menuOpen = ref(false)
   const selectedPreset = ref(findPreset(props.modelValue))
   const relativeValue = ref(props.modelValue.mode === 'relative' ? props.modelValue.value : 1)
   const relativeUnit = ref<RelativeTimeUnit>(props.modelValue.mode === 'relative' ? props.modelValue.unit : 'minutes')
@@ -163,6 +218,24 @@
   })
 
   const validationError = computed(() => validateTimeRangeSelection(currentSelection.value))
+  const buttonLabel = computed(() => {
+    if (currentSelection.value.mode === 'absolute') {
+      return 'Absolute range'
+    }
+
+    const unitLabels: Record<RelativeTimeUnit, string> = {
+      milliseconds: 'ms',
+      seconds: 's',
+      minutes: 'm',
+      hours: 'h',
+      days: 'd',
+      weeks: 'w',
+      months: 'mo',
+      years: 'y',
+    }
+
+    return `Last ${currentSelection.value.value}${unitLabels[currentSelection.value.unit]}`
+  })
 
   watch(
     currentSelection,

@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 import TimeSeries from '@/components/Plugins/Submodels/TimeSeries_v1_1.vue'
 import {
   createTimeSeriesSubmodelData,
@@ -80,6 +81,7 @@ function createWrapper (props?: Record<string, unknown>) {
         'v-text-field': true,
         'v-btn': true,
         'v-empty-state': true,
+        'AutoRefreshSelector': true,
         'TimeRangeSelector': true,
         'LineChart': true,
         'AreaChart': true,
@@ -141,6 +143,45 @@ describe('TimeSeries_v1_1.vue UI and emits contract', () => {
     const vm = wrapper.vm as any
 
     expect(vm.timeRangeSelection).toEqual({ mode: 'relative', value: 2, unit: 'hours' })
+  })
+
+  it('resets the chart viewport only after a changed range is committed', async () => {
+    const wrapper = createWrapper()
+    const vm = wrapper.vm as any
+    const initialResetKey = vm.viewportResetKey
+    const nextSelection = { mode: 'relative', value: 5, unit: 'minutes' }
+
+    vm.timeRangeSelection = nextSelection
+    await nextTick()
+    expect(vm.viewportResetKey).toBe(initialResetKey)
+
+    vm.applyTimeRange(
+      [[{ time: '2026-05-13T19:15:00.000Z', value: 1 }]],
+      nextSelection,
+    )
+    await nextTick()
+
+    expect(vm.viewportResetKey).toBe(JSON.stringify(nextSelection))
+  })
+
+  it('loads and emits a valid auto-refresh configuration', async () => {
+    const wrapper = createWrapper({
+      configData: {
+        configObject: {
+          autoRefresh: { enabled: true, value: 15, unit: 'seconds' },
+        },
+      },
+    })
+    const vm = wrapper.vm as any
+
+    expect(vm.autoRefreshSelection).toEqual({ enabled: true, value: 15, unit: 'seconds' })
+
+    vm.autoRefreshSelection = { enabled: true, value: 2, unit: 'minutes' }
+    await nextTick()
+
+    expect(wrapper.emitted('new-options')?.at(-1)?.[0]).toEqual({
+      autoRefresh: { enabled: true, value: 2, unit: 'minutes' },
+    })
   })
 
   it('detects segment type from semantic ids', () => {

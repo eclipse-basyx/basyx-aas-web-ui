@@ -63,11 +63,38 @@ describe('Time Series time-range utilities', () => {
   it.each([
     [{ mode: 'relative', value: 0, unit: 'minutes' }, 'greater than zero'],
     [{ mode: 'relative', value: 1.5, unit: 'months' }, 'whole numbers'],
+    [{ mode: 'relative', value: 1, unit: 'fortnights' }, 'supported time unit'],
+    [{ mode: 'relative', value: Number.MAX_VALUE, unit: 'milliseconds' }, 'supported date range'],
     [{ mode: 'absolute', start: '', stop: '' }, 'both a start and an end'],
+    [{ mode: 'absolute', start: '2026-02-30T12:00', stop: '2026-03-01T12:00' }, 'valid start and end'],
     [{ mode: 'absolute', start: '2026-05-14T00:00', stop: '2026-05-13T00:00' }, 'before the end'],
+    [{ mode: 'unexpected', start: '2026-05-13T00:00', stop: '2026-05-14T00:00' }, 'valid time range mode'],
+    [null, 'valid time range'],
   ] as const)('validates invalid selections', (selection, message) => {
     expect(validateTimeRangeSelection(selection as TimeRangeSelection)).toContain(message)
     expect(() => resolveTimeRange(selection as TimeRangeSelection, stop)).toThrow(message)
+  })
+
+  it('rejects local date-times that do not exist during a DST transition', () => {
+    const originalTimezone = process.env.TZ
+    process.env.TZ = 'Europe/Berlin'
+
+    try {
+      const selection: TimeRangeSelection = {
+        mode: 'absolute',
+        start: '2026-03-29T02:30',
+        stop: '2026-03-29T04:00',
+      }
+
+      expect(validateTimeRangeSelection(selection)).toContain('valid start and end')
+      expect(() => resolveTimeRange(selection)).toThrow('valid start and end')
+    } finally {
+      if (originalTimezone === undefined) {
+        delete process.env.TZ
+      } else {
+        process.env.TZ = originalTimezone
+      }
+    }
   })
 
   it('interpolates supported Flux variables without touching other identifiers', () => {
@@ -115,6 +142,14 @@ describe('Time Series time-range utilities', () => {
     ])
   })
 
+  it('finds the latest point in datasets larger than the function argument limit', () => {
+    const repeatedPoint = { time: '2026-05-13T19:15:00.000Z', value: 1 }
+    const dataset = Array.from({ length: 200_000 }, () => repeatedPoint)
+    dataset.push({ time: '2026-05-13T19:16:00.000Z', value: 2 })
+
+    expect(findLatestTimestamp([dataset])?.toISOString()).toBe('2026-05-13T19:16:00.000Z')
+  })
+
   it('converts relative and absolute ranges to ApexCharts options', () => {
     const relative = resolveTimeRange({ mode: 'relative', value: 5, unit: 'minutes' }, stop)
     const absolute = resolveTimeRange({
@@ -123,7 +158,7 @@ describe('Time Series time-range utilities', () => {
       stop: '2026-05-13T19:00:00.000Z',
     })
 
-    expect(toApexTimeRange(relative)).toEqual({ range: 300_000, min: undefined, max: undefined })
+    expect(toApexTimeRange(relative)).toEqual({ range: undefined, min: relative.startMs, max: relative.stopMs })
     expect(toApexTimeRange(absolute)).toEqual({ range: undefined, min: absolute.startMs, max: absolute.stopMs })
   })
 })

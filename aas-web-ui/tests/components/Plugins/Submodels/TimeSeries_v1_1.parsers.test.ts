@@ -78,6 +78,7 @@ function createWrapper () {
         'v-text-field': true,
         'v-btn': true,
         'v-empty-state': true,
+        'AutoRefreshSelector': true,
         'TimeRangeSelector': true,
         'LineChart': true,
         'AreaChart': true,
@@ -134,7 +135,7 @@ describe('TimeSeries_v1_1.vue parser and linked fetch behavior', () => {
 
     expect(dispatchSnackbarMock).toHaveBeenCalledTimes(1)
     expect(dispatchSnackbarMock.mock.calls[0][0].text).toContain('y-values "rpm" not available in LinkedSegment Data!')
-    expect(vm.timeSeriesValues).toEqual([])
+    expect(vm.timeSeriesValues).toEqual([[]])
   })
 
   it('builds linked request with token header and replaced y-value placeholder', async () => {

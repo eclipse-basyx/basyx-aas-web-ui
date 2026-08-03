@@ -75,6 +75,7 @@ function createWrapper () {
         'v-text-field': true,
         'v-btn': true,
         'v-empty-state': true,
+        'AutoRefreshSelector': true,
         'TimeRangeSelector': true,
         'LineChart': true,
         'AreaChart': true,
