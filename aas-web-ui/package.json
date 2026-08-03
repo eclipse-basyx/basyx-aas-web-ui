@@ -10,8 +10,11 @@
     "bff:build": "tsc --build tsconfig.bff.json --force",
     "bff:build:watch": "tsc --build tsconfig.bff.json --force --watch --preserveWatchOutput",
     "bff:start": "node dist-bff/edc-bff/server.js",
+    "bff:start:proxy": "node --use-env-proxy dist-bff/edc-bff/server.js",
     "bff:start:watch": "node --watch dist-bff/edc-bff/server.js",
+    "bff:start:watch:proxy": "node --use-env-proxy --watch dist-bff/edc-bff/server.js",
     "bff:dev": "run-s bff:build && run-p bff:build:watch bff:start:watch",
+    "bff:dev:proxy": "run-s bff:build && run-p bff:build:watch bff:start:watch:proxy",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc -b --force",
@@ -74,7 +77,7 @@
   "devDependencies": {
     "@intellectronica/ruler": "^0.3.44",
     "@playwright/test": "^1.62.0",
-    "@tsconfig/node22": "^22.0.5",
+    "@tsconfig/node24": "^24.0.4",
     "@types/leaflet": "^1.9.21",
     "@types/md5": "^2.3.6",
     "@types/node": "^26.1.2",
@@ -104,5 +107,8 @@
     "vitest": "^4.1.10",
     "vue-tsc": "^3.3.8"
   },
-  "packageManager": "pnpm@11.18.0+sha512.33d83c77da82f49fba836925c6f1b841181ec3132b670639bd012f7075f5c7cf634c5f870147c19aae7478fac01df09d8892e880454896edd23ee9b33757563c"
+  "packageManager": "pnpm@11.18.0+sha512.33d83c77da82f49fba836925c6f1b841181ec3132b670639bd012f7075f5c7cf634c5f870147c19aae7478fac01df09d8892e880454896edd23ee9b33757563c",
+  "engines": {
+    "node": ">=24.5.0 <25"
+  }
 }

@@ -4,6 +4,8 @@ This guide explains how to run the Catena-X EDC backend-for-frontend (BFF) local
 
 The important security rule is: the browser only knows an EDC `proxyId`. The EDC Management API URL and `x-api-key` stay in the local BFF process.
 
+Local BFF development requires Node.js 24 LTS. Native environment proxy support is disabled by default. Enable it explicitly only when outgoing EDC requests must use an `HTTP_PROXY` or `HTTPS_PROXY`.
+
 ## 1. Configure a Catena-X Infrastructure
 
 Use a Catena-X infrastructure in `aas-web-ui/public/config/basyx-infra.yml` or configure it in the UI:
@@ -49,6 +51,36 @@ CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES='*' \
 CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES=true \
 pnpm bff:start
 ```
+
+For watch mode, build and run the BFF together with:
+
+```bash
+pnpm bff:dev
+```
+
+### Opt in to an environment proxy
+
+The normal BFF commands make direct requests, even when `HTTP_PROXY` or `HTTPS_PROXY` exists in the surrounding environment. To opt in, use the corresponding proxy command:
+
+```bash
+pnpm bff:start:proxy
+# or, for watch mode
+pnpm bff:dev:proxy
+```
+
+You can also enable Node.js native proxy support for any BFF launch by setting `NODE_USE_ENV_PROXY=1` before it starts. In the VS Code launch configuration, explicitly select **Enabled (use environment proxy)**; it defaults to direct requests.
+
+Container images also keep proxy support disabled by default. Opt in at runtime for either the standalone BFF image or the integrated UI image:
+
+```bash
+docker run \
+  -e NODE_USE_ENV_PROXY=1 \
+  -e HTTPS_PROXY=http://proxy.example:8080 \
+  -e NO_PROXY=localhost,127.0.0.1 \
+  <image>
+```
+
+This runtime setting works with both the standalone `edc-bff-stage` image and the production image when `CX_EDC_BFF_ENABLED=true`.
 
 For a real connector, replace:
 
@@ -194,7 +226,7 @@ CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES=true
 | `CX_EDC_REQUEST_TIMEOUT_MS` | Upstream EDC request timeout, default `30000`. |
 | `CX_EDC_EDR_POLLING_ATTEMPTS` | EDR polling attempts, default `30`. |
 | `CX_EDC_EDR_POLLING_INTERVAL_MS` | Delay between EDR polling attempts in milliseconds, default `2000`. |
-| `NODE_USE_ENV_PROXY` | Set to `1` to make Node.js honor `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` for outgoing EDC requests. Already set by default in the Docker image; set it manually when running the BFF locally (e.g. `pnpm bff:start` / `pnpm bff:dev`) behind a proxy. |
+| `NODE_USE_ENV_PROXY` | Set to `1` before Node.js starts to opt in to `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY` and their lowercase equivalents for outgoing EDC requests. Local commands, VS Code, and container images leave proxy support disabled by default. |
 
 For multiple proxy IDs, use `CX_EDC_PROXY_CONFIG_JSON` or `CX_EDC_PROXY_CONFIG_FILE`:
 
