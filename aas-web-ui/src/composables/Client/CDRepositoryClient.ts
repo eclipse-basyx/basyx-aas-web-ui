@@ -1,8 +1,8 @@
 import type { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
 import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
 import { computed } from 'vue'
-import { base64Encode } from '@/../shared/utils/EncodeDecodeUtils'
-import { stripLastCharacter } from '@/../shared/utils/StringUtils'
+import { base64Encode } from '@/utils/EncodeDecodeUtils'
+import { stripLastCharacter } from '@/utils/StringUtils'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 

@@ -1,6 +1,6 @@
 import type { FeatureControlOverrides } from '@/utils/FeatureControl'
 import { defineStore } from 'pinia'
-import { base64Decode } from '@/../shared/utils/EncodeDecodeUtils'
+import { base64Decode } from '@/utils/EncodeDecodeUtils'
 import { urlRegex } from '@/composables/UrlUtils'
 
 const isProduction = import.meta.env.MODE === 'production'

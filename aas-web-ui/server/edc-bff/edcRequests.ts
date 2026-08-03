@@ -6,8 +6,8 @@ import type {
   EdcProxyConfig,
   EdcSubmodelFetchRequest,
 } from './types.js'
-import { base64Encode } from '../../shared/utils/EncodeDecodeUtils.js'
-import { trimString } from '../../shared/utils/StringUtils.js'
+import { base64Encode } from '../../src/utils/EncodeDecodeUtils.js'
+import { trimString } from '../../src/utils/StringUtils.js'
 import { isCounterPartyAddressAllowed, joinManagementUrl } from './config.js'
 
 export interface EdcForwardResult {

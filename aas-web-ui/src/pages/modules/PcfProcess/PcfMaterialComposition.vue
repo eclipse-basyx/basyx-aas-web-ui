@@ -211,7 +211,7 @@
   import { computed, onMounted, ref, toRaw } from 'vue'
   import { useRouter } from 'vue-router'
   import { useDisplay } from 'vuetify'
-  import { base64Encode } from '@/../shared/utils/EncodeDecodeUtils'
+  import { base64Encode } from '@/utils/EncodeDecodeUtils'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMHandling } from '@/composables/AAS/SMHandling'

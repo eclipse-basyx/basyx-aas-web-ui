@@ -1,4 +1,4 @@
-import { hasContent, stripLastCharacter } from '@/../shared/utils/StringUtils'
+import { hasContent, stripLastCharacter } from '@/utils/StringUtils'
 
 export function normalizeBaseUrl (url: string, endpoint: string): string | undefined {
   const raw = url.trim()

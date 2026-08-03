@@ -1,6 +1,6 @@
 import type { CompanyLookupQueryParameters } from '../types/api'
-import { base64Encode } from '@/../shared/utils/EncodeDecodeUtils'
-import { hasContent } from '@/../shared/utils/StringUtils'
+import { base64Encode } from '@/utils/EncodeDecodeUtils'
+import { hasContent } from '@/utils/StringUtils'
 
 export function buildQueryParams (params?: CompanyLookupQueryParameters): URLSearchParams {
   const qp = new URLSearchParams()

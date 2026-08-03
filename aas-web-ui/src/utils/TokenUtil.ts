@@ -1,5 +1,5 @@
 import type { UserData } from '@/types/Infrastructure'
-import { base64Decode } from '@/../shared/utils/EncodeDecodeUtils'
+import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
 export type TokenPayload = Record<string, unknown>
 

@@ -547,7 +547,7 @@
   import { computed, onMounted, ref } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'
-  import { base64Encode } from '@/../shared/utils/EncodeDecodeUtils'
+  import { base64Encode } from '@/utils/EncodeDecodeUtils'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
   import { appendOrMergeSortedAasById, compareAasById } from '@/composables/AAS/AASListAccumulation'
   import { useAASListPagination } from '@/composables/AAS/AASListPagination'

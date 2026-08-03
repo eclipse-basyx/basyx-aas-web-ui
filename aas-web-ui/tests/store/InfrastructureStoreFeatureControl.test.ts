@@ -2,7 +2,7 @@ import type { InfrastructureConfig } from '@/types/Infrastructure'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
-import { base64Encode } from '@/../shared/utils/EncodeDecodeUtils'
+import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 
 const mocks = vi.hoisted(() => ({

@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import type { VForm } from 'vuetify/components'
   import { computed, onMounted, ref, watch } from 'vue'
-  import { hasContent } from '@/../shared/utils/StringUtils'
+  import { hasContent } from '@/utils/StringUtils'
   import { useTestConnection } from '@/composables/Client/CompanyLookup/queries/useTestConnection'
   import { useCompanyLookupI18n } from '../i18n/useCompanyLookupI18n'
   import { type CompanyLookupConfig, useCompanyLookupConfigStore } from '../stores/useCompanyLookupConfigStore'

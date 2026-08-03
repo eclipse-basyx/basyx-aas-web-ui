@@ -227,7 +227,7 @@
   import { BaSyxEnvironment } from 'basyx-typescript-sdk'
   import Prism from 'prismjs'
   import { ref } from 'vue'
-  import { base64Encode } from '@/../shared/utils/EncodeDecodeUtils'
+  import { base64Encode } from '@/utils/EncodeDecodeUtils'
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { useEdcDataTransfer } from '@/pages/modules/EclipseDataspaceConnector/composables/useEdcDataTransfer'

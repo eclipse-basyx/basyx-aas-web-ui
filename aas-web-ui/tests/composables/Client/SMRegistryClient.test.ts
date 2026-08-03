@@ -42,7 +42,7 @@ describe('SMRegistryClient.ts reference resolution', () => {
   it('treats a missing descriptor as expected only while resolving an AAS reference', async () => {
     mockDeps.getRequest.mockResolvedValueOnce({ success: false, status: 404 })
 
-    const { base64Encode } = await import('@/../shared/utils/EncodeDecodeUtils')
+    const { base64Encode } = await import('@/utils/EncodeDecodeUtils')
     const { useSMRegistryClient } = await import('@/composables/Client/SMRegistryClient')
     const { fetchSmDescriptorById } = useSMRegistryClient()
 

@@ -1,4 +1,4 @@
-import { base64Decode } from '@/../shared/utils/EncodeDecodeUtils'
+import { base64Decode } from '@/utils/EncodeDecodeUtils'
 import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling'
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
 import { useAASStore } from '@/store/AASDataStore'

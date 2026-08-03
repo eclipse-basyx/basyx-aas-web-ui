@@ -127,7 +127,7 @@ describe('SMRepositoryClient.ts write contract', () => {
     mockState.selectedInfrastructure = { template: 'identifiable' }
     mockDeps.putRequest.mockResolvedValueOnce({ success: true })
 
-    const { base64Encode } = await import('@/../shared/utils/EncodeDecodeUtils')
+    const { base64Encode } = await import('@/utils/EncodeDecodeUtils')
     const { useSMRepositoryClient } = await import('@/composables/Client/SMRepositoryClient')
     const { getSmEndpointById, postSubmodel } = useSMRepositoryClient()
 

@@ -59,7 +59,7 @@
   import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { onMounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
-  import { base64Encode } from '@/../shared/utils/EncodeDecodeUtils.ts'
+  import { base64Encode } from '@/utils/EncodeDecodeUtils.ts'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { buildHandoverDocumentation } from '../builders/buildHandoverDocumentation'

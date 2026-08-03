@@ -184,7 +184,7 @@
   import { jsonization, types } from '@aas-core-works/aas-core3.1-typescript'
   import { computed, nextTick, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
-  import { base64Decode } from '@/../shared/utils/EncodeDecodeUtils'
+  import { base64Decode } from '@/utils/EncodeDecodeUtils'
   import { useOperationTreeMutation } from '@/composables/AAS/OperationTreeMutation'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification'

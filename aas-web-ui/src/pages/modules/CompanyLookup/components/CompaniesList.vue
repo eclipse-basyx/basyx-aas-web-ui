@@ -3,7 +3,7 @@
   import { computed, ref, useTemplateRef } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'
-  import { hasContent } from '@/../shared/utils/StringUtils'
+  import { hasContent } from '@/utils/StringUtils.ts'
   import { useGetAllCompanies } from '@/composables/Client/CompanyLookup/queries/useGetAllCompanies'
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useCompanyLookupI18n } from '../i18n/useCompanyLookupI18n'

@@ -1,4 +1,4 @@
-import { firstLetterToLowerCase } from '@/../shared/utils/StringUtils'
+import { firstLetterToLowerCase } from '@/utils/StringUtils'
 import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
 import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'
 import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement'

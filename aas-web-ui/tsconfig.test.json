@@ -5,7 +5,6 @@
     "server/**/*.ts",
     "src/**/*",
     "src/**/*.vue",
-    "shared/**/*.ts",
     "tests/**/*.ts",
     "tests/**/*.tsx",
     "tests/**/*.vue"

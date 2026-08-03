@@ -1,5 +1,5 @@
 import { computed } from 'vue'
-import { stripLastCharacter } from '@/../shared/utils/StringUtils'
+import { stripLastCharacter } from '@/utils/StringUtils'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
 

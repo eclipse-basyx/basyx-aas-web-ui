@@ -236,7 +236,7 @@
   import { computed, h, nextTick, onMounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'
-  import { base64Decode } from '@/../shared/utils/EncodeDecodeUtils'
+  import { base64Decode } from '@/utils/EncodeDecodeUtils'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
   import { useHierarchicalStructure_v1_xUtils } from '@/composables/AAS/SubmodelTemplates/HierarchicalStructures_v1_xUtils'

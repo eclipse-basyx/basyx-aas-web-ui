@@ -2,7 +2,7 @@ import type { FeatureControlOverrides } from '@/utils/FeatureControl'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { nextTick, ref } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
-import { base64Encode } from '@/../shared/utils/EncodeDecodeUtils'
+import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import {
   type FeatureControlToken,
   watchFeatureControlClaims,

@@ -159,7 +159,7 @@ usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not exec
   import { types as aasTypes, jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { computed, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
-  import { base64Decode } from '@/../shared/utils/EncodeDecodeUtils'
+  import { base64Decode } from '@/utils/EncodeDecodeUtils'
   import { useSMEHandling } from '@/composables/AAS/SMEHandling'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { applyFieldErrors, buildVerificationSummary, verifyForEditor } from '@/composables/MetamodelVerification'

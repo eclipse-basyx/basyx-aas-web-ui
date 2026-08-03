@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/vue-query'
-import { hasContent, stripLastCharacter } from '@/../shared/utils/StringUtils'
+import { hasContent, stripLastCharacter } from '@/utils/StringUtils'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { COMPANY_LOOKUP_ENDPOINT_PATHS, CONTEXT } from '../constants/api'
 
