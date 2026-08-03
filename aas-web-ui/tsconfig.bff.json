@@ -11,7 +11,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "dist-bff",
-    "rootDir": ".",
+    "rootDir": "server",
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.bff.tsbuildinfo",
     "lib": [
       "ES2023",
