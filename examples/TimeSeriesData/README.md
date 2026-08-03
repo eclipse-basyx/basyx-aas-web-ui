@@ -50,6 +50,17 @@ Prerequisites:
 
 1. Check if the query property of the `LinkedSegment` corresponds to the data you want to fetch from the database. If not, change the query property to the desired query (see images below).
 
+   Queries copied from the InfluxDB Data Explorer or Grafana can use the time range selected in the AAS Web UI:
+
+   ```flux
+   from(bucket: "basyx")
+     |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+     |> filter(fn: (r) => r["_measurement"] == "float_metric")
+     |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
+   ```
+
+   When **Fetch Data** is clicked, the Web UI replaces `v.timeRangeStart`, `v.timeRangeStop`, and `v.windowPeriod` with values calculated from the selected relative or absolute range. The existing `{{y-value}}` placeholder can still be used to inject the first selected y-variable. Other `v.*` variables must be defined by the Flux query itself.
+
 ![InfluxDB Data Explorer](../../Docs/Figs/InfluxDBQuery.png)
 ![AAS Web UI query property](../../Docs/Figs//AASWebUIQuery.png)
 
@@ -58,9 +69,10 @@ Prerequisites:
 3. In the `Visualization`-window select the `LinkedSegment` in the Segment dropdown
 4. Select `time` as time-value and for example `temperature` as y-value
 5. If you see an input field for the InfluxDB Token, copy the token from the docker-compose.yaml file
-6. Click on `Fetch Data`
-7. In the `Preview Chart`-window select a chart type
-8. You should now see a chart with the time series data
+6. Select a relative time range or enter an absolute start and end time
+7. Click on `Fetch Data`
+8. In the `Preview Chart`-window select a chart type
+9. You should now see a chart with the time series data
 
 You can always press the `Fetch Data` button again to update the chart with the latest data from the database.
 
@@ -76,7 +88,7 @@ You can choose between the following chart types:
 
 For most of the chart types you can also alter some options. Those include:
 
-- Time Range
+- Relative time range presets, a custom value and unit, or an absolute start and end time
 - Interpolation Mode
 - Number of Bins (for Histogram)
 - If Bars should be stacked (for Histogram)

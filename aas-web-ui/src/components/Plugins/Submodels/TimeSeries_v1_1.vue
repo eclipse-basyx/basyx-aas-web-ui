@@ -80,6 +80,8 @@
           label="API Token"
           variant="outlined"
         />
+
+        <TimeRangeSelector v-model="timeRangeSelection" />
       </v-card-text>
 
       <v-divider />
@@ -91,6 +93,7 @@
               v-if="segmentType == 'LinkedSegment'"
               class="text-buttonText"
               color="primary"
+              :disabled="Boolean(timeRangeError)"
               size="small"
               @click="fetchLinkedData()"
             >Fetch Data</v-btn>
@@ -99,6 +102,7 @@
               v-if="segmentType == 'InternalSegment'"
               class="text-buttonText"
               color="primary"
+              :disabled="Boolean(timeRangeError)"
               size="small"
               @click="fetchInternalData()"
             >Fetch Data</v-btn>
@@ -107,6 +111,7 @@
               v-if="segmentType == 'ExternalSegment'"
               class="text-buttonText"
               color="primary"
+              :disabled="Boolean(timeRangeError)"
               size="small"
               @click="fetchExternalData()"
             >Fetch Data</v-btn>
@@ -139,36 +144,46 @@
           variant="outlined"
           @update:model-value="clearChartOptions"
         />
+
+        <v-empty-state
+          v-if="hasFetched && !hasTimeSeriesValues"
+          icon="mdi-chart-line-variant"
+          text="Choose another time range or fetch the data again."
+          title="No data in the selected time range"
+        />
         <!-- Chart Preview -->
         <LineChart
-          v-if="selectedChartType && selectedChartType.id == 1"
+          v-if="selectedChartType && selectedChartType.id == 1 && hasTimeSeriesValues"
           :chart-data="timeSeriesValues"
           :chart-options-external="chartOptions"
+          :time-range="resolvedTimeRange"
           :time-variable="timeVariable"
           :y-variables="yVariables"
           @chart-options="getChartOptions"
         />
 
         <AreaChart
-          v-if="selectedChartType && selectedChartType.id == 2"
+          v-if="selectedChartType && selectedChartType.id == 2 && hasTimeSeriesValues"
           :chart-data="timeSeriesValues"
           :chart-options-external="chartOptions"
+          :time-range="resolvedTimeRange"
           :time-variable="timeVariable"
           :y-variables="yVariables"
           @chart-options="getChartOptions"
         />
 
         <ScatterChart
-          v-if="selectedChartType && selectedChartType.id == 3"
+          v-if="selectedChartType && selectedChartType.id == 3 && hasTimeSeriesValues"
           :chart-data="timeSeriesValues"
           :chart-options-external="chartOptions"
+          :time-range="resolvedTimeRange"
           :time-variable="timeVariable"
           :y-variables="yVariables"
           @chart-options="getChartOptions"
         />
 
         <Histogram
-          v-if="selectedChartType && selectedChartType.id == 4"
+          v-if="selectedChartType && selectedChartType.id == 4 && hasTimeSeriesValues"
           :chart-data="timeSeriesValues"
           :chart-options-external="chartOptions"
           :time-variable="timeVariable"
@@ -177,7 +192,7 @@
         />
 
         <Gauge
-          v-if="selectedChartType && selectedChartType.id == 5"
+          v-if="selectedChartType && selectedChartType.id == 5 && hasTimeSeriesValues"
           :chart-data="timeSeriesValues"
           :chart-options-external="chartOptions"
           :time-variable="timeVariable"
@@ -186,7 +201,7 @@
         />
 
         <DisplayField
-          v-if="selectedChartType && selectedChartType.id == 6"
+          v-if="selectedChartType && selectedChartType.id == 6 && hasTimeSeriesValues"
           :chart-data="timeSeriesValues"
           :y-variables="yVariables"
         />
@@ -197,6 +212,18 @@
 
 <script lang="ts" setup>
   import { computed, onMounted, ref, watch } from 'vue'
+  import {
+    cloneTimeRangeSelection,
+    DEFAULT_TIME_RANGE,
+    filterTimeSeriesData,
+    findLatestTimestamp,
+    interpolateFluxTimeRange,
+    type ResolvedTimeRange,
+    resolveTimeRange,
+    type TimeRangeSelection,
+    validateTimeRangeSelection,
+  } from '@/components/Plugins/Submodels/TimeSeries/timeRange'
+  import TimeRangeSelector from '@/components/Plugins/Submodels/TimeSeries/TimeRangeSelector.vue'
   import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'
@@ -259,6 +286,9 @@
   ]) // Array to store the chart types
   const selectedChartType = ref(null as any) // Object to store the selected chart type
   const chartOptions = ref({} as any) // Object to store the chart options
+  const timeRangeSelection = ref<TimeRangeSelection>(cloneTimeRangeSelection(DEFAULT_TIME_RANGE))
+  const resolvedTimeRange = ref<ResolvedTimeRange | null>(null)
+  const hasFetched = ref(false)
 
   // Computed properties
   const segmentType = computed(() => {
@@ -288,6 +318,9 @@
     return null
   })
 
+  const timeRangeError = computed(() => validateTimeRangeSelection(timeRangeSelection.value))
+  const hasTimeSeriesValues = computed(() => timeSeriesValues.value.some(dataset => dataset.length > 0))
+
   watch(
     () => props.loadTrigger,
     () => {
@@ -302,10 +335,28 @@
 
   function initComponent (): void {
     initializeTimeSeriesData()
+    initializeTimeRange()
     const influxDBToken = envStore.getEnvInfluxdbToken
     if (influxDBToken && influxDBToken !== '') {
       apiToken.value = influxDBToken
       showTokenInput.value = false
+    }
+  }
+
+  function initializeTimeRange (): void {
+    const configuredTimeRange = props.configData?.configObject?.timeRange
+    if (configuredTimeRange && !validateTimeRangeSelection(configuredTimeRange)) {
+      timeRangeSelection.value = cloneTimeRangeSelection(configuredTimeRange)
+      return
+    }
+
+    const legacyRange = Number(props.configData?.configObject?.chartOptions?.xaxis?.range)
+    if (Number.isFinite(legacyRange) && legacyRange > 0) {
+      timeRangeSelection.value = {
+        mode: 'relative',
+        value: legacyRange,
+        unit: 'milliseconds',
+      }
     }
   }
 
@@ -404,7 +455,7 @@
         })
       })
 
-    timeSeriesValues.value = transformedArray
+    applyTimeRange(transformedArray)
   }
 
   function fetchExternalData (): void {
@@ -572,7 +623,7 @@
       })),
     )
     // console.log('Datasets: ', datasets);
-    timeSeriesValues.value = datasets
+    applyTimeRange(datasets)
   }
 
   function parseCSV (csvString: string): { headers: Array<string>, data: Array<Array<string>> } {
@@ -594,11 +645,27 @@
       console.warn('No Segment selected')
       return
     }
+    const range = resolveSelectedTimeRange(new Date())
+    if (!range) {
+      return
+    }
+
     // get the Endpoint from the selected Segment
-    const endpoint = selectedSegment.value.value.find((smc: any) => checkIdShort(smc, 'Endpoint')).value
+    const endpoint = selectedSegment.value.value.find((smc: any) => checkIdShort(smc, 'Endpoint'))?.value
     // get the query from the selected Segment
-    let query = selectedSegment.value.value.find((smc: any) => checkIdShort(smc, 'Query')).value
+    let query = selectedSegment.value.value.find((smc: any) => checkIdShort(smc, 'Query'))?.value
+    if (!endpoint || !query) {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 6000,
+        color: 'warning',
+        btnColor: 'buttonText',
+        text: 'LinkedSegment requires both Endpoint and Query values.',
+      })
+      return
+    }
     if (yVariables.value.length > 0) query = query.replace(yVariableTemplate.value, yVariables.value[0].idShort)
+    query = interpolateFluxTimeRange(query, range)
 
     // console.log('Endpoint: ', endpoint, ' Query: ', query);
     // construct the headers for the request
@@ -615,12 +682,12 @@
     // send the request
     postRequest(path, content, headers, context, disableMessage, true).then((response: any) => {
       if (response.success) {
-        convertInfluxCSVtoArray(response.data)
+        convertInfluxCSVtoArray(response.data, range)
       }
     })
   }
 
-  function convertInfluxCSVtoArray (csvData: any): void {
+  function convertInfluxCSVtoArray (csvData: any, range?: ResolvedTimeRange): void {
     const csvString = typeof csvData === 'string' ? csvData : String(csvData)
     const lines = csvString.trim().split('\n')
     const datasets: Record<string, Array<{ time: string, value: number }>> = {}
@@ -687,7 +754,37 @@
       .map((yVar: any) => datasets[yVar.idShort])
       .filter((ds: any) => Array.isArray(ds))
 
-    timeSeriesValues.value = newDatasets
+    applyTimeRange(newDatasets, range)
+  }
+
+  function applyTimeRange (datasets: Array<Array<{ time: string, value: unknown }>>, range?: ResolvedTimeRange): void {
+    const relativeAnchor = findLatestTimestamp(datasets) || new Date()
+    const resolvedRange = range || resolveSelectedTimeRange(relativeAnchor)
+    if (!resolvedRange) {
+      return
+    }
+
+    resolvedTimeRange.value = resolvedRange
+    timeSeriesValues.value = filterTimeSeriesData(datasets, resolvedRange)
+    hasFetched.value = true
+    emit('new-options', {
+      timeRange: cloneTimeRangeSelection(timeRangeSelection.value),
+    })
+  }
+
+  function resolveSelectedTimeRange (relativeStop: Date): ResolvedTimeRange | null {
+    try {
+      return resolveTimeRange(timeRangeSelection.value, relativeStop)
+    } catch (error) {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 6000,
+        color: 'warning',
+        btnColor: 'buttonText',
+        text: error instanceof Error ? error.message : 'Invalid time range.',
+      })
+      return null
+    }
   }
 
   function finalizeDataset (

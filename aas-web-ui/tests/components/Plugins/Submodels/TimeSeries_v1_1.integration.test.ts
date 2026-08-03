@@ -74,6 +74,8 @@ function createWrapper () {
         'v-col': true,
         'v-text-field': true,
         'v-btn': true,
+        'v-empty-state': true,
+        'TimeRangeSelector': true,
         'LineChart': true,
         'AreaChart': true,
         'ScatterChart': true,
@@ -107,6 +109,11 @@ describe('TimeSeries_v1_1.vue integration-style flows', () => {
     vm.timeVariable = { idShort: 'time' }
     vm.yVariables = [{ idShort: 'AirQuality' }]
     vm.apiToken = 'integration-token'
+    vm.timeRangeSelection = {
+      mode: 'absolute',
+      start: '2026-05-13T19:00:00.000Z',
+      stop: '2026-05-13T20:00:00.000Z',
+    }
 
     vm.fetchLinkedData()
     await Promise.resolve()

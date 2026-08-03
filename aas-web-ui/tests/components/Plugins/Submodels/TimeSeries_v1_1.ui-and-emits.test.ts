@@ -79,6 +79,8 @@ function createWrapper (props?: Record<string, unknown>) {
         'v-col': true,
         'v-text-field': true,
         'v-btn': true,
+        'v-empty-state': true,
+        'TimeRangeSelector': true,
         'LineChart': true,
         'AreaChart': true,
         'ScatterChart': true,
@@ -108,6 +110,37 @@ describe('TimeSeries_v1_1.vue UI and emits contract', () => {
 
     expect(vm.apiToken).toBe('env-token')
     expect(vm.showTokenInput).toBe(false)
+  })
+
+  it('normalizes a legacy chart range from configData', () => {
+    const wrapper = createWrapper({
+      configData: {
+        configObject: {
+          chartOptions: { xaxis: { range: 3_600_000 } },
+        },
+      },
+    })
+    const vm = wrapper.vm as any
+
+    expect(vm.timeRangeSelection).toEqual({
+      mode: 'relative',
+      value: 3_600_000,
+      unit: 'milliseconds',
+    })
+  })
+
+  it('prefers a configured time-range selection over legacy chart options', () => {
+    const wrapper = createWrapper({
+      configData: {
+        configObject: {
+          timeRange: { mode: 'relative', value: 2, unit: 'hours' },
+          chartOptions: { xaxis: { range: 3_600_000 } },
+        },
+      },
+    })
+    const vm = wrapper.vm as any
+
+    expect(vm.timeRangeSelection).toEqual({ mode: 'relative', value: 2, unit: 'hours' })
   })
 
   it('detects segment type from semantic ids', () => {

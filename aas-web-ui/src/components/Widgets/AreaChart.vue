@@ -11,20 +11,6 @@
 
     <v-row align="center">
       <v-col cols="auto">
-        <v-text-field
-          v-model="range"
-          density="compact"
-          hide-details
-          label="Range"
-          suffix="ms"
-          type="number"
-          variant="outlined"
-          @blur="changeRange()"
-          @keydown.enter="changeRange()"
-        />
-      </v-col>
-
-      <v-col cols="auto">
         <v-select
           v-model="interpolation"
           density="compact"
@@ -47,6 +33,7 @@
   import ApexCharts, { type ApexOptions } from 'apexcharts'
   import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
   import { useTheme } from 'vuetify'
+  import { type ResolvedTimeRange, toApexTimeRange } from '@/components/Plugins/Submodels/TimeSeries/timeRange'
   import { useChartHandling } from '@/composables/ChartHandling'
 
   const props = defineProps<{
@@ -54,6 +41,7 @@
     timeVariable: any
     yVariables: any
     chartOptionsExternal: any
+    timeRange: ResolvedTimeRange | null
   }>()
 
   const emit = defineEmits<{
@@ -68,7 +56,6 @@
   let chartInstance: ApexCharts | null = null
 
   const localChartOptions = ref({} as any)
-  const range = ref(60_000) // Default range in milliseconds
   type InterpolationCurve = 'smooth' | 'straight' | 'stepline' | 'linestep' | 'monotoneCubic'
   const interpolationOptions: InterpolationCurve[] = ['smooth', 'straight', 'stepline']
   const interpolation = ref<InterpolationCurve>('smooth') // Default interpolation type
@@ -101,6 +88,16 @@
         updateChartData()
       } else {
         renderChart()
+      }
+    },
+    { deep: true },
+  )
+
+  watch(
+    () => props.timeRange,
+    value => {
+      if (chartInstance) {
+        chartInstance.updateOptions({ xaxis: toApexTimeRange(value) })
       }
     },
     { deep: true },
@@ -154,7 +151,7 @@
         },
         xaxis: {
           type: 'datetime',
-          range: 60_000,
+          ...toApexTimeRange(props.timeRange),
           tickAmount: 10,
           labels: {
             datetimeFormatter: {
@@ -197,8 +194,10 @@
       if (props.chartOptionsExternal) {
         Object.assign(chartOptions, props.chartOptionsExternal)
 
-        // Save the range and interpolation from external options
-        range.value = chartOptions.xaxis.range || 60_000
+        chartOptions.xaxis = {
+          ...chartOptions.xaxis,
+          ...toApexTimeRange(props.timeRange),
+        }
         const curve = chartOptions?.stroke?.curve
         interpolation.value = typeof curve === 'string' ? (curve as InterpolationCurve) : 'smooth'
       }
@@ -231,28 +230,6 @@
         },
         legend: legend,
       })
-    }
-  }
-
-  function changeRange (): void {
-    const rangeValue = Number(range.value)
-
-    if (!rangeValue || rangeValue <= 0) {
-      range.value = 60_000 // Reset to default if invalid
-      return
-    }
-
-    if (chartInstance) {
-      chartInstance.updateOptions({
-        xaxis: {
-          range: rangeValue,
-        },
-      })
-
-      localChartOptions.value = { ...localChartOptions.value, xaxis: { range: rangeValue } }
-
-      // Emit the updated options
-      emit('chart-options', localChartOptions.value)
     }
   }
 

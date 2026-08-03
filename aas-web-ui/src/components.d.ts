@@ -156,6 +156,7 @@ declare module 'vue' {
     TechnicalData_v2_0: typeof import('./components/Plugins/Submodels/TechnicalData_v2_0.vue')['default']
     TextInput: typeof import('./components/EditorComponents/InputTypes/TextInput.vue')['default']
     ThemeSwitch: typeof import('./components/AppNavigation/Settings/ThemeSwitch.vue')['default']
+    TimeRangeSelector: typeof import('./components/Plugins/Submodels/TimeSeries/TimeRangeSelector.vue')['default']
     TimeSeries_v1_1: typeof import('./components/Plugins/Submodels/TimeSeries_v1_1.vue')['default']
     Treeview: typeof import('./components/UIComponents/Treeview.vue')['default']
     UploadAAS: typeof import('./components/AppNavigation/UploadAAS.vue')['default']

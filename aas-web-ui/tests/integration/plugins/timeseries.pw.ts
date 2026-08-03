@@ -44,6 +44,9 @@ test('timeseries plugin is reachable in the example runtime', async ({ page }) =
   await selectByKeyboard(page, 2, 2)
   await page.keyboard.press('Escape')
 
+  await expect(page.getByText('Time Range', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Relative' })).toBeVisible()
+
   const fetchButton = page.getByRole('button', { name: 'Fetch Data' }).locator(':visible').first()
   await expect(fetchButton).toBeVisible({ timeout: 30_000 })
   const [linkedResponse] = await Promise.all([
@@ -54,7 +57,11 @@ test('timeseries plugin is reachable in the example runtime', async ({ page }) =
     fetchButton.click({ force: true }),
   ])
   expect(linkedResponse.ok()).toBeTruthy()
+  const query = linkedResponse.request().postData() || ''
+  expect(query).toMatch(/range\(start: \d{4}-\d{2}-\d{2}T.*Z, stop: \d{4}-\d{2}-\d{2}T.*Z\)/)
+  expect(query).toMatch(/aggregateWindow\(every: \d+ms/)
+  expect(query).not.toMatch(/v\.(timeRangeStart|timeRangeStop|windowPeriod)/)
 
-  await selectByKeyboard(page, 3, 1)
+  await selectByKeyboard(page, 4, 1)
   await expect(page.getByRole('application', { name: /line chart/i })).toBeVisible({ timeout: 30_000 })
 })

@@ -73,6 +73,8 @@ function createWrapper () {
         'v-col': true,
         'v-text-field': true,
         'v-btn': true,
+        'v-empty-state': true,
+        'TimeRangeSelector': true,
         'LineChart': true,
         'AreaChart': true,
         'ScatterChart': true,
@@ -126,6 +128,49 @@ describe('TimeSeries_v1_1.vue fetch behavior', () => {
     vm.fetchInternalData()
 
     expect(vm.timeSeriesValues).toEqual([{ time: 'existing', value: '1' }])
+  })
+
+  it('anchors a relative InternalSegment range to the latest record', () => {
+    const wrapper = createWrapper()
+    const vm = wrapper.vm as any
+
+    vm.selectedSegment = createTimeSeriesSubmodelData().submodelElements[0].value.find((segment: any) => segment.idShort === 'InternalSegment')
+    vm.timeVariable = { idShort: 'time' }
+    vm.yVariables = [{ idShort: 'AirQuality' }]
+    vm.timeRangeSelection = { mode: 'relative', value: 500, unit: 'milliseconds' }
+
+    vm.fetchInternalData()
+
+    expect(vm.timeSeriesValues).toEqual([[
+      {
+        time: '2026-05-13T19:15:54.345702712Z',
+        value: '264.02',
+      },
+    ]])
+    expect(vm.resolvedTimeRange.stop).toBe('2026-05-13T19:15:54.345Z')
+  })
+
+  it('commits an empty absolute range and emits its selection', () => {
+    const wrapper = createWrapper()
+    const vm = wrapper.vm as any
+
+    vm.selectedSegment = createTimeSeriesSubmodelData().submodelElements[0].value.find((segment: any) => segment.idShort === 'InternalSegment')
+    vm.timeVariable = { idShort: 'time' }
+    vm.yVariables = [{ idShort: 'AirQuality' }]
+    vm.timeRangeSelection = {
+      mode: 'absolute',
+      start: '2026-05-14T00:00:00.000Z',
+      stop: '2026-05-14T01:00:00.000Z',
+    }
+
+    vm.fetchInternalData()
+
+    expect(vm.hasFetched).toBe(true)
+    expect(vm.hasTimeSeriesValues).toBe(false)
+    expect(vm.timeSeriesValues).toEqual([[]])
+    expect(wrapper.emitted('new-options')?.at(-1)?.[0]).toEqual({
+      timeRange: vm.timeRangeSelection,
+    })
   })
 
   it('warns for HTML payload on ExternalSegment fetch', async () => {
