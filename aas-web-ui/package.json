@@ -96,7 +96,7 @@
     "eslint-plugin-vue": "^10.10.0",
     "jsdom": "^30.0.1",
     "npm-run-all2": "^9.0.3",
-    "pnpm": "11.19.0",
+    "pnpm": "11.20.0",
     "sass-embedded": "^1.100.0",
     "typescript": "^6.0.3",
     "unplugin-auto-import": "^21.1.0",
@@ -107,7 +107,7 @@
     "vitest": "^4.1.10",
     "vue-tsc": "^3.3.9"
   },
-  "packageManager": "pnpm@11.19.0+sha512.7881f3ed590d472c4a955e2b88b2121791116066dcc88cbca3849ec9b60f1bbaa6d2ccb221fa91da4e1c65bef2bcbe379365aea7ac539c7bf86dedc3a1b22dce",
+  "packageManager": "pnpm@11.20.0+sha512.9a6f330a95b66446ea088faf1521405a8a01f07fde7124cc9958dfed52d4bb436737e65b08f85f37b46fcba375092558ac51262b816844b22f63406ed166bfee",
   "engines": {
     "node": ">=24.5.0 <25"
   }

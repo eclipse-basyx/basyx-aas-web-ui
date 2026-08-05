@@ -184,8 +184,8 @@ importers:
         specifier: ^9.0.3
         version: 9.0.3
       pnpm:
-        specifier: 11.19.0
-        version: 11.19.0
+        specifier: 11.20.0
+        version: 11.20.0
       sass-embedded:
         specifier: ^1.100.0
         version: 1.100.0
@@ -2430,8 +2430,8 @@ packages:
   pnpm-workspace-yaml@1.6.1:
     resolution: {integrity: sha512-yTeZntGWi8m9WNuhoVsP0DpFc4sC1U0+rr/qR6Zi9n2g3sxXY+JfccjXjjruNz96tM8I09yaJUA86doRnNLkbg==}
 
-  pnpm@11.19.0:
-    resolution: {integrity: sha512-eIHz7VkNRyxKlV4riLISF5ERYGbcyIy8o4SeybYPG7qm0syyIfqR2k4cZb7yvL43k2Wup6xTnHv4be3DobItzg==}
+  pnpm@11.20.0:
+    resolution: {integrity: sha512-mm8zCpW2ZEbqCI+vFSFAWooB8H/ecSTMmVjf7VLUu0NnN+ZbCPhfN7Rvy6N1CSVYrFEmK4FoRLIvY0Bu0Wa/7g==}
     engines: {node: '>=22.13'}
     hasBin: true
 
@@ -5532,7 +5532,7 @@ snapshots:
     dependencies:
       yaml: 2.9.0
 
-  pnpm@11.19.0: {}
+  pnpm@11.20.0: {}
 
   postcss-selector-parser@7.1.4:
     dependencies:
