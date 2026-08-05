@@ -76,7 +76,7 @@
   },
   "devDependencies": {
     "@intellectronica/ruler": "^0.3.44",
-    "@playwright/test": "^1.62.0",
+    "@playwright/test": "^1.62.1",
     "@tsconfig/node24": "^24.0.4",
     "@types/leaflet": "^1.9.22",
     "@types/md5": "^2.3.6",
