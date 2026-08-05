@@ -1,0 +1,42 @@
+{
+  "@context": [
+    "https://w3id.org/dspace/2025/1/odrl-profile.jsonld",
+    "https://w3id.org/catenax/2025/9/policy/context.jsonld",
+    {
+      "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+    }
+  ],
+  "@type": "PolicyDefinition",
+  "@id": "{{Policy Definition ID|Enter a unique policy definition identifier|This will be the @id of your policy definition}}",
+  "policy": {
+    "@type": "Set",
+    "permission": [
+      {
+        "action": "use",
+        "constraint": [
+          {
+            "and": [
+              {
+                "leftOperand": "FrameworkAgreement",
+                "operator": "eq",
+                "rightOperand": "DataExchangeGovernance:1.0"
+              },
+              {
+                "leftOperand": "Membership",
+                "operator": "eq",
+                "rightOperand": "active"
+              },
+              {
+                "leftOperand": "UsagePurpose",
+                "operator": "isAnyOf",
+                "rightOperand": "cx.core.industrycore:1"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "prohibition": [],
+    "obligation": []
+  }
+}

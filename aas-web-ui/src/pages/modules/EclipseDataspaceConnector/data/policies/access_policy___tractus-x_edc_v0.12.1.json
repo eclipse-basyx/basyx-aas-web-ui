@@ -1,0 +1,20 @@
+{
+  "@context": [
+    "https://w3id.org/dspace/2025/1/odrl-profile.jsonld",
+    "https://w3id.org/catenax/2025/9/policy/context.jsonld",
+    {
+      "@vocab": "https://w3id.org/edc/v0.0.1/ns/"
+    }
+  ],
+  "@type": "PolicyDefinition",
+  "@id": "{{Policy Definition ID|Enter a unique policy definition identifier|This will be the @id of your policy definition}}",
+  "policy": {
+    "@type": "Set",
+    "permission": [
+      {
+        "action": "access",
+        "constraint": []
+      }
+    ]
+  }
+}

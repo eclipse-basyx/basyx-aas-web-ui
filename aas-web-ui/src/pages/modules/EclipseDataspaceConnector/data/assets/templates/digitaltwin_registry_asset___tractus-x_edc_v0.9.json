@@ -1,0 +1,37 @@
+{
+  "@context": {
+    "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+    "edc": "https://w3id.org/edc/v0.0.1/ns/",
+    "tx": "https://w3id.org/tractusx/v0.0.1/ns/",
+    "tx-auth": "https://w3id.org/tractusx/auth/",
+    "cx-policy": "https://w3id.org/catenax/policy/",
+    "odrl": "http://www.w3.org/ns/odrl/2/",
+    "dct": "http://purl.org/dc/terms/",
+    "cx-taxo": "https://w3id.org/catenax/taxonomy#",
+    "cx-common": "https://w3id.org/catenax/ontology/common#"
+  },
+  "@id": "{{Digital Twin Registry Asset ID|Enter a unique asset identifier, e.g. a UUID|This will be the @id of your asset}}",
+  "properties": {
+    "id": "{{Digital Twin Registry Asset ID|Enter a unique asset identifier, e.g. a UUID|This will be the @id of your asset}}",
+    "name": "Digital Twin Registry",
+    "description": "The Digital Twin Registry enables the discovery and access of Digital Twins",
+    "dct:type": {
+      "@id": "cx-taxo:DigitalTwinRegistry"
+    },
+    "cx-common:version": "3.0"
+  },
+  "privateProperties": {},
+  "dataAddress": {
+    "@type": "DataAddress",
+    "type": "HttpData",
+    "baseUrl": "{{Digital Twin Registry Endpoint||}}",
+    "proxyBody": "true",
+    "proxyMethod": "true",
+    "proxyPath": "true",
+    "proxyQueryParams": "true",
+    "oauth2:clientId": "{{Digital Twin Registry client ID||}}",
+    "oauth2:clientSecretKey": "{{Digital Twin Registry client secret key||}}",
+    "oauth2:tokenUrl": "{{Digital Twin Registry token endpoint||}}",
+    "oauth2:scope": "{{Digital Twin Registry Token scope||}}"
+  }
+}
