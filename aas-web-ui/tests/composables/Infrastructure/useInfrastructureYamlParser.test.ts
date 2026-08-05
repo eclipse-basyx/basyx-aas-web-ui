@@ -151,6 +151,44 @@ describe('useInfrastructureYamlParser.ts', () => {
     })
   })
 
+  it('parses custom-header security into a customHeader auth config', () => {
+    const { parseYamlConfig } = useInfrastructureYamlParser()
+
+    const parsed = parseYamlConfig(createYamlConfig({
+      name: 'Custom Header',
+      components: {
+        aasRepository: { baseUrl: 'https://aas-repo.example' },
+      },
+      security: {
+        type: 'custom-header',
+        config: { headerName: 'X-API-KEY', headerValue: 'secret-key-123' },
+      },
+    }))
+
+    const auth = parsed.infrastructures[0].auth
+    expect(auth?.securityType).toBe('Custom Header')
+    expect(auth?.customHeader).toEqual({ name: 'X-API-KEY', value: 'secret-key-123' })
+  })
+
+  it('omits customHeader when headerName or headerValue is missing', () => {
+    const { parseYamlConfig } = useInfrastructureYamlParser()
+
+    const parsed = parseYamlConfig(createYamlConfig({
+      name: 'Custom Header Incomplete',
+      components: {
+        aasRepository: { baseUrl: 'https://aas-repo.example' },
+      },
+      security: {
+        type: 'custom-header',
+        config: { headerName: 'X-API-KEY' },
+      },
+    }))
+
+    const auth = parsed.infrastructures[0].auth
+    expect(auth?.securityType).toBe('Custom Header')
+    expect(auth?.customHeader).toBeUndefined()
+  })
+
   it('parses Catena-X EDC partners from YAML', () => {
     const { parseYamlConfig } = useInfrastructureYamlParser()
 
