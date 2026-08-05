@@ -55,6 +55,9 @@ export function useInfrastructureYamlParser (): {
       case 'oauth2': {
         return 'OAuth2'
       }
+      case 'custom-header': {
+        return 'Custom Header'
+      }
       default: {
         console.warn(`Unknown security type: ${yamlType}, defaulting to 'No Authentication'`)
         return 'No Authentication'
@@ -132,6 +135,18 @@ export function useInfrastructureYamlParser (): {
           }
         } else {
           console.warn('OAuth2 authentication requires issuer and clientId')
+        }
+        break
+      }
+
+      case 'custom-header': {
+        if (config.headerName && config.headerValue) {
+          auth.customHeader = {
+            name: config.headerName,
+            value: config.headerValue,
+          }
+        } else {
+          console.warn('Custom header authentication requires headerName and headerValue')
         }
         break
       }
