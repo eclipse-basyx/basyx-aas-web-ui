@@ -6,9 +6,9 @@ import { useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { hasContent } from '@/utils/StringUtils'
+import { normalizeBaseUrl } from '@/utils/url'
 import { COMPANY_LOOKUP_ENDPOINT_PATHS, CONTEXT } from './constants/api'
 import { buildQueryParams } from './utils/params'
-import { normalizeBaseUrl } from './utils/url'
 
 export function useCompanyLookupClient (disableMessage = false) {
   const {

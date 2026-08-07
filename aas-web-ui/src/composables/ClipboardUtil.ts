@@ -70,7 +70,7 @@ export function useClipboardUtil () {
     }, 1500)
   }
 
-  async function copyJsonToClipboard (value: unknown, valueName: string, iconReference: { value: string }): Promise<void> {
+  async function copyJsonToClipboard (value: unknown, valueName: string, iconReference: { value: string }, shouldClean = true): Promise<void> {
     if (!value) {
       return
     }
@@ -80,7 +80,7 @@ export function useClipboardUtil () {
 
     // Todo: seems like when copying a company (as object) the endpoints are omitted, since cleanObjectRecursively is removing endpoints
     // Clean the JSON object recursively
-    const cleanedValue = cleanObjectRecursively(value)
+    const cleanedValue = shouldClean ? cleanObjectRecursively(value) : value
 
     iconReference.value = 'mdi-check'
 

@@ -1,0 +1,40 @@
+import type { Sort } from '../types/sort'
+import type { PolicyVersion } from '@/composables/Client/ABAC/types/policy'
+import { computed, ref, type Ref } from 'vue'
+
+export function useSortPolicies (policies: Ref<PolicyVersion[] | undefined>) {
+  const sort = ref<Sort>({ accessor: 'status', order: 'asc' })
+
+  function onSort (accessor: Sort['accessor']) {
+    sort.value = sort.value.accessor === accessor
+      ? {
+          accessor,
+          order: sort.value.order === 'asc' ? 'desc' : 'asc',
+        }
+      : { accessor, order: 'asc' }
+  }
+
+  const sortedPolicies = computed<PolicyVersion[]>(() => {
+    const items = [...policies.value ?? []]
+    const factor = sort.value.order === 'asc' ? 1 : -1
+
+    return items.toSorted((a, b) => {
+      const av = a[sort.value.accessor]
+      const bv = b[sort.value.accessor]
+
+      if (av == null && bv == null) {
+        return 0
+      }
+      if (av == null) {
+        return 1
+      }
+      if (bv == null) {
+        return -1
+      }
+
+      return av.toString().localeCompare(bv.toString(), 'de', { numeric: true }) * factor
+    })
+  })
+
+  return { sort, onSort, sortedPolicies }
+}

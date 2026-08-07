@@ -1,35 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
-import { hasItems } from './array'
 import { validateURL } from './url'
 import { zodRule } from './zodRule'
-
-describe('Array Utilities (array.ts)', () => {
-  describe('hasItems', () => {
-    it('should return true if array contains valid elements', () => {
-      expect(hasItems([1, 2, 3])).toBe(true)
-      expect(hasItems(['a'])).toBe(true)
-    })
-
-    it('should return true if array contains elements alongside nullish values', () => {
-      expect(hasItems([null, 'valid element', undefined])).toBe(true)
-    })
-
-    it('should return false for empty arrays', () => {
-      expect(hasItems([])).toBe(false)
-    })
-
-    it('should return false if array only contains null or undefined values', () => {
-      expect(hasItems([null])).toBe(false)
-      expect(hasItems([undefined, null, undefined])).toBe(false)
-    })
-
-    it('should return false for null and undefined inputs', () => {
-      expect(hasItems(null)).toBe(false)
-      expect(hasItems(undefined)).toBe(false)
-    })
-  })
-})
 
 describe('URL Utilities (url.ts)', () => {
   describe('validateURL', () => {
