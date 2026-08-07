@@ -13,7 +13,7 @@ export type InfrastructureTemplate = 'full' | 'identifiable' | 'mono-repo' | 'mo
 /**
  * Catena-X access modes supported by the CatenaXplorer module
  */
-export type CatenaXAccessMode = 'direct' | 'edc'
+export type CatenaXAccessMode = 'full' | 'direct' | 'edc'
 
 /**
  * Basic authentication credentials

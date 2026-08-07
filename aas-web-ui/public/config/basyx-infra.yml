@@ -18,7 +18,11 @@
 # - mono-all: one aasEnvironment URL for all components
 # - catena-x: direct digitalTwinRegistry plus submodelService, or EDC proxy access
 # Optional Catena-X EDC metadata:
-# - catenaX.accessMode can be "direct" or "edc"; older configs infer "edc" when proxyId is set.
+# - catenaX.accessMode can be "direct", "edc", or "full"; older configs infer "edc" when proxyId is set.
+#   - direct: digitalTwinRegistry and submodelService are accessed directly.
+#   - edc: components are accessed exclusively through the server-side EDC proxy.
+#   - full: behaves like "edc" but also allows configuring digitalTwinRegistry and
+#     submodelService components.
 # - catenaX.edc.proxyId links this infrastructure to a server-side EDC BFF proxy config.
 # - catenaX.edc.partners can preconfigure known counterparties; users may still enter runtime partners.
 # - Do not put the EDC Management API URL or x-api-key in this YAML file.
@@ -79,6 +83,43 @@ infrastructures:
   #       clientId: "basyx-web-ui"
   #       scope: "openid profile email"
 
+  # # Infrastructure with Basic Authentication
+  # staging:
+  #   name: Staging BaSyx
+  #   template: full
+  #   components:
+  #     aasDiscovery:
+  #       baseUrl: "https://discovery.basyx.example.com"
+  #     aasRegistry:
+  #       baseUrl: "https://aasreg.basyx.example.com"
+  #     submodelRegistry:
+  #       baseUrl: "https://smreg.basyx.example.com"
+  #     aasRepository:
+  #       baseUrl: "https://aasenv.basyx.example.com"
+  #     submodelRepository:
+  #       baseUrl: "https://aasenv.basyx.example.com"
+  #     conceptDescriptionRepository:
+  #       baseUrl: "https://aasenv.basyx.example.com"
+  #     companyLookup:
+  #       baseUrl: "https://companylookup.basyx.example.com"
+  #   security:
+  #     type: basic
+  #     config:
+  #       username: "admin"
+  #       password: "admin123"
+
+  # # Infrastructure with Bearer Token
+  # test:
+  #   name: Test BaSyx
+  #   template: identifiable
+  #   components:
+  #     aasRepository:
+  #       baseUrl: "https://aasenv.test.basyx.com"
+  #   security:
+  #     type: bearer
+  #     config:
+  #       token: "your-bearer-token-here"
+
   # # Service infrastructure with OAuth2 (Client Credentials Flow)
   # # WARNING: Client secrets in this file are stored in plain text!
   # # Only use this for non-production scenarios or with proper secret management.
@@ -103,8 +144,8 @@ infrastructures:
   #       clientSecret: "your-client-secret-here"
   #       scope: ""
 
-  # # Infrastructure with Basic Authentication
-  # staging:
+  # # Catena-X Infrastructure (direct, comparable to MX-Port Leo)
+  # edc-direct:
   #   name: Staging BaSyx
   #   template: catena-x
   #   catenaX:
@@ -115,12 +156,9 @@ infrastructures:
   #     submodelService:
   #       baseUrl: "https://submodel-service.staging.basyx.com"
   #   security:
-  #     type: basic
-  #     config:
-  #       username: "admin"
-  #       password: "admin123"
+  #     type: none
 
-  # # Catena-X EDC infrastructure
+  # # Catena-X EDC infrastructure (aka MX-Port Hercules)
   # edc:
   #   name: EDC Catena-X
   #   template: catena-x
@@ -135,22 +173,39 @@ infrastructures:
   #       partners:
   #         - id: provider-a
   #           name: Provider A
-  #           counterPartyId: "<COUNTERPARTY_ID>"
-  #           counterPartyAddress: "<COUNTERPARTY_DSP_ADDRESS>"
+  #           counterPartyId: "<COUNTERPARTY_ID_A>"
+  #           counterPartyAddress: "<COUNTERPARTY_DSP_ADDRESS_A>"
+  #         - id: provider-b
+  #           name: Provider B
+  #           counterPartyId: "<COUNTERPARTY_ID_B>"
+  #           counterPartyAddress: "<COUNTERPARTY_DSP_ADDRESS_B>"
   #   security:
-  #     type: basic
-  #     config:
-  #       username: "admin"
-  #       password: "admin123"
+  #     type: none
 
-  # # Infrastructure with Bearer Token
-  # test:
-  #   name: Test BaSyx
-  #   template: identifiable
+  # # Catena-X EDC infrastructure (combination of MX-Port Leo & Hercules)
+  # edc-full:
+  #   name: EDC Catena-X (Full)
+  #   template: catena-x
   #   components:
-  #     aasRepository:
-  #       baseUrl: "https://aasenv.test.basyx.com"
+  #     digitalTwinRegistry:
+  #       baseUrl: "https://dtr.staging.basyx.com"
+  #     submodelService:
+  #       baseUrl: "https://submodel-service.staging.basyx.com"
+  #   catenaX:
+  #     accessMode: full
+  #     edc:
+  #       proxyId: default
+  #       defaultPartnerId: provider-a
+  #       defaultCounterPartyAddress: "<COUNTERPARTY_DSP_ADDRESS>"
+  #       defaultCounterPartyId: "<COUNTERPARTY_ID>"
+  #       partners:
+  #         - id: provider-a
+  #           name: Provider A
+  #           counterPartyId: "<COUNTERPARTY_ID_A>"
+  #           counterPartyAddress: "<COUNTERPARTY_DSP_ADDRESS_A>"
+  #         - id: provider-b
+  #           name: Provider B
+  #           counterPartyId: "<COUNTERPARTY_ID_B>"
+  #           counterPartyAddress: "<COUNTERPARTY_DSP_ADDRESS_B>"
   #   security:
-  #     type: bearer
-  #     config:
-  #       token: "your-bearer-token-here"
+  #     type: none
