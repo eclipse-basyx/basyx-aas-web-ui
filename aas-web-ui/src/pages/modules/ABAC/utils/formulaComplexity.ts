@@ -10,7 +10,7 @@
  *
  */
 
-import type { FormulaExpression } from '@/composables/Client/ABAC/types/formula'
+import type { FormulaExpression } from '@/pages/modules/ABAC/types/formula'
 
 export type Complexity = 'N/A' | 'LOW' | 'DATA_DRIVEN'
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { PolicyValidationResult } from '@/composables/Client/ABAC/types/policy'
+  import type { PolicyValidationResult } from '@/pages/modules/ABAC/types/policy'
   import { ref } from 'vue'
   import { hasContent } from '@/utils/StringUtils'
   import { useAbacI18n } from '../../../i18n/useAbacI18n'

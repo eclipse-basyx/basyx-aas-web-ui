@@ -1,9 +1,9 @@
 <script setup lang="ts">
   import { ref } from 'vue'
-  import { useDeleteRule } from '@/composables/Client/ABAC/queries/rule/useDeleteRule'
-  import { useDuplicateRule } from '@/composables/Client/ABAC/queries/rule/useDuplicateRule'
-  import { useMoveRule } from '@/composables/Client/ABAC/queries/rule/useMoveRule'
-  import { useToggleRule } from '@/composables/Client/ABAC/queries/rule/useToggleRule'
+  import { useDeleteRule } from '@/pages/modules/ABAC/api/queries/rule/useDeleteRule'
+  import { useDuplicateRule } from '@/pages/modules/ABAC/api/queries/rule/useDuplicateRule'
+  import { useMoveRule } from '@/pages/modules/ABAC/api/queries/rule/useMoveRule'
+  import { useToggleRule } from '@/pages/modules/ABAC/api/queries/rule/useToggleRule'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
   import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
@@ -29,7 +29,7 @@
 
   const { selectedPolicyVersion, onSelectRule } = useAbacNavigation()
   const { rulesCount, selectedRule } = useRules()
-  const isEnabled = computed(() => selectedRule.value?.access.toLocaleLowerCase() === 'ALLOW'.toLocaleLowerCase())
+  const isEnabled = computed(() => selectedRule.value?.access?.toUpperCase() === 'ALLOW')
 
   const { mutateAsync: duplicateRule, isPending: isDuplicating } = useDuplicateRule()
   const { mutateAsync: moveRule, isPending: isMoving } = useMoveRule()
@@ -214,7 +214,6 @@
 
           <v-btn
             color="primary"
-            :disabled="isMoving"
             :loading="isMoving"
             variant="flat"
             @click="doAction('move')"

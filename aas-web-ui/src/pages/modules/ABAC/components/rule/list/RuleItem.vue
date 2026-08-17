@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { Rule } from '@/composables/Client/ABAC/types/rules'
+  import type { Rule } from '@/pages/modules/ABAC/types/rules'
   import { useTheme } from 'vuetify'
   import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
   import RuleComplexityBadge from '../RuleComplexityBadge.vue'
@@ -19,7 +19,7 @@
   const isSelected = computed(() => selectedRuleIndex.value?.toString() === rule?.rule_index?.toString())
 
   const accessBadge = computed(() => {
-    const isEnabled = rule?.access?.toLocaleLowerCase() === 'ALLOW'.toLocaleLowerCase()
+    const isEnabled = rule?.access?.toUpperCase() === 'ALLOW'
     return isEnabled ? { icon: ICONS.ALLOW, color: 'success' } : { icon: ICONS.DISABLED, color: 'error' }
   })
 

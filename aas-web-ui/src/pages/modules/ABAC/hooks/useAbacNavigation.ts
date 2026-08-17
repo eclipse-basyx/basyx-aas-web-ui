@@ -1,5 +1,7 @@
 import type { ViewType } from '../types/view'
-import type { DefinitionKind } from '@/composables/Client/ABAC/types/definitions'
+import type { DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
+import type { BaSyxComponentKey } from '@/types/BaSyx'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNavigationStore } from '@/store/NavigationStore'
 import { VIEW } from '../types/view'
@@ -11,6 +13,25 @@ export function useAbacNavigation () {
 
   const isMobile = computed(() => navigationStore.getIsMobile)
   const isListOpen = ref(true)
+
+  const selectedService = computed<BaSyxComponentKey | undefined>(() => {
+    const paramService = route.query.service as string | undefined
+    return paramService ? decodeURIComponent(paramService) as BaSyxComponentKey : undefined
+  })
+
+  function onSelectService (key: BaSyxComponentKey): void {
+    const query = { ...route.query }
+
+    delete query.policy
+    delete query.rule
+    delete query.definition
+    delete query.kind
+    delete query.view
+
+    query.service = encodeURIComponent(key)
+
+    router.replace({ query })
+  }
 
   const selectedPolicyVersion = computed(() => {
     const paramId = route.query.policy as string | undefined
@@ -24,6 +45,7 @@ export function useAbacNavigation () {
     delete query.rule
     delete query.definition
     delete query.kind
+    delete query.view
 
     if (isCurrentlySelected) {
       delete query.policy
@@ -100,6 +122,8 @@ export function useAbacNavigation () {
   })
 
   return {
+    selectedService,
+    onSelectService,
     selectedPolicyVersion,
     onSelectPolicy,
     selectedRuleIndex,

@@ -3,8 +3,8 @@
   import { ref } from 'vue'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { useAbacI18n } from '../../i18n/useAbacI18n'
-  import { type AbacConfig, useAbacConfigStore } from '../../stores/useAbacConfigStore'
-  import { Locales } from '../../types/locale'
+  import { useAbacConfigStore } from '../../stores/useAbacConfigStore'
+  import { type Locale, Locales } from '../../types/locale'
 
   const ICONS = {
     CONFIGS: 'mdi-cog',
@@ -19,7 +19,7 @@
   const form = ref<VForm | null>(null)
   const isValid = ref(false)
 
-  const localState = ref<AbacConfig>({
+  const localState = ref<{ language: Locale }>({
     language: Locales.EN,
   })
 

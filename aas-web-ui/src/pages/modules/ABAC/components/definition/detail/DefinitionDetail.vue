@@ -6,8 +6,8 @@
 
   const ICONS = {
     DEFINITIONS: 'mdi-book-open-variant',
-
   } as const
+
   const { t, i18nData } = useAbacI18n()
 
   const { selectedDefinition } = useDefinitions()

@@ -1,26 +1,22 @@
-import { useGetRule } from '@/composables/Client/ABAC/queries/rule/useGetRule'
-import { useGetRules } from '@/composables/Client/ABAC/queries/rule/useGetRules'
+import { useGetRule } from '@/pages/modules/ABAC/api/queries/rule/useGetRule'
+import { useGetRules } from '@/pages/modules/ABAC/api/queries/rule/useGetRules'
 import { useAbacNavigation } from './useAbacNavigation'
 
 export function useRules () {
   const { selectedPolicyVersion, selectedRuleIndex } = useAbacNavigation()
 
-  const queryValues = useGetRules(selectedPolicyVersion)
+  const { data: rules, ...rest } = useGetRules(selectedPolicyVersion)
 
-  const rulesCount = ref<number>(0)
-
-  watch(queryValues.data, rules => {
-    rulesCount.value = rules?.length ?? 0
-  })
+  const rulesCount = computed(() => rules.value?.length ?? 0)
 
   const { data: selectedRule, isLoading: isSelectedRuleLoading }
     = useGetRule(selectedPolicyVersion, selectedRuleIndex)
 
   return {
     selectedRuleIndex,
-    rules: queryValues.data,
+    rules,
     rulesCount,
-    ...queryValues,
+    ...rest,
     selectedRule,
     isSelectedRuleLoading,
   }

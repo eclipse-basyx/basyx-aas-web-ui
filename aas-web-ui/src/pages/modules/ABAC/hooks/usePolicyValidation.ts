@@ -1,6 +1,6 @@
 import type { JsonErrorMessage } from '../components/shared/JsonCodeEditor.vue'
 import type { AbacValidationMessages } from '../i18n/locales'
-import type { CompletePolicy } from '@/composables/Client/ABAC/types/policy'
+import type { CompletePolicy } from '@/pages/modules/ABAC/types/policy'
 import { hasContent } from '@/utils/StringUtils'
 import { createPolicySchema } from '../schemas/policySchema'
 import { extractLineFromSyntaxError, findLineForPath } from '../utils/json'

@@ -2,7 +2,7 @@
   import type { Sort } from '../../../types/sort'
   import { computed, ref, useTemplateRef } from 'vue'
   import { useTheme } from 'vuetify'
-  import { useGetPolicies } from '@/composables/Client/ABAC/queries/policy/useGetPolicies'
+  import { useGetPolicies } from '@/pages/modules/ABAC/api/queries/policy/useGetPolicies'
   import { hasItems } from '@/utils/array'
   import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
   import { useSortPolicies } from '../../../hooks/useSortPolicies'

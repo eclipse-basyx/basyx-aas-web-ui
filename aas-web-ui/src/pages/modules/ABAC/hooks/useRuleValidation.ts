@@ -1,6 +1,6 @@
 import type { JsonErrorMessage } from '../components/shared/JsonCodeEditor.vue'
 import type { AbacValidationMessages } from '../i18n/locales'
-import type { ConfiguredRule } from '@/composables/Client/ABAC/types/rules'
+import type { ConfiguredRule } from '@/pages/modules/ABAC/types/rules'
 import { hasContent } from '@/utils/StringUtils'
 import { createRuleSchema } from '../schemas/ruleSchema'
 import { extractLineFromSyntaxError, findLineForPath } from '../utils/json'

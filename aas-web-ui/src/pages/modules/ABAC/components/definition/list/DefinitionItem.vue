@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { Definition, DefinitionKind } from '@/composables/Client/ABAC/types/definitions'
+  import type { Definition, DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
   import { useTheme } from 'vuetify'
   import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
 

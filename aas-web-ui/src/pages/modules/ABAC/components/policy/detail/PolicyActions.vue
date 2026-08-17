@@ -1,11 +1,12 @@
 <script setup lang="ts">
   import { ref } from 'vue'
-  import { useActivatePolicy } from '@/composables/Client/ABAC/queries/policy/useActivatePolicy'
-  import { useCloneVersion } from '@/composables/Client/ABAC/queries/policy/useCloneVersion'
-  import { useRejectPolicy } from '@/composables/Client/ABAC/queries/policy/useRejectPolicy'
-  import { useValidatePolicy } from '@/composables/Client/ABAC/queries/policy/useValidatePolicy'
+  import { useActivatePolicy } from '@/pages/modules/ABAC/api/queries/policy/useActivatePolicy'
+  import { useCloneVersion } from '@/pages/modules/ABAC/api/queries/policy/useCloneVersion'
+  import { useRejectPolicy } from '@/pages/modules/ABAC/api/queries/policy/useRejectPolicy'
+  import { useValidatePolicy } from '@/pages/modules/ABAC/api/queries/policy/useValidatePolicy'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
+  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
   import { usePolicy } from '../../../hooks/usePolicy'
   import { useAbacI18n } from '../../../i18n/useAbacI18n'
   import PolicyValidationDialog from './PolicyValidationDialog.vue'
@@ -22,7 +23,7 @@
 
   const { t, i18nData } = useAbacI18n()
   const navigationStore = useNavigationStore()
-
+  const { onSelectPolicy } = useAbacNavigation()
   const { selectedPolicyVersion, policy } = usePolicy()
 
   const { mutateAsync: clone, isPending: isCloning } = useCloneVersion()
@@ -46,13 +47,13 @@
     try {
       switch (action) {
         case 'clone': {
-          await clone(selectedPolicyVersion.value)
+          const clonedPolicy = await clone(selectedPolicyVersion.value)
+          onSelectPolicy(clonedPolicy.version_id)
           break
         }
         case 'validate': {
           const result = await validate(selectedPolicyVersion.value)
           if (result) policyValidationDialog.value?.open(result)
-
           break
         }
         case 'activate': {
@@ -140,14 +141,14 @@
     </template>
   </div>
 
-  <v-dialog v-model="confirmDialog" max-width="420" persistent>
+  <v-dialog v-if="confirmAction" v-model="confirmDialog" max-width="420" persistent>
     <v-card>
       <v-card-title class="pa-4" v-bind="i18nData(`policies.policy.confirmDialog.${confirmAction}.title`)">
         {{ t(`policies.policy.confirmDialog.${confirmAction}.title`) }}
       </v-card-title>
 
       <v-card-text class="pa-4" v-bind="i18nData(`policies.policy.confirmDialog.${confirmAction}.message`)">
-        {{ t(`policies.policy.confirmDialog.${confirmAction}.message`) }}
+        {{ t(`policies.policy.confirmDialog.${confirmAction}.message`,{ version: selectedPolicyVersion }) }}
       </v-card-text>
 
       <v-divider />

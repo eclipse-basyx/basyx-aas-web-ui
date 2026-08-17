@@ -1,7 +1,7 @@
 <script setup lang="ts">
-  import type { DefinitionKind } from '@/composables/Client/ABAC/types/definitions'
-  import { computed } from 'vue'
-  import { DEFINITION_KINDS } from '@/composables/Client/ABAC/types/definitions'
+  import type { DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
+  import { computed, ref } from 'vue'
+  import { DEFINITION_KINDS } from '@/pages/modules/ABAC/types/definitions'
   import { hasItems } from '@/utils/array'
   import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
   import { useDefinitions } from '../../../hooks/useDefinitions'

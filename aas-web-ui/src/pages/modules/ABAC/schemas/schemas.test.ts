@@ -1,4 +1,4 @@
-import type { FormulaExpression } from '@/composables/Client/ABAC/types/formula'
+import type { FormulaExpression } from '@/pages/modules/ABAC/types/formula'
 import type { z } from 'zod'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import { useDefinitionValidation } from '../hooks/useDefinitionValidation'
@@ -889,7 +889,7 @@ describe('policySchema', () => {
         DEFACLS: [
           {
             name: 'readAcl',
-            acl: { ACCESS: 'ALLOW', RIGHTS: ['READ'], ATTRIBUTES: [{ CLAIM: 'x the typrole' }] },
+            acl: { ACCESS: 'ALLOW', RIGHTS: ['READ'], ATTRIBUTES: [{ CLAIM: 'x the typRole' }] },
           },
         ],
         DEFOBJECTS: [{ name: 'adminRoutes', objects: [{ ROUTE: '/security/abac/*' }] }],

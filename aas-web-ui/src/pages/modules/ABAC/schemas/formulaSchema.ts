@@ -10,7 +10,7 @@ import type {
   MatchExpression,
   StringValueExpression,
   ValueExpression,
-} from '@/composables/Client/ABAC/types/formula'
+} from '@/pages/modules/ABAC/types/formula'
 import { z } from 'zod'
 import { DATE_TIME_VAL_PATTERN, FIELD_PATTERN, HEX_VAL_PATTERN, TIME_VAL_PATTERN } from './pattern'
 

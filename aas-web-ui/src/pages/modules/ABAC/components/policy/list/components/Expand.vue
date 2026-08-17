@@ -17,7 +17,7 @@
     :icon="ICONS.EXPAND"
     size="small"
     variant="tonal"
-    v-bind="i18nData('policies.layout.expandList')"
+    v-bind="i18nData('policies.list.expandList')"
     @click="emit('expand')"
   >
     <v-icon>{{ ICONS.EXPAND }}</v-icon>

@@ -1,8 +1,12 @@
 import type { Sort } from '../types/sort'
-import type { PolicyVersion } from '@/composables/Client/ABAC/types/policy'
+import type { PolicyVersion } from '@/pages/modules/ABAC/types/policy'
 import { computed, ref, type Ref } from 'vue'
+import { useAbacConfigStore } from '../stores/useAbacConfigStore'
 
 export function useSortPolicies (policies: Ref<PolicyVersion[] | undefined>) {
+  const config = useAbacConfigStore()
+  const locale = computed(() => config.language)
+
   const sort = ref<Sort>({ accessor: 'status', order: 'asc' })
 
   function onSort (accessor: Sort['accessor']) {
@@ -32,7 +36,7 @@ export function useSortPolicies (policies: Ref<PolicyVersion[] | undefined>) {
         return -1
       }
 
-      return av.toString().localeCompare(bv.toString(), 'de', { numeric: true }) * factor
+      return av.toString().localeCompare(bv.toString(), locale.value, { numeric: true }) * factor
     })
   })
 

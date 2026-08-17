@@ -1,6 +1,6 @@
 import type { JsonErrorMessage } from '../components/shared/JsonCodeEditor.vue'
 import type { AbacValidationMessages } from '../i18n/locales'
-import type { DefinitionCreatePayload, DefinitionKind } from '@/composables/Client/ABAC/types/definitions'
+import type { DefinitionCreatePayload, DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
 import { hasContent } from '@/utils/StringUtils'
 import { createDefinitionSchema } from '../schemas/definitionSchema'
 import { extractLineFromSyntaxError, findLineForPath } from '../utils/json'

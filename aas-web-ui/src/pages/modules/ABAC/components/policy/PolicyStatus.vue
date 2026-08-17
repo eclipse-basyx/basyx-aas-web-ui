@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { PolicyStatus } from '@/composables/Client/ABAC/types/policy'
+  import type { PolicyStatus } from '@/pages/modules/ABAC/types/policy'
   import { computed } from 'vue'
   import { useAbacI18n } from '../../i18n/useAbacI18n'
 
@@ -32,7 +32,7 @@
     :color="color"
     label
     size="small"
-    :v-bind="key"
+    v-bind="key"
     variant="flat"
   >
     <v-icon :icon="icon" size="16" start />

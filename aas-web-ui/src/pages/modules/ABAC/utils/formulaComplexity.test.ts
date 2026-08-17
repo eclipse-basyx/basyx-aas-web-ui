@@ -1,4 +1,4 @@
-import type { FormulaExpression } from '@/composables/Client/ABAC/types/formula'
+import type { FormulaExpression } from '@/pages/modules/ABAC/types/formula'
 import { describe, expect, it } from 'vitest'
 import { classifyFormulaComplexity, hasFieldAccess } from './formulaComplexity'
 

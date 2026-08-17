@@ -1,11 +1,11 @@
 <script setup lang="ts">
   import type { JsonErrorMessage } from '../shared/JsonCodeEditor.vue'
-  import type { DefinitionKind } from '@/composables/Client/ABAC/types/definitions'
+  import type { DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
   import { computed, ref, watch } from 'vue'
-  import { useCreateDefinition } from '@/composables/Client/ABAC/queries/definition/useCreateDefinition'
-  import { usePatchDefinition } from '@/composables/Client/ABAC/queries/definition/usePatchDefinition'
-  import { useReplaceDefinition } from '@/composables/Client/ABAC/queries/definition/useReplaceDefinition'
-  import { DEFINITION_KINDS } from '@/composables/Client/ABAC/types/definitions'
+  import { useCreateDefinition } from '@/pages/modules/ABAC/api/queries/definition/useCreateDefinition'
+  import { usePatchDefinition } from '@/pages/modules/ABAC/api/queries/definition/usePatchDefinition'
+  import { useReplaceDefinition } from '@/pages/modules/ABAC/api/queries/definition/useReplaceDefinition'
+  import { DEFINITION_KINDS } from '@/pages/modules/ABAC/types/definitions'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
   import { EMPTY_DEFINITION } from '../../constants/json'
@@ -35,8 +35,6 @@
 
   const isOpen = ref(false)
   const dialogMode = ref<DefinitionDialogMode>('create')
-
-  const isValid = ref(false)
 
   const definitionKind = ref<DefinitionKind>(selectedDefinitionKind.value || 'attributes')
   const definitionJson = ref('')
@@ -178,7 +176,7 @@
       <v-divider />
 
       <v-card-text class="pa-4">
-        <v-form ref="form" v-model="isValid" @submit.prevent="onSubmit">
+        <v-form ref="form" @submit.prevent="onSubmit">
           <v-select
             v-model="definitionKind"
             class="mb-3"
@@ -217,7 +215,6 @@
 
         <v-btn
           color="primary"
-          :disabled="!isValid"
           :loading="isPending"
           variant="flat"
           v-bind="i18nData(`definitions.definitionDialog.${dialogMode}`)"

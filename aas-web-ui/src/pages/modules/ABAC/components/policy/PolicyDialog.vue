@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { ref } from 'vue'
-  import { useImportPolicy } from '@/composables/Client/ABAC/queries/policy/useImportPolicy'
+  import { useImportPolicy } from '@/pages/modules/ABAC/api/queries/policy/useImportPolicy'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { EMPTY_POLICY } from '../../constants/json'
   import { useAbacNavigation } from '../../hooks/useAbacNavigation'
@@ -113,7 +113,7 @@
             v-model="sourceRef"
             density="comfortable"
             hide-details
-            v-bind="i18nData('policies.import.activateOnImport')"
+            v-bind="i18nData('policies.import.sourceRef')"
             :label="t('policies.import.sourceRef')"
             variant="outlined"
           />

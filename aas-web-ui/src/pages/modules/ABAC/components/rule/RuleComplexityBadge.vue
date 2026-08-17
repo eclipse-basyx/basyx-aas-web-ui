@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { Rule } from '@/composables/Client/ABAC/types/rules'
+  import type { Rule } from '@/pages/modules/ABAC/types/rules'
   import { useAbacI18n } from '../../i18n/useAbacI18n'
   import { classifyFormulaComplexity } from '../../utils/formulaComplexity'
 
@@ -19,7 +19,7 @@
     if (!complexity || complexity.value === 'N/A')
       return {
         color: 'grey',
-        icon: ICONS.LOW,
+        icon: ICONS.N_A,
         label: t('rules.complexity.na'),
         tooltip: t('rules.complexity.naTooltip'),
       }
@@ -28,7 +28,7 @@
       return {
         color: 'success',
         icon: ICONS.LOW,
-        label: complexity.value ? t('rules.complexity.low') : 'N/A',
+        label: t('rules.complexity.low'),
         tooltip: t('rules.complexity.lowTooltip'),
       }
     }
@@ -52,7 +52,7 @@
         variant="flat"
       >
         <v-icon :icon="badgeConfig.icon" size="14" start />
-        {{ t(badgeConfig.label) }}
+        {{ badgeConfig.label }}
       </v-chip>
     </template>
 

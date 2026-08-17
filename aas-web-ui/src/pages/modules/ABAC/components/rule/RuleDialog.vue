@@ -1,8 +1,8 @@
 <script setup lang="ts">
   import { ref } from 'vue'
-  import { useCreateRule } from '@/composables/Client/ABAC/queries/rule/useCreateRule'
-  import { usePatchRule } from '@/composables/Client/ABAC/queries/rule/usePatchRule'
-  import { useReplaceRule } from '@/composables/Client/ABAC/queries/rule/useReplaceRule'
+  import { useCreateRule } from '@/pages/modules/ABAC/api/queries/rule/useCreateRule'
+  import { usePatchRule } from '@/pages/modules/ABAC/api/queries/rule/usePatchRule'
+  import { useReplaceRule } from '@/pages/modules/ABAC/api/queries/rule/useReplaceRule'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
   import { EMPTY_RULE } from '../../constants/json'
@@ -130,7 +130,7 @@
   <v-dialog v-model="isOpen" max-width="800" persistent scrollable>
     <v-card>
       <v-card-title class="pa-4 bg-cardHeader d-flex align-center">
-        <span class="text-h6" v-bind="i18nData(`rules.ruleDialog.title${dialogMode}`) ">
+        <span class="text-h6" v-bind="i18nData(`rules.ruleDialog.title.${dialogMode}`) ">
           {{ t(`rules.ruleDialog.title.${dialogMode}`) }}
         </span>
 

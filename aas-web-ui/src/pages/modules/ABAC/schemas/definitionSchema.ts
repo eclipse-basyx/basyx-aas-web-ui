@@ -5,7 +5,7 @@
  */
 
 import type { AbacValidationMessages } from '../i18n/locales'
-import type { DefinitionKind } from '@/composables/Client/ABAC/types/definitions'
+import type { DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
 import { z } from 'zod'
 import { createFormulaSchema } from './formulaSchema'
 import { createSharedSchemas } from './sharedSchema'

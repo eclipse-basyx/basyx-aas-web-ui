@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { ref } from 'vue'
-  import { useDeleteDefinition } from '@/composables/Client/ABAC/queries/definition/useDeleteDefinition'
+  import { useDeleteDefinition } from '@/pages/modules/ABAC/api/queries/definition/useDeleteDefinition'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
   import { useAbacNavigation } from '../../../hooks/useAbacNavigation'

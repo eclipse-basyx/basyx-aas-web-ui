@@ -39,6 +39,13 @@ export const en = {
         updated: 'Updated',
         status: 'Status',
       },
+      selector: {
+        noServiceAvailable: 'No service available',
+        noValidServiceSelected: 'No valid service selected',
+        noServiceSelected: 'No service selected',
+        available: 'ABAC endpoint reachable',
+        unavailable: 'ABAC endpoint not reachable',
+      },
     },
     policy: {
       title: 'Policy v{version}',
@@ -184,6 +191,7 @@ export const en = {
       title: {
         create: 'Create Definition',
         replace: 'Replace Definition',
+        patch: 'Patch Definition',
       },
       kind: 'Kind',
       editor: 'Definition JSON',
@@ -312,6 +320,13 @@ export const de: AbacI18NSchema = {
         created: 'Erstellt',
         updated: 'Bearbeitet',
         status: 'Status',
+      },
+      selector: {
+        noServiceAvailable: 'Kein Service verfügbar',
+        noValidServiceSelected: 'Kein gültiger Service ausgewählt',
+        noServiceSelected: 'Kein Service ausgewählt',
+        available: 'ABAC-Endpunkt erreichbar',
+        unavailable: 'ABAC-Endpunkt nicht erreichbar',
       },
     },
     policy: {
@@ -458,6 +473,7 @@ export const de: AbacI18NSchema = {
       title: {
         create: 'Definition erstellen',
         replace: 'Definition ersetzen',
+        patch: 'Definition patchen',
       },
       kind: 'Art',
       editor: 'Definitions-JSON',

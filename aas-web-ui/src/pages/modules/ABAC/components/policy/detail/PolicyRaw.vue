@@ -18,6 +18,8 @@
   const fileName = `${selectedPolicyVersion || 'policy'}.json`
   const copyIcon = ref<string>(ICONS.COPY)
 
+  const policyJson = computed(() => JSON.stringify(policy ?? {}, null, 2))
+
   function onCopy (): void {
     copyJsonToClipboard(policy, fileName, copyIcon, false)
   }
@@ -55,7 +57,7 @@
 
     <JsonCodeEditor
       :disabled="true"
-      :model-value="JSON.stringify(policy, null, 2)"
+      :model-value="policyJson"
     />
   </div>
 
