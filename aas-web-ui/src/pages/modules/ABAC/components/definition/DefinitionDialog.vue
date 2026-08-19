@@ -35,10 +35,9 @@
 
   const isOpen = ref(false)
   const dialogMode = ref<DefinitionDialogMode>('create')
-
   const definitionKind = ref<DefinitionKind>()
   const definitionJson = ref('')
-  const definitionName = ref('')
+  const definitionName = ref<string | null>(null)
   const jsonError = ref<JsonErrorMessage | null>(null)
   const errorLines = ref<number[]>([])
 
@@ -58,6 +57,7 @@
     jsonError.value = null
     errorLines.value = []
     definitionKind.value = selectedDefinitionKind.value || 'attributes'
+    definitionName.value = null
 
     if ((mode !== 'create') && selectedDefinition.value && selectedDefinitionKind.value) {
       const { name, ...rest } = selectedDefinition.value

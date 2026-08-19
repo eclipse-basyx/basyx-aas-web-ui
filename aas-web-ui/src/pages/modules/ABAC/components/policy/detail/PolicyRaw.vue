@@ -15,7 +15,7 @@
   const { copyJsonToClipboard } = useClipboardUtil()
   const { selectedPolicyVersion, policy } = usePolicy()
 
-  const fileName = `${selectedPolicyVersion || 'policy'}.json`
+  const fileName = `Policy_v${selectedPolicyVersion.value}.json`
   const copyIcon = ref<string>(ICONS.COPY)
 
   const policyJson = computed(() => {
@@ -24,11 +24,11 @@
   })
 
   function onCopy (): void {
-    copyJsonToClipboard(policy, fileName, copyIcon, false)
+    copyJsonToClipboard(policy.value, fileName, copyIcon, false)
   }
 
   function onDownload (): void {
-    downloadJson(policy, fileName)
+    downloadJson(policy.value, fileName)
   }
 </script>
 

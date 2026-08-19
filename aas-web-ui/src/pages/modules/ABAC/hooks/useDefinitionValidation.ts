@@ -8,7 +8,7 @@ import { extractLineFromSyntaxError, findLineForPath } from '../utils/json'
 export interface DefinitionValidationInput {
   json: string
   kind: DefinitionKind | undefined
-  name?: string
+  name?: string | null
   errorMessages: {
     requiredKind: string
     requiredDefinition: string
