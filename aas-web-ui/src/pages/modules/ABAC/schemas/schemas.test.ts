@@ -971,10 +971,12 @@ describe('usePolicyValidation', () => {
   const { validateJson } = usePolicyValidation(msgs)
 
   it('returns error for empty string', () => {
-    const r = validateJson('', {
-      required: 'required',
-      invalidJson: 'invalid',
-      invalidPolicy: 'invalid',
+    const r = validateJson({
+      json: '', errorMessages: {
+        required: 'required',
+        invalidJson: 'invalid',
+        invalidPolicy: 'invalid',
+      },
     })
     expect(r.policy).toBeNull()
     expect(r.error!.title).toBe('required')
@@ -982,20 +984,24 @@ describe('usePolicyValidation', () => {
   })
 
   it('returns error for whitespace-only string', () => {
-    const r = validateJson(' '.repeat(3), {
-      required: 'required',
-      invalidJson: 'invalid',
-      invalidPolicy: 'invalid',
+    const r = validateJson({
+      json: ' '.repeat(3), errorMessages: {
+        required: 'required',
+        invalidJson: 'invalid',
+        invalidPolicy: 'invalid',
+      },
     })
     expect(r.error!.title).toBe('required')
   })
 
   it('returns syntax error for malformed JSON', () => {
     const json = '{ "AllAccessPermissionRules": { "rules": [ }'
-    const r = validateJson(json, {
-      required: 'required',
-      invalidJson: 'SYNTAX',
-      invalidPolicy: 'invalid',
+    const r = validateJson({
+      json, errorMessages: {
+        required: 'required',
+        invalidJson: 'SYNTAX',
+        invalidPolicy: 'invalid',
+      },
     })
     expect(r.policy).toBeNull()
     expect(r.error!.title).toBe('SYNTAX')
@@ -1003,10 +1009,12 @@ describe('usePolicyValidation', () => {
 
   it('returns structural error for JSON that parses but fails schema', () => {
     const json = JSON.stringify({ AllAccessPermissionRules: { rules: [] } })
-    const r = validateJson(json, {
-      required: 'required',
-      invalidJson: 'invalid',
-      invalidPolicy: 'SCHEMA_ERROR',
+    const r = validateJson({
+      json, errorMessages: {
+        required: 'required',
+        invalidJson: 'invalid',
+        invalidPolicy: 'SCHEMA_ERROR',
+      },
     })
     expect(r.policy).toBeNull()
     expect(r.error!.title).toBe('SCHEMA_ERROR')
@@ -1021,10 +1029,12 @@ describe('usePolicyValidation', () => {
         ],
       },
     })
-    const r = validateJson(json, {
-      required: 'required',
-      invalidJson: 'invalid',
-      invalidPolicy: 'invalid',
+    const r = validateJson({
+      json, errorMessages: {
+        required: 'required',
+        invalidJson: 'invalid',
+        invalidPolicy: 'invalid',
+      },
     })
     expect(r.error).toBeNull()
     expect(r.policy).not.toBeNull()
@@ -1035,24 +1045,24 @@ describe('usePolicyValidation', () => {
 describe('useRuleValidation', () => {
   const { validateJson } = useRuleValidation(msgs)
 
-  const rl = {
+  const errorMessages = {
     required: 'required',
     invalidJson: 'SYNTAX',
     invalidRule: 'SCHEMA',
   }
 
   it('returns error for empty string', () => {
-    const r = validateJson('', rl)
+    const r = validateJson({ json: '', errorMessages })
     expect(r.error!.title).toBe('required')
   })
 
   it('returns syntax error for malformed JSON', () => {
-    const r = validateJson('{ broken', rl)
+    const r = validateJson({ json: '{ broken', errorMessages })
     expect(r.error!.title).toBe('SYNTAX')
   })
 
   it('returns structural error for JSON missing required fields', () => {
-    const r = validateJson('{}', rl)
+    const r = validateJson({ json: '{}', errorMessages })
     expect(r.error!.title).toBe('SCHEMA')
   })
 
@@ -1062,7 +1072,7 @@ describe('useRuleValidation', () => {
       OBJECTS: [validObjectEntry],
       FORMULA: validFormula,
     })
-    const r = validateJson(json, rl)
+    const r = validateJson({ json, errorMessages })
     expect(r.error).toBeNull()
     expect(r.rule).not.toBeNull()
     expect(r.rule!.ACL).toBeDefined()
@@ -1072,7 +1082,7 @@ describe('useRuleValidation', () => {
 describe('useDefinitionValidation', () => {
   const { validateJson } = useDefinitionValidation(msgs)
 
-  const dl = {
+  const errorMessages = {
     requiredKind: 'KIND_REQUIRED',
     requiredDefinition: 'DEF_REQUIRED',
     invalidJson: 'SYNTAX',
@@ -1080,28 +1090,28 @@ describe('useDefinitionValidation', () => {
   }
 
   it('returns error when kind is undefined', () => {
-    const r = validateJson('{}', undefined, dl)
+    const r = validateJson({ json: '{}', kind: undefined, errorMessages })
     expect(r.error!.title).toBe('KIND_REQUIRED')
   })
 
   it('returns error when json is empty', () => {
-    const r = validateJson('', 'attributes', dl)
+    const r = validateJson({ json: '', kind: 'attributes', errorMessages })
     expect(r.error!.title).toBe('DEF_REQUIRED')
   })
 
   it('returns syntax error for malformed JSON', () => {
-    const r = validateJson('{ broken', 'attributes', dl)
+    const r = validateJson({ json: '{ broken', kind: 'attributes', errorMessages })
     expect(r.error!.title).toBe('SYNTAX')
   })
 
   it('returns structural error for JSON that fails schema', () => {
-    const r = validateJson('{}', 'attributes', dl)
+    const r = validateJson({ json: '{}', kind: 'attributes', errorMessages })
     expect(r.error!.title).toBe('SCHEMA')
   })
 
   it('returns parsed definition for valid JSON matching kind', () => {
     const json = JSON.stringify({ name: 'test', attributes: [{ CLAIM: 'x' }] })
-    const r = validateJson(json, 'attributes', dl)
+    const r = validateJson({ json, kind: 'attributes', errorMessages })
     expect(r.error).toBeNull()
     expect(r.payload).not.toBeNull()
     expect(r.payload!.name).toBe('test')
@@ -1110,7 +1120,7 @@ describe('useDefinitionValidation', () => {
   it('returns structural error when kind mismatches payload shape', () => {
     // formulas kind but payload is an attributes shape
     const json = JSON.stringify({ name: 'test', attributes: [{ CLAIM: 'x' }] })
-    const r = validateJson(json, 'formulas', dl)
+    const r = validateJson({ json, kind: 'formulas', errorMessages })
     expect(r.error).not.toBeNull()
     expect(r.error!.title).toBe('SCHEMA')
   })

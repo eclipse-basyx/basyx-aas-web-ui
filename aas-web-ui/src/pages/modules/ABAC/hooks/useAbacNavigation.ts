@@ -4,6 +4,7 @@ import type { BaSyxComponentKey } from '@/types/BaSyx'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNavigationStore } from '@/store/NavigationStore'
+import { hasContent } from '@/utils/StringUtils'
 import { VIEW } from '../types/view'
 
 export function useAbacNavigation () {
@@ -65,14 +66,14 @@ export function useAbacNavigation () {
     return paramId ? decodeURIComponent(paramId) : undefined
   })
 
-  function onSelectRule (id: string | number): void {
-    const isCurrentlySelected = selectedRuleIndex.value?.toString() === id?.toString()
+  function onSelectRule (index: string | number): void {
+    const isCurrentlySelected = selectedRuleIndex.value?.toString() === index?.toString()
     const query = { ...route.query }
 
     if (isCurrentlySelected) {
       delete query.rule
     } else {
-      query.rule = encodeURIComponent(id.toString())
+      query.rule = encodeURIComponent(index.toString())
     }
 
     router.push({ query })
@@ -88,8 +89,31 @@ export function useAbacNavigation () {
     return paramId ? decodeURIComponent(paramId) : undefined
   })
 
+  function onSelectDefinitionKind (kind: DefinitionKind | 'all'): void {
+    const isCurrentlySelected = selectedDefinitionKind.value?.toString() === kind.toString()
+
+    const query = { ...route.query }
+
+    if (kind === 'all') {
+      // Remove kind if no definition is selected
+      if (!hasContent(selectedDefinitionName.value)) {
+        delete query.kind
+      }
+    } else {
+      // Remove definition if selected kind changes
+      if (!isCurrentlySelected) {
+        delete query.definition
+      }
+
+      query.kind = encodeURIComponent(kind)
+    }
+
+    router.push({ query })
+  }
+
   function onSelectDefinition (name: string, kind: DefinitionKind): void {
-    const isCurrentlySelected = selectedDefinitionName.value?.toString() === name?.toString()
+    // Note: we can have definitions of different kind using the same name
+    const isCurrentlySelected = selectedDefinitionName.value?.toString() === name?.toString() && selectedDefinitionKind.value?.toString() === kind.toString()
     const query = { ...route.query }
 
     if (isCurrentlySelected) {
@@ -97,7 +121,7 @@ export function useAbacNavigation () {
       delete query.kind
     } else {
       query.definition = encodeURIComponent(name)
-      query.kind = kind
+      query.kind = encodeURIComponent(kind)
     }
 
     router.push({ query })
@@ -129,6 +153,7 @@ export function useAbacNavigation () {
     selectedRuleIndex,
     onSelectRule,
     selectedDefinitionKind,
+    onSelectDefinitionKind,
     selectedDefinitionName,
     onSelectDefinition,
     selectedView,

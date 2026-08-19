@@ -39,10 +39,11 @@
 
 <style scoped>
 .rules-list-panel {
-  width: 30vw;
-  max-width: 45%;
+  width: 35vw;
+  min-width: 320px;
+  max-width: 360px;
+  flex-shrink: 1;
   height: 100%;
-  flex-shrink: 0;
   border-right: 1px solid rgba(var(--v-border-color), 0.12);
 }
 </style>

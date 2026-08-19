@@ -5,6 +5,18 @@ import { hasContent } from '@/utils/StringUtils'
 import { createDefinitionSchema } from '../schemas/definitionSchema'
 import { extractLineFromSyntaxError, findLineForPath } from '../utils/json'
 
+export interface DefinitionValidationInput {
+  json: string
+  kind: DefinitionKind | undefined
+  name?: string
+  errorMessages: {
+    requiredKind: string
+    requiredDefinition: string
+    invalidJson: string
+    invalidDefinition: string
+  }
+}
+
 export interface DefinitionValidationResult {
   payload: DefinitionCreatePayload | null
   error: JsonErrorMessage | null
@@ -14,34 +26,30 @@ export interface DefinitionValidationResult {
 export function useDefinitionValidation (messages: AbacValidationMessages) {
   const { schemaForKind } = createDefinitionSchema(messages)
 
-  function validateJson (
-    json: string,
-    kind: DefinitionKind | undefined,
-    labels: {
-      requiredKind: string
-      requiredDefinition: string
-      invalidJson: string
-      invalidDefinition: string
-    },
-  ): DefinitionValidationResult {
+  function validateJson ({ json, kind, name, errorMessages }: DefinitionValidationInput): DefinitionValidationResult {
     if (!hasContent(kind)) {
-      return { payload: null, error: { title: labels.requiredKind }, errorLines: [] }
+      return { payload: null, error: { title: errorMessages.requiredKind }, errorLines: [] }
     }
 
     if (!hasContent(json)) {
-      return { payload: null, error: { title: labels.requiredDefinition }, errorLines: [] }
+      return { payload: null, error: { title: errorMessages.requiredDefinition }, errorLines: [] }
     }
 
     // 1) JSON syntax
     let parsed: unknown
     try {
-      parsed = JSON.parse(json)
+      const obj = JSON.parse(json)
+      // Re-attach the name that was stripped from the editor JSON in case of replace or patch
+      if (hasContent(name)) {
+        obj.name = name
+      }
+      parsed = obj
     } catch (error) {
       const detail = (error as Error).message
       const errorLine = extractLineFromSyntaxError(json, detail)
       return {
         payload: null,
-        error: { title: labels.invalidJson, messages: [detail] },
+        error: { title: errorMessages.invalidJson, messages: [detail] },
         errorLines: errorLine ? [errorLine] : [],
       }
     }
@@ -52,7 +60,7 @@ export function useDefinitionValidation (messages: AbacValidationMessages) {
       return {
         payload: null,
         error: {
-          title: labels.invalidDefinition,
+          title: errorMessages.invalidDefinition,
           messages: result.error.issues.map(issue => {
             const path = issue.path.join('.') || '(root)'
             return `${path}: ${issue.message}`

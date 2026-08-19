@@ -18,7 +18,10 @@
   const fileName = `${selectedPolicyVersion || 'policy'}.json`
   const copyIcon = ref<string>(ICONS.COPY)
 
-  const policyJson = computed(() => JSON.stringify(policy ?? {}, null, 2))
+  const policyJson = computed(() => {
+    if (!policy.value) return ''
+    return JSON.stringify(policy.value, null, 2)
+  })
 
   function onCopy (): void {
     copyJsonToClipboard(policy, fileName, copyIcon, false)

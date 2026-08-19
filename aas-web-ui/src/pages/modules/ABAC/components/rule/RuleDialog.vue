@@ -21,7 +21,7 @@
   const { t, tm, i18nData } = useAbacI18n()
   const navigationStore = useNavigationStore()
 
-  const { selectedPolicyVersion } = useAbacNavigation()
+  const { selectedPolicyVersion, selectedRuleIndex, onSelectRule } = useAbacNavigation()
   const { rulesCount, selectedRule } = useRules()
 
   const { mutateAsync: createRule, isPending: isCreating } = useCreateRule()
@@ -32,7 +32,7 @@
 
   const isOpen = ref(false)
   const dialogMode = ref<RuleDialogMode>('create')
-  const position = ref<number | undefined>()
+  const position = ref<number>()
   const ruleJson = ref('')
   const jsonError = ref<JsonErrorMessage | null>(null)
   const errorLines = ref<number[]>([])
@@ -48,11 +48,7 @@
       position.value = rulesCount.value + 1
       ruleJson.value = JSON.stringify(EMPTY_RULE, null, 2)
     } else if (selectedRule) {
-      ruleJson.value = JSON.stringify(
-        selectedRule.value?.configured_rule_json,
-        null,
-        2,
-      )
+      ruleJson.value = JSON.stringify(selectedRule.value?.configured_rule_json, null, 2)
     }
   }
 
@@ -63,14 +59,14 @@
   const { validateJson } = useRuleValidation(tm('validation'))
 
   async function onSubmit (): Promise<void> {
-    const { rule, error, errorLines: lines } = validateJson(
-      ruleJson.value,
-      {
+    const { rule, error, errorLines: lines } = validateJson({
+      json: ruleJson.value,
+      errorMessages: {
         required: t('rules.ruleDialog.required'),
         invalidJson: t('rules.ruleDialog.invalidJson'),
         invalidRule: t('rules.ruleDialog.invalidRule'),
       },
-    )
+    })
 
     jsonError.value = error
     errorLines.value = lines
@@ -84,6 +80,14 @@
       switch (dialogMode.value) {
         case 'create': {
           await createRule({ versionId, payload: { position: position.value, rule } })
+
+          /**
+           * Select rule after creation.
+           * Note: if a new rule is created with the same index as the selected one, rule detail will be updated
+           */
+          if (selectedRuleIndex.value !== position.value?.toString() && position.value) {
+            onSelectRule(position.value)
+          }
           break
         }
         case 'replace': {

@@ -12,8 +12,8 @@
 
   <div
     v-else
-    class="h-100 w-100 d-flex overflow-hidden"
-    style="height: calc(100dvh - var(--v-layout-top, 64px) - var(--v-layout-bottom, 40px) - 2px);"
+    class="h-100 d-flex overflow-hidden mx-auto"
+    style="height: calc(100dvh - var(--v-layout-top, 64px) - var(--v-layout-bottom, 40px) - 2px); max-width: 1440px;"
   >
 
     <PoliciesList />

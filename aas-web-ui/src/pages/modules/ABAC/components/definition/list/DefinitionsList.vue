@@ -19,7 +19,7 @@
   const emit = defineEmits<{ (e: 'create'): void }>()
 
   const { t, i18nData } = useAbacI18n()
-  const { selectedDefinitionKind } = useAbacNavigation()
+  const { selectedDefinitionKind, onSelectDefinitionKind } = useAbacNavigation()
   const { definitions, isLoading, isError } = useDefinitions()
 
   const isMenuOpen = ref(false)
@@ -43,6 +43,7 @@
 
   function onFilter (value: KindFilter): void {
     activeFilter.value = value
+    onSelectDefinitionKind(value)
   }
 
 </script>
@@ -126,7 +127,7 @@
       </v-list>
 
       <v-list v-else-if="hasItems(list)" class="pa-0 h-100 bg-card" nav>
-        <DefinitionItem v-for="({definition, kind}) in list" :key="definition.name" :definition="definition" :kind="kind" />
+        <DefinitionItem v-for="({definition, kind}) in list" :key="`${kind}-${definition.name}`" :definition="definition" :kind="kind" />
       </v-list>
 
       <v-container

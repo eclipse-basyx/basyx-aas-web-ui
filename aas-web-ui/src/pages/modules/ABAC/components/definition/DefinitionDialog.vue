@@ -24,7 +24,7 @@
   const { t, tm, i18nData } = useAbacI18n()
   const navigationStore = useNavigationStore()
 
-  const { selectedPolicyVersion, selectedDefinitionKind } = useAbacNavigation()
+  const { selectedPolicyVersion, selectedDefinitionKind, onSelectDefinition } = useAbacNavigation()
   const { selectedDefinition } = useDefinitions()
 
   const { mutateAsync: createDefinition, isPending: isCreating } = useCreateDefinition()
@@ -36,8 +36,9 @@
   const isOpen = ref(false)
   const dialogMode = ref<DefinitionDialogMode>('create')
 
-  const definitionKind = ref<DefinitionKind>(selectedDefinitionKind.value || 'attributes')
+  const definitionKind = ref<DefinitionKind>()
   const definitionJson = ref('')
+  const definitionName = ref('')
   const jsonError = ref<JsonErrorMessage | null>(null)
   const errorLines = ref<number[]>([])
 
@@ -47,11 +48,8 @@
   }))
 
   watch(definitionKind, kind => {
-    definitionJson.value = JSON.stringify(
-      EMPTY_DEFINITION[kind || 'attributes'],
-      null,
-      2,
-    )
+    if (dialogMode.value !== 'create') return
+    definitionJson.value = JSON.stringify(EMPTY_DEFINITION[kind || 'attributes'], null, 2)
   })
 
   function open (mode: DefinitionDialogMode): void {
@@ -59,17 +57,15 @@
     dialogMode.value = mode
     jsonError.value = null
     errorLines.value = []
+    definitionKind.value = selectedDefinitionKind.value || 'attributes'
 
-    if (mode === 'replace' && selectedDefinition.value && selectedDefinitionKind.value) {
-      definitionKind.value = selectedDefinitionKind.value
-      definitionJson.value = JSON.stringify(selectedDefinition.value, null, 2)
+    if ((mode !== 'create') && selectedDefinition.value && selectedDefinitionKind.value) {
+      const { name, ...rest } = selectedDefinition.value
+      definitionName.value = name
+      // Note: name cannot be changed
+      definitionJson.value = JSON.stringify(rest, null, 2)
     } else {
-      definitionKind.value = selectedDefinitionKind.value || 'attributes'
-      definitionJson.value = JSON.stringify(
-        EMPTY_DEFINITION[selectedDefinitionKind.value || 'attributes'],
-        null,
-        2,
-      )
+      definitionJson.value = JSON.stringify(EMPTY_DEFINITION[selectedDefinitionKind.value || 'attributes'], null, 2)
     }
   }
 
@@ -80,16 +76,17 @@
   const { validateJson } = useDefinitionValidation(tm('validation'))
 
   async function onSubmit (): Promise<void> {
-    const { payload, error, errorLines: lines } = validateJson(
-      definitionJson.value,
-      definitionKind.value,
-      {
+    const { payload, error, errorLines: lines } = validateJson({
+      json: definitionJson.value,
+      kind: definitionKind.value,
+      name: definitionName.value,
+      errorMessages: {
         requiredKind: t('definitions.definitionDialog.requiredKind'),
         requiredDefinition: t('definitions.definitionDialog.requiredDefinition'),
         invalidJson: t('definitions.definitionDialog.invalidJson'),
         invalidDefinition: t('definitions.definitionDialog.invalidDefinition'),
       },
-    )
+    })
 
     jsonError.value = error
     errorLines.value = lines
@@ -108,6 +105,8 @@
             kind,
             payload,
           })
+
+          onSelectDefinition(payload.name, kind)
           break
         }
         case 'patch': {
@@ -179,15 +178,26 @@
         <v-form ref="form" @submit.prevent="onSubmit">
           <v-select
             v-model="definitionKind"
-            class="mb-3"
+            class="mb-5"
             density="comfortable"
-            :disabled="dialogMode === 'replace'"
+            :disabled="dialogMode !== 'create'"
             hide-details
             item-title="title"
             item-value="value"
             :items="kindOptions"
             v-bind="i18nData('definitions.definitionDialog.kind')"
             :label="t('definitions.definitionDialog.kind')"
+            variant="outlined"
+          />
+
+          <v-text-field
+            v-if="dialogMode !== 'create'"
+            id="name"
+            density="comfortable"
+            disabled
+            hide-details
+            :label="t('definitions.definitionDialog.name')"
+            :model-value="definitionName"
             variant="outlined"
           />
 

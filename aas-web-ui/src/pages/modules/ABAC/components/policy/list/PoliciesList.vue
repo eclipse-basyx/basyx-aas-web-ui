@@ -20,7 +20,7 @@
   </template>
 
   <template v-else>
-    <div v-if="isListOpen" class="list" style="max-width: 40%;">
+    <div v-if="isListOpen" class="list">
       <Policies />
       <ListFooter @collapse="isListOpen = !isListOpen" />
     </div>
@@ -32,8 +32,7 @@
 <style scoped>
 .list {
   height: 100%;
-  width: 30vw;
-  min-width: 320px;
+  width: 320px;
   display: flex;
   flex-shrink: 0;
   flex-direction: column;

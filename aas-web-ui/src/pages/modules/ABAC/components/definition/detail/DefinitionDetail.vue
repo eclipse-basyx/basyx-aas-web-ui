@@ -14,7 +14,7 @@
 
   const definitionJson = computed(() => {
     if (!selectedDefinition.value) return ''
-    return JSON.stringify(selectedDefinition, null, 2)
+    return JSON.stringify(selectedDefinition.value, null, 2)
   })
 </script>
 

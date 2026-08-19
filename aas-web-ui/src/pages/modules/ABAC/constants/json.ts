@@ -1,4 +1,4 @@
-import type { DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
+import type { Definition, DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
 
 export const EMPTY_POLICY = {
   AllAccessPermissionRules: {
@@ -59,7 +59,7 @@ export const EMPTY_RULE = {
   },
 }
 
-export const EMPTY_DEFINITION: Record<DefinitionKind, object> = {
+export const EMPTY_DEFINITION: Record<DefinitionKind, Definition> = {
   attributes: {
     name: 'adminClaims',
     attributes: [

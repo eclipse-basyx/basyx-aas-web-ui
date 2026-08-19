@@ -5,6 +5,15 @@ import { hasContent } from '@/utils/StringUtils'
 import { createRuleSchema } from '../schemas/ruleSchema'
 import { extractLineFromSyntaxError, findLineForPath } from '../utils/json'
 
+export interface RuleValidationInput {
+  json: string
+  errorMessages: {
+    required: string
+    invalidJson: string
+    invalidRule: string
+  }
+}
+
 export interface RuleValidationResult {
   rule: ConfiguredRule | null
   error: JsonErrorMessage | null
@@ -14,16 +23,9 @@ export interface RuleValidationResult {
 export function useRuleValidation (messages: AbacValidationMessages) {
   const { configuredRuleSchema } = createRuleSchema(messages)
 
-  function validateJson (
-    json: string,
-    labels: {
-      required: string
-      invalidJson: string
-      invalidRule: string
-    },
-  ): RuleValidationResult {
+  function validateJson ({ json, errorMessages }: RuleValidationInput): RuleValidationResult {
     if (!hasContent(json)) {
-      return { rule: null, error: { title: labels.required }, errorLines: [] }
+      return { rule: null, error: { title: errorMessages.required }, errorLines: [] }
     }
 
     // 1) JSON syntax
@@ -35,7 +37,7 @@ export function useRuleValidation (messages: AbacValidationMessages) {
       const errorLine = extractLineFromSyntaxError(json, detail)
       return {
         rule: null,
-        error: { title: labels.invalidJson, messages: [detail] },
+        error: { title: errorMessages.invalidJson, messages: [detail] },
         errorLines: errorLine ? [errorLine] : [],
       }
     }
@@ -46,7 +48,7 @@ export function useRuleValidation (messages: AbacValidationMessages) {
       return {
         rule: null,
         error: {
-          title: labels.invalidRule,
+          title: errorMessages.invalidRule,
           messages: result.error.issues.map(issue => {
             const path = issue.path.join('.') || '(root)'
             return `${path}: ${issue.message}`

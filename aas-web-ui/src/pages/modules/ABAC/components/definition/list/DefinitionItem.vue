@@ -3,14 +3,14 @@
   import { useTheme } from 'vuetify'
   import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
 
-  const { definition, loading } = defineProps<{ definition?: Definition, kind?: DefinitionKind, loading?: boolean }>()
+  const { definition, kind, loading } = defineProps<{ definition?: Definition, kind?: DefinitionKind, loading?: boolean }>()
 
   const theme = useTheme()
   const isDark = computed(() => theme.global.current.value.dark)
   const primaryColor = computed(() => theme.current.value.colors.primary)
 
-  const { selectedDefinitionName, onSelectDefinition } = useAbacNavigation()
-  const isSelected = computed(() => selectedDefinitionName.value?.toString() === definition?.name?.toString())
+  const { selectedDefinitionName, selectedDefinitionKind, onSelectDefinition } = useAbacNavigation()
+  const isSelected = computed(() => selectedDefinitionName.value?.toString() === definition?.name?.toString() && selectedDefinitionKind.value === kind)
 
 </script>
 

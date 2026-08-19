@@ -5,6 +5,15 @@ import { hasContent } from '@/utils/StringUtils'
 import { createPolicySchema } from '../schemas/policySchema'
 import { extractLineFromSyntaxError, findLineForPath } from '../utils/json'
 
+export interface PolicyValidationInput {
+  json: string
+  errorMessages: {
+    required: string
+    invalidJson: string
+    invalidPolicy: string
+  }
+}
+
 export interface PolicyValidationResult {
   policy: CompletePolicy | null
   error: JsonErrorMessage | null
@@ -14,16 +23,9 @@ export interface PolicyValidationResult {
 export function usePolicyValidation (messages: AbacValidationMessages) {
   const { policySchema } = createPolicySchema(messages)
 
-  function validateJson (
-    json: string,
-    labels: {
-      required: string
-      invalidJson: string
-      invalidPolicy: string
-    },
-  ): PolicyValidationResult {
+  function validateJson ({ json, errorMessages }: PolicyValidationInput): PolicyValidationResult {
     if (!hasContent(json)) {
-      return { policy: null, error: { title: labels.required }, errorLines: [] }
+      return { policy: null, error: { title: errorMessages.required }, errorLines: [] }
     }
 
     // 1) JSON syntax
@@ -35,7 +37,7 @@ export function usePolicyValidation (messages: AbacValidationMessages) {
       const errorLine = extractLineFromSyntaxError(json, detail)
       return {
         policy: null,
-        error: { title: labels.invalidJson, messages: [detail] },
+        error: { title: errorMessages.invalidJson, messages: [detail] },
         errorLines: errorLine ? [errorLine] : [],
       }
     }
@@ -46,7 +48,7 @@ export function usePolicyValidation (messages: AbacValidationMessages) {
       return {
         policy: null,
         error: {
-          title: labels.invalidPolicy,
+          title: errorMessages.invalidPolicy,
           messages: result.error.issues.map(issue => {
             const path = issue.path.join('.') || '(root)'
             return `${path}: ${issue.message}`

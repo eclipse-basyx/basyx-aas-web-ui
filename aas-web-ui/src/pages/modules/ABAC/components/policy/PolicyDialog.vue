@@ -40,14 +40,14 @@
   const { validateJson } = usePolicyValidation(tm('validation'))
 
   async function onSubmit (): Promise<void> {
-    const { policy, error, errorLines: lines } = validateJson(
-      policyJson.value,
-      {
+    const { policy, error, errorLines: lines } = validateJson({
+      json: policyJson.value,
+      errorMessages: {
         required: t('policies.import.required'),
         invalidJson: t('policies.import.invalidJson'),
         invalidPolicy: t('policies.import.invalidPolicy'),
       },
-    )
+    })
 
     jsonError.value = error
     errorLines.value = lines

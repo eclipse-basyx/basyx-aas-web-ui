@@ -13,7 +13,7 @@
     isDesktopModule: true,
     isMobileModule: true,
     isVisibleModule: true,
-    //  needsAuthentication: true,
+    needsAuthentication: true,
     supportedInfrastructureTemplates: ['full', 'identifiable', 'mono-repo', 'mono-all'],
   })
 
