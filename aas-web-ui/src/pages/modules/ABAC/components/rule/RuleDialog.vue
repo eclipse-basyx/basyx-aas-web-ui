@@ -61,6 +61,7 @@
   async function onSubmit (): Promise<void> {
     const { rule, error, errorLines: lines } = validateJson({
       json: ruleJson.value,
+      currentRule: dialogMode.value === 'patch' ? selectedRule.value?.configured_rule_json : undefined,
       errorMessages: {
         required: t('rules.ruleDialog.required'),
         invalidJson: t('rules.ruleDialog.invalidJson'),
@@ -164,6 +165,10 @@
             :label="t('rules.ruleDialog.position')"
             variant="outlined"
           />
+
+          <p v-if="dialogMode === 'patch'" class="text-end mb-0 text-body-small">
+            {{ t('rules.ruleDialog.patchHint') }}
+          </p>
 
           <JsonCodeEditor
             v-model="ruleJson"

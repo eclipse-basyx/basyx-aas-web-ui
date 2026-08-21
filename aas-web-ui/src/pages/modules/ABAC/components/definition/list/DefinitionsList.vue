@@ -5,6 +5,7 @@
   import { hasItems } from '@/utils/array'
   import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
   import { useDefinitions } from '../../../hooks/useDefinitions'
+  import { usePolicy } from '../../../hooks/usePolicy'
   import { useAbacI18n } from '../../../i18n/useAbacI18n'
   import DefinitionItem from './DefinitionItem.vue'
 
@@ -19,6 +20,7 @@
   const emit = defineEmits<{ (e: 'create'): void }>()
 
   const { t, i18nData } = useAbacI18n()
+  const { policy } = usePolicy()
   const { selectedDefinitionKind, onSelectDefinitionKind } = useAbacNavigation()
   const { definitions, isLoading, isError } = useDefinitions()
 
@@ -69,7 +71,12 @@
             offset-x="8"
             offset-y="8"
           >
-            <v-btn v-bind="menuProps" :icon="ICONS.FILTER" variant="text" />
+            <v-btn
+              v-bind="menuProps"
+              density="comfortable"
+              :icon="ICONS.FILTER"
+              variant="text"
+            />
           </v-badge>
         </template>
 
@@ -93,6 +100,7 @@
       <v-tooltip location="bottom" :open-delay="600">
         <template #activator="{ props: tipProps }">
           <v-btn
+            v-if="policy?.status === 'staged'"
             v-bind="tipProps"
             density="comfortable"
             :icon="ICONS.ADD"

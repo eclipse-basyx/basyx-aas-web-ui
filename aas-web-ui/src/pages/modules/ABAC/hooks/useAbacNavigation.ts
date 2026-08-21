@@ -7,17 +7,19 @@ import { useNavigationStore } from '@/store/NavigationStore'
 import { hasContent } from '@/utils/StringUtils'
 import { VIEW } from '../types/view'
 
+// Module-level shared state so all composable consumers mutate the same ref.
+const isListOpen = ref(true)
+
 export function useAbacNavigation () {
   const route = useRoute()
   const router = useRouter()
   const navigationStore = useNavigationStore()
 
   const isMobile = computed(() => navigationStore.getIsMobile)
-  const isListOpen = ref(true)
 
   const selectedService = computed<BaSyxComponentKey | undefined>(() => {
-    const paramService = route.query.service as string | undefined
-    return paramService ? decodeURIComponent(paramService) as BaSyxComponentKey : undefined
+    const paramService = route.query.service as BaSyxComponentKey | undefined
+    return paramService
   })
 
   function onSelectService (key: BaSyxComponentKey): void {
@@ -29,14 +31,14 @@ export function useAbacNavigation () {
     delete query.kind
     delete query.view
 
-    query.service = encodeURIComponent(key)
+    query.service = (key)
 
     router.replace({ query })
   }
 
   const selectedPolicyVersion = computed(() => {
     const paramId = route.query.policy as string | undefined
-    return paramId ? decodeURIComponent(paramId) : undefined
+    return paramId
   })
 
   function onSelectPolicy (version: string | number): void {
@@ -46,12 +48,11 @@ export function useAbacNavigation () {
     delete query.rule
     delete query.definition
     delete query.kind
-    delete query.view
 
     if (isCurrentlySelected) {
       delete query.policy
     } else {
-      query.policy = encodeURIComponent(version.toString())
+      query.policy = (version.toString())
     }
 
     router.push({ query })
@@ -62,8 +63,8 @@ export function useAbacNavigation () {
   }
 
   const selectedRuleIndex = computed(() => {
-    const paramId = route.query.rule as string | undefined
-    return paramId ? decodeURIComponent(paramId) : undefined
+    const paramIndex = route.query.rule as string | undefined
+    return paramIndex
   })
 
   function onSelectRule (index: string | number): void {
@@ -73,20 +74,20 @@ export function useAbacNavigation () {
     if (isCurrentlySelected) {
       delete query.rule
     } else {
-      query.rule = encodeURIComponent(index.toString())
+      query.rule = (index.toString())
     }
 
     router.push({ query })
   }
 
-  const selectedDefinitionKind = computed(() => {
-    const paramId = route.query.kind as string | undefined
-    return paramId ? decodeURIComponent(paramId) as DefinitionKind : undefined
+  const selectedDefinitionKind = computed<DefinitionKind | undefined>(() => {
+    const paramKind = route.query.kind as DefinitionKind | undefined
+    return paramKind
   })
 
   const selectedDefinitionName = computed(() => {
-    const paramId = route.query.definition as string | undefined
-    return paramId ? decodeURIComponent(paramId) : undefined
+    const paramDefinition = route.query.definition as string | undefined
+    return paramDefinition
   })
 
   function onSelectDefinitionKind (kind: DefinitionKind | 'all'): void {
@@ -105,7 +106,7 @@ export function useAbacNavigation () {
         delete query.definition
       }
 
-      query.kind = encodeURIComponent(kind)
+      query.kind = (kind)
     }
 
     router.push({ query })
@@ -120,8 +121,8 @@ export function useAbacNavigation () {
       delete query.definition
       delete query.kind
     } else {
-      query.definition = encodeURIComponent(name)
-      query.kind = encodeURIComponent(kind)
+      query.definition = (name)
+      query.kind = (kind)
     }
 
     router.push({ query })

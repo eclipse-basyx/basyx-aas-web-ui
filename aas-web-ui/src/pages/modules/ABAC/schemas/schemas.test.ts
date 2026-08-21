@@ -14,13 +14,7 @@ const msgs = en.validation
 
 const { formulaExpressionSchema } = createFormulaSchema(msgs)
 const { configuredRuleSchema } = createRuleSchema(msgs)
-const {
-  defAttributeSchema,
-  defAclSchema,
-  defObjectSchema,
-  defFormulaSchema,
-  schemaForKind,
-} = createDefinitionSchema(msgs)
+const { SCHEMA_FOR_KIND } = createDefinitionSchema(msgs)
 const { policySchema } = createPolicySchema(msgs)
 
 const validFormula = { $boolean: true }
@@ -183,6 +177,8 @@ describe('formulaSchema', () => {
     ['hex vs number ordered', { $gt: [{ $hexVal: '16#FF' }, { $numVal: 10 }] }],
     ['dateTime vs string', { $eq: [{ $dateTimeVal: '2026-08-06T12:00:00Z' }, { $strVal: '2026-08-06T12:00:00Z' }] }],
     ['time vs dateTime', { $eq: [{ $timeVal: '12:00:00Z' }, { $dateTimeVal: '2026-08-06T12:00:00Z' }] }],
+    ['CLAIM vs number', { $eq: [{ $attribute: { CLAIM: 'level' } }, { $numVal: 5 }] }],
+    ['REFERENCE vs number', { $eq: [{ $attribute: { REFERENCE: '$sm#id' } }, { $numVal: 1 }] }],
   ])('rejects cross-kind comparison (BE GRAMMAR-LOGEXPR-CMPTYPE): %s', (_label, expr) => {
     const result = formulaExpressionSchema.safeParse(expr)
     expect(result.success).toBe(false)
@@ -251,8 +247,11 @@ describe('formulaSchema', () => {
     ['$field is compatible with any kind',
       { $eq: [{ $field: '$sm#id' }, { $numVal: 1 }] },
     ],
-    ['$attribute CLAIM is compatible with any kind',
-      { $gt: [{ $attribute: { CLAIM: 'level' } }, { $numVal: 5 }] },
+    ['$attribute CLAIM is string-compatible with $strVal',
+      { $eq: [{ $attribute: { CLAIM: 'level' } }, { $strVal: 'admin' }] },
+    ],
+    ['$attribute REFERENCE is string-compatible with $strVal',
+      { $eq: [{ $attribute: { REFERENCE: '$sm#id' } }, { $strVal: 'abc' }] },
     ],
   ])('accepts semantically valid expression: %s', (_label, expr) => {
     const result = formulaExpressionSchema.safeParse(expr)
@@ -334,15 +333,14 @@ describe('ruleSchema', () => {
 
   // ── Exclusivity: OBJECTS vs USEOBJECTS ──
 
-  it('rejects when both OBJECTS and USEOBJECTS are provided', () => {
+  it('accepts when both OBJECTS and USEOBJECTS are provided', () => {
     const result = configuredRuleSchema.safeParse({
       ACL: validAcl,
       OBJECTS: [validObjectEntry],
       USEOBJECTS: ['myObjects'],
       FORMULA: validFormula,
     })
-    expect(result.success).toBe(false)
-    expect(result.error!.issues.some(i => i.message === msgs.exactlyOneObjects)).toBe(true)
+    expect(result.success).toBe(true)
   })
 
   it('rejects when neither OBJECTS nor USEOBJECTS is provided', () => {
@@ -351,7 +349,7 @@ describe('ruleSchema', () => {
       FORMULA: validFormula,
     })
     expect(result.success).toBe(false)
-    expect(result.error!.issues.some(i => i.message === msgs.exactlyOneObjects)).toBe(true)
+    expect(result.error!.issues.some(i => i.message === msgs.atLeastOneObjectOrUseobject)).toBe(true)
   })
 
   // ── Exclusivity: FORMULA vs USEFORMULA ──
@@ -604,14 +602,14 @@ describe('ruleSchema', () => {
 
   // ── Extra unknown keys ──
 
-  it('accepts rule with extra unknown properties (looseObject)', () => {
+  it('rejects rule with extra unknown properties', () => {
     const result = configuredRuleSchema.safeParse({
       ACL: validAcl,
       OBJECTS: [validObjectEntry],
       FORMULA: validFormula,
       EXTRA_FIELD: 'should be ignored',
     })
-    expect(result.success).toBe(true)
+    expect(result.success).toBe(false)
   })
 
   it.each([
@@ -667,16 +665,24 @@ describe('ruleSchema', () => {
 describe('definitionSchema', () => {
   // ── DefAttribute ──
 
-  it('accepts a valid DEFATTRIBUTES entry', () => {
-    const result = defAttributeSchema.safeParse({
+  it('accepts a valid DEFATTRIBUTES entry with inline attributes', () => {
+    const result = SCHEMA_FOR_KIND['attributes'].safeParse({
       name: 'adminClaims',
       attributes: [{ CLAIM: 'role' }],
     })
     expect(result.success).toBe(true)
   })
 
+  it('accepts a valid DEFATTRIBUTES entry with USEATTRIBUTES reference', () => {
+    const result = SCHEMA_FOR_KIND['attributes'].safeParse({
+      name: 'roleAttrs',
+      USEATTRIBUTES: ['adminClaims'],
+    })
+    expect(result.success).toBe(true)
+  })
+
   it('rejects DEFATTRIBUTES without name', () => {
-    const result = defAttributeSchema.safeParse({
+    const result = SCHEMA_FOR_KIND['attributes'].safeParse({
       attributes: [{ CLAIM: 'role' }],
     })
     expect(result.success).toBe(false)
@@ -684,15 +690,40 @@ describe('definitionSchema', () => {
   })
 
   it('rejects DEFATTRIBUTES with empty attributes array', () => {
-    const result = defAttributeSchema.safeParse({
+    const result = SCHEMA_FOR_KIND['attributes'].safeParse({
       name: 'empty',
       attributes: [],
     })
     expect(result.success).toBe(false)
   })
 
+  it('rejects DEFATTRIBUTES with empty USEATTRIBUTES array', () => {
+    const result = SCHEMA_FOR_KIND['attributes'].safeParse({
+      name: 'emptyRef',
+      USEATTRIBUTES: [],
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('accepts DEFATTRIBUTES with both attributes and USEATTRIBUTES', () => {
+    const result = SCHEMA_FOR_KIND['attributes'].safeParse({
+      name: 'bothAttributes',
+      attributes: [{ CLAIM: 'role' }],
+      USEATTRIBUTES: ['adminClaims'],
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects DEFATTRIBUTES with neither attributes nor USEATTRIBUTES', () => {
+    const result = SCHEMA_FOR_KIND['attributes'].safeParse({
+      name: 'empty',
+    })
+    expect(result.success).toBe(false)
+    expect(result.error!.issues.some(i => i.message === msgs.atLeastOneAttributesOrUseattributes)).toBe(true)
+  })
+
   it('rejects DEFATTRIBUTES with empty attribute source', () => {
-    const result = defAttributeSchema.safeParse({
+    const result = SCHEMA_FOR_KIND['attributes'].safeParse({
       name: 'bad',
       attributes: [{}],
     })
@@ -700,7 +731,7 @@ describe('definitionSchema', () => {
   })
 
   it('rejects DEFATTRIBUTES with attribute source having all three keys', () => {
-    const result = defAttributeSchema.safeParse({
+    const result = SCHEMA_FOR_KIND['attributes'].safeParse({
       name: 'bad',
       attributes: [{ CLAIM: 'role', GLOBAL: 'ANONYMOUS', REFERENCE: '$sm#id' }],
     })
@@ -710,7 +741,7 @@ describe('definitionSchema', () => {
   // ── DefAcl ──
 
   it('accepts a valid DEFACLS entry', () => {
-    const result = defAclSchema.safeParse({
+    const result = SCHEMA_FOR_KIND['acls'].safeParse({
       name: 'readAcl',
       acl: {
         ACCESS: 'ALLOW',
@@ -722,7 +753,7 @@ describe('definitionSchema', () => {
   })
 
   it('accepts DEFACLS with USEATTRIBUTES reference', () => {
-    const result = defAclSchema.safeParse({
+    const result = SCHEMA_FOR_KIND['acls'].safeParse({
       name: 'refAcl',
       acl: {
         ACCESS: 'DISABLED',
@@ -734,7 +765,7 @@ describe('definitionSchema', () => {
   })
 
   it('rejects DEFACLS with both ATTRIBUTES and USEATTRIBUTES', () => {
-    const result = defAclSchema.safeParse({
+    const result = SCHEMA_FOR_KIND['acls'].safeParse({
       name: 'badAcl',
       acl: {
         ACCESS: 'ALLOW',
@@ -747,7 +778,7 @@ describe('definitionSchema', () => {
   })
 
   it('rejects DEFACLS without name', () => {
-    const result = defAclSchema.safeParse({
+    const result = SCHEMA_FOR_KIND['acls'].safeParse({
       acl: { ACCESS: 'ALLOW', RIGHTS: ['READ'], ATTRIBUTES: [{ CLAIM: 'role' }] },
     })
     expect(result.success).toBe(false)
@@ -756,7 +787,7 @@ describe('definitionSchema', () => {
   // ── DefObject ──
 
   it('accepts a valid DEFOBJECTS entry with inline objects', () => {
-    const result = defObjectSchema.safeParse({
+    const result = SCHEMA_FOR_KIND['objects'].safeParse({
       name: 'adminRoutes',
       objects: [{ ROUTE: '/security/abac/*' }],
     })
@@ -764,7 +795,7 @@ describe('definitionSchema', () => {
   })
 
   it('accepts a valid DEFOBJECTS entry with USEOBJECTS reference', () => {
-    const result = defObjectSchema.safeParse({
+    const result = SCHEMA_FOR_KIND['objects'].safeParse({
       name: 'refRoutes',
       USEOBJECTS: ['baseRoutes'],
     })
@@ -772,25 +803,25 @@ describe('definitionSchema', () => {
   })
 
   it('rejects DEFOBJECTS with both objects and USEOBJECTS', () => {
-    const result = defObjectSchema.safeParse({
+    const result = SCHEMA_FOR_KIND['objects'].safeParse({
       name: 'badRoutes',
       objects: [{ ROUTE: '/x' }],
       USEOBJECTS: ['baseRoutes'],
     })
     expect(result.success).toBe(false)
-    expect(result.error!.issues.some(i => i.message === msgs.exactlyOneObjects)).toBe(true)
+    expect(result.error!.issues.some(i => i.message === msgs.exactlyOneObjectOrUseobject)).toBe(true)
   })
 
   it('rejects DEFOBJECTS with neither objects nor USEOBJECTS', () => {
-    const result = defObjectSchema.safeParse({
+    const result = SCHEMA_FOR_KIND['objects'].safeParse({
       name: 'emptyRoutes',
     })
     expect(result.success).toBe(false)
-    expect(result.error!.issues.some(i => i.message === msgs.exactlyOneObjects)).toBe(true)
+    expect(result.error!.issues.some(i => i.message === msgs.exactlyOneObjectOrUseobject)).toBe(true)
   })
 
   it('rejects DEFOBJECTS without name', () => {
-    const result = defObjectSchema.safeParse({
+    const result = SCHEMA_FOR_KIND['objects'].safeParse({
       objects: [{ ROUTE: '/x' }],
     })
     expect(result.success).toBe(false)
@@ -799,7 +830,7 @@ describe('definitionSchema', () => {
   // ── DefFormula ──
 
   it('accepts a valid DEFFORMULAS entry', () => {
-    const result = defFormulaSchema.safeParse({
+    const result = SCHEMA_FOR_KIND['formulas'].safeParse({
       name: 'isAdmin',
       formula: {
         $and: [{ $boolean: true }, { $boolean: false }],
@@ -809,21 +840,21 @@ describe('definitionSchema', () => {
   })
 
   it('rejects DEFFORMULAS without name', () => {
-    const result = defFormulaSchema.safeParse({
+    const result = SCHEMA_FOR_KIND['formulas'].safeParse({
       formula: { $boolean: true },
     })
     expect(result.success).toBe(false)
   })
 
   it('rejects DEFFORMULAS without formula', () => {
-    const result = defFormulaSchema.safeParse({
+    const result = SCHEMA_FOR_KIND['formulas'].safeParse({
       name: 'missingFormula',
     })
     expect(result.success).toBe(false)
   })
 
   it('rejects DEFFORMULAS with invalid formula', () => {
-    const result = defFormulaSchema.safeParse({
+    const result = SCHEMA_FOR_KIND['formulas'].safeParse({
       name: 'badFormula',
       formula: { $foobar: 1 },
     })
@@ -834,11 +865,12 @@ describe('definitionSchema', () => {
 
   it.each([
     ['attributes', { name: 'test', attributes: [{ CLAIM: 'x' }] }],
+    ['attributes', { name: 'test', USEATTRIBUTES: ['ref'] }],
     ['acls', { name: 'test', acl: { ACCESS: 'ALLOW', RIGHTS: ['READ'], ATTRIBUTES: [{ CLAIM: 'x' }] } }],
     ['objects', { name: 'test', objects: [{ ROUTE: '/x' }] }],
     ['formulas', { name: 'test', formula: { $boolean: true } }],
   ] as const)('schemaForKind(%s) accepts valid payload', (kind, payload) => {
-    const schema = schemaForKind(kind)
+    const schema = SCHEMA_FOR_KIND[kind]
     expect(schema.safeParse(payload).success).toBe(true)
   })
 
@@ -848,12 +880,12 @@ describe('definitionSchema', () => {
     ['objects', { name: 'test', acl: { ACCESS: 'ALLOW', RIGHTS: ['READ'], ATTRIBUTES: [{ CLAIM: 'x' }] } }],
     ['formulas', { name: 'test', objects: [{ ROUTE: '/x' }] }],
   ] as const)('schemaForKind(%s) rejects wrong-shaped payload', (kind, payload) => {
-    const schema = schemaForKind(kind)
+    const schema = SCHEMA_FOR_KIND[kind]
     expect(schema.safeParse(payload).success).toBe(false)
   })
 
   it('rejects DEFFORMULAS with a semantically invalid formula', () => {
-    const result = defFormulaSchema.safeParse({
+    const result = SCHEMA_FOR_KIND['formulas'].safeParse({
       name: 'typeMismatch',
       formula: { $eq: [{ $strVal: 'a' }, { $numVal: 1 }] },
     })
@@ -946,14 +978,14 @@ describe('policySchema', () => {
     expect(result.success).toBe(false)
   })
 
-  it('accepts policy with extra keys inside the rules object (loose)', () => {
+  it('rejects policy with extra keys inside the rules object (loose)', () => {
     const result = policySchema.safeParse({
       AllAccessPermissionRules: {
         rules: [{ ACL: validAcl, OBJECTS: [validObjectEntry], FORMULA: validFormula }],
         EXTRA: 'allowed inside',
       },
     })
-    expect(result.success).toBe(true)
+    expect(result.success).toBe(false)
   })
 
   it('rejects policy with invalid definition in DEFATTRIBUTES', () => {
@@ -964,6 +996,16 @@ describe('policySchema', () => {
       },
     })
     expect(result.success).toBe(false)
+  })
+
+  it('accepts policy with DEFATTRIBUTES using USEATTRIBUTES reference', () => {
+    const result = policySchema.safeParse({
+      AllAccessPermissionRules: {
+        DEFATTRIBUTES: [{ name: 'merged', USEATTRIBUTES: ['adminClaims'] }],
+        rules: [{ ACL: validAcl, OBJECTS: [validObjectEntry], FORMULA: validFormula }],
+      },
+    })
+    expect(result.success).toBe(true)
   })
 })
 

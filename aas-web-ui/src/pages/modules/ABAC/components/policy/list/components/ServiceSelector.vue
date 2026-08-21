@@ -19,12 +19,13 @@
   const isMenuOpen = ref(false)
 
   const abacServices = computed(() => configStore.services)
+
+  const isEmpty = computed(() => !hasItems(abacServices.value))
+  const isInvalid = computed(() => hasItems(abacServices.value) && !configStore.apiUrl)
+
   const selectedServiceName = computed(() => {
-    if (!hasItems(abacServices.value)) return t('policies.list.selector.noServiceAvailable')
-
-    const isServiceNotFound = abacServices.value.length > 0 && !configStore.apiUrl
-    if (isServiceNotFound) return t('policies.list.selector.noValidServiceSelected')
-
+    if (isEmpty.value) return t('policies.list.selector.noServiceAvailable')
+    if (isInvalid.value) return t('policies.list.selector.noValidServiceSelected')
     return abacServices.value.find(s => s.url === configStore.apiUrl)?.name || t('policies.list.selector.noServiceSelected')
   })
 
@@ -37,7 +38,11 @@
 <template>
   <v-menu v-model="isMenuOpen">
     <template #activator="{ props: menuProps }">
-      <span v-bind="menuProps" class="text-subtitle-2 cursor-pointer">{{ selectedServiceName }}</span>
+      <span
+        v-bind="menuProps"
+        class="text-subtitle-2 cursor-pointer"
+        :class="{ 'text-warning': isEmpty, 'text-error': isInvalid }"
+      >{{ selectedServiceName }}</span>
     </template>
 
     <v-sheet border>

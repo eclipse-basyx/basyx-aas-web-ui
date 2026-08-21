@@ -63,9 +63,13 @@ function inferKind (node: unknown): Kind {
   if (key === '$attribute') {
     const inner = (node as Record<string, unknown>).$attribute
     if (typeof inner === 'object' && inner !== null) {
-      const global = (inner as Record<string, unknown>).GLOBAL
+      const attribute = inner as Record<string, unknown>
+      const global = attribute.GLOBAL
       if (typeof global === 'string') {
         return DATETIME_GLOBALS.has(global) ? 'dateTime' : 'string'
+      }
+      if (typeof attribute.CLAIM === 'string' || typeof attribute.REFERENCE === 'string') {
+        return 'string'
       }
     }
     return 'unknown'

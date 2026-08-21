@@ -12,7 +12,8 @@ export interface AttributeSource {
 
 export interface DefAttribute {
   name: string
-  attributes: AttributeSource[]
+  attributes?: AttributeSource[]
+  USEATTRIBUTES?: string[]
 }
 
 export type AccessRight = 'CREATE' | 'READ' | 'UPDATE' | 'DELETE' | 'EXECUTE' | 'VIEW' | 'ALL'
@@ -71,6 +72,7 @@ export interface DefinitionsMap {
 export interface DefinitionCreatePayload {
   name: string
   attributes?: AttributeSource[]
+  USEATTRIBUTES?: string[]
   acl?: AclEntry
   objects?: RouteObject[]
   USEOBJECTS?: string[]

@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { hasItems } from '@/utils/array'
+  import { usePolicy } from '../../../hooks/usePolicy'
   import { useRules } from '../../../hooks/useRules'
   import { useAbacI18n } from '../../../i18n/useAbacI18n'
   import RuleItem from './RuleItem.vue'
@@ -12,6 +13,7 @@
   const emit = defineEmits<{ (e: 'create'): void }>()
 
   const { t, i18nData } = useAbacI18n()
+  const { policy } = usePolicy()
   const { rules, isLoading, isError } = useRules()
 
 </script>
@@ -26,6 +28,7 @@
       <v-tooltip location="bottom" :open-delay="600">
         <template #activator="{ props: tipProps }">
           <v-btn
+            v-if="policy?.status === 'staged'"
             v-bind="tipProps"
             density="comfortable"
             :icon="ICONS.ADD"

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { computed, ref } from 'vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { downloadJson } from '@/utils/generalUtils'
   import { usePolicy } from '../../../hooks/usePolicy'
@@ -15,7 +15,7 @@
   const { copyJsonToClipboard } = useClipboardUtil()
   const { selectedPolicyVersion, policy } = usePolicy()
 
-  const fileName = `Policy_v${selectedPolicyVersion.value}.json`
+  const fileName = computed(() => `Policy_v${selectedPolicyVersion.value}.json`)
   const copyIcon = ref<string>(ICONS.COPY)
 
   const policyJson = computed(() => {
@@ -24,11 +24,11 @@
   })
 
   function onCopy (): void {
-    copyJsonToClipboard(policy.value, fileName, copyIcon, false)
+    copyJsonToClipboard(policy.value, fileName.value, copyIcon, false)
   }
 
   function onDownload (): void {
-    downloadJson(policy.value, fileName)
+    downloadJson(policy.value, fileName.value)
   }
 </script>
 

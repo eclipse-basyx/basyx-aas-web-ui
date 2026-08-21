@@ -139,6 +139,7 @@ export const en = {
       replace: 'Replace',
       patch: 'Patch',
       cancel: 'Cancel',
+      patchHint: 'Note: To delete a field, set it to null (e.g. "FIELD": null). Omitted fields keep their current values.',
     },
     moveDialog: {
       title: 'Move Rule',
@@ -204,6 +205,7 @@ export const en = {
       replace: 'Replace',
       patch: 'Patch',
       cancel: 'Cancel',
+      patchHint: 'Note: To delete a field, set it to null (e.g. "FIELD": null). Omitted fields keep their current values.',
     },
     deleteDialog: {
       title: 'Confirm Delete',
@@ -254,7 +256,8 @@ export const en = {
     inlineFormulaRequired: 'FORMULA is required when not using USEFORMULA',
     refFormulaRequired: 'USEFORMULA is required when not providing an inline FORMULA',
     exactlyOneAcl: 'Rule must have exactly one of ACL or USEACL',
-    exactlyOneObjects: 'Rule must have at least one of OBJECTS or USEOBJECTS',
+    atLeastOneObjectOrUseobject: 'Rule must have at least one of OBJECTS or USEOBJECTS',
+    exactlyOneObjectOrUseobject: 'Definition must have exactly one of objects or USEOBJECTS',
     exactlyOneFormula: 'Rule must have exactly one of FORMULA or USEFORMULA',
     exactlyOneAclAttributes: 'ACL must have exactly one of ATTRIBUTES or USEATTRIBUTES',
     exactlyOneFilterCondition: 'Filter must have exactly one of CONDITION or USEFORMULA',
@@ -270,6 +273,7 @@ export const en = {
     // Definition
     nameRequired: 'Definition name is required',
     attributesRequired: 'Attribute sources array is required',
+    atLeastOneAttributesOrUseattributes: 'Definition must have at least one of attributes or USEATTRIBUTES',
     aclRequired: 'acl entry is required',
     objectsRequired: 'objects array is required',
     formulaRequired: 'formula expression is required',
@@ -422,6 +426,7 @@ export const de: AbacI18NSchema = {
       replace: 'Ersetzen',
       patch: 'Patchen',
       cancel: 'Abbrechen',
+      patchHint: 'Hinweis: Zum Löschen eines Feldes setzen Sie es auf null (z.B. "FIELD": null). Ausgelassene Felder behalten ihre aktuellen Werte.',
     },
     moveDialog: {
       title: 'Regel verschieben',
@@ -487,6 +492,7 @@ export const de: AbacI18NSchema = {
       replace: 'Ersetzen',
       patch: 'Patchen',
       cancel: 'Abbrechen',
+      patchHint: 'Hinweis: Zum Löschen eines Feldes setzen Sie es auf null (z.B. "FIELD": null). Ausgelassene Felder behalten ihre aktuellen Werte.',
     },
     deleteDialog: {
       title: 'Löschen bestätigen',
@@ -537,7 +543,8 @@ export const de: AbacI18NSchema = {
     inlineFormulaRequired: 'FORMULA ist erforderlich, wenn USEFORMULA nicht verwendet wird',
     refFormulaRequired: 'USEFORMULA ist erforderlich, wenn keine inline FORMULA angegeben ist',
     exactlyOneAcl: 'Regel muss genau eines von ACL oder USEACL haben',
-    exactlyOneObjects: 'Regel muss genau eines von OBJECTS oder USEOBJECTS haben',
+    atLeastOneObjectOrUseobject: 'Regel muss mindestens eines von OBJECTS oder USEOBJECTS haben',
+    exactlyOneObjectOrUseobject: 'Definition muss genau eines von objects oder USEOBJECTS haben',
     exactlyOneFormula: 'Regel muss genau eines von FORMULA oder USEFORMULA haben',
     exactlyOneAclAttributes: 'ACL muss genau eines von ATTRIBUTES oder USEATTRIBUTES haben',
     exactlyOneFilterCondition: 'Filter muss genau eines von CONDITION oder USEFORMULA haben',
@@ -553,6 +560,7 @@ export const de: AbacI18NSchema = {
     // Definition
     nameRequired: 'Definitionsname ist erforderlich',
     attributesRequired: 'Attributquellen-Array ist erforderlich',
+    atLeastOneAttributesOrUseattributes: 'Definition muss mindestens eines von attributes oder USEATTRIBUTES haben',
     aclRequired: 'acl-Eintrag ist erforderlich',
     objectsRequired: 'objects-Array ist erforderlich',
     formulaRequired: 'formula-Ausdruck ist erforderlich',

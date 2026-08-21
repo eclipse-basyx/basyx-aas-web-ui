@@ -66,11 +66,16 @@
             return
           }
           if (movePosition.value === null) return
+          const position = movePosition.value
           await moveRule({
             versionId,
             ruleIndex,
-            payload: { position: movePosition.value },
+            payload: { position },
           })
+
+          if (position !== ruleIndex) {
+            onSelectRule(position)
+          }
           moveDialog.value = false
           break
         }

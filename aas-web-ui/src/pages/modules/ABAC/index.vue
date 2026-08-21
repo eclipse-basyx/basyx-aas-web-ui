@@ -39,6 +39,14 @@
     },
     { immediate: true })
 
+  // Sync store when the user navigates back/forward or ?service= changes externally.
+  // The discovery watcher above only fires on initial load / refetch.
+  watch(selectedService, key => {
+    if (!key || configStore.services.length === 0) return
+    const match = configStore.services.find(s => s.componentKey === key)
+    if (match) configStore.setApiUrl(match.url)
+  })
+
   watch(
     () => configStore.language,
     lang => {

@@ -69,6 +69,7 @@ export const useAbacConfigStore = defineStore(STORE_KEY, {
           this.apiUrl = url
           return true
         }
+        this.apiUrl = ''
         return false // component not found in discovered services
       }
 

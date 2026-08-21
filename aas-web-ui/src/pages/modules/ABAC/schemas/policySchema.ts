@@ -11,16 +11,11 @@ import { createDefinitionSchema } from './definitionSchema'
 import { createRuleSchema } from './ruleSchema'
 
 export function createPolicySchema (messages: AbacValidationMessages) {
-  const {
-    defAttributeSchema,
-    defAclSchema,
-    defObjectSchema,
-    defFormulaSchema,
-  } = createDefinitionSchema(messages)
+  const { defAttributeSchema, defAclSchema, defObjectSchema, defFormulaSchema } = createDefinitionSchema(messages)
 
   const { configuredRuleSchema } = createRuleSchema(messages)
 
-  const allAccessPermissionRulesSchema = z.looseObject({
+  const allAccessPermissionRulesSchema = z.strictObject({
     DEFATTRIBUTES: z.array(defAttributeSchema).optional(),
     DEFACLS: z.array(defAclSchema).optional(),
     DEFOBJECTS: z.array(defObjectSchema).optional(),

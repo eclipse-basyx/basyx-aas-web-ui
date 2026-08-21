@@ -3,12 +3,13 @@
  *
  * Enforces the ABAC grammar exclusivity rules:
  * - Exactly one of ACL | USEACL
- * - Exactly one of OBJECTS | USEOBJECTS
+ * - At least one of OBJECTS | USEOBJECTS
  * - Exactly one of FORMULA | USEFORMULA
  */
 
 import type { AbacValidationMessages } from '../i18n/locales'
 import { z } from 'zod'
+import { toNullish } from '../utils/zod'
 import { createFormulaSchema } from './formulaSchema'
 import { FIELD_PATTERN } from './pattern'
 import { createSharedSchemas } from './sharedSchema'
@@ -16,22 +17,14 @@ import { createSharedSchemas } from './sharedSchema'
 export function createRuleSchema (messages: AbacValidationMessages) {
   const { formulaExpressionSchema } = createFormulaSchema(messages)
 
-  const {
-    aclEntrySchema,
-    objectEntrySchema,
-  } = createSharedSchemas(messages)
+  const { aclEntrySchema, objectEntrySchema } = createSharedSchemas(messages)
 
-  const filterSchema = z
-    .looseObject({
-      FRAGMENT: z
-        .string()
-        .regex(FIELD_PATTERN, {
-          error: messages.filterFragmentRequired,
-        }),
-      MATCH: z.boolean().optional(),
-      CONDITION: formulaExpressionSchema.optional(),
-      USEFORMULA: z.string().min(1).optional(),
-    })
+  const filterSchema = z.strictObject({
+    FRAGMENT: z.string().regex(FIELD_PATTERN, { error: messages.filterFragmentRequired }),
+    MATCH: z.boolean().optional(),
+    CONDITION: formulaExpressionSchema.optional(),
+    USEFORMULA: z.string().min(1).optional(),
+  })
     .refine(
       v => (v.CONDITION ? !v.USEFORMULA : !!v.USEFORMULA),
       {
@@ -40,24 +33,18 @@ export function createRuleSchema (messages: AbacValidationMessages) {
       },
     )
 
-  const configuredRuleSchema = z
-    .looseObject({
-      ACL: aclEntrySchema.optional(),
-      USEACL: z.string().min(1).optional(),
-      OBJECTS: z.array(objectEntrySchema).min(1).optional(),
-      USEOBJECTS: z
-        .array(
-          z
-            .string()
-            .min(1, { error: messages.refObjectNameRequired }),
-        )
-        .min(1)
-        .optional(),
-      FORMULA: formulaExpressionSchema.optional(),
-      USEFORMULA: z.string().min(1).optional(),
-      FILTER: filterSchema.optional(),
-      FILTERLIST: z.array(filterSchema).min(1).optional(),
-    })
+  const ruleSchema = z.strictObject({
+    ACL: aclEntrySchema.optional(),
+    USEACL: z.string().min(1).optional(),
+    OBJECTS: z.array(objectEntrySchema).min(1).optional(),
+    USEOBJECTS: z.array(z.string().min(1, { error: messages.refObjectNameRequired })).min(1).optional(),
+    FORMULA: formulaExpressionSchema.optional(),
+    USEFORMULA: z.string().min(1).optional(),
+    FILTER: filterSchema.optional(),
+    FILTERLIST: z.array(filterSchema).min(1).optional(),
+  })
+
+  const configuredRuleSchema = ruleSchema
     .refine(
       v => (v.ACL ? !v.USEACL : !!v.USEACL),
       {
@@ -66,13 +53,9 @@ export function createRuleSchema (messages: AbacValidationMessages) {
       },
     )
     .refine(
-      v => (
-        v.OBJECTS?.length
-          ? !v.USEOBJECTS?.length
-          : !!v.USEOBJECTS?.length
-      ),
+      v => !!(v.OBJECTS?.length || v.USEOBJECTS?.length),
       {
-        error: messages.exactlyOneObjects,
+        error: messages.atLeastOneObjectOrUseobject,
         path: ['OBJECTS'],
       },
     )
@@ -84,5 +67,7 @@ export function createRuleSchema (messages: AbacValidationMessages) {
       },
     )
 
-  return { configuredRuleSchema }
+  const patchRuleSchema = ruleSchema.extend(toNullish(ruleSchema)).strict()
+
+  return { configuredRuleSchema, patchRuleSchema }
 }

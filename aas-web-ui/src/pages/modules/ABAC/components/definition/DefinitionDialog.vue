@@ -41,10 +41,10 @@
   const jsonError = ref<JsonErrorMessage | null>(null)
   const errorLines = ref<number[]>([])
 
-  const kindOptions = DEFINITION_KINDS.map(k => ({
+  const kindOptions = computed(() => DEFINITION_KINDS.map(k => ({
     title: t(`definitions.${k}`),
     value: k,
-  }))
+  })))
 
   watch(definitionKind, kind => {
     if (dialogMode.value !== 'create') return
@@ -79,6 +79,7 @@
     const { payload, error, errorLines: lines } = validateJson({
       json: definitionJson.value,
       kind: definitionKind.value,
+      currentDefinition: dialogMode.value === 'patch' ? selectedDefinition.value : undefined,
       name: definitionName.value,
       errorMessages: {
         requiredKind: t('definitions.definitionDialog.requiredKind'),
@@ -200,6 +201,10 @@
             :model-value="definitionName"
             variant="outlined"
           />
+
+          <p v-if="dialogMode === 'patch'" class="text-end mb-0 text-body-small">
+            {{ t('definitions.definitionDialog.patchHint') }}
+          </p>
 
           <JsonCodeEditor
             v-model="definitionJson"

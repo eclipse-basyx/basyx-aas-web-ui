@@ -1,6 +1,7 @@
 import type { JsonErrorMessage } from '../components/shared/JsonCodeEditor.vue'
 import type { AbacValidationMessages } from '../i18n/locales'
-import type { DefinitionCreatePayload, DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
+import type { Definition, DefinitionCreatePayload, DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
+import type { ZodError } from 'zod'
 import { hasContent } from '@/utils/StringUtils'
 import { createDefinitionSchema } from '../schemas/definitionSchema'
 import { extractLineFromSyntaxError, findLineForPath } from '../utils/json'
@@ -8,6 +9,7 @@ import { extractLineFromSyntaxError, findLineForPath } from '../utils/json'
 export interface DefinitionValidationInput {
   json: string
   kind: DefinitionKind | undefined
+  currentDefinition?: Definition
   name?: string | null
   errorMessages: {
     requiredKind: string
@@ -24,9 +26,9 @@ export interface DefinitionValidationResult {
 }
 
 export function useDefinitionValidation (messages: AbacValidationMessages) {
-  const { schemaForKind } = createDefinitionSchema(messages)
+  const { SCHEMA_FOR_KIND, PATCH_SCHEMA_FOR_KIND } = createDefinitionSchema(messages)
 
-  function validateJson ({ json, kind, name, errorMessages }: DefinitionValidationInput): DefinitionValidationResult {
+  function validateJson ({ json, kind, currentDefinition, name, errorMessages }: DefinitionValidationInput): DefinitionValidationResult {
     if (!hasContent(kind)) {
       return { payload: null, error: { title: errorMessages.requiredKind }, errorLines: [] }
     }
@@ -35,7 +37,7 @@ export function useDefinitionValidation (messages: AbacValidationMessages) {
       return { payload: null, error: { title: errorMessages.requiredDefinition }, errorLines: [] }
     }
 
-    // 1) JSON syntax
+    // JSON syntax validation
     let parsed: unknown
     try {
       const obj = JSON.parse(json)
@@ -54,25 +56,55 @@ export function useDefinitionValidation (messages: AbacValidationMessages) {
       }
     }
 
-    // 2) Structural validation
-    const result = schemaForKind(kind!).safeParse(parsed)
-    if (!result.success) {
-      return {
-        payload: null,
-        error: {
-          title: errorMessages.invalidDefinition,
-          messages: result.error.issues.map(issue => {
-            const path = issue.path.join('.') || '(root)'
-            return `${path}: ${issue.message}`
-          }),
-        },
-        errorLines: result.error.issues
-          .map(issue => findLineForPath(json, issue.path))
-          .filter((n): n is number => n !== null),
+    // Patch flow: currentDefinition is only passed in patch flow
+    if (currentDefinition) {
+      const patchResult = PATCH_SCHEMA_FOR_KIND[kind].safeParse(parsed)
+      // Check if passed input is valid
+      if (!patchResult.success) {
+        return formatSchemaError(patchResult.error, errorMessages.invalidDefinition, json)
       }
+
+      const patch = patchResult.data
+      const base: Record<string, unknown> = { ...currentDefinition }
+      for (const [key, value] of Object.entries(patch)) {
+        if (value === null) {
+          delete base[key]
+        } else {
+          base[key] = value
+        }
+      }
+
+      // Check if expected definition is valid
+      const mergedResult = SCHEMA_FOR_KIND[kind].safeParse(base)
+      if (!mergedResult.success) {
+        return formatSchemaError(mergedResult.error, errorMessages.invalidDefinition, json)
+      }
+
+      return { payload: patch as DefinitionCreatePayload, error: null, errorLines: [] }
     }
 
-    return { payload: result.data as DefinitionCreatePayload, error: null, errorLines: [] }
+    // Structural validation against full schema
+    const result = SCHEMA_FOR_KIND[kind].safeParse(parsed)
+
+    return result.success
+      ? { payload: result.data as DefinitionCreatePayload, error: null, errorLines: [] }
+      : formatSchemaError(result.error, errorMessages.invalidDefinition, json)
+  }
+
+  function formatSchemaError (error: ZodError, title: string, json: string): DefinitionValidationResult {
+    return {
+      payload: null,
+      error: {
+        title,
+        messages: error.issues.map(issue => {
+          const path = issue.path.join('.') || '(root)'
+          return `${path}: ${issue.message}`
+        }),
+      },
+      errorLines: error.issues
+        .map(issue => findLineForPath(json, issue.path))
+        .filter((n): n is number => n !== null),
+    }
   }
 
   return { validateJson }
