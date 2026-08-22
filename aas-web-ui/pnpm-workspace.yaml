@@ -6,3 +6,6 @@ blockExoticSubdeps: true
 trustPolicy: no-downgrade
 packages:
     - '.'
+
+overrides:
+  "nanoid@": 3.3.18
