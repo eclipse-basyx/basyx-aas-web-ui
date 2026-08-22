@@ -1,6 +1,8 @@
 allowBuilds:
   '@parcel/watcher': true
   'vue-demi': true
-minimumReleaseAge: 1440
+minimumReleaseAge: 10080
+blockExoticSubdeps: true
+trustPolicy: no-downgrade
 packages:
     - '.'
