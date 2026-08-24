@@ -318,4 +318,57 @@ describe('useInfrastructureStorage.ts', () => {
     })
     expect(stored.infrastructures[1].catenaX).toBeUndefined()
   })
+
+  it('preserves configured partner metadata when it matches the legacy default', () => {
+    const { saveInfrastructuresToStorage } = useInfrastructureStorage()
+    const infrastructure = createInfrastructure('catena-x', true)
+    infrastructure.template = 'catena-x'
+    infrastructure.catenaX = {
+      accessMode: 'edc',
+      edc: {
+        proxyId: 'default',
+        defaultPartnerId: 'partner-a',
+        defaultCounterPartyId: 'BPNL000000000AAA',
+        defaultCounterPartyAddress: 'https://partner-a.example/api/v1/dsp',
+        partners: [
+          {
+            id: 'partner-a',
+            name: 'Partner A',
+            counterPartyId: 'BPNL000000000AAA',
+            counterPartyAddress: 'https://partner-a.example/api/v1/dsp',
+          },
+          {
+            id: 'partner-b',
+            name: 'Partner B',
+            counterPartyId: 'BPNL000000000BBB',
+            counterPartyAddress: 'https://partner-b.example/api/v1/dsp',
+          },
+        ],
+      },
+    }
+
+    saveInfrastructuresToStorage([infrastructure], infrastructure.id)
+
+    const stored = JSON.parse(window.localStorage.getItem('basyxInfrastructures') ?? '{}')
+    expect(stored.infrastructures[0].catenaX.edc).toEqual({
+      proxyId: 'default',
+      defaultPartnerId: 'partner-a',
+      defaultCounterPartyId: 'BPNL000000000AAA',
+      defaultCounterPartyAddress: 'https://partner-a.example/api/v1/dsp',
+      partners: [
+        {
+          id: 'partner-a',
+          name: 'Partner A',
+          counterPartyId: 'BPNL000000000AAA',
+          counterPartyAddress: 'https://partner-a.example/api/v1/dsp',
+        },
+        {
+          id: 'partner-b',
+          name: 'Partner B',
+          counterPartyId: 'BPNL000000000BBB',
+          counterPartyAddress: 'https://partner-b.example/api/v1/dsp',
+        },
+      ],
+    })
+  })
 })

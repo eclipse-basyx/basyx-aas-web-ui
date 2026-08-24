@@ -228,10 +228,10 @@ export function useInfrastructureStorage (): {
 
     const legacyDefaultPartner = createLegacyDefaultPartner(edc?.defaultCounterPartyId, edc?.defaultCounterPartyAddress)
     const partners = normalizeCatenaXPartners([
-      ...(edc?.partners ?? []),
       ...(legacyDefaultPartner ? [legacyDefaultPartner] : []),
+      ...(edc?.partners ?? []),
     ])
-    const defaultPartnerId = edc?.defaultPartnerId?.trim() || partners[0]?.id
+    const defaultPartnerId = edc?.defaultPartnerId?.trim() || partners[0]?.id?.trim()
     const defaultPartner = partners.find(partner => partner.id === defaultPartnerId) ?? partners[0]
 
     infrastructure.catenaX = {

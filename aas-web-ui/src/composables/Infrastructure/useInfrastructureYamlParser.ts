@@ -200,8 +200,8 @@ export function useInfrastructureYamlParser (): {
 
     return Array.from(
       new Map([
-        ...(partners ?? []),
         ...(legacyDefaultPartner ? [legacyDefaultPartner] : []),
+        ...(partners ?? []),
       ].map(partner => [`${partner.counterPartyId}::${partner.counterPartyAddress}`, partner])).values(),
     )
   }
