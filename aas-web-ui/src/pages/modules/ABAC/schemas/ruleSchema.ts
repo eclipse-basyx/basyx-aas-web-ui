@@ -7,12 +7,12 @@
  * - Exactly one of FORMULA | USEFORMULA
  */
 
-import type { AbacValidationMessages } from '../i18n/locales'
+import type { AbacValidationMessages } from '@/pages/modules/ABAC/i18n/locales'
 import { z } from 'zod'
-import { toNullish } from '../utils/zod'
-import { createFormulaSchema } from './formulaSchema'
-import { FIELD_PATTERN } from './pattern'
-import { createSharedSchemas } from './sharedSchema'
+import { createFormulaSchema } from '@/pages/modules/ABAC/schemas/formulaSchema'
+import { FIELD_PATTERN } from '@/pages/modules/ABAC/schemas/pattern'
+import { createSharedSchemas } from '@/pages/modules/ABAC/schemas/sharedSchema'
+import { toNullish } from '@/pages/modules/ABAC/utils/zod'
 
 export function createRuleSchema (messages: AbacValidationMessages) {
   const { formulaExpressionSchema } = createFormulaSchema(messages)

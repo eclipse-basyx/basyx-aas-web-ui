@@ -5,10 +5,10 @@
  * is validated against the full ABAC grammar (definitions + rules).
  */
 
-import type { AbacValidationMessages } from '../i18n/locales'
+import type { AbacValidationMessages } from '@/pages/modules/ABAC/i18n/locales'
 import { z } from 'zod'
-import { createDefinitionSchema } from './definitionSchema'
-import { createRuleSchema } from './ruleSchema'
+import { createDefinitionSchema } from '@/pages/modules/ABAC/schemas/definitionSchema'
+import { createRuleSchema } from '@/pages/modules/ABAC/schemas/ruleSchema'
 
 export function createPolicySchema (messages: AbacValidationMessages) {
   const { defAttributeSchema, defAclSchema, defObjectSchema, defFormulaSchema } = createDefinitionSchema(messages)

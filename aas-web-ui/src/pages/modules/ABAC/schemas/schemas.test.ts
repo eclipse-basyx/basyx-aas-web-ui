@@ -1,14 +1,14 @@
 import type { FormulaExpression } from '@/pages/modules/ABAC/types/formula'
 import type { z } from 'zod'
 import { describe, expect, expectTypeOf, it } from 'vitest'
-import { useDefinitionValidation } from '../hooks/useDefinitionValidation'
-import { usePolicyValidation } from '../hooks/usePolicyValidation'
-import { useRuleValidation } from '../hooks/useRuleValidation'
-import { en } from '../i18n/locales'
-import { createDefinitionSchema } from './definitionSchema'
-import { createFormulaSchema } from './formulaSchema'
-import { createPolicySchema } from './policySchema'
-import { createRuleSchema } from './ruleSchema'
+import { useDefinitionValidation } from '@/pages/modules/ABAC/hooks/useDefinitionValidation'
+import { usePolicyValidation } from '@/pages/modules/ABAC/hooks/usePolicyValidation'
+import { useRuleValidation } from '@/pages/modules/ABAC/hooks/useRuleValidation'
+import { en } from '@/pages/modules/ABAC/i18n/locales'
+import { createDefinitionSchema } from '@/pages/modules/ABAC/schemas/definitionSchema'
+import { createFormulaSchema } from '@/pages/modules/ABAC/schemas/formulaSchema'
+import { createPolicySchema } from '@/pages/modules/ABAC/schemas/policySchema'
+import { createRuleSchema } from '@/pages/modules/ABAC/schemas/ruleSchema'
 
 const msgs = en.validation
 

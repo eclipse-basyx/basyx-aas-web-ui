@@ -1,126 +1,3 @@
-<script setup lang="ts">
-  import { ref } from 'vue'
-  import { useDeleteRule } from '@/pages/modules/ABAC/api/queries/rule/useDeleteRule'
-  import { useDuplicateRule } from '@/pages/modules/ABAC/api/queries/rule/useDuplicateRule'
-  import { useMoveRule } from '@/pages/modules/ABAC/api/queries/rule/useMoveRule'
-  import { useToggleRule } from '@/pages/modules/ABAC/api/queries/rule/useToggleRule'
-  import { useNavigationStore } from '@/store/NavigationStore'
-  import { hasContent } from '@/utils/StringUtils'
-  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
-  import { useRules } from '../../../hooks/useRules'
-  import { useAbacI18n } from '../../../i18n/useAbacI18n'
-
-  type RuleAction = 'replace' | 'patch' | 'duplicate' | 'move' | 'toggle' | 'delete'
-
-  const ICONS = {
-    REPLACE: 'mdi-pencil',
-    PATCH: 'mdi-pencil-box',
-    DUPLICATE: 'mdi-content-copy',
-    MOVE: 'mdi-arrow-right',
-    ENABLE: 'mdi-toggle-switch',
-    DISABLE: 'mdi-toggle-switch-off',
-    DELETE: 'mdi-delete',
-  } as const
-
-  const emit = defineEmits<{ (e: 'replace' | 'patch'): void }>()
-
-  const { t, i18nData } = useAbacI18n()
-  const navigationStore = useNavigationStore()
-
-  const { selectedPolicyVersion, onSelectRule } = useAbacNavigation()
-  const { rulesCount, selectedRule } = useRules()
-  const isEnabled = computed(() => selectedRule.value?.access?.toUpperCase() === 'ALLOW')
-
-  const { mutateAsync: duplicateRule, isPending: isDuplicating } = useDuplicateRule()
-  const { mutateAsync: moveRule, isPending: isMoving } = useMoveRule()
-  const { mutateAsync: toggleRule, isPending: isToggling } = useToggleRule()
-  const { mutateAsync: deleteRule, isPending: isDeleting } = useDeleteRule()
-
-  const moveDialog = ref(false)
-  const movePosition = ref<number | null>(null)
-
-  const deleteDialog = ref(false)
-  async function doAction (action: RuleAction): Promise<void> {
-    const ruleIndex = selectedRule.value?.rule_index
-    const versionId = selectedPolicyVersion.value
-    if (!hasContent(ruleIndex?.toString()) || !hasContent(versionId)) return
-
-    try {
-      switch (action) {
-        case 'replace': {
-          emit('replace')
-          break
-        }
-        case 'patch': {
-          emit('patch')
-          break
-        }
-        case 'duplicate': {
-          await duplicateRule({ versionId, ruleIndex })
-          break
-        }
-        case 'move': {
-          if (!moveDialog.value) {
-            moveDialog.value = true
-            movePosition.value = selectedRule.value?.rule_index ?? null
-            return
-          }
-          if (movePosition.value === null) return
-          const position = movePosition.value
-          await moveRule({
-            versionId,
-            ruleIndex,
-            payload: { position },
-          })
-
-          if (position !== ruleIndex) {
-            onSelectRule(position)
-          }
-          moveDialog.value = false
-          break
-        }
-        case 'toggle': {
-          await toggleRule({
-            versionId,
-            ruleIndex,
-            payload: { enabled: !isEnabled.value },
-          })
-          break
-        }
-        case 'delete': {
-          if (!deleteDialog.value) {
-            deleteDialog.value = true
-            return
-          }
-          await deleteRule({ versionId, ruleIndex })
-          onSelectRule(ruleIndex)
-          deleteDialog.value = false
-          break
-        }
-      }
-
-      if (action === 'replace' || action === 'patch') return
-
-      navigationStore.dispatchSnackbar({
-        status: true,
-        timeout: 3000,
-        color: 'success',
-        btnColor: 'buttonText',
-        text: t(`rules.success.${action}`),
-      })
-    } catch {
-      navigationStore.dispatchSnackbar({
-        status: true,
-        timeout: 8000,
-        color: 'error',
-        btnColor: 'buttonText',
-        text: t(`rules.error.${action}`),
-      })
-    }
-  }
-
-</script>
-
 <template>
   <v-row v-if="selectedRule" class="d-flex align-center pa-2 ga-2">
     <v-col class="d-flex flex-wrap align-center ga-2" cols="12">
@@ -254,3 +131,126 @@
       </v-card>
     </v-dialog>
   </v-row></template>
+
+<script setup lang="ts">
+  import { ref } from 'vue'
+  import { useDeleteRule } from '@/pages/modules/ABAC/api/rule/useDeleteRule'
+  import { useDuplicateRule } from '@/pages/modules/ABAC/api/rule/useDuplicateRule'
+  import { useMoveRule } from '@/pages/modules/ABAC/api/rule/useMoveRule'
+  import { useToggleRule } from '@/pages/modules/ABAC/api/rule/useToggleRule'
+  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
+  import { useRules } from '@/pages/modules/ABAC/hooks/useRules'
+  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+  import { useNavigationStore } from '@/store/NavigationStore'
+  import { hasContent } from '@/utils/StringUtils'
+
+  type RuleAction = 'replace' | 'patch' | 'duplicate' | 'move' | 'toggle' | 'delete'
+
+  const ICONS = {
+    REPLACE: 'mdi-pencil',
+    PATCH: 'mdi-pencil-box',
+    DUPLICATE: 'mdi-content-copy',
+    MOVE: 'mdi-arrow-right',
+    ENABLE: 'mdi-toggle-switch',
+    DISABLE: 'mdi-toggle-switch-off',
+    DELETE: 'mdi-delete',
+  } as const
+
+  const emit = defineEmits<{ (e: 'replace' | 'patch'): void }>()
+
+  const { t, i18nData } = useAbacI18n()
+  const navigationStore = useNavigationStore()
+
+  const { selectedPolicyVersion, onSelectRule } = useAbacNavigation()
+  const { rulesCount, selectedRule } = useRules()
+  const isEnabled = computed(() => selectedRule.value?.access?.toUpperCase() === 'ALLOW')
+
+  const { mutateAsync: duplicateRule, isPending: isDuplicating } = useDuplicateRule()
+  const { mutateAsync: moveRule, isPending: isMoving } = useMoveRule()
+  const { mutateAsync: toggleRule, isPending: isToggling } = useToggleRule()
+  const { mutateAsync: deleteRule, isPending: isDeleting } = useDeleteRule()
+
+  const moveDialog = ref(false)
+  const movePosition = ref<number | null>(null)
+
+  const deleteDialog = ref(false)
+  async function doAction (action: RuleAction): Promise<void> {
+    const ruleIndex = selectedRule.value?.rule_index
+    const versionId = selectedPolicyVersion.value
+    if (!hasContent(ruleIndex?.toString()) || !hasContent(versionId)) return
+
+    try {
+      switch (action) {
+        case 'replace': {
+          emit('replace')
+          break
+        }
+        case 'patch': {
+          emit('patch')
+          break
+        }
+        case 'duplicate': {
+          await duplicateRule({ versionId, ruleIndex })
+          break
+        }
+        case 'move': {
+          if (!moveDialog.value) {
+            moveDialog.value = true
+            movePosition.value = selectedRule.value?.rule_index ?? null
+            return
+          }
+          if (movePosition.value === null) return
+          const position = movePosition.value
+          await moveRule({
+            versionId,
+            ruleIndex,
+            payload: { position },
+          })
+
+          if (position !== ruleIndex) {
+            onSelectRule(position)
+          }
+          moveDialog.value = false
+          break
+        }
+        case 'toggle': {
+          await toggleRule({
+            versionId,
+            ruleIndex,
+            payload: { enabled: !isEnabled.value },
+          })
+          break
+        }
+        case 'delete': {
+          if (!deleteDialog.value) {
+            deleteDialog.value = true
+            return
+          }
+          await deleteRule({ versionId, ruleIndex })
+          onSelectRule(ruleIndex)
+          deleteDialog.value = false
+          break
+        }
+      }
+
+      if (action === 'replace' || action === 'patch') return
+
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 3000,
+        color: 'success',
+        btnColor: 'buttonText',
+        text: t(`rules.success.${action}`),
+      })
+    } catch {
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 8000,
+        color: 'error',
+        btnColor: 'buttonText',
+        text: t(`rules.error.${action}`),
+      })
+    }
+  }
+
+</script>

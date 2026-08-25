@@ -1,23 +1,3 @@
-<script setup lang="ts">
-  import { hasItems } from '@/utils/array'
-  import { usePolicy } from '../../../hooks/usePolicy'
-  import { useRules } from '../../../hooks/useRules'
-  import { useAbacI18n } from '../../../i18n/useAbacI18n'
-  import RuleItem from './RuleItem.vue'
-
-  const ICONS = {
-    ADD: 'mdi-plus',
-    RULES: 'mdi-playlist-check',
-  } as const
-
-  const emit = defineEmits<{ (e: 'create'): void }>()
-
-  const { t, i18nData } = useAbacI18n()
-  const { policy } = usePolicy()
-  const { rules, isLoading, isError } = useRules()
-
-</script>
-
 <template>
   <v-card class="h-100 d-flex flex-column" variant="flat">
     <v-card-title class="pa-2 d-flex align-center">
@@ -62,7 +42,7 @@
 
       <v-list
         v-else-if="hasItems(rules)"
-        class="pa-0 h-100 bg-card"
+        class="pa-0 pb-2 h-100 bg-card"
         nav
       >
         <RuleItem v-for="(rule) in rules" :key="rule.rule_index" :rule="rule" />
@@ -81,3 +61,23 @@
     </div>
   </v-card>
 </template>
+
+<script setup lang="ts">
+  import RuleItem from '@/pages/modules/ABAC/components/rule/list/RuleItem.vue'
+  import { usePolicy } from '@/pages/modules/ABAC/hooks/usePolicy'
+  import { useRules } from '@/pages/modules/ABAC/hooks/useRules'
+  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+  import { hasItems } from '@/utils/array'
+
+  const ICONS = {
+    ADD: 'mdi-plus',
+    RULES: 'mdi-playlist-check',
+  } as const
+
+  const emit = defineEmits<{ (e: 'create'): void }>()
+
+  const { t, i18nData } = useAbacI18n()
+  const { policy } = usePolicy()
+  const { rules, isLoading, isError } = useRules()
+
+</script>

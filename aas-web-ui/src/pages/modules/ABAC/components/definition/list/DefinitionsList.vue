@@ -1,55 +1,3 @@
-<script setup lang="ts">
-  import type { DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
-  import { computed, ref } from 'vue'
-  import { DEFINITION_KINDS } from '@/pages/modules/ABAC/types/definitions'
-  import { hasItems } from '@/utils/array'
-  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
-  import { useDefinitions } from '../../../hooks/useDefinitions'
-  import { usePolicy } from '../../../hooks/usePolicy'
-  import { useAbacI18n } from '../../../i18n/useAbacI18n'
-  import DefinitionItem from './DefinitionItem.vue'
-
-  type KindFilter = DefinitionKind | 'all'
-
-  const ICONS = {
-    ADD: 'mdi-plus',
-    FILTER: 'mdi-filter-variant',
-    DEFINITIONS: 'mdi-book-open-variant',
-  } as const
-
-  const emit = defineEmits<{ (e: 'create'): void }>()
-
-  const { t, i18nData } = useAbacI18n()
-  const { policy } = usePolicy()
-  const { selectedDefinitionKind, onSelectDefinitionKind } = useAbacNavigation()
-  const { definitions, isLoading, isError } = useDefinitions()
-
-  const isMenuOpen = ref(false)
-  const activeFilter = ref<KindFilter>(selectedDefinitionKind.value ?? 'all')
-
-  const list = computed(() => {
-    if (!definitions.value) return []
-
-    if (activeFilter.value === 'all') {
-      return [
-        ...(definitions.value.attributes ?? []).map(d => ({ definition: d, kind: 'attributes' as const })),
-        ...(definitions.value.acls ?? []).map(d => ({ definition: d, kind: 'acls' as const })),
-        ...(definitions.value.objects ?? []).map(d => ({ definition: d, kind: 'objects' as const })),
-        ...(definitions.value.formulas ?? []).map(d => ({ definition: d, kind: 'formulas' as const })),
-      ]
-    }
-
-    const k = activeFilter.value
-    return (definitions.value[k] ?? []).map(d => ({ definition: d, kind: k }))
-  })
-
-  function onFilter (value: KindFilter): void {
-    activeFilter.value = value
-    onSelectDefinitionKind(value)
-  }
-
-</script>
-
 <template>
   <v-card class="h-100 d-flex flex-column" variant="flat">
     <v-card-title class="pa-2 d-flex align-center">
@@ -134,7 +82,7 @@
         <DefinitionItem v-for="i in 4" :key="i" loading />
       </v-list>
 
-      <v-list v-else-if="hasItems(list)" class="pa-0 h-100 bg-card" nav>
+      <v-list v-else-if="hasItems(list)" class="pa-0 pb-2 h-100 bg-card" nav>
         <DefinitionItem v-for="({definition, kind}) in list" :key="`${kind}-${definition.name}`" :definition="definition" :kind="kind" />
       </v-list>
 
@@ -151,3 +99,55 @@
     </div>
   </v-card>
 </template>
+
+<script setup lang="ts">
+  import type { DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
+  import { computed, ref } from 'vue'
+  import DefinitionItem from '@/pages/modules/ABAC/components/definition/list/DefinitionItem.vue'
+  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
+  import { useDefinitions } from '@/pages/modules/ABAC/hooks/useDefinitions'
+  import { usePolicy } from '@/pages/modules/ABAC/hooks/usePolicy'
+  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+  import { DEFINITION_KINDS } from '@/pages/modules/ABAC/types/definitions'
+  import { hasItems } from '@/utils/array'
+
+  type KindFilter = DefinitionKind | 'all'
+
+  const ICONS = {
+    ADD: 'mdi-plus',
+    FILTER: 'mdi-filter-variant',
+    DEFINITIONS: 'mdi-book-open-variant',
+  } as const
+
+  const emit = defineEmits<{ (e: 'create'): void }>()
+
+  const { t, i18nData } = useAbacI18n()
+  const { policy } = usePolicy()
+  const { selectedDefinitionKind, onSelectDefinitionKind } = useAbacNavigation()
+  const { definitions, isLoading, isError } = useDefinitions()
+
+  const isMenuOpen = ref(false)
+  const activeFilter = ref<KindFilter>(selectedDefinitionKind.value ?? 'all')
+
+  const list = computed(() => {
+    if (!definitions.value) return []
+
+    if (activeFilter.value === 'all') {
+      return [
+        ...(definitions.value.attributes ?? []).map(d => ({ definition: d, kind: 'attributes' as const })),
+        ...(definitions.value.acls ?? []).map(d => ({ definition: d, kind: 'acls' as const })),
+        ...(definitions.value.objects ?? []).map(d => ({ definition: d, kind: 'objects' as const })),
+        ...(definitions.value.formulas ?? []).map(d => ({ definition: d, kind: 'formulas' as const })),
+      ]
+    }
+
+    const k = activeFilter.value
+    return (definitions.value[k] ?? []).map(d => ({ definition: d, kind: k }))
+  })
+
+  function onFilter (value: KindFilter): void {
+    activeFilter.value = value
+    onSelectDefinitionKind(value)
+  }
+
+</script>

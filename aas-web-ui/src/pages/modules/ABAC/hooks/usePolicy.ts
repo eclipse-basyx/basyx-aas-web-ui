@@ -1,5 +1,5 @@
-import { useGetPolicy } from '@/pages/modules/ABAC/api/queries/policy/useGetPolicy'
-import { useAbacNavigation } from './useAbacNavigation'
+import { useGetPolicy } from '@/pages/modules/ABAC/api/policy/useGetPolicy'
+import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
 
 export function usePolicy () {
   const { selectedPolicyVersion } = useAbacNavigation()

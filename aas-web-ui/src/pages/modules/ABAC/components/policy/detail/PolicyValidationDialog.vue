@@ -1,34 +1,3 @@
-<script setup lang="ts">
-  import type { PolicyValidationResult } from '@/pages/modules/ABAC/types/policy'
-  import { ref } from 'vue'
-  import { hasContent } from '@/utils/StringUtils'
-  import { useAbacI18n } from '../../../i18n/useAbacI18n'
-
-  const ICONS = {
-    CLOSE: 'mdi-close',
-    VALID_CHECK: 'mdi-check-circle-outline',
-    INVALID_WARN: 'mdi-alert-circle-outline',
-    HASH: 'mdi-pound',
-  } as const
-
-  const { t, i18nData } = useAbacI18n()
-
-  const isOpen = ref(false)
-  const result = ref<PolicyValidationResult | null>(null)
-
-  function open (validationResult: PolicyValidationResult): void {
-    isOpen.value = true
-    result.value = validationResult
-  }
-
-  function close (): void {
-    isOpen.value = false
-    result.value = null
-  }
-
-  defineExpose({ open, close })
-</script>
-
 <template>
   <v-dialog v-model="isOpen" max-width="720" persistent scrollable>
     <v-card>
@@ -102,3 +71,34 @@
     </v-card>
   </v-dialog>
 </template>
+
+<script setup lang="ts">
+  import type { PolicyValidationResult } from '@/pages/modules/ABAC/types/policy'
+  import { ref } from 'vue'
+  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+  import { hasContent } from '@/utils/StringUtils'
+
+  const ICONS = {
+    CLOSE: 'mdi-close',
+    VALID_CHECK: 'mdi-check-circle-outline',
+    INVALID_WARN: 'mdi-alert-circle-outline',
+    HASH: 'mdi-pound',
+  } as const
+
+  const { t, i18nData } = useAbacI18n()
+
+  const isOpen = ref(false)
+  const result = ref<PolicyValidationResult | null>(null)
+
+  function open (validationResult: PolicyValidationResult): void {
+    isOpen.value = true
+    result.value = validationResult
+  }
+
+  function close (): void {
+    isOpen.value = false
+    result.value = null
+  }
+
+  defineExpose({ open, close })
+</script>

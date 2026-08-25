@@ -1,10 +1,10 @@
-import type { JsonErrorMessage } from '../components/shared/JsonCodeEditor.vue'
-import type { AbacValidationMessages } from '../i18n/locales'
+import type { JsonErrorMessage } from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
+import type { AbacValidationMessages } from '@/pages/modules/ABAC/i18n/locales'
 import type { ConfiguredRule } from '@/pages/modules/ABAC/types/rules'
 import type { ZodError } from 'zod'
+import { createRuleSchema } from '@/pages/modules/ABAC/schemas/ruleSchema'
+import { extractLineFromSyntaxError, findLineForPath } from '@/pages/modules/ABAC/utils/json'
 import { hasContent } from '@/utils/StringUtils'
-import { createRuleSchema } from '../schemas/ruleSchema'
-import { extractLineFromSyntaxError, findLineForPath } from '../utils/json'
 
 export interface RuleValidationInput {
   json: string

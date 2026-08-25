@@ -1,41 +1,3 @@
-<script setup lang="ts">
-  import { computed, ref } from 'vue'
-  import { useRules } from '../../../hooks/useRules'
-  import { useAbacI18n } from '../../../i18n/useAbacI18n'
-  import JsonCodeEditor from '../../shared/JsonCodeEditor.vue'
-  import RuleComplexityBadge from '../RuleComplexityBadge.vue'
-
-  const VIEW = {
-    CONFIGURED: 'configured',
-    MATERIALIZED: 'materialized',
-  } as const
-
-  type ViewType = typeof VIEW[keyof typeof VIEW]
-
-  const ICONS = {
-    RULES: 'mdi-playlist-check',
-    [VIEW.CONFIGURED]: 'mdi-playlist-check',
-    [VIEW.MATERIALIZED]: 'mdi-code-json',
-  } as const
-
-  const { t, i18nData } = useAbacI18n()
-
-  const { selectedRule } = useRules()
-
-  const selectedView = ref<ViewType>(VIEW.CONFIGURED)
-  function onChangeView (value: ViewType): void {
-    selectedView.value = value
-  }
-
-  const ruleJson = computed(() => {
-    if (!selectedRule.value) return ''
-    const json = selectedView.value === VIEW.CONFIGURED
-      ? selectedRule.value.configured_rule_json
-      : selectedRule.value.materialized_rule_json
-    return JSON.stringify(json, null, 2)
-  })
-</script>
-
 <template>
   <v-card class="h-100 d-flex flex-column" variant="flat">
     <template v-if="selectedRule">
@@ -74,3 +36,41 @@
     </v-card-text>
   </v-card>
 </template>
+
+<script setup lang="ts">
+  import { computed, ref } from 'vue'
+  import RuleComplexityBadge from '@/pages/modules/ABAC/components/rule/RuleComplexityBadge.vue'
+  import JsonCodeEditor from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
+  import { useRules } from '@/pages/modules/ABAC/hooks/useRules'
+  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+
+  const VIEW = {
+    CONFIGURED: 'configured',
+    MATERIALIZED: 'materialized',
+  } as const
+
+  type ViewType = typeof VIEW[keyof typeof VIEW]
+
+  const ICONS = {
+    RULES: 'mdi-playlist-check',
+    [VIEW.CONFIGURED]: 'mdi-playlist-check',
+    [VIEW.MATERIALIZED]: 'mdi-code-json',
+  } as const
+
+  const { t, i18nData } = useAbacI18n()
+
+  const { selectedRule } = useRules()
+
+  const selectedView = ref<ViewType>(VIEW.CONFIGURED)
+  function onChangeView (value: ViewType): void {
+    selectedView.value = value
+  }
+
+  const ruleJson = computed(() => {
+    if (!selectedRule.value) return ''
+    const json = selectedView.value === VIEW.CONFIGURED
+      ? selectedRule.value.configured_rule_json
+      : selectedRule.value.materialized_rule_json
+    return JSON.stringify(json, null, 2)
+  })
+</script>

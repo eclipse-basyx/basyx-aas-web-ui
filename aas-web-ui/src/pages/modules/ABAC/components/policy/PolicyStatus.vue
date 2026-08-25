@@ -1,7 +1,20 @@
+<template>
+  <v-chip
+    :color="color"
+    label
+    size="small"
+    v-bind="key"
+    variant="flat"
+  >
+    <v-icon :icon="icon" size="16" start />
+    {{ label }}
+  </v-chip>
+</template>
+
 <script setup lang="ts">
   import type { PolicyStatus } from '@/pages/modules/ABAC/types/policy'
   import { computed } from 'vue'
-  import { useAbacI18n } from '../../i18n/useAbacI18n'
+  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
 
   const ICONS = {
     active: 'mdi-check-circle',
@@ -26,16 +39,3 @@
   const icon = computed(() => ICONS[status])
   const key = computed(() => i18nData(`policies.status.${status}`))
 </script>
-
-<template>
-  <v-chip
-    :color="color"
-    label
-    size="small"
-    v-bind="key"
-    variant="flat"
-  >
-    <v-icon :icon="icon" size="16" start />
-    {{ label }}
-  </v-chip>
-</template>

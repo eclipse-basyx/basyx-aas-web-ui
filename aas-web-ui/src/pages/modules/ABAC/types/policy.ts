@@ -7,8 +7,8 @@ import type {
   DefAttribute,
   DefFormula,
   DefObject,
-} from './definitions'
-import type { ConfiguredRule } from './rules'
+} from '@/pages/modules/ABAC/types/definitions'
+import type { ConfiguredRule } from '@/pages/modules/ABAC/types/rules'
 
 export type PolicyStatus = 'staged' | 'active' | 'superseded' | 'rejected'
 

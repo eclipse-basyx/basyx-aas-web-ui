@@ -1,40 +1,3 @@
-<script setup lang="ts">
-  import type { AbacService } from '@/pages/modules/ABAC/types/service'
-  import { computed, ref } from 'vue'
-  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
-  import { useAbacConfigStore } from '@/pages/modules/ABAC/stores/useAbacConfigStore'
-  import { hasItems } from '@/utils/array'
-
-  const ICONS = {
-    SERVICE: 'mdi-server',
-    AVAILABLE: 'mdi-check-circle',
-    UNAVAILABLE: 'mdi-alert-circle',
-  } as const
-
-  const { t } = useAbacI18n()
-  const configStore = useAbacConfigStore()
-  const { onSelectService } = useAbacNavigation()
-
-  const isMenuOpen = ref(false)
-
-  const abacServices = computed(() => configStore.services)
-
-  const isEmpty = computed(() => !hasItems(abacServices.value))
-  const isInvalid = computed(() => hasItems(abacServices.value) && !configStore.apiUrl)
-
-  const selectedServiceName = computed(() => {
-    if (isEmpty.value) return t('policies.list.selector.noServiceAvailable')
-    if (isInvalid.value) return t('policies.list.selector.noValidServiceSelected')
-    return abacServices.value.find(s => s.url === configStore.apiUrl)?.name || t('policies.list.selector.noServiceSelected')
-  })
-
-  function onSelect (service: AbacService): void {
-    configStore.setApiUrl(service.url)
-    onSelectService(service.componentKey)
-  }
-</script>
-
 <template>
   <v-menu v-model="isMenuOpen">
     <template #activator="{ props: menuProps }">
@@ -77,3 +40,40 @@
   </v-menu>
 
 </template>
+
+<script setup lang="ts">
+  import type { AbacService } from '@/pages/modules/ABAC/types/service'
+  import { computed, ref } from 'vue'
+  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
+  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+  import { useAbacConfigStore } from '@/pages/modules/ABAC/stores/useAbacConfigStore'
+  import { hasItems } from '@/utils/array'
+
+  const ICONS = {
+    SERVICE: 'mdi-server',
+    AVAILABLE: 'mdi-check-circle',
+    UNAVAILABLE: 'mdi-alert-circle',
+  } as const
+
+  const { t } = useAbacI18n()
+  const configStore = useAbacConfigStore()
+  const { onSelectService } = useAbacNavigation()
+
+  const isMenuOpen = ref(false)
+
+  const abacServices = computed(() => configStore.services)
+
+  const isEmpty = computed(() => !hasItems(abacServices.value))
+  const isInvalid = computed(() => hasItems(abacServices.value) && !configStore.apiUrl)
+
+  const selectedServiceName = computed(() => {
+    if (isEmpty.value) return t('policies.list.selector.noServiceAvailable')
+    if (isInvalid.value) return t('policies.list.selector.noValidServiceSelected')
+    return abacServices.value.find(s => s.url === configStore.apiUrl)?.name || t('policies.list.selector.noServiceSelected')
+  })
+
+  function onSelect (service: AbacService): void {
+    configStore.setApiUrl(service.url)
+    onSelectService(service.componentKey)
+  }
+</script>

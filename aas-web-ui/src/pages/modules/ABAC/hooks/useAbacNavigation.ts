@@ -1,11 +1,11 @@
-import type { ViewType } from '../types/view'
 import type { DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
+import type { ViewType } from '@/pages/modules/ABAC/types/view'
 import type { BaSyxComponentKey } from '@/types/BaSyx'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { VIEW } from '@/pages/modules/ABAC/types/view'
 import { useNavigationStore } from '@/store/NavigationStore'
 import { hasContent } from '@/utils/StringUtils'
-import { VIEW } from '../types/view'
 
 // Module-level shared state so all composable consumers mutate the same ref.
 const isListOpen = ref(true)

@@ -1,43 +1,3 @@
-<script setup lang="ts">
-  import type { Rule } from '@/pages/modules/ABAC/types/rules'
-  import { useTheme } from 'vuetify'
-  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
-  import RuleComplexityBadge from '../RuleComplexityBadge.vue'
-
-  const ICONS = {
-    ALLOW: 'mdi-check-circle',
-    DISABLED: 'mdi-close-circle',
-  } as const
-
-  const { rule, loading } = defineProps<{ rule?: Rule, loading?: boolean }>()
-
-  const theme = useTheme()
-  const isDark = computed(() => theme.global.current.value.dark)
-  const primaryColor = computed(() => theme.current.value.colors.primary)
-
-  const { selectedRuleIndex, onSelectRule } = useAbacNavigation()
-  const isSelected = computed(() => selectedRuleIndex.value?.toString() === rule?.rule_index?.toString())
-
-  const accessBadge = computed(() => {
-    const isEnabled = rule?.access?.toUpperCase() === 'ALLOW'
-    return isEnabled ? { icon: ICONS.ALLOW, color: 'success' } : { icon: ICONS.DISABLED, color: 'error' }
-  })
-
-  const ruleSummary = computed(() => {
-    if (!rule?.configured_rule_json) return ''
-
-    const parts: string[] = []
-    if (rule?.configured_rule_json.USEACL) parts.push(`ACL: ${rule?.configured_rule_json.USEACL}`)
-    else if (rule?.configured_rule_json.ACL) parts.push(`ACL inline (${rule?.configured_rule_json.ACL.ACCESS})`)
-    if (rule?.configured_rule_json.USEFORMULA) parts.push(`FORMULA: ${rule?.configured_rule_json.USEFORMULA}`)
-    else if (rule?.configured_rule_json.FORMULA) parts.push('FORMULA inline')
-    if (rule?.configured_rule_json.USEOBJECTS) parts.push(`OBJ: ${rule?.configured_rule_json.USEOBJECTS.join(', ')}`)
-    else if (rule?.configured_rule_json.OBJECTS) parts.push(`OBJ: ${rule?.configured_rule_json.OBJECTS.length} route(s)`)
-    return parts.join('\n') || '—'
-  })
-
-</script>
-
 <template>
   <v-list-item
     v-if="loading"
@@ -105,6 +65,46 @@
   </v-list-item>
 
 </template>
+
+<script setup lang="ts">
+  import type { Rule } from '@/pages/modules/ABAC/types/rules'
+  import { useTheme } from 'vuetify'
+  import RuleComplexityBadge from '@/pages/modules/ABAC/components/rule/RuleComplexityBadge.vue'
+  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
+
+  const ICONS = {
+    ALLOW: 'mdi-check-circle',
+    DISABLED: 'mdi-close-circle',
+  } as const
+
+  const { rule, loading } = defineProps<{ rule?: Rule, loading?: boolean }>()
+
+  const theme = useTheme()
+  const isDark = computed(() => theme.global.current.value.dark)
+  const primaryColor = computed(() => theme.current.value.colors.primary)
+
+  const { selectedRuleIndex, onSelectRule } = useAbacNavigation()
+  const isSelected = computed(() => selectedRuleIndex.value?.toString() === rule?.rule_index?.toString())
+
+  const accessBadge = computed(() => {
+    const isEnabled = rule?.access?.toUpperCase() === 'ALLOW'
+    return isEnabled ? { icon: ICONS.ALLOW, color: 'success' } : { icon: ICONS.DISABLED, color: 'error' }
+  })
+
+  const ruleSummary = computed(() => {
+    if (!rule?.configured_rule_json) return ''
+
+    const parts: string[] = []
+    if (rule?.configured_rule_json.USEACL) parts.push(`ACL: ${rule?.configured_rule_json.USEACL}`)
+    else if (rule?.configured_rule_json.ACL) parts.push(`ACL inline (${rule?.configured_rule_json.ACL.ACCESS})`)
+    if (rule?.configured_rule_json.USEFORMULA) parts.push(`FORMULA: ${rule?.configured_rule_json.USEFORMULA}`)
+    else if (rule?.configured_rule_json.FORMULA) parts.push('FORMULA inline')
+    if (rule?.configured_rule_json.USEOBJECTS) parts.push(`OBJ: ${rule?.configured_rule_json.USEOBJECTS.join(', ')}`)
+    else if (rule?.configured_rule_json.OBJECTS) parts.push(`OBJ: ${rule?.configured_rule_json.OBJECTS.length} route(s)`)
+    return parts.join('\n') || '—'
+  })
+
+</script>
 
 <style scoped>
 .rule-summary {

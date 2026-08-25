@@ -1,3 +1,48 @@
+<template>
+  <div class="d-flex flex-column flex-1-1" style="min-height: 0;">
+    <span v-if="hasContent(label)" :class="`pa-4 text-body-small ${isError?'text-error':''}`">
+      {{ label }}
+    </span>
+
+    <div
+      class="json-editor"
+      :class="{ 'json-editor--grow': grow, 'json-editor--error': isError }"
+      :style="{ height: editorHeight }"
+    >
+      <div class="json-editor__gutter">
+        <div ref="gutterInner" class="json-editor__gutter-inner">
+          <div
+            v-for="n in lineCount"
+            :key="n"
+            class="json-editor__line-number"
+            :class="{ 'json-editor__line-number--error': isErrorLine(n) }"
+          >
+            {{ n }}
+          </div>
+        </div>
+      </div>
+
+      <textarea
+        id="json-editor"
+        v-model="model"
+        class="json-editor__textarea"
+        :disabled="disabled"
+        spellcheck="false"
+        wrap="off"
+        @scroll="syncScroll"
+      />
+    </div>
+
+    <div v-if="errorMessage" class="text-error ps-4 mt-2 text-body-small">
+      <span>{{ errorMessage.title }}</span>
+
+      <ul v-if="hasItems(errorMessage.messages)">
+        <li v-for="(err, i) in errorMessage.messages" :key="i">{{ err }}</li>
+      </ul>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
   import { computed, ref } from 'vue'
   import { hasItems } from '@/utils/array'
@@ -43,51 +88,6 @@
     return props.errorLines.includes(n)
   }
   </script>
-
-<template>
-  <div class="d-flex flex-column flex-1-1" style="min-height: 0;">
-    <span v-if="hasContent(label)" :class="`pa-4 text-body-small ${isError?'text-error':''}`">
-      {{ label }}
-    </span>
-
-    <div
-      class="json-editor"
-      :class="{ 'json-editor--grow': grow, 'json-editor--error': isError }"
-      :style="{ height: editorHeight }"
-    >
-      <div class="json-editor__gutter">
-        <div ref="gutterInner" class="json-editor__gutter-inner">
-          <div
-            v-for="n in lineCount"
-            :key="n"
-            class="json-editor__line-number"
-            :class="{ 'json-editor__line-number--error': isErrorLine(n) }"
-          >
-            {{ n }}
-          </div>
-        </div>
-      </div>
-
-      <textarea
-        id="json-editor"
-        v-model="model"
-        class="json-editor__textarea"
-        :disabled="disabled"
-        spellcheck="false"
-        wrap="off"
-        @scroll="syncScroll"
-      />
-    </div>
-
-    <div v-if="errorMessage" class="text-error ps-4 mt-2 text-body-small">
-      <span>{{ errorMessage.title }}</span>
-
-      <ul v-if="hasItems(errorMessage.messages)">
-        <li v-for="(err, i) in errorMessage.messages" :key="i">{{ err }}</li>
-      </ul>
-    </div>
-  </div>
-</template>
 
 <style scoped>
   .json-editor {

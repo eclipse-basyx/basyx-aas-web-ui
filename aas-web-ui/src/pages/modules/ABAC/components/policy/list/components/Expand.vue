@@ -1,15 +1,3 @@
-<script setup lang="ts">
-  import { useAbacI18n } from '../../../../i18n/useAbacI18n'
-
-  const ICONS = {
-    EXPAND: 'mdi-chevron-double-right',
-  } as const
-
-  const emit = defineEmits<{ expand: [] }>()
-
-  const { t, i18nData } = useAbacI18n()
-</script>
-
 <template>
   <div class="position-relative">
     <v-btn
@@ -29,6 +17,18 @@
     </v-btn>
   </div>
 </template>
+
+<script setup lang="ts">
+  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+
+  const ICONS = {
+    EXPAND: 'mdi-chevron-double-right',
+  } as const
+
+  const emit = defineEmits<{ expand: [] }>()
+
+  const { t, i18nData } = useAbacI18n()
+</script>
 
 <style scoped>
 .floating-expand-btn {

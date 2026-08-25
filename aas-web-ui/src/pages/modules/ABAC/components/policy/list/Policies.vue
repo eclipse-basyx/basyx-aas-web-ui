@@ -1,54 +1,3 @@
-<script setup lang="ts">
-  import type { Sort } from '../../../types/sort'
-  import { computed, ref, useTemplateRef } from 'vue'
-  import { useTheme } from 'vuetify'
-  import { useGetPolicies } from '@/pages/modules/ABAC/api/queries/policy/useGetPolicies'
-  import { hasItems } from '@/utils/array'
-  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
-  import { useSortPolicies } from '../../../hooks/useSortPolicies'
-  import { useAbacI18n } from '../../../i18n/useAbacI18n'
-  import PolicyDialog from '../PolicyDialog.vue'
-  import PolicyStatus from '../PolicyStatus.vue'
-
-  const ICONS = {
-    IMPORT: 'mdi-file-import-outline',
-    REFRESH: 'mdi-refresh',
-    POLICIES: 'mdi-source-repository',
-    SORT: 'mdi-sort',
-    CREATED: 'mdi-calendar-clock',
-    UPDATED: 'mdi-calendar-edit',
-    DESC: 'mdi-arrow-down-thin',
-    ASC: 'mdi-arrow-up-thin',
-  } as const
-
-  const { t, i18nData } = useAbacI18n()
-  const theme = useTheme()
-  const isDark = computed(() => theme.global.current.value.dark)
-  const primaryColor = computed(() => theme.current.value.colors.primary)
-
-  const isMenuOpen = ref(false)
-
-  const { data: policies, isLoading, isError, isFetching, refetch } = useGetPolicies()
-
-  const sortOptions: { accessor: Sort['accessor'], i18n: string, icon: string }[] = [
-    { accessor: 'created_at', i18n: 'policies.list.sort.created', icon: ICONS.CREATED },
-    { accessor: 'updated_at', i18n: 'policies.list.sort.updated', icon: ICONS.UPDATED },
-    { accessor: 'status', i18n: 'policies.list.sort.status', icon: ICONS.SORT },
-  ]
-  const { sort, onSort, sortedPolicies } = useSortPolicies(policies)
-
-  const { selectedPolicyVersion, onSelectPolicy } = useAbacNavigation()
-  function isSelected (id?: number): boolean {
-    return selectedPolicyVersion.value?.toString() === id?.toString()
-  }
-
-  const policyDialog = useTemplateRef<InstanceType<typeof PolicyDialog>>('policyDialog')
-  function onImport (): void {
-    policyDialog.value?.open()
-  }
-
-</script>
-
 <template>
   <v-card class="h-100 d-flex flex-column" variant="flat">
     <v-card-title class="px-2 py-2 d-flex align-center">
@@ -148,7 +97,7 @@
       <v-list
         v-else-if="hasItems(sortedPolicies)"
         bg-color="card"
-        class="pa-0"
+        class="pa-0 pb-2"
         nav
       >
         <v-list-item
@@ -168,7 +117,6 @@
           variant="tonal"
           @click="onSelectPolicy(version_id)"
         >
-
           <v-list-item-title class="d-flex align-center text-primary pb-2">
             <span class="text-title-small">v{{ version_id }}</span>
             <v-spacer />
@@ -193,3 +141,54 @@
 
   <PolicyDialog ref="policyDialog" />
 </template>
+
+<script setup lang="ts">
+  import type { Sort } from '@/pages/modules/ABAC/types/sort'
+  import { computed, ref, useTemplateRef } from 'vue'
+  import { useTheme } from 'vuetify'
+  import { useGetPolicies } from '@/pages/modules/ABAC/api/policy/useGetPolicies'
+  import PolicyDialog from '@/pages/modules/ABAC/components/policy/PolicyDialog.vue'
+  import PolicyStatus from '@/pages/modules/ABAC/components/policy/PolicyStatus.vue'
+  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
+  import { useSortPolicies } from '@/pages/modules/ABAC/hooks/useSortPolicies'
+  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+  import { hasItems } from '@/utils/array'
+
+  const ICONS = {
+    IMPORT: 'mdi-file-import-outline',
+    REFRESH: 'mdi-refresh',
+    POLICIES: 'mdi-source-repository',
+    SORT: 'mdi-sort',
+    CREATED: 'mdi-calendar-clock',
+    UPDATED: 'mdi-calendar-edit',
+    DESC: 'mdi-arrow-down-thin',
+    ASC: 'mdi-arrow-up-thin',
+  } as const
+
+  const { t, i18nData } = useAbacI18n()
+  const theme = useTheme()
+  const isDark = computed(() => theme.global.current.value.dark)
+  const primaryColor = computed(() => theme.current.value.colors.primary)
+
+  const isMenuOpen = ref(false)
+
+  const { data: policies, isLoading, isError, isFetching, refetch } = useGetPolicies()
+
+  const sortOptions: { accessor: Sort['accessor'], i18n: string, icon: string }[] = [
+    { accessor: 'created_at', i18n: 'policies.list.sort.created', icon: ICONS.CREATED },
+    { accessor: 'updated_at', i18n: 'policies.list.sort.updated', icon: ICONS.UPDATED },
+    { accessor: 'status', i18n: 'policies.list.sort.status', icon: ICONS.SORT },
+  ]
+  const { sort, onSort, sortedPolicies } = useSortPolicies(policies)
+
+  const { selectedPolicyVersion, onSelectPolicy } = useAbacNavigation()
+  function isSelected (id?: number): boolean {
+    return selectedPolicyVersion.value?.toString() === id?.toString()
+  }
+
+  const policyDialog = useTemplateRef<InstanceType<typeof PolicyDialog>>('policyDialog')
+  function onImport (): void {
+    policyDialog.value?.open()
+  }
+
+</script>

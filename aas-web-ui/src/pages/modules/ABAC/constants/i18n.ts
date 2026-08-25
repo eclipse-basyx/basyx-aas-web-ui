@@ -1,5 +1,5 @@
-import type { AbacI18NSchema } from '../i18n/setup'
-import type { Locale } from '../types/locale'
+import type { AbacI18NSchema } from '@/pages/modules/ABAC/i18n/setup'
+import type { Locale } from '@/pages/modules/ABAC/types/locale'
 import type { InjectionKey } from 'vue'
 import type { Composer } from 'vue-i18n'
 

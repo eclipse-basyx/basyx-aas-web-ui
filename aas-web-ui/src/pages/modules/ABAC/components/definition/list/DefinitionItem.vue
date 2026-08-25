@@ -1,19 +1,3 @@
-<script setup lang="ts">
-  import type { Definition, DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
-  import { useTheme } from 'vuetify'
-  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
-
-  const { definition, kind, loading } = defineProps<{ definition?: Definition, kind?: DefinitionKind, loading?: boolean }>()
-
-  const theme = useTheme()
-  const isDark = computed(() => theme.global.current.value.dark)
-  const primaryColor = computed(() => theme.current.value.colors.primary)
-
-  const { selectedDefinitionName, selectedDefinitionKind, onSelectDefinition } = useAbacNavigation()
-  const isSelected = computed(() => selectedDefinitionName.value?.toString() === definition?.name?.toString() && selectedDefinitionKind.value === kind)
-
-</script>
-
 <template>
   <v-list-item
     v-if="loading"
@@ -50,3 +34,19 @@
   </v-list-item>
 
 </template>
+
+<script setup lang="ts">
+  import type { Definition, DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
+  import { useTheme } from 'vuetify'
+  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
+
+  const { definition, kind, loading } = defineProps<{ definition?: Definition, kind?: DefinitionKind, loading?: boolean }>()
+
+  const theme = useTheme()
+  const isDark = computed(() => theme.global.current.value.dark)
+  const primaryColor = computed(() => theme.current.value.colors.primary)
+
+  const { selectedDefinitionName, selectedDefinitionKind, onSelectDefinition } = useAbacNavigation()
+  const isSelected = computed(() => selectedDefinitionName.value?.toString() === definition?.name?.toString() && selectedDefinitionKind.value === kind)
+
+</script>

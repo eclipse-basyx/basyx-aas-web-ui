@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { extractLineFromSyntaxError, findLineForPath } from './json'
+import { extractLineFromSyntaxError, findLineForPath } from '@/pages/modules/ABAC/utils/json'
 
 describe('ABAC JSON Error Location Utilities', () => {
   describe('extractLineFromSyntaxError', () => {

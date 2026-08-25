@@ -1,36 +1,6 @@
-<script setup lang="ts">
-  import { formatDate } from '@/utils/DateUtils'
-  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
-  import { usePolicy } from '../../../hooks/usePolicy'
-  import { useRules } from '../../../hooks/useRules'
-  import { useAbacI18n } from '../../../i18n/useAbacI18n'
-  import { VIEW } from '../../../types/view'
-  import Definitions from '../../definition/Definitions.vue'
-  import Rules from '../../rule/Rules.vue'
-  import PolicyStatus from '../PolicyStatus.vue'
-  import PolicyActions from './PolicyActions.vue'
-  import PolicyRaw from './PolicyRaw.vue'
-
-  const ICONS = {
-    RULES: 'mdi-playlist-check',
-    SCOPE: 'mdi-server',
-    CREATED: 'mdi-calendar-clock',
-    UPDATED: 'mdi-calendar-edit',
-    POLICIES: 'mdi-source-repository',
-    [VIEW.DEFINITIONS]: 'mdi-book-open-variant',
-    [VIEW.RULES]: 'mdi-playlist-check',
-    [VIEW.RAW]: 'mdi-code-json',
-  } as const
-
-  const { t, i18nData } = useAbacI18n()
-  const { selectedView, onChangeView } = useAbacNavigation()
-  const { selectedPolicyVersion, policy, isLoading } = usePolicy()
-  const { rulesCount } = useRules()
-</script>
-
 <template>
-  <div v-if="policy" class="d-flex flex-column h-100 w-100 overflow-hidden">
-    <v-card class="flex-0-0" variant="flat">
+  <div v-if="policy" class="flex-grow-1 d-flex flex-column">
+    <v-card variant="flat">
       <v-card-title class="px-2">
         <v-row class="ga-3">
           <v-col class="d-flex align-center ga-4" cols="12">
@@ -93,29 +63,47 @@
 
     <v-divider />
 
-    <div class="flex-1-1 d-flex flex-column" style="min-height: 0;">
-      <div class="d-flex flex-column flex-1-1" style="min-height: 0;" variant="elevated">
-        <template v-if="selectedView === VIEW.RULES">
-          <Rules />
-        </template>
-
-        <template v-else-if="selectedView === VIEW.DEFINITIONS">
-          <Definitions />
-        </template>
-
-        <template v-else-if="selectedView === VIEW.RAW">
-          <PolicyRaw />
-        </template>
-      </div>
-    </div>
+    <Rules v-if="selectedView === VIEW.RULES" />
+    <Definitions v-else-if="selectedView === VIEW.DEFINITIONS" />
+    <PolicyRaw v-else-if="selectedView === VIEW.RAW" />
   </div>
 
   <v-container v-else-if="isLoading" class="h-100 d-flex align-center justify-center">
     <v-progress-circular color="primary" indeterminate />
   </v-container>
 
-  <v-container v-else class="h-100 d-flex flex-column align-center justify-center text-grey">
+  <v-container v-else class="d-flex flex-column align-center justify-center text-grey fill-height">
     <v-icon class="mb-4" size="128">{{ ICONS.POLICIES }}</v-icon>
     <h2 class="text-h5" v-bind="i18nData('policies.policy.empty')">{{ t('policies.policy.empty') }}</h2>
   </v-container>
 </template>
+
+<script setup lang="ts">
+  import Definitions from '@/pages/modules/ABAC/components/definition/Definitions.vue'
+  import PolicyActions from '@/pages/modules/ABAC/components/policy/detail/PolicyActions.vue'
+  import PolicyRaw from '@/pages/modules/ABAC/components/policy/detail/PolicyRaw.vue'
+  import PolicyStatus from '@/pages/modules/ABAC/components/policy/PolicyStatus.vue'
+  import Rules from '@/pages/modules/ABAC/components/rule/Rules.vue'
+  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
+  import { usePolicy } from '@/pages/modules/ABAC/hooks/usePolicy'
+  import { useRules } from '@/pages/modules/ABAC/hooks/useRules'
+  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+  import { VIEW } from '@/pages/modules/ABAC/types/view'
+  import { formatDate } from '@/utils/DateUtils'
+
+  const ICONS = {
+    RULES: 'mdi-playlist-check',
+    SCOPE: 'mdi-server',
+    CREATED: 'mdi-calendar-clock',
+    UPDATED: 'mdi-calendar-edit',
+    POLICIES: 'mdi-source-repository',
+    [VIEW.DEFINITIONS]: 'mdi-book-open-variant',
+    [VIEW.RULES]: 'mdi-playlist-check',
+    [VIEW.RAW]: 'mdi-code-json',
+  } as const
+
+  const { t, i18nData } = useAbacI18n()
+  const { selectedView, onChangeView } = useAbacNavigation()
+  const { selectedPolicyVersion, policy, isLoading } = usePolicy()
+  const { rulesCount } = useRules()
+</script>

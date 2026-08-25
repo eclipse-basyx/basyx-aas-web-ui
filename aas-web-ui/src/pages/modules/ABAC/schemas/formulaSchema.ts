@@ -4,7 +4,7 @@
  * Provides runtime validation matching the BE ABAC grammar (from Go source).
  */
 
-import type { AbacValidationMessages } from '../i18n/locales'
+import type { AbacValidationMessages } from '@/pages/modules/ABAC/i18n/locales'
 import type {
   FormulaExpression,
   MatchExpression,
@@ -12,7 +12,7 @@ import type {
   ValueExpression,
 } from '@/pages/modules/ABAC/types/formula'
 import { z } from 'zod'
-import { DATE_TIME_VAL_PATTERN, FIELD_PATTERN, HEX_VAL_PATTERN, TIME_VAL_PATTERN } from './pattern'
+import { DATE_TIME_VAL_PATTERN, FIELD_PATTERN, HEX_VAL_PATTERN, TIME_VAL_PATTERN } from '@/pages/modules/ABAC/schemas/pattern'
 
 // Kind inference
 

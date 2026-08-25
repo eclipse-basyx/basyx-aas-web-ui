@@ -2,8 +2,8 @@
  * ABAC Rule Types
  */
 
-import type { AccessPermissionRuleFilter, AclEntry, AttributeSource, RouteObject } from './definitions'
-import type { FormulaExpression } from './formula'
+import type { AccessPermissionRuleFilter, AclEntry, AttributeSource, RouteObject } from '@/pages/modules/ABAC/types/definitions'
+import type { FormulaExpression } from '@/pages/modules/ABAC/types/formula'
 
 // ---------------------------------------------------------------------------
 // Request / Response

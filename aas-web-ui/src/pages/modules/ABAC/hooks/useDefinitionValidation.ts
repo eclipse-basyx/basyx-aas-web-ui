@@ -1,10 +1,10 @@
-import type { JsonErrorMessage } from '../components/shared/JsonCodeEditor.vue'
-import type { AbacValidationMessages } from '../i18n/locales'
+import type { JsonErrorMessage } from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
+import type { AbacValidationMessages } from '@/pages/modules/ABAC/i18n/locales'
 import type { Definition, DefinitionCreatePayload, DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
 import type { ZodError } from 'zod'
+import { createDefinitionSchema } from '@/pages/modules/ABAC/schemas/definitionSchema'
+import { extractLineFromSyntaxError, findLineForPath } from '@/pages/modules/ABAC/utils/json'
 import { hasContent } from '@/utils/StringUtils'
-import { createDefinitionSchema } from '../schemas/definitionSchema'
-import { extractLineFromSyntaxError, findLineForPath } from '../utils/json'
 
 export interface DefinitionValidationInput {
   json: string

@@ -1,5 +1,5 @@
+import { ABAC_ENDPOINT_PATHS, ABAC_ROUTE_PATHS } from '@/pages/modules/ABAC/constants/api'
 import { normalizeBaseUrl } from '@/utils/url'
-import { ABAC_ENDPOINT_PATHS, ABAC_ROUTE_PATHS } from '../constants/api'
 
 /**
  * Builds a URL for a version-scoped path.

@@ -1,12 +1,91 @@
+<template>
+  <v-dialog v-model="isOpen" max-width="800" persistent scrollable>
+    <v-card>
+      <v-card-title class="pa-4 bg-cardHeader d-flex align-center">
+        <span class="text-h6" v-bind="i18nData('policies.import.title') ">{{ t('policies.import.title') }}</span>
+        <v-spacer />
+
+        <v-btn
+          density="comfortable"
+          :disabled="isImportPending"
+          :icon="ICONS.CLOSE"
+          size="small"
+          variant="text"
+          @click="close"
+        />
+      </v-card-title>
+
+      <v-divider />
+
+      <v-card-text class="pa-4">
+        <v-form @submit.prevent="onSubmit">
+          <v-text-field
+            id="sourceRef"
+            v-model="sourceRef"
+            density="comfortable"
+            hide-details
+            v-bind="i18nData('policies.import.sourceRef')"
+            :label="t('policies.import.sourceRef')"
+            variant="outlined"
+          />
+
+          <v-switch
+            id="activateOnImport"
+            v-model="activateOnImport"
+            class="mx-2 my-4"
+            color="warning"
+            density="compact"
+            hide-details
+            v-bind="i18nData('policies.import.activateOnImport')"
+            :label="t('policies.import.activateOnImport')"
+          />
+
+          <JsonCodeEditor
+            v-model="policyJson"
+            :disabled="isImportPending"
+            :error-lines="errorLines"
+            :error-message="jsonError"
+            :label="t('policies.import.editor')"
+            :rows="16"
+          />
+        </v-form>
+      </v-card-text>
+
+      <v-divider />
+
+      <v-card-actions class="pa-4">
+        <v-btn
+          :disabled="isImportPending"
+          variant="text"
+          v-bind="i18nData('policies.import.cancel')"
+          @click="close"
+        >
+          {{ t('policies.import.cancel') }}
+        </v-btn>
+
+        <v-btn
+          color="primary"
+          :loading="isImportPending"
+          variant="flat"
+          v-bind="i18nData('policies.import.import')"
+          @click="onSubmit"
+        >
+          {{ t('policies.import.import') }}
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+</template>
+
 <script setup lang="ts">
   import { ref } from 'vue'
-  import { useImportPolicy } from '@/pages/modules/ABAC/api/queries/policy/useImportPolicy'
+  import { useImportPolicy } from '@/pages/modules/ABAC/api/policy/useImportPolicy'
+  import JsonCodeEditor, { type JsonErrorMessage } from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
+  import { EMPTY_POLICY } from '@/pages/modules/ABAC/constants/json'
+  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
+  import { usePolicyValidation } from '@/pages/modules/ABAC/hooks/usePolicyValidation'
+  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
   import { useNavigationStore } from '@/store/NavigationStore'
-  import { EMPTY_POLICY } from '../../constants/json'
-  import { useAbacNavigation } from '../../hooks/useAbacNavigation'
-  import { usePolicyValidation } from '../../hooks/usePolicyValidation'
-  import { useAbacI18n } from '../../i18n/useAbacI18n'
-  import JsonCodeEditor, { type JsonErrorMessage } from '../shared/JsonCodeEditor.vue'
 
   const ICONS = {
     CLOSE: 'mdi-close',
@@ -86,82 +165,3 @@
 
   defineExpose({ open, close })
 </script>
-
-<template>
-  <v-dialog v-model="isOpen" max-width="800" persistent scrollable>
-    <v-card>
-      <v-card-title class="pa-4 bg-cardHeader d-flex align-center">
-        <span class="text-h6" v-bind="i18nData('policies.import.title') ">{{ t('policies.import.title') }}</span>
-        <v-spacer />
-
-        <v-btn
-          density="comfortable"
-          :disabled="isImportPending"
-          :icon="ICONS.CLOSE"
-          size="small"
-          variant="text"
-          @click="close"
-        />
-      </v-card-title>
-
-      <v-divider />
-
-      <v-card-text class="pa-4">
-        <v-form @submit.prevent="onSubmit">
-          <v-text-field
-            id="sourceRef"
-            v-model="sourceRef"
-            density="comfortable"
-            hide-details
-            v-bind="i18nData('policies.import.sourceRef')"
-            :label="t('policies.import.sourceRef')"
-            variant="outlined"
-          />
-
-          <v-switch
-            id="activateOnImport"
-            v-model="activateOnImport"
-            class="mx-2 my-4"
-            color="warning"
-            density="compact"
-            hide-details
-            v-bind="i18nData('policies.import.activateOnImport')"
-            :label="t('policies.import.activateOnImport')"
-          />
-
-          <JsonCodeEditor
-            v-model="policyJson"
-            :disabled="isImportPending"
-            :error-lines="errorLines"
-            :error-message="jsonError"
-            :label="t('policies.import.editor')"
-            :rows="16"
-          />
-        </v-form>
-      </v-card-text>
-
-      <v-divider />
-
-      <v-card-actions class="pa-4">
-        <v-btn
-          :disabled="isImportPending"
-          variant="text"
-          v-bind="i18nData('policies.import.cancel')"
-          @click="close"
-        >
-          {{ t('policies.import.cancel') }}
-        </v-btn>
-
-        <v-btn
-          color="primary"
-          :loading="isImportPending"
-          variant="flat"
-          v-bind="i18nData('policies.import.import')"
-          @click="onSubmit"
-        >
-          {{ t('policies.import.import') }}
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
-</template>

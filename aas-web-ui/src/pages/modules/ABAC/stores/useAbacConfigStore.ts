@@ -1,9 +1,9 @@
 /* eslint-disable unicorn/no-this-outside-of-class */
-import type { AbacService } from '../types/service'
+import type { AbacService } from '@/pages/modules/ABAC/types/service'
 import type { BaSyxComponentKey } from '@/types/BaSyx'
 import { defineStore } from 'pinia'
+import { type Locale, Locales } from '@/pages/modules/ABAC/types/locale'
 import { getLocalStorageItem, setLocalStorageItem } from '@/utils/storage'
-import { type Locale, Locales } from '../types/locale'
 
 const STORE_KEY = 'ABAC_CONFIG_STORE'
 

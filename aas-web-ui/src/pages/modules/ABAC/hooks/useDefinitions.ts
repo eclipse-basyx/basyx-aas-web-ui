@@ -1,6 +1,6 @@
-import { useGetDefinition } from '@/pages/modules/ABAC/api/queries/definition/useGetDefinition'
-import { useGetDefinitions } from '@/pages/modules/ABAC/api/queries/definition/useGetDefinitions'
-import { useAbacNavigation } from './useAbacNavigation'
+import { useGetDefinition } from '@/pages/modules/ABAC/api/definition/useGetDefinition'
+import { useGetDefinitions } from '@/pages/modules/ABAC/api/definition/useGetDefinitions'
+import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
 
 export function useDefinitions () {
   const { selectedPolicyVersion, selectedDefinitionKind, selectedDefinitionName } = useAbacNavigation()

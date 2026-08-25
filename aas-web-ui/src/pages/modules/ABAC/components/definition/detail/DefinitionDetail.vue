@@ -1,23 +1,3 @@
-<script setup lang="ts">
-  import { computed } from 'vue'
-  import { useDefinitions } from '../../../hooks/useDefinitions'
-  import { useAbacI18n } from '../../../i18n/useAbacI18n'
-  import JsonCodeEditor from '../../shared/JsonCodeEditor.vue'
-
-  const ICONS = {
-    DEFINITIONS: 'mdi-book-open-variant',
-  } as const
-
-  const { t, i18nData } = useAbacI18n()
-
-  const { selectedDefinition } = useDefinitions()
-
-  const definitionJson = computed(() => {
-    if (!selectedDefinition.value) return ''
-    return JSON.stringify(selectedDefinition.value, null, 2)
-  })
-</script>
-
 <template>
   <v-card class="h-100 d-flex flex-column" variant="flat">
     <template v-if="selectedDefinition">
@@ -38,3 +18,23 @@
     </v-card-text>
   </v-card>
 </template>
+
+<script setup lang="ts">
+  import { computed } from 'vue'
+  import JsonCodeEditor from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
+  import { useDefinitions } from '@/pages/modules/ABAC/hooks/useDefinitions'
+  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+
+  const ICONS = {
+    DEFINITIONS: 'mdi-book-open-variant',
+  } as const
+
+  const { t, i18nData } = useAbacI18n()
+
+  const { selectedDefinition } = useDefinitions()
+
+  const definitionJson = computed(() => {
+    if (!selectedDefinition.value) return ''
+    return JSON.stringify(selectedDefinition.value, null, 2)
+  })
+</script>

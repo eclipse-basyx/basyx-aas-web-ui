@@ -1,6 +1,6 @@
 import type { FormulaExpression } from '@/pages/modules/ABAC/types/formula'
 import { describe, expect, it } from 'vitest'
-import { classifyFormulaComplexity, hasFieldAccess } from './formulaComplexity'
+import { classifyFormulaComplexity, hasFieldAccess } from '@/pages/modules/ABAC/utils/formulaComplexity'
 
 const simpleBool: FormulaExpression = { $boolean: true }
 

@@ -1,13 +1,13 @@
-import type { AbacService } from '../types/service'
+import type { AbacService } from '@/pages/modules/ABAC/types/service'
 import type { BaSyxComponentKey } from '@/types/BaSyx'
 import { useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
 import { useRequestHandling } from '@/composables/RequestHandling'
+import { CONTEXT } from '@/pages/modules/ABAC/constants/api'
+import { ABAC_CACHE_KEYS } from '@/pages/modules/ABAC/constants/cache'
+import { buildAbacUrl } from '@/pages/modules/ABAC/utils/api'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { getComponentLabel } from '@/utils/InfrastructureUtils'
-import { CONTEXT } from '../constants/api'
-import { ABAC_CACHE_KEYS } from '../constants/cache'
-import { buildAbacUrl } from '../utils/api'
 
 // Component keys that potentially expose ABAC management APIs
 const DISCOVERABLE_COMPONENT_KEYS: BaSyxComponentKey[] = [

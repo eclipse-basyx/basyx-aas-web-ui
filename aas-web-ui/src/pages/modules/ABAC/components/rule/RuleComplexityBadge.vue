@@ -1,7 +1,26 @@
+<template>
+  <v-tooltip location="top" :open-delay="400">
+    <template #activator="{ props: tipProps }">
+      <v-chip
+        v-bind="tipProps"
+        :color="badgeConfig.color"
+        label
+        size="x-small"
+        variant="flat"
+      >
+        <v-icon :icon="badgeConfig.icon" size="14" start />
+        {{ badgeConfig.label }}
+      </v-chip>
+    </template>
+
+    <span>{{ badgeConfig.tooltip }}</span>
+  </v-tooltip>
+</template>
+
 <script setup lang="ts">
   import type { Rule } from '@/pages/modules/ABAC/types/rules'
-  import { useAbacI18n } from '../../i18n/useAbacI18n'
-  import { classifyFormulaComplexity } from '../../utils/formulaComplexity'
+  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+  import { classifyFormulaComplexity } from '@/pages/modules/ABAC/utils/formulaComplexity'
 
   const ICONS = {
     LOW: 'mdi-speedometer-slow',
@@ -40,22 +59,3 @@
     }
   })
 </script>
-
-<template>
-  <v-tooltip location="top" :open-delay="400">
-    <template #activator="{ props: tipProps }">
-      <v-chip
-        v-bind="tipProps"
-        :color="badgeConfig.color"
-        label
-        size="x-small"
-        variant="flat"
-      >
-        <v-icon :icon="badgeConfig.icon" size="14" start />
-        {{ badgeConfig.label }}
-      </v-chip>
-    </template>
-
-    <span>{{ badgeConfig.tooltip }}</span>
-  </v-tooltip>
-</template>

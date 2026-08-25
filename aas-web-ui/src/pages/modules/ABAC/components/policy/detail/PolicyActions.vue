@@ -1,15 +1,96 @@
+<template>
+  <div class="d-flex flex-wrap justify-end ga-2">
+    <v-btn
+      color="surface-light"
+      :loading="isCloning"
+      size="small"
+      v-bind="i18nData('policies.policy.clone')"
+      @click="doAction('clone')"
+    >
+      <v-icon class="mr-1" :icon="ICONS.CLONE" size="small" />
+      {{ t('policies.policy.clone') }}
+    </v-btn>
+
+    <template v-if="policy?.status === 'staged'">
+      <v-btn
+        color="warning"
+        :loading="isValidating"
+        size="small"
+        v-bind="i18nData('policies.policy.validate')"
+        @click="doAction('validate')"
+      >
+        <v-icon class="mr-1" :icon="ICONS.VALIDATE" size="small" />
+        {{ t('policies.policy.validate') }}
+      </v-btn>
+
+      <v-btn
+        color="success"
+        :loading="isActivating"
+        size="small"
+        v-bind="i18nData('policies.policy.activate')"
+        @click="openConfirm('activate')"
+      >
+        <v-icon class="mr-1" :icon="ICONS.ACTIVATE" size="small" />
+        {{ t('policies.policy.activate') }}
+      </v-btn>
+
+      <v-btn
+        color="error"
+        :loading="isRejecting"
+        size="small"
+        v-bind="i18nData('policies.policy.reject')"
+        @click="openConfirm('reject')"
+      >
+        <v-icon class="mr-1" :icon="ICONS.REJECT" size="small" />
+        {{ t('policies.policy.reject') }}
+      </v-btn>
+    </template>
+  </div>
+
+  <v-dialog v-if="confirmAction" v-model="confirmDialog" max-width="420" persistent>
+    <v-card>
+      <v-card-title class="pa-4" v-bind="i18nData(`policies.policy.confirmDialog.${confirmAction}.title`)">
+        {{ t(`policies.policy.confirmDialog.${confirmAction}.title`) }}
+      </v-card-title>
+
+      <v-card-text class="pa-4" v-bind="i18nData(`policies.policy.confirmDialog.${confirmAction}.message`)">
+        {{ t(`policies.policy.confirmDialog.${confirmAction}.message`,{ version: selectedPolicyVersion }) }}
+      </v-card-text>
+
+      <v-divider />
+
+      <v-card-actions class="pa-4">
+        <v-btn variant="text" v-bind="i18nData('policies.policy.confirmDialog.cancel')" @click="confirmDialog = false">
+          {{ t('policies.policy.confirmDialog.cancel') }}
+        </v-btn>
+
+        <v-btn
+          :color="confirmAction === 'reject' ? 'error' : 'warning'"
+          variant="flat"
+          v-bind="i18nData(`policies.policy.confirmDialog.${confirmAction}.confirm`)"
+          @click="onConfirm"
+        >
+          {{ t(`policies.policy.confirmDialog.${confirmAction}.confirm`) }}
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <PolicyValidationDialog ref="policyValidationDialog" />
+</template>
+
 <script setup lang="ts">
   import { ref } from 'vue'
-  import { useActivatePolicy } from '@/pages/modules/ABAC/api/queries/policy/useActivatePolicy'
-  import { useCloneVersion } from '@/pages/modules/ABAC/api/queries/policy/useCloneVersion'
-  import { useRejectPolicy } from '@/pages/modules/ABAC/api/queries/policy/useRejectPolicy'
-  import { useValidatePolicy } from '@/pages/modules/ABAC/api/queries/policy/useValidatePolicy'
+  import { useActivatePolicy } from '@/pages/modules/ABAC/api/policy/useActivatePolicy'
+  import { useCloneVersion } from '@/pages/modules/ABAC/api/policy/useCloneVersion'
+  import { useRejectPolicy } from '@/pages/modules/ABAC/api/policy/useRejectPolicy'
+  import { useValidatePolicy } from '@/pages/modules/ABAC/api/policy/useValidatePolicy'
+  import PolicyValidationDialog from '@/pages/modules/ABAC/components/policy/detail/PolicyValidationDialog.vue'
+  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
+  import { usePolicy } from '@/pages/modules/ABAC/hooks/usePolicy'
+  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
-  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
-  import { usePolicy } from '../../../hooks/usePolicy'
-  import { useAbacI18n } from '../../../i18n/useAbacI18n'
-  import PolicyValidationDialog from './PolicyValidationDialog.vue'
 
   const ICONS = {
     CLONE: 'mdi-source-branch',
@@ -91,84 +172,3 @@
     }
   }
 </script>
-
-<template>
-  <div class="d-flex flex-wrap justify-end ga-2">
-    <v-btn
-      color="surface-light"
-      :loading="isCloning"
-      size="small"
-      v-bind="i18nData('policies.policy.clone')"
-      @click="doAction('clone')"
-    >
-      <v-icon class="mr-1" :icon="ICONS.CLONE" size="small" />
-      {{ t('policies.policy.clone') }}
-    </v-btn>
-
-    <template v-if="policy?.status === 'staged'">
-      <v-btn
-        color="warning"
-        :loading="isValidating"
-        size="small"
-        v-bind="i18nData('policies.policy.validate')"
-        @click="doAction('validate')"
-      >
-        <v-icon class="mr-1" :icon="ICONS.VALIDATE" size="small" />
-        {{ t('policies.policy.validate') }}
-      </v-btn>
-
-      <v-btn
-        color="success"
-        :loading="isActivating"
-        size="small"
-        v-bind="i18nData('policies.policy.activate')"
-        @click="openConfirm('activate')"
-      >
-        <v-icon class="mr-1" :icon="ICONS.ACTIVATE" size="small" />
-        {{ t('policies.policy.activate') }}
-      </v-btn>
-
-      <v-btn
-        color="error"
-        :loading="isRejecting"
-        size="small"
-        v-bind="i18nData('policies.policy.reject')"
-        @click="openConfirm('reject')"
-      >
-        <v-icon class="mr-1" :icon="ICONS.REJECT" size="small" />
-        {{ t('policies.policy.reject') }}
-      </v-btn>
-    </template>
-  </div>
-
-  <v-dialog v-if="confirmAction" v-model="confirmDialog" max-width="420" persistent>
-    <v-card>
-      <v-card-title class="pa-4" v-bind="i18nData(`policies.policy.confirmDialog.${confirmAction}.title`)">
-        {{ t(`policies.policy.confirmDialog.${confirmAction}.title`) }}
-      </v-card-title>
-
-      <v-card-text class="pa-4" v-bind="i18nData(`policies.policy.confirmDialog.${confirmAction}.message`)">
-        {{ t(`policies.policy.confirmDialog.${confirmAction}.message`,{ version: selectedPolicyVersion }) }}
-      </v-card-text>
-
-      <v-divider />
-
-      <v-card-actions class="pa-4">
-        <v-btn variant="text" v-bind="i18nData('policies.policy.confirmDialog.cancel')" @click="confirmDialog = false">
-          {{ t('policies.policy.confirmDialog.cancel') }}
-        </v-btn>
-
-        <v-btn
-          :color="confirmAction === 'reject' ? 'error' : 'warning'"
-          variant="flat"
-          v-bind="i18nData(`policies.policy.confirmDialog.${confirmAction}.confirm`)"
-          @click="onConfirm"
-        >
-          {{ t(`policies.policy.confirmDialog.${confirmAction}.confirm`) }}
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
-
-  <PolicyValidationDialog ref="policyValidationDialog" />
-</template>

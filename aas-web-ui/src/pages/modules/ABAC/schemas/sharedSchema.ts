@@ -2,7 +2,7 @@
  * Shared Zod schemas used by ABAC rules and definitions.
  */
 
-import type { AbacValidationMessages } from '../i18n/locales'
+import type { AbacValidationMessages } from '@/pages/modules/ABAC/i18n/locales'
 import { z } from 'zod'
 
 export function createSharedSchemas (messages: AbacValidationMessages) {

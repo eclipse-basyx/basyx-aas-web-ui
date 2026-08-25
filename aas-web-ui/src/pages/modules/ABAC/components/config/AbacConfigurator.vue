@@ -1,63 +1,3 @@
-<script setup lang="ts">
-  import type { VForm } from 'vuetify/components'
-  import { ref } from 'vue'
-  import { useNavigationStore } from '@/store/NavigationStore'
-  import { useAbacI18n } from '../../i18n/useAbacI18n'
-  import { useAbacConfigStore } from '../../stores/useAbacConfigStore'
-  import { type Locale, Locales } from '../../types/locale'
-
-  const ICONS = {
-    CONFIGS: 'mdi-cog',
-    CLOSE: 'mdi-close',
-  } as const
-
-  const { t, i18nData } = useAbacI18n()
-  const configStore = useAbacConfigStore()
-  const navigationStore = useNavigationStore()
-
-  const isDialogOpen = ref(false)
-  const form = ref<VForm | null>(null)
-  const isValid = ref(false)
-
-  const localState = ref<{ language: Locale }>({
-    language: Locales.EN,
-  })
-
-  const localeOptions = Object.entries(Locales).map(([key, value]) => ({
-    title: key,
-    value,
-  }))
-
-  function onOpenDialog (): void {
-    localState.value = {
-      language: configStore.language,
-    }
-    isDialogOpen.value = true
-  }
-
-  function onCloseDialog (): void {
-    isDialogOpen.value = false
-  }
-
-  async function onSave (): Promise<void> {
-    if (!form.value) return
-    const { valid } = await form.value.validate()
-    if (!valid) return
-
-    configStore.setLanguage(localState.value.language)
-
-    navigationStore.dispatchSnackbar({
-      status: true,
-      timeout: 3000,
-      color: 'success',
-      btnColor: 'buttonText',
-      text: t('config.saved'),
-    })
-
-    onCloseDialog()
-  }
-</script>
-
 <template>
   <v-btn
     density="comfortable"
@@ -131,3 +71,63 @@
     </v-card>
   </v-dialog>
 </template>
+
+<script setup lang="ts">
+  import type { VForm } from 'vuetify/components'
+  import { ref } from 'vue'
+  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+  import { useAbacConfigStore } from '@/pages/modules/ABAC/stores/useAbacConfigStore'
+  import { type Locale, Locales } from '@/pages/modules/ABAC/types/locale'
+  import { useNavigationStore } from '@/store/NavigationStore'
+
+  const ICONS = {
+    CONFIGS: 'mdi-cog',
+    CLOSE: 'mdi-close',
+  } as const
+
+  const { t, i18nData } = useAbacI18n()
+  const configStore = useAbacConfigStore()
+  const navigationStore = useNavigationStore()
+
+  const isDialogOpen = ref(false)
+  const form = ref<VForm | null>(null)
+  const isValid = ref(false)
+
+  const localState = ref<{ language: Locale }>({
+    language: Locales.EN,
+  })
+
+  const localeOptions = Object.entries(Locales).map(([key, value]) => ({
+    title: key,
+    value,
+  }))
+
+  function onOpenDialog (): void {
+    localState.value = {
+      language: configStore.language,
+    }
+    isDialogOpen.value = true
+  }
+
+  function onCloseDialog (): void {
+    isDialogOpen.value = false
+  }
+
+  async function onSave (): Promise<void> {
+    if (!form.value) return
+    const { valid } = await form.value.validate()
+    if (!valid) return
+
+    configStore.setLanguage(localState.value.language)
+
+    navigationStore.dispatchSnackbar({
+      status: true,
+      timeout: 3000,
+      color: 'success',
+      btnColor: 'buttonText',
+      text: t('config.saved'),
+    })
+
+    onCloseDialog()
+  }
+</script>

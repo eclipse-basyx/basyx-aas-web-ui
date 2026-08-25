@@ -1,9 +1,9 @@
-import type { JsonErrorMessage } from '../components/shared/JsonCodeEditor.vue'
-import type { AbacValidationMessages } from '../i18n/locales'
+import type { JsonErrorMessage } from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
+import type { AbacValidationMessages } from '@/pages/modules/ABAC/i18n/locales'
 import type { CompletePolicy } from '@/pages/modules/ABAC/types/policy'
+import { createPolicySchema } from '@/pages/modules/ABAC/schemas/policySchema'
+import { extractLineFromSyntaxError, findLineForPath } from '@/pages/modules/ABAC/utils/json'
 import { hasContent } from '@/utils/StringUtils'
-import { createPolicySchema } from '../schemas/policySchema'
-import { extractLineFromSyntaxError, findLineForPath } from '../utils/json'
 
 export interface PolicyValidationInput {
   json: string
