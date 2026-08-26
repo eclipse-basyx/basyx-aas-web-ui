@@ -65,14 +65,14 @@
         </v-tooltip>
       </v-btn>
 
-      <span class="text-h6">{{ t('module.title') }}</span>
+      <span class="text-h6">{{ t('layout.title') }}</span>
 
       <v-spacer />
 
       <CompanyLookupConfigurator />
     </div>
 
-    <div class="cl-body d-flex flex-grow-1 overflow-hidden">
+    <div class="d-flex flex-grow-1 overflow-hidden">
       <v-navigation-drawer
         v-if="isMobile && !isDetailsOnly"
         v-model="drawer"
@@ -86,7 +86,7 @@
         <CompaniesList @select="onSelect" />
       </div>
 
-      <div class="cl-detail flex-grow-1 overflow-y-auto">
+      <div class="flex-grow-1 overflow-y-auto">
         <CompanyDetail :details-only="isDetailsOnly" />
       </div>
     </div>

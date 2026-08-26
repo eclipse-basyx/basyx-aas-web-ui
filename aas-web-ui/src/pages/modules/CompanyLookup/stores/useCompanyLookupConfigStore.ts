@@ -1,6 +1,7 @@
 /* eslint-disable unicorn/no-this-outside-of-class */
 import { defineStore } from 'pinia'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
+import { getLocalStorageItem, setLocalStorageItem } from '@/utils/storage'
 import { type Locale, Locales } from '../types/locale'
 
 const STORE_KEY = 'COMPANY_LOOKUP_CONFIG_STORE'
@@ -17,20 +18,6 @@ export interface CompanyLookupConfig {
 type ConfigStoreState = CompanyLookupConfig & {
   isInitialized: boolean
   isInitializing: boolean
-}
-
-function getLocalStorageItem (key: string): string | null {
-  if (typeof window === 'undefined') {
-    return null
-  }
-  return window.localStorage.getItem(key)
-}
-
-function setLocalStorageItem (key: string, value: string): void {
-  if (typeof window === 'undefined') {
-    return
-  }
-  window.localStorage.setItem(key, value)
 }
 
 export const useCompanyLookupConfigStore = defineStore(STORE_KEY, {

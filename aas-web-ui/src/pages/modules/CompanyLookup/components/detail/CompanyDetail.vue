@@ -3,10 +3,10 @@
   import { computed, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useGetCompany } from '@/composables/Client/CompanyLookup/queries/useGetCompany'
+  import { hasItems } from '@/utils/array'
   import CompanyOptions from '../../components/options/CompanyOptions.vue'
   import { VIEW, VIEWS } from '../../constants/view'
   import { useCompanyLookupI18n } from '../../i18n/useCompanyLookupI18n'
-  import { hasItems } from '../../utils/array'
   import CompanyJsonView from './CompanyJsonView.vue'
   import CompanyProperty from './CompanyProperty.vue'
 

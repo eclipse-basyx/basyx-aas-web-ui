@@ -1,8 +1,8 @@
 <script setup lang="ts">
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
+  import { hasItems } from '@/utils/array'
   import { hasContent } from '@/utils/StringUtils'
   import { DEFAULT_COPY_ICON } from '../../constants/icons'
-  import { hasItems } from '../../utils/array'
 
   const { value, title } = defineProps<{ value?: null | string | string[], title: string, hideDivider?: boolean }>()
 
