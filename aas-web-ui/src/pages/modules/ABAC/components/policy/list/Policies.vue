@@ -144,7 +144,6 @@
 
 <script setup lang="ts">
   import type { Sort } from '@/pages/modules/ABAC/types/sort'
-  import { computed, ref, useTemplateRef } from 'vue'
   import { useTheme } from 'vuetify'
   import { useGetPolicies } from '@/pages/modules/ABAC/api/policy/useGetPolicies'
   import PolicyDialog from '@/pages/modules/ABAC/components/policy/PolicyDialog.vue'

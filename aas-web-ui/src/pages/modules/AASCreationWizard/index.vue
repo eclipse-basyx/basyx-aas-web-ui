@@ -67,7 +67,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref } from 'vue'
   import StepAssetInformation from './components/StepAssetInformation.vue'
   import StepDigitalNamePlate from './components/StepDigitalNamePlate.vue'
   import StepHandoverDocumentation from './components/StepHandoverDocumentation.vue'

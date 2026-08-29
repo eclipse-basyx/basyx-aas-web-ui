@@ -57,7 +57,6 @@
   import type { HandoverDocumentationTemplate } from '../types/template'
   import type { ValidationIssue } from '../types/validation'
   import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
-  import { onMounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'

@@ -20,7 +20,6 @@
 </template>
 
 <script setup lang="ts">
-  import { useTemplateRef } from 'vue'
   import RuleActions from '@/pages/modules/ABAC/components/rule/detail/RuleActions.vue'
   import RuleDetail from '@/pages/modules/ABAC/components/rule/detail/RuleDetail.vue'
   import RulesList from '@/pages/modules/ABAC/components/rule/list/RulesList.vue'

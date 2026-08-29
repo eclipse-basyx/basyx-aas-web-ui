@@ -152,7 +152,6 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, reactive, ref } from 'vue'
   import FormField from './components/FormField.vue'
   import { useFormStore } from './stores/formData'
   import { createDigitalInterfacesSMC } from './utils/digitalInterfacesSmcBuilder'

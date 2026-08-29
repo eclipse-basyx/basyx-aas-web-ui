@@ -152,7 +152,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'

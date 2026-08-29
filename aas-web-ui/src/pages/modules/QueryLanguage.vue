@@ -70,7 +70,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref, watch } from 'vue'
   import { useRequestHandling } from '@/composables/RequestHandling'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
 

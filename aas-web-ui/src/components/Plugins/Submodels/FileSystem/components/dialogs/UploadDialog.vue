@@ -40,7 +40,6 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref } from 'vue'
 
   interface Props {
     modelValue: boolean

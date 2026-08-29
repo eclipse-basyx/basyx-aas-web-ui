@@ -190,7 +190,6 @@
 
 <script lang="ts" setup>
   import { types as aasTypes, jsonization } from '@aas-core-works/aas-core3.1-typescript'
-  import { computed, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'

@@ -31,7 +31,6 @@
 <script lang="ts" setup>
   import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization'
   import { types as aasTypes, jsonization } from '@aas-core-works/aas-core3.1-typescript'
-  import { computed, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'

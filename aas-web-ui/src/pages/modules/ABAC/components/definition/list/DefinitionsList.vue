@@ -102,7 +102,6 @@
 
 <script setup lang="ts">
   import type { DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
-  import { computed, ref } from 'vue'
   import DefinitionItem from '@/pages/modules/ABAC/components/definition/list/DefinitionItem.vue'
   import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
   import { useDefinitions } from '@/pages/modules/ABAC/hooks/useDefinitions'

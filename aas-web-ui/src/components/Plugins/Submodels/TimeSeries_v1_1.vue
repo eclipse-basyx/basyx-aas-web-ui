@@ -222,7 +222,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
   import {
     autoRefreshIntervalMs,
     type AutoRefreshSelection,
@@ -230,7 +229,6 @@
     DEFAULT_AUTO_REFRESH,
     validateAutoRefreshSelection,
   } from '@/components/Plugins/Submodels/TimeSeries/autoRefresh'
-  import AutoRefreshSelector from '@/components/Plugins/Submodels/TimeSeries/AutoRefreshSelector.vue'
   import {
     cloneTimeRangeSelection,
     DEFAULT_TIME_RANGE,
@@ -242,7 +240,6 @@
     type TimeRangeSelection,
     validateTimeRangeSelection,
   } from '@/components/Plugins/Submodels/TimeSeries/timeRange'
-  import TimeRangeSelector from '@/components/Plugins/Submodels/TimeSeries/TimeRangeSelector.vue'
   import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'

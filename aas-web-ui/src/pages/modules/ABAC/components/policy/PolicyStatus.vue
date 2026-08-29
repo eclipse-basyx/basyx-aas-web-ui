@@ -13,7 +13,6 @@
 
 <script setup lang="ts">
   import type { PolicyStatus } from '@/pages/modules/ABAC/types/policy'
-  import { computed } from 'vue'
   import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
 
   const ICONS = {

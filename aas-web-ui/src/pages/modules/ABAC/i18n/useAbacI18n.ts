@@ -1,4 +1,3 @@
-import { inject } from 'vue'
 import { ABAC_I18N_KEY, type I18nComposer } from '@/pages/modules/ABAC/constants/i18n'
 
 interface AbacI18n {

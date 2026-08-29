@@ -133,7 +133,6 @@
   </v-row></template>
 
 <script setup lang="ts">
-  import { ref } from 'vue'
   import { useDeleteRule } from '@/pages/modules/ABAC/api/rule/useDeleteRule'
   import { useDuplicateRule } from '@/pages/modules/ABAC/api/rule/useDuplicateRule'
   import { useMoveRule } from '@/pages/modules/ABAC/api/rule/useMoveRule'

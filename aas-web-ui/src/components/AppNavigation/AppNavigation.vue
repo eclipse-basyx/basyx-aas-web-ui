@@ -284,10 +284,8 @@
 
 <script lang="ts" setup>
   import type { AutoSyncType, StatusCheckType } from '@/types/Application'
-  import { computed, onMounted, ref, watch } from 'vue'
   import { useRoute } from 'vue-router'
   import { useTheme } from 'vuetify'
-  import Snackbar from '@/components/AppNavigation/Snackbar.vue'
   import { useModuleHandling } from '@/composables/ModuleHandling'
   import { useGlobalShortcuts } from '@/composables/Shortcuts/useGlobalShortcuts'
   import { useEnvStore } from '@/store/EnvironmentStore'

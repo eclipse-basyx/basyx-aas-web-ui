@@ -1,5 +1,5 @@
+import type { MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { computed, type MaybeRefOrGetter, toValue } from 'vue'
 import { useAbacContext } from '@/pages/modules/ABAC/api/useAbacContext'
 
 export function useGetDefinitions (versionId: MaybeRefOrGetter<string | undefined>) {

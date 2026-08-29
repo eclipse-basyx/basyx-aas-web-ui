@@ -80,7 +80,6 @@
 </template>
 <script lang="ts" setup>
   import type { FileTab, SubmodelElementLike } from '../types'
-  import { computed, ref } from 'vue'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { getDigitalFiles, getPreviewFile, hasAttachments } from '../utils/submodelElementUtils'
 

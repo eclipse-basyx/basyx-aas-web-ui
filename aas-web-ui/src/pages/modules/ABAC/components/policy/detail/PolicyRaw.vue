@@ -32,7 +32,6 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref } from 'vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import JsonCodeEditor from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
   import { usePolicy } from '@/pages/modules/ABAC/hooks/usePolicy'

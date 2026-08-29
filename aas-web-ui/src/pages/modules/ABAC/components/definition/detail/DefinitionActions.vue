@@ -63,7 +63,6 @@
   </v-row></template>
 
 <script setup lang="ts">
-  import { ref } from 'vue'
   import { useDeleteDefinition } from '@/pages/modules/ABAC/api/definition/useDeleteDefinition'
   import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
   import { useDefinitions } from '@/pages/modules/ABAC/hooks/useDefinitions'

@@ -546,7 +546,6 @@
 
 <script lang="ts" setup>
   import type { Ref } from 'vue'
-  import { computed, ref } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'

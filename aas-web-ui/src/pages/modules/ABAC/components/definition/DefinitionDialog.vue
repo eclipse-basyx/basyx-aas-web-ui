@@ -89,7 +89,6 @@
 <script setup lang="ts">
   import type { JsonErrorMessage } from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
   import type { DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
-  import { computed, ref, watch } from 'vue'
   import { useCreateDefinition } from '@/pages/modules/ABAC/api/definition/useCreateDefinition'
   import { usePatchDefinition } from '@/pages/modules/ABAC/api/definition/usePatchDefinition'
   import { useReplaceDefinition } from '@/pages/modules/ABAC/api/definition/useReplaceDefinition'

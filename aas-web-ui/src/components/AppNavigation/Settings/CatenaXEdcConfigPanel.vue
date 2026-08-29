@@ -164,8 +164,6 @@
 
 <script lang="ts" setup>
   import type { CatenaXConfig, CatenaXPartner } from '@/types/Infrastructure'
-  import { computed, ref } from 'vue'
-  import CatenaXPartnerDialog from '@/components/AppNavigation/Settings/CatenaXPartnerDialog.vue'
   import { normalizeCatenaXPartners } from '@/utils/CatenaXPartnerUtils'
 
   const props = defineProps<{

@@ -292,9 +292,7 @@
     SecurityType,
   } from '@/types/Infrastructure'
   import type { InfrastructureEndpointFieldKey } from '@/utils/InfrastructureUtils'
-  import { computed, ref, toRaw, watch } from 'vue'
   import { useRouter } from 'vue-router'
-  import CatenaXEdcConfigPanel from '@/components/AppNavigation/Settings/CatenaXEdcConfigPanel.vue'
   import { useAuth } from '@/composables/Auth/useAuth'
   import { useBasicAuthForm } from '@/composables/Auth/useBasicAuthForm'
   import { useOAuth2Form } from '@/composables/Auth/useOAuth2Form'

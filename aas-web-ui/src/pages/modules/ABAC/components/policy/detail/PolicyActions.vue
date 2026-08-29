@@ -80,7 +80,6 @@
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue'
   import { useActivatePolicy } from '@/pages/modules/ABAC/api/policy/useActivatePolicy'
   import { useCloneVersion } from '@/pages/modules/ABAC/api/policy/useCloneVersion'
   import { useRejectPolicy } from '@/pages/modules/ABAC/api/policy/useRejectPolicy'

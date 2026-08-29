@@ -1,43 +1,3 @@
-<script setup lang="ts">
-  import { computed, ref, watch } from 'vue'
-  import { useRoute } from 'vue-router'
-  import { useNavigationStore } from '@/store/NavigationStore'
-  import { hasContent } from '@/utils/StringUtils'
-  import { VIEW } from '../constants/view'
-  import { useCompanyLookupI18n } from '../i18n/useCompanyLookupI18n'
-  import CompaniesList from './CompaniesList.vue'
-  import CompanyLookupConfigurator from './CompanyLookupConfigurator.vue'
-  import CompanyDetail from './detail/CompanyDetail.vue'
-
-  const { t } = useCompanyLookupI18n()
-  const route = useRoute()
-  const navigationStore = useNavigationStore()
-
-  const drawer = ref(false)
-  const listCollapsed = ref(route.query.view === VIEW.DETAILSONLY)
-
-  const isMobile = computed(() => navigationStore.getIsMobile)
-  const isDetailsOnly = computed(() => route.query.view === VIEW.DETAILSONLY)
-
-  // Auto-close mobile drawer when leaving mobile
-  watch(isMobile, val => {
-    if (!val) drawer.value = false
-  })
-
-  watch(isDetailsOnly, val => {
-    if (val) {
-      drawer.value = false
-      listCollapsed.value = true
-    } else {
-      listCollapsed.value = false
-    }
-  })
-
-  function onSelect (id?: string): void {
-    if (isMobile.value && hasContent(id)) drawer.value = false
-  }
-</script>
-
 <template>
   <div class="h-100 w-100 d-flex flex-column">
     <div v-if="!isDetailsOnly" class="flex-shrink-0 d-flex align-center px-4 py-2 border-b">
@@ -92,6 +52,45 @@
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+  import { useRoute } from 'vue-router'
+  import { useNavigationStore } from '@/store/NavigationStore'
+  import { hasContent } from '@/utils/StringUtils'
+  import { VIEW } from '../constants/view'
+  import { useCompanyLookupI18n } from '../i18n/useCompanyLookupI18n'
+  import CompaniesList from './CompaniesList.vue'
+  import CompanyLookupConfigurator from './CompanyLookupConfigurator.vue'
+  import CompanyDetail from './detail/CompanyDetail.vue'
+
+  const { t } = useCompanyLookupI18n()
+  const route = useRoute()
+  const navigationStore = useNavigationStore()
+
+  const drawer = ref(false)
+  const listCollapsed = ref(route.query.view === VIEW.DETAILSONLY)
+
+  const isMobile = computed(() => navigationStore.getIsMobile)
+  const isDetailsOnly = computed(() => route.query.view === VIEW.DETAILSONLY)
+
+  // Auto-close mobile drawer when leaving mobile
+  watch(isMobile, val => {
+    if (!val) drawer.value = false
+  })
+
+  watch(isDetailsOnly, val => {
+    if (val) {
+      drawer.value = false
+      listCollapsed.value = true
+    } else {
+      listCollapsed.value = false
+    }
+  })
+
+  function onSelect (id?: string): void {
+    if (isMobile.value && hasContent(id)) drawer.value = false
+  }
+</script>
 
 <style scoped>
 .list {

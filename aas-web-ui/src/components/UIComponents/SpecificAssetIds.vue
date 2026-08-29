@@ -52,7 +52,6 @@
 
 <script setup lang="ts">
   import type { Ref } from 'vue'
-  import { ref } from 'vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
 
   // Composables

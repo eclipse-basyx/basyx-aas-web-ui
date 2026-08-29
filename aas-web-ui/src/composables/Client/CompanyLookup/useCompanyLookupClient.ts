@@ -1,6 +1,5 @@
 import type { CompanyLookupQueryParameters, CompanyLookupResponse, PagedCompanyDescriptors } from './types/api'
 import type { CompanyDescriptor } from './types/company'
-import { computed } from 'vue'
 import { appendQueryParams } from '@/composables/Client/PaginationUtils'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'

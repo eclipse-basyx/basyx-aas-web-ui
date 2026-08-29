@@ -78,7 +78,6 @@
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue'
   import { useImportPolicy } from '@/pages/modules/ABAC/api/policy/useImportPolicy'
   import JsonCodeEditor, { type JsonErrorMessage } from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
   import { EMPTY_POLICY } from '@/pages/modules/ABAC/constants/json'

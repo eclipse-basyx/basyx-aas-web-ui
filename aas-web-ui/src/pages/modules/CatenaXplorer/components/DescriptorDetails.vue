@@ -93,7 +93,6 @@
 
 <script lang="ts" setup>
   import type { EdcSubmodelViewState } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
-  import { computed, ref } from 'vue'
   import {
     displayValue,
     formatDateTime,

@@ -66,7 +66,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onMounted, ref, watch } from 'vue'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'
   import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement'

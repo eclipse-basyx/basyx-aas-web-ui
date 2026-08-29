@@ -31,7 +31,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { onMounted, ref, watch } from 'vue'
   import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'
 
   // Composables

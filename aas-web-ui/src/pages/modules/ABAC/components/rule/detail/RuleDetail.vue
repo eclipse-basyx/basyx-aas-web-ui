@@ -38,7 +38,6 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref } from 'vue'
   import RuleComplexityBadge from '@/pages/modules/ABAC/components/rule/RuleComplexityBadge.vue'
   import JsonCodeEditor from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
   import { useRules } from '@/pages/modules/ABAC/hooks/useRules'
