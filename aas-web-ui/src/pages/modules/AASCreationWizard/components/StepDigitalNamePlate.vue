@@ -46,7 +46,6 @@
   import type { FormStateObject } from '../types/form'
   import type { DigitalNameplateTemplate } from '../types/template'
   import type { ValidationIssue } from '../types/validation'
-  import { ref, toRaw } from 'vue'
   import { buildDigitalNameplate } from '../builders/buildDigitalNameplate'
   import { useAASCreationStore } from '../stores/aasCreationForm'
   import template from '../templates/digital-nameplate.json'

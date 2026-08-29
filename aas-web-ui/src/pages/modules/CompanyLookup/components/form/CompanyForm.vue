@@ -1,188 +1,3 @@
-<script setup lang="ts">
-  import type { AdministrativeInformation, CompanyDescriptor } from '@/composables/Client/CompanyLookup/types/company'
-  import type { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
-  import type { Reference } from '@aas-core-works/aas-core3.1-typescript/types'
-  import type { VForm } from 'vuetify/components'
-  import { computed, ref, watch } from 'vue'
-  import MultiLanguageTextInput from '@/components/EditorComponents/InputTypes/MultiLanguageTextInput.vue'
-  import ReferenceInput from '@/components/EditorComponents/InputTypes/ReferenceInput.vue'
-  import { useCreateCompany } from '@/composables/Client/CompanyLookup/queries/useCreateCompany'
-  import { useUpdateCompany } from '@/composables/Client/CompanyLookup/queries/useUpdateCompany'
-  import { useNavigationStore } from '@/store/NavigationStore'
-  import { hasItems } from '@/utils/array'
-  import { useCompanyLookupI18n } from '../../i18n/useCompanyLookupI18n'
-  import { createCompanyDescriptorSchema } from '../../schemas/companyDescriptor'
-  import { emptyAdministration, emptyFormData } from '../../utils/form'
-  import { zodRule } from '../../utils/zodRule'
-  import EndpointsForm from './EndpointsForm.vue'
-
-  const { company } = defineProps<{ company?: CompanyDescriptor }>()
-  const emit = defineEmits<{
-    (e: 'saved', descriptor: CompanyDescriptor): void
-    (e: 'closed'): void
-  }>()
-  const isOpen = defineModel<boolean>({ default: false })
-
-  const { t, tm } = useCompanyLookupI18n()
-  const navigationStore = useNavigationStore()
-
-  const { mutateAsync: createCompany } = useCreateCompany()
-  const { mutateAsync: updateCompany } = useUpdateCompany()
-
-  const isEditMode = computed(() => !!company)
-  const openPanels = ref<number[]>([0])
-
-  const { companyDescriptorSchema, endpointSchema } = createCompanyDescriptorSchema(tm('validation'))
-  const formRef = ref<VForm | null>(null)
-  const isFormValid = computed(() => companyDescriptorSchema.safeParse(buildPayload()).success)
-  const isSubmitting = ref(false)
-  const submitError = ref<string | undefined>()
-  const panelErrors = ref({ details: false, configuration: false, administration: false })
-
-  const rules = {
-    idShort: zodRule(companyDescriptorSchema.shape.idShort),
-    name: zodRule(companyDescriptorSchema.shape.name),
-    domain: zodRule(companyDescriptorSchema.shape.domain),
-    endpointInterface: zodRule(endpointSchema.shape.interface),
-    endpointHref: zodRule(endpointSchema.shape.protocolInformation.shape.href),
-    regexList: (list?: string[]) => {
-      if (!hasItems(list)) return true
-      const parsed = companyDescriptorSchema.shape.assetIdRegexPatterns.safeParse(list)
-      return parsed.success || (parsed.error.issues[0]?.message ?? t('validation.regex.invalid'))
-    },
-  }
-
-  const formData = ref<CompanyDescriptor>(emptyFormData())
-  const displayName = computed<aasTypes.LangStringTextType[] | null>({
-    get: () => formData.value.displayName ?? null,
-    set: d => {
-      formData.value.displayName = d ?? undefined
-    },
-  })
-  const description = computed<aasTypes.LangStringTextType[] | null>({
-    get: () => formData.value.description ?? null,
-    set: d => {
-      formData.value.description = d ?? undefined
-    },
-  })
-
-  const nameOptionsModel = computed<string[]>({
-    get: () => formData.value.nameOptions ?? [],
-    set: n => {
-      formData.value.nameOptions = [...new Set(n.map(s => s.trim()).filter(Boolean))]
-    },
-  })
-
-  const assetIdRegexPatterns = computed<string[]>({
-    get: () => formData.value.assetIdRegexPatterns ?? [],
-    set: a => {
-      formData.value.assetIdRegexPatterns = [...new Set(a.map(s => s.trim()).filter(Boolean))]
-    },
-  })
-
-  const administration = ref<AdministrativeInformation>(emptyAdministration())
-  const creator = computed<Reference | null>({
-    get: () => administration.value.creator ?? null,
-    set: c => {
-      administration.value.creator = c ?? undefined
-    },
-  })
-
-  function initForm (initialCompany?: CompanyDescriptor): void {
-    if (!initialCompany) {
-      formData.value = emptyFormData()
-      administration.value = emptyAdministration()
-      return
-    }
-    // structuredClone fails when the object contains class instances (e.g., Reference)
-    // eslint-disable-next-line unicorn/prefer-structured-clone
-    const clone = JSON.parse(JSON.stringify(initialCompany)) as CompanyDescriptor
-    formData.value = clone
-    administration.value = {
-      version: clone.administration?.version ?? null,
-      revision: clone.administration?.revision ?? null,
-      creator: clone.administration?.creator ?? null,
-    }
-  }
-
-  watch(isOpen, opened => {
-    if (!opened) return
-    submitError.value = undefined
-    openPanels.value = [0]
-    initForm(company)
-  })
-
-  const detailsIds = new Set(['name', 'idShort', 'domain', 'nameOptions'])
-  const adminIds = new Set(['administration.version', 'administration.revision'])
-
-  watch(
-    () => formRef.value?.errors ?? [],
-    errors => {
-      panelErrors.value = {
-        details: errors.some(e => detailsIds.has(e.id.toString())),
-        configuration: errors.some(e => e.id.toString().startsWith('endpoint-') || e.id.toString() === 'assetIdRegexPatterns'),
-        administration: errors.some(e => adminIds.has(e.id.toString())),
-      }
-    },
-    { deep: true, flush: 'post' },
-  )
-
-  function buildPayload (): CompanyDescriptor {
-    const admin = administration.value
-    const hasAdmin = !!(admin.version || admin.revision || admin.creator)
-    return {
-      ...formData.value,
-      administration: hasAdmin
-        ? {
-          version: admin.version || undefined,
-          revision: admin.revision || undefined,
-          creator: admin.creator || undefined,
-        }
-        : undefined,
-    }
-  }
-
-  async function onSubmit (): Promise<void> {
-    if (isSubmitting.value) return
-    submitError.value = undefined
-
-    const parsed = companyDescriptorSchema.safeParse(buildPayload())
-    if (!parsed.success) {
-      // Trigger Vuetify to show per-field errors
-      await formRef.value?.validate()
-      return
-    }
-
-    isSubmitting.value = true
-    try {
-      const saved = isEditMode.value
-        ? await updateCompany({ id: parsed.data.domain, descriptor: parsed.data })
-        : await createCompany(parsed.data)
-      emit('saved', saved)
-      emit('closed')
-      isOpen.value = false
-    } catch (error) {
-      const message = error instanceof Error ? error.message : t('form.error.generic')
-      submitError.value = message
-      navigationStore.dispatchSnackbar({
-        status: true,
-        timeout: 5000,
-        color: 'error',
-        btnColor: 'buttonText',
-        text: isEditMode.value ? t('form.error.update') : t('form.error.create'),
-      })
-    } finally {
-      isSubmitting.value = false
-    }
-  }
-
-  function onClose (): void {
-    if (isSubmitting.value) return
-    isOpen.value = false
-    emit('closed')
-  }
-</script>
-
 <template>
   <v-dialog v-model="isOpen" max-width="860" persistent scrollable>
     <v-card>
@@ -374,3 +189,185 @@
     </v-card>
   </v-dialog>
 </template>
+
+<script setup lang="ts">
+  import type { AdministrativeInformation, CompanyDescriptor } from '@/composables/Client/CompanyLookup/types/company'
+  import type { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
+  import type { Reference } from '@aas-core-works/aas-core3.1-typescript/types'
+  import type { VForm } from 'vuetify/components'
+  import { useCreateCompany } from '@/composables/Client/CompanyLookup/queries/useCreateCompany'
+  import { useUpdateCompany } from '@/composables/Client/CompanyLookup/queries/useUpdateCompany'
+  import { useNavigationStore } from '@/store/NavigationStore'
+  import { hasItems } from '@/utils/array'
+  import { useCompanyLookupI18n } from '../../i18n/useCompanyLookupI18n'
+  import { createCompanyDescriptorSchema } from '../../schemas/companyDescriptor'
+  import { emptyAdministration, emptyFormData } from '../../utils/form'
+  import { zodRule } from '../../utils/zodRule'
+  import EndpointsForm from './EndpointsForm.vue'
+
+  const { company } = defineProps<{ company?: CompanyDescriptor }>()
+  const emit = defineEmits<{
+    (e: 'saved', descriptor: CompanyDescriptor): void
+    (e: 'closed'): void
+  }>()
+  const isOpen = defineModel<boolean>({ default: false })
+
+  const { t, tm } = useCompanyLookupI18n()
+  const navigationStore = useNavigationStore()
+
+  const { mutateAsync: createCompany } = useCreateCompany()
+  const { mutateAsync: updateCompany } = useUpdateCompany()
+
+  const isEditMode = computed(() => !!company)
+  const openPanels = ref<number[]>([0])
+
+  const { companyDescriptorSchema, endpointSchema } = createCompanyDescriptorSchema(tm('validation'))
+  const formRef = ref<VForm | null>(null)
+  const isFormValid = computed(() => companyDescriptorSchema.safeParse(buildPayload()).success)
+  const isSubmitting = ref(false)
+  const submitError = ref<string | undefined>()
+  const panelErrors = ref({ details: false, configuration: false, administration: false })
+
+  const rules = {
+    idShort: zodRule(companyDescriptorSchema.shape.idShort),
+    name: zodRule(companyDescriptorSchema.shape.name),
+    domain: zodRule(companyDescriptorSchema.shape.domain),
+    endpointInterface: zodRule(endpointSchema.shape.interface),
+    endpointHref: zodRule(endpointSchema.shape.protocolInformation.shape.href),
+    regexList: (list?: string[]) => {
+      if (!hasItems(list)) return true
+      const parsed = companyDescriptorSchema.shape.assetIdRegexPatterns.safeParse(list)
+      return parsed.success || (parsed.error.issues[0]?.message ?? t('validation.regex.invalid'))
+    },
+  }
+
+  const formData = ref<CompanyDescriptor>(emptyFormData())
+  const displayName = computed<aasTypes.LangStringTextType[] | null>({
+    get: () => formData.value.displayName ?? null,
+    set: d => {
+      formData.value.displayName = d ?? undefined
+    },
+  })
+  const description = computed<aasTypes.LangStringTextType[] | null>({
+    get: () => formData.value.description ?? null,
+    set: d => {
+      formData.value.description = d ?? undefined
+    },
+  })
+
+  const nameOptionsModel = computed<string[]>({
+    get: () => formData.value.nameOptions ?? [],
+    set: n => {
+      formData.value.nameOptions = [...new Set(n.map(s => s.trim()).filter(Boolean))]
+    },
+  })
+
+  const assetIdRegexPatterns = computed<string[]>({
+    get: () => formData.value.assetIdRegexPatterns ?? [],
+    set: a => {
+      formData.value.assetIdRegexPatterns = [...new Set(a.map(s => s.trim()).filter(Boolean))]
+    },
+  })
+
+  const administration = ref<AdministrativeInformation>(emptyAdministration())
+  const creator = computed<Reference | null>({
+    get: () => administration.value.creator ?? null,
+    set: c => {
+      administration.value.creator = c ?? undefined
+    },
+  })
+
+  function initForm (initialCompany?: CompanyDescriptor): void {
+    if (!initialCompany) {
+      formData.value = emptyFormData()
+      administration.value = emptyAdministration()
+      return
+    }
+    // structuredClone fails when the object contains class instances (e.g., Reference)
+    // eslint-disable-next-line unicorn/prefer-structured-clone
+    const clone = JSON.parse(JSON.stringify(initialCompany)) as CompanyDescriptor
+    formData.value = clone
+    administration.value = {
+      version: clone.administration?.version ?? null,
+      revision: clone.administration?.revision ?? null,
+      creator: clone.administration?.creator ?? null,
+    }
+  }
+
+  watch(isOpen, opened => {
+    if (!opened) return
+    submitError.value = undefined
+    openPanels.value = [0]
+    initForm(company)
+  })
+
+  const detailsIds = new Set(['name', 'idShort', 'domain', 'nameOptions'])
+  const adminIds = new Set(['administration.version', 'administration.revision'])
+
+  watch(
+    () => formRef.value?.errors ?? [],
+    errors => {
+      panelErrors.value = {
+        details: errors.some(e => detailsIds.has(e.id.toString())),
+        configuration: errors.some(e => e.id.toString().startsWith('endpoint-') || e.id.toString() === 'assetIdRegexPatterns'),
+        administration: errors.some(e => adminIds.has(e.id.toString())),
+      }
+    },
+    { deep: true, flush: 'post' },
+  )
+
+  function buildPayload (): CompanyDescriptor {
+    const admin = administration.value
+    const hasAdmin = !!(admin.version || admin.revision || admin.creator)
+    return {
+      ...formData.value,
+      administration: hasAdmin
+        ? {
+          version: admin.version || undefined,
+          revision: admin.revision || undefined,
+          creator: admin.creator || undefined,
+        }
+        : undefined,
+    }
+  }
+
+  async function onSubmit (): Promise<void> {
+    if (isSubmitting.value) return
+    submitError.value = undefined
+
+    const parsed = companyDescriptorSchema.safeParse(buildPayload())
+    if (!parsed.success) {
+      // Trigger Vuetify to show per-field errors
+      await formRef.value?.validate()
+      return
+    }
+
+    isSubmitting.value = true
+    try {
+      const saved = isEditMode.value
+        ? await updateCompany({ id: parsed.data.domain, descriptor: parsed.data })
+        : await createCompany(parsed.data)
+      emit('saved', saved)
+      emit('closed')
+      isOpen.value = false
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('form.error.generic')
+      submitError.value = message
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 5000,
+        color: 'error',
+        btnColor: 'buttonText',
+        text: isEditMode.value ? t('form.error.update') : t('form.error.create'),
+      })
+    } finally {
+      isSubmitting.value = false
+    }
+  }
+
+  function onClose (): void {
+    if (isSubmitting.value) return
+    isOpen.value = false
+    emit('closed')
+  }
+</script>

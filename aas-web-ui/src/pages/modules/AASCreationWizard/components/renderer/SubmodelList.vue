@@ -63,7 +63,6 @@
 <script lang="ts" setup>
   import type { FormStateObject, FormStateValue } from '../../types/form'
   import type { SubmodelElementListElement, TemplateElement } from '../../types/template'
-  import { computed, onMounted, ref } from 'vue'
   import { isRequiredElement } from '../../utils/cardinalityUtils'
   import { asFormStateObjectArray, formatRepeatedElementBaseLabel } from '../../utils/formFieldUtils'
   import {

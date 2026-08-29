@@ -130,7 +130,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch } from 'vue'
   import BankAccounts from './BankAccounts.vue'
   import BusinessReportFigures from './BusinessReportFigures.vue'
   import CompanyGovernance from './CompanyGovernance.vue'

@@ -158,7 +158,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onMounted, ref, toRaw } from 'vue'
   import { useDisplay, useTheme } from 'vuetify'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'

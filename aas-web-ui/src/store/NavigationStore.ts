@@ -9,7 +9,6 @@ import type {
 } from '@/types/Application'
 import type { LocationQuery } from 'vue-router'
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
 import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils'
 import { useEnvStore } from './EnvironmentStore'
 

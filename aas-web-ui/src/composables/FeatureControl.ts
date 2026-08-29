@@ -1,6 +1,5 @@
 import type { MaybeRefOrGetter, WatchStopHandle } from 'vue'
 import type { LocationQuery, Router, RouteRecordNameGeneric } from 'vue-router'
-import { toValue, watch } from 'vue'
 import {
   evaluateFeatureControl,
   extractFeatureClaims,

@@ -1,7 +1,6 @@
 import type { AbacService } from '@/pages/modules/ABAC/types/service'
 import type { BaSyxComponentKey } from '@/types/BaSyx'
 import { useQuery } from '@tanstack/vue-query'
-import { computed } from 'vue'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { CONTEXT } from '@/pages/modules/ABAC/constants/api'
 import { ABAC_CACHE_KEYS } from '@/pages/modules/ABAC/constants/cache'

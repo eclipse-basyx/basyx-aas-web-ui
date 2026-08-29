@@ -116,7 +116,6 @@
 
 <script lang="ts" setup>
   import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
-  import { computed, onMounted, ref, watch } from 'vue'
   import { useSMEHandling } from '@/composables/AAS/SMEHandling'
   import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'

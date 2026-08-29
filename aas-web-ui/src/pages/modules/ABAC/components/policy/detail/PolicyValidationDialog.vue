@@ -74,7 +74,6 @@
 
 <script setup lang="ts">
   import type { PolicyValidationResult } from '@/pages/modules/ABAC/types/policy'
-  import { ref } from 'vue'
   import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
   import { hasContent } from '@/utils/StringUtils'
 

@@ -212,9 +212,6 @@
 
 <script lang="ts" setup>
   import type { EdcSubmodelViewState } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
-  import { ref } from 'vue'
-  import JSONPreview from '@/components/Plugins/JSONPreview.vue'
-  import SubmodelValueOnlyView from '@/components/UIComponents/SubmodelValueOnlyView.vue'
   import {
     getDescriptorKey,
     getDescriptorTitle,

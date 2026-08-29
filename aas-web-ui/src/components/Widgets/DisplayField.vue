@@ -28,7 +28,6 @@
 
 <script lang="ts" setup>
   import type { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
-  import { onMounted, ref, watch } from 'vue'
   import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
 

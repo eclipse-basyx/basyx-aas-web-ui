@@ -20,7 +20,6 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue'
   import JsonCodeEditor from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
   import { useDefinitions } from '@/pages/modules/ABAC/hooks/useDefinitions'
   import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'

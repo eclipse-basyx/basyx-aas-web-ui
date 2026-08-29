@@ -1,5 +1,4 @@
 import { useQueryClient } from '@tanstack/vue-query'
-import { computed } from 'vue'
 import { useAbacClient } from '@/pages/modules/ABAC/api/useAbacClient'
 import { ABAC_CACHE_KEYS } from '@/pages/modules/ABAC/constants/cache'
 import { useAbacConfigStore } from '@/pages/modules/ABAC/stores/useAbacConfigStore'

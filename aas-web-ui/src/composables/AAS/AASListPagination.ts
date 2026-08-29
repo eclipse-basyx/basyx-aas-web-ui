@@ -1,6 +1,5 @@
 import type { AasListSource } from '@/composables/AAS/AASHandling'
 import type { ComponentPublicInstance, Ref } from 'vue'
-import { nextTick, ref } from 'vue'
 import { debounce } from '@/utils/generalUtils'
 
 export interface AasListPagePayload<TItem = unknown> {

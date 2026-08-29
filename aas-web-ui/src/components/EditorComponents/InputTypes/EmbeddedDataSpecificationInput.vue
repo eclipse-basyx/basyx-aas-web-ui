@@ -327,7 +327,6 @@
 
 <script setup lang="ts">
   import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
-  import { computed, ref, watch } from 'vue'
 
   const IEC_61360_DATA_SPEC_IRI = 'https://admin-shell.io/DataSpecificationTemplates/DataSpecificationIEC61360/3/0'
 

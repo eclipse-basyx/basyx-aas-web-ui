@@ -1,5 +1,4 @@
 import type { jsonization } from '@aas-core-works/aas-core3.1-typescript'
-import { computed } from 'vue'
 import { type RequestErrorHandlingOptions, useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import * as descriptorTypes from '@/types/Descriptors'

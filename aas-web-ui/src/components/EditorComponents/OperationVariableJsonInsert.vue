@@ -34,7 +34,6 @@
   import type { OperationNodeLocator, OperationPersistenceBoundary, OperationVariableDirection } from '@/types/OperationTree'
   import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization'
   import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
-  import { computed, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import { useOperationTreeMutation } from '@/composables/AAS/OperationTreeMutation'
   import { useNavigationStore } from '@/store/NavigationStore'

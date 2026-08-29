@@ -74,7 +74,6 @@
 
 <script setup lang="ts">
   import type { VForm } from 'vuetify/components'
-  import { ref } from 'vue'
   import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
   import { useAbacConfigStore } from '@/pages/modules/ABAC/stores/useAbacConfigStore'
   import { type Locale, Locales } from '@/pages/modules/ABAC/types/locale'

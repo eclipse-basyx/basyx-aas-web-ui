@@ -74,7 +74,6 @@
 </template>
 
 <script setup lang="ts">
-  import { ref } from 'vue'
   import { useCreateRule } from '@/pages/modules/ABAC/api/rule/useCreateRule'
   import { usePatchRule } from '@/pages/modules/ABAC/api/rule/usePatchRule'
   import { useReplaceRule } from '@/pages/modules/ABAC/api/rule/useReplaceRule'

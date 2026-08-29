@@ -1,6 +1,5 @@
 import type { PolicyVersion } from '@/pages/modules/ABAC/types/policy'
 import { useQuery } from '@tanstack/vue-query'
-import { computed } from 'vue'
 import { useAbacContext } from '@/pages/modules/ABAC/api/useAbacContext'
 
 export function useGetPolicies () {

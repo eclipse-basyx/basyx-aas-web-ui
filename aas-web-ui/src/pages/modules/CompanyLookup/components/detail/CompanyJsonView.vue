@@ -1,31 +1,3 @@
-<script setup lang="ts">
-  import type { CompanyDescriptor } from '@/composables/Client/CompanyLookup/types/company'
-  import { computed, ref } from 'vue'
-  import { useClipboardUtil } from '@/composables/ClipboardUtil'
-  import { downloadJson } from '@/utils/generalUtils'
-  import { useCompanyLookupI18n } from '../../i18n/useCompanyLookupI18n'
-
-  const { company } = defineProps<{ company: CompanyDescriptor }>()
-
-  const { t } = useCompanyLookupI18n()
-  const { copyJsonToClipboard } = useClipboardUtil()
-
-  const jsonString = computed(() =>
-    company ? JSON.stringify(company, null, 2) : '',
-  )
-
-  const fileName = `${company.idShort || 'data'}.json`
-  const copyIcon = ref<string>('mdi-content-copy')
-
-  function onCopy (): void {
-    copyJsonToClipboard(jsonString.value, fileName, copyIcon)
-  }
-
-  function onDownload (): void {
-    downloadJson(jsonString.value, fileName)
-  }
-</script>
-
 <template>
   <div class="d-flex flex-column fill-height">
     <div class="d-flex align-center mb-2">
@@ -53,6 +25,33 @@
     <pre class="json-view flex-grow-1"><code>{{ jsonString }}</code></pre>
   </div>
 </template>
+
+<script setup lang="ts">
+  import type { CompanyDescriptor } from '@/composables/Client/CompanyLookup/types/company'
+  import { useClipboardUtil } from '@/composables/ClipboardUtil'
+  import { downloadJson } from '@/utils/generalUtils'
+  import { useCompanyLookupI18n } from '../../i18n/useCompanyLookupI18n'
+
+  const { company } = defineProps<{ company: CompanyDescriptor }>()
+
+  const { t } = useCompanyLookupI18n()
+  const { copyJsonToClipboard } = useClipboardUtil()
+
+  const jsonString = computed(() =>
+    company ? JSON.stringify(company, null, 2) : '',
+  )
+
+  const fileName = `${company.idShort || 'data'}.json`
+  const copyIcon = ref<string>('mdi-content-copy')
+
+  function onCopy (): void {
+    copyJsonToClipboard(jsonString.value, fileName, copyIcon)
+  }
+
+  function onDownload (): void {
+    downloadJson(jsonString.value, fileName)
+  }
+</script>
 
 <style scoped>
 .fill-height { height: 100%; }

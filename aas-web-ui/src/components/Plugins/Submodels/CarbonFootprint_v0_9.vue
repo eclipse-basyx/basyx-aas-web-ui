@@ -422,7 +422,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { onMounted, ref } from 'vue'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
   import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement'

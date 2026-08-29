@@ -20,7 +20,6 @@
 </template>
 
 <script setup lang="ts">
-  import { useTemplateRef } from 'vue'
   import DefinitionDialog, { type DefinitionDialogMode } from '@/pages/modules/ABAC/components/definition/DefinitionDialog.vue'
   import DefinitionActions from '@/pages/modules/ABAC/components/definition/detail/DefinitionActions.vue'
   import DefinitionDetail from '@/pages/modules/ABAC/components/definition/detail/DefinitionDetail.vue'

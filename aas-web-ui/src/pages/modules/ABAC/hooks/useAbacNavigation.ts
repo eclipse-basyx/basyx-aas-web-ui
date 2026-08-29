@@ -1,7 +1,6 @@
 import type { DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
 import type { ViewType } from '@/pages/modules/ABAC/types/view'
 import type { BaSyxComponentKey } from '@/types/BaSyx'
-import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { VIEW } from '@/pages/modules/ABAC/types/view'
 import { useNavigationStore } from '@/store/NavigationStore'

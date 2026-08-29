@@ -1,6 +1,6 @@
 import type { PolicyVersion } from '@/pages/modules/ABAC/types/policy'
 import type { Sort } from '@/pages/modules/ABAC/types/sort'
-import { computed, ref, type Ref } from 'vue'
+import type { Ref } from 'vue'
 import { useAbacConfigStore } from '@/pages/modules/ABAC/stores/useAbacConfigStore'
 
 export function useSortPolicies (policies: Ref<PolicyVersion[] | undefined>) {

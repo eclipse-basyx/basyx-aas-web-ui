@@ -3,7 +3,6 @@
 </template>
 
 <script setup lang="ts">
-  import { provide, watch } from 'vue'
   import { useAbacServiceDiscovery } from '@/pages/modules/ABAC/api/useAbacServiceDiscovery'
   import AbacLayout from '@/pages/modules/ABAC/components/AbacLayout.vue'
   import { ABAC_I18N_KEY } from '@/pages/modules/ABAC/constants/i18n'

@@ -86,7 +86,6 @@
 
 <script setup lang="ts">
   import type { FileElement, FileSystemElement } from '../../types'
-  import { computed } from 'vue'
   import { checkContentType } from '@/utils/FileHandling'
 
   interface Props {

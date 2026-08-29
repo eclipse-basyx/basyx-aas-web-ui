@@ -3,7 +3,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onMounted } from 'vue'
   import { useRouter } from 'vue-router'
   import { useEnvStore } from '@/store/EnvironmentStore'
 

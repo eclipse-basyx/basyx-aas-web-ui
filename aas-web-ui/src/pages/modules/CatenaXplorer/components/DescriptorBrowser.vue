@@ -89,7 +89,6 @@
 
 <script lang="ts" setup>
   import type { CatenaXPartner } from '@/types/Infrastructure'
-  import { computed } from 'vue'
   import DescriptorCreateAction from '@/pages/modules/CatenaXplorer/components/DescriptorCreateAction.vue'
   import DescriptorList from '@/pages/modules/CatenaXplorer/components/DescriptorList.vue'
   import DescriptorSearchForm from '@/pages/modules/CatenaXplorer/components/DescriptorSearchForm.vue'

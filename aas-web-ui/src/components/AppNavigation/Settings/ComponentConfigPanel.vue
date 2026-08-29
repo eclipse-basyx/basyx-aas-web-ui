@@ -87,7 +87,6 @@
     InfrastructureEndpointField,
     InfrastructureEndpointFieldKey,
   } from '@/utils/InfrastructureUtils'
-  import { computed } from 'vue'
   import {
     getEndpointFieldsForTemplate,
     getEndpointFieldValue,
