@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { removeImportSpecifiers } from './import-fixes.js'
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const sourceRoot = resolve(projectRoot, 'src')
@@ -50,6 +51,7 @@ const noRedundantAutoImportedComponent = {
     docs: {
       description: 'Disallow imports for components that are only used as auto-imported template tags.',
     },
+    fixable: 'code',
     schema: [],
     messages: {
       redundantImport: 'The \'{{name}}\' import is redundant because the component is only used as an auto-imported template tag.',
@@ -78,7 +80,12 @@ const noRedundantAutoImportedComponent = {
 
         const componentSource = autoImportedComponents.get(specifier.local.name)
         if (componentSource === importSource) {
-          candidates.set(specifier.local.name, { node: specifier.local, local: specifier.local })
+          candidates.set(specifier.local.name, {
+            declaration: node,
+            local: specifier.local,
+            node: specifier.local,
+            specifier,
+          })
         }
       }
     }
@@ -104,6 +111,12 @@ const noRedundantAutoImportedComponent = {
           node: candidate.node,
           messageId: 'redundantImport',
           data: { name },
+          fix: fixer => removeImportSpecifiers(
+            fixer,
+            sourceCode,
+            candidate.declaration,
+            [candidate.specifier],
+          ),
         })
       }
     }

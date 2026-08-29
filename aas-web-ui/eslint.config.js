@@ -1,8 +1,8 @@
 import vuetify from 'eslint-config-vuetify'
 import jsdoc from 'eslint-plugin-jsdoc'
 import vue from 'eslint-plugin-vue'
-import { vueRuntimeAutoImports } from './config/auto-imports.js'
 import { noRedundantAutoImportedComponent } from './eslint-rules/no-redundant-auto-imported-component.js'
+import { noRedundantAutoImportedVueApi } from './eslint-rules/no-redundant-auto-imported-vue-api.js'
 
 export default vuetify({
   ts: true,
@@ -17,6 +17,7 @@ export default vuetify({
     basyx: {
       rules: {
         'no-redundant-auto-imported-component': noRedundantAutoImportedComponent,
+        'no-redundant-auto-imported-vue-api': noRedundantAutoImportedVueApi,
       },
     },
     jsdoc,
@@ -34,14 +35,7 @@ export default vuetify({
 }, {
   files: ['src/**/*.{ts,tsx,js,jsx,vue,mts,mjs}'],
   rules: {
-    'no-restricted-imports': ['error', {
-      paths: [{
-        name: 'vue',
-        importNames: vueRuntimeAutoImports,
-        allowTypeImports: true,
-        message: 'This Vue API is provided by unplugin-auto-import. Remove the redundant import.',
-      }],
-    }],
+    'basyx/no-redundant-auto-imported-vue-api': 'error',
   },
 }, {
   files: ['src/**/*.vue'],
