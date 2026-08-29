@@ -210,7 +210,7 @@
     normalizeCatenaXPartners,
   } from '@/utils/CatenaXPartnerUtils'
   import { base64Decode } from '@/utils/EncodeDecodeUtils'
-  import { getCatenaXAccessMode } from '@/utils/InfrastructureUtils'
+  import { isCatenaXEdcAccessMode } from '@/utils/InfrastructureUtils'
 
   defineOptions({
     inheritAttrs: false,
@@ -286,7 +286,7 @@
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
   const isEdcAccessMode = computed(() =>
     selectedInfrastructure.value?.template === 'catena-x'
-    && getCatenaXAccessMode(selectedInfrastructure.value) === 'edc',
+    && isCatenaXEdcAccessMode(selectedInfrastructure.value),
   )
   const dtrUrl = computed(() => isEdcAccessMode.value ? '' : infrastructureStore.getAASRegistryURL)
   const mdAndUp = computed(() => display.mdAndUp.value)
