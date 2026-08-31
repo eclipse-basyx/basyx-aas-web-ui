@@ -44,7 +44,7 @@
     "@thatopen/components": "^3.4.8",
     "@thatopen/components-front": "^3.4.4",
     "@thatopen/fragments": "^3.4.7",
-    "@thatopen/ui": "^3.4.10",
+    "@thatopen/ui": "^3.4.11",
     "@thatopen/ui-obc": "^3.4.2",
     "@vue/devtools-api": "^8.2.1",
     "@vue-flow/background": "^1.3.2",
