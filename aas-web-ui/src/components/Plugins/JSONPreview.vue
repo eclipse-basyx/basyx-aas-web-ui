@@ -130,6 +130,7 @@
 <script lang="ts" setup>
   import Prism from 'prismjs'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
+  import { formatJSON } from '@/utils/JsonUtils'
   import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
   import 'prismjs/themes/prism.css'
 
@@ -273,31 +274,6 @@
 
       jsonContainer.value.scrollTop = scrollTo - containerTop - 100
     })
-  }
-
-  function formatJSON (json: string): string {
-    try {
-      // Check if input is valid
-      if (!json || typeof json !== 'string') {
-        return ''
-      }
-
-      const trimmedJson = json.trim()
-      if (!trimmedJson) {
-        return ''
-      }
-
-      try {
-        const obj = JSON.parse(trimmedJson)
-        return JSON.stringify(obj, null, 2)
-      } catch (parseError) {
-        console.warn('JSON parsing warning:', parseError)
-        return trimmedJson
-      }
-    } catch (error_) {
-      console.error('Error formatting JSON:', error_)
-      return json
-    }
   }
 
   function highlightJson (): void {
