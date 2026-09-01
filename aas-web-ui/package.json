@@ -72,7 +72,7 @@
     "vue3-apexcharts": "^1.11.1",
     "vuetify": "^4.1.12",
     "web-ifc": "^0.0.77",
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "@intellectronica/ruler": "^0.3.44",
