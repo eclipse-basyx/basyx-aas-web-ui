@@ -7,9 +7,9 @@ import {
   jsonDefaults,
 } from 'monaco-editor/languages/features/json/register'
 import {
-  QUERY_LANGUAGE_SCHEMA_URI,
-  queryLanguageSchema,
-} from '@/pages/modules/queryLanguage/queryLanguageSchema'
+  hasQueryLanguageSchemaRegistration,
+  mergeQueryLanguageSchemaRegistration,
+} from '@/pages/modules/queryLanguage/queryLanguageDiagnostics'
 import 'monaco-editor/editor/contrib/bracketMatching/browser/bracketMatching'
 import 'monaco-editor/editor/contrib/clipboard/browser/clipboard'
 import 'monaco-editor/editor/contrib/codeAction/browser/codeActionContributions'
@@ -60,20 +60,29 @@ workerEnvironment.MonacoEnvironment ??= {
   },
 }
 
-export function configureQueryLanguageDiagnostics (modelUri: string): void {
+export function configureQueryLanguageDiagnostics (): void {
+  const currentOptions = jsonDefaults.diagnosticsOptions
+  if (
+    currentOptions.allowComments === false
+    && currentOptions.comments === 'error'
+    && currentOptions.enableSchemaRequest === false
+    && currentOptions.schemaRequest === 'error'
+    && currentOptions.schemaValidation === 'error'
+    && currentOptions.trailingCommas === 'error'
+    && currentOptions.validate === true
+    && hasQueryLanguageSchemaRegistration(currentOptions.schemas)
+  ) {
+    return
+  }
+
   jsonDefaults.setDiagnosticsOptions({
+    ...currentOptions,
     allowComments: false,
     comments: 'error',
     enableSchemaRequest: false,
     schemaRequest: 'error',
     schemaValidation: 'error',
-    schemas: [
-      {
-        fileMatch: [modelUri],
-        schema: queryLanguageSchema,
-        uri: QUERY_LANGUAGE_SCHEMA_URI,
-      },
-    ],
+    schemas: mergeQueryLanguageSchemaRegistration(currentOptions.schemas),
     trailingCommas: 'error',
     validate: true,
   })

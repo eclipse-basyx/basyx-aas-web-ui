@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createQueryLanguageValidationScheduler } from '@/pages/modules/queryLanguage/queryLanguageValidation'
+import {
+  createQueryLanguageValidationScheduler,
+  getQueryLanguageValidationErrorMessage,
+  isQueryLanguageValidationStartupError,
+} from '@/pages/modules/queryLanguage/queryLanguageValidation'
 
 interface Deferred<Result> {
   promise: Promise<Result>
@@ -79,5 +83,45 @@ describe('query language validation scheduler', () => {
     expect(onResult).toHaveBeenCalledOnce()
     expect(onResult).toHaveBeenCalledWith('current')
     scheduler.dispose()
+  })
+
+  it('retries a transient worker activation failure', async () => {
+    vi.useFakeTimers()
+    const validate = vi.fn()
+      .mockRejectedValueOnce('JSON not registered!')
+      .mockResolvedValueOnce([])
+    const onError = vi.fn()
+    const onResult = vi.fn()
+    const scheduler = createQueryLanguageValidationScheduler({
+      debounceMs: 0,
+      onError,
+      onResult,
+      shouldRetry: isQueryLanguageValidationStartupError,
+      validate,
+    })
+
+    scheduler.schedule()
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(validate).toHaveBeenCalledOnce()
+    expect(onError).not.toHaveBeenCalled()
+
+    await vi.advanceTimersByTimeAsync(50)
+
+    expect(validate).toHaveBeenCalledTimes(2)
+    expect(onResult).toHaveBeenCalledWith([])
+    expect(onError).not.toHaveBeenCalled()
+    scheduler.dispose()
+  })
+
+  it('formats string rejections without displaying undefined', () => {
+    expect(getQueryLanguageValidationErrorMessage('JSON not registered!'))
+      .toBe('JSON not registered!')
+    expect(getQueryLanguageValidationErrorMessage(new Error('Worker failed')))
+      .toBe('Worker failed')
+    expect(getQueryLanguageValidationErrorMessage(undefined))
+      .toBe('Unknown validation error')
+    expect(isQueryLanguageValidationStartupError('JSON not registered!')).toBe(true)
+    expect(isQueryLanguageValidationStartupError(new Error('Worker failed'))).toBe(false)
   })
 })

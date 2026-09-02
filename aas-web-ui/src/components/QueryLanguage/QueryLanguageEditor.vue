@@ -44,6 +44,8 @@
   import { useTheme } from 'vuetify'
   import {
     createQueryLanguageValidationScheduler,
+    getQueryLanguageValidationErrorMessage,
+    isQueryLanguageValidationStartupError,
     type QueryLanguageValidation,
     type QueryLanguageValidationScheduler,
   } from '@/pages/modules/queryLanguage/queryLanguageValidation'
@@ -96,7 +98,7 @@
 
       const modelUri = monaco.Uri.parse(`inmemory://aas-query-language/query-${Date.now()}.json`)
 
-      integration.configureQueryLanguageDiagnostics(modelUri.toString())
+      integration.configureQueryLanguageDiagnostics()
 
       queryModel = monaco.editor.createModel(queryText.value, 'json', modelUri)
       queryEditor = monaco.editor.create(editorContainer.value, {
@@ -126,6 +128,7 @@
       validationScheduler = createQueryLanguageValidationScheduler({
         onError: handleValidationError,
         onResult: applyValidation,
+        shouldRetry: isQueryLanguageValidationStartupError,
         validate: () => integration.validateQueryLanguageDocument(modelUri),
       })
 
@@ -141,10 +144,10 @@
         if (!isApplyingExternalValue) queryText.value = queryModel.getValue()
       })
 
-      validationScheduler.schedule(0)
+      validationScheduler.schedule()
     } catch (error) {
       validationMessages.value = [
-        `Unable to load the query editor: ${(error as Error).message}`,
+        `Unable to load the query editor: ${getQueryLanguageValidationErrorMessage(error)}`,
       ]
       emit('validation-change', {
         isValid: false,
@@ -175,7 +178,9 @@
   }
 
   function handleValidationError (error: unknown): void {
-    validationMessages.value = [`Unable to validate the query: ${(error as Error).message}`]
+    validationMessages.value = [
+      `Unable to validate the query: ${getQueryLanguageValidationErrorMessage(error)}`,
+    ]
     emit('validation-change', {
       isValid: false,
       messages: validationMessages.value,
