@@ -92,7 +92,7 @@
     "@vue/tsconfig": "^0.9.1",
     "eslint": "^10.9.1",
     "eslint-config-vuetify": "^4.7.2",
-    "eslint-plugin-jsdoc": "^64.3.2",
+    "eslint-plugin-jsdoc": "^64.3.3",
     "eslint-plugin-vue": "^10.10.0",
     "jsdom": "^30.0.1",
     "npm-run-all2": "^9.0.3",
