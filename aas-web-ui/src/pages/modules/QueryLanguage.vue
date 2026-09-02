@@ -29,16 +29,9 @@
       </v-list>
     </v-menu>
 
-    <v-textarea
+    <QueryLanguageEditor
       v-model="queryText"
-      bg-color="surface"
-      density="compact"
-      :error="!isValidJson && queryText.trim() !== ''"
-      :error-messages="jsonError"
-      flat
-      placeholder="Enter your JSON query here..."
-      rows="15"
-      variant="outlined"
+      @validation-change="updateQueryValidation"
     />
 
     <v-card-actions class="pa-0">
@@ -47,6 +40,7 @@
       <v-btn
         class="text-buttonText"
         color="primary"
+        :disabled="!queryValidation.isValid"
         text="Execute Query"
         variant="elevated"
         @click="executeQuery"
@@ -70,6 +64,7 @@
 </template>
 
 <script lang="ts" setup>
+  import type { QueryLanguageValidation } from '@/pages/modules/queryLanguage/queryLanguageValidation'
   import { useRequestHandling } from '@/composables/RequestHandling'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
 
@@ -80,31 +75,15 @@
   // Selected endpoint for the query
   const selectedEndpoint = ref('')
 
-  // Query text and validation
+  // Query text and schema validation
   const queryText = ref('')
-  const isValidJson = ref(true)
-  const jsonError = ref('')
+  const queryValidation = ref<QueryLanguageValidation>({
+    isValid: false,
+    messages: [],
+  })
 
   // Query response
   const queryResponse = ref('')
-
-  // Watch for changes in queryText to validate JSON
-  watch(queryText, newValue => {
-    if (newValue.trim() === '') {
-      isValidJson.value = true
-      jsonError.value = ''
-      return
-    }
-
-    try {
-      JSON.parse(newValue)
-      isValidJson.value = true
-      jsonError.value = ''
-    } catch (error) {
-      isValidJson.value = false
-      jsonError.value = `Invalid JSON: ${(error as Error).message}`
-    }
-  })
 
   // Helper function to transform URLs for query endpoints
   function transformUrlForQuery (url: string, componentType: string): string {
@@ -210,6 +189,10 @@
     return endpoint ? endpoint.title : ''
   }
 
+  function updateQueryValidation (validation: QueryLanguageValidation): void {
+    queryValidation.value = validation
+  }
+
   defineOptions({
     inheritAttrs: false,
     moduleTitle: 'Query Language', // optional module title
@@ -221,8 +204,8 @@
       return
     }
 
-    if (!isValidJson.value || queryText.value.trim() === '') {
-      queryResponse.value = 'Error: Please enter a valid JSON query.'
+    if (!queryValidation.value.isValid || queryText.value.trim() === '') {
+      queryResponse.value = 'Error: Please enter a query that is valid against the AAS Query Language schema.'
       return
     }
 

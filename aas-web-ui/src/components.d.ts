@@ -114,6 +114,7 @@ declare module 'vue' {
     QRScanner: typeof import('./components/AppNavigation/QRScanner.vue')['default']
     QualifierElement: typeof import('./components/UIComponents/QualifierElement.vue')['default']
     QualifierInput: typeof import('./components/EditorComponents/InputTypes/QualifierInput.vue')['default']
+    QueryLanguageEditor: typeof import('./components/QueryLanguage/QueryLanguageEditor.vue')['default']
     Range: typeof import('./components/SubmodelElements/Range.vue')['default']
     RangeForm: typeof import('./components/EditorComponents/SubmodelElements/RangeForm.vue')['default']
     RangeInput: typeof import('./components/EditorComponents/InputTypes/RangeInput.vue')['default']
