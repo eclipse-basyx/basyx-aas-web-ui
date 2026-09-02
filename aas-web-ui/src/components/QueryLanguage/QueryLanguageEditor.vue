@@ -39,10 +39,14 @@
 </template>
 
 <script setup lang="ts">
-  import type { QueryLanguageValidation } from '@/pages/modules/queryLanguage/queryLanguageValidation'
+  import type { QueryLanguageError } from './monacoQueryLanguage'
   import type { editor, IDisposable } from 'monaco-editor'
-  import type * as MonacoEditor from 'monaco-editor/editor/editor.api'
   import { useTheme } from 'vuetify'
+  import {
+    createQueryLanguageValidationScheduler,
+    type QueryLanguageValidation,
+    type QueryLanguageValidationScheduler,
+  } from '@/pages/modules/queryLanguage/queryLanguageValidation'
 
   const queryText = defineModel<string>({ required: true })
 
@@ -61,10 +65,9 @@
 
   let queryEditor: editor.IStandaloneCodeEditor | undefined
   let queryModel: editor.ITextModel | undefined
-  let markerSubscription: IDisposable | undefined
   let contentSubscription: IDisposable | undefined
+  let validationScheduler: QueryLanguageValidationScheduler | undefined
   let isApplyingExternalValue = false
-  let monacoApi: typeof MonacoEditor | undefined
   let isUnmounted = false
 
   watch(queryText, value => {
@@ -90,7 +93,6 @@
       if (!editorContainer.value || isUnmounted) return
 
       const monaco = integration.monaco
-      monacoApi = monaco
 
       const modelUri = monaco.Uri.parse(`inmemory://aas-query-language/query-${Date.now()}.json`)
 
@@ -121,21 +123,25 @@
         wordBasedSuggestions: 'off',
       })
 
+      validationScheduler = createQueryLanguageValidationScheduler({
+        onError: handleValidationError,
+        onResult: applyValidation,
+        validate: () => integration.validateQueryLanguageDocument(modelUri),
+      })
+
       contentSubscription = queryModel.onDidChangeContent(() => {
-        if (!queryModel || isApplyingExternalValue) return
+        if (!queryModel) return
 
         emit('validation-change', {
           isValid: false,
           messages: validationMessages.value,
         })
-        queryText.value = queryModel.getValue()
+        validationScheduler?.schedule()
+
+        if (!isApplyingExternalValue) queryText.value = queryModel.getValue()
       })
 
-      markerSubscription = monaco.editor.onDidChangeMarkers(resources => {
-        if (!queryModel || !resources.some(resource => resource.toString() === queryModel?.uri.toString())) return
-
-        updateValidation()
-      })
+      validationScheduler.schedule(0)
     } catch (error) {
       validationMessages.value = [
         `Unable to load the query editor: ${(error as Error).message}`,
@@ -152,24 +158,26 @@
   onBeforeUnmount(() => {
     isUnmounted = true
     contentSubscription?.dispose()
-    markerSubscription?.dispose()
+    validationScheduler?.dispose()
     queryEditor?.dispose()
     queryModel?.dispose()
   })
 
-  function updateValidation (): void {
-    if (!queryModel || !monacoApi) return
-
-    const errorMarkers = monacoApi.editor
-      .getModelMarkers({ resource: queryModel.uri })
-      .filter(marker => marker.severity === monacoApi?.MarkerSeverity.Error)
-
-    validationMessages.value = errorMarkers.map(marker =>
-      `Line ${marker.startLineNumber}, column ${marker.startColumn}: ${marker.message}`,
+  function applyValidation (errors: QueryLanguageError[]): void {
+    validationMessages.value = errors.map(error =>
+      `Line ${error.line}, column ${error.column}: ${error.message}`,
     )
 
     emit('validation-change', {
-      isValid: queryModel.getValue().trim() !== '' && errorMarkers.length === 0,
+      isValid: queryModel?.getValue().trim() !== '' && errors.length === 0,
+      messages: validationMessages.value,
+    })
+  }
+
+  function handleValidationError (error: unknown): void {
+    validationMessages.value = [`Unable to validate the query: ${(error as Error).message}`]
+    emit('validation-change', {
+      isValid: false,
       messages: validationMessages.value,
     })
   }

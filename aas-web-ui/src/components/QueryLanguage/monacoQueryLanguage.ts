@@ -1,6 +1,11 @@
+import type { Uri } from 'monaco-editor'
 import editorWorker from 'monaco-editor/editor/editor.worker?worker'
 import jsonWorker from 'monaco-editor/language/json/json.worker?worker'
-import { jsonDefaults } from 'monaco-editor/languages/features/json/register'
+import {
+  getWorker,
+  type IJSONWorker,
+  jsonDefaults,
+} from 'monaco-editor/languages/features/json/register'
 import {
   QUERY_LANGUAGE_SCHEMA_URI,
   queryLanguageSchema,
@@ -24,6 +29,29 @@ interface MonacoWorkerEnvironment {
     getWorker: (_moduleId: string, label: string) => Worker
   }
 }
+
+interface JSONDiagnostic {
+  message: string
+  range: {
+    start: {
+      character: number
+      line: number
+    }
+  }
+  severity?: number
+}
+
+interface JSONValidationWorker extends IJSONWorker {
+  doValidation: (uri: string) => Promise<JSONDiagnostic[]>
+}
+
+export interface QueryLanguageError {
+  column: number
+  line: number
+  message: string
+}
+
+const DIAGNOSTIC_SEVERITY_ERROR = 1
 
 const workerEnvironment = globalThis as typeof globalThis & MonacoWorkerEnvironment
 workerEnvironment.MonacoEnvironment ??= {
@@ -49,6 +77,20 @@ export function configureQueryLanguageDiagnostics (modelUri: string): void {
     trailingCommas: 'error',
     validate: true,
   })
+}
+
+export async function validateQueryLanguageDocument (modelUri: Uri): Promise<QueryLanguageError[]> {
+  const getJsonWorker = await getWorker()
+  const worker = await getJsonWorker(modelUri) as JSONValidationWorker
+  const diagnostics = await worker.doValidation(modelUri.toString())
+
+  return diagnostics
+    .filter(diagnostic => diagnostic.severity === DIAGNOSTIC_SEVERITY_ERROR)
+    .map(diagnostic => ({
+      column: diagnostic.range.start.character + 1,
+      line: diagnostic.range.start.line + 1,
+      message: diagnostic.message,
+    }))
 }
 
 export * as monaco from 'monaco-editor/editor/editor.api'
