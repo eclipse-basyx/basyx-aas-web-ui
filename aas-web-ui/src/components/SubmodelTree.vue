@@ -71,9 +71,12 @@
                 v-model="smSearchValue"
                 example="semanticId:0173"
                 label="Search SM/SME"
+                :loading="querySearch.loading.value"
                 :placeholder="submodelTree.length.toString() + ' Submodels'"
                 :server-search="globalQueryAvailable"
                 target="submodel-repository"
+                @clear="clearQuerySearch"
+                @submit="submitSearch"
                 @update:model-value="handleSearchInput"
               />
             </v-col>
@@ -460,6 +463,7 @@
   import { useLoadGeneration } from '@/composables/LoadGeneration'
   import { verifyForEditor } from '@/composables/MetamodelVerification'
   import { useQuerySearch } from '@/composables/QueryLanguage/QuerySearch'
+  import { useQuerySearchRoute } from '@/composables/QueryLanguage/QuerySearchRoute'
   import { useAASStore } from '@/store/AASDataStore'
   import { useClipboardStore } from '@/store/ClipboardStore'
   import { useEnvStore } from '@/store/EnvironmentStore'
@@ -476,12 +480,12 @@
     verificationPathToOperationLocator,
   } from '@/utils/AAS/OperationTreeUtils'
   import { isChildTypeAllowed } from '@/utils/AAS/SubmodelElementRegistry'
-  import { debounce } from '@/utils/generalUtils'
   import {
     buildStructuredSearchQuery,
     createQueryExample,
     parseQuerySearchExpression,
     supportsQueryProfile,
+    validateQueryForTarget,
   } from '@/utils/QueryLanguageUtils'
   import { isEmptyString } from '@/utils/StringUtils'
 
@@ -496,6 +500,7 @@
   const { nameToDisplay, descriptionToDisplay } = useReferableUtils()
   const { pasteElement } = useClipboardUtil()
   const { mutateOperation } = useOperationTreeMutation()
+  const smSearchRoute = useQuerySearchRoute('smSearch', 'smQuery')
 
   // Stores
   const navigationStore = useNavigationStore()
@@ -508,9 +513,9 @@
   const submodelTree = ref([] as Array<any>) as Ref<Array<any>> // Submodel Treeview Data
   const submodelTreeUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the unfiltere Submodel Treeview Data before filtering
   const smSearchValue = ref('')
-  const debouncedFilterSubmodelTree = debounce(filterSubmodelTree, 300)
   const advancedQueryDialog = ref(false)
   const advancedQueryDraft = ref('')
+  let ignoreNextSearchRouteUpdate = false
   const treeLoad = useLoadGeneration()
   const treeLoading = treeLoad.loading // Variable to store if the Submodel Tree is loading
   const selectSMETypeToAddDialog = ref(false) // Variable to store if the Add SubmodelElement Dialog should be shown
@@ -642,7 +647,9 @@
     () => submodelRepoURL.value,
     () => {
       querySearch.invalidate()
-      smSearchValue.value = ''
+      smSearchValue.value = smSearchRoute.state.value.mode === 'search'
+        ? smSearchRoute.state.value.expression
+        : ''
       advancedQueryDraft.value = ''
       if (isGlobalSmRoute.value) {
         treeLoad.invalidate()
@@ -668,10 +675,22 @@
   )
 
   watch(globalQueryAvailable, available => {
-    if (available && smSearchValue.value.trim() !== '' && !querySearch.activeMode.value) {
-      handleSearchInput(smSearchValue.value)
+    if (available && smSearchRoute.state.value.mode !== 'none' && !querySearch.activeMode.value) {
+      void applySearchFromRoute(false)
     }
   })
+
+  watch(
+    [() => route.query.smSearch, () => route.query.smQuery],
+    () => {
+      if (!isGlobalSmRoute.value) return
+      if (ignoreNextSearchRouteUpdate) {
+        ignoreNextSearchRouteUpdate = false
+        return
+      }
+      void applySearchFromRoute(true)
+    },
+  )
 
   watch(
     () => triggerTreeviewReload.value,
@@ -744,9 +763,12 @@
       return
     }
 
-    if (isGlobalSmRoute.value && querySearch.activeQuery.value && querySearch.activeMode.value) {
-      const success = await querySearch.execute(querySearch.activeQuery.value, querySearch.activeMode.value)
-      if (success) applyQueryItems()
+    if (
+      isGlobalSmRoute.value
+      && globalQueryAvailable.value
+      && smSearchRoute.state.value.mode !== 'none'
+    ) {
+      await applySearchFromRoute(false)
       return
     }
 
@@ -765,6 +787,11 @@
 
       submodelTree.value = processedList
       submodelTreeUnfiltered.value = processedList
+
+      if (isGlobalSmRoute.value && smSearchRoute.state.value.mode === 'search') {
+        smSearchValue.value = smSearchRoute.state.value.expression
+        filterSubmodelTree(smSearchValue.value)
+      }
 
       if (activeTreePath.value && !isEmptyString(activeTreePath.value)) {
         expandTree()
@@ -1672,14 +1699,31 @@
 
   function handleSearchInput (value: string | null): void {
     smSearchValue.value = value ?? ''
+  }
 
-    if (!globalQueryAvailable.value) {
-      debouncedFilterSubmodelTree(smSearchValue.value)
+  async function submitSearch (): Promise<void> {
+    if (isGlobalSmRoute.value && parsedSearch.value.incompleteField) return
+    if (smSearchValue.value.trim() === '') {
+      await clearQuerySearch()
       return
     }
 
+    const success = await executeSearchExpression()
+    if (!success || !isGlobalSmRoute.value) return
+
+    ignoreNextSearchRouteUpdate = true
+    const changed = await smSearchRoute.commitSearch(smSearchValue.value)
+    if (!changed) ignoreNextSearchRouteUpdate = false
+  }
+
+  async function executeSearchExpression (): Promise<boolean> {
+    if (!globalQueryAvailable.value) {
+      filterSubmodelTree(smSearchValue.value)
+      return true
+    }
+
     if (parsedSearch.value.incompleteField) {
-      return
+      return false
     }
 
     const query = buildStructuredSearchQuery(
@@ -1689,13 +1733,14 @@
       'all',
     )
     if (!query) {
-      clearQuerySearch()
-      return
+      return false
     }
 
-    querySearch.schedule(query, parsedSearch.value.filters.length > 0 ? 'filters' : 'quick', success => {
-      if (success) applyQueryItems()
-    })
+    const success = await querySearch.execute(query, parsedSearch.value.filters.length > 0 ? 'filters' : 'quick')
+    if (!success) return false
+
+    applyQueryItems()
+    return true
   }
 
   function openSearchDialog (): void {
@@ -1718,18 +1763,58 @@
   }
 
   async function executeAdvancedQuery (query: QueryLanguageQuery): Promise<void> {
-    const success = await querySearch.execute(query, 'advanced')
+    const success = await runAdvancedQuery(query)
     if (!success) return
 
-    smSearchValue.value = ''
-    applyQueryItems()
+    ignoreNextSearchRouteUpdate = true
+    const changed = await smSearchRoute.commitAdvancedQuery(query)
+    if (!changed) ignoreNextSearchRouteUpdate = false
     advancedQueryDialog.value = false
   }
 
-  function clearQuerySearch (): void {
+  async function runAdvancedQuery (query: QueryLanguageQuery): Promise<boolean> {
+    const success = await querySearch.execute(query, 'advanced')
+    if (!success) return false
+
+    smSearchValue.value = ''
+    applyQueryItems()
+    return true
+  }
+
+  async function clearQuerySearch (): Promise<void> {
+    if (isGlobalSmRoute.value) {
+      ignoreNextSearchRouteUpdate = true
+      const changed = await smSearchRoute.clear()
+      if (!changed) ignoreNextSearchRouteUpdate = false
+    }
     querySearch.clear()
     smSearchValue.value = ''
-    void initialize()
+    await initialize()
+  }
+
+  async function applySearchFromRoute (reloadWhenEmpty: boolean): Promise<void> {
+    if (!isGlobalSmRoute.value) return
+
+    const state = smSearchRoute.state.value
+    if (state.mode === 'search') {
+      smSearchValue.value = state.expression
+      await executeSearchExpression()
+      return
+    }
+    if (state.mode === 'advanced') {
+      if (!globalQueryAvailable.value) return
+      const validation = validateQueryForTarget(state.queryText, 'submodel-repository')
+      if (!validation.isValid || !validation.query) return
+      advancedQueryDraft.value = JSON.stringify(validation.query, null, 2)
+      await runAdvancedQuery(validation.query)
+      return
+    }
+
+    smSearchValue.value = ''
+    if (reloadWhenEmpty) {
+      querySearch.clear()
+      await initialize()
+    }
   }
 
   function applyQueryItems (): void {

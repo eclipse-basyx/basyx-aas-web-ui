@@ -24,6 +24,7 @@ function mountSearchField (serverSearch = true) {
     props: {
       example: 'idShort:Motor',
       label: 'Search AAS',
+      loading: false,
       modelValue: '',
       placeholder: '3 Shells',
       serverSearch,
@@ -64,5 +65,14 @@ describe('QuerySearchField', () => {
 
     expect(wrapper.find('[aria-label="Add a field filter"]').exists()).toBe(false)
     expect(wrapper.get('input').attributes('placeholder')).toBe('3 Shells')
+  })
+
+  it('submits on Enter and through the search button', async () => {
+    const wrapper = mountSearchField()
+
+    await wrapper.get('input').trigger('keydown.enter')
+    await wrapper.get('[aria-label="Run search"]').trigger('click')
+
+    expect(wrapper.emitted('submit')).toHaveLength(2)
   })
 })

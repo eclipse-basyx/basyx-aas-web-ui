@@ -13,17 +13,19 @@
         density="compact"
         hide-details
         :label="label"
+        :loading="loading"
         :model-value="searchExpression"
         persistent-placeholder
         :placeholder="serverSearch ? example : placeholder"
         variant="outlined"
-        @click:clear="suggestionsOpen = false"
+        @click:clear="clearSearch"
         @focus="openSuggestions"
+        @keydown.enter.prevent="submitSearch"
         @keydown.esc="suggestionsOpen = false"
         @update:model-value="updateSearchExpression"
       >
-        <template v-if="serverSearch" #append-inner>
-          <v-tooltip location="bottom" text="Add a field filter">
+        <template #append-inner>
+          <v-tooltip v-if="serverSearch" location="bottom" text="Add a field filter">
             <template #activator="{ props: tooltipProps }">
               <v-btn
                 v-bind="tooltipProps"
@@ -32,6 +34,20 @@
                 size="x-small"
                 variant="text"
                 @click.stop="suggestionsOpen = !suggestionsOpen"
+              />
+            </template>
+          </v-tooltip>
+
+          <v-tooltip location="bottom" text="Run search">
+            <template #activator="{ props: tooltipProps }">
+              <v-btn
+                v-bind="tooltipProps"
+                aria-label="Run search"
+                color="primary"
+                icon="mdi-magnify"
+                size="x-small"
+                variant="text"
+                @click.stop="submitSearch"
               />
             </template>
           </v-tooltip>
@@ -74,7 +90,7 @@
       <v-divider />
 
       <div class="px-3 py-2 text-caption text-medium-emphasis">
-        <code>field:value</code> contains · <code>field=value</code> exact · <code>field!=value</code> excludes
+        <code>field:value</code> contains / <code>field=value</code> exact / <code>field!=value</code> excludes
       </div>
     </v-card>
   </v-menu>
@@ -87,9 +103,15 @@
   const props = defineProps<{
     example: string
     label: string
+    loading: boolean
     placeholder: string
     serverSearch: boolean
     target: QueryTarget
+  }>()
+
+  const emit = defineEmits<{
+    clear: []
+    submit: []
   }>()
 
   const searchExpression = defineModel<string>({ required: true })
@@ -125,6 +147,16 @@
 
   function openSuggestions (): void {
     if (props.serverSearch) suggestionsOpen.value = true
+  }
+
+  function clearSearch (): void {
+    suggestionsOpen.value = false
+    emit('clear')
+  }
+
+  function submitSearch (): void {
+    suggestionsOpen.value = false
+    emit('submit')
   }
 
   function updateSearchExpression (value: string | null): void {
