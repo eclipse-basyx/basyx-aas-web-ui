@@ -1,7 +1,8 @@
 <template>
-  <div>
+  <div @show-suggestions="showSuggestions">
     <CodeEditor
       v-if="integration"
+      ref="codeEditor"
       v-model="queryText"
       accessible-label="AAS Query Language JSON editor"
       :error="validationMessages.length > 0"
@@ -35,7 +36,7 @@
 
     <div class="mt-1 text-caption text-medium-emphasis">
       Suggestions and validation are provided by the AAS Query Language JSON Schema.
-      Press <v-hotkey inline keys="cmd+i" /> to open suggestions.
+      Press <v-hotkey inline :keys="querySuggestionsShortcut.keys" /> to open suggestions.
     </div>
   </div>
 </template>
@@ -44,6 +45,7 @@
   import type * as QueryIntegration from './monacoQueryLanguage'
   import type { QueryLanguageError } from './monacoQueryLanguage'
   import type { editor } from 'monaco-editor'
+  import { querySuggestionsShortcut } from '@/pages/modules/queryLanguage/queryLanguageShortcuts'
   import {
     createQueryLanguageValidationScheduler,
     getQueryLanguageValidationErrorMessage,
@@ -57,6 +59,7 @@
     'validation-change': [validation: QueryLanguageValidation]
   }>()
   const integration = shallowRef<typeof QueryIntegration>()
+  const codeEditor = ref<{ suggest: () => void }>()
   const validationMessages = ref<string[]>([])
   let validationScheduler: QueryLanguageValidationScheduler | undefined
   let unmounted = false
@@ -78,6 +81,12 @@
     unmounted = true
     validationScheduler?.dispose()
   })
+
+  async function showSuggestions (): Promise<void> {
+    // Let the command palette close before moving focus back to the editor.
+    await nextTick()
+    if (!unmounted) codeEditor.value?.suggest()
+  }
 
   function initializeValidation (model: editor.ITextModel): void {
     const loaded = integration.value

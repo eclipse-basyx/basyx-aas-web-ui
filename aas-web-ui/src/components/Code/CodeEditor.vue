@@ -142,7 +142,12 @@
     void instance?.getAction('actions.find')?.run()
   }
 
-  defineExpose({ find })
+  function suggest (): void {
+    instance?.focus()
+    void instance?.getAction('editor.action.triggerSuggest')?.run()
+  }
+
+  defineExpose({ find, suggest })
 </script>
 
 <style scoped>

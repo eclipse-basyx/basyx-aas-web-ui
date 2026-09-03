@@ -30,6 +30,7 @@
     </v-menu>
 
     <QueryLanguageEditor
+      id="query-language-editor"
       v-model="queryText"
       @validation-change="updateQueryValidation"
     />
@@ -60,11 +61,17 @@
   </v-container>
 </template>
 
-<script lang="ts" setup>
+<script lang="ts">
+  import type { PageShortcutDefinitions } from '@/composables/Shortcuts/useRouteShortcuts'
   import type { QueryLanguageValidation } from '@/pages/modules/queryLanguage/queryLanguageValidation'
   import { useRequestHandling } from '@/composables/RequestHandling'
+  import { querySuggestionsShortcut } from '@/pages/modules/queryLanguage/queryLanguageShortcuts'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
 
+  export const shortcuts: PageShortcutDefinitions = () => [querySuggestionsShortcut]
+</script>
+
+<script lang="ts" setup>
   const infrastructureStore = useInfrastructureStore()
 
   const { postRequest } = useRequestHandling()

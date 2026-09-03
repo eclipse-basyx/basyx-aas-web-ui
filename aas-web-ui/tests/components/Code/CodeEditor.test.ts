@@ -96,6 +96,18 @@ describe('CodeEditor lifecycle', () => {
     second.unmount()
   })
 
+  it('focuses the editor and runs Monaco suggestions when requested', async () => {
+    const wrapper = mount(CodeEditor, { props: { modelValue: '{}', accessibleLabel: 'JSON' }, global: { stubs } })
+    await vi.dynamicImportSettled()
+    await flushPromises()
+    wrapper.vm.suggest()
+    const instance = mocks.create.mock.results[0].value
+    expect(instance.focus).toHaveBeenCalledOnce()
+    expect(instance.getAction).toHaveBeenCalledWith('editor.action.triggerSuggest')
+    expect(instance.getAction.mock.results[0].value.run).toHaveBeenCalledOnce()
+    wrapper.unmount()
+  })
+
   it('does not create an editor after unmounting during lazy initialization', async () => {
     const wrapper = mount(CodeEditor, { props: { modelValue: '{}', accessibleLabel: 'JSON' }, global: { stubs } })
     wrapper.unmount()
