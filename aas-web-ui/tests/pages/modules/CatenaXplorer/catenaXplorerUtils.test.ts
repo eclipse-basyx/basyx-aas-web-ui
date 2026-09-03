@@ -14,7 +14,9 @@ import {
   getDescriptorTimestampInfo,
   getSpecificAssetIdNameSuggestions,
   getSubmodelEdcEndpointInfo,
+  getSubmodelEndpointHref,
   getSubmodelMarkerValues,
+  isSubmodelPayload,
   normalizeSupplementalSemanticIds,
   parseSubprotocolBody,
 } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
@@ -263,5 +265,55 @@ describe('catenaXplorerUtils.ts', () => {
     expect(getSubmodelEdcEndpointInfo({
       endpoints: [{ protocolInformation: { href: 'https://data-plane.test/submodel' } }],
     })).toBeNull()
+  })
+
+  it('extracts a direct Submodel endpoint href by interface preference', () => {
+    expect(getSubmodelEndpointHref({
+      endpoints: [
+        {
+          interface: 'SUBMODEL-REPOSITORY-3.0',
+          protocolInformation: { href: 'https://repository.test/submodels/fallback' },
+        },
+        {
+          interface: 'SUBMODEL-3.0',
+          protocolInformation: { href: ' https://repository.test/submodels/preferred ' },
+        },
+      ],
+    })).toBe('https://repository.test/submodels/preferred')
+
+    expect(getSubmodelEndpointHref({
+      endpoints: [{
+        interface: '',
+        protocolInformation: { href: 'https://repository.test/submodels/without-interface' },
+      }],
+    })).toBe('https://repository.test/submodels/without-interface')
+
+    expect(getSubmodelEndpointHref({ endpoints: [] })).toBe('')
+
+    expect(getSubmodelEndpointHref({
+      endpoints: [{
+        interface: 'SUBMODEL-REGISTRY-3.0',
+        protocolInformation: { href: 'https://registry.test/submodel-descriptors' },
+      }],
+    })).toBe('')
+  })
+
+  it('accepts only valid Submodel payloads for direct navigation', () => {
+    expect(isSubmodelPayload({
+      id: 'urn:example:submodel:1',
+      modelType: 'Submodel',
+      submodelElements: [],
+    })).toBe(true)
+
+    expect(isSubmodelPayload({
+      id: 'urn:example:submodel:1',
+      modelType: 'AssetAdministrationShell',
+    })).toBe(false)
+
+    expect(isSubmodelPayload({
+      id: 'urn:example:submodel:1',
+      modelType: 'Submodel',
+      idShort: 'Submodel Not Authorized!',
+    })).toBe(false)
   })
 })

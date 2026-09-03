@@ -304,6 +304,38 @@ export function getEndpointRows (endpoints: unknown): EndpointRow[] {
     .filter(endpoint => endpoint.href !== '')
 }
 
+export function getSubmodelEndpointHref (submodelDescriptor: any): string {
+  const endpoints = asArray<any>(submodelDescriptor?.endpoints)
+  const hasHref = (endpoint: any): boolean => toTrimmedString(endpoint?.protocolInformation?.href) !== ''
+  const matchingEndpoint = endpoints.find(endpoint => {
+    return hasHref(endpoint)
+      && toTrimmedString(endpoint?.interface).toUpperCase() === 'SUBMODEL-3.0'
+  }) ?? endpoints.find(endpoint => {
+    return hasHref(endpoint)
+      && toTrimmedString(endpoint?.interface).toUpperCase() === 'SUBMODEL-REPOSITORY-3.0'
+  }) ?? endpoints.find(endpoint => {
+    return hasHref(endpoint)
+      && /^SUBMODEL(?:-REPOSITORY)?-3\.[^-]+$/i.test(toTrimmedString(endpoint?.interface))
+  }) ?? endpoints.find(endpoint => {
+    return hasHref(endpoint) && toTrimmedString(endpoint?.interface) === ''
+  })
+
+  return toTrimmedString(matchingEndpoint?.protocolInformation?.href)
+}
+
+export function isSubmodelPayload (value: unknown): value is { id: string, modelType: 'Submodel' } {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return false
+  }
+
+  const submodel = value as { id?: unknown, idShort?: unknown, modelType?: unknown }
+  const idShort = typeof submodel.idShort === 'string' ? submodel.idShort : ''
+  return submodel.modelType === 'Submodel'
+    && typeof submodel.id === 'string'
+    && submodel.id.trim() !== ''
+    && !['Submodel not found', 'Submodel Not Authorized!'].includes(idShort)
+}
+
 export function getReferenceKeyValues (reference: unknown): string[] {
   const record = reference as { keys?: Array<{ value?: unknown }> } | undefined
   if (!Array.isArray(record?.keys)) {

@@ -98,9 +98,28 @@
             :endpoints="getEndpointRows(submodelDescriptor.endpoints)"
           />
 
+          <div
+            v-if="!edcAccessEnabled && getSubmodelEndpointHref(submodelDescriptor)"
+            class="d-flex justify-end mt-4"
+          >
+            <v-btn
+              :aria-label="getOpenSubmodelAriaLabel(submodelDescriptor)"
+              data-testid="open-submodel"
+              :disabled="openingSubmodelKey !== ''"
+              :loading="openingSubmodelKey === getDescriptorKey(submodelDescriptor)"
+              prepend-icon="mdi-arrow-right-circle-outline"
+              size="small"
+              variant="tonal"
+              @click="emit('open-submodel', submodelDescriptor)"
+            >
+              Open Submodel
+            </v-btn>
+          </div>
+
           <template v-if="edcAccessEnabled">
             <div class="d-flex justify-end mt-4">
               <v-btn
+                data-testid="load-submodel"
                 :disabled="!canLoadSubmodel(submodelDescriptor)"
                 :loading="getSubmodelState(submodelDescriptor).isLoading"
                 prepend-icon="mdi-download-network-outline"
@@ -218,6 +237,7 @@
     getEndpointRows,
     getReferenceKeyValues,
     getSubmodelEdcEndpointInfo,
+    getSubmodelEndpointHref,
     getSubmodelMarkerValues,
     normalizeSupplementalSemanticIds,
   } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
@@ -228,16 +248,27 @@
     descriptors: any[]
     edcAccessEnabled?: boolean
     edcSubmodels?: Record<string, EdcSubmodelViewState>
+    openingSubmodelKey?: string
   }>(), {
     edcAccessEnabled: false,
     edcSubmodels: () => ({}),
+    openingSubmodelKey: '',
   })
 
   const emit = defineEmits<{
     'load-edc-submodel': [descriptor: any]
+    'open-submodel': [descriptor: any]
   }>()
 
   const submodelViewModes = ref<Record<string, 'table' | 'json'>>({})
+
+  function getOpenSubmodelAriaLabel (submodelDescriptor: any): string {
+    const title = getDescriptorTitle(submodelDescriptor)
+    const id = typeof submodelDescriptor?.id === 'string' ? submodelDescriptor.id.trim() : ''
+    return id !== '' && id !== title
+      ? `Open Submodel ${title} (${id})`
+      : `Open Submodel ${title}`
+  }
 
   function getSubmodelState (submodelDescriptor: any): EdcSubmodelViewState {
     return props.edcSubmodels[getDescriptorKey(submodelDescriptor)] ?? {}
