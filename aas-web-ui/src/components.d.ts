@@ -116,6 +116,7 @@ declare module 'vue' {
     QualifierElement: typeof import('./components/UIComponents/QualifierElement.vue')['default']
     QualifierInput: typeof import('./components/EditorComponents/InputTypes/QualifierInput.vue')['default']
     QueryLanguageEditor: typeof import('./components/QueryLanguage/QueryLanguageEditor.vue')['default']
+    QuerySearchField: typeof import('./components/QueryLanguage/QuerySearchField.vue')['default']
     Range: typeof import('./components/SubmodelElements/Range.vue')['default']
     RangeForm: typeof import('./components/EditorComponents/SubmodelElements/RangeForm.vue')['default']
     RangeInput: typeof import('./components/EditorComponents/InputTypes/RangeInput.vue')['default']

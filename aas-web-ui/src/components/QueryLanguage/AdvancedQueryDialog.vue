@@ -26,7 +26,7 @@
 
         <QueryLanguageEditor
           v-model="queryText"
-          :height="mobile ? 'calc(100svh - 330px)' : 'min(55vh, 520px)'"
+          :height="mobile ? 'calc(100svh - 310px)' : 'min(55vh, 520px)'"
           @validation-change="schemaValidation = $event"
         />
 

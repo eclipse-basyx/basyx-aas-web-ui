@@ -67,16 +67,13 @@
             "
           >
             <v-col>
-              <v-text-field
-                clearable
-                density="compact"
-                hide-details
-                :label="globalQueryAvailable ? 'Search Submodel identifiers on server...' : 'Search for SM/SME...'"
-                :min-width="200"
-                :model-value="smSearchValue"
-                persistent-placeholder
+              <QuerySearchField
+                v-model="smSearchValue"
+                example="semanticId:0173"
+                label="Search SM/SME"
                 :placeholder="submodelTree.length.toString() + ' Submodels'"
-                variant="outlined"
+                :server-search="globalQueryAvailable"
+                target="submodel-repository"
                 @update:model-value="handleSearchInput"
               />
             </v-col>
@@ -88,23 +85,12 @@
                   :color="querySearch.activeMode.value === 'advanced' ? 'primary' : undefined"
                   icon="mdi-code-json"
                   variant="plain"
-                  @click="openAdvancedQuery"
+                  @click="openSearchDialog"
                 />
               </template>
 
-              <span>{{ querySearch.activeMode.value === 'advanced' ? 'Edit advanced query' : 'Advanced Query Language search' }}</span>
+              <span>{{ querySearch.activeMode.value === 'advanced' ? 'Edit advanced query' : 'Advanced Query Language' }}</span>
             </v-tooltip>
-
-            <v-chip
-              v-if="querySearch.activeMode.value"
-              closable
-              color="primary"
-              size="small"
-              variant="tonal"
-              @click:close="clearQuerySearch"
-            >
-              {{ querySearch.activeMode.value === 'advanced' ? 'Advanced query' : 'Server search' }}
-            </v-chip>
 
             <v-tooltip :disabled="isMobile" location="bottom" open-delay="600">
               <template #activator="{ props }">
@@ -213,7 +199,7 @@
         indeterminate
       />
 
-      <v-card-text style="overflow-y: auto; height: calc(100svh - 170px)">
+      <v-card-text :style="{ overflowY: 'auto', height: treeContentHeight }">
         <!-- Show Skeleton Loader when the tree is loading -->
         <template v-if="treeLoading">
           <v-list-item
@@ -451,7 +437,7 @@
     :mobile="isMobile"
     :query="advancedQueryDraft"
     target="submodel-repository"
-    title="Advanced Submodel search"
+    title="Advanced Submodel query"
     @execute="executeAdvancedQuery"
     @reset="resetAdvancedQueryDraft"
     @update:query="advancedQueryDraft = $event"
@@ -491,7 +477,12 @@
   } from '@/utils/AAS/OperationTreeUtils'
   import { isChildTypeAllowed } from '@/utils/AAS/SubmodelElementRegistry'
   import { debounce } from '@/utils/generalUtils'
-  import { buildQuickSearchQuery, createQueryExample, supportsQueryProfile } from '@/utils/QueryLanguageUtils'
+  import {
+    buildStructuredSearchQuery,
+    createQueryExample,
+    parseQuerySearchExpression,
+    supportsQueryProfile,
+  } from '@/utils/QueryLanguageUtils'
   import { isEmptyString } from '@/utils/StringUtils'
 
   // Vue Router
@@ -623,6 +614,8 @@
       }
     },
   })
+  const treeContentHeight = computed(() => 'calc(100svh - 170px)')
+  const parsedSearch = computed(() => parseQuerySearchExpression('submodel-repository', smSearchValue.value))
 
   // Watchers
   watch(
@@ -1678,29 +1671,43 @@
   }
 
   function handleSearchInput (value: string | null): void {
-    smSearchValue.value = value?.trim() ?? ''
+    smSearchValue.value = value ?? ''
 
     if (!globalQueryAvailable.value) {
       debouncedFilterSubmodelTree(smSearchValue.value)
       return
     }
 
-    const query = buildQuickSearchQuery('submodel-repository', smSearchValue.value)
+    if (parsedSearch.value.incompleteField) {
+      return
+    }
+
+    const query = buildStructuredSearchQuery(
+      'submodel-repository',
+      parsedSearch.value.text,
+      parsedSearch.value.filters,
+      'all',
+    )
     if (!query) {
       clearQuerySearch()
       return
     }
 
-    querySearch.schedule(query, 'quick', success => {
+    querySearch.schedule(query, parsedSearch.value.filters.length > 0 ? 'filters' : 'quick', success => {
       if (success) applyQueryItems()
     })
   }
 
-  function openAdvancedQuery (): void {
+  function openSearchDialog (): void {
     if (advancedQueryDraft.value.trim() === '') {
-      const quickQuery = buildQuickSearchQuery('submodel-repository', smSearchValue.value)
-      advancedQueryDraft.value = quickQuery
-        ? JSON.stringify(quickQuery, null, 2)
+      const structuredQuery = buildStructuredSearchQuery(
+        'submodel-repository',
+        parsedSearch.value.text,
+        parsedSearch.value.filters,
+        'all',
+      )
+      advancedQueryDraft.value = structuredQuery
+        ? JSON.stringify(structuredQuery, null, 2)
         : createQueryExample('submodel-repository')
     }
     advancedQueryDialog.value = true

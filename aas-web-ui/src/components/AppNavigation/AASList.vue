@@ -27,17 +27,17 @@
             <span>Reload AAS List</span>
           </v-tooltip>
 
-          <v-text-field
-            clearable
-            density="compact"
-            hide-details
-            :label="queryAvailable ? 'Search AAS identifiers on server...' : 'Search for AAS...'"
-            :model-value="searchValue"
-            persistent-placeholder
-            :placeholder="aasList.length.toString() + ' Shells'"
-            variant="outlined"
-            @update:model-value="handleSearchInput"
-          />
+          <div class="flex-grow-1">
+            <QuerySearchField
+              v-model="searchValue"
+              example="idShort:Motor"
+              label="Search AAS"
+              :placeholder="aasList.length.toString() + ' Shells'"
+              :server-search="queryAvailable"
+              :target="aasQueryTarget"
+              @update:model-value="handleSearchInput"
+            />
+          </div>
 
           <v-tooltip v-if="queryAvailable" :disabled="isMobile" location="bottom" open-delay="600">
             <template #activator="{ props }">
@@ -46,24 +46,12 @@
                 :color="querySearch.activeMode.value === 'advanced' ? 'primary' : undefined"
                 icon="mdi-code-json"
                 variant="plain"
-                @click="openAdvancedQuery"
+                @click="openSearchDialog"
               />
             </template>
 
-            <span>{{ querySearch.activeMode.value === 'advanced' ? 'Edit advanced query' : 'Advanced Query Language search' }}</span>
+            <span>{{ querySearch.activeMode.value === 'advanced' ? 'Edit advanced query' : 'Advanced Query Language' }}</span>
           </v-tooltip>
-
-          <v-chip
-            v-if="querySearch.activeMode.value"
-            class="ml-1"
-            closable
-            color="primary"
-            size="small"
-            variant="tonal"
-            @click:close="clearQuerySearch"
-          >
-            {{ querySearch.activeMode.value === 'advanced' ? 'Advanced query' : 'Server search' }}
-          </v-chip>
 
           <!-- QR Scanner -->
           <v-tooltip :disabled="isMobile" location="bottom" open-delay="600">
@@ -421,7 +409,7 @@
     :mobile="isMobile"
     :query="advancedQueryDraft"
     :target="aasQueryTarget"
-    title="Advanced AAS search"
+    title="Advanced AAS query"
     @execute="executeAdvancedQuery"
     @reset="resetAdvancedQueryDraft"
     @update:query="advancedQueryDraft = $event"
@@ -446,7 +434,12 @@
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { debounce } from '@/utils/generalUtils'
-  import { buildQuickSearchQuery, createQueryExample, supportsQueryProfile } from '@/utils/QueryLanguageUtils'
+  import {
+    buildStructuredSearchQuery,
+    createQueryExample,
+    parseQuerySearchExpression,
+    supportsQueryProfile,
+  } from '@/utils/QueryLanguageUtils'
 
   // Extend the ComponentPublicInstance type to include scrollToIndex
   interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -602,6 +595,7 @@
   const isTestingConnections = computed(() => infrastructureStore.getIsTestingConnections) // Check if testing connections
   const selectedInfrastructureId = computed(() => infrastructureStore.getSelectedInfrastructureId) // Get selected infrastructure ID
   const aasQueryTarget = computed<QueryTarget>(() => activeSource.value === 'registry' ? 'aas-registry' : 'aas-repository')
+  const parsedSearch = computed(() => parseQuerySearchExpression(aasQueryTarget.value, searchValue.value))
   const activeQueryBaseUrl = computed(() => aasQueryTarget.value === 'aas-registry' ? aasRegistryURL.value : aasRepoURL.value)
   const queryAvailable = computed(() => {
     if (!activeSource.value) return false
@@ -816,7 +810,7 @@
   }
 
   function filterAasList (value: string | null): void {
-    searchValue.value = value?.trim() ?? ''
+    searchValue.value = value ?? ''
     applyCurrentFilter()
     scrollToSelectedAAS()
   }
@@ -829,7 +823,16 @@
       return
     }
 
-    const query = buildQuickSearchQuery(aasQueryTarget.value, searchValue.value)
+    if (parsedSearch.value.incompleteField) {
+      return
+    }
+
+    const query = buildStructuredSearchQuery(
+      aasQueryTarget.value,
+      parsedSearch.value.text,
+      parsedSearch.value.filters,
+      'all',
+    )
     if (!query) {
       clearQuerySearch()
       return
@@ -837,18 +840,23 @@
 
     unbindVirtualScrollListener()
     unbindQueryScrollListener()
-    querySearch.schedule(query, 'quick', success => {
+    querySearch.schedule(query, parsedSearch.value.filters.length > 0 ? 'filters' : 'quick', success => {
       if (!success) return
       syncQueryItems()
       void nextTick(bindQueryScrollListener)
     })
   }
 
-  function openAdvancedQuery (): void {
+  function openSearchDialog (): void {
     if (advancedQueryDraft.value.trim() === '') {
-      const quickQuery = buildQuickSearchQuery(aasQueryTarget.value, searchValue.value)
-      advancedQueryDraft.value = quickQuery
-        ? JSON.stringify(quickQuery, null, 2)
+      const structuredQuery = buildStructuredSearchQuery(
+        aasQueryTarget.value,
+        parsedSearch.value.text,
+        parsedSearch.value.filters,
+        'all',
+      )
+      advancedQueryDraft.value = structuredQuery
+        ? JSON.stringify(structuredQuery, null, 2)
         : createQueryExample(aasQueryTarget.value)
     }
     advancedQueryDialog.value = true
