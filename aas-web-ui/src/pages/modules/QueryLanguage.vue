@@ -30,6 +30,7 @@
     </v-menu>
 
     <QueryLanguageEditor
+      id="query-language-editor"
       v-model="queryText"
       @validation-change="updateQueryValidation"
     />
@@ -47,27 +48,30 @@
       />
     </v-card-actions>
 
-    <!-- Query Response Display -->
-    <v-textarea
+    <CodeViewer
       v-if="queryResponse"
-      v-model="queryResponse"
-      bg-color="surface"
       class="mt-4"
-      density="compact"
-      flat
-      label="Query Response"
-      readonly
-      rows="15"
-      variant="outlined"
+      :file-name="queryResponseLanguage === 'json' ? 'query-response.json' : 'query-response.txt'"
+      height="360px"
+      :language="queryResponseLanguage"
+      :mime-type="queryResponseLanguage === 'json' ? 'application/json' : 'text/plain'"
+      :text="queryResponse"
+      title="Query Response"
     />
   </v-container>
 </template>
 
-<script lang="ts" setup>
+<script lang="ts">
+  import type { PageShortcutDefinitions } from '@/composables/Shortcuts/useRouteShortcuts'
   import type { QueryLanguageValidation } from '@/pages/modules/queryLanguage/queryLanguageValidation'
   import { useRequestHandling } from '@/composables/RequestHandling'
+  import { querySuggestionsShortcut } from '@/pages/modules/queryLanguage/queryLanguageShortcuts'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
 
+  export const shortcuts: PageShortcutDefinitions = () => [querySuggestionsShortcut]
+</script>
+
+<script lang="ts" setup>
   const infrastructureStore = useInfrastructureStore()
 
   const { postRequest } = useRequestHandling()
@@ -84,6 +88,7 @@
 
   // Query response
   const queryResponse = ref('')
+  const queryResponseLanguage = ref<'json' | 'plaintext'>('plaintext')
 
   // Helper function to transform URLs for query endpoints
   function transformUrlForQuery (url: string, componentType: string): string {
@@ -199,6 +204,7 @@
   })
 
   async function executeQuery (): Promise<void> {
+    queryResponseLanguage.value = 'plaintext'
     if (!selectedEndpoint.value) {
       queryResponse.value = 'Error: Please select an API component.'
       return
@@ -229,6 +235,7 @@
       // send the request
       await postRequest(path, content, headers, context, disableMessage, true).then((response: unknown) => {
         const res = response as { success: boolean, data?: unknown, message?: string }
+        queryResponseLanguage.value = res.success ? 'json' : 'plaintext'
         queryResponse.value = res.success ? JSON.stringify(res.data, null, 2) : `Query failed: ${res.message || 'Unknown error'}`
       })
     } catch (error) {

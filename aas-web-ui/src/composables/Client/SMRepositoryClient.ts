@@ -728,7 +728,7 @@ export function useSMRepositoryClient () {
     return ensureWriteSuccess(response)
   }
 
-  async function fetchAttachmentFile (path: string): Promise<Blob | undefined> {
+  async function fetchAttachmentFile (path: string, responseType: 'auto' | 'blob' = 'auto'): Promise<Blob | undefined> {
     const failResponse = undefined
 
     const context = 'fetching file attachment'
@@ -736,7 +736,7 @@ export function useSMRepositoryClient () {
     const requestPath = path + '/attachment'
 
     try {
-      const response = await getRequest(requestPath, context, disableMessage)
+      const response = await getRequest(requestPath, context, disableMessage, new Headers(), {}, responseType)
       if (response.success && response.data) {
         return response.data
       }

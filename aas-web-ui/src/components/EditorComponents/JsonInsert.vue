@@ -1,30 +1,48 @@
 <template>
-  <v-dialog v-model="jsonInsertDialog" persistent width="860">
-    <v-card>
-      <v-card-title>Insert {{ type }} from JSON</v-card-title>
+  <v-dialog
+    v-model="jsonInsertDialog"
+    :fullscreen="isMobile"
+    :max-width="isMobile ? undefined : '860px'"
+    persistent
+  >
+    <v-sheet
+      border
+      class="d-flex flex-column"
+      :rounded="isMobile ? undefined : 'lg'"
+      :style="isMobile ? { height: '100vh' } : undefined"
+    >
+      <v-card-title class="bg-cardHeader">Insert {{ type }} from JSON</v-card-title>
       <v-divider />
 
-      <v-card-text class="bg-card pa-3">
-        <v-card>
-          <v-textarea
-            v-model="jsonInput"
-            :error-messages="jsonInputErrors"
-            hide-details
-            rows="10"
-            variant="outlined"
-            @update:model-value="clearErrorMessages"
-          />
-        </v-card>
+      <v-card-text
+        class="overflow-y-auto"
+        :style="isMobile ? { flex: '1 1 auto', minHeight: '0' } : { maxHeight: 'calc(100vh - 200px)' }"
+      >
+        <AasJsonEditor
+          v-if="jsonInsertDialog"
+          v-model="jsonInput"
+          :errors="jsonInputErrors"
+          :label="`${type} JSON`"
+          :root="type"
+          @update:model-value="clearErrorMessages"
+        />
       </v-card-text>
 
       <v-divider />
 
       <v-card-actions>
         <v-spacer />
-        <v-btn @click="closeDialog">Cancel</v-btn>
-        <v-btn color="primary" @click="insertJson">Save</v-btn>
+        <v-btn rounded="lg" @click="closeDialog">Cancel</v-btn>
+
+        <v-btn
+          class="text-buttonText"
+          color="primary"
+          rounded="lg"
+          variant="flat"
+          @click="insertJson"
+        >Save</v-btn>
       </v-card-actions>
-    </v-card>
+    </v-sheet>
   </v-dialog>
 </template>
 
@@ -82,10 +100,11 @@
 
   // Data
   const jsonInsertDialog = ref(false)
-  const jsonInput = ref<string | null>(null)
+  const jsonInput = ref('')
   const jsonInputErrors = ref<string[]>([])
 
   // Computed Properties
+  const isMobile = computed(() => navigationStore.getIsMobile)
   const selectedAAS = computed(() => aasStore.getSelectedAAS) // Get the selected AAS from Store
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
   const submodelRegistryActive = computed(() =>
@@ -391,7 +410,7 @@
   }
 
   function clearForm (): void {
-    jsonInput.value = null
+    jsonInput.value = ''
   }
 
   function clearErrorMessages (): void {
