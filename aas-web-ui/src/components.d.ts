@@ -12,6 +12,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AASForm: typeof import('./components/EditorComponents/AASForm.vue')['default']
+    AasJsonEditor: typeof import('./components/Code/AasJsonEditor.vue')['default']
     AASList: typeof import('./components/AppNavigation/AASList.vue')['default']
     AASListDetails: typeof import('./components/AppNavigation/AASListDetails.vue')['default']
     AASToInstance: typeof import('./components/AppNavigation/AASToInstance.vue')['default']
