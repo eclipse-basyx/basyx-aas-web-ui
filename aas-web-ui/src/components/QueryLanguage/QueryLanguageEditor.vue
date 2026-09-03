@@ -35,7 +35,7 @@
 
     <div class="mt-1 text-caption text-medium-emphasis">
       Suggestions and validation are provided by the AAS Query Language JSON Schema.
-      Press Ctrl+Space to open suggestions.
+      Press <v-hotkey inline keys="cmd+i" /> to open suggestions.
     </div>
   </div>
 </template>

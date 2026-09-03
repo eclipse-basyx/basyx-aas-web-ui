@@ -17,6 +17,8 @@ const stubs = {
   VCard: slot, VCardTitle: slot, VCardText: slot, VIcon: slot,
   VSpacer: true, VDivider: true, VProgressLinear: true, VEmptyState: true,
   VAlert: { template: '<div role="alert"><slot /></div>' },
+  VTooltip: { template: '<div><slot name="activator" :props="{}" /><slot /></div>' },
+  VHotkey: true,
 }
 
 describe('CodeViewer controls', () => {

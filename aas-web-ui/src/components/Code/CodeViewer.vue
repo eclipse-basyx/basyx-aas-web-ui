@@ -6,13 +6,22 @@
       <v-spacer />
 
       <template v-if="hasContent">
-        <v-btn
-          aria-label="Search"
-          icon="mdi-magnify"
-          title="Search (Ctrl/Cmd+F)"
-          variant="text"
-          @click="codeEditor?.find()"
-        />
+        <v-tooltip location="bottom" open-delay="600">
+          <template #activator="{ props: tooltipProps }">
+            <v-btn
+              v-bind="tooltipProps"
+              aria-label="Search"
+              icon="mdi-magnify"
+              variant="text"
+              @click="codeEditor?.find()"
+            />
+          </template>
+
+          <span>
+            <v-hotkey class="mr-2" keys="cmd+f" />
+            Search
+          </span>
+        </v-tooltip>
 
         <v-btn
           :aria-label="wordWrap ? 'Disable word wrap' : 'Enable word wrap'"
