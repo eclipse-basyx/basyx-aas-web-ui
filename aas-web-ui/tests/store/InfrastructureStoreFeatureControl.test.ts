@@ -7,6 +7,7 @@ import { base64Encode } from '@/utils/EncodeDecodeUtils'
 
 const mocks = vi.hoisted(() => ({
   appliedOverrides: [] as unknown[],
+  getRequest: vi.fn(),
   loadInfrastructuresFromStorage: vi.fn(),
   saveInfrastructuresToStorage: vi.fn(),
   refreshInfrastructureTokens: vi.fn().mockResolvedValue([]),
@@ -76,7 +77,7 @@ vi.mock('@/composables/Infrastructure/useInfrastructureAuth', () => ({
 
 vi.mock('@/composables/RequestHandling', () => ({
   useRequestHandling: () => ({
-    getRequest: vi.fn().mockResolvedValue({ success: true }),
+    getRequest: mocks.getRequest,
   }),
 }))
 
@@ -114,6 +115,8 @@ describe('InfrastructureStore', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.appliedOverrides.length = 0
+    mocks.getRequest.mockReset()
+    mocks.getRequest.mockResolvedValue({ success: true })
     setActivePinia(createPinia())
     mocks.loadInfrastructuresFromStorage.mockResolvedValue({
       selectedInfrastructureId: 'viewer',
@@ -246,5 +249,27 @@ describe('InfrastructureStore', () => {
 
       expect(store.getHasAuthenticationCredentials, scenario.name).toBe(scenario.expected)
     }
+  })
+
+  it('stores description profiles and clears them when only the fallback endpoint connects', async () => {
+    const store = useInfrastructureStore()
+    await store.waitForInitialization()
+    const component = store.getBasyxComponents.AASRepo
+    component.url = 'https://example.com/shells'
+
+    const description = {
+      profiles: [
+        'https://admin-shell.io/aas/API/3/2/AssetAdministrationShellRepositoryServiceSpecification/SSP-003',
+      ],
+    }
+    mocks.getRequest.mockResolvedValueOnce({ success: true, data: description })
+    await store.connectComponent('AASRepo')
+    expect(component.description).toEqual(description)
+
+    mocks.getRequest
+      .mockResolvedValueOnce({ success: false })
+      .mockResolvedValueOnce({ success: true })
+    await store.connectComponent('AASRepo')
+    expect(component.description).toBeNull()
   })
 })

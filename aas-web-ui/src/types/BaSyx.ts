@@ -4,10 +4,15 @@ export interface BaSyxComponent {
   url: Ref<string>
   loading: Ref<boolean>
   connected: Ref<boolean | null>
+  description: Ref<ServiceDescription | null>
   connect: () => void
   label: string
   pathCheck?: string
   additionalParams?: string
+}
+
+export interface ServiceDescription {
+  profiles: string[]
 }
 
 export type BaSyxComponentKey

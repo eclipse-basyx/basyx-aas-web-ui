@@ -96,13 +96,17 @@ export function useSMHandling () {
       return failResponse
     }
 
-    smList = smList.map((aas: any) => {
-      aas.timestamp = formatDate(new Date())
-      aas.path = getSmEndpointByIdFromRepo(aas.id)
-      return aas
-    })
+    smList = enrichSmListItems(smList)
 
     return smList
+  }
+
+  function enrichSmListItems (items: Array<any>): Array<any> {
+    return items.map((submodel: any) => ({
+      ...submodel,
+      timestamp: formatDate(new Date()),
+      path: getSmEndpointByIdFromRepo(submodel.id),
+    }))
   }
 
   /**
@@ -536,6 +540,7 @@ export function useSMHandling () {
     fetchSmDescriptorList,
     fetchSmDescriptor,
     fetchSmList,
+    enrichSmListItems,
     setData,
     fetchAllConceptDescriptions,
     deleteSm,

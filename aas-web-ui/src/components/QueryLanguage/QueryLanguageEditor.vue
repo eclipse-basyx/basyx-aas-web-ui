@@ -4,6 +4,7 @@
       ref="editorContainer"
       class="query-language-editor"
       :class="{ 'query-language-editor--error': validationMessages.length > 0 }"
+      :style="editorStyle"
     />
 
     <v-progress-linear
@@ -41,6 +42,7 @@
 <script setup lang="ts">
   import type { QueryLanguageError } from './monacoQueryLanguage'
   import type { editor, IDisposable } from 'monaco-editor'
+  import type { CSSProperties } from 'vue'
   import { useTheme } from 'vuetify'
   import {
     createQueryLanguageValidationScheduler,
@@ -50,12 +52,17 @@
     type QueryLanguageValidationScheduler,
   } from '@/pages/modules/queryLanguage/queryLanguageValidation'
 
-  const queryText = defineModel<string>({ required: true })
+  const props = withDefaults(defineProps<{
+    height?: string
+  }>(), {
+    height: '400px',
+  })
 
   const emit = defineEmits<{
     'validation-change': [validation: QueryLanguageValidation]
   }>()
 
+  const queryText = defineModel<string>({ required: true })
   const editorContainer = ref<HTMLElement>()
   const validationMessages = ref<string[]>([])
   const isLoading = ref(true)
@@ -64,6 +71,7 @@
   const visibleValidationMessages = computed(() => validationMessages.value.slice(0, 3))
   const hiddenValidationMessageCount = computed(() => Math.max(0, validationMessages.value.length - 3))
   const isDark = computed(() => theme.global.current.value.dark)
+  const editorStyle = computed<CSSProperties>(() => ({ height: props.height }))
 
   let queryEditor: editor.IStandaloneCodeEditor | undefined
   let queryModel: editor.ITextModel | undefined
@@ -192,7 +200,6 @@
   .query-language-editor {
     border: 1px solid rgb(var(--v-theme-outline));
     border-radius: 4px;
-    height: 400px;
     overflow: hidden;
   }
 

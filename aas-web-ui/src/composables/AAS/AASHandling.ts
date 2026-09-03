@@ -73,6 +73,12 @@ export function useAASHandling () {
     })
   }
 
+  function enrichAasShellListItems (items: Array<any>, source: AasListSource): Array<any> {
+    return source === 'registry'
+      ? enrichDescriptorListItems(items)
+      : enrichRepositoryListItems(items)
+  }
+
   async function fetchRegistryShellPage (
     options: RegistryPageOptions,
   ): Promise<AasShellListPageResult> {
@@ -631,6 +637,7 @@ export function useAASHandling () {
     fetchAndDispatchAas,
     fetchAndDispatchAasById,
     fetchAasShellListPage,
+    enrichAasShellListItems,
     fetchAasDescriptorList,
     fetchAasDescriptor,
     fetchAasList,

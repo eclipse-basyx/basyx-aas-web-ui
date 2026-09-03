@@ -65,8 +65,10 @@
 
 <script lang="ts" setup>
   import type { QueryLanguageValidation } from '@/pages/modules/queryLanguage/queryLanguageValidation'
+  import type { QueryTarget } from '@/types/QueryLanguage'
   import { useRequestHandling } from '@/composables/RequestHandling'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
+  import { buildQueryEndpoint } from '@/utils/QueryLanguageUtils'
 
   const infrastructureStore = useInfrastructureStore()
 
@@ -85,60 +87,26 @@
   // Query response
   const queryResponse = ref('')
 
-  // Helper function to transform URLs for query endpoints
   function transformUrlForQuery (url: string, componentType: string): string {
-    if (!url || url.trim() === '') return ''
+    if (url.trim() === '') return ''
 
-    let transformedUrl = url.trim()
-    // Remove trailing slash if present
-    if (transformedUrl.endsWith('/')) {
-      transformedUrl = transformedUrl.slice(0, -1)
+    const targetMap: Partial<Record<string, QueryTarget>> = {
+      'aas-registry': 'aas-registry',
+      'aas-repo': 'aas-repository',
+      'submodel-repo': 'submodel-repository',
     }
+    const target = targetMap[componentType]
+    if (target) return buildQueryEndpoint(url, target)
 
+    let transformedUrl = url.trim().replace(/\/$/, '')
     switch (componentType) {
-      case 'aas-registry': {
-        // Transform shell-descriptors to query/shell-descriptors or add /query/shell-descriptors
-        if (transformedUrl.includes('/shell-descriptors')) {
-          transformedUrl = transformedUrl.replace('/shell-descriptors', '/query/shell-descriptors')
-        } else {
-          transformedUrl += '/query/shell-descriptors'
-        }
-        break
-      }
       case 'submodel-registry': {
-        // Transform submodel-descriptors to query/submodel-descriptors or add /query/submodel-descriptors
-        if (transformedUrl.includes('/submodel-descriptors')) {
-          transformedUrl = transformedUrl.replace('/submodel-descriptors', '/query/submodel-descriptors')
-        } else {
-          transformedUrl += '/query/submodel-descriptors'
-        }
-        break
-      }
-      case 'aas-repo': {
-        // Transform shells to query/shells or add /query/shells
-        if (transformedUrl.includes('/shells')) {
-          transformedUrl = transformedUrl.replace('/shells', '/query/shells')
-        } else {
-          transformedUrl += '/query/shells'
-        }
-        break
-      }
-      case 'submodel-repo': {
-        // Transform submodels to query/submodels or add /query/submodels
-        if (transformedUrl.includes('/submodels')) {
-          transformedUrl = transformedUrl.replace('/submodels', '/query/submodels')
-        } else {
-          transformedUrl += '/query/submodels'
-        }
+        transformedUrl = transformedUrl.replace(/\/submodel-descriptors$/, '') + '/query/submodel-descriptors'
         break
       }
       case 'cd-repo': {
         // Transform concept-descriptions to query/concept-descriptions or add /query/concept-descriptions
-        if (transformedUrl.includes('/concept-descriptions')) {
-          transformedUrl = transformedUrl.replace('/concept-descriptions', '/query/concept-descriptions')
-        } else {
-          transformedUrl += '/query/concept-descriptions'
-        }
+        transformedUrl = transformedUrl.replace(/\/concept-descriptions$/, '') + '/query/concept-descriptions'
         break
       }
       default: {
