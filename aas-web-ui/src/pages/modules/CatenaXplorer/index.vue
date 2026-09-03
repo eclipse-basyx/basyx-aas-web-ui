@@ -198,7 +198,6 @@
     getAssetIdNameSuggestions,
     getDescriptorKey,
     getSubmodelEdcEndpointInfo,
-    getSubmodelEndpointHref,
     isSubmodelPayload,
   } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
   import CatenaXplorerNavigationDrawer from '@/pages/modules/CatenaXplorer/components/CatenaXplorerNavigationDrawer.vue'
@@ -209,6 +208,7 @@
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
+  import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils'
   import {
     getCatenaXPartnerKey,
     mergeCatenaXPartners,
@@ -723,7 +723,7 @@
       return
     }
 
-    const endpoint = getSubmodelEndpointHref(submodelDescriptor)
+    const endpoint = extractEndpointHref(submodelDescriptor, 'SUBMODEL-3.0').trim()
     if (endpoint === '') {
       showSubmodelOpenError(
         'The descriptor has no SUBMODEL endpoint with an href. Add a valid endpoint before opening the Submodel.',

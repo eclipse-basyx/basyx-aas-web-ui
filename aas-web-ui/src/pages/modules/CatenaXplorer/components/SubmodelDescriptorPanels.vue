@@ -99,7 +99,7 @@
           />
 
           <div
-            v-if="!edcAccessEnabled && getSubmodelEndpointHref(submodelDescriptor)"
+            v-if="!edcAccessEnabled && extractEndpointHref(submodelDescriptor, 'SUBMODEL-3.0').trim()"
             class="d-flex justify-end mt-4"
           >
             <v-btn
@@ -237,12 +237,12 @@
     getEndpointRows,
     getReferenceKeyValues,
     getSubmodelEdcEndpointInfo,
-    getSubmodelEndpointHref,
     getSubmodelMarkerValues,
     normalizeSupplementalSemanticIds,
   } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
   import EndpointTable from '@/pages/modules/CatenaXplorer/components/EndpointTable.vue'
   import ReferenceChips from '@/pages/modules/CatenaXplorer/components/ReferenceChips.vue'
+  import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils'
 
   const props = withDefaults(defineProps<{
     descriptors: any[]
