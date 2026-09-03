@@ -1,13 +1,10 @@
+import { type CodeSchema, mergeCodeSchemas } from '@/components/Code/codeSchema'
 import {
   QUERY_LANGUAGE_SCHEMA_URI,
   queryLanguageSchema,
 } from './queryLanguageSchema'
 
-export interface QueryLanguageSchemaRegistration {
-  fileMatch?: string[]
-  schema?: unknown
-  uri: string
-}
+export type QueryLanguageSchemaRegistration = CodeSchema
 
 export const QUERY_LANGUAGE_MODEL_PATTERN = 'inmemory://aas-query-language/*.json'
 
@@ -25,12 +22,11 @@ export function hasQueryLanguageSchemaRegistration (
 export function mergeQueryLanguageSchemaRegistration (
   schemas: readonly QueryLanguageSchemaRegistration[] = [],
 ): QueryLanguageSchemaRegistration[] {
-  return [
-    ...schemas.filter(schema => schema.uri !== QUERY_LANGUAGE_SCHEMA_URI),
+  return mergeCodeSchemas(schemas, [
     {
       fileMatch: [QUERY_LANGUAGE_MODEL_PATTERN],
       schema: queryLanguageSchema,
       uri: QUERY_LANGUAGE_SCHEMA_URI,
     },
-  ]
+  ])
 }
