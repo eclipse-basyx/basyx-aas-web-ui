@@ -15,7 +15,6 @@ import {
   getSpecificAssetIdNameSuggestions,
   getSubmodelEdcEndpointInfo,
   getSubmodelMarkerValues,
-  isSubmodelPayload,
   normalizeSupplementalSemanticIds,
   parseSubprotocolBody,
 } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
@@ -264,24 +263,5 @@ describe('catenaXplorerUtils.ts', () => {
     expect(getSubmodelEdcEndpointInfo({
       endpoints: [{ protocolInformation: { href: 'https://data-plane.test/submodel' } }],
     })).toBeNull()
-  })
-
-  it('accepts only valid Submodel payloads for direct navigation', () => {
-    expect(isSubmodelPayload({
-      id: 'urn:example:submodel:1',
-      modelType: 'Submodel',
-      submodelElements: [],
-    })).toBe(true)
-
-    expect(isSubmodelPayload({
-      id: 'urn:example:submodel:1',
-      modelType: 'AssetAdministrationShell',
-    })).toBe(false)
-
-    expect(isSubmodelPayload({
-      id: 'urn:example:submodel:1',
-      modelType: 'Submodel',
-      idShort: 'Submodel Not Authorized!',
-    })).toBe(false)
   })
 })

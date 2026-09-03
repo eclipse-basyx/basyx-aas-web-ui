@@ -198,7 +198,6 @@
     getAssetIdNameSuggestions,
     getDescriptorKey,
     getSubmodelEdcEndpointInfo,
-    isSubmodelPayload,
   } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
   import CatenaXplorerNavigationDrawer from '@/pages/modules/CatenaXplorer/components/CatenaXplorerNavigationDrawer.vue'
   import DeleteDescriptorDialog from '@/pages/modules/CatenaXplorer/components/DeleteDescriptorDialog.vue'
@@ -209,6 +208,7 @@
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils'
+  import { isSubmodelPayload } from '@/utils/AAS/SubmodelUtils'
   import {
     getCatenaXPartnerKey,
     mergeCatenaXPartners,
