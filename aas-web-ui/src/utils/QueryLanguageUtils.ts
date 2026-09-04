@@ -22,7 +22,7 @@ const QUERY_RESOURCE_PATHS: Record<QueryTarget, { collection: string, query: str
 }
 
 const ALLOWED_FIELD_ROOTS: Record<QueryTarget, string[]> = {
-  'aas-repository': ['$aas'],
+  'aas-repository': ['$aas', '$sm', '$sme'],
   'aas-registry': ['$aasdesc', '$smdesc'],
   'submodel-repository': ['$sm', '$sme'],
 }

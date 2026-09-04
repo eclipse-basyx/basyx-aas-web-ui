@@ -204,6 +204,21 @@ describe('QueryLanguageUtils', () => {
         $fragment: '$sme#value',
         $condition: { $boolean: true },
       }],
-    }), 'aas-repository').isValid).toBe(false)
+    }), 'aas-repository').isValid).toBe(true)
+
+    expect(validateQueryForTarget(JSON.stringify({
+      $condition: {
+        $and: [
+          { $eq: [{ $field: '$sm#idShort' }, { $strVal: 'Nameplate' }] },
+          { $eq: [{ $field: '$sme.ManufacturerName#value' }, { $strVal: 'Example' }] },
+        ],
+      },
+    }), 'aas-repository').isValid).toBe(true)
+
+    const wrongAasRepositoryRoot = validateQueryForTarget(JSON.stringify({
+      $condition: { $eq: [{ $field: '$aasdesc#idShort' }, { $strVal: 'Example' }] },
+    }), 'aas-repository')
+    expect(wrongAasRepositoryRoot.isValid).toBe(false)
+    expect(wrongAasRepositoryRoot.message).toContain('Allowed roots: $aas, $sm, $sme')
   })
 })
