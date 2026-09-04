@@ -770,8 +770,8 @@
       && globalQueryAvailable.value
       && smSearchRoute.state.value.mode !== 'none'
     ) {
-      await applySearchFromRoute(false)
-      return
+      const queryEstablished = await applySearchFromRoute(false)
+      if (queryEstablished) return
     }
 
     const generation = treeLoad.start()
@@ -847,7 +847,34 @@
       idShortLower: item?.idShort?.toLowerCase() || '',
       nameLower: nameToDisplay(item).toLowerCase(),
       descLower: descriptionToDisplay(item).toLowerCase(),
+      searchValuesLower: getSubmodelSearchValues(item),
     }))
+  }
+
+  function getSubmodelSearchValues (item: any): string[] {
+    const values: string[] = []
+    if (['string', 'number', 'boolean'].includes(typeof item?.value)) {
+      values.push(String(item.value))
+    }
+    if (item?.modelType === 'MultiLanguageProperty' && Array.isArray(item.value)) {
+      values.push(...item.value
+        .map((entry: any) => entry?.text)
+        .filter((value: unknown): value is string => typeof value === 'string'))
+    }
+
+    values.push(...getReferenceValues(item?.semanticId))
+    if (Array.isArray(item?.supplementalSemanticIds)) {
+      values.push(...item.supplementalSemanticIds.flatMap((reference: any) => getReferenceValues(reference)))
+    }
+
+    return values.map(value => value.toLowerCase())
+  }
+
+  function getReferenceValues (reference: any): string[] {
+    if (!Array.isArray(reference?.keys)) return []
+    return reference.keys
+      .map((key: any) => key?.value)
+      .filter((value: unknown): value is string => typeof value === 'string')
   }
 
   function deepMap (array: Array<any>, fn: (arg0: any) => any): Array<any> {
@@ -1694,7 +1721,8 @@
           item.idLower.includes(search)
           || item.idShortLower.includes(search)
           || item.nameLower.includes(search)
-          || item.descLower.includes(search),
+          || item.descLower.includes(search)
+          || item.searchValuesLower.some((value: string) => value.includes(search)),
       )
     }
   }
@@ -1741,6 +1769,7 @@
     const success = await querySearch.execute(query, parsedSearch.value.filters.length > 0 ? 'filters' : 'quick')
     if (!success) return false
 
+    treeLoad.invalidate()
     applyQueryItems()
     return true
   }
@@ -1779,6 +1808,7 @@
     if (!success) return false
 
     smSearchValue.value = ''
+    treeLoad.invalidate()
     applyQueryItems()
     return true
   }
@@ -1794,26 +1824,48 @@
     await initialize()
   }
 
-  async function applySearchFromRoute (reloadWhenEmpty: boolean): Promise<void> {
-    if (!isGlobalSmRoute.value) return
+  async function applySearchFromRoute (reloadWhenEmpty: boolean): Promise<boolean> {
+    if (!isGlobalSmRoute.value) return false
 
     const state = smSearchRoute.state.value
     if (state.mode === 'search') {
       smSearchValue.value = state.expression
-      await executeSearchExpression()
-      return
+      if (parsedSearch.value.incompleteField) {
+        await clearInvalidRouteSearch('The shared Submodel search is incomplete.')
+        if (reloadWhenEmpty) await initialize()
+        return false
+      }
+
+      const success = await executeSearchExpression()
+      if (success) return true
+
+      await clearInvalidRouteSearch('The shared Submodel search could not be applied.')
+      if (reloadWhenEmpty) await initialize()
+      return false
     }
     if (state.mode === 'advanced') {
-      if (!globalQueryAvailable.value) return
+      if (!globalQueryAvailable.value) {
+        await clearInvalidRouteSearch('Advanced Submodel search is not available for this infrastructure.')
+        if (reloadWhenEmpty) await initialize()
+        return false
+      }
       const validation = validateQueryForTarget(
         state.queryText,
         'submodel-repository',
         selectedInfrastructureTemplate.value,
       )
-      if (!validation.isValid || !validation.query) return
+      if (!validation.isValid || !validation.query) {
+        await clearInvalidRouteSearch(validation.message || 'The shared Submodel query is invalid.')
+        if (reloadWhenEmpty) await initialize()
+        return false
+      }
       advancedQueryDraft.value = JSON.stringify(validation.query, null, 2)
-      await runAdvancedQuery(validation.query)
-      return
+      const success = await runAdvancedQuery(validation.query)
+      if (success) return true
+
+      await clearInvalidRouteSearch('The shared Submodel query could not be applied.')
+      if (reloadWhenEmpty) await initialize()
+      return false
     }
 
     smSearchValue.value = ''
@@ -1821,6 +1873,23 @@
       querySearch.clear()
       await initialize()
     }
+    return false
+  }
+
+  async function clearInvalidRouteSearch (message: string): Promise<void> {
+    navigationStore.dispatchSnackbar({
+      status: true,
+      timeout: 5000,
+      color: 'error',
+      btnColor: 'buttonText',
+      text: `${message} Loading the complete Submodel list instead.`,
+    })
+    ignoreNextSearchRouteUpdate = true
+    const changed = await smSearchRoute.clear()
+    if (!changed) ignoreNextSearchRouteUpdate = false
+    querySearch.clear()
+    smSearchValue.value = ''
+    advancedQueryDraft.value = ''
   }
 
   function applyQueryItems (): void {

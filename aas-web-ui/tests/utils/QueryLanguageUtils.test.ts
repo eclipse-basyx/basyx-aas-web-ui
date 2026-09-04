@@ -8,6 +8,7 @@ import {
   formatQueryFilter,
   getQueryFilterFields,
   parseQuerySearchExpression,
+  resolveAasQueryTarget,
   supportsQueryProfile,
   validateQueryForTarget,
 } from '@/utils/QueryLanguageUtils'
@@ -44,12 +45,26 @@ describe('QueryLanguageUtils', () => {
     const query = buildQuickSearchQuery('submodel-repository', ' Pump (A)+ ')
     const conditions = query?.$condition.$or as Array<Record<string, any>>
 
-    expect(conditions).toHaveLength(4)
-    expect(conditions[0].$regex).toEqual([
+    expect(conditions).toHaveLength(8)
+    expect(conditions[0].$match).toHaveLength(1)
+    expect(conditions[0].$match[0].$regex).toEqual([
       { $field: '$sm#id' },
       { $strVal: String.raw`(?i)Pump \(A\)\+` },
     ])
+    expect(conditions.slice(4).map(condition => condition.$match[0].$regex[0].$field)).toEqual([
+      '$sme#idShort',
+      '$sme#value',
+      '$sme#semanticId.keys[].value',
+      '$sme#supplementalSemanticIds[].keys[].value',
+    ])
     expect(buildQuickSearchQuery('aas-repository', '  ')).toBeUndefined()
+  })
+
+  it('selects an independently capable AAS query endpoint and prefers hierarchy support in mono mode', () => {
+    expect(resolveAasQueryTarget('mono-all', 'registry', true, true)).toBe('aas-repository')
+    expect(resolveAasQueryTarget('mono-repo', 'registry', true, false)).toBe('aas-repository')
+    expect(resolveAasQueryTarget('full', 'registry', true, true)).toBe('aas-registry')
+    expect(resolveAasQueryTarget('full', 'registry', true, false)).toBe('aas-repository')
   })
 
   it('exposes stable visual fields with target-specific Query Language paths', () => {
@@ -147,6 +162,24 @@ describe('QueryLanguageUtils', () => {
     ], 'all')).toBeUndefined()
   })
 
+  it('negates equality for exclusions on multi-valued fields', () => {
+    expect(buildStructuredSearchQuery('aas-repository', '', [{
+      id: 'excluded-specific-id',
+      field: 'specificAssetId',
+      operator: 'not-equals',
+      value: 'blocked',
+    }], 'all')).toEqual({
+      $condition: {
+        $not: {
+          $eq: [
+            { $field: '$aas#assetInformation.specificAssetIds[].value' },
+            { $strVal: 'blocked' },
+          ],
+        },
+      },
+    })
+  })
+
   it('parses GitHub-style field qualifiers while preserving plain text', () => {
     expect(parseQuerySearchExpression(
       'aas-repository',
@@ -201,16 +234,30 @@ describe('QueryLanguageUtils', () => {
     expect(validateQueryForTarget(JSON.stringify({
       $condition: { $boolean: true },
       $filters: [{
-        $fragment: '$sme#value',
-        $condition: { $boolean: true },
+        $fragment: '$sme.Readings[]',
+        $condition: {
+          $eq: [{ $field: '$sme.Readings[]#value' }, { $strVal: '42' }],
+        },
       }],
     }), 'aas-repository').isValid).toBe(false)
 
     expect(validateQueryForTarget(JSON.stringify({
       $condition: { $boolean: true },
       $filters: [{
-        $fragment: '$sme#value',
-        $condition: { $boolean: true },
+        $fragment: '$sme.Readings[]',
+        $condition: {
+          $eq: [{ $field: '$sme.Readings[]#value' }, { $strVal: '42' }],
+        },
+      }],
+    }), 'aas-repository', 'mono-all').isValid).toBe(false)
+
+    expect(validateQueryForTarget(JSON.stringify({
+      $condition: { $eq: [{ $field: '$sm#idShort' }, { $strVal: 'Nameplate' }] },
+      $filters: [{
+        $fragment: '$aas#submodels[]',
+        $condition: {
+          $eq: [{ $field: '$aas#submodels[].keys[].value' }, { $strVal: 'submodel-id' }],
+        },
       }],
     }), 'aas-repository', 'mono-all').isValid).toBe(true)
 

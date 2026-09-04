@@ -48,6 +48,10 @@ const QUICK_SEARCH_FIELDS: Record<QueryTarget, string[]> = {
     '$sm#idShort',
     '$sm#semanticId.keys[].value',
     '$sm#supplementalSemanticIds[].keys[].value',
+    '$sme#idShort',
+    '$sme#value',
+    '$sme#semanticId.keys[].value',
+    '$sme#supplementalSemanticIds[].keys[].value',
   ],
 }
 
@@ -109,6 +113,8 @@ export interface QueryContextValidation {
   query?: QueryLanguageQuery
 }
 
+export type AasQuerySource = 'registry' | 'repository'
+
 export function supportsQueryProfile (
   description: ServiceDescription | null | undefined,
   target: QueryTarget,
@@ -161,16 +167,46 @@ export function buildQuickSearchQuery (
   }
 
   const regex = `(?i)${escapeRegexLiteral(search)}`
+  const fieldConditions = QUICK_SEARCH_FIELDS[target].map(field => ({
+    $regex: [
+      { $field: field },
+      { $strVal: regex },
+    ],
+  }))
   return {
     $condition: {
-      $or: QUICK_SEARCH_FIELDS[target].map(field => ({
-        $regex: [
-          { $field: field },
-          { $strVal: regex },
-        ],
-      })),
+      $or: target === 'submodel-repository'
+        ? fieldConditions.map(condition => ({ $match: [condition] }))
+        : fieldConditions,
     },
   }
+}
+
+export function resolveAasQueryTarget (
+  infrastructureTemplate: InfrastructureTemplate,
+  activeSource: AasQuerySource | undefined,
+  repositoryAvailable: boolean,
+  registryAvailable: boolean,
+): QueryTarget {
+  const isMonoInfrastructure = infrastructureTemplate === 'mono-repo' || infrastructureTemplate === 'mono-all'
+  if (isMonoInfrastructure && repositoryAvailable) {
+    return 'aas-repository'
+  }
+
+  if (activeSource === 'repository' && repositoryAvailable) {
+    return 'aas-repository'
+  }
+  if (activeSource === 'registry' && registryAvailable) {
+    return 'aas-registry'
+  }
+  if (registryAvailable) {
+    return 'aas-registry'
+  }
+  if (repositoryAvailable) {
+    return 'aas-repository'
+  }
+
+  return activeSource === 'registry' ? 'aas-registry' : 'aas-repository'
 }
 
 export function getQueryFilterFields (target: QueryTarget): QueryFilterFieldDefinition[] {
@@ -317,24 +353,41 @@ export function validateQueryForTarget (
     return { isValid: false, message: '$select: "id" cannot be used because this view needs complete objects.' }
   }
 
-  const allowedFieldRoots = getAllowedFieldRoots(target, infrastructureTemplate)
-  const invalidFields = collectFieldValues(query)
-    .filter(field => !isAllowedField(field, allowedFieldRoots))
-  if (invalidFields.length > 0) {
-    const invalidRoot = invalidFields[0].split(/[.#(]/, 1)[0]
+  const allowedConditionRoots = getAllowedConditionFieldRoots(target, infrastructureTemplate)
+  const invalidConditionField = collectStringProperties(query.$condition, '$field')
+    .find(field => !isAllowedField(field, allowedConditionRoots))
+  if (invalidConditionField) {
+    const invalidRoot = invalidConditionField.split(/[.#(]/, 1)[0]
     const monoRootHint = target === 'aas-repository' && ['$sm', '$sme'].includes(invalidRoot)
       ? ' $sm and $sme roots for /query/shells are only available with mono-repo or mono-all infrastructures.'
       : ''
     return {
       isValid: false,
-      message: `Field ${invalidFields[0]} is not valid for this query target. Allowed roots: ${allowedFieldRoots.join(', ')}.${monoRootHint}`,
+      message: `Field ${invalidConditionField} is not valid for this query target. Allowed roots: ${allowedConditionRoots.join(', ')}.${monoRootHint}`,
+    }
+  }
+
+  const allowedFilterRoots = ALLOWED_FIELD_ROOTS[target]
+  const invalidFilterField = collectStringProperties(query.$filters, '$field')
+    .find(field => !isAllowedField(field, allowedFilterRoots))
+  const invalidFragment = collectStringProperties(query.$filters, '$fragment')
+    .find(fragment => !isAllowedField(fragment, allowedFilterRoots))
+  const invalidFilterValue = invalidFragment ?? invalidFilterField
+  if (invalidFilterValue) {
+    const role = invalidFragment ? 'Fragment' : 'Filter field'
+    const hierarchyHint = target === 'aas-repository'
+      ? ' $sm and $sme roots may only be used in the top-level condition for this endpoint.'
+      : ''
+    return {
+      isValid: false,
+      message: `${role} ${invalidFilterValue} is not valid for this query target. Allowed filter roots: ${allowedFilterRoots.join(', ')}.${hierarchyHint}`,
     }
   }
 
   return { isValid: true, message: '', query }
 }
 
-function getAllowedFieldRoots (
+function getAllowedConditionFieldRoots (
   target: QueryTarget,
   infrastructureTemplate?: InfrastructureTemplate,
 ): string[] {
@@ -348,18 +401,17 @@ function getAllowedFieldRoots (
   return ALLOWED_FIELD_ROOTS[target]
 }
 
-function collectFieldValues (value: unknown): string[] {
+function collectStringProperties (value: unknown, property: '$field' | '$fragment'): string[] {
   if (Array.isArray(value)) {
-    return value.flatMap(item => collectFieldValues(item))
+    return value.flatMap(item => collectStringProperties(item, property))
   }
   if (!value || typeof value !== 'object') {
     return []
   }
 
   const record = value as Record<string, unknown>
-  const fields = [record.$field, record.$fragment]
-    .filter((field): field is string => typeof field === 'string')
-  return fields.concat(Object.values(record).flatMap(item => collectFieldValues(item)))
+  const values = typeof record[property] === 'string' ? [record[property]] : []
+  return values.concat(Object.values(record).flatMap(item => collectStringProperties(item, property)))
 }
 
 function isAllowedField (field: string, roots: string[]): boolean {
@@ -397,7 +449,7 @@ function buildQueryFilterCondition (
     return { $eq: [fieldOperand, stringOperand] }
   }
   if (filter.operator === 'not-equals') {
-    return { $ne: [fieldOperand, stringOperand] }
+    return { $not: { $eq: [fieldOperand, stringOperand] } }
   }
   if (filter.operator === 'regex') {
     return { $regex: [fieldOperand, stringOperand] }

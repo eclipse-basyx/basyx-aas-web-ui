@@ -442,6 +442,7 @@
     buildStructuredSearchQuery,
     createQueryExample,
     parseQuerySearchExpression,
+    resolveAasQueryTarget,
     supportsQueryProfile,
     validateQueryForTarget,
   } from '@/utils/QueryLanguageUtils'
@@ -601,14 +602,23 @@
   const isTestingConnections = computed(() => infrastructureStore.getIsTestingConnections) // Check if testing connections
   const selectedInfrastructureId = computed(() => infrastructureStore.getSelectedInfrastructureId) // Get selected infrastructure ID
   const selectedInfrastructureTemplate = computed(() => infrastructureStore.getSelectedInfrastructure?.template ?? 'full')
-  const aasQueryTarget = computed<QueryTarget>(() => activeSource.value === 'registry' ? 'aas-registry' : 'aas-repository')
+  const aasRepositoryQueryAvailable = computed(() => supportsQueryProfile(
+    unref(infrastructureStore.getBasyxComponents.AASRepo.description),
+    'aas-repository',
+  ))
+  const aasRegistryQueryAvailable = computed(() => supportsQueryProfile(
+    unref(infrastructureStore.getBasyxComponents.AASRegistry.description),
+    'aas-registry',
+  ))
+  const aasQueryTarget = computed<QueryTarget>(() => resolveAasQueryTarget(
+    selectedInfrastructureTemplate.value,
+    activeSource.value,
+    aasRepositoryQueryAvailable.value,
+    aasRegistryQueryAvailable.value,
+  ))
   const parsedSearch = computed(() => parseQuerySearchExpression(aasQueryTarget.value, searchValue.value))
   const activeQueryBaseUrl = computed(() => aasQueryTarget.value === 'aas-registry' ? aasRegistryURL.value : aasRepoURL.value)
-  const queryAvailable = computed(() => {
-    if (!activeSource.value) return false
-    const componentKey = aasQueryTarget.value === 'aas-registry' ? 'AASRegistry' : 'AASRepo'
-    return supportsQueryProfile(unref(infrastructureStore.getBasyxComponents[componentKey].description), aasQueryTarget.value)
-  })
+  const queryAvailable = computed(() => aasRepositoryQueryAvailable.value || aasRegistryQueryAvailable.value)
   const isSearchLimited = computed(() => !queryAvailable.value && searchValue.value.trim() !== '' && hasMorePages.value)
   const visiblePageLoading = computed(() => querySearch.loadingMore.value || pageLoading.value)
 
@@ -652,7 +662,7 @@
       }
 
       void nextTick(() => {
-        bindVirtualScrollListener()
+        if (!querySearch.activeMode.value) bindVirtualScrollListener()
       })
     },
   )
@@ -875,13 +885,10 @@
       return false
     }
 
-    unbindVirtualScrollListener()
-    unbindQueryScrollListener()
     const success = await querySearch.execute(query, parsedSearch.value.filters.length > 0 ? 'filters' : 'quick')
     if (!success) return false
 
-    syncQueryItems()
-    void nextTick(bindQueryScrollListener)
+    activateQueryResults()
     return true
   }
 
@@ -915,14 +922,11 @@
   }
 
   async function runAdvancedQuery (query: QueryLanguageQuery): Promise<boolean> {
-    unbindVirtualScrollListener()
-    unbindQueryScrollListener()
     const success = await querySearch.execute(query, 'advanced')
     if (!success) return false
 
     searchValue.value = ''
-    syncQueryItems()
-    void nextTick(bindQueryScrollListener)
+    activateQueryResults()
     return true
   }
 
@@ -970,6 +974,14 @@
       .map(item => preprocessListItem(item))
       .toSorted(compareAasById)
     aasList.value = allLoadedAas.value
+  }
+
+  function activateQueryResults (): void {
+    invalidatePaginationGeneration()
+    unbindVirtualScrollListener()
+    unbindQueryScrollListener()
+    syncQueryItems()
+    void nextTick(bindQueryScrollListener)
   }
 
   function bindQueryScrollListener (): void {
@@ -1101,8 +1113,9 @@
     aasToInstantiate.value = aasDescriptor
   }
 
-  function handleAasSelected (aasId: string): void {
+  async function handleAasSelected (aasId: string): Promise<void> {
     handleSearchInput(aasId)
+    await submitSearch()
   }
 </script>
 
