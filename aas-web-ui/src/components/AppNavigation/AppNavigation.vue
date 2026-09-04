@@ -146,7 +146,7 @@
         <v-col class="d-flex flex-column align-center justify-center pa-0" :cols="isMobile ? 12 : 4">
           <div
             v-if="copyrightName || legalNoticeUrl || privacyPolicyUrl"
-            class="footer-company bg-surface rounded px-3 d-flex flex-column align-center justify-center"
+            class="footer-company px-3 d-flex flex-column align-center justify-center"
           >
             <div v-if="copyrightName" class="footer-company-name font-weight-regular text-no-wrap">
               {{ new Date().getFullYear() }} — {{ copyrightName }} ©
