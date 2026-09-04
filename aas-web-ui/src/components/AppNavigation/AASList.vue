@@ -408,6 +408,7 @@
     v-if="queryAvailable"
     v-model="advancedQueryDialog"
     :endpoint="activeQueryBaseUrl"
+    :infrastructure-template="selectedInfrastructureTemplate"
     :loading="querySearch.loading.value"
     :mobile="isMobile"
     :query="advancedQueryDraft"
@@ -599,6 +600,7 @@
   const isAuthenticating = computed(() => infrastructureStore.getIsAuthenticating) // Check if authentication is in progress
   const isTestingConnections = computed(() => infrastructureStore.getIsTestingConnections) // Check if testing connections
   const selectedInfrastructureId = computed(() => infrastructureStore.getSelectedInfrastructureId) // Get selected infrastructure ID
+  const selectedInfrastructureTemplate = computed(() => infrastructureStore.getSelectedInfrastructure?.template ?? 'full')
   const aasQueryTarget = computed<QueryTarget>(() => activeSource.value === 'registry' ? 'aas-registry' : 'aas-repository')
   const parsedSearch = computed(() => parseQuerySearchExpression(aasQueryTarget.value, searchValue.value))
   const activeQueryBaseUrl = computed(() => aasQueryTarget.value === 'aas-registry' ? aasRegistryURL.value : aasRepoURL.value)
@@ -943,7 +945,11 @@
     }
     if (state.mode === 'advanced') {
       if (!queryAvailable.value) return
-      const validation = validateQueryForTarget(state.queryText, aasQueryTarget.value)
+      const validation = validateQueryForTarget(
+        state.queryText,
+        aasQueryTarget.value,
+        selectedInfrastructureTemplate.value,
+      )
       if (!validation.isValid || !validation.query) return
       advancedQueryDraft.value = JSON.stringify(validation.query, null, 2)
       await runAdvancedQuery(validation.query)

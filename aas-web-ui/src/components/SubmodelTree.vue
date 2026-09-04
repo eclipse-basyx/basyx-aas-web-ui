@@ -436,6 +436,7 @@
     v-if="globalQueryAvailable"
     v-model="advancedQueryDialog"
     :endpoint="submodelRepoURL"
+    :infrastructure-template="selectedInfrastructureTemplate"
     :loading="querySearch.loading.value"
     :mobile="isMobile"
     :query="advancedQueryDraft"
@@ -576,6 +577,7 @@
   const aasRegistryURL = computed(() => infrastructureStore.getAASRegistryURL) // get AAS Registry URL from Store
   const submodelRegistryURL = computed(() => infrastructureStore.getSubmodelRegistryURL) // get Submodel Registry URL from Store
   const submodelRepoURL = computed(() => infrastructureStore.getSubmodelRepoURL)
+  const selectedInfrastructureTemplate = computed(() => infrastructureStore.getSelectedInfrastructure?.template ?? 'full')
   const selectedNode = computed(() => aasStore.getSelectedNode) // get the updated Treeview Node from Store
   const singleAas = computed(() => envStore.getSingleAas) // Get the single AAS state from the Store
   const editorMode = computed(() => ['AASEditor', 'SMEditor'].includes(route.name as string))
@@ -1803,7 +1805,11 @@
     }
     if (state.mode === 'advanced') {
       if (!globalQueryAvailable.value) return
-      const validation = validateQueryForTarget(state.queryText, 'submodel-repository')
+      const validation = validateQueryForTarget(
+        state.queryText,
+        'submodel-repository',
+        selectedInfrastructureTemplate.value,
+      )
       if (!validation.isValid || !validation.query) return
       advancedQueryDraft.value = JSON.stringify(validation.query, null, 2)
       await runAdvancedQuery(validation.query)

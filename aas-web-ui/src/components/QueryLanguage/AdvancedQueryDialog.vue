@@ -62,6 +62,7 @@
 
 <script setup lang="ts">
   import type { QueryLanguageValidation } from '@/pages/modules/queryLanguage/queryLanguageValidation'
+  import type { InfrastructureTemplate } from '@/types/Infrastructure'
   import type { QueryLanguageQuery, QueryTarget } from '@/types/QueryLanguage'
   import { buildQueryEndpoint, validateQueryForTarget } from '@/utils/QueryLanguageUtils'
 
@@ -70,6 +71,7 @@
     loading: boolean
     mobile: boolean
     query: string
+    infrastructureTemplate: InfrastructureTemplate
     target: QueryTarget
     title: string
   }>()
@@ -87,7 +89,11 @@
     get: () => props.query,
     set: value => emit('update:query', value),
   })
-  const contextValidation = computed(() => validateQueryForTarget(props.query, props.target))
+  const contextValidation = computed(() => validateQueryForTarget(
+    props.query,
+    props.target,
+    props.infrastructureTemplate,
+  ))
   const canExecute = computed(() => schemaValidation.value.isValid && contextValidation.value.isValid && !props.loading)
   const targetLabel = computed(() => {
     if (props.target === 'aas-registry') return 'AAS Registry'

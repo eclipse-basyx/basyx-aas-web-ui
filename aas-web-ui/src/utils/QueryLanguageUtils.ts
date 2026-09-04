@@ -1,4 +1,5 @@
 import type { ServiceDescription } from '@/types/BaSyx'
+import type { InfrastructureTemplate } from '@/types/Infrastructure'
 import type {
   ParsedQuerySearchExpression,
   QueryFilter,
@@ -22,10 +23,12 @@ const QUERY_RESOURCE_PATHS: Record<QueryTarget, { collection: string, query: str
 }
 
 const ALLOWED_FIELD_ROOTS: Record<QueryTarget, string[]> = {
-  'aas-repository': ['$aas', '$sm', '$sme'],
+  'aas-repository': ['$aas'],
   'aas-registry': ['$aasdesc', '$smdesc'],
   'submodel-repository': ['$sm', '$sme'],
 }
+
+const MONO_AAS_REPOSITORY_FIELD_ROOTS = ['$aas', '$sm', '$sme']
 
 const QUICK_SEARCH_FIELDS: Record<QueryTarget, string[]> = {
   'aas-repository': [
@@ -290,7 +293,11 @@ export function createQueryExample (target: QueryTarget): string {
   }, null, 2)
 }
 
-export function validateQueryForTarget (queryText: string, target: QueryTarget): QueryContextValidation {
+export function validateQueryForTarget (
+  queryText: string,
+  target: QueryTarget,
+  infrastructureTemplate?: InfrastructureTemplate,
+): QueryContextValidation {
   let parsed: unknown
   try {
     parsed = JSON.parse(queryText)
@@ -310,16 +317,35 @@ export function validateQueryForTarget (queryText: string, target: QueryTarget):
     return { isValid: false, message: '$select: "id" cannot be used because this view needs complete objects.' }
   }
 
+  const allowedFieldRoots = getAllowedFieldRoots(target, infrastructureTemplate)
   const invalidFields = collectFieldValues(query)
-    .filter(field => !isAllowedField(field, ALLOWED_FIELD_ROOTS[target]))
+    .filter(field => !isAllowedField(field, allowedFieldRoots))
   if (invalidFields.length > 0) {
+    const invalidRoot = invalidFields[0].split(/[.#(]/, 1)[0]
+    const monoRootHint = target === 'aas-repository' && ['$sm', '$sme'].includes(invalidRoot)
+      ? ' $sm and $sme roots for /query/shells are only available with mono-repo or mono-all infrastructures.'
+      : ''
     return {
       isValid: false,
-      message: `Field ${invalidFields[0]} is not valid for this query target. Allowed roots: ${ALLOWED_FIELD_ROOTS[target].join(', ')}.`,
+      message: `Field ${invalidFields[0]} is not valid for this query target. Allowed roots: ${allowedFieldRoots.join(', ')}.${monoRootHint}`,
     }
   }
 
   return { isValid: true, message: '', query }
+}
+
+function getAllowedFieldRoots (
+  target: QueryTarget,
+  infrastructureTemplate?: InfrastructureTemplate,
+): string[] {
+  if (
+    target === 'aas-repository'
+    && (infrastructureTemplate === 'mono-repo' || infrastructureTemplate === 'mono-all')
+  ) {
+    return MONO_AAS_REPOSITORY_FIELD_ROOTS
+  }
+
+  return ALLOWED_FIELD_ROOTS[target]
 }
 
 function collectFieldValues (value: unknown): string[] {

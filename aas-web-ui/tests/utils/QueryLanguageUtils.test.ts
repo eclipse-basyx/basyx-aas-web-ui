@@ -204,7 +204,15 @@ describe('QueryLanguageUtils', () => {
         $fragment: '$sme#value',
         $condition: { $boolean: true },
       }],
-    }), 'aas-repository').isValid).toBe(true)
+    }), 'aas-repository').isValid).toBe(false)
+
+    expect(validateQueryForTarget(JSON.stringify({
+      $condition: { $boolean: true },
+      $filters: [{
+        $fragment: '$sme#value',
+        $condition: { $boolean: true },
+      }],
+    }), 'aas-repository', 'mono-all').isValid).toBe(true)
 
     expect(validateQueryForTarget(JSON.stringify({
       $condition: {
@@ -213,12 +221,19 @@ describe('QueryLanguageUtils', () => {
           { $eq: [{ $field: '$sme.ManufacturerName#value' }, { $strVal: 'Example' }] },
         ],
       },
-    }), 'aas-repository').isValid).toBe(true)
+    }), 'aas-repository', 'mono-repo').isValid).toBe(true)
 
     const wrongAasRepositoryRoot = validateQueryForTarget(JSON.stringify({
       $condition: { $eq: [{ $field: '$aasdesc#idShort' }, { $strVal: 'Example' }] },
     }), 'aas-repository')
     expect(wrongAasRepositoryRoot.isValid).toBe(false)
-    expect(wrongAasRepositoryRoot.message).toContain('Allowed roots: $aas, $sm, $sme')
+    expect(wrongAasRepositoryRoot.message).toContain('Allowed roots: $aas')
+
+    const separatedRepositorySubmodelRoot = validateQueryForTarget(JSON.stringify({
+      $condition: { $eq: [{ $field: '$sm#idShort' }, { $strVal: 'Nameplate' }] },
+    }), 'aas-repository', 'full')
+    expect(separatedRepositorySubmodelRoot.isValid).toBe(false)
+    expect(separatedRepositorySubmodelRoot.message).toContain('Allowed roots: $aas')
+    expect(separatedRepositorySubmodelRoot.message).toContain('only available with mono-repo or mono-all')
   })
 })
