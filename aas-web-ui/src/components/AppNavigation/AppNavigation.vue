@@ -139,7 +139,7 @@
     <!-- App Footer -->
     <v-footer app class="bg-appBar d-flex py-0 px-2 px-sm-4" height="40">
       <v-row align="center" class="flex-nowrap" justify="center" no-gutters>
-        <v-col v-if="!isMobile" class="d-flex justify-start pa-0 text-caption font-weight-regular" cols="4">
+        <v-col v-if="!isMobile" class="basyx-copyright d-flex justify-start pa-0 font-weight-regular" cols="4">
           Eclipse BaSyx™ ©
         </v-col>
 
@@ -498,3 +498,10 @@
   }
 
 </script>
+
+<style scoped>
+  .basyx-copyright {
+    font-size: 0.625rem;
+    line-height: 1rem;
+  }
+</style>
