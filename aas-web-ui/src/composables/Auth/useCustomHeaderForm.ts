@@ -1,5 +1,5 @@
 import type { InfrastructureConfig } from '@/types/Infrastructure'
-import { type Ref, ref } from 'vue'
+import type { Ref } from 'vue'
 
 /**
  * Default header name suggested when Custom Header authentication is selected.
