@@ -87,6 +87,43 @@
           />
         </template>
 
+        <!-- Custom Header -->
+        <template v-if="auth.securityType === 'Custom Header'">
+          <v-alert
+            class="mb-2"
+            density="compact"
+            icon="mdi-alert"
+            prominent
+            type="warning"
+            variant="tonal"
+          >
+            <strong>Security Warning:</strong> The header value is stored as a static secret in the
+            browser's localStorage. This exposes it in the browser context and should
+            <strong>only be used for development/testing</strong>. For production, use a backend
+            service that injects the header.
+          </v-alert>
+
+          <v-text-field
+            class="mb-2"
+            density="compact"
+            label="Custom Header Name"
+            :model-value="customHeaderName"
+            placeholder="X-API-KEY"
+            variant="outlined"
+            @update:model-value="$emit('update:custom-header-name', $event)"
+          />
+
+          <v-text-field
+            class="mb-2"
+            density="compact"
+            label="Custom Header Value"
+            :model-value="customHeaderValue"
+            type="password"
+            variant="outlined"
+            @update:model-value="$emit('update:custom-header-value', $event)"
+          />
+        </template>
+
         <!-- OAuth2 -->
         <template v-if="auth.securityType === 'OAuth2'">
           <v-select
@@ -234,6 +271,9 @@
     basicAuthPassword: string
     // Bearer Token
     bearerToken: string
+    // Custom Header
+    customHeaderName: string
+    customHeaderValue: string
     // OAuth2
     oAuth2AuthFlow: string
     oauth2Data: {
@@ -254,6 +294,8 @@
     'update:basic-auth-username': [value: string]
     'update:basic-auth-password': [value: string]
     'update:bearer-token': [value: string]
+    'update:custom-header-name': [value: string]
+    'update:custom-header-value': [value: string]
     'update:o-auth2-auth-flow': [value: string]
     'update:oauth2-host': [value: string]
     'update:oauth2-client-id': [value: string]

@@ -628,6 +628,15 @@ export function useRequestHandling () {
         } else if (auth.securityType === 'OAuth2' && selectedInfra.token?.accessToken) {
           requestHeaders.set('Authorization', authorizationPrefix + ' ' + selectedInfra.token.accessToken)
           return requestHeaders
+        } else if (auth.securityType === 'Custom Header' && auth.customHeader) {
+          // Header name is trimmed (names cannot contain whitespace); the value is
+          // sent verbatim. Skip entirely if either is empty.
+          const headerName = auth.customHeader.name?.trim()
+          const headerValue = auth.customHeader.value
+          if (headerName && headerValue?.trim()) {
+            requestHeaders.set(headerName, headerValue)
+          }
+          return requestHeaders
         }
       }
     }
