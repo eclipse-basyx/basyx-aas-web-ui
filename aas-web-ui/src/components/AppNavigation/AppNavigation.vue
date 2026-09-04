@@ -144,34 +144,41 @@
         </v-col>
 
         <v-col class="d-flex flex-column align-center justify-center pa-0" :cols="isMobile ? 12 : 4">
-          <div v-if="copyrightName" class="text-caption font-weight-regular text-no-wrap">
-            {{ new Date().getFullYear() }} — {{ copyrightName }} ©
-          </div>
+          <div
+            v-if="copyrightName || legalNoticeUrl || privacyPolicyUrl"
+            class="footer-company bg-surface rounded px-3 d-flex flex-column align-center justify-center"
+          >
+            <div v-if="copyrightName" class="footer-company-name font-weight-regular text-no-wrap">
+              {{ new Date().getFullYear() }} — {{ copyrightName }} ©
+            </div>
 
-          <div v-if="legalNoticeUrl || privacyPolicyUrl" class="d-flex align-center">
-            <v-btn
-              v-if="legalNoticeUrl"
-              class="px-1 text-caption"
-              density="compact"
-              height="18"
-              :href="legalNoticeUrl"
-              rel="noopener"
-              size="x-small"
-              target="_blank"
-              variant="text"
-            >Legal notice</v-btn>
+            <div v-if="legalNoticeUrl || privacyPolicyUrl" class="d-flex align-center">
+              <v-btn
+                v-if="legalNoticeUrl"
+                class="footer-link px-1 text-decoration-underline"
+                color="primary"
+                density="compact"
+                height="16"
+                :href="legalNoticeUrl"
+                rel="noopener"
+                size="x-small"
+                target="_blank"
+                variant="text"
+              >Legal notice</v-btn>
 
-            <v-btn
-              v-if="privacyPolicyUrl"
-              class="px-1 text-caption"
-              density="compact"
-              height="18"
-              :href="privacyPolicyUrl"
-              rel="noopener"
-              size="x-small"
-              target="_blank"
-              variant="text"
-            >Privacy policy</v-btn>
+              <v-btn
+                v-if="privacyPolicyUrl"
+                class="footer-link px-1 text-decoration-underline"
+                color="primary"
+                density="compact"
+                height="16"
+                :href="privacyPolicyUrl"
+                rel="noopener"
+                size="x-small"
+                target="_blank"
+                variant="text"
+              >Privacy policy</v-btn>
+            </div>
           </div>
         </v-col>
 
@@ -503,5 +510,19 @@
   .basyx-copyright {
     font-size: 0.625rem;
     line-height: 1rem;
+  }
+
+  .footer-company {
+    min-height: 2.125rem;
+  }
+
+  .footer-company-name,
+  .footer-link {
+    font-size: 0.6875rem;
+    line-height: 0.875rem;
+  }
+
+  .footer-link {
+    text-underline-offset: 0.125rem;
   }
 </style>
