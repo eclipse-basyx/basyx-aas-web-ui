@@ -502,6 +502,46 @@ describe('RequestHandling.ts', () => {
     expect(fetchHeaders.get('Authorization')).toBe('Bearer token-1')
   })
 
+  it('sends the configured custom header verbatim under the given name', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response('', { status: 202 })) as unknown as typeof fetch
+    mockState.selectedInfrastructure = {
+      id: 'infra-1',
+      auth: {
+        securityType: 'Custom Header',
+        customHeader: { name: 'X-API-KEY', value: 'secret-key-123' },
+      },
+      token: undefined,
+    }
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { postRequest } = useRequestHandling()
+    await postRequest('/operation/invoke-async', '{}', new Headers(), 'invoking Operation', false)
+
+    const fetchHeaders = (vi.mocked(global.fetch).mock.calls[0][1]?.headers) as Headers
+    expect(fetchHeaders.get('X-API-KEY')).toBe('secret-key-123')
+    // Does not set an Authorization header for this scheme.
+    expect(fetchHeaders.has('Authorization')).toBe(false)
+  })
+
+  it('skips the custom header when the name or value is empty', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response('', { status: 202 })) as unknown as typeof fetch
+    mockState.selectedInfrastructure = {
+      id: 'infra-1',
+      auth: {
+        securityType: 'Custom Header',
+        customHeader: { name: 'X-API-KEY', value: ' '.repeat(3) },
+      },
+      token: undefined,
+    }
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { postRequest } = useRequestHandling()
+    await postRequest('/operation/invoke-async', '{}', new Headers(), 'invoking Operation', false)
+
+    const fetchHeaders = (vi.mocked(global.fetch).mock.calls[0][1]?.headers) as Headers
+    expect(fetchHeaders.has('X-API-KEY')).toBe(false)
+  })
+
   it('suppresses only configured unsupported POST statuses so a caller can fall back', async () => {
     global.fetch = vi.fn().mockResolvedValue(
       Response.json([{ code: 405, text: 'Method not allowed' }], {
