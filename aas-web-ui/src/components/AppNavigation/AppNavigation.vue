@@ -137,20 +137,53 @@
     <CommandPalette v-model="commandPaletteDialog" />
 
     <!-- App Footer -->
-    <v-footer app class="bg-appBar text-center d-flex py-0">
-      <v-spacer />
+    <v-footer app class="bg-appBar d-flex py-0 px-2 px-sm-4">
+      <v-row align="center" class="flex-nowrap" justify="center" no-gutters>
+        <v-col v-if="!isMobile" class="d-flex justify-start pa-0" cols="4">
+          <strong>Eclipse BaSyx™ ©</strong>
+        </v-col>
 
-      <v-list-item class="px-1">
-        <v-list-item-title>
-          <div>{{ new Date().getFullYear() }} — <strong>Eclipse BaSyx™ ©</strong></div>
-        </v-list-item-title>
-      </v-list-item>
+        <v-col class="d-flex justify-center pa-0" :cols="isMobile ? 'auto' : 4">
+          <div v-if="copyrightName" class="text-no-wrap" :class="{ 'text-caption': isMobile }">
+            {{ new Date().getFullYear() }} — <strong>{{ copyrightName }} ©</strong>
+          </div>
+        </v-col>
 
-      <v-spacer />
-      <!-- IDTA Logo -->
-      <a href="https://industrialdigitaltwin.org/" rel="noopener" target="_blank">
-        <v-img v-if="!isMobile" class="cursor-pointer" src="@/assets/IDTA_Logo_Blue_Web_S.svg" width="80px" />
-      </a>
+        <v-col class="d-flex align-center justify-end pa-0" :cols="isMobile ? 'auto' : 4">
+          <v-btn
+            v-if="legalNoticeUrl"
+            class="px-1"
+            density="compact"
+            :href="legalNoticeUrl"
+            rel="noopener"
+            size="small"
+            target="_blank"
+            variant="text"
+          >Legal notice</v-btn>
+
+          <v-btn
+            v-if="privacyPolicyUrl"
+            class="px-1"
+            density="compact"
+            :href="privacyPolicyUrl"
+            rel="noopener"
+            size="small"
+            target="_blank"
+            variant="text"
+          >Privacy policy</v-btn>
+
+          <!-- IDTA Logo -->
+          <a
+            v-if="!isMobile"
+            class="ml-2"
+            href="https://industrialdigitaltwin.org/"
+            rel="noopener"
+            target="_blank"
+          >
+            <v-img class="cursor-pointer" src="@/assets/IDTA_Logo_Blue_Web_S.svg" width="80px" />
+          </a>
+        </v-col>
+      </v-row>
     </v-footer>
 
     <!-- left Side Menu with the AAS List -->
@@ -329,6 +362,9 @@
   const isMobile = computed(() => navigationStore.getIsMobile)
   const isDark = computed(() => theme.global.current.value.dark)
   const endpointConfigAvailable = computed(() => envStore.getEndpointConfigAvailable)
+  const copyrightName = computed(() => getOptionalEnvValue(envStore.getEnvCopyrightName))
+  const legalNoticeUrl = computed(() => getFooterUrl(envStore.getEnvLegalNoticeUrl))
+  const privacyPolicyUrl = computed(() => getFooterUrl(envStore.getEnvPrivacyPolicyUrl))
   const menuToggleTitle = computed(() => {
     if (route.path.startsWith('/modules/')) {
       const parentModuleRoute = route.matched.find(record => record.path.startsWith('/modules/'))
@@ -451,6 +487,16 @@
     } catch {
       return false
     }
+  }
+
+  function getFooterUrl (value: string): string | undefined {
+    const url = getOptionalEnvValue(value)
+    return url && validURL(url) ? url : undefined
+  }
+
+  function getOptionalEnvValue (value: string): string | undefined {
+    const configuredValue = value.trim()
+    return configuredValue !== '' && !configuredValue.includes('PLACEHOLDER') ? configuredValue : undefined
   }
 
 </script>
