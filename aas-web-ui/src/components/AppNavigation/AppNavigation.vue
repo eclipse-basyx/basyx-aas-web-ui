@@ -137,49 +137,47 @@
     <CommandPalette v-model="commandPaletteDialog" />
 
     <!-- App Footer -->
-    <v-footer app class="bg-appBar d-flex py-0 px-2 px-sm-4">
+    <v-footer app class="bg-appBar d-flex py-0 px-2 px-sm-4" height="40">
       <v-row align="center" class="flex-nowrap" justify="center" no-gutters>
-        <v-col v-if="!isMobile" class="d-flex justify-start pa-0" cols="4">
-          <strong>Eclipse BaSyx™ ©</strong>
+        <v-col v-if="!isMobile" class="d-flex justify-start pa-0 text-caption font-weight-regular" cols="4">
+          Eclipse BaSyx™ ©
         </v-col>
 
-        <v-col class="d-flex justify-center pa-0" :cols="isMobile ? 'auto' : 4">
-          <div v-if="copyrightName" class="text-no-wrap" :class="{ 'text-caption': isMobile }">
-            {{ new Date().getFullYear() }} — <strong>{{ copyrightName }} ©</strong>
+        <v-col class="d-flex flex-column align-center justify-center pa-0" :cols="isMobile ? 12 : 4">
+          <div v-if="copyrightName" class="text-caption font-weight-regular text-no-wrap">
+            {{ new Date().getFullYear() }} — {{ copyrightName }} ©
+          </div>
+
+          <div v-if="legalNoticeUrl || privacyPolicyUrl" class="d-flex align-center">
+            <v-btn
+              v-if="legalNoticeUrl"
+              class="px-1 text-caption"
+              density="compact"
+              height="18"
+              :href="legalNoticeUrl"
+              rel="noopener"
+              size="x-small"
+              target="_blank"
+              variant="text"
+            >Legal notice</v-btn>
+
+            <v-btn
+              v-if="privacyPolicyUrl"
+              class="px-1 text-caption"
+              density="compact"
+              height="18"
+              :href="privacyPolicyUrl"
+              rel="noopener"
+              size="x-small"
+              target="_blank"
+              variant="text"
+            >Privacy policy</v-btn>
           </div>
         </v-col>
 
-        <v-col class="d-flex align-center justify-end pa-0" :cols="isMobile ? 'auto' : 4">
-          <v-btn
-            v-if="legalNoticeUrl"
-            class="px-1"
-            density="compact"
-            :href="legalNoticeUrl"
-            rel="noopener"
-            size="small"
-            target="_blank"
-            variant="text"
-          >Legal notice</v-btn>
-
-          <v-btn
-            v-if="privacyPolicyUrl"
-            class="px-1"
-            density="compact"
-            :href="privacyPolicyUrl"
-            rel="noopener"
-            size="small"
-            target="_blank"
-            variant="text"
-          >Privacy policy</v-btn>
-
+        <v-col v-if="!isMobile" class="d-flex align-center justify-end pa-0" cols="4">
           <!-- IDTA Logo -->
-          <a
-            v-if="!isMobile"
-            class="ml-2"
-            href="https://industrialdigitaltwin.org/"
-            rel="noopener"
-            target="_blank"
-          >
+          <a class="ml-2" href="https://industrialdigitaltwin.org/" rel="noopener" target="_blank">
             <v-img class="cursor-pointer" src="@/assets/IDTA_Logo_Blue_Web_S.svg" width="80px" />
           </a>
         </v-col>

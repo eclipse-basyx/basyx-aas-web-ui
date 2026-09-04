@@ -25,6 +25,11 @@ test('ui is reachable under configured base path', async ({ page, request }) => 
 
   await expect(page.getByAltText('Logo')).toBeVisible({ timeout: 30_000 })
 
+  const footer = page.locator('footer')
+  await expect(footer).toBeVisible()
+  expect(await footer.evaluate(element => Math.round(element.getBoundingClientRect().height))).toBe(40)
+  await expect(footer.getByText(/Eclipse BaSyx™ ©/)).toBeVisible()
+
   const indexResponse = await request.get(normalizedBasePath)
   expect(indexResponse.ok()).toBeTruthy()
   const indexHtml = await indexResponse.text()
