@@ -67,18 +67,33 @@
             "
           >
             <v-col>
-              <v-text-field
-                clearable
-                density="compact"
-                hide-details
-                label="Search for SM/SME..."
-                :min-width="200"
-                persistent-placeholder
+              <QuerySearchField
+                v-model="smSearchValue"
+                example="semanticId:0173"
+                label="Search SM/SME"
+                :loading="querySearch.loading.value"
                 :placeholder="submodelTree.length.toString() + ' Submodels'"
-                variant="outlined"
-                @update:model-value="debouncedFilterSubmodelTree"
+                :server-search="globalQueryAvailable"
+                target="submodel-repository"
+                @clear="clearQuerySearch"
+                @submit="submitSearch"
+                @update:model-value="handleSearchInput"
               />
             </v-col>
+
+            <v-tooltip v-if="globalQueryAvailable" :disabled="isMobile" location="bottom" open-delay="600">
+              <template #activator="{ props }">
+                <v-btn
+                  v-bind="props"
+                  :color="querySearch.activeMode.value === 'advanced' ? 'primary' : undefined"
+                  icon="mdi-code-json"
+                  variant="plain"
+                  @click="openSearchDialog"
+                />
+              </template>
+
+              <span>{{ querySearch.activeMode.value === 'advanced' ? 'Edit advanced query' : 'Advanced Query Language' }}</span>
+            </v-tooltip>
 
             <v-tooltip :disabled="isMobile" location="bottom" open-delay="600">
               <template #activator="{ props }">
@@ -180,7 +195,14 @@
 
       <v-divider />
 
-      <v-card-text style="overflow-y: auto; height: calc(100svh - 170px)">
+      <v-progress-linear
+        v-if="querySearch.loading.value || querySearch.loadingMore.value"
+        color="primary"
+        height="2"
+        indeterminate
+      />
+
+      <v-card-text :style="{ overflowY: 'auto', height: treeContentHeight }">
         <!-- Show Skeleton Loader when the tree is loading -->
         <template v-if="treeLoading">
           <v-list-item
@@ -235,13 +257,27 @@
                 @paste-operation-owned-element="pasteOperationOwnedElement"
                 @show-delete-dialog="openDeleteDialog"
               />
+
+              <div
+                v-if="querySearch.activeMode.value && querySearch.hasMore.value && !querySearch.failed.value"
+                v-intersect="loadMoreQueryResults"
+                class="d-flex justify-center py-3"
+              >
+                <v-progress-circular v-if="querySearch.loadingMore.value" indeterminate size="22" width="2" />
+              </div>
+
+              <div v-if="querySearch.activeMode.value && querySearch.failed.value" class="d-flex justify-center py-3">
+                <v-btn prepend-icon="mdi-reload" size="small" variant="tonal" @click="retryQueryPage">
+                  Retry query
+                </v-btn>
+              </div>
             </template>
 
             <v-empty-state
               v-else-if="['SMViewer', 'SMEditor'].includes(route.name as string)"
               class="text-divider"
-              text="The specified Submodel Repository does not contain any Submodels"
-              title="No existing Submodels"
+              :text="querySearch.activeMode.value ? 'No Submodels match the active query' : 'The specified Submodel Repository does not contain any Submodels'"
+              :title="querySearch.activeMode.value ? 'No matching Submodels' : 'No existing Submodels'"
             />
 
             <v-empty-state
@@ -395,10 +431,26 @@
     v-model="conversionDialog"
     :submodel="submodelToConvert"
   />
+
+  <AdvancedQueryDialog
+    v-if="globalQueryAvailable"
+    v-model="advancedQueryDialog"
+    :endpoint="submodelRepoURL"
+    :infrastructure-template="selectedInfrastructureTemplate"
+    :loading="querySearch.loading.value"
+    :mobile="isMobile"
+    :query="advancedQueryDraft"
+    target="submodel-repository"
+    title="Advanced Submodel query"
+    @execute="executeAdvancedQuery"
+    @reset="resetAdvancedQueryDraft"
+    @update:query="advancedQueryDraft = $event"
+  />
 </template>
 
 <script lang="ts" setup>
   import type { OperationNodeLocator, OperationVariableDirection } from '@/types/OperationTree'
+  import type { QueryLanguageQuery } from '@/types/QueryLanguage'
   import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization'
   import type { Ref } from 'vue'
   import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
@@ -407,9 +459,12 @@
   import { useOperationTreeMutation } from '@/composables/AAS/OperationTreeMutation'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
+  import { useQueryLanguageClient } from '@/composables/Client/QueryLanguageClient'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { useLoadGeneration } from '@/composables/LoadGeneration'
   import { verifyForEditor } from '@/composables/MetamodelVerification'
+  import { useQuerySearch } from '@/composables/QueryLanguage/QuerySearch'
+  import { useQuerySearchRoute } from '@/composables/QueryLanguage/QuerySearchRoute'
   import { useAASStore } from '@/store/AASDataStore'
   import { useClipboardStore } from '@/store/ClipboardStore'
   import { useEnvStore } from '@/store/EnvironmentStore'
@@ -426,7 +481,13 @@
     verificationPathToOperationLocator,
   } from '@/utils/AAS/OperationTreeUtils'
   import { isChildTypeAllowed } from '@/utils/AAS/SubmodelElementRegistry'
-  import { debounce } from '@/utils/generalUtils'
+  import {
+    buildStructuredSearchQuery,
+    createQueryExample,
+    parseQuerySearchExpression,
+    supportsQueryProfile,
+    validateQueryForTarget,
+  } from '@/utils/QueryLanguageUtils'
   import { isEmptyString } from '@/utils/StringUtils'
 
   // Vue Router
@@ -435,10 +496,12 @@
 
   // Composables
   const { fetchAasSmListById } = useAASHandling()
-  const { fetchSmList } = useSMHandling()
+  const { fetchSmList, enrichSmListItems } = useSMHandling()
+  const { queryPage } = useQueryLanguageClient()
   const { nameToDisplay, descriptionToDisplay } = useReferableUtils()
   const { pasteElement } = useClipboardUtil()
   const { mutateOperation } = useOperationTreeMutation()
+  const smSearchRoute = useQuerySearchRoute('smSearch', 'smQuery')
 
   // Stores
   const navigationStore = useNavigationStore()
@@ -450,7 +513,10 @@
   // Data
   const submodelTree = ref([] as Array<any>) as Ref<Array<any>> // Submodel Treeview Data
   const submodelTreeUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the unfiltere Submodel Treeview Data before filtering
-  const debouncedFilterSubmodelTree = debounce(filterSubmodelTree, 300) // Debounced function to filter the AAS List
+  const smSearchValue = ref('')
+  const advancedQueryDialog = ref(false)
+  const advancedQueryDraft = ref('')
+  let ignoreNextSearchRouteUpdate = false
   const treeLoad = useLoadGeneration()
   const treeLoading = treeLoad.loading // Variable to store if the Submodel Tree is loading
   const selectSMETypeToAddDialog = ref(false) // Variable to store if the Add SubmodelElement Dialog should be shown
@@ -510,6 +576,8 @@
   const selectedAAS = computed(() => aasStore.getSelectedAAS) // get selected AAS from Store
   const aasRegistryURL = computed(() => infrastructureStore.getAASRegistryURL) // get AAS Registry URL from Store
   const submodelRegistryURL = computed(() => infrastructureStore.getSubmodelRegistryURL) // get Submodel Registry URL from Store
+  const submodelRepoURL = computed(() => infrastructureStore.getSubmodelRepoURL)
+  const selectedInfrastructureTemplate = computed(() => infrastructureStore.getSelectedInfrastructure?.template ?? 'full')
   const selectedNode = computed(() => aasStore.getSelectedNode) // get the updated Treeview Node from Store
   const singleAas = computed(() => envStore.getSingleAas) // Get the single AAS state from the Store
   const editorMode = computed(() => ['AASEditor', 'SMEditor'].includes(route.name as string))
@@ -517,6 +585,14 @@
   const clearTreeview = computed(() => navigationStore.getClearTreeview) // Clear the Treeview
   const clipboardElementContentType = computed(() => clipboardStore.getClipboardElementModelType()) // Get the Clipboard Element Content Type
   const isAuthenticating = computed(() => infrastructureStore.getIsAuthenticating) // Check if authentication is in progress
+  const isGlobalSmRoute = computed(() => ['SMViewer', 'SMEditor'].includes(route.name as string))
+  const globalQueryAvailable = computed(() =>
+    isGlobalSmRoute.value
+    && supportsQueryProfile(
+      unref(infrastructureStore.getBasyxComponents.SubmodelRepo.description),
+      'submodel-repository',
+    ),
+  )
   const activeTreePath = computed(() => {
     if (
       selectedNode.value
@@ -532,6 +608,21 @@
 
     return ''
   })
+
+  const querySearch = useQuerySearch<any>({
+    debounceMs: 300,
+    pageLimit: 100,
+    getKey: item => item?.id ?? JSON.stringify(item),
+    fetchPage: async (query, options) => {
+      const page = await queryPage<any>(submodelRepoURL.value, 'submodel-repository', query, options)
+      return {
+        ...page,
+        items: page.success ? enrichSmListItems(page.items) : [],
+      }
+    },
+  })
+  const treeContentHeight = computed(() => 'calc(100svh - 170px)')
+  const parsedSearch = computed(() => parseQuerySearchExpression('submodel-repository', smSearchValue.value))
 
   // Watchers
   watch(
@@ -555,6 +646,23 @@
   )
 
   watch(
+    () => submodelRepoURL.value,
+    () => {
+      querySearch.invalidate()
+      smSearchValue.value = smSearchRoute.state.value.mode === 'search'
+        ? smSearchRoute.state.value.expression
+        : ''
+      advancedQueryDraft.value = ''
+      if (isGlobalSmRoute.value) {
+        treeLoad.invalidate()
+        submodelTree.value = []
+        submodelTreeUnfiltered.value = []
+        if (!isAuthenticating.value) void initialize()
+      }
+    },
+  )
+
+  watch(
     () => selectedAAS.value,
     () => {
       treeLoad.invalidate()
@@ -565,6 +673,24 @@
           initialize()
         }
       }
+    },
+  )
+
+  watch(globalQueryAvailable, available => {
+    if (available && smSearchRoute.state.value.mode !== 'none' && !querySearch.activeMode.value) {
+      void applySearchFromRoute(false)
+    }
+  })
+
+  watch(
+    [() => route.query.smSearch, () => route.query.smQuery],
+    () => {
+      if (!isGlobalSmRoute.value) return
+      if (ignoreNextSearchRouteUpdate) {
+        ignoreNextSearchRouteUpdate = false
+        return
+      }
+      void applySearchFromRoute(true)
     },
   )
 
@@ -595,6 +721,8 @@
     () => clearTreeview.value,
     () => {
       treeLoad.invalidate()
+      querySearch.invalidate()
+      smSearchValue.value = ''
       submodelTree.value = []
       submodelTreeUnfiltered.value = []
     },
@@ -623,6 +751,7 @@
 
   onBeforeUnmount(() => {
     treeLoad.invalidate()
+    querySearch.invalidate()
   })
 
   async function initialize (): Promise<void> {
@@ -636,6 +765,15 @@
       return
     }
 
+    if (
+      isGlobalSmRoute.value
+      && globalQueryAvailable.value
+      && smSearchRoute.state.value.mode !== 'none'
+    ) {
+      const queryEstablished = await applySearchFromRoute(false)
+      if (queryEstablished) return
+    }
+
     const generation = treeLoad.start()
 
     try {
@@ -647,60 +785,15 @@
         return
       }
 
-      // Handle empty objects and sort
-      const validSubmodels: Array<any> = []
-      const emptySubmodels: Array<any> = []
-
-      for (const submodel of submodels) {
-        const isEmpty = !submodel || Object.keys(submodel).length === 0 || (!submodel.id && !submodel.idShort)
-        if (isEmpty) {
-          emptySubmodels.push({
-            ...submodel,
-            idShort: 'Submodel not available!',
-            id: 'sm-not-available-' + Math.random().toString(36).slice(2, 15),
-          })
-        } else {
-          validSubmodels.push(submodel)
-        }
-      }
-
-      // Sort valid submodels
-      const sortedValidSubmodels = validSubmodels.toSorted((a, b) => {
-        const aId = a?.id || a?.idShort || ''
-        const bId = b?.id || b?.idShort || ''
-        return aId.localeCompare(bId)
-      })
-
-      // Combine: valid first, empty at the bottom
-      const sortedSubmodels = [...sortedValidSubmodels, ...emptySubmodels]
-
-      let processedList = [] as Array<any>
-
-      processedList = sortedSubmodels.map((submodel: any) => {
-        // Assumes submodel.path is already set for top-level nodes
-        if (
-          submodel.submodelElements
-          && Array.isArray(submodel.submodelElements)
-          && submodel.submodelElements.length > 0
-        ) {
-          submodel.children = prepareForTree(submodel.submodelElements, submodel)
-          submodel.showChildren = shouldExpandNode(submodel.path)
-          return submodel
-        }
-        return submodel
-      })
-
-      // Precompute lowercase search fields
-      processedList = deepMap(processedList, (item: any) => ({
-        ...item,
-        idLower: item?.id?.toLowerCase() || '',
-        idShortLower: item?.idShort?.toLowerCase() || '',
-        nameLower: nameToDisplay(item).toLowerCase(),
-        descLower: descriptionToDisplay(item).toLowerCase(),
-      }))
+      const processedList = processSubmodels(submodels)
 
       submodelTree.value = processedList
       submodelTreeUnfiltered.value = processedList
+
+      if (isGlobalSmRoute.value && smSearchRoute.state.value.mode === 'search') {
+        smSearchValue.value = smSearchRoute.state.value.expression
+        filterSubmodelTree(smSearchValue.value)
+      }
 
       if (activeTreePath.value && !isEmptyString(activeTreePath.value)) {
         expandTree()
@@ -708,6 +801,80 @@
     } finally {
       treeLoad.finish(generation)
     }
+  }
+
+  function processSubmodels (submodels: Array<any>): Array<any> {
+    const validSubmodels: Array<any> = []
+    const emptySubmodels: Array<any> = []
+
+    for (const submodel of submodels) {
+      const isEmpty = !submodel || Object.keys(submodel).length === 0 || (!submodel.id && !submodel.idShort)
+      if (isEmpty) {
+        emptySubmodels.push({
+          ...submodel,
+          idShort: 'Submodel not available!',
+          id: 'sm-not-available-' + Math.random().toString(36).slice(2, 15),
+        })
+      } else {
+        validSubmodels.push(submodel)
+      }
+    }
+
+    const sortedSubmodels = [
+      ...validSubmodels.toSorted((a, b) => {
+        const aId = a?.id || a?.idShort || ''
+        const bId = b?.id || b?.idShort || ''
+        return aId.localeCompare(bId)
+      }),
+      ...emptySubmodels,
+    ]
+
+    const processedList = sortedSubmodels.map((submodel: any) => {
+      if (
+        submodel.submodelElements
+        && Array.isArray(submodel.submodelElements)
+        && submodel.submodelElements.length > 0
+      ) {
+        submodel.children = prepareForTree(submodel.submodelElements, submodel)
+        submodel.showChildren = shouldExpandNode(submodel.path)
+      }
+      return submodel
+    })
+
+    return deepMap(processedList, (item: any) => ({
+      ...item,
+      idLower: item?.id?.toLowerCase() || '',
+      idShortLower: item?.idShort?.toLowerCase() || '',
+      nameLower: nameToDisplay(item).toLowerCase(),
+      descLower: descriptionToDisplay(item).toLowerCase(),
+      searchValuesLower: getSubmodelSearchValues(item),
+    }))
+  }
+
+  function getSubmodelSearchValues (item: any): string[] {
+    const values: string[] = []
+    if (['string', 'number', 'boolean'].includes(typeof item?.value)) {
+      values.push(String(item.value))
+    }
+    if (item?.modelType === 'MultiLanguageProperty' && Array.isArray(item.value)) {
+      values.push(...item.value
+        .map((entry: any) => entry?.text)
+        .filter((value: unknown): value is string => typeof value === 'string'))
+    }
+
+    values.push(...getReferenceValues(item?.semanticId))
+    if (Array.isArray(item?.supplementalSemanticIds)) {
+      values.push(...item.supplementalSemanticIds.flatMap((reference: any) => getReferenceValues(reference)))
+    }
+
+    return values.map(value => value.toLowerCase())
+  }
+
+  function getReferenceValues (reference: any): string[] {
+    if (!Array.isArray(reference?.keys)) return []
+    return reference.keys
+      .map((key: any) => key?.value)
+      .filter((value: unknown): value is string => typeof value === 'string')
   }
 
   function deepMap (array: Array<any>, fn: (arg0: any) => any): Array<any> {
@@ -1554,9 +1721,195 @@
           item.idLower.includes(search)
           || item.idShortLower.includes(search)
           || item.nameLower.includes(search)
-          || item.descLower.includes(search),
+          || item.descLower.includes(search)
+          || item.searchValuesLower.some((value: string) => value.includes(search)),
       )
     }
+  }
+
+  function handleSearchInput (value: string | null): void {
+    smSearchValue.value = value ?? ''
+  }
+
+  async function submitSearch (): Promise<void> {
+    if (isGlobalSmRoute.value && parsedSearch.value.incompleteField) return
+    if (smSearchValue.value.trim() === '') {
+      await clearQuerySearch()
+      return
+    }
+
+    const success = await executeSearchExpression()
+    if (!success || !isGlobalSmRoute.value) return
+
+    ignoreNextSearchRouteUpdate = true
+    const changed = await smSearchRoute.commitSearch(smSearchValue.value)
+    if (!changed) ignoreNextSearchRouteUpdate = false
+  }
+
+  async function executeSearchExpression (): Promise<boolean> {
+    if (!globalQueryAvailable.value) {
+      filterSubmodelTree(smSearchValue.value)
+      return true
+    }
+
+    if (parsedSearch.value.incompleteField) {
+      return false
+    }
+
+    const query = buildStructuredSearchQuery(
+      'submodel-repository',
+      parsedSearch.value.text,
+      parsedSearch.value.filters,
+      'all',
+    )
+    if (!query) {
+      return false
+    }
+
+    const success = await querySearch.execute(query, parsedSearch.value.filters.length > 0 ? 'filters' : 'quick')
+    if (!success) return false
+
+    treeLoad.invalidate()
+    applyQueryItems()
+    return true
+  }
+
+  function openSearchDialog (): void {
+    if (advancedQueryDraft.value.trim() === '') {
+      const structuredQuery = buildStructuredSearchQuery(
+        'submodel-repository',
+        parsedSearch.value.text,
+        parsedSearch.value.filters,
+        'all',
+      )
+      advancedQueryDraft.value = structuredQuery
+        ? JSON.stringify(structuredQuery, null, 2)
+        : createQueryExample('submodel-repository')
+    }
+    advancedQueryDialog.value = true
+  }
+
+  function resetAdvancedQueryDraft (): void {
+    advancedQueryDraft.value = createQueryExample('submodel-repository')
+  }
+
+  async function executeAdvancedQuery (query: QueryLanguageQuery): Promise<void> {
+    const success = await runAdvancedQuery(query)
+    if (!success) return
+
+    ignoreNextSearchRouteUpdate = true
+    const changed = await smSearchRoute.commitAdvancedQuery(query)
+    if (!changed) ignoreNextSearchRouteUpdate = false
+    advancedQueryDialog.value = false
+  }
+
+  async function runAdvancedQuery (query: QueryLanguageQuery): Promise<boolean> {
+    const success = await querySearch.execute(query, 'advanced')
+    if (!success) return false
+
+    smSearchValue.value = ''
+    treeLoad.invalidate()
+    applyQueryItems()
+    return true
+  }
+
+  async function clearQuerySearch (): Promise<void> {
+    if (isGlobalSmRoute.value) {
+      ignoreNextSearchRouteUpdate = true
+      const changed = await smSearchRoute.clear()
+      if (!changed) ignoreNextSearchRouteUpdate = false
+    }
+    querySearch.clear()
+    smSearchValue.value = ''
+    await initialize()
+  }
+
+  async function applySearchFromRoute (reloadWhenEmpty: boolean): Promise<boolean> {
+    if (!isGlobalSmRoute.value) return false
+
+    const state = smSearchRoute.state.value
+    if (state.mode === 'search') {
+      smSearchValue.value = state.expression
+      if (parsedSearch.value.incompleteField) {
+        await clearInvalidRouteSearch('The shared Submodel search is incomplete.')
+        if (reloadWhenEmpty) await initialize()
+        return false
+      }
+
+      const success = await executeSearchExpression()
+      if (success) return true
+
+      await clearInvalidRouteSearch('The shared Submodel search could not be applied.')
+      if (reloadWhenEmpty) await initialize()
+      return false
+    }
+    if (state.mode === 'advanced') {
+      if (!globalQueryAvailable.value) {
+        await clearInvalidRouteSearch('Advanced Submodel search is not available for this infrastructure.')
+        if (reloadWhenEmpty) await initialize()
+        return false
+      }
+      const validation = validateQueryForTarget(
+        state.queryText,
+        'submodel-repository',
+        selectedInfrastructureTemplate.value,
+      )
+      if (!validation.isValid || !validation.query) {
+        await clearInvalidRouteSearch(validation.message || 'The shared Submodel query is invalid.')
+        if (reloadWhenEmpty) await initialize()
+        return false
+      }
+      advancedQueryDraft.value = JSON.stringify(validation.query, null, 2)
+      const success = await runAdvancedQuery(validation.query)
+      if (success) return true
+
+      await clearInvalidRouteSearch('The shared Submodel query could not be applied.')
+      if (reloadWhenEmpty) await initialize()
+      return false
+    }
+
+    smSearchValue.value = ''
+    if (reloadWhenEmpty) {
+      querySearch.clear()
+      await initialize()
+    }
+    return false
+  }
+
+  async function clearInvalidRouteSearch (message: string): Promise<void> {
+    navigationStore.dispatchSnackbar({
+      status: true,
+      timeout: 5000,
+      color: 'error',
+      btnColor: 'buttonText',
+      text: `${message} Loading the complete Submodel list instead.`,
+    })
+    ignoreNextSearchRouteUpdate = true
+    const changed = await smSearchRoute.clear()
+    if (!changed) ignoreNextSearchRouteUpdate = false
+    querySearch.clear()
+    smSearchValue.value = ''
+    advancedQueryDraft.value = ''
+  }
+
+  function applyQueryItems (): void {
+    const processedList = processSubmodels(querySearch.items.value)
+    submodelTree.value = processedList
+    submodelTreeUnfiltered.value = processedList
+  }
+
+  function loadMoreQueryResults (isIntersecting: boolean): void {
+    if (!isIntersecting || querySearch.failed.value) return
+    void querySearch.loadMore().then(success => {
+      if (success) applyQueryItems()
+    })
+  }
+
+  function retryQueryPage (): void {
+    querySearch.failed.value = false
+    void querySearch.loadMore().then(success => {
+      if (success) applyQueryItems()
+    })
   }
 
   function deepFilter (array: Array<any>, predicate: { (item: any): any, (arg0: any): any }): Array<any> {

@@ -53,4 +53,21 @@ describe('NavigationStore', () => {
       text: 'A general notification',
     })
   })
+
+  it('preserves list search parameters when route selections change', () => {
+    const navigationStore = useNavigationStore()
+    const query = {
+      aas: 'https://example.com/shells/example',
+      aasQuery: '{"$condition":{"$boolean":true}}',
+      aasSearch: 'idShort:Motor',
+      path: 'https://example.com/submodels/example',
+      smQuery: '{"$condition":{"$boolean":true}}',
+      smSearch: 'semanticId:0173',
+    }
+
+    expect(navigationStore.filterQueryParams(query)).toEqual({
+      filteredQuery: query,
+      removedParams: [],
+    })
+  })
 })

@@ -6,6 +6,7 @@
       v-model="queryText"
       accessible-label="AAS Query Language JSON editor"
       :error="validationMessages.length > 0"
+      :height="props.height"
       model-namespace="aas-query-language"
       :options="{ glyphMargin: true }"
       :schemas="integration.queryLanguageSchemas"
@@ -54,10 +55,17 @@
     type QueryLanguageValidationScheduler,
   } from '@/pages/modules/queryLanguage/queryLanguageValidation'
 
-  const queryText = defineModel<string>({ required: true })
+  const props = withDefaults(defineProps<{
+    height?: string
+  }>(), {
+    height: '400px',
+  })
+
   const emit = defineEmits<{
     'validation-change': [validation: QueryLanguageValidation]
   }>()
+
+  const queryText = defineModel<string>({ required: true })
   const integration = shallowRef<typeof QueryIntegration>()
   const codeEditor = ref<{ suggest: () => void }>()
   const validationMessages = ref<string[]>([])

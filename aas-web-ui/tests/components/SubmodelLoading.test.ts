@@ -9,6 +9,9 @@ const state = vi.hoisted(() => ({
   selectedNode: null as any,
   aasRegistryURL: null as any,
   submodelRegistryURL: null as any,
+  submodelRepoURL: null as any,
+  selectedInfrastructure: null as any,
+  submodelDescription: null as any,
   clearTreeview: null as any,
   triggerTreeviewReload: null as any,
   routeName: null as any,
@@ -18,6 +21,9 @@ const state = vi.hoisted(() => ({
 const mocks = vi.hoisted(() => ({
   fetchAasSmListById: vi.fn(),
   fetchSmList: vi.fn(),
+  queryPage: vi.fn(),
+  routerPush: vi.fn(),
+  dispatchSnackbar: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
@@ -29,7 +35,7 @@ vi.mock('vue-router', () => ({
       return state.routeQuery.value
     },
   }),
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: mocks.routerPush }),
 }))
 
 vi.mock('vuetify', async importOriginal => {
@@ -48,7 +54,14 @@ vi.mock('@/composables/AAS/AASHandling', () => ({
 }))
 
 vi.mock('@/composables/AAS/SMHandling', () => ({
-  useSMHandling: () => ({ fetchSmList: mocks.fetchSmList }),
+  useSMHandling: () => ({
+    fetchSmList: mocks.fetchSmList,
+    enrichSmListItems: (items: any[]) => items,
+  }),
+}))
+
+vi.mock('@/composables/Client/QueryLanguageClient', () => ({
+  useQueryLanguageClient: () => ({ queryPage: mocks.queryPage }),
 }))
 
 vi.mock('@/composables/AAS/ReferableUtils', () => ({
@@ -95,6 +108,17 @@ vi.mock('@/store/InfrastructureStore', () => ({
     get getSubmodelRegistryURL () {
       return state.submodelRegistryURL.value
     },
+    get getSubmodelRepoURL () {
+      return state.submodelRepoURL.value
+    },
+    get getSelectedInfrastructure () {
+      return state.selectedInfrastructure.value
+    },
+    get getBasyxComponents () {
+      return {
+        SubmodelRepo: { description: state.submodelDescription.value },
+      }
+    },
     getIsAuthenticating: false,
   }),
 }))
@@ -108,6 +132,7 @@ vi.mock('@/store/NavigationStore', () => ({
     get getTriggerTreeviewReload () {
       return state.triggerTreeviewReload.value
     },
+    dispatchSnackbar: mocks.dispatchSnackbar,
   }),
 }))
 
@@ -129,6 +154,17 @@ const slotStub = {
   template: '<div><slot /></div>',
 }
 
+const submodelQueryProfile = 'https://admin-shell.io/aas/API/3/2/SubmodelRepositoryServiceSpecification/SSP-005'
+
+function createSubmodel (id: string, submodelElements: any[] = []): any {
+  return {
+    id,
+    idShort: id,
+    modelType: 'Submodel',
+    submodelElements,
+  }
+}
+
 describe('Submodel loading invalidation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -136,11 +172,18 @@ describe('Submodel loading invalidation', () => {
     state.selectedNode = ref({})
     state.aasRegistryURL = ref('https://infra.example/shell-descriptors')
     state.submodelRegistryURL = ref('https://infra.example/submodel-descriptors')
+    state.submodelRepoURL = ref('https://infra.example/submodels')
+    state.selectedInfrastructure = ref({ template: 'full' })
+    state.submodelDescription = ref(null)
     state.clearTreeview = ref(0)
     state.triggerTreeviewReload = ref(0)
     state.routeName = ref('AASViewer')
     state.routeQuery = ref({})
     mocks.fetchSmList.mockResolvedValue([])
+    mocks.queryPage.mockResolvedValue({ items: [], hasMore: false, success: true })
+    mocks.routerPush.mockImplementation(async ({ query }: { query: Record<string, unknown> }) => {
+      state.routeQuery.value = query
+    })
   })
 
   it.each([
@@ -202,4 +245,81 @@ describe('Submodel loading invalidation', () => {
       path: 'https://example.test/submodels/template',
     }))
   })
+
+  it.each(['quick', 'advanced'] as const)(
+    'does not let a stale initial load replace successful %s query results',
+    async mode => {
+      let resolveInitialLoad!: (submodels: any[]) => void
+      state.routeName.value = 'SMViewer'
+      state.submodelDescription.value = { profiles: [submodelQueryProfile] }
+      mocks.fetchSmList.mockReturnValue(new Promise(resolve => {
+        resolveInitialLoad = resolve
+      }))
+      mocks.queryPage.mockResolvedValue({
+        items: [createSubmodel('query-result')],
+        hasMore: false,
+        success: true,
+      })
+
+      const wrapper = mount(SubmodelTree, { shallow: true })
+      await flushPromises()
+
+      if (mode === 'quick') {
+        ;(wrapper.vm as any).handleSearchInput('query-result')
+        await (wrapper.vm as any).submitSearch()
+      } else {
+        await (wrapper.vm as any).runAdvancedQuery({ $condition: { $boolean: true } })
+      }
+      await flushPromises()
+
+      expect((wrapper.vm as any).submodelTree.map((item: any) => item.id)).toEqual(['query-result'])
+
+      resolveInitialLoad([createSubmodel('stale-unfiltered-result')])
+      await flushPromises()
+
+      expect((wrapper.vm as any).submodelTree.map((item: any) => item.id)).toEqual(['query-result'])
+    },
+  )
+
+  it.each([
+    ['incomplete compact search', { smSearch: 'idShort:' }, true],
+    ['malformed advanced query', { smQuery: '{invalid' }, true],
+    ['failed query request', { smSearch: 'missing' }, false],
+  ])('loads the normal repository list for an %s route', async (_name, routeQuery, querySuccess) => {
+    state.routeName.value = 'SMViewer'
+    state.routeQuery.value = routeQuery
+    state.submodelDescription.value = { profiles: [submodelQueryProfile] }
+    mocks.fetchSmList.mockResolvedValue([createSubmodel('normal-result')])
+    mocks.queryPage.mockResolvedValue({ items: [], hasMore: false, success: querySuccess })
+
+    const wrapper = mount(SubmodelTree, { shallow: true })
+    await flushPromises()
+
+    expect(mocks.fetchSmList).toHaveBeenCalledOnce()
+    expect((wrapper.vm as any).submodelTree.map((item: any) => item.id)).toEqual(['normal-result'])
+    expect(state.routeQuery.value).toEqual({})
+    expect(mocks.dispatchSnackbar).toHaveBeenCalled()
+  })
+
+  it.each(['property-value', 'urn:semantic:temperature', 'urn:supplemental:temperature'])(
+    'finds a containing Submodel through the local SME value %s',
+    async searchValue => {
+      const property = {
+        idShort: 'Temperature',
+        modelType: 'Property',
+        value: 'property-value',
+        semanticId: { keys: [{ value: 'urn:semantic:temperature' }] },
+        supplementalSemanticIds: [{ keys: [{ value: 'urn:supplemental:temperature' }] }],
+      }
+      mocks.fetchAasSmListById.mockResolvedValue([createSubmodel('containing-submodel', [property])])
+
+      const wrapper = mount(SubmodelTree, { shallow: true })
+      await flushPromises()
+
+      ;(wrapper.vm as any).handleSearchInput(searchValue)
+      await (wrapper.vm as any).submitSearch()
+
+      expect((wrapper.vm as any).submodelTree.map((item: any) => item.id)).toEqual(['containing-submodel'])
+    },
+  )
 })

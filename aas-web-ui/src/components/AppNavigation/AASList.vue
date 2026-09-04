@@ -27,17 +27,34 @@
             <span>Reload AAS List</span>
           </v-tooltip>
 
-          <v-text-field
-            clearable
-            density="compact"
-            hide-details
-            label="Search for AAS..."
-            :model-value="searchValue"
-            persistent-placeholder
-            :placeholder="aasList.length.toString() + ' Shells'"
-            variant="outlined"
-            @update:model-value="debouncedFilterAasList"
-          />
+          <div class="flex-grow-1">
+            <QuerySearchField
+              v-model="searchValue"
+              example="idShort:Motor"
+              label="Search AAS"
+              :loading="querySearch.loading.value"
+              :placeholder="aasList.length.toString() + ' Shells'"
+              :server-search="queryAvailable"
+              :target="aasQueryTarget"
+              @clear="clearQuerySearch"
+              @submit="submitSearch"
+              @update:model-value="handleSearchInput"
+            />
+          </div>
+
+          <v-tooltip v-if="queryAvailable" :disabled="isMobile" location="bottom" open-delay="600">
+            <template #activator="{ props }">
+              <v-btn
+                v-bind="props"
+                :color="querySearch.activeMode.value === 'advanced' ? 'primary' : undefined"
+                icon="mdi-code-json"
+                variant="plain"
+                @click="openSearchDialog"
+              />
+            </template>
+
+            <span>{{ querySearch.activeMode.value === 'advanced' ? 'Edit advanced query' : 'Advanced Query Language' }}</span>
+          </v-tooltip>
 
           <!-- QR Scanner -->
           <v-tooltip :disabled="isMobile" location="bottom" open-delay="600">
@@ -104,7 +121,7 @@
         <v-divider />
 
         <v-progress-linear
-          v-if="pageLoading && !listLoading"
+          v-if="(visiblePageLoading || querySearch.loading.value) && !listLoading"
           color="primary"
           height="2"
           indeterminate
@@ -142,7 +159,15 @@
         </template>
 
         <template v-else>
+          <v-empty-state
+            v-if="querySearch.activeMode.value && aasList.length === 0"
+            class="text-divider"
+            text="No Asset Administration Shells match the active query"
+            title="No matching AAS"
+          />
+
           <v-virtual-scroll
+            v-else
             ref="virtualScrollRef"
             class="pb-2 bg-card"
             :item-height="56"
@@ -328,7 +353,7 @@
           </v-list-item>
 
           <v-list-item
-            v-if="pageLoading && !listLoading"
+            v-if="visiblePageLoading && !listLoading"
             class="px-4 py-0"
             density="compact"
           >
@@ -337,6 +362,16 @@
             </template>
 
             <v-list-item-subtitle class="text-listItemText ml-1">Loading more shells...</v-list-item-subtitle>
+          </v-list-item>
+
+          <v-list-item
+            v-if="querySearch.activeMode.value && querySearch.failed.value"
+            class="justify-center px-4 py-1"
+            density="compact"
+          >
+            <v-btn prepend-icon="mdi-reload" size="small" variant="tonal" @click="retryQueryPage">
+              Retry query
+            </v-btn>
           </v-list-item>
         </template>
       </v-list>
@@ -368,9 +403,25 @@
   <AASToInstance v-model="instanceDialog" :aas="aasToInstantiate" />
   <!-- Dialog for QR Scanner -->
   <QRScanner v-model="qrScannerDialog" @select-aas="handleAasSelected" />
+
+  <AdvancedQueryDialog
+    v-if="queryAvailable"
+    v-model="advancedQueryDialog"
+    :endpoint="activeQueryBaseUrl"
+    :infrastructure-template="selectedInfrastructureTemplate"
+    :loading="querySearch.loading.value"
+    :mobile="isMobile"
+    :query="advancedQueryDraft"
+    :target="aasQueryTarget"
+    title="Advanced AAS query"
+    @execute="executeAdvancedQuery"
+    @reset="resetAdvancedQueryDraft"
+    @update:query="advancedQueryDraft = $event"
+  />
 </template>
 
 <script lang="ts" setup>
+  import type { QueryLanguageQuery, QueryTarget } from '@/types/QueryLanguage'
   import type { ComponentPublicInstance, Ref } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'
@@ -379,12 +430,22 @@
   import { useAASListPagination } from '@/composables/AAS/AASListPagination'
   import { useAASListStatusChecks } from '@/composables/AAS/AASListStatusChecks'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
+  import { useQueryLanguageClient } from '@/composables/Client/QueryLanguageClient'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
+  import { useQuerySearch } from '@/composables/QueryLanguage/QuerySearch'
+  import { useQuerySearchRoute } from '@/composables/QueryLanguage/QuerySearchRoute'
   import { useAASStore } from '@/store/AASDataStore'
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
-  import { debounce } from '@/utils/generalUtils'
+  import {
+    buildStructuredSearchQuery,
+    createQueryExample,
+    parseQuerySearchExpression,
+    resolveAasQueryTarget,
+    supportsQueryProfile,
+    validateQueryForTarget,
+  } from '@/utils/QueryLanguageUtils'
 
   // Extend the ComponentPublicInstance type to include scrollToIndex
   interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -396,9 +457,11 @@
   const router = useRouter()
 
   // Composables
-  const { fetchAasShellListPage, aasIsAvailableById } = useAASHandling()
+  const { fetchAasShellListPage, aasIsAvailableById, enrichAasShellListItems } = useAASHandling()
+  const { queryPage } = useQueryLanguageClient()
   const { nameToDisplay, descriptionToDisplay } = useReferableUtils()
   const { copyToClipboard } = useClipboardUtil()
+  const aasSearchRoute = useQuerySearchRoute('aasSearch', 'aasQuery')
 
   // Stores
   const navigationStore = useNavigationStore()
@@ -425,8 +488,9 @@
   const allLoadedAas = ref([] as Array<any>) as Ref<Array<any>> // Variable to store all loaded AAS Data
   const searchValue = ref('')
   const loadedIds = ref(new Set<string>())
-  const debouncedFilterAasList = debounce(filterAasList, 300) // Debounced function to filter the AAS List
   const listLoading = computed(() => isLoadingInitialPage.value) // Variable to store if the AAS List is loading
+  const advancedQueryDialog = ref(false)
+  const advancedQueryDraft = ref('')
   const deleteDialog = ref(false) // Variable to store if the Delete Dialog should be shown
   const downloadAASDialog = ref(false) // Variable to store if the DownloadAAS Dialog should be shown
   const aasToDelete = ref({}) // Variable to store the AAS to be deleted
@@ -441,9 +505,12 @@
   const instanceDialog = ref(false) // Variable to store if the Instance Creation Dialog should be shown
   const aasToInstantiate = ref({}) // Variable to store the AAS to be instantiated
   const qrScannerDialog = ref(false)
+  let queryScrollContainer: HTMLElement | null = null
+  let ignoreNextSearchRouteUpdate = false
 
   const {
     hasMorePages,
+    activeSource,
     isLoadingInitialPage,
     pageLoading,
     getVirtualScrollContainer,
@@ -477,6 +544,21 @@
       if (incomingItems.length > 0) {
         allLoadedAas.value = appendOrMergeSortedAasById(allLoadedAas.value, incomingItems)
         applyCurrentFilter()
+      }
+    },
+  })
+
+  const querySearch = useQuerySearch<any>({
+    debounceMs: 300,
+    pageLimit: minPageLimit,
+    getKey: item => item?.id ?? JSON.stringify(item),
+    fetchPage: async (query, options) => {
+      const target = aasQueryTarget.value
+      const source = target === 'aas-registry' ? 'registry' : 'repository'
+      const page = await queryPage<any>(activeQueryBaseUrl.value, target, query, options)
+      return {
+        ...page,
+        items: page.success ? enrichAasShellListItems(page.items, source) : [],
       }
     },
   })
@@ -519,7 +601,26 @@
   const isAuthenticating = computed(() => infrastructureStore.getIsAuthenticating) // Check if authentication is in progress
   const isTestingConnections = computed(() => infrastructureStore.getIsTestingConnections) // Check if testing connections
   const selectedInfrastructureId = computed(() => infrastructureStore.getSelectedInfrastructureId) // Get selected infrastructure ID
-  const isSearchLimited = computed(() => searchValue.value.trim() !== '' && hasMorePages.value)
+  const selectedInfrastructureTemplate = computed(() => infrastructureStore.getSelectedInfrastructure?.template ?? 'full')
+  const aasRepositoryQueryAvailable = computed(() => supportsQueryProfile(
+    unref(infrastructureStore.getBasyxComponents.AASRepo.description),
+    'aas-repository',
+  ))
+  const aasRegistryQueryAvailable = computed(() => supportsQueryProfile(
+    unref(infrastructureStore.getBasyxComponents.AASRegistry.description),
+    'aas-registry',
+  ))
+  const aasQueryTarget = computed<QueryTarget>(() => resolveAasQueryTarget(
+    selectedInfrastructureTemplate.value,
+    activeSource.value,
+    aasRepositoryQueryAvailable.value,
+    aasRegistryQueryAvailable.value,
+  ))
+  const parsedSearch = computed(() => parseQuerySearchExpression(aasQueryTarget.value, searchValue.value))
+  const activeQueryBaseUrl = computed(() => aasQueryTarget.value === 'aas-registry' ? aasRegistryURL.value : aasRepoURL.value)
+  const queryAvailable = computed(() => aasRepositoryQueryAvailable.value || aasRegistryQueryAvailable.value)
+  const isSearchLimited = computed(() => !queryAvailable.value && searchValue.value.trim() !== '' && hasMorePages.value)
+  const visiblePageLoading = computed(() => querySearch.loadingMore.value || pageLoading.value)
 
   // Watchers
   // Reload when AAS Registry URL or selected infrastructure changes.
@@ -561,8 +662,25 @@
       }
 
       void nextTick(() => {
-        bindVirtualScrollListener()
+        if (!querySearch.activeMode.value) bindVirtualScrollListener()
       })
+    },
+  )
+
+  watch(queryAvailable, available => {
+    if (available && aasSearchRoute.state.value.mode !== 'none' && !querySearch.activeMode.value) {
+      void applySearchFromRoute(false)
+    }
+  })
+
+  watch(
+    [() => route.query.aasSearch, () => route.query.aasQuery],
+    () => {
+      if (ignoreNextSearchRouteUpdate) {
+        ignoreNextSearchRouteUpdate = false
+        return
+      }
+      void applySearchFromRoute(true)
     },
   )
 
@@ -631,6 +749,8 @@
   onBeforeUnmount(() => {
     window.clearInterval(statusCheckInterval.value)
     unbindVirtualScrollListener()
+    unbindQueryScrollListener()
+    querySearch.invalidate()
   })
 
   onActivated(() => {
@@ -652,6 +772,11 @@
   }
 
   function applyCurrentFilter (): void {
+    if (querySearch.activeMode.value) {
+      aasList.value = allLoadedAas.value
+      return
+    }
+
     const trimmedSearch = searchValue.value.trim().toLowerCase()
     const filteredItems = trimmedSearch === ''
       ? allLoadedAas.value
@@ -695,11 +820,15 @@
   }
 
   function resetAASListState (enablePagination = true): void {
+    querySearch.clear()
+    unbindQueryScrollListener()
     aasList.value = []
     allLoadedAas.value = []
     loadedIds.value.clear()
     resetPaginationStateInternal(enablePagination)
-    searchValue.value = ''
+    searchValue.value = aasSearchRoute.state.value.mode === 'search'
+      ? aasSearchRoute.state.value.expression
+      : ''
   }
 
   // Function to get the AAS Data from the Registry Server
@@ -707,13 +836,189 @@
     if (!singleAas.value) {
       resetAASListState(true)
       await initializePagination(scrollToSelectedAAS)
+      await applySearchFromRoute(false)
     }
   }
 
   function filterAasList (value: string | null): void {
-    searchValue.value = value?.trim() ?? ''
+    searchValue.value = value ?? ''
     applyCurrentFilter()
     scrollToSelectedAAS()
+  }
+
+  function handleSearchInput (value: string | null): void {
+    searchValue.value = value ?? ''
+  }
+
+  async function submitSearch (): Promise<void> {
+    if (parsedSearch.value.incompleteField) return
+    if (searchValue.value.trim() === '') {
+      await clearQuerySearch()
+      return
+    }
+
+    const success = await executeSearchExpression()
+    if (!success) return
+
+    ignoreNextSearchRouteUpdate = true
+    const changed = await aasSearchRoute.commitSearch(searchValue.value)
+    if (!changed) ignoreNextSearchRouteUpdate = false
+  }
+
+  async function executeSearchExpression (): Promise<boolean> {
+    if (!queryAvailable.value) {
+      filterAasList(searchValue.value)
+      return true
+    }
+
+    if (parsedSearch.value.incompleteField) {
+      return false
+    }
+
+    const query = buildStructuredSearchQuery(
+      aasQueryTarget.value,
+      parsedSearch.value.text,
+      parsedSearch.value.filters,
+      'all',
+    )
+    if (!query) {
+      return false
+    }
+
+    const success = await querySearch.execute(query, parsedSearch.value.filters.length > 0 ? 'filters' : 'quick')
+    if (!success) return false
+
+    activateQueryResults()
+    return true
+  }
+
+  function openSearchDialog (): void {
+    if (advancedQueryDraft.value.trim() === '') {
+      const structuredQuery = buildStructuredSearchQuery(
+        aasQueryTarget.value,
+        parsedSearch.value.text,
+        parsedSearch.value.filters,
+        'all',
+      )
+      advancedQueryDraft.value = structuredQuery
+        ? JSON.stringify(structuredQuery, null, 2)
+        : createQueryExample(aasQueryTarget.value)
+    }
+    advancedQueryDialog.value = true
+  }
+
+  function resetAdvancedQueryDraft (): void {
+    advancedQueryDraft.value = createQueryExample(aasQueryTarget.value)
+  }
+
+  async function executeAdvancedQuery (query: QueryLanguageQuery): Promise<void> {
+    const success = await runAdvancedQuery(query)
+    if (!success) return
+
+    ignoreNextSearchRouteUpdate = true
+    const changed = await aasSearchRoute.commitAdvancedQuery(query)
+    if (!changed) ignoreNextSearchRouteUpdate = false
+    advancedQueryDialog.value = false
+  }
+
+  async function runAdvancedQuery (query: QueryLanguageQuery): Promise<boolean> {
+    const success = await querySearch.execute(query, 'advanced')
+    if (!success) return false
+
+    searchValue.value = ''
+    activateQueryResults()
+    return true
+  }
+
+  async function clearQuerySearch (): Promise<void> {
+    searchValue.value = ''
+    ignoreNextSearchRouteUpdate = true
+    const changed = await aasSearchRoute.clear()
+    if (!changed) ignoreNextSearchRouteUpdate = false
+    querySearch.clear()
+    unbindQueryScrollListener()
+    await initialize()
+  }
+
+  async function applySearchFromRoute (reloadWhenEmpty: boolean): Promise<void> {
+    const state = aasSearchRoute.state.value
+    if (state.mode === 'search') {
+      searchValue.value = state.expression
+      await executeSearchExpression()
+      return
+    }
+    if (state.mode === 'advanced') {
+      if (!queryAvailable.value) return
+      const validation = validateQueryForTarget(
+        state.queryText,
+        aasQueryTarget.value,
+        selectedInfrastructureTemplate.value,
+      )
+      if (!validation.isValid || !validation.query) return
+      advancedQueryDraft.value = JSON.stringify(validation.query, null, 2)
+      await runAdvancedQuery(validation.query)
+      return
+    }
+
+    searchValue.value = ''
+    if (reloadWhenEmpty) {
+      querySearch.clear()
+      unbindQueryScrollListener()
+      await initialize()
+    }
+  }
+
+  function syncQueryItems (): void {
+    loadedIds.value = new Set(querySearch.items.value.map(item => item?.id).filter(Boolean))
+    allLoadedAas.value = querySearch.items.value
+      .map(item => preprocessListItem(item))
+      .toSorted(compareAasById)
+    aasList.value = allLoadedAas.value
+  }
+
+  function activateQueryResults (): void {
+    invalidatePaginationGeneration()
+    unbindVirtualScrollListener()
+    unbindQueryScrollListener()
+    syncQueryItems()
+    void nextTick(bindQueryScrollListener)
+  }
+
+  function bindQueryScrollListener (): void {
+    if (!querySearch.activeMode.value) return
+    const container = getVirtualScrollContainer()
+    if (!container || container === queryScrollContainer) return
+
+    unbindQueryScrollListener()
+    queryScrollContainer = container
+    queryScrollContainer.addEventListener('scroll', onQueryScroll, { passive: true })
+  }
+
+  function unbindQueryScrollListener (): void {
+    queryScrollContainer?.removeEventListener('scroll', onQueryScroll)
+    queryScrollContainer = null
+  }
+
+  function onQueryScroll (): void {
+    if (
+      !queryScrollContainer
+      || !querySearch.hasMore.value
+      || querySearch.loadingMore.value
+      || querySearch.failed.value
+    ) return
+    const remaining = queryScrollContainer.scrollHeight - queryScrollContainer.scrollTop - queryScrollContainer.clientHeight
+    if (remaining > itemHeight * prefetchThresholdInRows) return
+
+    void querySearch.loadMore().then(success => {
+      if (success) syncQueryItems()
+    })
+  }
+
+  function retryQueryPage (): void {
+    querySearch.failed.value = false
+    void querySearch.loadMore().then(success => {
+      if (success) syncQueryItems()
+    })
   }
 
   // Function to select an AAS
@@ -808,8 +1113,9 @@
     aasToInstantiate.value = aasDescriptor
   }
 
-  function handleAasSelected (aasId: string): void {
-    filterAasList(aasId)
+  async function handleAasSelected (aasId: string): Promise<void> {
+    handleSearchInput(aasId)
+    await submitSearch()
   }
 </script>
 
