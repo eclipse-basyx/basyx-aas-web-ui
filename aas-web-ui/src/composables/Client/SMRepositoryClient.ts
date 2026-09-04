@@ -1,6 +1,5 @@
 import type { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
 import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
-import { computed } from 'vue'
 import { useIDUtils } from '@/composables/IDUtils'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useAASStore } from '@/store/AASDataStore'
@@ -729,7 +728,7 @@ export function useSMRepositoryClient () {
     return ensureWriteSuccess(response)
   }
 
-  async function fetchAttachmentFile (path: string): Promise<Blob | undefined> {
+  async function fetchAttachmentFile (path: string, responseType: 'auto' | 'blob' = 'auto'): Promise<Blob | undefined> {
     const failResponse = undefined
 
     const context = 'fetching file attachment'
@@ -737,7 +736,7 @@ export function useSMRepositoryClient () {
     const requestPath = path + '/attachment'
 
     try {
-      const response = await getRequest(requestPath, context, disableMessage)
+      const response = await getRequest(requestPath, context, disableMessage, new Headers(), {}, responseType)
       if (response.success && response.data) {
         return response.data
       }

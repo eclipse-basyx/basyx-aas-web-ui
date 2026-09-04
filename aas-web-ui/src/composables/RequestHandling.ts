@@ -320,6 +320,7 @@ export function useRequestHandling () {
     disableMessage: boolean,
     headers: Headers = new Headers(),
     errorHandlingOptions: RequestErrorHandlingOptions = {},
+    responseType: 'auto' | 'blob' = 'auto',
   ): any {
     const requestOwnerId = getRequestOwnerId()
     if (shouldAddAuthorizationHeader(path)) {
@@ -328,6 +329,11 @@ export function useRequestHandling () {
     }
     return fetch(path, { method: 'GET', headers, signal: errorHandlingOptions.signal })
       .then(async response => {
+        // File previews need the original bytes, including malformed JSON and its whitespace.
+        // Error responses still follow the existing payload/error handling below.
+        if (response.ok && responseType === 'blob') {
+          return { response, data: await response.blob() }
+        }
         const contentType = getResponseContentType(response)
         // Check if the Server responded with content.
         if (

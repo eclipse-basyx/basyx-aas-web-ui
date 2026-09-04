@@ -31,7 +31,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onMounted, ref } from 'vue'
   import { useTheme } from 'vuetify'
 
   const theme = useTheme()

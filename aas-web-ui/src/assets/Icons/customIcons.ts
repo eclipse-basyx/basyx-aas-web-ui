@@ -1,5 +1,4 @@
 import type { IconProps, IconSet } from 'vuetify'
-import { h } from 'vue'
 import aasIcon from './AASIcon.vue'
 
 const customSvgNameToComponent: any = {

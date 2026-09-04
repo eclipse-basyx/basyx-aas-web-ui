@@ -24,7 +24,6 @@
   import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
   import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
   import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
-  import { computed, onMounted, ref, watch } from 'vue'
   import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'

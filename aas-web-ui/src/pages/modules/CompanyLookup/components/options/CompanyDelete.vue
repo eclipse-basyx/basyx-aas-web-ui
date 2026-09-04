@@ -1,6 +1,50 @@
+<template>
+  <slot name="activator" :props="activatorProps">
+    <v-list-item v-bind="activatorProps" class="text-error">
+      <template #prepend>
+        <v-icon size="x-small">mdi-delete</v-icon>
+      </template>
+
+      <v-list-item-subtitle>{{ t('delete.delete') }}</v-list-item-subtitle>
+    </v-list-item>
+  </slot>
+
+  <v-dialog v-model="dialog" max-width="500" @click:outside="onCancel">
+    <v-card>
+      <v-card-title>{{ t('delete.confirmTitle') }}</v-card-title>
+      <v-divider />
+
+      <v-card-text>
+        <div class="mt-2 font-weight-bold">
+          {{ t('delete.company',{company: company.name || company.idShort }) }}
+        </div>
+        {{ t('delete.confirmMessage') }}
+      </v-card-text>
+
+      <v-divider />
+
+      <v-card-actions>
+        <v-spacer />
+
+        <v-btn :disabled="isPending" variant="text" @click="onCancel">
+          {{ t('delete.cancel') }}
+        </v-btn>
+
+        <v-btn
+          color="error"
+          :loading="isPending"
+          variant="flat"
+          @click="onConfirm"
+        >
+          {{ t('delete.confirm') }}
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+</template>
+
 <script setup lang="ts">
   import type { CompanyDescriptor } from '@/composables/Client/CompanyLookup/types/company'
-  import { ref } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useDeleteCompany } from '@/composables/Client/CompanyLookup/queries/useDeleteCompany'
   import { useNavigationStore } from '@/store/NavigationStore'
@@ -56,48 +100,3 @@
     }
   }
 </script>
-
-<template>
-  <slot name="activator" :props="activatorProps">
-    <v-list-item v-bind="activatorProps" class="text-error">
-      <template #prepend>
-        <v-icon size="x-small">mdi-delete</v-icon>
-      </template>
-
-      <v-list-item-subtitle>{{ t('delete.delete') }}</v-list-item-subtitle>
-    </v-list-item>
-  </slot>
-
-  <v-dialog v-model="dialog" max-width="500" @click:outside="onCancel">
-    <v-card>
-      <v-card-title>{{ t('delete.confirmTitle') }}</v-card-title>
-      <v-divider />
-
-      <v-card-text>
-        <div class="mt-2 font-weight-bold">
-          {{ t('delete.company',{company: company.name || company.idShort }) }}
-        </div>
-        {{ t('delete.confirmMessage') }}
-      </v-card-text>
-
-      <v-divider />
-
-      <v-card-actions>
-        <v-spacer />
-
-        <v-btn :disabled="isPending" variant="text" @click="onCancel">
-          {{ t('delete.cancel') }}
-        </v-btn>
-
-        <v-btn
-          color="error"
-          :loading="isPending"
-          variant="flat"
-          @click="onConfirm"
-        >
-          {{ t('delete.confirm') }}
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
-</template>

@@ -23,7 +23,6 @@
 
 <script setup lang="ts">
   import type { MoveProgress, UploadProgress } from '../types'
-  import { computed } from 'vue'
 
   interface Props {
     title: string

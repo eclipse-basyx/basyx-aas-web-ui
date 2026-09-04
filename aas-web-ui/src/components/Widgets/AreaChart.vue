@@ -31,7 +31,6 @@
 
 <script lang="ts" setup>
   import ApexCharts, { type ApexOptions } from 'apexcharts'
-  import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
   import { useTheme } from 'vuetify'
   import { type ResolvedTimeRange, toApexTimeRange } from '@/components/Plugins/Submodels/TimeSeries/timeRange'
   import { mergeTemporalChartControls } from '@/components/Widgets/temporalChartOptions'

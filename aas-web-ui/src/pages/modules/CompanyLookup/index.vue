@@ -1,5 +1,8 @@
+<template>
+  <CompanyLookupLayout />
+</template>
+
 <script setup lang="ts">
-  import { provide, watch } from 'vue'
   import CompanyLookupLayout from './components/CompanyLookupLayout.vue'
   import { COMPANY_LOOKUP_I18N_KEY } from './constants/i18n'
   import { i18nGlobal } from './i18n/setup'
@@ -28,7 +31,3 @@
     { immediate: true },
   )
 </script>
-
-<template>
-  <CompanyLookupLayout />
-</template>

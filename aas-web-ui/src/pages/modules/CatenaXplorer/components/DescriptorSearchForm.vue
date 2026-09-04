@@ -98,7 +98,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref } from 'vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { buildShellDescriptorsCurlCommand } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
   import SearchButton from '@/pages/modules/CatenaXplorer/components/SearchButton.vue'

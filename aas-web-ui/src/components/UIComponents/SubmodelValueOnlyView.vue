@@ -50,7 +50,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref } from 'vue'
 
   interface ValueOnlyRow {
     displayValue: string

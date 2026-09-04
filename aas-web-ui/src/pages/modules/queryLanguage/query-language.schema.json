@@ -1,0 +1,1431 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Common JSON Schema for AAS Queries and Access Rules",
+  "description": "This schema contains all classes that are shared between the AAS Query Language and the AAS Access Rule Language.",
+  "oneOf": [
+    {
+      "$ref": "#/definitions/Query"
+    },
+    {
+      "$ref": "#/definitions/AllAccessPermissionRules"
+    }
+  ],
+  "definitions": {
+    "standardString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ReferenceIdentifier": {
+      "type": "string",
+      "pattern": "^(?:\\$aas\\(\"(?:[\\x09\\x0A\\x0D\\x20-\\x21\\x23-\\x5B\\x5D-\\uD7FF\\uE000-\\uFFFD]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]|[^\\u0000-\\uFFFF]|\\\\[\"\\\\]){1,2048}\"\\)#(?:idShort|id|assetInformation\\.assetKind|assetInformation\\.assetType|assetInformation\\.globalAssetId|assetInformation\\.specificAssetIds\\[(?:0|[1-9][0-9]*)?\\]\\.(?:name|value|externalSubjectId(?:\\.(?:type|keys\\[(?:0|[1-9][0-9]*)?\\]\\.(?:type|value)))?)|submodels\\[(?:0|[1-9][0-9]*)?\\](?:\\.(?:type|keys\\[(?:0|[1-9][0-9]*)?\\]\\.(?:type|value)))?)|\\$sm\\(\"(?:[\\x09\\x0A\\x0D\\x20-\\x21\\x23-\\x5B\\x5D-\\uD7FF\\uE000-\\uFFFD]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]|[^\\u0000-\\uFFFF]|\\\\[\"\\\\]){1,2048}\"\\)#(?:semanticId(?:\\.(?:type|keys\\[(?:0|[1-9][0-9]*)?\\]\\.(?:type|value)))?|supplementalSemanticIds(?:\\[(?:0|[1-9][0-9]*)?\\])?(?:\\.(?:type|keys\\[(?:0|[1-9][0-9]*)?\\]\\.(?:type|value)))?|idShort|id)|\\$cd\\(\"(?:[\\x09\\x0A\\x0D\\x20-\\x21\\x23-\\x5B\\x5D-\\uD7FF\\uE000-\\uFFFD]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]|[^\\u0000-\\uFFFF]|\\\\[\"\\\\]){1,2048}\"\\)#(?:idShort|id)|\\$sme\\(\"(?:[\\x09\\x0A\\x0D\\x20-\\x21\\x23-\\x5B\\x5D-\\uD7FF\\uE000-\\uFFFD]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]|[^\\u0000-\\uFFFF]|\\\\[\"\\\\]){1,2048}\"\\)\\.[A-Za-z](?:[A-Za-z0-9_-]*[A-Za-z0-9_])?(?:\\[(?:0|[1-9][0-9]*)?\\])*(?:\\.[A-Za-z](?:[A-Za-z0-9_-]*[A-Za-z0-9_])?(?:\\[(?:0|[1-9][0-9]*)?\\])*)*#(?:semanticId(?:\\.(?:type|keys\\[(?:0|[1-9][0-9]*)?\\]\\.(?:type|value)))?|supplementalSemanticIds(?:\\[(?:0|[1-9][0-9]*)?\\])?(?:\\.(?:type|keys\\[(?:0|[1-9][0-9]*)?\\]\\.(?:type|value)))?|idShort|value|valueType|language))$"
+    },
+    "IdentifiableIdentifier": {
+      "type": "string",
+      "pattern": "^\\$(?:aas|sm|cd)\\(\"(?:[\\x09\\x0A\\x0D\\x20-\\x21\\x23-\\x5B\\x5D-\\uD7FF\\uE000-\\uFFFD]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]|[^\\u0000-\\uFFFF]|\\\\[\"\\\\]){1,2048}\"\\)$"
+    },
+    "ReferableIdentifier": {
+      "type": "string",
+      "pattern": "^\\$sme\\(\"(?:[\\x09\\x0A\\x0D\\x20-\\x21\\x23-\\x5B\\x5D-\\uD7FF\\uE000-\\uFFFD]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]|[^\\u0000-\\uFFFF]|\\\\[\"\\\\]){1,2048}\"\\)\\.[A-Za-z](?:[A-Za-z0-9_-]*[A-Za-z0-9_])?(?:\\[(?:0|[1-9][0-9]*)?\\])*(?:\\.[A-Za-z](?:[A-Za-z0-9_-]*[A-Za-z0-9_])?(?:\\[(?:0|[1-9][0-9]*)?\\])*)*$"
+    },
+    "FragmentIdentifier": {
+      "$ref": "#/definitions/FragmentFieldIdentifier"
+    },
+    "DescriptorIdentifier": {
+      "type": "string",
+      "pattern": "^\\$(?:aasdesc|smdesc)\\(\"(?:[\\x09\\x0A\\x0D\\x20-\\x21\\x23-\\x5B\\x5D-\\uD7FF\\uE000-\\uFFFD]|[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]|[^\\u0000-\\uFFFF]|\\\\[\"\\\\]){1,2048}\"\\)$"
+    },
+    "FieldIdentifier": {
+      "type": "string",
+      "pattern": "^(?:\\$aas#(?:idShort|id|assetInformation\\.assetKind|assetInformation\\.assetType|assetInformation\\.globalAssetId|assetInformation\\.specificAssetIds\\[(?:0|[1-9][0-9]*)?\\]\\.(?:name|value|externalSubjectId(?:\\.(?:type|keys\\[(?:0|[1-9][0-9]*)?\\]\\.(?:type|value)))?)|submodels\\[(?:0|[1-9][0-9]*)?\\](?:\\.(?:type|keys\\[(?:0|[1-9][0-9]*)?\\]\\.(?:type|value)))?)|\\$sm#(?:semanticId(?:\\.(?:type|keys\\[(?:0|[1-9][0-9]*)?\\]\\.(?:type|value)))?|supplementalSemanticIds(?:\\[(?:0|[1-9][0-9]*)?\\])?(?:\\.(?:type|keys\\[(?:0|[1-9][0-9]*)?\\]\\.(?:type|value)))?|idShort|id)|\\$sme(?:\\.[A-Za-z](?:[A-Za-z0-9_-]*[A-Za-z0-9_])?(?:\\[(?:0|[1-9][0-9]*)?\\])*(?:\\.[A-Za-z](?:[A-Za-z0-9_-]*[A-Za-z0-9_])?(?:\\[(?:0|[1-9][0-9]*)?\\])*)*)?#(?:semanticId(?:\\.(?:type|keys\\[(?:0|[1-9][0-9]*)?\\]\\.(?:type|value)))?|supplementalSemanticIds(?:\\[(?:0|[1-9][0-9]*)?\\])?(?:\\.(?:type|keys\\[(?:0|[1-9][0-9]*)?\\]\\.(?:type|value)))?|idShort|value|valueType|language)|\\$cd#(?:idShort|id)|\\$aasdesc#(?:idShort|id|assetKind|assetType|globalAssetId|specificAssetIds\\[(?:0|[1-9][0-9]*)?\\]\\.(?:name|value|externalSubjectId(?:\\.(?:type|keys\\[(?:0|[1-9][0-9]*)?\\]\\.(?:type|value)))?)|endpoints\\[(?:0|[1-9][0-9]*)?\\]\\.(?:interface|protocolinformation\\.href)|submodelDescriptors\\[(?:0|[1-9][0-9]*)?\\]\\.(?:semanticId(?:\\.(?:type|keys\\[(?:0|[1-9][0-9]*)?\\]\\.(?:type|value)))?|supplementalSemanticIds(?:\\[(?:0|[1-9][0-9]*)?\\])?(?:\\.(?:type|keys\\[(?:0|[1-9][0-9]*)?\\]\\.(?:type|value)))?|idShort|id|endpoints\\[(?:0|[1-9][0-9]*)?\\]\\.(?:interface|protocolinformation\\.href)))|\\$smdesc#(?:semanticId(?:\\.(?:type|keys\\[(?:0|[1-9][0-9]*)?\\]\\.(?:type|value)))?|supplementalSemanticIds(?:\\[(?:0|[1-9][0-9]*)?\\])?(?:\\.(?:type|keys\\[(?:0|[1-9][0-9]*)?\\]\\.(?:type|value)))?|idShort|id|endpoints\\[(?:0|[1-9][0-9]*)?\\]\\.(?:interface|protocolinformation\\.href)))$"
+    },
+    "FragmentFieldIdentifier": {
+      "type": "string",
+      "pattern": "^(?:\\$aas#(?:idShort|assetInformation\\.assetType|assetInformation\\.globalAssetId|assetInformation\\.specificAssetIds(?:\\[(?:0|[1-9][0-9]*)?\\](?:\\.externalSubjectId(?:\\.keys(?:\\[(?:0|[1-9][0-9]*)?\\])?)?)?)?|submodels(?:\\[(?:0|[1-9][0-9]*)?\\](?:\\.keys(?:\\[(?:0|[1-9][0-9]*)?\\])?)?)?)|\\$sm#(?:semanticId(?:\\.keys(?:\\[(?:0|[1-9][0-9]*)?\\])?)?|supplementalSemanticIds(?:\\[(?:0|[1-9][0-9]*)?\\](?:\\.keys(?:\\[(?:0|[1-9][0-9]*)?\\])?)?)?|idShort)|\\$sme(?:\\.[A-Za-z](?:[A-Za-z0-9_-]*[A-Za-z0-9_])?(?:\\[(?:0|[1-9][0-9]*)?\\])*(?:\\.[A-Za-z](?:[A-Za-z0-9_-]*[A-Za-z0-9_])?(?:\\[(?:0|[1-9][0-9]*)?\\])*)*)?(?:#(?:semanticId(?:\\.keys(?:\\[(?:0|[1-9][0-9]*)?\\])?)?|supplementalSemanticIds(?:\\[(?:0|[1-9][0-9]*)?\\](?:\\.keys(?:\\[(?:0|[1-9][0-9]*)?\\])?)?)?|idShort|value|valueType|language))?|\\$cd#idShort|\\$aasdesc#(?:idShort|description|displayName|extension|administration|assetKind|assetType|globalAssetId|specificAssetIds(?:\\[(?:0|[1-9][0-9]*)?\\](?:\\.externalSubjectId(?:\\.keys(?:\\[(?:0|[1-9][0-9]*)?\\])?)?)?)?|endpoints(?:\\[(?:0|[1-9][0-9]*)?\\])?|submodelDescriptors(?:\\[(?:0|[1-9][0-9]*)?\\](?:\\.(?:semanticId(?:\\.keys(?:\\[(?:0|[1-9][0-9]*)?\\])?)?|supplementalSemanticIds(?:\\[(?:0|[1-9][0-9]*)?\\](?:\\.keys(?:\\[(?:0|[1-9][0-9]*)?\\])?)?)?|idShort|endpoints(?:\\[(?:0|[1-9][0-9]*)?\\])?))?)?)|\\$smdesc#(?:semanticId(?:\\.keys(?:\\[(?:0|[1-9][0-9]*)?\\])?)?|supplementalSemanticIds(?:\\[(?:0|[1-9][0-9]*)?\\](?:\\.keys(?:\\[(?:0|[1-9][0-9]*)?\\])?)?)?|idShort|endpoints(?:\\[(?:0|[1-9][0-9]*)?\\])?))$"
+    },
+    "hexLiteralPattern": {
+      "type": "string",
+      "pattern": "^16#[0-9A-F]+$"
+    },
+    "dateTimeLiteralPattern": {
+      "type": "string",
+      "pattern": "^(?:(?:[0-9]{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12][0-9]|3[01])|(?:0[469]|11)-(?:0[1-9]|[12][0-9]|30)|02-(?:0[1-9]|1[0-9]|2[0-8])))|(?:(?:[0-9]{2}(?:0[48]|[2468][048]|[13579][26])|(?:[02468][048]|[13579][26])00)-02-29))T?(?:(?:[01][0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?(?:\\.[0-9]+)?|24:00(?::00)?(?:\\.0+)?)(?:Z|[+-](?:(?:0[0-9]|1[0-3]):[0-5][0-9]|14:00))?$"
+    },
+    "timeLiteralPattern": {
+      "type": "string",
+      "pattern": "^(?:(?:[01][0-9]|2[0-3]):[0-5][0-9](?::[0-5][0-9])?(?:\\.[0-9]+)?|24:00(?::00)?(?:\\.0+)?)(?:Z|[+-](?:(?:0[0-9]|1[0-3]):[0-5][0-9]|14:00))?$"
+    },
+    "dateTimeAttributeItem": {
+      "type": "object",
+      "properties": {
+        "GLOBAL": {
+          "type": "string",
+          "enum": [
+            "LOCALNOW",
+            "UTCNOW",
+            "CLIENTNOW"
+          ]
+        }
+      },
+      "required": [
+        "GLOBAL"
+      ],
+      "additionalProperties": false
+    },
+    "dateTimeOperand": {
+      "type": "object",
+      "properties": {
+        "$dateTimeVal": {
+          "$ref": "#/definitions/dateTimeLiteralPattern"
+        },
+        "$dateTimeCast": {
+          "$ref": "#/definitions/stringValue"
+        },
+        "$attribute": {
+          "$ref": "#/definitions/dateTimeAttributeItem"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "$dateTimeVal"
+          ]
+        },
+        {
+          "required": [
+            "$dateTimeCast"
+          ]
+        },
+        {
+          "required": [
+            "$attribute"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "fieldOperand": {
+      "type": "object",
+      "properties": {
+        "$field": {
+          "$ref": "#/definitions/FieldIdentifier"
+        }
+      },
+      "required": [
+        "$field"
+      ],
+      "additionalProperties": false
+    },
+    "numericalOperand": {
+      "type": "object",
+      "properties": {
+        "$numVal": {
+          "type": "number"
+        },
+        "$numCast": {
+          "$ref": "#/definitions/Value"
+        },
+        "$dayOfWeek": {
+          "$ref": "#/definitions/dateTimeOperand"
+        },
+        "$dayOfMonth": {
+          "$ref": "#/definitions/dateTimeOperand"
+        },
+        "$month": {
+          "$ref": "#/definitions/dateTimeOperand"
+        },
+        "$year": {
+          "$ref": "#/definitions/dateTimeOperand"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "$numVal"
+          ]
+        },
+        {
+          "required": [
+            "$numCast"
+          ]
+        },
+        {
+          "required": [
+            "$dayOfWeek"
+          ]
+        },
+        {
+          "required": [
+            "$dayOfMonth"
+          ]
+        },
+        {
+          "required": [
+            "$month"
+          ]
+        },
+        {
+          "required": [
+            "$year"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "hexOperand": {
+      "type": "object",
+      "properties": {
+        "$hexVal": {
+          "$ref": "#/definitions/hexLiteralPattern"
+        },
+        "$hexCast": {
+          "$ref": "#/definitions/Value"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "$hexVal"
+          ]
+        },
+        {
+          "required": [
+            "$hexCast"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "boolOperand": {
+      "type": "object",
+      "properties": {
+        "$boolean": {
+          "type": "boolean"
+        },
+        "$boolCast": {
+          "$ref": "#/definitions/Value"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "$boolean"
+          ]
+        },
+        {
+          "required": [
+            "$boolCast"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "timeOperand": {
+      "type": "object",
+      "properties": {
+        "$timeVal": {
+          "$ref": "#/definitions/timeLiteralPattern"
+        },
+        "$timeCast": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/stringValue"
+            },
+            {
+              "$ref": "#/definitions/dateTimeOperand"
+            }
+          ]
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "$timeVal"
+          ]
+        },
+        {
+          "required": [
+            "$timeCast"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "Value": {
+      "type": "object",
+      "properties": {
+        "$field": {
+          "$ref": "#/definitions/FieldIdentifier"
+        },
+        "$strVal": {
+          "$ref": "#/definitions/standardString"
+        },
+        "$attribute": {
+          "$ref": "#/definitions/attributeItem"
+        },
+        "$numVal": {
+          "type": "number"
+        },
+        "$hexVal": {
+          "$ref": "#/definitions/hexLiteralPattern"
+        },
+        "$dateTimeVal": {
+          "$ref": "#/definitions/dateTimeLiteralPattern"
+        },
+        "$timeVal": {
+          "$ref": "#/definitions/timeLiteralPattern"
+        },
+        "$boolean": {
+          "type": "boolean"
+        },
+        "$strCast": {
+          "$ref": "#/definitions/Value"
+        },
+        "$numCast": {
+          "$ref": "#/definitions/Value"
+        },
+        "$hexCast": {
+          "$ref": "#/definitions/Value"
+        },
+        "$boolCast": {
+          "$ref": "#/definitions/Value"
+        },
+        "$dateTimeCast": {
+          "$ref": "#/definitions/stringValue"
+        },
+        "$timeCast": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/stringValue"
+            },
+            {
+              "$ref": "#/definitions/dateTimeOperand"
+            }
+          ]
+        },
+        "$dayOfWeek": {
+          "$ref": "#/definitions/dateTimeOperand"
+        },
+        "$dayOfMonth": {
+          "$ref": "#/definitions/dateTimeOperand"
+        },
+        "$month": {
+          "$ref": "#/definitions/dateTimeOperand"
+        },
+        "$year": {
+          "$ref": "#/definitions/dateTimeOperand"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "$field"
+          ]
+        },
+        {
+          "required": [
+            "$strVal"
+          ]
+        },
+        {
+          "required": [
+            "$attribute"
+          ]
+        },
+        {
+          "required": [
+            "$numVal"
+          ]
+        },
+        {
+          "required": [
+            "$hexVal"
+          ]
+        },
+        {
+          "required": [
+            "$dateTimeVal"
+          ]
+        },
+        {
+          "required": [
+            "$timeVal"
+          ]
+        },
+        {
+          "required": [
+            "$boolean"
+          ]
+        },
+        {
+          "required": [
+            "$strCast"
+          ]
+        },
+        {
+          "required": [
+            "$numCast"
+          ]
+        },
+        {
+          "required": [
+            "$hexCast"
+          ]
+        },
+        {
+          "required": [
+            "$boolCast"
+          ]
+        },
+        {
+          "required": [
+            "$dateTimeCast"
+          ]
+        },
+        {
+          "required": [
+            "$timeCast"
+          ]
+        },
+        {
+          "required": [
+            "$dayOfWeek"
+          ]
+        },
+        {
+          "required": [
+            "$dayOfMonth"
+          ]
+        },
+        {
+          "required": [
+            "$month"
+          ]
+        },
+        {
+          "required": [
+            "$year"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "stringValue": {
+      "type": "object",
+      "properties": {
+        "$field": {
+          "$ref": "#/definitions/FieldIdentifier"
+        },
+        "$strVal": {
+          "$ref": "#/definitions/standardString"
+        },
+        "$strCast": {
+          "$ref": "#/definitions/Value"
+        },
+        "$attribute": {
+          "$ref": "#/definitions/attributeItem"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "$field"
+          ]
+        },
+        {
+          "required": [
+            "$strVal"
+          ]
+        },
+        {
+          "required": [
+            "$strCast"
+          ]
+        },
+        {
+          "required": [
+            "$attribute"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "stringNonFieldValue": {
+      "type": "object",
+      "properties": {
+        "$strVal": {
+          "$ref": "#/definitions/standardString"
+        },
+        "$strCast": {
+          "$ref": "#/definitions/Value"
+        },
+        "$attribute": {
+          "$ref": "#/definitions/attributeItem"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "$strVal"
+          ]
+        },
+        {
+          "required": [
+            "$strCast"
+          ]
+        },
+        {
+          "required": [
+            "$attribute"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "comparisonItems": {
+      "$ref": "#/definitions/equalityComparisonItems"
+    },
+    "stringItems": {
+      "anyOf": [
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "$ref": "#/definitions/stringValue"
+            },
+            {
+              "$ref": "#/definitions/stringNonFieldValue"
+            }
+          ]
+        },
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "$ref": "#/definitions/stringNonFieldValue"
+            },
+            {
+              "$ref": "#/definitions/stringValue"
+            }
+          ]
+        },
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "$ref": "#/definitions/fieldOperand"
+            },
+            {
+              "$ref": "#/definitions/fieldOperand"
+            }
+          ]
+        }
+      ]
+    },
+    "numericalComparisonItems": {
+      "oneOf": [
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/definitions/numericalOperand"
+          }
+        },
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "$ref": "#/definitions/numericalOperand"
+            },
+            {
+              "$ref": "#/definitions/fieldOperand"
+            }
+          ]
+        },
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "$ref": "#/definitions/fieldOperand"
+            },
+            {
+              "$ref": "#/definitions/numericalOperand"
+            }
+          ]
+        }
+      ]
+    },
+    "hexComparisonItems": {
+      "oneOf": [
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/definitions/hexOperand"
+          }
+        },
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "$ref": "#/definitions/hexOperand"
+            },
+            {
+              "$ref": "#/definitions/fieldOperand"
+            }
+          ]
+        },
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "$ref": "#/definitions/fieldOperand"
+            },
+            {
+              "$ref": "#/definitions/hexOperand"
+            }
+          ]
+        }
+      ]
+    },
+    "boolComparisonItems": {
+      "oneOf": [
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/definitions/boolOperand"
+          }
+        },
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "$ref": "#/definitions/boolOperand"
+            },
+            {
+              "$ref": "#/definitions/fieldOperand"
+            }
+          ]
+        },
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "$ref": "#/definitions/fieldOperand"
+            },
+            {
+              "$ref": "#/definitions/boolOperand"
+            }
+          ]
+        }
+      ]
+    },
+    "dateTimeComparisonItems": {
+      "oneOf": [
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/definitions/dateTimeOperand"
+          }
+        },
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "$ref": "#/definitions/dateTimeOperand"
+            },
+            {
+              "$ref": "#/definitions/fieldOperand"
+            }
+          ]
+        },
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "$ref": "#/definitions/fieldOperand"
+            },
+            {
+              "$ref": "#/definitions/dateTimeOperand"
+            }
+          ]
+        }
+      ]
+    },
+    "timeComparisonItems": {
+      "oneOf": [
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/definitions/timeOperand"
+          }
+        },
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "$ref": "#/definitions/timeOperand"
+            },
+            {
+              "$ref": "#/definitions/fieldOperand"
+            }
+          ]
+        },
+        {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": [
+            {
+              "$ref": "#/definitions/fieldOperand"
+            },
+            {
+              "$ref": "#/definitions/timeOperand"
+            }
+          ]
+        }
+      ]
+    },
+    "equalityComparisonItems": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/stringItems"
+        },
+        {
+          "$ref": "#/definitions/numericalComparisonItems"
+        },
+        {
+          "$ref": "#/definitions/hexComparisonItems"
+        },
+        {
+          "$ref": "#/definitions/boolComparisonItems"
+        },
+        {
+          "$ref": "#/definitions/dateTimeComparisonItems"
+        },
+        {
+          "$ref": "#/definitions/timeComparisonItems"
+        }
+      ]
+    },
+    "orderedComparisonItems": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/stringItems"
+        },
+        {
+          "$ref": "#/definitions/numericalComparisonItems"
+        },
+        {
+          "$ref": "#/definitions/hexComparisonItems"
+        },
+        {
+          "$ref": "#/definitions/dateTimeComparisonItems"
+        },
+        {
+          "$ref": "#/definitions/timeComparisonItems"
+        }
+      ]
+    },
+    "matchExpression": {
+      "type": "object",
+      "properties": {
+        "$match": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/matchExpression"
+          }
+        },
+        "$eq": {
+          "$ref": "#/definitions/equalityComparisonItems"
+        },
+        "$ne": {
+          "$ref": "#/definitions/equalityComparisonItems"
+        },
+        "$gt": {
+          "$ref": "#/definitions/orderedComparisonItems"
+        },
+        "$ge": {
+          "$ref": "#/definitions/orderedComparisonItems"
+        },
+        "$lt": {
+          "$ref": "#/definitions/orderedComparisonItems"
+        },
+        "$le": {
+          "$ref": "#/definitions/orderedComparisonItems"
+        },
+        "$contains": {
+          "$ref": "#/definitions/stringItems"
+        },
+        "$starts-with": {
+          "$ref": "#/definitions/stringItems"
+        },
+        "$ends-with": {
+          "$ref": "#/definitions/stringItems"
+        },
+        "$regex": {
+          "$ref": "#/definitions/stringItems"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "$eq"
+          ]
+        },
+        {
+          "required": [
+            "$ne"
+          ]
+        },
+        {
+          "required": [
+            "$gt"
+          ]
+        },
+        {
+          "required": [
+            "$ge"
+          ]
+        },
+        {
+          "required": [
+            "$lt"
+          ]
+        },
+        {
+          "required": [
+            "$le"
+          ]
+        },
+        {
+          "required": [
+            "$contains"
+          ]
+        },
+        {
+          "required": [
+            "$starts-with"
+          ]
+        },
+        {
+          "required": [
+            "$ends-with"
+          ]
+        },
+        {
+          "required": [
+            "$regex"
+          ]
+        },
+        {
+          "required": [
+            "$match"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "logicalExpression": {
+      "type": "object",
+      "properties": {
+        "$and": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "#/definitions/logicalExpression"
+          }
+        },
+        "$match": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/matchExpression"
+          }
+        },
+        "$or": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "#/definitions/logicalExpression"
+          }
+        },
+        "$not": {
+          "$ref": "#/definitions/logicalExpression"
+        },
+        "$eq": {
+          "$ref": "#/definitions/equalityComparisonItems"
+        },
+        "$ne": {
+          "$ref": "#/definitions/equalityComparisonItems"
+        },
+        "$gt": {
+          "$ref": "#/definitions/orderedComparisonItems"
+        },
+        "$ge": {
+          "$ref": "#/definitions/orderedComparisonItems"
+        },
+        "$lt": {
+          "$ref": "#/definitions/orderedComparisonItems"
+        },
+        "$le": {
+          "$ref": "#/definitions/orderedComparisonItems"
+        },
+        "$contains": {
+          "$ref": "#/definitions/stringItems"
+        },
+        "$starts-with": {
+          "$ref": "#/definitions/stringItems"
+        },
+        "$ends-with": {
+          "$ref": "#/definitions/stringItems"
+        },
+        "$regex": {
+          "$ref": "#/definitions/stringItems"
+        },
+        "$boolean": {
+          "type": "boolean"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "$and"
+          ]
+        },
+        {
+          "required": [
+            "$or"
+          ]
+        },
+        {
+          "required": [
+            "$not"
+          ]
+        },
+        {
+          "required": [
+            "$eq"
+          ]
+        },
+        {
+          "required": [
+            "$ne"
+          ]
+        },
+        {
+          "required": [
+            "$gt"
+          ]
+        },
+        {
+          "required": [
+            "$ge"
+          ]
+        },
+        {
+          "required": [
+            "$lt"
+          ]
+        },
+        {
+          "required": [
+            "$le"
+          ]
+        },
+        {
+          "required": [
+            "$contains"
+          ]
+        },
+        {
+          "required": [
+            "$starts-with"
+          ]
+        },
+        {
+          "required": [
+            "$ends-with"
+          ]
+        },
+        {
+          "required": [
+            "$regex"
+          ]
+        },
+        {
+          "required": [
+            "$boolean"
+          ]
+        },
+        {
+          "required": [
+            "$match"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "attributeItem": {
+      "oneOf": [
+        {
+          "required": [
+            "CLAIM"
+          ]
+        },
+        {
+          "required": [
+            "GLOBAL"
+          ]
+        },
+        {
+          "required": [
+            "REFERENCE"
+          ]
+        }
+      ],
+      "properties": {
+        "CLAIM": {
+          "type": "string"
+        },
+        "GLOBAL": {
+          "type": "string",
+          "enum": [
+            "LOCALNOW",
+            "UTCNOW",
+            "CLIENTNOW",
+            "ANONYMOUS"
+          ]
+        },
+        "REFERENCE": {
+          "$ref": "#/definitions/ReferenceIdentifier"
+        }
+      },
+      "additionalProperties": false
+    },
+    "objectItem": {
+      "oneOf": [
+        {
+          "required": [
+            "ROUTE"
+          ]
+        },
+        {
+          "required": [
+            "IDENTIFIABLE"
+          ]
+        },
+        {
+          "required": [
+            "REFERABLE"
+          ]
+        },
+        {
+          "required": [
+            "FRAGMENT"
+          ]
+        },
+        {
+          "required": [
+            "DESCRIPTOR"
+          ]
+        }
+      ],
+      "properties": {
+        "ROUTE": {
+          "type": "string"
+        },
+        "IDENTIFIABLE": {
+          "$ref": "#/definitions/IdentifiableIdentifier"
+        },
+        "REFERABLE": {
+          "$ref": "#/definitions/ReferableIdentifier"
+        },
+        "FRAGMENT": {
+          "$ref": "#/definitions/FragmentIdentifier"
+        },
+        "DESCRIPTOR": {
+          "$ref": "#/definitions/DescriptorIdentifier"
+        }
+      },
+      "additionalProperties": false
+    },
+    "rightsEnum": {
+      "type": "string",
+      "enum": [
+        "CREATE",
+        "READ",
+        "UPDATE",
+        "DELETE",
+        "EXECUTE",
+        "VIEW",
+        "ALL"
+      ],
+      "additionalProperties": false
+    },
+    "ACL": {
+      "type": "object",
+      "properties": {
+        "ATTRIBUTES": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/attributeItem"
+          }
+        },
+        "USEATTRIBUTES": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "RIGHTS": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/rightsEnum"
+          }
+        },
+        "ACCESS": {
+          "type": "string",
+          "enum": [
+            "ALLOW",
+            "DISABLED"
+          ]
+        }
+      },
+      "required": [
+        "RIGHTS",
+        "ACCESS"
+      ],
+      "anyOf": [
+        {
+          "required": [
+            "ATTRIBUTES"
+          ]
+        },
+        {
+          "required": [
+            "USEATTRIBUTES"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "AccessPermissionRule": {
+      "type": "object",
+      "properties": {
+        "ACL": {
+          "$ref": "#/definitions/ACL"
+        },
+        "USEACL": {
+          "type": "string"
+        },
+        "OBJECTS": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/objectItem"
+          },
+          "additionalProperties": false
+        },
+        "USEOBJECTS": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "FORMULA": {
+          "$ref": "#/definitions/logicalExpression",
+          "additionalProperties": false
+        },
+        "USEFORMULA": {
+          "type": "string"
+        },
+        "FILTER": {
+          "$ref": "#/definitions/SecurityQueryFilter",
+          "additionalProperties": false
+        },
+        "FILTERLIST": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SecurityQueryFilter"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "required": [
+                "ACL"
+              ]
+            },
+            {
+              "required": [
+                "USEACL"
+              ]
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "required": [
+                "OBJECTS"
+              ]
+            },
+            {
+              "required": [
+                "USEOBJECTS"
+              ]
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "FORMULA"
+              ]
+            },
+            {
+              "required": [
+                "USEFORMULA"
+              ]
+            }
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "SecurityQueryFilter": {
+      "type": "object",
+      "properties": {
+        "FRAGMENT": {
+          "$ref": "#/definitions/FragmentFieldIdentifier"
+        },
+        "CONDITION": {
+          "$ref": "#/definitions/logicalExpression"
+        },
+        "USEFORMULA": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "FRAGMENT"
+      ],
+      "oneOf": [
+        {
+          "required": [
+            "CONDITION"
+          ]
+        },
+        {
+          "required": [
+            "USEFORMULA"
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+    "QueryFilter": {
+      "type": "object",
+      "properties": {
+        "$fragment": {
+          "$ref": "#/definitions/FragmentFieldIdentifier"
+        },
+        "$condition": {
+          "$ref": "#/definitions/logicalExpression"
+        }
+      },
+      "required": [
+        "$fragment",
+        "$condition"
+      ],
+      "additionalProperties": false
+    },
+    "Query": {
+      "type": "object",
+      "properties": {
+        "$select": {
+          "type": "string",
+          "pattern": "^id$"
+        },
+        "$condition": {
+          "$ref": "#/definitions/logicalExpression"
+        },
+        "$filters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/QueryFilter"
+          }
+        }
+      },
+      "required": [
+        "$condition"
+      ],
+      "additionalProperties": false
+    },
+    "AllAccessPermissionRules": {
+      "type": "object",
+      "properties": {
+        "DEFATTRIBUTES": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "attributes": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/attributeItem"
+                }
+              },
+              "USEATTRIBUTES": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "oneOf": [
+              {
+                "required": [
+                  "attributes"
+                ]
+              },
+              {
+                "required": [
+                  "USEATTRIBUTES"
+                ]
+              }
+            ],
+            "additionalProperties": false
+          }
+        },
+        "DEFACLS": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "acl": {
+                "$ref": "#/definitions/ACL"
+              }
+            },
+            "required": [
+              "name",
+              "acl"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "DEFOBJECTS": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "objects": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/objectItem"
+                }
+              },
+              "USEOBJECTS": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "oneOf": [
+              {
+                "required": [
+                  "objects"
+                ]
+              },
+              {
+                "required": [
+                  "USEOBJECTS"
+                ]
+              }
+            ],
+            "additionalProperties": false
+          }
+        },
+        "DEFFORMULAS": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "formula": {
+                "$ref": "#/definitions/logicalExpression"
+              }
+            },
+            "required": [
+              "name",
+              "formula"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AccessPermissionRule"
+          }
+        }
+      },
+      "required": [
+        "rules"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

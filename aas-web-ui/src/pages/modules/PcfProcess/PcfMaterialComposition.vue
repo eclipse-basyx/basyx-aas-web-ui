@@ -208,7 +208,6 @@
 
 <script lang="ts" setup>
   import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
-  import { computed, onMounted, ref, toRaw } from 'vue'
   import { useRouter } from 'vue-router'
   import { useDisplay } from 'vuetify'
   import { useAASHandling } from '@/composables/AAS/AASHandling'

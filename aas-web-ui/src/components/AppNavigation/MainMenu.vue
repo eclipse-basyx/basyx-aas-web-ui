@@ -212,7 +212,6 @@
 <script lang="ts" setup>
   import type { ModuleNavigationRoute } from '@/types/Application'
   import type { ComponentPublicInstance, Ref } from 'vue'
-  import { computed, onMounted, ref } from 'vue'
   import { useRoute } from 'vue-router'
   import { useModuleHandling } from '@/composables/ModuleHandling'
   import { useAASStore } from '@/store/AASDataStore'

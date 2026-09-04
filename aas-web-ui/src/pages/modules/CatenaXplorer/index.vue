@@ -51,7 +51,9 @@
             :descriptor="selectedDescriptor"
             :edc-access-enabled="isEdcAccessMode"
             :edc-submodels="edcSubmodels"
+            :opening-submodel-key="openingSubmodelKey"
             @load-edc-submodel="loadEdcSubmodel"
+            @open-submodel="openSubmodel"
           />
         </main>
       </template>
@@ -134,7 +136,9 @@
               :descriptor="selectedDescriptor"
               :edc-access-enabled="isEdcAccessMode"
               :edc-submodels="edcSubmodels"
+              :opening-submodel-key="openingSubmodelKey"
               @load-edc-submodel="loadEdcSubmodel"
+              @open-submodel="openSubmodel"
             />
           </v-window-item>
         </v-window>
@@ -173,13 +177,12 @@
   import type { CatenaXEdcDtrMetadata } from '@/composables/Client/CatenaXEdcClient'
   import type { EdcSubmodelViewState } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
   import type { CatenaXPartner, InfrastructureConfig } from '@/types/Infrastructure'
-  import { computed, onMounted, ref, toRaw, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useDisplay } from 'vuetify'
-  import CatenaXPartnerDialog from '@/components/AppNavigation/Settings/CatenaXPartnerDialog.vue'
   import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import { parseNextCursor } from '@/composables/Client/PaginationUtils'
+  import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { useIDUtils } from '@/composables/IDUtils'
   import {
@@ -204,6 +207,8 @@
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
+  import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils'
+  import { isSubmodelPayload } from '@/utils/AAS/SubmodelUtils'
   import {
     getCatenaXPartnerKey,
     mergeCatenaXPartners,
@@ -245,6 +250,11 @@
     fetchDtrShellDescriptors,
     fetchSubmodel,
   } = useCatenaXEdcClient()
+  const {
+    consumeLastRequestFailureDetails: consumeSubmodelRequestFailureDetails,
+    consumeLastRequestFailureStatus: consumeSubmodelRequestFailureStatus,
+    fetchSm,
+  } = useSMRepositoryClient()
   const { copyToClipboard } = useClipboardUtil()
   const { generateIri } = useIDUtils()
 
@@ -256,6 +266,8 @@
   const edcSubmodels = ref<Record<string, EdcSubmodelViewState>>({})
   const hasMoreDescriptors = ref(false)
   const isLoadingMoreDescriptors = ref(false)
+  const openingSubmodelKey = ref('')
+  const submodelOpenGeneration = ref(0)
   const knownAssetIdNames = ref<string[]>([])
   const nextDescriptorCursor = ref<string | undefined>(undefined)
   const selectedDescriptorId = ref('')
@@ -370,6 +382,20 @@
     selectDefaultEdcPartner()
     reloadDescriptors()
   })
+
+  onBeforeUnmount(() => {
+    cancelSubmodelOpen()
+  })
+
+  watch(
+    () => [
+      selectedInfrastructure.value?.id,
+      isEdcAccessMode.value,
+      infrastructureStore.getAASRepoURL,
+      infrastructureStore.getSubmodelRepoURL,
+    ],
+    () => cancelSubmodelOpen(),
+  )
 
   watch(
     () => [
@@ -687,6 +713,163 @@
         isLoading: false,
       })
     }
+  }
+
+  async function openSubmodel (submodelDescriptor: any): Promise<void> {
+    if (isEdcAccessMode.value) {
+      showSubmodelOpenError(
+        'Submodels obtained through EDC are read-only in CatenaXplorer. Use Load Submodel to inspect this endpoint.',
+      )
+      return
+    }
+
+    const endpoint = extractEndpointHref(submodelDescriptor, 'SUBMODEL-3.0').trim()
+    if (endpoint === '') {
+      showSubmodelOpenError(
+        'The descriptor has no SUBMODEL endpoint with an href. Add a valid endpoint before opening the Submodel.',
+      )
+      return
+    }
+
+    if (!navigationStore.getIsMobile && !envStore.getSmViewerEditor) {
+      showSubmodelOpenError(
+        'The standalone Submodel viewer/editor is disabled in this deployment.',
+        endpoint,
+      )
+      return
+    }
+
+    const generation = ++submodelOpenGeneration.value
+    const infrastructureId = selectedInfrastructure.value?.id
+    openingSubmodelKey.value = getDescriptorKey(submodelDescriptor)
+
+    try {
+      const submodel = await fetchSm(endpoint)
+      const failureStatus = consumeSubmodelRequestFailureStatus()
+      const failureDetails = consumeSubmodelRequestFailureDetails()
+
+      if (!isCurrentSubmodelOpen(generation, infrastructureId)) {
+        return
+      }
+
+      if (failureStatus !== undefined) {
+        if ([401, 403].includes(failureStatus) && hasInfrastructureAccessSnackbar()) {
+          return
+        }
+        showSubmodelOpenError(getSubmodelResolutionFailureMessage(failureStatus), endpoint, failureDetails)
+        return
+      }
+
+      if (!isSubmodelPayload(submodel)) {
+        showSubmodelOpenError(
+          'The endpoint did not return a valid Submodel. Check the descriptor href and repository availability.',
+          endpoint,
+          failureDetails,
+        )
+        return
+      }
+
+      const descriptorId = typeof submodelDescriptor?.id === 'string' ? submodelDescriptor.id.trim() : ''
+      const resolvedId = submodel.id.trim()
+      if (descriptorId !== '' && resolvedId !== descriptorId) {
+        showSubmodelOpenError(
+          `The endpoint resolved to Submodel "${resolvedId}", but the descriptor identifies "${descriptorId}".`,
+          endpoint,
+          'Correct the descriptor href or ID before editing to avoid changing the wrong Submodel.',
+        )
+        return
+      }
+
+      let targetRouteName = 'Visualization'
+      if (!navigationStore.getIsMobile) {
+        targetRouteName = envStore.getAllowEditing ? 'SMEditor' : 'SMViewer'
+      }
+
+      await router.push({
+        name: targetRouteName,
+        query: { path: endpoint },
+      })
+
+      if (!isCurrentSubmodelOpen(generation, infrastructureId)) {
+        return
+      }
+
+      if (router.currentRoute.value.query.path !== endpoint) {
+        if (hasInfrastructureAccessSnackbar()) {
+          return
+        }
+        showSubmodelOpenError(
+          'The Submodel was resolved, but the target view could not keep the endpoint selection.',
+          endpoint,
+          'Check whether standalone Submodel navigation is enabled for this deployment.',
+        )
+      }
+    } catch (error) {
+      if (!isCurrentSubmodelOpen(generation, infrastructureId)) {
+        return
+      }
+      console.warn(error)
+      showSubmodelOpenError(
+        'The Submodel endpoint could not be resolved or the target view could not be opened.',
+        endpoint,
+        getErrorMessage(error, ''),
+      )
+    } finally {
+      if (generation === submodelOpenGeneration.value) {
+        openingSubmodelKey.value = ''
+      }
+    }
+  }
+
+  function isCurrentSubmodelOpen (generation: number, infrastructureId: string | undefined): boolean {
+    return generation === submodelOpenGeneration.value
+      && selectedInfrastructure.value?.id === infrastructureId
+      && !isEdcAccessMode.value
+  }
+
+  function cancelSubmodelOpen (): void {
+    submodelOpenGeneration.value += 1
+    openingSubmodelKey.value = ''
+  }
+
+  function hasInfrastructureAccessSnackbar (): boolean {
+    const snackbarKind = navigationStore.getSnackbar.kind
+    return navigationStore.getSnackbar.status
+      && (snackbarKind === 'authentication-required' || snackbarKind === 'access-denied')
+  }
+
+  function getSubmodelResolutionFailureMessage (status: number): string {
+    if (status === 400) {
+      return 'The Submodel endpoint rejected the request. Check that the descriptor href is a valid Submodel API endpoint.'
+    }
+    if (status === 401) {
+      return 'Authentication is required to access the Submodel endpoint.'
+    }
+    if (status === 403) {
+      return 'Access to the Submodel endpoint was denied for the current credentials.'
+    }
+    if (status === 404) {
+      return 'No Submodel was found at the descriptor href. It may have been moved or deleted.'
+    }
+
+    return `The Submodel endpoint could not be resolved (HTTP ${status}).`
+  }
+
+  function showSubmodelOpenError (message: string, endpoint = '', details = ''): void {
+    const extendedError = [
+      message,
+      endpoint === '' ? '' : `Endpoint: ${endpoint}`,
+      details.trim(),
+    ].filter(Boolean).join('\n')
+
+    navigationStore.dispatchSnackbar({
+      status: true,
+      timeout: 15_000,
+      color: 'error',
+      btnColor: 'buttonText',
+      baseError: 'Could not open Submodel',
+      extendedError,
+    })
   }
 
   function buildEdcFailureMessage (fallback: string): string {

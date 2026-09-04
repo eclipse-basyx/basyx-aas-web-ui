@@ -1,4 +1,4 @@
-import { computed, type ComputedRef } from 'vue'
+import type { ComputedRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 export type ShortcutDefinition = {

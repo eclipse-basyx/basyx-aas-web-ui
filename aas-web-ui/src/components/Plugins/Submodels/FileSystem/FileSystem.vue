@@ -151,7 +151,6 @@
 
 <script setup lang="ts">
   import type { BreadcrumbItem, FileElement, FileSystemElement, FolderElement, TableHeader } from './types'
-  import { nextTick, onMounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { mimeToExtension } from '@/utils/FileHandling'

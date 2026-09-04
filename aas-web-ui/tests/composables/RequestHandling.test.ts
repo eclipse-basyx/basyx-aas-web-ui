@@ -66,6 +66,27 @@ describe('RequestHandling.ts', () => {
     mockState.authDescriptionExemption = false
   })
 
+  it.each(['{ "value": 1 }\n', '{ malformed JSON', '', 'false'])('preserves attachment bytes in blob mode: %s', async source => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(source, {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as unknown as typeof fetch
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const response = await useRequestHandling().getRequest('/attachment', 'previewing', true, new Headers(), {}, 'blob')
+    expect(response.success).toBe(true)
+    expect(await response.data.text()).toBe(source)
+  })
+
+  it('keeps JSON parsing as the default and preserves error handling in blob mode', async () => {
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce(new Response('{"value":1}', { headers: { 'Content-Type': 'application/json' } }))
+      .mockResolvedValueOnce(new Response('{"message":"Forbidden"}', { status: 403, headers: { 'Content-Type': 'application/json' } })) as unknown as typeof fetch
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { getRequest } = useRequestHandling()
+    expect((await getRequest('/data', 'loading', true)).data).toEqual({ value: 1 })
+    expect(await getRequest('/attachment', 'previewing', true, new Headers(), {}, 'blob')).toMatchObject({ success: false, status: 403 })
+  })
+
   it('handles 401 with authentication-required snackbar and infra auth reset', async () => {
     global.fetch = vi.fn().mockResolvedValue(
       new Response('', {

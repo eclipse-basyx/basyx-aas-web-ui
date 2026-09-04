@@ -130,7 +130,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref, toRaw, watch } from 'vue'
   import { useAASStore } from '@/store/AASDataStore'
   import {
     buildPlantUmlForSubmodelElement,

@@ -95,7 +95,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed } from 'vue'
   import { isNumber } from '@/utils/generalUtils'
 
   const props = defineProps({

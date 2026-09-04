@@ -33,7 +33,6 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, reactive, ref } from 'vue'
   import BankAccountForm from './components/BankAccountForm.vue'
   import { useFormStore } from './stores/formData'
   import { createBankAccountsSMC } from './utils/bankAccountSmcBuilder'

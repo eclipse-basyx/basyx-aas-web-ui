@@ -229,4 +229,59 @@ describe('useInfrastructureYamlParser.ts', () => {
       ],
     })
   })
+
+  it('preserves configured partner metadata when it matches the legacy default', () => {
+    const { parseYamlConfig } = useInfrastructureYamlParser()
+
+    const parsed = parseYamlConfig(createYamlConfig({
+      name: 'Catena-X',
+      template: 'catena-x',
+      components: {},
+      catenaX: {
+        accessMode: 'edc',
+        edc: {
+          proxyId: 'default',
+          defaultPartnerId: 'partner-a',
+          defaultCounterPartyId: 'BPNL000000000AAA',
+          defaultCounterPartyAddress: 'https://partner-a.example/api/v1/dsp',
+          partners: [
+            {
+              id: 'partner-a',
+              name: 'Partner A',
+              counterPartyId: 'BPNL000000000AAA',
+              counterPartyAddress: 'https://partner-a.example/api/v1/dsp',
+            },
+            {
+              id: 'partner-b',
+              name: 'Partner B',
+              counterPartyId: 'BPNL000000000BBB',
+              counterPartyAddress: 'https://partner-b.example/api/v1/dsp',
+            },
+          ],
+        },
+      },
+      security: { type: 'none' },
+    }))
+
+    expect(parsed.infrastructures[0].catenaX?.edc).toEqual({
+      proxyId: 'default',
+      defaultPartnerId: 'partner-a',
+      defaultCounterPartyId: 'BPNL000000000AAA',
+      defaultCounterPartyAddress: 'https://partner-a.example/api/v1/dsp',
+      partners: [
+        {
+          id: 'partner-a',
+          name: 'Partner A',
+          counterPartyId: 'BPNL000000000AAA',
+          counterPartyAddress: 'https://partner-a.example/api/v1/dsp',
+        },
+        {
+          id: 'partner-b',
+          name: 'Partner B',
+          counterPartyId: 'BPNL000000000BBB',
+          counterPartyAddress: 'https://partner-b.example/api/v1/dsp',
+        },
+      ],
+    })
+  })
 })
