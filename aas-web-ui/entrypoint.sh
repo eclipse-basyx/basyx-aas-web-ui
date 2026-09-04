@@ -7,6 +7,9 @@
 : "${LOGO_PATH:=}"
 : "${LOGO_LIGHT_PATH:=Logo_light.svg}"
 : "${LOGO_DARK_PATH:=Logo_dark.svg}"
+: "${COPYRIGHT_NAME:=}"
+: "${LEGAL_NOTICE_URL:=}"
+: "${PRIVACY_POLICY_URL:=}"
 : "${AAS_DISCOVERY_PATH:=}"
 : "${AAS_REGISTRY_PATH:=}"
 : "${SUBMODEL_REGISTRY_PATH:=}"
@@ -151,6 +154,9 @@ echo "Environment variables:"
 echo "-------------------------------------------------------------------------------------------------------------------------"
 printf "%-38s %s\n" "Logo light path:" "$LOGO_LIGHT_PATH"
 printf "%-38s %s\n" "Logo dark path:" "$LOGO_DARK_PATH"
+printf "%-38s %s\n" "Copyright name:" "$COPYRIGHT_NAME"
+printf "%-38s %s\n" "Legal notice URL:" "$LEGAL_NOTICE_URL"
+printf "%-38s %s\n" "Privacy policy URL:" "$PRIVACY_POLICY_URL"
 printf "%-38s %s\n" "AAS Discovery path:" "$AAS_DISCOVERY_PATH"
 printf "%-38s %s\n" "AAS Registry path:" "$AAS_REGISTRY_PATH"
 printf "%-38s %s\n" "Submodel Registry path:" "$SUBMODEL_REGISTRY_PATH"
@@ -198,6 +204,9 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__BASE_PATH_PLACEHOLDER__/|$BASE_PATH_WITH_SLASH|g" \
     -e "s|/__LOGO_LIGHT_PATH_PLACEHOLDER__/|$LOGO_LIGHT_PATH|g" \
     -e "s|/__LOGO_DARK_PATH_PLACEHOLDER__/|$LOGO_DARK_PATH|g" \
+    -e "s|/__COPYRIGHT_NAME_PLACEHOLDER__/|$COPYRIGHT_NAME|g" \
+    -e "s|/__LEGAL_NOTICE_URL_PLACEHOLDER__/|$LEGAL_NOTICE_URL|g" \
+    -e "s|/__PRIVACY_POLICY_URL_PLACEHOLDER__/|$PRIVACY_POLICY_URL|g" \
     -e "s|/__AAS_DISCOVERY_PATH_PLACEHOLDER__/|$AAS_DISCOVERY_PATH|g" \
     -e "s|/__AAS_REGISTRY_PATH_PLACEHOLDER__/|$AAS_REGISTRY_PATH|g" \
     -e "s|/__SUBMODEL_REGISTRY_PATH_PLACEHOLDER__/|$SUBMODEL_REGISTRY_PATH|g" \

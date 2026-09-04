@@ -32,4 +32,17 @@ describe('EnvironmentStore feature-control configuration', () => {
 
     expect(decodeProductionBase64(base64Encode(configuration, false))).toBe(configuration)
   })
+
+  it('provides the configured footer links', async () => {
+    vi.stubEnv('VITE_COPYRIGHT_NAME', 'Example Corp')
+    vi.stubEnv('VITE_LEGAL_NOTICE_URL', 'https://example.com/legal-notice')
+    vi.stubEnv('VITE_PRIVACY_POLICY_URL', 'https://example.com/privacy-policy')
+    const { useEnvStore } = await import('@/store/EnvironmentStore')
+    setActivePinia(createPinia())
+    const envStore = useEnvStore()
+
+    expect(envStore.getEnvCopyrightName).toBe('Example Corp')
+    expect(envStore.getEnvLegalNoticeUrl).toBe('https://example.com/legal-notice')
+    expect(envStore.getEnvPrivacyPolicyUrl).toBe('https://example.com/privacy-policy')
+  })
 })

@@ -25,6 +25,11 @@ test('ui is reachable under configured base path', async ({ page, request }) => 
 
   await expect(page.getByAltText('Logo')).toBeVisible({ timeout: 30_000 })
 
+  const footer = page.locator('footer')
+  await expect(footer).toBeVisible()
+  expect(await footer.evaluate(element => Math.round(element.getBoundingClientRect().height))).toBe(40)
+  await expect(footer.getByText(/Eclipse BaSyx™ ©/)).toBeVisible()
+
   const indexResponse = await request.get(normalizedBasePath)
   expect(indexResponse.ok()).toBeTruthy()
   const indexHtml = await indexResponse.text()
@@ -32,7 +37,24 @@ test('ui is reachable under configured base path', async ({ page, request }) => 
   if (runtimeTarget === 'docker') {
     expect(indexHtml).not.toContain('__BASE_PATH_PLACEHOLDER__')
     expect(indexHtml).not.toContain('__LOGO_LIGHT_PATH_PLACEHOLDER__')
+    expect(indexHtml).not.toContain('__COPYRIGHT_NAME_PLACEHOLDER__')
+    expect(indexHtml).not.toContain('__LEGAL_NOTICE_URL_PLACEHOLDER__')
+    expect(indexHtml).not.toContain('__PRIVACY_POLICY_URL_PLACEHOLDER__')
   }
+})
+
+test('unconfigured legal links are not shown in the footer', async ({ page }) => {
+  await page.goto(normalizedBasePath, { waitUntil: 'networkidle' })
+
+  await expect(page.getByRole('link', { name: 'Legal notice' })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Privacy policy' })).toHaveCount(0)
+})
+
+test('the BaSyx copyright is hidden on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto(normalizedBasePath, { waitUntil: 'networkidle' })
+
+  await expect(page.getByText(/Eclipse BaSyx™ ©/)).toHaveCount(0)
 })
 
 test('deep link route works under configured base path', async ({ page }) => {

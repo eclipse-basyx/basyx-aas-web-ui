@@ -18,7 +18,6 @@
       "DOM.Iterable"
     ],
     "types": [
-      "prismjs",
       "leaflet",
       "qrcode"
     ],

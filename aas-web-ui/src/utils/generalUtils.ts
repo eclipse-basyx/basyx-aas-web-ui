@@ -56,14 +56,7 @@ export function isNumber (valueType: string): boolean {
 export function downloadJson (obj: any, fileName: string): void {
   const jsonStr = JSON.stringify(obj, null, 4)
   const blob = new Blob([jsonStr], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = fileName
-  document.body.append(a)
-  a.click()
-  a.remove()
-  URL.revokeObjectURL(url)
+  downloadFile(fileName, blob)
 }
 
 /**
@@ -78,11 +71,13 @@ export function downloadJson (obj: any, fileName: string): void {
  */
 export function downloadFile (filename: string, fileContent: Blob): void {
   const link = document.createElement('a')
-  link.href = window.URL.createObjectURL(fileContent)
+  const url = URL.createObjectURL(fileContent)
+  link.href = url
   link.download = filename
   document.body.append(link)
   link.click()
   link.remove()
+  URL.revokeObjectURL(url)
 }
 
 /**
