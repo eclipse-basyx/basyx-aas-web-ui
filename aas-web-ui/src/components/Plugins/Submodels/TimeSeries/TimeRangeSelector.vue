@@ -48,7 +48,7 @@
         </v-btn-toggle>
 
         <template v-if="mode === 'relative'">
-          <v-row class="mb-2" dense>
+          <v-row class="mb-2" density="compact">
             <v-col v-for="preset in presets" :key="preset.id" cols="3">
               <v-btn
                 :active="selectedPreset === preset.id"
@@ -64,7 +64,7 @@
             </v-col>
           </v-row>
 
-          <v-row v-if="selectedPreset === 'custom'" dense>
+          <v-row v-if="selectedPreset === 'custom'" density="compact">
             <v-col cols="7">
               <div class="text-caption mb-1">Range</div>
 
@@ -83,7 +83,7 @@
             <v-col cols="5">
               <div class="text-caption mb-1">Unit</div>
 
-              <v-row dense>
+              <v-row density="compact">
                 <v-col v-for="unit in relativeUnits" :key="unit.value" cols="3">
                   <v-btn
                     :active="relativeUnit === unit.value"

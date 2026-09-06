@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, nextTick } from 'vue'
 import QueryLanguageEditor from '@/components/QueryLanguage/QueryLanguageEditor.vue'
 import { shortcuts } from '@/pages/modules/QueryLanguage.vue'
+import { hotkeyStub } from '../../helpers/vuetifyStubs'
 
 vi.mock('@/components/QueryLanguage/monacoQueryLanguage', () => ({ queryLanguageSchemas: [] }))
 vi.mock('@/composables/RequestHandling', () => ({ useRequestHandling: vi.fn() }))
@@ -21,7 +22,7 @@ async function mountEditor () {
     props: { modelValue: '' },
     attrs: { id: 'query-language-editor' },
     attachTo: document.body,
-    global: { stubs: { CodeEditor: editor, VHotkey: true, VProgressLinear: true, VAlert: true } },
+    global: { stubs: { CodeEditor: editor, VHotkey: hotkeyStub, VProgressLinear: true, VAlert: true } },
   })
   await vi.dynamicImportSettled()
   await flushPromises()
@@ -37,7 +38,7 @@ describe('Query Language command palette shortcuts', () => {
     const wrapper = await mountEditor()
     const [command] = shortcuts({ route: { name: 'QueryLanguage' } as RouteLocationNormalizedLoaded })
     expect(command.title).toBe('Show Query Suggestions')
-    expect(wrapper.get('v-hotkey-stub').attributes('keys')).toBe(command.keys)
+    expect(wrapper.getComponent(hotkeyStub).props('keys')).toBe(command.keys)
     command.handler(new KeyboardEvent('keydown'))
     expect(suggest).not.toHaveBeenCalled()
     await nextTick()

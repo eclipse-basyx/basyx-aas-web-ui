@@ -129,6 +129,29 @@ const slotStub = {
   template: '<div><slot /></div>',
 }
 
+// Consume the component prop without forwarding it to the read-only DOM property.
+const editorFormStub = {
+  props: ['parentElement'],
+  template: '<div />',
+}
+
+const editorFormStubs = {
+  SubmodelElementForm: editorFormStub,
+  PropertyForm: editorFormStub,
+  MLPForm: editorFormStub,
+  RangeForm: editorFormStub,
+  FileForm: editorFormStub,
+  BlobForm: editorFormStub,
+  CollectionForm: editorFormStub,
+  ListForm: editorFormStub,
+  EntityForm: editorFormStub,
+  ReferenceElementForm: editorFormStub,
+  RelationshipElementForm: editorFormStub,
+  AnnotatedRelationshipElementForm: editorFormStub,
+  JsonInsert: editorFormStub,
+  SubmodelElementDraftForm: editorFormStub,
+}
+
 describe('Submodel loading invalidation', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -151,7 +174,7 @@ describe('Submodel loading invalidation', () => {
     mocks.fetchAasSmListById.mockReturnValue(new Promise(resolve => {
       resolveLoad = resolve
     }))
-    const wrapper = mount(component, { shallow: true })
+    const wrapper = mount(component, { shallow: true, global: { stubs: editorFormStubs } })
     await flushPromises()
 
     expect((wrapper.vm as any)[loadingProperty]).toBe(true)
@@ -181,6 +204,7 @@ describe('Submodel loading invalidation', () => {
       shallow: true,
       global: {
         stubs: {
+          ...editorFormStubs,
           'Treeview': treeviewStub,
           'ConvertSubmodelToInstanceDialog': conversionDialogStub,
           'v-container': slotStub,

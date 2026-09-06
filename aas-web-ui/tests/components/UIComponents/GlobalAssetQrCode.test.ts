@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import GlobalAssetQrCode from '@/components/UIComponents/GlobalAssetQrCode.vue'
 
 const { toDataURLMock } = vi.hoisted(() => ({
@@ -18,6 +18,10 @@ async function flushAsync (): Promise<void> {
 }
 
 describe('GlobalAssetQrCode.vue', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   beforeEach(() => {
     toDataURLMock.mockReset()
     toDataURLMock.mockResolvedValue('data:image/png;base64,qr')
@@ -60,7 +64,9 @@ describe('GlobalAssetQrCode.vue', () => {
   })
 
   it('falls back to empty output when QR generation fails', async () => {
-    toDataURLMock.mockRejectedValueOnce(new Error('QR generation error'))
+    const error = new Error('QR generation error')
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    toDataURLMock.mockRejectedValueOnce(error)
 
     const wrapper = mount(GlobalAssetQrCode, {
       props: {
@@ -71,6 +77,7 @@ describe('GlobalAssetQrCode.vue', () => {
     await flushAsync()
 
     expect(toDataURLMock).toHaveBeenCalledTimes(1)
+    expect(errorSpy).toHaveBeenCalledExactlyOnceWith(error)
     expect(wrapper.find('[data-testid="global-asset-qr-code"]').exists()).toBe(false)
   })
 
