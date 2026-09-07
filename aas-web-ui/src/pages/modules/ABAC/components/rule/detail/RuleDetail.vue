@@ -38,10 +38,10 @@
 </template>
 
 <script setup lang="ts">
-  import RuleComplexityBadge from '@/pages/modules/ABAC/components/rule/RuleComplexityBadge.vue'
-  import JsonCodeEditor from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
-  import { useRules } from '@/pages/modules/ABAC/hooks/useRules'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+  import { useRules } from '../../../hooks/useRules'
+  import { useAbacI18n } from '../../../i18n/useAbacI18n'
+  import JsonCodeEditor from '../../shared/JsonCodeEditor.vue'
+  import RuleComplexityBadge from '../RuleComplexityBadge.vue'
 
   const VIEW = {
     CONFIGURED: 'configured',

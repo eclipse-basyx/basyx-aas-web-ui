@@ -20,11 +20,11 @@
 </template>
 
 <script setup lang="ts">
-  import DefinitionDialog, { type DefinitionDialogMode } from '@/pages/modules/ABAC/components/definition/DefinitionDialog.vue'
-  import DefinitionActions from '@/pages/modules/ABAC/components/definition/detail/DefinitionActions.vue'
-  import DefinitionDetail from '@/pages/modules/ABAC/components/definition/detail/DefinitionDetail.vue'
-  import DefinitionsList from '@/pages/modules/ABAC/components/definition/list/DefinitionsList.vue'
-  import { usePolicy } from '@/pages/modules/ABAC/hooks/usePolicy'
+  import { usePolicy } from '../../hooks/usePolicy'
+  import DefinitionDialog, { type DefinitionDialogMode } from './DefinitionDialog.vue'
+  import DefinitionActions from './detail/DefinitionActions.vue'
+  import DefinitionDetail from './detail/DefinitionDetail.vue'
+  import DefinitionsList from './list/DefinitionsList.vue'
 
   const { policy } = usePolicy()
 

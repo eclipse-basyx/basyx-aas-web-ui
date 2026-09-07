@@ -63,12 +63,12 @@
   </v-row></template>
 
 <script setup lang="ts">
-  import { useDeleteDefinition } from '@/pages/modules/ABAC/api/definition/useDeleteDefinition'
-  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
-  import { useDefinitions } from '@/pages/modules/ABAC/hooks/useDefinitions'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
+  import { useDeleteDefinition } from '../../../api/definition/useDeleteDefinition'
+  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
+  import { useDefinitions } from '../../../hooks/useDefinitions'
+  import { useAbacI18n } from '../../../i18n/useAbacI18n'
 
   type DefinitionAction = 'replace' | 'patch' | 'delete'
 

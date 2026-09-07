@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+  import { useAbacI18n } from '../../../../i18n/useAbacI18n'
 
   const ICONS = {
     EXPAND: 'mdi-chevron-double-right',

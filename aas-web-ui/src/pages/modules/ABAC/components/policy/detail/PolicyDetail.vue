@@ -79,17 +79,17 @@
 </template>
 
 <script setup lang="ts">
-  import Definitions from '@/pages/modules/ABAC/components/definition/Definitions.vue'
-  import PolicyActions from '@/pages/modules/ABAC/components/policy/detail/PolicyActions.vue'
-  import PolicyRaw from '@/pages/modules/ABAC/components/policy/detail/PolicyRaw.vue'
-  import PolicyStatus from '@/pages/modules/ABAC/components/policy/PolicyStatus.vue'
-  import Rules from '@/pages/modules/ABAC/components/rule/Rules.vue'
-  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
-  import { usePolicy } from '@/pages/modules/ABAC/hooks/usePolicy'
-  import { useRules } from '@/pages/modules/ABAC/hooks/useRules'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
-  import { VIEW } from '@/pages/modules/ABAC/types/view'
   import { formatDate } from '@/utils/DateUtils'
+  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
+  import { usePolicy } from '../../../hooks/usePolicy'
+  import { useRules } from '../../../hooks/useRules'
+  import { useAbacI18n } from '../../../i18n/useAbacI18n'
+  import { VIEW } from '../../../types/view'
+  import Definitions from '../../definition/Definitions.vue'
+  import Rules from '../../rule/Rules.vue'
+  import PolicyStatus from '../PolicyStatus.vue'
+  import PolicyActions from './PolicyActions.vue'
+  import PolicyRaw from './PolicyRaw.vue'
 
   const ICONS = {
     RULES: 'mdi-playlist-check',

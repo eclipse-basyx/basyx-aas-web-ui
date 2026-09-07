@@ -143,15 +143,15 @@
 </template>
 
 <script setup lang="ts">
-  import type { Sort } from '@/pages/modules/ABAC/types/sort'
+  import type { Sort } from '../../../types/sort'
   import { useTheme } from 'vuetify'
-  import { useGetPolicies } from '@/pages/modules/ABAC/api/policy/useGetPolicies'
-  import PolicyDialog from '@/pages/modules/ABAC/components/policy/PolicyDialog.vue'
-  import PolicyStatus from '@/pages/modules/ABAC/components/policy/PolicyStatus.vue'
-  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
-  import { useSortPolicies } from '@/pages/modules/ABAC/hooks/useSortPolicies'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
   import { hasItems } from '@/utils/array'
+  import { useGetPolicies } from '../../../api/policy/useGetPolicies'
+  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
+  import { useSortPolicies } from '../../../hooks/useSortPolicies'
+  import { useAbacI18n } from '../../../i18n/useAbacI18n'
+  import PolicyDialog from '../PolicyDialog.vue'
+  import PolicyStatus from '../PolicyStatus.vue'
 
   const ICONS = {
     IMPORT: 'mdi-file-import-outline',

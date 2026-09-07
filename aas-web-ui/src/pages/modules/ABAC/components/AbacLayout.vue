@@ -18,8 +18,8 @@
 </template>
 
 <script setup lang="ts">
-  import PolicyDetail from '@/pages/modules/ABAC/components/policy/detail/PolicyDetail.vue'
-  import PoliciesList from '@/pages/modules/ABAC/components/policy/list/PoliciesList.vue'
+  import PolicyDetail from './policy/detail/PolicyDetail.vue'
+  import PoliciesList from './policy/list/PoliciesList.vue'
 
   defineProps<{ loading: boolean }>()
 </script>

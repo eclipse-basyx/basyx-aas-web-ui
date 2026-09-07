@@ -36,9 +36,9 @@
 </template>
 
 <script setup lang="ts">
-  import type { Definition, DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
+  import type { Definition, DefinitionKind } from '../../../types/definitions'
   import { useTheme } from 'vuetify'
-  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
+  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
 
   const { definition, kind, loading } = defineProps<{ definition?: Definition, kind?: DefinitionKind, loading?: boolean }>()
 

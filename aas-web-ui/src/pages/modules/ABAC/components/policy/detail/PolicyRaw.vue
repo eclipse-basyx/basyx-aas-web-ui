@@ -33,10 +33,10 @@
 
 <script setup lang="ts">
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
-  import JsonCodeEditor from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
-  import { usePolicy } from '@/pages/modules/ABAC/hooks/usePolicy'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
   import { downloadJson } from '@/utils/generalUtils'
+  import { usePolicy } from '../../../hooks/usePolicy'
+  import { useAbacI18n } from '../../../i18n/useAbacI18n'
+  import JsonCodeEditor from '../../shared/JsonCodeEditor.vue'
 
   const ICONS = {
     COPY: 'mdi-content-copy',

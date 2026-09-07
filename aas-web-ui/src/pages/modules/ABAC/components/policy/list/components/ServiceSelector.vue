@@ -42,11 +42,11 @@
 </template>
 
 <script setup lang="ts">
-  import type { AbacService } from '@/pages/modules/ABAC/types/service'
-  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
-  import { useAbacConfigStore } from '@/pages/modules/ABAC/stores/useAbacConfigStore'
+  import type { AbacService } from '../../../../types/service'
   import { hasItems } from '@/utils/array'
+  import { useAbacNavigation } from '../../../../hooks/useAbacNavigation'
+  import { useAbacI18n } from '../../../../i18n/useAbacI18n'
+  import { useAbacConfigStore } from '../../../../stores/useAbacConfigStore'
 
   const ICONS = {
     SERVICE: 'mdi-server',

@@ -20,9 +20,9 @@
 </template>
 
 <script setup lang="ts">
-  import JsonCodeEditor from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
-  import { useDefinitions } from '@/pages/modules/ABAC/hooks/useDefinitions'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+  import { useDefinitions } from '../../../hooks/useDefinitions'
+  import { useAbacI18n } from '../../../i18n/useAbacI18n'
+  import JsonCodeEditor from '../../shared/JsonCodeEditor.vue'
 
   const ICONS = {
     DEFINITIONS: 'mdi-book-open-variant',

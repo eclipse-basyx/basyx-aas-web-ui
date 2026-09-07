@@ -1,6 +1,6 @@
-import { useGetRule } from '@/pages/modules/ABAC/api/rule/useGetRule'
-import { useGetRules } from '@/pages/modules/ABAC/api/rule/useGetRules'
-import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
+import { useGetRule } from '../api/rule/useGetRule'
+import { useGetRules } from '../api/rule/useGetRules'
+import { useAbacNavigation } from './useAbacNavigation'
 
 export function useRules () {
   const { selectedPolicyVersion, selectedRuleIndex } = useAbacNavigation()
