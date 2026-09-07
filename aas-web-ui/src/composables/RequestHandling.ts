@@ -2,6 +2,7 @@ import { useAuth } from '@/composables/Auth/useAuth'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { useNavigationStore } from '@/store/NavigationStore'
+import { isValidCustomHeader } from '@/utils/CustomHeaderUtils'
 
 export interface RequestErrorHandlingOptions {
   /**
@@ -323,11 +324,11 @@ export function useRequestHandling () {
     responseType: 'auto' | 'blob' = 'auto',
   ): any {
     const requestOwnerId = getRequestOwnerId()
-    if (shouldAddAuthorizationHeader(path)) {
-      // No Authorization needed for the /description endpoint.
-      headers = addAuthorizationHeader(headers) // Add the Authorization header
-    }
-    return fetch(path, { method: 'GET', headers, signal: errorHandlingOptions.signal })
+    return fetchWithAuthentication(
+      path,
+      { method: 'GET', headers, signal: errorHandlingOptions.signal },
+      shouldAddAuthorizationHeader(path),
+    )
       .then(async response => {
         // File previews need the original bytes, including malformed JSON and its whitespace.
         // Error responses still follow the existing payload/error handling below.
@@ -419,10 +420,11 @@ export function useRequestHandling () {
     errorHandlingOptions: RequestErrorHandlingOptions = {},
   ): any {
     const requestOwnerId = getRequestOwnerId()
-    if (!isTSRequest) {
-      headers = addAuthorizationHeader(headers) // Add the Authorization header
-    }
-    return fetch(path, { method: 'POST', body, headers, signal: errorHandlingOptions.signal })
+    return fetchWithAuthentication(
+      path,
+      { method: 'POST', body, headers, signal: errorHandlingOptions.signal },
+      !isTSRequest,
+    )
       .then(async response => {
         const contentType = getResponseContentType(response)
         // Check if the Server responded with content
@@ -491,8 +493,7 @@ export function useRequestHandling () {
 
   function putRequest (path: string, body: any, headers: Headers, context: string, disableMessage: boolean): any {
     const requestOwnerId = getRequestOwnerId()
-    headers = addAuthorizationHeader(headers) // Add the Authorization header
-    return fetch(path, { method: 'PUT', body, headers })
+    return fetchWithAuthentication(path, { method: 'PUT', body, headers })
       .then(response => {
         const contentType = getResponseContentType(response)
         // Check if the Server responded with content
@@ -533,8 +534,7 @@ export function useRequestHandling () {
 
   function patchRequest (path: string, body: any, headers: Headers, context: string, disableMessage: boolean): any {
     const requestOwnerId = getRequestOwnerId()
-    headers = addAuthorizationHeader(headers) // Add the Authorization header
-    return fetch(path, { method: 'PATCH', body, headers })
+    return fetchWithAuthentication(path, { method: 'PATCH', body, headers })
       .then(response => {
         const contentType = getResponseContentType(response)
         // Check if the Server responded with content
@@ -574,9 +574,8 @@ export function useRequestHandling () {
   }
 
   function deleteRequest (path: string, headers: Headers, context: string, disableMessage: boolean): any {
-    headers = addAuthorizationHeader(headers) // Add the Authorization header
     const requestOwnerId = getRequestOwnerId()
-    return fetch(path, { method: 'DELETE', headers })
+    return fetchWithAuthentication(path, { method: 'DELETE', headers })
       .then(response => {
         const contentType = getResponseContentType(response)
         // Check if the Server responded with content
@@ -612,7 +611,17 @@ export function useRequestHandling () {
       .catch(error => handleRequestError(error, disableMessage, {}, requestOwnerId))
   }
 
-  function addAuthorizationHeader (headers: Headers): Headers {
+  // Convert header construction failures to rejections handled by each request's catch block.
+  function fetchWithAuthentication (path: string, options: RequestInit, includeAuth = true): Promise<Response> {
+    try {
+      const headers = includeAuth ? addAuthorizationHeader(options.headers) : options.headers
+      return fetch(path, { ...options, headers })
+    } catch (error) {
+      return Promise.reject(error)
+    }
+  }
+
+  function addAuthorizationHeader (headers: HeadersInit | undefined): Headers {
     const requestHeaders = new Headers(headers)
     // Try to find which infrastructure component this request is for
     const selectedInfra = infrastructureStore.getSelectedInfrastructure
@@ -633,6 +642,12 @@ export function useRequestHandling () {
           return requestHeaders
         } else if (auth.securityType === 'OAuth2' && selectedInfra.token?.accessToken) {
           requestHeaders.set('Authorization', authorizationPrefix + ' ' + selectedInfra.token.accessToken)
+          return requestHeaders
+        } else if (auth.securityType === 'Custom Header') {
+          if (!isValidCustomHeader(auth.customHeader)) {
+            throw new Error('Invalid custom header configuration. Check the header name and value in infrastructure settings.')
+          }
+          requestHeaders.set(auth.customHeader.name.trim(), auth.customHeader.value)
           return requestHeaders
         }
       }

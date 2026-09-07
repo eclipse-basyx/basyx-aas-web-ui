@@ -14,6 +14,7 @@ import { useInfrastructureStorage } from '@/composables/Infrastructure/useInfras
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useNavigationStore } from '@/store/NavigationStore'
+import { isValidCustomHeader } from '@/utils/CustomHeaderUtils'
 import { getActiveComponentKeys, isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
 
@@ -227,6 +228,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       }
       case 'Bearer Token': {
         return Boolean(infra.auth.bearerToken?.token.trim())
+      }
+      case 'Custom Header': {
+        return isValidCustomHeader(infra.auth.customHeader)
       }
       case 'OAuth2': {
         return Boolean(infra.token?.accessToken) && infra.isAuthenticated !== false

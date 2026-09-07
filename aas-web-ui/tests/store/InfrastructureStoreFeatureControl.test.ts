@@ -206,6 +206,56 @@ describe('InfrastructureStore', () => {
         expected: false,
       },
       {
+        name: 'custom header accepts configured credentials without an OAuth2 token',
+        auth: {
+          securityType: 'Custom Header',
+          customHeader: { name: ' X-API-KEY ', value: 'static-key' },
+        },
+        expected: true,
+      },
+      {
+        name: 'custom header ignores stale credentials when configuration is absent',
+        auth: {
+          securityType: 'Custom Header',
+          bearerToken: { token: 'stale-token' },
+        },
+        token: { accessToken: 'stale-oauth-token' },
+        isAuthenticated: true,
+        expected: false,
+      },
+      {
+        name: 'custom header rejects a blank name',
+        auth: {
+          securityType: 'Custom Header',
+          customHeader: { name: ' '.repeat(3), value: 'static-key' },
+        },
+        expected: false,
+      },
+      {
+        name: 'custom header rejects a blank value',
+        auth: {
+          securityType: 'Custom Header',
+          customHeader: { name: 'X-API-KEY', value: ' '.repeat(3) },
+        },
+        expected: false,
+      },
+      {
+        name: 'custom header rejects an invalid header name',
+        auth: {
+          securityType: 'Custom Header',
+          customHeader: { name: 'X API KEY', value: 'static-key' },
+        },
+        expected: false,
+      },
+      {
+        name: 'custom header rejects an invalid header value',
+        auth: {
+          securityType: 'Custom Header',
+          customHeader: { name: 'X-API-KEY', value: 'static\r\nkey' },
+        },
+        expected: false,
+      },
+      {
         name: 'OAuth2 accepts a valid runtime token',
         auth: {
           securityType: 'OAuth2',
