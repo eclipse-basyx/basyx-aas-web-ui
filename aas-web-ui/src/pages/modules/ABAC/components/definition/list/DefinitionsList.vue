@@ -101,14 +101,14 @@
 </template>
 
 <script setup lang="ts">
-  import type { DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
-  import DefinitionItem from '@/pages/modules/ABAC/components/definition/list/DefinitionItem.vue'
-  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
-  import { useDefinitions } from '@/pages/modules/ABAC/hooks/useDefinitions'
-  import { usePolicy } from '@/pages/modules/ABAC/hooks/usePolicy'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
-  import { DEFINITION_KINDS } from '@/pages/modules/ABAC/types/definitions'
+  import type { DefinitionKind } from '../../../types/definitions'
   import { hasItems } from '@/utils/array'
+  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
+  import { useDefinitions } from '../../../hooks/useDefinitions'
+  import { usePolicy } from '../../../hooks/usePolicy'
+  import { useAbacI18n } from '../../../i18n/useAbacI18n'
+  import { DEFINITION_KINDS } from '../../../types/definitions'
+  import DefinitionItem from './DefinitionItem.vue'
 
   type KindFilter = DefinitionKind | 'all'
 

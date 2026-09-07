@@ -1,4 +1,4 @@
-import type { Definition, DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
+import type { Definition, DefinitionKind } from '../types/definitions'
 
 export const EMPTY_POLICY = {
   AllAccessPermissionRules: {

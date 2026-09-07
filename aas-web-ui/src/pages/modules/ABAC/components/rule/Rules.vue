@@ -20,11 +20,11 @@
 </template>
 
 <script setup lang="ts">
-  import RuleActions from '@/pages/modules/ABAC/components/rule/detail/RuleActions.vue'
-  import RuleDetail from '@/pages/modules/ABAC/components/rule/detail/RuleDetail.vue'
-  import RulesList from '@/pages/modules/ABAC/components/rule/list/RulesList.vue'
-  import RuleDialog, { type RuleDialogMode } from '@/pages/modules/ABAC/components/rule/RuleDialog.vue'
-  import { usePolicy } from '@/pages/modules/ABAC/hooks/usePolicy'
+  import { usePolicy } from '../../hooks/usePolicy'
+  import RuleActions from './detail/RuleActions.vue'
+  import RuleDetail from './detail/RuleDetail.vue'
+  import RulesList from './list/RulesList.vue'
+  import RuleDialog, { type RuleDialogMode } from './RuleDialog.vue'
 
   const { policy } = usePolicy()
 

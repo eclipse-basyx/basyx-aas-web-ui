@@ -63,11 +63,11 @@
 </template>
 
 <script setup lang="ts">
-  import RuleItem from '@/pages/modules/ABAC/components/rule/list/RuleItem.vue'
-  import { usePolicy } from '@/pages/modules/ABAC/hooks/usePolicy'
-  import { useRules } from '@/pages/modules/ABAC/hooks/useRules'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
   import { hasItems } from '@/utils/array'
+  import { usePolicy } from '../../../hooks/usePolicy'
+  import { useRules } from '../../../hooks/useRules'
+  import { useAbacI18n } from '../../../i18n/useAbacI18n'
+  import RuleItem from './RuleItem.vue'
 
   const ICONS = {
     ADD: 'mdi-plus',

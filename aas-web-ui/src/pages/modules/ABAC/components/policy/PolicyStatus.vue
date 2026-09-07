@@ -12,8 +12,8 @@
 </template>
 
 <script setup lang="ts">
-  import type { PolicyStatus } from '@/pages/modules/ABAC/types/policy'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+  import type { PolicyStatus } from '../../types/policy'
+  import { useAbacI18n } from '../../i18n/useAbacI18n'
 
   const ICONS = {
     active: 'mdi-check-circle',

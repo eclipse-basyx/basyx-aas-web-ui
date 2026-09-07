@@ -87,20 +87,20 @@
 </template>
 
 <script setup lang="ts">
-  import type { JsonErrorMessage } from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
-  import type { DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
-  import { useCreateDefinition } from '@/pages/modules/ABAC/api/definition/useCreateDefinition'
-  import { usePatchDefinition } from '@/pages/modules/ABAC/api/definition/usePatchDefinition'
-  import { useReplaceDefinition } from '@/pages/modules/ABAC/api/definition/useReplaceDefinition'
-  import JsonCodeEditor from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
-  import { EMPTY_DEFINITION } from '@/pages/modules/ABAC/constants/json'
-  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
-  import { useDefinitions } from '@/pages/modules/ABAC/hooks/useDefinitions'
-  import { useDefinitionValidation } from '@/pages/modules/ABAC/hooks/useDefinitionValidation'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
-  import { DEFINITION_KINDS } from '@/pages/modules/ABAC/types/definitions'
+  import type { DefinitionKind } from '../../types/definitions'
+  import type { JsonErrorMessage } from '../shared/JsonCodeEditor.vue'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
+  import { useCreateDefinition } from '../../api/definition/useCreateDefinition'
+  import { usePatchDefinition } from '../../api/definition/usePatchDefinition'
+  import { useReplaceDefinition } from '../../api/definition/useReplaceDefinition'
+  import { EMPTY_DEFINITION } from '../../constants/json'
+  import { useAbacNavigation } from '../../hooks/useAbacNavigation'
+  import { useDefinitions } from '../../hooks/useDefinitions'
+  import { useDefinitionValidation } from '../../hooks/useDefinitionValidation'
+  import { useAbacI18n } from '../../i18n/useAbacI18n'
+  import { DEFINITION_KINDS } from '../../types/definitions'
+  import JsonCodeEditor from '../shared/JsonCodeEditor.vue'
 
   const ICONS = {
     CLOSE: 'mdi-close',

@@ -133,15 +133,15 @@
   </v-row></template>
 
 <script setup lang="ts">
-  import { useDeleteRule } from '@/pages/modules/ABAC/api/rule/useDeleteRule'
-  import { useDuplicateRule } from '@/pages/modules/ABAC/api/rule/useDuplicateRule'
-  import { useMoveRule } from '@/pages/modules/ABAC/api/rule/useMoveRule'
-  import { useToggleRule } from '@/pages/modules/ABAC/api/rule/useToggleRule'
-  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
-  import { useRules } from '@/pages/modules/ABAC/hooks/useRules'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
+  import { useDeleteRule } from '../../../api/rule/useDeleteRule'
+  import { useDuplicateRule } from '../../../api/rule/useDuplicateRule'
+  import { useMoveRule } from '../../../api/rule/useMoveRule'
+  import { useToggleRule } from '../../../api/rule/useToggleRule'
+  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
+  import { useRules } from '../../../hooks/useRules'
+  import { useAbacI18n } from '../../../i18n/useAbacI18n'
 
   type RuleAction = 'replace' | 'patch' | 'duplicate' | 'move' | 'toggle' | 'delete'
 
