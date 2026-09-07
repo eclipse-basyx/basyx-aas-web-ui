@@ -74,17 +74,17 @@
 </template>
 
 <script setup lang="ts">
-  import { useCreateRule } from '@/pages/modules/ABAC/api/rule/useCreateRule'
-  import { usePatchRule } from '@/pages/modules/ABAC/api/rule/usePatchRule'
-  import { useReplaceRule } from '@/pages/modules/ABAC/api/rule/useReplaceRule'
-  import JsonCodeEditor, { type JsonErrorMessage } from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
-  import { EMPTY_RULE } from '@/pages/modules/ABAC/constants/json'
-  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
-  import { useRules } from '@/pages/modules/ABAC/hooks/useRules'
-  import { useRuleValidation } from '@/pages/modules/ABAC/hooks/useRuleValidation'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
+  import { useCreateRule } from '../../api/rule/useCreateRule'
+  import { usePatchRule } from '../../api/rule/usePatchRule'
+  import { useReplaceRule } from '../../api/rule/useReplaceRule'
+  import { EMPTY_RULE } from '../../constants/json'
+  import { useAbacNavigation } from '../../hooks/useAbacNavigation'
+  import { useRules } from '../../hooks/useRules'
+  import { useRuleValidation } from '../../hooks/useRuleValidation'
+  import { useAbacI18n } from '../../i18n/useAbacI18n'
+  import JsonCodeEditor, { type JsonErrorMessage } from '../shared/JsonCodeEditor.vue'
 
   const ICONS = {
     CLOSE: 'mdi-close',

@@ -67,10 +67,10 @@
 </template>
 
 <script setup lang="ts">
-  import type { Rule } from '@/pages/modules/ABAC/types/rules'
+  import type { Rule } from '../../../types/rules'
   import { useTheme } from 'vuetify'
-  import RuleComplexityBadge from '@/pages/modules/ABAC/components/rule/RuleComplexityBadge.vue'
-  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
+  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
+  import RuleComplexityBadge from '../RuleComplexityBadge.vue'
 
   const ICONS = {
     ALLOW: 'mdi-check-circle',

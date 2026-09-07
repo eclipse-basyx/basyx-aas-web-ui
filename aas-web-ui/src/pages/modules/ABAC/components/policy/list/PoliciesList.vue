@@ -21,10 +21,10 @@
 </template>
 
 <script setup lang="ts">
-  import Expand from '@/pages/modules/ABAC/components/policy/list/components/Expand.vue'
-  import ListFooter from '@/pages/modules/ABAC/components/policy/list/components/Footer.vue'
-  import Policies from '@/pages/modules/ABAC/components/policy/list/Policies.vue'
-  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
+  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
+  import Expand from './components/Expand.vue'
+  import ListFooter from './components/Footer.vue'
+  import Policies from './Policies.vue'
 
   const { isListOpen, isMobile } = useAbacNavigation()
 </script>

@@ -80,16 +80,16 @@
 </template>
 
 <script setup lang="ts">
-  import { useActivatePolicy } from '@/pages/modules/ABAC/api/policy/useActivatePolicy'
-  import { useCloneVersion } from '@/pages/modules/ABAC/api/policy/useCloneVersion'
-  import { useRejectPolicy } from '@/pages/modules/ABAC/api/policy/useRejectPolicy'
-  import { useValidatePolicy } from '@/pages/modules/ABAC/api/policy/useValidatePolicy'
-  import PolicyValidationDialog from '@/pages/modules/ABAC/components/policy/detail/PolicyValidationDialog.vue'
-  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
-  import { usePolicy } from '@/pages/modules/ABAC/hooks/usePolicy'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
+  import { useActivatePolicy } from '../../../api/policy/useActivatePolicy'
+  import { useCloneVersion } from '../../../api/policy/useCloneVersion'
+  import { useRejectPolicy } from '../../../api/policy/useRejectPolicy'
+  import { useValidatePolicy } from '../../../api/policy/useValidatePolicy'
+  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
+  import { usePolicy } from '../../../hooks/usePolicy'
+  import { useAbacI18n } from '../../../i18n/useAbacI18n'
+  import PolicyValidationDialog from './PolicyValidationDialog.vue'
 
   const ICONS = {
     CLONE: 'mdi-source-branch',
