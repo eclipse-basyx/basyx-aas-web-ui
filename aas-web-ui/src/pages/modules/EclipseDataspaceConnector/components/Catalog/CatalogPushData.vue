@@ -1035,14 +1035,9 @@
                 rightOperand: 'DataExchangeGovernance:1.0',
               },
               {
-                leftOperand: 'Membership',
-                operator: 'eq',
-                rightOperand: 'active',
-              },
-              {
                 leftOperand: 'UsagePurpose',
                 operator: 'isAnyOf',
-                rightOperand: 'rwx.core.pushEndpoint:1',
+                rightOperand: 'cx.core.industrycore:1',
               },
             ],
           },
