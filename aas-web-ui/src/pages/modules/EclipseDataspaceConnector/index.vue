@@ -51,7 +51,6 @@
     isDesktopModule: true,
     isMobileModule: false,
     preserveRouteQuery: true,
-    visibleOnRoutes: ['AASEditor', 'SMEditor'],
   })
 
   // Vue Router
