@@ -262,4 +262,31 @@ describe('AAS list query transitions', () => {
     expect((wrapper.vm as any).aasList.map((item: any) => item.id)).toEqual(['missing-normal-aas'])
     expect((wrapper.vm as any).pageLoading).toBe(false)
   })
+
+  it('clears the active filter and reloads the AAS list from the reload button', async () => {
+    state.repositoryDescription.value = { profiles: [aasRepositoryQueryProfile] }
+
+    const wrapper = mount(AASList, {
+      shallow: true,
+      global: {
+        renderStubDefaultSlot: true,
+        stubs: {
+          VTooltip: { template: '<div><slot name="activator" :props="{}" /><slot /></div>' },
+        },
+      },
+    })
+    await flushPromises()
+
+    ;(wrapper.vm as any).handleSearchInput('id:example')
+    await (wrapper.vm as any).submitSearch()
+    expect((wrapper.vm as any).searchValue).toBe('id:example')
+    expect((wrapper.vm as any).aasList).toEqual([])
+
+    await wrapper.get('[icon="mdi-reload"]').trigger('click')
+    await flushPromises()
+
+    expect((wrapper.vm as any).searchValue).toBe('')
+    expect((wrapper.vm as any).aasList.map((item: any) => item.id)).toEqual(['registry-aas'])
+    expect(state.routeQuery.value).not.toHaveProperty('search')
+  })
 })

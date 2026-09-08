@@ -1,5 +1,5 @@
 import { DOMWrapper, mount } from '@vue/test-utils'
-import { beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { createVuetify } from 'vuetify'
 import QuerySearchField from '@/components/QueryLanguage/QuerySearchField.vue'
 
@@ -19,6 +19,10 @@ beforeAll(() => {
   })
 })
 
+afterEach(() => {
+  document.body.innerHTML = ''
+})
+
 function mountSearchField (serverSearch = true) {
   return mount(QuerySearchField, {
     props: {
@@ -36,43 +40,83 @@ function mountSearchField (serverSearch = true) {
   })
 }
 
+function findMenuItem (text: string): Element | undefined {
+  return [...document.body.querySelectorAll('.v-list-item')]
+    .find(item => item.textContent?.includes(text))
+}
+
 describe('QuerySearchField', () => {
-  it('keeps filter expressions in the normal text field', async () => {
+  it('opens field suggestions on focus without separate filter or search icons', async () => {
     const wrapper = mountSearchField()
 
-    await wrapper.get('input').setValue('pump idShort:Motor')
-
-    expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual(['pump idShort:Motor'])
-    expect(wrapper.find('[aria-label="Add a field filter"]').exists()).toBe(true)
-  })
-
-  it('inserts a selected field qualifier without an apply button', async () => {
-    const wrapper = mountSearchField()
-
-    await wrapper.get('[aria-label="Add a field filter"]').trigger('click')
+    await wrapper.get('input').trigger('focus')
     await nextTick()
-    const items = [...document.body.querySelectorAll('.v-list-item')]
-    const idShortItem = items.find(item => item.textContent?.includes('ID Short'))
 
-    expect(idShortItem).toBeDefined()
-    await new DOMWrapper(idShortItem!).trigger('click')
-
-    expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual(['idShort:'])
+    expect(findMenuItem('ID Short')).toBeDefined()
+    expect(wrapper.find('[aria-label="Add a field filter"]').exists()).toBe(false)
+    expect(wrapper.find('[aria-label="Run search"]').exists()).toBe(false)
   })
 
-  it('does not offer server filter suggestions on unsupported backends', () => {
+  it('guides field, operator, and value selection without inserting a colon', async () => {
+    const wrapper = mountSearchField()
+    await wrapper.get('input').trigger('focus')
+    await nextTick()
+
+    await new DOMWrapper(findMenuItem('AAS ID')!).trigger('click')
+    expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual(['id'])
+    expect(findMenuItem('contains')).toBeDefined()
+
+    await new DOMWrapper(findMenuItem('contains')!).trigger('click')
+    expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual(['id:'])
+
+    await wrapper.get('input').setValue('id:Motor')
+    await wrapper.get('input').trigger('keydown.space')
+
+    expect(wrapper.get('.v-chip').text()).toContain('id:Motor')
+    expect(wrapper.get('input').element.value).toBe('')
+    expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual(['id:Motor'])
+  })
+
+  it('allows a complete filter to be typed and commits it on submit', async () => {
+    const wrapper = mountSearchField()
+
+    await wrapper.get('input').setValue('globalAssetId=urn:asset:42')
+    await wrapper.get('input').trigger('keydown.enter')
+    await nextTick()
+
+    expect(wrapper.get('.v-chip').text()).toContain('globalAssetId=urn:asset:42')
+    expect(wrapper.emitted('submit')).toHaveLength(1)
+  })
+
+  it('removes committed filter chips through their close control', async () => {
+    const wrapper = mountSearchField()
+
+    await wrapper.get('input').setValue('idShort:Motor')
+    await wrapper.get('input').trigger('keydown.space')
+    await wrapper.get('.v-chip__close').trigger('click')
+
+    expect(wrapper.find('.v-chip').exists()).toBe(false)
+    expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([''])
+  })
+
+  it('offers the advanced query action in the suggestions menu', async () => {
+    const wrapper = mountSearchField()
+
+    await wrapper.get('input').trigger('focus')
+    await nextTick()
+    await new DOMWrapper(findMenuItem('Advanced Query Language')!).trigger('click')
+
+    expect(wrapper.emitted('advanced')).toHaveLength(1)
+  })
+
+  it('keeps plain local search behavior on unsupported backends', async () => {
     const wrapper = mountSearchField(false)
 
-    expect(wrapper.find('[aria-label="Add a field filter"]').exists()).toBe(false)
-    expect(wrapper.get('input').attributes('placeholder')).toBe('3 Shells')
-  })
-
-  it('submits on Enter and through the search button', async () => {
-    const wrapper = mountSearchField()
-
+    await wrapper.get('input').setValue('Motor')
     await wrapper.get('input').trigger('keydown.enter')
-    await wrapper.get('[aria-label="Run search"]').trigger('click')
 
-    expect(wrapper.emitted('submit')).toHaveLength(2)
+    expect(document.body.querySelector('.v-list-item')).toBeNull()
+    expect(wrapper.get('input').attributes('placeholder')).toBe('3 Shells')
+    expect(wrapper.emitted('submit')).toHaveLength(1)
   })
 })

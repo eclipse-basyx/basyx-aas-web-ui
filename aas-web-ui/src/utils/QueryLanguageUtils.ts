@@ -265,6 +265,19 @@ export function parseQuerySearchExpression (
   }
 }
 
+export function formatQueryFilterExpression (filter: QueryFilter): string {
+  const separators: Partial<Record<QueryFilterOperator, string>> = {
+    'contains': ':',
+    'equals': '=',
+    'not-equals': '!=',
+  }
+  const separator = separators[filter.operator]
+  if (!separator) {
+    throw new Error(`Filter operator ${filter.operator} does not have a symbolic search representation.`)
+  }
+  return `${filter.field}${separator}${quoteQueryFilterValue(filter.value)}`
+}
+
 export function createQueryFilter (target: QueryTarget, id: string): QueryFilter {
   const field = QUERY_FILTER_FIELDS[target][0]
   return {
@@ -291,10 +304,10 @@ export function buildStructuredSearchQuery (
     .map(filter => buildQueryFilterCondition(target, filter))
     .filter((condition): condition is Record<string, unknown> => condition !== undefined)
 
-  if (filterConditions.length === 1) {
-    conditions.push(filterConditions[0])
-  } else if (filterConditions.length > 1) {
-    conditions.push({ [matchMode === 'all' ? '$and' : '$or']: filterConditions })
+  if (filterConditions.length > 0) {
+    conditions.push(matchMode === 'all'
+      ? { $match: filterConditions }
+      : { $or: filterConditions.map(condition => ({ $match: [condition] })) })
   }
 
   if (conditions.length === 0) {
@@ -304,12 +317,6 @@ export function buildStructuredSearchQuery (
     return { $condition: conditions[0] }
   }
   return { $condition: { $and: conditions } }
-}
-
-export function formatQueryFilter (target: QueryTarget, filter: QueryFilter): string {
-  const field = QUERY_FILTER_FIELDS[target].find(candidate => candidate.key === filter.field)
-  const optionLabel = field?.valueOptions?.find(option => option.value === filter.value)?.title
-  return `${field?.label ?? filter.field} ${QUERY_FILTER_OPERATOR_LABELS[filter.operator]} ${optionLabel ?? filter.value}`
 }
 
 export function createQueryExample (target: QueryTarget): string {
@@ -433,6 +440,12 @@ function createField (
   return { key, label, path, operators, valueOptions }
 }
 
+function quoteQueryFilterValue (value: string): string {
+  return /[\s"\\]/.test(value)
+    ? `"${value.replace(/[\\"]/g, String.raw`\$&`)}"`
+    : value
+}
+
 function buildQueryFilterCondition (
   target: QueryTarget,
   filter: QueryFilter,
@@ -449,15 +462,16 @@ function buildQueryFilterCondition (
     return { $eq: [fieldOperand, stringOperand] }
   }
   if (filter.operator === 'not-equals') {
-    return { $not: { $eq: [fieldOperand, stringOperand] } }
+    return { $ne: [fieldOperand, stringOperand] }
   }
-  if (filter.operator === 'regex') {
-    return { $regex: [fieldOperand, stringOperand] }
+  if (filter.operator === 'contains') {
+    return { $contains: [fieldOperand, stringOperand] }
   }
-
-  const escaped = escapeRegexLiteral(value)
-  const expression = filter.operator === 'starts-with'
-    ? `(?i)^${escaped}`
-    : (filter.operator === 'ends-with' ? `(?i)${escaped}$` : `(?i)${escaped}`)
-  return { $regex: [fieldOperand, { $strVal: expression }] }
+  if (filter.operator === 'starts-with') {
+    return { '$starts-with': [fieldOperand, stringOperand] }
+  }
+  if (filter.operator === 'ends-with') {
+    return { '$ends-with': [fieldOperand, stringOperand] }
+  }
+  return { $regex: [fieldOperand, stringOperand] }
 }

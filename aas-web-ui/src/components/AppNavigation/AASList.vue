@@ -19,7 +19,7 @@
                 :loading="listLoading"
                 variant="plain"
                 v-bind="props"
-                @click="initialize()"
+                @click="clearQuerySearch"
               />
 
             </template>
@@ -30,31 +30,19 @@
           <div class="flex-grow-1">
             <QuerySearchField
               v-model="searchValue"
+              :advanced-active="querySearch.activeMode.value === 'advanced'"
               example="idShort:Motor"
               label="Search AAS"
               :loading="querySearch.loading.value"
               :placeholder="aasList.length.toString() + ' Shells'"
               :server-search="queryAvailable"
               :target="aasQueryTarget"
+              @advanced="openSearchDialog"
               @clear="clearQuerySearch"
               @submit="submitSearch"
               @update:model-value="handleSearchInput"
             />
           </div>
-
-          <v-tooltip v-if="queryAvailable" :disabled="isMobile" location="bottom" open-delay="600">
-            <template #activator="{ props }">
-              <v-btn
-                v-bind="props"
-                :color="querySearch.activeMode.value === 'advanced' ? 'primary' : undefined"
-                icon="mdi-code-json"
-                variant="plain"
-                @click="openSearchDialog"
-              />
-            </template>
-
-            <span>{{ querySearch.activeMode.value === 'advanced' ? 'Edit advanced query' : 'Advanced Query Language' }}</span>
-          </v-tooltip>
 
           <!-- QR Scanner -->
           <v-tooltip :disabled="isMobile" location="bottom" open-delay="600">

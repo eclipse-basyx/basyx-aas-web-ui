@@ -69,31 +69,19 @@
             <v-col>
               <QuerySearchField
                 v-model="smSearchValue"
+                :advanced-active="querySearch.activeMode.value === 'advanced'"
                 example="semanticId:0173"
                 label="Search SM/SME"
                 :loading="querySearch.loading.value"
                 :placeholder="submodelTree.length.toString() + ' Submodels'"
                 :server-search="globalQueryAvailable"
                 target="submodel-repository"
+                @advanced="openSearchDialog"
                 @clear="clearQuerySearch"
                 @submit="submitSearch"
                 @update:model-value="handleSearchInput"
               />
             </v-col>
-
-            <v-tooltip v-if="globalQueryAvailable" :disabled="isMobile" location="bottom" open-delay="600">
-              <template #activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  :color="querySearch.activeMode.value === 'advanced' ? 'primary' : undefined"
-                  icon="mdi-code-json"
-                  variant="plain"
-                  @click="openSearchDialog"
-                />
-              </template>
-
-              <span>{{ querySearch.activeMode.value === 'advanced' ? 'Edit advanced query' : 'Advanced Query Language' }}</span>
-            </v-tooltip>
 
             <v-tooltip :disabled="isMobile" location="bottom" open-delay="600">
               <template #activator="{ props }">

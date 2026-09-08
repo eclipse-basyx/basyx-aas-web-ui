@@ -5,7 +5,7 @@ import {
   buildStructuredSearchQuery,
   createQueryFilter,
   escapeRegexLiteral,
-  formatQueryFilter,
+  formatQueryFilterExpression,
   getQueryFilterFields,
   parseQuerySearchExpression,
   resolveAasQueryTarget,
@@ -92,11 +92,11 @@ describe('QueryLanguageUtils', () => {
         $and: [
           expect.objectContaining({ $or: expect.any(Array) }),
           {
-            $and: [
+            $match: [
               {
-                $regex: [
+                $contains: [
                   { $field: '$aas#idShort' },
-                  { $strVal: String.raw`(?i)Motor\.1` },
+                  { $strVal: 'Motor.1' },
                 ],
               },
               {
@@ -123,16 +123,20 @@ describe('QueryLanguageUtils', () => {
     expect(query?.$condition).toEqual({
       $or: [
         {
-          $regex: [
-            { $field: '$sm#semanticId.keys[].value' },
-            { $strVal: String.raw`(?i)^0173\.` },
-          ],
+          $match: [{
+            '$starts-with': [
+              { $field: '$sm#semanticId.keys[].value' },
+              { $strVal: '0173.' },
+            ],
+          }],
         },
         {
-          $regex: [
-            { $field: '$sm#idShort' },
-            { $strVal: '^Motor-[0-9]+$' },
-          ],
+          $match: [{
+            $regex: [
+              { $field: '$sm#idShort' },
+              { $strVal: '^Motor-[0-9]+$' },
+            ],
+          }],
         },
       ],
     })
@@ -144,12 +148,12 @@ describe('QueryLanguageUtils', () => {
       operator: 'contains',
       value: '',
     })
-    expect(formatQueryFilter('aas-registry', {
+    expect(formatQueryFilterExpression({
       id: 'kind',
       field: 'assetKind',
       operator: 'equals',
       value: 'NotApplicable',
-    })).toBe('Asset Kind equals Not Applicable')
+    })).toBe('assetKind=NotApplicable')
   })
 
   it('ignores incomplete or target-incompatible visual filters', () => {
@@ -162,7 +166,7 @@ describe('QueryLanguageUtils', () => {
     ], 'all')).toBeUndefined()
   })
 
-  it('negates equality for exclusions on multi-valued fields', () => {
+  it('uses a match expression with direct non-equality for exclusions', () => {
     expect(buildStructuredSearchQuery('aas-repository', '', [{
       id: 'excluded-specific-id',
       field: 'specificAssetId',
@@ -170,12 +174,12 @@ describe('QueryLanguageUtils', () => {
       value: 'blocked',
     }], 'all')).toEqual({
       $condition: {
-        $not: {
-          $eq: [
+        $match: [{
+          $ne: [
             { $field: '$aas#assetInformation.specificAssetIds[].value' },
             { $strVal: 'blocked' },
           ],
-        },
+        }],
       },
     })
   })
@@ -193,6 +197,23 @@ describe('QueryLanguageUtils', () => {
       ],
       incompleteField: undefined,
     })
+  })
+
+  it('formats symbolic filter expressions used by the search builder', () => {
+    const filter = {
+      id: 'symbolic-filter',
+      field: 'globalAssetId' as const,
+      operator: 'equals' as const,
+      value: 'urn:asset 42',
+    }
+
+    expect(formatQueryFilterExpression(filter)).toBe('globalAssetId="urn:asset 42"')
+    expect(parseQuerySearchExpression('aas-repository', formatQueryFilterExpression(filter)).filters[0])
+      .toMatchObject({
+        field: filter.field,
+        operator: filter.operator,
+        value: filter.value,
+      })
   })
 
   it('supports exclusions, incomplete qualifiers, and target-specific fields', () => {
