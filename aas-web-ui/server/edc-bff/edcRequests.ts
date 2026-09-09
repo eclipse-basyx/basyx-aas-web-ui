@@ -423,65 +423,45 @@ export function parseSubprotocolBody (value: unknown): Record<string, string> {
   return params
 }
 
-export async function forwardJsonToEdc (
+interface EdcForwardOptions {
+  method: 'GET' | 'POST'
+  body?: Record<string, unknown>
+}
+
+export function forwardJsonToEdc (
   proxy: EdcProxyConfig,
   path: string,
   body: Record<string, unknown>,
   fetchFn: typeof fetch = fetch,
 ): Promise<EdcForwardResult> {
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), proxy.requestTimeoutMs)
-
-  try {
-    const response = await fetchFn(joinManagementUrl(proxy, path), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        [proxy.apiKeyHeader]: proxy.apiKey,
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    })
-    const data = await parseResponseBody(response)
-
-    return {
-      status: response.status,
-      headers: {
-        'content-type': response.headers.get('content-type') ?? 'application/json',
-      },
-      data,
-    }
-  } catch (error) {
-    if (isAbortError(error)) {
-      throw error
-    }
-
-    console.error('Error forwarding JSON to EDC:', error)
-    return {
-      status: 500,
-      headers: { 'content-type': 'application/json' },
-      data: { error: describeFetchError(error) },
-    }
-  } finally {
-    clearTimeout(timeout)
-  }
+  return forwardToEdc(proxy, path, { method: 'POST', body }, fetchFn)
 }
 
-export async function forwardGetToEdc (
+export function forwardGetToEdc (
   proxy: EdcProxyConfig,
   path: string,
   fetchFn: typeof fetch = fetch,
+): Promise<EdcForwardResult> {
+  return forwardToEdc(proxy, path, { method: 'GET' }, fetchFn)
+}
+
+async function forwardToEdc (
+  proxy: EdcProxyConfig,
+  path: string,
+  options: EdcForwardOptions,
+  fetchFn: typeof fetch,
 ): Promise<EdcForwardResult> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), proxy.requestTimeoutMs)
 
   try {
     const response = await fetchFn(joinManagementUrl(proxy, path), {
-      method: 'GET',
+      method: options.method,
       headers: {
         'Content-Type': 'application/json',
         [proxy.apiKeyHeader]: proxy.apiKey,
       },
+      ...(options.body ? { body: JSON.stringify(options.body) } : {}),
       signal: controller.signal,
     })
     const data = await parseResponseBody(response)
@@ -498,7 +478,7 @@ export async function forwardGetToEdc (
       throw error
     }
 
-    console.error('Error forwarding GET to EDC:', error)
+    console.error(`Error forwarding ${options.method} to EDC:`, error)
     return {
       status: 500,
       headers: { 'content-type': 'application/json' },
