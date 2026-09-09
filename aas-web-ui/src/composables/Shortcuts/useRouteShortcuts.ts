@@ -1,5 +1,5 @@
 import type { ShortcutDefinition } from './useShortcutDefinitions'
-import { computed, type ComputedRef, ref, watch } from 'vue'
+import type { ComputedRef } from 'vue'
 import { type RouteLocationNormalizedLoaded, useRoute } from 'vue-router'
 import { useNavigationStore } from '@/store/NavigationStore'
 

@@ -6,7 +6,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref } from 'vue'
   import PcfMaterialComposition from './PcfMaterialComposition.vue'
   import PcfProductSelection from './PcfProductSelection.vue'
 

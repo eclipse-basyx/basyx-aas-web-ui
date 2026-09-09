@@ -24,13 +24,14 @@ const PassthroughStub = defineComponent({
 
 const VBtnStub = defineComponent({
   name: 'VBtn',
+  inheritAttrs: false,
   props: {
     disabled: Boolean,
     loading: Boolean,
   },
   emits: ['click'],
   template: `
-    <button data-testid="load-submodel" :disabled="disabled || loading" type="button" @click="$emit('click', $event)">
+    <button v-bind="$attrs" :disabled="disabled || loading" type="button" @click="$emit('click', $event)">
       <slot />
     </button>
   `,
@@ -135,6 +136,49 @@ describe('SubmodelDescriptorPanels.vue', () => {
     const wrapper = createWrapper({ edcAccessEnabled: false })
 
     expect(wrapper.find('[data-testid="load-submodel"]').exists()).toBe(false)
+  })
+
+  it('shows and emits the direct Submodel action when a Submodel href is available', async () => {
+    const wrapper = createWrapper({ edcAccessEnabled: false })
+    const openButton = wrapper.find('[data-testid="open-submodel"]')
+
+    expect(openButton.exists()).toBe(true)
+    expect(openButton.text()).toContain('Open Submodel')
+    expect(openButton.attributes('aria-label')).toBe(
+      'Open Submodel TechnicalData (urn:example:submodel:1)',
+    )
+
+    await openButton.trigger('click')
+
+    expect(wrapper.emitted('open-submodel')?.[0]).toEqual([submodelDescriptor])
+  })
+
+  it('hides the direct Submodel action when no Submodel href is available', () => {
+    const wrapper = createWrapper({
+      edcAccessEnabled: false,
+      descriptors: [{ ...submodelDescriptor, endpoints: [] }],
+    })
+
+    expect(wrapper.find('[data-testid="open-submodel"]').exists()).toBe(false)
+  })
+
+  it('shows progress while the direct Submodel endpoint is being resolved', () => {
+    const wrapper = createWrapper({
+      edcAccessEnabled: false,
+      openingSubmodelKey: submodelDescriptor.id,
+      descriptors: [
+        submodelDescriptor,
+        {
+          ...submodelDescriptor,
+          id: 'urn:example:submodel:2',
+          idShort: 'Documentation',
+        },
+      ],
+    })
+
+    const openButtons = wrapper.findAll<HTMLButtonElement>('[data-testid="open-submodel"]')
+    expect(openButtons).toHaveLength(2)
+    expect(openButtons.every(button => button.element.disabled)).toBe(true)
   })
 
   it('renders loaded submodel elements with the generic table view', () => {

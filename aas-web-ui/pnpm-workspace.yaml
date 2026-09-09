@@ -1,6 +1,10 @@
 allowBuilds:
   '@parcel/watcher': true
+  'pnpm': true
   'vue-demi': true
 minimumReleaseAge: 1440
 packages:
     - '.'
+
+overrides:
+  "nanoid@": 3.3.18

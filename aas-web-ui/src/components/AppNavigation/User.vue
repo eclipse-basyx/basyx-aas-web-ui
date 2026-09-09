@@ -75,7 +75,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed } from 'vue'
   import { useRouter } from 'vue-router'
   import { useAuth } from '@/composables/Auth/useAuth'
   import { useEnvStore } from '@/store/EnvironmentStore'

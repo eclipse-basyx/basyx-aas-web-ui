@@ -1,5 +1,4 @@
 import type { ModuleNavigationRoute } from '@/types/Application'
-import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAASStore } from '@/store/AASDataStore'
 import { useEnvStore } from '@/store/EnvironmentStore'

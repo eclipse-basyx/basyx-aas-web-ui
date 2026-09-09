@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent } from 'vue'
 import { createMemoryHistory, createRouter, type RouteRecordRaw } from 'vue-router'
 import CompanyDescriptorViewer from '@/pages/modules/CompanyDescriptorViewer/index.vue'
@@ -14,6 +14,10 @@ const DummyView = defineComponent({
 })
 
 describe('module manifest child routes', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('creates prefixed child route names and inherits module meta defaults', () => {
     const children = buildValidatedModuleChildRoutes(
       'Dpp',
@@ -88,6 +92,7 @@ describe('module manifest child routes', () => {
   })
 
   it('rejects child routes that escape module namespace', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const children = buildValidatedModuleChildRoutes(
       'Dpp',
       '/modules/dpp',
@@ -114,6 +119,10 @@ describe('module manifest child routes', () => {
 
     expect(children).toHaveLength(1)
     expect(children[0].path).toBe('allowed')
+    expect(warnSpy.mock.calls).toEqual([
+      ['[Module Router] Ignored invalid child route "/outside" in module "Dpp". Child routes must be relative and stay below /modules/dpp/**.'],
+      ['[Module Router] Ignored invalid child route "../outside" in module "Dpp". Child routes must be relative and stay below /modules/dpp/**.'],
+    ])
   })
 
   it('supports deep-link matching for module child routes', async () => {

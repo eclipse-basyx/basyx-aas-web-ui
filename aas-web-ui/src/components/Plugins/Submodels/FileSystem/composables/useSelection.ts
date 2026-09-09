@@ -2,7 +2,7 @@
  * Composable for multi-selection functionality in the FileSystem component.
  */
 import type { FileSystemElement } from '../types'
-import { computed, type Ref, ref } from 'vue'
+import type { Ref } from 'vue'
 
 export interface UseSelectionOptions {
   fileObjects: Ref<FileSystemElement[]>

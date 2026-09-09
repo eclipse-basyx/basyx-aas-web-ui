@@ -34,7 +34,6 @@
 <script lang="ts" setup>
   import type { FormStateObject, FormStateValue } from '../../types/form'
   import type { TemplateElement } from '../../types/template'
-  import { computed } from 'vue'
   import {
     isLeafElement,
     isSubmodelElementCollectionElement,

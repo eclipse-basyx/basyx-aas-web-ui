@@ -159,7 +159,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref, watch } from 'vue'
   import { useReferenceComposable } from '@/composables/AAS/ReferenceComposable'
   import { useJumpHandling } from '@/composables/JumpHandling'
 

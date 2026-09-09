@@ -71,7 +71,6 @@
 
 <script setup lang="ts">
   import type { FileSystemElement, FileUrlsMap } from '../types'
-  import { computed } from 'vue'
 
   interface Props {
     fileObjects: FileSystemElement[]

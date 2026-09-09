@@ -1,5 +1,6 @@
 import type { YamlInfrastructuresConfig } from '@/types/Infrastructure'
-import { describe, expect, it } from 'vitest'
+import { load } from 'js-yaml'
+import { describe, expect, it, vi } from 'vitest'
 import { useInfrastructureYamlParser } from '@/composables/Infrastructure/useInfrastructureYamlParser'
 
 function createYamlConfig (
@@ -151,6 +152,76 @@ describe('useInfrastructureYamlParser.ts', () => {
     })
   })
 
+  it('parses custom-header security into a customHeader auth config', () => {
+    const { parseYamlConfig } = useInfrastructureYamlParser()
+
+    const parsed = parseYamlConfig(createYamlConfig({
+      name: 'Custom Header',
+      components: {
+        aasRepository: { baseUrl: 'https://aas-repo.example' },
+      },
+      security: {
+        type: 'custom-header',
+        config: { headerName: 'X-API-KEY', headerValue: 'secret-key-123' },
+      },
+    }))
+
+    const auth = parsed.infrastructures[0].auth
+    expect(auth?.securityType).toBe('Custom Header')
+    expect(auth?.customHeader).toEqual({ name: 'X-API-KEY', value: 'secret-key-123' })
+  })
+
+  it('omits customHeader when headerName or headerValue is missing', () => {
+    const { parseYamlConfig } = useInfrastructureYamlParser()
+
+    const parsed = parseYamlConfig(createYamlConfig({
+      name: 'Custom Header Incomplete',
+      components: {
+        aasRepository: { baseUrl: 'https://aas-repo.example' },
+      },
+      security: {
+        type: 'custom-header',
+        config: { headerName: 'X-API-KEY' },
+      },
+    }))
+
+    const auth = parsed.infrastructures[0].auth
+    expect(auth?.securityType).toBe('Custom Header')
+    expect(auth?.customHeader).toBeUndefined()
+  })
+
+  it.each([
+    ['X-API-KEY:', 'secret'],
+    ['X API KEY', 'secret'],
+    ['', 'secret'],
+    ['X-API-KEY', ' '.repeat(3)],
+    ['X-API-KEY', 'line1\nline2'],
+    ['X-API-KEY', 123_456],
+    [123, 'secret'],
+  ])('omits invalid custom-header YAML values (%j, %j)', (headerName, headerValue) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const raw = load(`infrastructures:
+  gateway:
+    components:
+      aasRepository:
+        baseUrl: https://aas-repo.example
+    security:
+      type: custom-header
+      config:
+        headerName: ${JSON.stringify(headerName)}
+        headerValue: ${JSON.stringify(headerValue)}
+`)
+      const parser = useInfrastructureYamlParser()
+      expect(parser.validateYamlConfig(raw)).toBe(true)
+      const parsed = parser.parseYamlConfig(raw as YamlInfrastructuresConfig)
+      expect(parsed.infrastructures[0].auth).toEqual({ securityType: 'Custom Header' })
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('valid headerName and headerValue'))
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
   it('parses Catena-X EDC partners from YAML', () => {
     const { parseYamlConfig } = useInfrastructureYamlParser()
 
@@ -187,6 +258,61 @@ describe('useInfrastructureYamlParser.ts', () => {
           name: 'Partner A',
           counterPartyId: 'TEST_PARTICIPANT_ID',
           counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+        },
+      ],
+    })
+  })
+
+  it('preserves configured partner metadata when it matches the legacy default', () => {
+    const { parseYamlConfig } = useInfrastructureYamlParser()
+
+    const parsed = parseYamlConfig(createYamlConfig({
+      name: 'Catena-X',
+      template: 'catena-x',
+      components: {},
+      catenaX: {
+        accessMode: 'edc',
+        edc: {
+          proxyId: 'default',
+          defaultPartnerId: 'partner-a',
+          defaultCounterPartyId: 'BPNL000000000AAA',
+          defaultCounterPartyAddress: 'https://partner-a.example/api/v1/dsp',
+          partners: [
+            {
+              id: 'partner-a',
+              name: 'Partner A',
+              counterPartyId: 'BPNL000000000AAA',
+              counterPartyAddress: 'https://partner-a.example/api/v1/dsp',
+            },
+            {
+              id: 'partner-b',
+              name: 'Partner B',
+              counterPartyId: 'BPNL000000000BBB',
+              counterPartyAddress: 'https://partner-b.example/api/v1/dsp',
+            },
+          ],
+        },
+      },
+      security: { type: 'none' },
+    }))
+
+    expect(parsed.infrastructures[0].catenaX?.edc).toEqual({
+      proxyId: 'default',
+      defaultPartnerId: 'partner-a',
+      defaultCounterPartyId: 'BPNL000000000AAA',
+      defaultCounterPartyAddress: 'https://partner-a.example/api/v1/dsp',
+      partners: [
+        {
+          id: 'partner-a',
+          name: 'Partner A',
+          counterPartyId: 'BPNL000000000AAA',
+          counterPartyAddress: 'https://partner-a.example/api/v1/dsp',
+        },
+        {
+          id: 'partner-b',
+          name: 'Partner B',
+          counterPartyId: 'BPNL000000000BBB',
+          counterPartyAddress: 'https://partner-b.example/api/v1/dsp',
         },
       ],
     })

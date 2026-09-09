@@ -39,7 +39,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed } from 'vue'
   import { useNavigationStore } from '@/store/NavigationStore'
 
   // Stores

@@ -1,5 +1,5 @@
 import type { AuthTokenState, InfrastructureConfig, OAuth2FormData } from '@/types/Infrastructure'
-import { type Ref, ref } from 'vue'
+import type { Ref } from 'vue'
 import {
   authenticateOAuth2ClientCredentials,
   clearOAuth2AuthorizationCodeState,

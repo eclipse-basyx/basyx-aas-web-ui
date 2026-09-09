@@ -26,8 +26,8 @@
 </template>
 
 <script lang="ts" setup>
+  import type { ComponentPublicInstance } from 'vue'
   import ApexCharts, { type ApexOptions } from 'apexcharts'
-  import { type ComponentPublicInstance, computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
   import { useTheme } from 'vuetify'
   import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'

@@ -100,7 +100,6 @@
 
 <script lang="ts" setup>
   import type { Ref } from 'vue'
-  import { onMounted, ref, watch } from 'vue'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
   import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'

@@ -1,20 +1,32 @@
 <template>
-  <v-dialog v-model="dialog" persistent width="860">
-    <v-card>
-      <v-card-title>Add {{ directionLabel }} Operation Variable from JSON</v-card-title>
+  <v-dialog
+    v-model="dialog"
+    :fullscreen="isMobile"
+    :max-width="isMobile ? undefined : '860px'"
+    persistent
+  >
+    <v-sheet
+      border
+      class="d-flex flex-column"
+      :rounded="isMobile ? undefined : 'lg'"
+      :style="isMobile ? { height: '100vh' } : undefined"
+    >
+      <v-card-title class="bg-cardHeader">Add {{ directionLabel }} Operation Variable from JSON</v-card-title>
       <v-divider />
 
-      <v-card-text class="bg-card pa-3">
+      <v-card-text
+        class="overflow-y-auto"
+        :style="isMobile ? { flex: '1 1 auto', minHeight: '0' } : { maxHeight: 'calc(100vh - 200px)' }"
+      >
         <v-alert class="mb-3" density="compact" type="info" variant="tonal">
           Insert exactly one AAS Core 3.1 SubmodelElement. The OperationVariable wrapper is created automatically.
         </v-alert>
 
-        <v-textarea
+        <AasJsonEditor
+          v-if="dialog"
           v-model="jsonInput"
-          :error-messages="errors"
+          :errors="errors"
           label="SubmodelElement JSON"
-          rows="14"
-          variant="outlined"
           @update:model-value="errors = []"
         />
       </v-card-text>
@@ -23,10 +35,18 @@
 
       <v-card-actions>
         <v-spacer />
-        <v-btn @click="dialog = false">Cancel</v-btn>
-        <v-btn color="primary" :loading="saving" @click="insert">Add Variable</v-btn>
+        <v-btn rounded="lg" @click="dialog = false">Cancel</v-btn>
+
+        <v-btn
+          class="text-buttonText"
+          color="primary"
+          :loading="saving"
+          rounded="lg"
+          variant="flat"
+          @click="insert"
+        >Add Variable</v-btn>
       </v-card-actions>
-    </v-card>
+    </v-sheet>
   </v-dialog>
 </template>
 
@@ -34,7 +54,6 @@
   import type { OperationNodeLocator, OperationPersistenceBoundary, OperationVariableDirection } from '@/types/OperationTree'
   import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization'
   import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
-  import { computed, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import { useOperationTreeMutation } from '@/composables/AAS/OperationTreeMutation'
   import { useNavigationStore } from '@/store/NavigationStore'
@@ -63,6 +82,7 @@
   const errors = ref<string[]>([])
   const saving = ref(false)
 
+  const isMobile = computed(() => navigationStore.getIsMobile)
   const directionLabel = computed(() => {
     if (props.direction === 'inputVariables') return 'Input'
     if (props.direction === 'inoutputVariables') return 'In/Out'

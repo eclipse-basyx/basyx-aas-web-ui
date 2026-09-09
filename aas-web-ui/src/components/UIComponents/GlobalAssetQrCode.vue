@@ -16,7 +16,6 @@
 
 <script lang="ts" setup>
   import QRCode from 'qrcode'
-  import { computed, ref, watch } from 'vue'
 
   type IsoVariant = 'auto' | '61406-1' | '61406-2'
 

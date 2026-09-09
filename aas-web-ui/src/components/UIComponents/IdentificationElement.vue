@@ -123,7 +123,6 @@
 
 <script setup lang="ts">
   import type { Ref } from 'vue'
-  import { ref } from 'vue'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
 

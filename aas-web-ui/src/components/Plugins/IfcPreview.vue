@@ -62,7 +62,6 @@
   import type * as BUIModule from '@thatopen/ui'
   import type * as BUICModule from '@thatopen/ui-obc'
   import type * as THREEModule from 'three'
-  import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { useEnvStore } from '@/store/EnvironmentStore'
 

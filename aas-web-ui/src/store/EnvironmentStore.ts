@@ -40,6 +40,9 @@ export const useEnvStore = defineStore('envStore', () => {
   const basePath = ref(withProductionPlaceholder(import.meta.env.VITE_BASE_PATH, '/__BASE_PATH_PLACEHOLDER__/'))
   const logoLightPath = ref(withProductionPlaceholder(import.meta.env.VITE_LOGO_LIGHT_PATH, '/__LOGO_LIGHT_PATH_PLACEHOLDER__/'))
   const logoDarkPath = ref(withProductionPlaceholder(import.meta.env.VITE_LOGO_DARK_PATH, '/__LOGO_DARK_PATH_PLACEHOLDER__/'))
+  const copyrightName = ref(withProductionPlaceholder(import.meta.env.VITE_COPYRIGHT_NAME, '/__COPYRIGHT_NAME_PLACEHOLDER__/'))
+  const legalNoticeUrl = ref(withProductionPlaceholder(import.meta.env.VITE_LEGAL_NOTICE_URL, '/__LEGAL_NOTICE_URL_PLACEHOLDER__/'))
+  const privacyPolicyUrl = ref(withProductionPlaceholder(import.meta.env.VITE_PRIVACY_POLICY_URL, '/__PRIVACY_POLICY_URL_PLACEHOLDER__/'))
   const aasDiscoveryPath = ref(withProductionPlaceholder(import.meta.env.VITE_AAS_DISCOVERY_PATH, '/__AAS_DISCOVERY_PATH_PLACEHOLDER__/'))
   const aasRegistryPath = ref(withProductionPlaceholder(import.meta.env.VITE_AAS_REGISTRY_PATH, '/__AAS_REGISTRY_PATH_PLACEHOLDER__/'))
   const submodelRegistryPath = ref(withProductionPlaceholder(import.meta.env.VITE_SUBMODEL_REGISTRY_PATH, '/__SUBMODEL_REGISTRY_PATH_PLACEHOLDER__/'))
@@ -86,6 +89,9 @@ export const useEnvStore = defineStore('envStore', () => {
   const getEnvBasePath = computed(() => basePath.value)
   const getEnvLogoLightPath = computed(() => logoLightPath.value)
   const getEnvLogoDarkPath = computed(() => logoDarkPath.value)
+  const getEnvCopyrightName = computed(() => copyrightName.value)
+  const getEnvLegalNoticeUrl = computed(() => legalNoticeUrl.value)
+  const getEnvPrivacyPolicyUrl = computed(() => privacyPolicyUrl.value)
   const getEnvAASDiscoveryPath = computed(() => aasDiscoveryPath.value)
   const getEnvAASRegistryPath = computed(() => aasRegistryPath.value)
   const getEnvSubmodelRegistryPath = computed(() => submodelRegistryPath.value)
@@ -169,6 +175,9 @@ export const useEnvStore = defineStore('envStore', () => {
     BASE_PATH: getEnvBasePath,
     LOGO_LIGHT_PATH: getEnvLogoLightPath,
     LOGO_DARK_PATH: getEnvLogoDarkPath,
+    COPYRIGHT_NAME: getEnvCopyrightName,
+    LEGAL_NOTICE_URL: getEnvLegalNoticeUrl,
+    PRIVACY_POLICY_URL: getEnvPrivacyPolicyUrl,
     AAS_DISCOVERY_PATH: getEnvAASDiscoveryPath,
     AAS_REGISTRY_PATH: getEnvAASRegistryPath,
     SUBMODEL_REGISTRY_PATH: getEnvSubmodelRegistryPath,
@@ -263,6 +272,9 @@ export const useEnvStore = defineStore('envStore', () => {
     getEnvBasePath,
     getEnvLogoLightPath,
     getEnvLogoDarkPath,
+    getEnvCopyrightName,
+    getEnvLegalNoticeUrl,
+    getEnvPrivacyPolicyUrl,
     getEnvAASDiscoveryPath,
     getEnvAASRegistryPath,
     getEnvSubmodelRegistryPath,

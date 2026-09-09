@@ -82,7 +82,6 @@
 
 <script setup lang="ts">
   import type { ContentTypeCategory, FileElement } from '../types'
-  import { computed } from 'vue'
   import { checkContentType, mimeToExtension } from '@/utils/FileHandling'
 
   interface Props {

@@ -65,7 +65,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onMounted, ref, watch } from 'vue'
   import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling'
   import { useSMEHandling } from '@/composables/AAS/SMEHandling'
   import { useRequestHandling } from '@/composables/RequestHandling'

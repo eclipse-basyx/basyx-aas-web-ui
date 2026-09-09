@@ -198,7 +198,6 @@
   import type { FormStateValue, RangeFormValue } from '../../types/form'
   import type { TemplateElement } from '../../types/template'
   import ISO6391 from 'iso-639-1'
-  import { computed } from 'vue'
   import {
     isRepeatableElement, isRequiredElement,
   } from '../../utils/cardinalityUtils'

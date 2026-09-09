@@ -40,7 +40,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed } from 'vue'
   import { useDisplay } from 'vuetify'
 
   const props = withDefaults(

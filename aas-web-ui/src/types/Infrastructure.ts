@@ -3,7 +3,12 @@ import type { BaSyxComponentKey } from '@/types/BaSyx'
 /**
  * Security types supported for infrastructure authentication
  */
-export type SecurityType = 'No Authentication' | 'Basic Authentication' | 'Bearer Token' | 'OAuth2'
+export type SecurityType
+  = | 'No Authentication'
+    | 'Basic Authentication'
+    | 'Bearer Token'
+    | 'OAuth2'
+    | 'Custom Header'
 
 /**
  * Supported infrastructure topology templates
@@ -31,6 +36,15 @@ export interface BearerTokenData {
 }
 
 /**
+ * Custom header authentication. Sends a static value under an arbitrary
+ * header name (e.g. 'X-API-KEY') on every request.
+ */
+export interface CustomHeaderData {
+  name: string
+  value: string
+}
+
+/**
  * OAuth2 configuration for authentication
  */
 export interface OAuth2ConnectionData {
@@ -51,6 +65,7 @@ export interface InfrastructureAuth {
   basicAuth?: BasicAuthData
   bearerToken?: BearerTokenData
   oauth2?: OAuth2ConnectionData
+  customHeader?: CustomHeaderData
 }
 
 /**
@@ -202,7 +217,7 @@ export interface YamlComponentConfig {
  * Security configuration in YAML format
  */
 export interface YamlSecurityConfig {
-  type: 'none' | 'basic' | 'bearer' | 'oauth2'
+  type: 'none' | 'basic' | 'bearer' | 'oauth2' | 'custom-header'
   config?: {
     // Basic auth
     username?: string
@@ -215,6 +230,9 @@ export interface YamlSecurityConfig {
     clientId?: string
     clientSecret?: string
     scope?: string
+    // Custom header
+    headerName?: string
+    headerValue?: string
   }
 }
 

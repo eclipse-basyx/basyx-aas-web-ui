@@ -102,10 +102,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref, watch } from 'vue'
   import { useRoute } from 'vue-router'
-  import JSONPreview from '@/components/Plugins/JSONPreview.vue'
-  import XMLPreview from '@/components/Plugins/XMLPreview.vue'
   import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { checkContentType, mimeToExtension } from '@/utils/FileHandling'

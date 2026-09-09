@@ -1,4 +1,3 @@
-import { ref, watch } from 'vue'
 import { useHotkey } from 'vuetify'
 import { useRouteShortcuts } from '@/composables/Shortcuts/useRouteShortcuts'
 import { useShortcutDefinitions } from '@/composables/Shortcuts/useShortcutDefinitions'

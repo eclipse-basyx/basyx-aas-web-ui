@@ -75,9 +75,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onMounted, ref, watch } from 'vue'
   import { type LocationQueryRaw, useRoute, useRouter } from 'vue-router'
-  import GlobalAssetQrCode from '@/components/UIComponents/GlobalAssetQrCode.vue'
   import { useTechnicalData_v1_2Utils } from '@/composables/AAS/SubmodelTemplates/TechnicalData_v1_2Utils'
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { urlRegex, useUrlUtils } from '@/composables/UrlUtils'

@@ -10,7 +10,6 @@ import type { App as AppType, defineComponent } from 'vue'
 // Components
 import { createPinia } from 'pinia'
 // Composables
-import { createApp } from 'vue'
 import VueApexCharts from 'vue3-apexcharts'
 import App from '@/App.vue'
 // Plugins

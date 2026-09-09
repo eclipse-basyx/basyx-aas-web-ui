@@ -51,7 +51,6 @@
 
 <script lang="ts" setup>
   import type { CatenaXPartner } from '@/types/Infrastructure'
-  import { computed } from 'vue'
   import DescriptorBrowser from '@/pages/modules/CatenaXplorer/components/DescriptorBrowser.vue'
 
   const drawerWidth = 400

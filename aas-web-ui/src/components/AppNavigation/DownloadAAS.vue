@@ -75,7 +75,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref, watch } from 'vue'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
   import { useAASXPackaging } from '@/composables/AAS/AASXPackaging'
   import {

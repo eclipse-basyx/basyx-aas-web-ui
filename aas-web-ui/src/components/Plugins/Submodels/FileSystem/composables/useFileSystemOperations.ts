@@ -13,7 +13,6 @@ import type {
   SubmodelElementData,
   UploadProgress,
 } from '../types'
-import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { convertFileNameToIdentifier, createThumbnail, mimeToExtension } from '@/utils/FileHandling'

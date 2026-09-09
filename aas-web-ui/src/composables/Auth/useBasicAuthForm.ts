@@ -1,5 +1,5 @@
 import type { InfrastructureConfig } from '@/types/Infrastructure'
-import { type Ref, ref } from 'vue'
+import type { Ref } from 'vue'
 
 /**
  * Composable for managing Basic Authentication and Bearer Token form state

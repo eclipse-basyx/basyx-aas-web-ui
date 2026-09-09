@@ -12,6 +12,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AASForm: typeof import('./components/EditorComponents/AASForm.vue')['default']
+    AasJsonEditor: typeof import('./components/Code/AasJsonEditor.vue')['default']
     AASList: typeof import('./components/AppNavigation/AASList.vue')['default']
     AASListDetails: typeof import('./components/AppNavigation/AASListDetails.vue')['default']
     AASToInstance: typeof import('./components/AppNavigation/AASToInstance.vue')['default']
@@ -34,6 +35,8 @@ declare module 'vue' {
     CarbonFootprint_v1_0: typeof import('./components/Plugins/Submodels/CarbonFootprint_v1_0.vue')['default']
     CatenaXEdcConfigPanel: typeof import('./components/AppNavigation/Settings/CatenaXEdcConfigPanel.vue')['default']
     CatenaXPartnerDialog: typeof import('./components/AppNavigation/Settings/CatenaXPartnerDialog.vue')['default']
+    CodeEditor: typeof import('./components/Code/CodeEditor.vue')['default']
+    CodeViewer: typeof import('./components/Code/CodeViewer.vue')['default']
     CollectionForm: typeof import('./components/EditorComponents/SubmodelElements/CollectionForm.vue')['default']
     CommandPalette: typeof import('./components/AppNavigation/CommandPalette.vue')['default']
     ComponentConfigPanel: typeof import('./components/AppNavigation/Settings/ComponentConfigPanel.vue')['default']
@@ -114,6 +117,7 @@ declare module 'vue' {
     QRScanner: typeof import('./components/AppNavigation/QRScanner.vue')['default']
     QualifierElement: typeof import('./components/UIComponents/QualifierElement.vue')['default']
     QualifierInput: typeof import('./components/EditorComponents/InputTypes/QualifierInput.vue')['default']
+    QueryLanguageEditor: typeof import('./components/QueryLanguage/QueryLanguageEditor.vue')['default']
     Range: typeof import('./components/SubmodelElements/Range.vue')['default']
     RangeForm: typeof import('./components/EditorComponents/SubmodelElements/RangeForm.vue')['default']
     RangeInput: typeof import('./components/EditorComponents/InputTypes/RangeInput.vue')['default']

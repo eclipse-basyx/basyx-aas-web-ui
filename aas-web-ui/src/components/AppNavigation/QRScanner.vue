@@ -146,7 +146,6 @@
 
 <script setup lang="ts">
   import { Html5Qrcode } from 'html5-qrcode'
-  import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
   import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
 

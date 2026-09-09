@@ -9,8 +9,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed } from 'vue'
-  import JSONPreview from '@/components/Plugins/JSONPreview.vue'
   import { getDescriptorTitle } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
 
   const props = defineProps<{

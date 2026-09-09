@@ -1,6 +1,107 @@
+<template>
+  <v-btn
+    density="comfortable"
+    icon="mdi-cog"
+    size="small"
+    variant="text"
+    @click="onOpenDialog"
+  >
+    <v-icon>mdi-cog</v-icon>
+
+    <v-tooltip activator="parent" location="bottom" :open-delay="600">
+      {{ t('config.title') }}
+    </v-tooltip>
+  </v-btn>
+
+  <v-dialog v-model="isDialogOpen" max-width="560" persistent>
+    <v-card>
+      <v-card-title class="pa-4 bg-cardHeader d-flex align-center">
+        <span class="text-h6">{{ t('config.title') }}</span>
+        <v-spacer />
+
+        <v-btn
+          density="comfortable"
+          icon="mdi-close"
+          size="small"
+          variant="text"
+          @click="onCloseDialog"
+        />
+      </v-card-title>
+
+      <v-divider />
+
+      <v-card-text class="pa-4">
+        <v-form ref="form" v-model="isValid" @submit.prevent="onSave">
+          <v-text-field
+            v-model="localState.apiUrl"
+            class="mb-2"
+            density="comfortable"
+            :hint="testMessage"
+            :label="t('config.apiUrl')"
+            :persistent-hint="!!testMessage"
+            placeholder="https://example.com/api"
+            readonly
+            variant="outlined"
+          >
+            <template #prepend-inner>
+              <v-icon :color="testColor">{{ testIcon }}</v-icon>
+            </template>
+
+            <template #append-inner>
+              <v-tooltip location="top" :open-delay="400">
+                <template #activator="{ props: tipProps }">
+                  <v-btn
+                    v-bind="tipProps"
+                    density="comfortable"
+                    :disabled="!isValid"
+                    :icon="isTesting ? '' : 'mdi-connection'"
+                    :loading="isTesting"
+                    size="small"
+                    variant="text"
+                    @click="onTest"
+                  />
+                </template>
+                {{ t('config.testConnection') }}
+              </v-tooltip>
+            </template>
+          </v-text-field>
+
+          <v-select
+            v-model="localState.language"
+            density="comfortable"
+            item-title="title"
+            item-value="value"
+            :items="localeOptions"
+            :label="t('config.language')"
+            variant="outlined"
+          />
+        </v-form>
+      </v-card-text>
+
+      <v-divider />
+
+      <v-card-actions class="pa-4">
+        <v-spacer />
+
+        <v-btn variant="text" @click="onCloseDialog">
+          {{ t('config.cancel') }}
+        </v-btn>
+
+        <v-btn
+          color="primary"
+          :disabled="!isValid"
+          variant="flat"
+          @click="onSave"
+        >
+          {{ t('config.save') }}
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+</template>
+
 <script setup lang="ts">
   import type { VForm } from 'vuetify/components'
-  import { computed, onMounted, ref, watch } from 'vue'
   import { useTestConnection } from '@/composables/Client/CompanyLookup/queries/useTestConnection'
   import { hasContent } from '@/utils/StringUtils'
   import { useCompanyLookupI18n } from '../i18n/useCompanyLookupI18n'
@@ -114,105 +215,3 @@
     onCloseDialog()
   }
 </script>
-
-<template>
-  <v-btn
-    density="comfortable"
-    icon="mdi-cog"
-    size="small"
-    variant="text"
-    @click="onOpenDialog"
-  >
-    <v-icon>mdi-cog</v-icon>
-
-    <v-tooltip activator="parent" location="bottom" :open-delay="600">
-      {{ t('config.title') }}
-    </v-tooltip>
-  </v-btn>
-
-  <v-dialog v-model="isDialogOpen" max-width="560" persistent>
-    <v-card>
-      <v-card-title class="pa-4 bg-cardHeader d-flex align-center">
-        <span class="text-h6">{{ t('config.title') }}</span>
-        <v-spacer />
-
-        <v-btn
-          density="comfortable"
-          icon="mdi-close"
-          size="small"
-          variant="text"
-          @click="onCloseDialog"
-        />
-      </v-card-title>
-
-      <v-divider />
-
-      <v-card-text class="pa-4">
-        <v-form ref="form" v-model="isValid" @submit.prevent="onSave">
-          <v-text-field
-            v-model="localState.apiUrl"
-            class="mb-2"
-            density="comfortable"
-            :hint="testMessage"
-            :label="t('config.apiUrl')"
-            :persistent-hint="!!testMessage"
-            placeholder="https://example.com/api"
-            readonly
-            variant="outlined"
-          >
-            <template #prepend-inner>
-              <v-icon :color="testColor">{{ testIcon }}</v-icon>
-            </template>
-
-            <template #append-inner>
-              <v-tooltip location="top" :open-delay="400">
-                <template #activator="{ props: tipProps }">
-                  <v-btn
-                    v-bind="tipProps"
-                    density="comfortable"
-                    :disabled="!isValid"
-                    :icon="isTesting ? '' : 'mdi-connection'"
-                    :loading="isTesting"
-                    size="small"
-                    variant="text"
-                    @click="onTest"
-                  />
-                </template>
-                {{ t('config.testConnection') }}
-              </v-tooltip>
-            </template>
-          </v-text-field>
-
-          <v-select
-            v-model="localState.language"
-            density="comfortable"
-            item-title="title"
-            item-value="value"
-            :items="localeOptions"
-            :label="t('config.language')"
-            variant="outlined"
-          />
-        </v-form>
-      </v-card-text>
-
-      <v-divider />
-
-      <v-card-actions class="pa-4">
-        <v-spacer />
-
-        <v-btn variant="text" @click="onCloseDialog">
-          {{ t('config.cancel') }}
-        </v-btn>
-
-        <v-btn
-          color="primary"
-          :disabled="!isValid"
-          variant="flat"
-          @click="onSave"
-        >
-          {{ t('config.save') }}
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
-</template>

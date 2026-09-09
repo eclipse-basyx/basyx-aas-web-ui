@@ -28,7 +28,6 @@
       "vitest/globals",
       "node",
       "vite/client",
-      "prismjs",
       "leaflet",
       "qrcode"
     ]

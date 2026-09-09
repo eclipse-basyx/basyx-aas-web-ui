@@ -129,7 +129,6 @@
 <script lang="ts" setup>
   import type { FormStateObject, FormStateValue } from '../../types/form'
   import type { SubmodelElementCollectionElement } from '../../types/template'
-  import { computed, nextTick, ref } from 'vue'
   import {
     isOptionalSingleElement,
     isRepeatableElement,

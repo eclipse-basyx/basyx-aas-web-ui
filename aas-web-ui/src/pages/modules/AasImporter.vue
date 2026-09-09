@@ -166,7 +166,6 @@
 <script lang="ts">
   import type { PageShortcutDefinitions } from '@/composables/Shortcuts/useRouteShortcuts'
   import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
-  import { computed, onMounted, ref, watch } from 'vue'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
   import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient'
   import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'

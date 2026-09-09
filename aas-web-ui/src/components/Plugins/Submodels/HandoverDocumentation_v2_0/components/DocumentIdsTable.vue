@@ -62,7 +62,6 @@
 </template>
 <script lang="ts" setup>
   import type { SubmodelElementLike } from '../types'
-  import { computed } from 'vue'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSME } from '@/composables/AAS/SubmodelElements/SubmodelElement'
   import { asSubmodelElementArray, getDescriptionArray, getLangSets } from '../utils/submodelElementUtils'

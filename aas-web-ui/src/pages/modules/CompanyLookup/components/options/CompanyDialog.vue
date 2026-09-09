@@ -1,6 +1,9 @@
+<template>
+  <CompanyForm v-model="isOpen" :company="company" @closed="emit('closed')" @saved="c => emit('saved', c)" />
+</template>
+
 <script setup lang="ts">
   import type { CompanyDescriptor } from '@/composables/Client/CompanyLookup/types/company'
-  import { ref } from 'vue'
   import CompanyForm from '../form/CompanyForm.vue'
 
   defineProps<{ company?: CompanyDescriptor }>()
@@ -21,7 +24,3 @@
 
   defineExpose({ open, close })
 </script>
-
-<template>
-  <CompanyForm v-model="isOpen" :company="company" @closed="emit('closed')" @saved="c => emit('saved', c)" />
-</template>

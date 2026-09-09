@@ -66,6 +66,27 @@ describe('RequestHandling.ts', () => {
     mockState.authDescriptionExemption = false
   })
 
+  it.each(['{ "value": 1 }\n', '{ malformed JSON', '', 'false'])('preserves attachment bytes in blob mode: %s', async source => {
+    global.fetch = vi.fn().mockResolvedValue(new Response(source, {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })) as unknown as typeof fetch
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const response = await useRequestHandling().getRequest('/attachment', 'previewing', true, new Headers(), {}, 'blob')
+    expect(response.success).toBe(true)
+    expect(await response.data.text()).toBe(source)
+  })
+
+  it('keeps JSON parsing as the default and preserves error handling in blob mode', async () => {
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce(new Response('{"value":1}', { headers: { 'Content-Type': 'application/json' } }))
+      .mockResolvedValueOnce(new Response('{"message":"Forbidden"}', { status: 403, headers: { 'Content-Type': 'application/json' } })) as unknown as typeof fetch
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { getRequest } = useRequestHandling()
+    expect((await getRequest('/data', 'loading', true)).data).toEqual({ value: 1 })
+    expect(await getRequest('/attachment', 'previewing', true, new Headers(), {}, 'blob')).toMatchObject({ success: false, status: 403 })
+  })
+
   it('handles 401 with authentication-required snackbar and infra auth reset', async () => {
     global.fetch = vi.fn().mockResolvedValue(
       new Response('', {
@@ -479,6 +500,76 @@ describe('RequestHandling.ts', () => {
     expect(requestHeaders.has('Authorization')).toBe(false)
     const fetchHeaders = (vi.mocked(global.fetch).mock.calls[0][1]?.headers) as Headers
     expect(fetchHeaders.get('Authorization')).toBe('Bearer token-1')
+  })
+
+  it('sends the configured custom header verbatim under the given name', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response('', { status: 202 })) as unknown as typeof fetch
+    mockState.selectedInfrastructure = {
+      id: 'infra-1',
+      auth: {
+        securityType: 'Custom Header',
+        customHeader: { name: 'X-API-KEY', value: 'secret-key-123' },
+      },
+      token: undefined,
+    }
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { postRequest } = useRequestHandling()
+    await postRequest('/operation/invoke-async', '{}', new Headers(), 'invoking Operation', false)
+
+    const fetchHeaders = (vi.mocked(global.fetch).mock.calls[0][1]?.headers) as Headers
+    expect(fetchHeaders.get('X-API-KEY')).toBe('secret-key-123')
+    // Does not set an Authorization header for this scheme.
+    expect(fetchHeaders.has('Authorization')).toBe(false)
+  })
+
+  it.each([
+    undefined,
+    { name: 'X-API-KEY', value: ' '.repeat(3) },
+    { name: ' ', value: 'secret' },
+    { name: 'X API KEY', value: 'secret' },
+    { name: 'X-API-KEY:', value: 'secret' },
+    { name: 'X-API-KEY', value: 'line1\nline2' },
+    { name: 'X-API-KEY', value: 'line1\rline2' },
+    { name: 'X-API-KEY', value: 'key\0value' },
+    { name: 'X-API-KEY', value: '🔑' },
+    { name: 'X-API-KEY', value: 123_456 },
+    { name: 123, value: 'secret' },
+  ])('handles invalid custom headers without sending a request: %j', async customHeader => {
+    global.fetch = vi.fn()
+    mockState.selectedInfrastructure = {
+      id: 'infra-1', auth: { securityType: 'Custom Header', customHeader },
+    }
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const requests = useRequestHandling()
+    const results = await Promise.all([
+      requests.getRequest('/api', 'loading', false),
+      requests.postRequest('/api', '{}', new Headers(), 'posting', false),
+      requests.putRequest('/api', '{}', new Headers(), 'updating', false),
+      requests.patchRequest('/api', '{}', new Headers(), 'patching', false),
+      requests.deleteRequest('/api', new Headers(), 'deleting', false),
+    ])
+
+    expect(results).toEqual(Array.from({ length: 5 }, () => ({ success: false, status: undefined })))
+    expect(global.fetch).not.toHaveBeenCalled()
+    expect(mockDeps.dispatchSnackbar).toHaveBeenCalledTimes(5)
+    expect(mockDeps.dispatchSnackbar).toHaveBeenLastCalledWith(expect.objectContaining({
+      color: 'error',
+      text: expect.stringContaining('Invalid custom header configuration'),
+    }))
+  })
+
+  it('respects disabled messages for invalid custom-header configuration', async () => {
+    global.fetch = vi.fn()
+    mockState.selectedInfrastructure = { id: 'infra-1', auth: { securityType: 'Custom Header' } }
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const requests = useRequestHandling()
+
+    expect(await requests.getRequest('/api', 'loading', true)).toMatchObject({ success: false })
+    expect(requests.consumeLastRequestFailureDetails()).toContain('Invalid custom header configuration')
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalled()
+    expect(global.fetch).not.toHaveBeenCalled()
   })
 
   it('suppresses only configured unsupported POST statuses so a caller can fall back', async () => {

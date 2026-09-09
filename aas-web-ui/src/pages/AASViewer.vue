@@ -21,7 +21,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onBeforeUnmount, onMounted } from 'vue'
   import { useTheme } from 'vuetify'
 
   const theme = useTheme()

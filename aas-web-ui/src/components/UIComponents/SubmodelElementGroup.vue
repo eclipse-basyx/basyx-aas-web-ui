@@ -257,7 +257,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { onMounted, ref, watch } from 'vue'
   import { useConceptDescriptionHandling } from '@/composables/AAS/ConceptDescriptionHandling'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMHandling } from '@/composables/AAS/SMHandling'

@@ -107,7 +107,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onMounted, ref, watch } from 'vue'
 
   const props = defineProps<{
     content: Uint8Array | null

@@ -13,7 +13,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref } from 'vue'
 
   defineOptions({
     inheritAttrs: false,

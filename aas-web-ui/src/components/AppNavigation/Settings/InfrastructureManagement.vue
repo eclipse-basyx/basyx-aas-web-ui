@@ -175,6 +175,8 @@
               :basic-auth-password="basicAuthPassword"
               :basic-auth-username="basicAuthUsername"
               :bearer-token="bearerToken"
+              :custom-header-name="customHeaderName"
+              :custom-header-value="customHeaderValue"
               :o-auth2-auth-flow="oAuth2AuthFlow"
               :oauth2-data="oauth2Data"
               :oauth2-loading="oauth2Loading"
@@ -184,6 +186,8 @@
               @update:basic-auth-password="basicAuthPassword = $event"
               @update:basic-auth-username="basicAuthUsername = $event"
               @update:bearer-token="bearerToken = $event"
+              @update:custom-header-name="customHeaderName = $event"
+              @update:custom-header-value="customHeaderValue = $event"
               @update:o-auth2-auth-flow="
                 oAuth2AuthFlow = $event as 'auth-code' | 'client-credentials' | 'password'
               "
@@ -193,7 +197,7 @@
               @update:oauth2-password="oauth2Data.password = $event"
               @update:oauth2-scope="oauth2Data.scope = $event"
               @update:oauth2-username="oauth2Data.username = $event"
-              @update:security-type="editingInfrastructure.auth!.securityType = $event as SecurityType"
+              @update:security-type="handleSecurityTypeChange($event as SecurityType)"
             />
           </v-form>
         </v-card-text>
@@ -297,11 +301,10 @@
     SecurityType,
   } from '@/types/Infrastructure'
   import type { InfrastructureEndpointFieldKey } from '@/utils/InfrastructureUtils'
-  import { computed, ref, toRaw, watch } from 'vue'
   import { useRouter } from 'vue-router'
-  import CatenaXEdcConfigPanel from '@/components/AppNavigation/Settings/CatenaXEdcConfigPanel.vue'
   import { useAuth } from '@/composables/Auth/useAuth'
   import { useBasicAuthForm } from '@/composables/Auth/useBasicAuthForm'
+  import { DEFAULT_CUSTOM_HEADER_NAME, useCustomHeaderForm } from '@/composables/Auth/useCustomHeaderForm'
   import { useOAuth2Form } from '@/composables/Auth/useOAuth2Form'
   import { useComponentConnectionTesting } from '@/composables/Infrastructure/useComponentConnectionTesting'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
@@ -360,7 +363,13 @@
     },
   })
 
-  const securityTypes: SecurityType[] = ['No Authentication', 'Basic Authentication', 'Bearer Token', 'OAuth2']
+  const securityTypes: SecurityType[] = [
+    'No Authentication',
+    'Basic Authentication',
+    'Bearer Token',
+    'OAuth2',
+    'Custom Header',
+  ]
   const authFlowOptions: AuthFlowOption[] = [
     { text: 'User Login (Authorization Code Flow)', value: 'auth-code' },
     { text: 'Service Account (Client Credentials)', value: 'client-credentials' },
@@ -368,6 +377,7 @@
 
   // Initialize composables for auth forms
   const basicAuthForm = useBasicAuthForm()
+  const customHeaderForm = useCustomHeaderForm()
   const oauth2Form = useOAuth2Form()
   const connectionTesting = useComponentConnectionTesting()
 
@@ -375,6 +385,9 @@
   const basicAuthUsername = basicAuthForm.basicAuthUsername
   const basicAuthPassword = basicAuthForm.basicAuthPassword
   const bearerToken = basicAuthForm.bearerToken
+
+  const customHeaderName = customHeaderForm.customHeaderName
+  const customHeaderValue = customHeaderForm.customHeaderValue
 
   const oauth2Data = oauth2Form.formData
   const oAuth2AuthFlow = oauth2Form.authFlow
@@ -454,9 +467,19 @@
     await testAllConnections()
   }
 
+  function handleSecurityTypeChange (securityType: SecurityType): void {
+    editingInfrastructure.value.auth!.securityType = securityType
+
+    // Prefill a sensible default header name when switching to Custom Header
+    if (securityType === 'Custom Header' && !customHeaderName.value) {
+      customHeaderName.value = DEFAULT_CUSTOM_HEADER_NAME
+    }
+  }
+
   function loadAuthDataFromInfrastructure (infra: InfrastructureConfig): void {
     // Load auth data using composables
     basicAuthForm.loadFromInfrastructure(infra)
+    customHeaderForm.loadFromInfrastructure(infra)
     oauth2Form.loadFromInfrastructure(infra)
 
     // Reset component connection status
@@ -466,6 +489,7 @@
   async function saveAuthDataToInfrastructure (infra: InfrastructureConfig): Promise<void> {
     // Save auth data using composables
     basicAuthForm.saveToInfrastructure(infra)
+    customHeaderForm.saveToInfrastructure(infra)
     oauth2Form.saveToInfrastructure(infra)
   }
 

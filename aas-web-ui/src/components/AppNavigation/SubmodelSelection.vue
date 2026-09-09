@@ -28,7 +28,6 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, watch } from 'vue'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
 
   const { nameToDisplay } = useReferableUtils()

@@ -273,7 +273,6 @@
     ArbitraryRangeNode,
     ArbitrarySectionNode,
   } from '../types/arbitrary'
-  import { computed } from 'vue'
 
   const props = withDefaults(defineProps<{
     modelValue: ArbitraryNode[]

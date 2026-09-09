@@ -1,7 +1,6 @@
 import type { BaSyxComponent, BaSyxComponentKey } from '@/types/BaSyx'
 import type { InfrastructureConfig } from '@/types/Infrastructure'
 import { defineStore } from 'pinia'
-import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { ASS_DISCOVERY_ENDPOINT_PATH } from '@/composables/Client/AASDiscoveryClient'
 import { ASS_REGISTRY_ENDPOINT_PATH } from '@/composables/Client/AASRegistryClient'
 import { ASS_REPOSITORY_ENDPOINT_PATH } from '@/composables/Client/AASRepositoryClient'
@@ -15,6 +14,7 @@ import { useInfrastructureStorage } from '@/composables/Infrastructure/useInfras
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useNavigationStore } from '@/store/NavigationStore'
+import { isValidCustomHeader } from '@/utils/CustomHeaderUtils'
 import { getActiveComponentKeys, isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
 
@@ -228,6 +228,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       }
       case 'Bearer Token': {
         return Boolean(infra.auth.bearerToken?.token.trim())
+      }
+      case 'Custom Header': {
+        return isValidCustomHeader(infra.auth.customHeader)
       }
       case 'OAuth2': {
         return Boolean(infra.token?.accessToken) && infra.isAuthenticated !== false

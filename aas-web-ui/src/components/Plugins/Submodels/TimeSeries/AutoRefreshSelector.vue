@@ -43,7 +43,7 @@
           label="Auto refresh"
         />
 
-        <v-row dense>
+        <v-row density="compact">
           <v-col cols="7">
             <div class="text-caption mb-1">Refresh every</div>
 
@@ -94,7 +94,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref, watch } from 'vue'
   import {
     type AutoRefreshSelection,
     type AutoRefreshUnit,

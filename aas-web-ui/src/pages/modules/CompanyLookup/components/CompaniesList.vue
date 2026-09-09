@@ -1,80 +1,3 @@
-<script setup lang="ts">
-  import type { CompanyDescriptor } from '@/composables/Client/CompanyLookup/types/company'
-  import { computed, ref, useTemplateRef } from 'vue'
-  import { useRoute, useRouter } from 'vue-router'
-  import { useTheme } from 'vuetify'
-  import { useGetAllCompanies } from '@/composables/Client/CompanyLookup/queries/useGetAllCompanies'
-  import { useEnvStore } from '@/store/EnvironmentStore'
-  import { hasContent } from '@/utils/StringUtils'
-  import { useCompanyLookupI18n } from '../i18n/useCompanyLookupI18n'
-  import { debouncedRef } from '../utils/debounce'
-  import CompanyDialog from './options/CompanyDialog.vue'
-  import CompanyOptions from './options/CompanyOptions.vue'
-
-  const emit = defineEmits<{ (e: 'select'): void }>()
-
-  const { t } = useCompanyLookupI18n()
-  const theme = useTheme()
-  const isDark = computed(() => theme.global.current.value.dark)
-  const primaryColor = computed(() => theme.current.value.colors.primary)
-
-  const route = useRoute()
-  const router = useRouter()
-
-  const envStore = useEnvStore()
-
-  const search = ref('')
-  const debouncedSearch = debouncedRef(search, 400)
-
-  const {
-    data, isLoading, isError, isFetching, isFetchingNextPage,
-    hasNextPage, fetchNextPage, refetch,
-  } = useGetAllCompanies({ name: debouncedSearch })
-
-  const allowEditing = computed(() => envStore.getAllowEditing)
-
-  const companies = computed<CompanyDescriptor[]>(() =>
-    data.value?.pages.flatMap(p => p.result ?? []) ?? [],
-  )
-
-  const selectedId = computed(() => {
-    const paramId = route.query.id as string | undefined
-    return paramId ? decodeURIComponent(paramId) : undefined
-  })
-
-  function isSelected (c: CompanyDescriptor): boolean {
-    return selectedId.value === c.domain
-  }
-
-  function onSelect (id: string): void {
-    const newId = selectedId.value === id ? undefined : id
-    router.push({ query: { ...route.query, id: newId ? encodeURIComponent(newId) : undefined } })
-    if (hasContent(newId)) emit('select')
-  }
-
-  function onScroll (e: Event): void {
-    const t = e.target as HTMLElement
-    if (
-      t.scrollTop + t.clientHeight >= t.scrollHeight - 40
-      && hasNextPage.value
-      && !isFetchingNextPage.value
-    ) fetchNextPage()
-  }
-
-  const isMenuOpen = ref(false)
-  const createDialog = useTemplateRef<InstanceType<typeof CompanyDialog>>('createDialog')
-
-  function openCreate (): void {
-    isMenuOpen.value = false
-    createDialog.value?.open()
-  }
-
-  function onCreate (created: CompanyDescriptor): void {
-    router.push({ query: { ...route.query, id: encodeURIComponent(created.domain) } })
-    isMenuOpen.value = false
-  }
-</script>
-
 <template>
   <v-card class="h-100 d-flex flex-column" variant="flat">
     <v-card-title class="px-2 py-2 d-flex align-center">
@@ -202,3 +125,79 @@
 
   <CompanyDialog ref="createDialog" @saved="onCreate" />
 </template>
+
+<script setup lang="ts">
+  import type { CompanyDescriptor } from '@/composables/Client/CompanyLookup/types/company'
+  import { useRoute, useRouter } from 'vue-router'
+  import { useTheme } from 'vuetify'
+  import { useGetAllCompanies } from '@/composables/Client/CompanyLookup/queries/useGetAllCompanies'
+  import { useEnvStore } from '@/store/EnvironmentStore'
+  import { hasContent } from '@/utils/StringUtils'
+  import { useCompanyLookupI18n } from '../i18n/useCompanyLookupI18n'
+  import { debouncedRef } from '../utils/debounce'
+  import CompanyDialog from './options/CompanyDialog.vue'
+  import CompanyOptions from './options/CompanyOptions.vue'
+
+  const emit = defineEmits<{ (e: 'select'): void }>()
+
+  const { t } = useCompanyLookupI18n()
+  const theme = useTheme()
+  const isDark = computed(() => theme.global.current.value.dark)
+  const primaryColor = computed(() => theme.current.value.colors.primary)
+
+  const route = useRoute()
+  const router = useRouter()
+
+  const envStore = useEnvStore()
+
+  const search = ref('')
+  const debouncedSearch = debouncedRef(search, 400)
+
+  const {
+    data, isLoading, isError, isFetching, isFetchingNextPage,
+    hasNextPage, fetchNextPage, refetch,
+  } = useGetAllCompanies({ name: debouncedSearch })
+
+  const allowEditing = computed(() => envStore.getAllowEditing)
+
+  const companies = computed<CompanyDescriptor[]>(() =>
+    data.value?.pages.flatMap(p => p.result ?? []) ?? [],
+  )
+
+  const selectedId = computed(() => {
+    const paramId = route.query.id as string | undefined
+    return paramId ? decodeURIComponent(paramId) : undefined
+  })
+
+  function isSelected (c: CompanyDescriptor): boolean {
+    return selectedId.value === c.domain
+  }
+
+  function onSelect (id: string): void {
+    const newId = selectedId.value === id ? undefined : id
+    router.push({ query: { ...route.query, id: newId ? encodeURIComponent(newId) : undefined } })
+    if (hasContent(newId)) emit('select')
+  }
+
+  function onScroll (e: Event): void {
+    const t = e.target as HTMLElement
+    if (
+      t.scrollTop + t.clientHeight >= t.scrollHeight - 40
+      && hasNextPage.value
+      && !isFetchingNextPage.value
+    ) fetchNextPage()
+  }
+
+  const isMenuOpen = ref(false)
+  const createDialog = useTemplateRef<InstanceType<typeof CompanyDialog>>('createDialog')
+
+  function openCreate (): void {
+    isMenuOpen.value = false
+    createDialog.value?.open()
+  }
+
+  function onCreate (created: CompanyDescriptor): void {
+    router.push({ query: { ...route.query, id: encodeURIComponent(created.domain) } })
+    isMenuOpen.value = false
+  }
+</script>
