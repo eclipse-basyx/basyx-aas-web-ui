@@ -4,19 +4,9 @@ import { useQuery } from '@tanstack/vue-query'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { getComponentLabel } from '@/utils/InfrastructureUtils'
-import { CONTEXT } from '../constants/api'
+import { CONTEXT, DISCOVERABLE_COMPONENT_KEYS } from '../constants/api'
 import { ABAC_CACHE_KEYS } from '../constants/cache'
 import { buildAbacUrl } from '../utils/api'
-
-// Component keys that potentially expose ABAC management APIs
-const DISCOVERABLE_COMPONENT_KEYS: BaSyxComponentKey[] = [
-  'AASDiscovery',
-  'AASRegistry',
-  'SubmodelRegistry',
-  'AASRepo',
-  'SubmodelRepo',
-  'ConceptDescriptionRepo',
-]
 
 /**
  * Discovers available ABAC services using TanStack Query.
@@ -61,7 +51,7 @@ export function useAbacServiceDiscovery () {
           continue
         }
 
-        const abacUrl = buildAbacUrl(componentUrl)
+        const abacUrl = buildAbacUrl(componentUrl, componentKey)
         if (!abacUrl || seenUrls.has(abacUrl)) {
           continue
         }

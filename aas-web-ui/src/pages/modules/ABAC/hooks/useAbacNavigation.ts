@@ -66,7 +66,7 @@ export function useAbacNavigation () {
     return paramIndex
   })
 
-  function onSelectRule (index: string | number): void {
+  function onSelectRule (index: string | number, replace?: boolean): void {
     const isCurrentlySelected = selectedRuleIndex.value?.toString() === index?.toString()
     const query = { ...route.query }
 
@@ -76,6 +76,10 @@ export function useAbacNavigation () {
       query.rule = (index.toString())
     }
 
+    if (replace) {
+      router.replace({ query })
+      return
+    }
     router.push({ query })
   }
 
@@ -111,7 +115,7 @@ export function useAbacNavigation () {
     router.push({ query })
   }
 
-  function onSelectDefinition (name: string, kind: DefinitionKind): void {
+  function onSelectDefinition (name: string, kind: DefinitionKind, replace?: boolean): void {
     // Note: we can have definitions of different kind using the same name
     const isCurrentlySelected = selectedDefinitionName.value?.toString() === name?.toString() && selectedDefinitionKind.value?.toString() === kind.toString()
     const query = { ...route.query }
@@ -122,6 +126,11 @@ export function useAbacNavigation () {
     } else {
       query.definition = (name)
       query.kind = (kind)
+    }
+
+    if (replace) {
+      router.replace({ query })
+      return
     }
 
     router.push({ query })
