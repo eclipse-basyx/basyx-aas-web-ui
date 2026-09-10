@@ -2,6 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent } from 'vue'
 import CodeViewer from '@/components/Code/CodeViewer.vue'
+import { hotkeyStub } from '../../helpers/vuetifyStubs'
 
 const editor = defineComponent({
   props: { modelValue: String, readOnly: Boolean, options: Object },
@@ -18,7 +19,7 @@ const stubs = {
   VSpacer: true, VDivider: true, VProgressLinear: true, VEmptyState: true,
   VAlert: { template: '<div role="alert"><slot /></div>' },
   VTooltip: { template: '<div><slot name="activator" :props="{}" /><slot /></div>' },
-  VHotkey: true,
+  VHotkey: hotkeyStub,
 }
 
 describe('CodeViewer controls', () => {

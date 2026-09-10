@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   fetchSme: vi.fn(),
@@ -19,6 +19,10 @@ vi.mock('@/store/AASDataStore', () => ({
 }))
 
 describe('SMEHandling Operation fragments', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('fetches the owning Operation endpoint and resolves the fragment locally', async () => {
     mocks.fetchSme.mockResolvedValue({
       modelType: 'Operation',
@@ -43,6 +47,7 @@ describe('SMEHandling Operation fragments', () => {
   })
 
   it('never submits a malformed fragment as a repository endpoint', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     mocks.fetchSme.mockResolvedValue({ modelType: 'Operation', inputVariables: [] })
     const endpoint = '/submodels/c20/submodel-elements/operation'
     const { useSMEHandling } = await import('@/composables/AAS/SMEHandling')
@@ -50,6 +55,7 @@ describe('SMEHandling Operation fragments', () => {
     const result = await useSMEHandling().fetchSme(endpoint, false, '/inputVariables/0/constructor')
 
     expect(result).toEqual({})
+    expect(warnSpy).toHaveBeenCalledExactlyOnceWith('Resolving Operation fragment \'/inputVariables/0/constructor\' failed!')
     expect(mocks.fetchSme).toHaveBeenCalledWith(endpoint)
     expect(mocks.fetchSme).not.toHaveBeenCalledWith(expect.stringContaining('constructor'))
   })

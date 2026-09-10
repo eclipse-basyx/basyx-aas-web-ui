@@ -25,54 +25,23 @@
   import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
   import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
   import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'
-  import { useEnvStore } from '@/store/EnvironmentStore'
-  import { useInfrastructureStore } from '@/store/InfrastructureStore'
+  import { useRequestHandling } from '@/composables/RequestHandling'
 
   // Props
   const props = defineProps<{
     submodelElementData: any
   }>()
 
-  // Store
-  const environmentStore = useEnvStore()
-
   // Template refs
   const viewerContainer = ref<HTMLElement>()
 
-  // Composables and stores
-  const infrastructureStore = useInfrastructureStore()
+  // Composables
   const { valueUrl } = useSMEFile()
+  const { getRequest } = useRequestHandling()
 
   // Reactive data
   const localPathValue = ref('')
   const showViewer = ref(true)
-
-  // Computed properties
-  const selectedInfra = computed(() => infrastructureStore.getSelectedInfrastructure)
-
-  // Helper function to create authenticated headers
-  function getAuthHeaders (): Headers {
-    const headers: Headers = new Headers()
-
-    if (selectedInfra.value) {
-      const auth = selectedInfra.value.auth
-      const authHeaderPrefix = environmentStore.getAuthorizationPrefix
-      if (auth && auth.securityType !== 'No Authentication') {
-        if (auth.securityType === 'Bearer Token' && auth.bearerToken?.token) {
-          headers.set('Authorization', `${authHeaderPrefix} ${auth.bearerToken.token}`)
-        } else if (auth.securityType === 'Basic Authentication' && auth.basicAuth) {
-          headers.set(
-            'Authorization',
-            `Basic ${btoa(auth.basicAuth.username + ':' + auth.basicAuth.password)}`,
-          )
-        } else if (auth.securityType === 'OAuth2' && selectedInfra.value.token?.accessToken) {
-          headers.set('Authorization', `${authHeaderPrefix} ${selectedInfra.value.token.accessToken}`)
-        }
-      }
-    }
-
-    return headers
-  }
 
   // Watchers
   watch(
@@ -238,63 +207,72 @@
     animate()
   }
 
+  async function fetchCADFile (): Promise<Blob | null> {
+    const response = await getRequest(localPathValue.value, 'loading CAD file', false, new Headers(), {}, 'blob')
+    if (!response.success) {
+      showViewer.value = false
+      return null
+    }
+    return response.data
+  }
+
   // Function to import a STL file
-  function importSTL (scene: THREE.Scene): void {
-    fetch(localPathValue.value, {
-      headers: getAuthHeaders(),
-    })
-      .then(response => response.arrayBuffer())
-      .then(buffer => {
-        const stlLoader = new STLLoader()
-        const geometry = stlLoader.parse(buffer)
-        const material = createStandardMaterial()
-        const mesh = new THREE.Mesh(geometry, material)
-        mesh.scale.multiplyScalar(0.03)
-        scene.add(mesh)
-      })
-      .catch(error => console.error('Error loading STL:', error))
+  async function importSTL (scene: THREE.Scene): Promise<void> {
+    try {
+      const file = await fetchCADFile()
+      if (!file) return
+
+      const stlLoader = new STLLoader()
+      const geometry = stlLoader.parse(await file.arrayBuffer())
+      const material = createStandardMaterial()
+      const mesh = new THREE.Mesh(geometry, material)
+      mesh.scale.multiplyScalar(0.03)
+      scene.add(mesh)
+    } catch (error) {
+      console.error('Error loading STL:', error)
+    }
   }
 
   // Function to import a OBJ file
-  function importOBJ (scene: THREE.Scene): void {
-    fetch(localPathValue.value, {
-      headers: getAuthHeaders(),
-    })
-      .then(response => response.text())
-      .then(text => {
-        const objLoader = new OBJLoader()
-        const object = objLoader.parse(text)
-        object.traverse(child => {
+  async function importOBJ (scene: THREE.Scene): Promise<void> {
+    try {
+      const file = await fetchCADFile()
+      if (!file) return
+
+      const objLoader = new OBJLoader()
+      const object = objLoader.parse(await file.text())
+      object.traverse(child => {
+        if ((child as THREE.Mesh).isMesh) {
+          const mesh = child as THREE.Mesh
+          mesh.material = createStandardMaterial()
+          mesh.scale.multiplyScalar(0.03)
+        }
+      })
+      scene.add(object)
+    } catch (error) {
+      console.error('Error loading OBJ:', error)
+    }
+  }
+
+  // Function to import a GLTF file
+  async function importGLTF (scene: THREE.Scene): Promise<void> {
+    try {
+      const file = await fetchCADFile()
+      if (!file) return
+
+      const gltfLoader = new GLTFLoader()
+      gltfLoader.parse(await file.arrayBuffer(), '', gltf => {
+        gltf.scene.traverse(child => {
           if ((child as THREE.Mesh).isMesh) {
             const mesh = child as THREE.Mesh
             mesh.material = createStandardMaterial()
             mesh.scale.multiplyScalar(0.03)
           }
         })
-        scene.add(object)
+        scene.add(gltf.scene)
       })
-      .catch(error => console.error('Error loading OBJ:', error))
-  }
-
-  // Function to import a GLTF file
-  function importGLTF (scene: THREE.Scene): void {
-    fetch(localPathValue.value, {
-      headers: getAuthHeaders(),
-    })
-      .then(response => response.arrayBuffer())
-      .then(buffer => {
-        const gltfLoader = new GLTFLoader()
-        gltfLoader.parse(buffer, '', gltf => {
-          gltf.scene.traverse(child => {
-            if ((child as THREE.Mesh).isMesh) {
-              const mesh = child as THREE.Mesh
-              mesh.material = createStandardMaterial()
-              mesh.scale.multiplyScalar(0.03)
-            }
-          })
-          scene.add(gltf.scene)
-        })
-      })
-      .catch(error => console.error('Error loading GLTF:', error))
+    } catch (error) {
+      console.error('Error loading GLTF:', error)
+    }
   }
 </script>

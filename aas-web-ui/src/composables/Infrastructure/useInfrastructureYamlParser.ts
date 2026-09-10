@@ -11,6 +11,7 @@ import type {
   YamlSecurityConfig,
 } from '@/types/Infrastructure'
 import { createCatenaXPartnerId } from '@/utils/CatenaXPartnerUtils'
+import { isValidCustomHeader } from '@/utils/CustomHeaderUtils'
 import {
   getEndpointFieldsForTemplate,
   normalizeInfrastructureTemplate,
@@ -54,6 +55,9 @@ export function useInfrastructureYamlParser (): {
       }
       case 'oauth2': {
         return 'OAuth2'
+      }
+      case 'custom-header': {
+        return 'Custom Header'
       }
       default: {
         console.warn(`Unknown security type: ${yamlType}, defaulting to 'No Authentication'`)
@@ -132,6 +136,16 @@ export function useInfrastructureYamlParser (): {
           }
         } else {
           console.warn('OAuth2 authentication requires issuer and clientId')
+        }
+        break
+      }
+
+      case 'custom-header': {
+        const customHeader = { name: config.headerName, value: config.headerValue }
+        if (isValidCustomHeader(customHeader)) {
+          auth.customHeader = { ...customHeader, name: customHeader.name.trim() }
+        } else {
+          console.warn('Custom header authentication requires a valid headerName and headerValue as non-empty strings')
         }
         break
       }
