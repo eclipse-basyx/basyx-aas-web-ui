@@ -7,7 +7,7 @@ export function useDefinitions () {
 
   const { data: definitions, ...rest } = useGetDefinitions(selectedPolicyVersion)
 
-  const { data: selectedDefinition, isLoading: isSelectedDefinitionLoading }
+  const { data: selectedDefinition, isLoading: isSelectedDefinitionLoading, isError: isSelectedDefinitionError }
     = useGetDefinition(selectedPolicyVersion, selectedDefinitionKind, selectedDefinitionName)
 
   return {
@@ -17,5 +17,6 @@ export function useDefinitions () {
     ...rest,
     selectedDefinition,
     isSelectedDefinitionLoading,
+    isSelectedDefinitionError,
   }
 }

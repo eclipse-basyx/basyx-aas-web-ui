@@ -87,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-  import type { DefinitionKind } from '../../types/definitions'
+  import type { Definition, DefinitionKind } from '../../types/definitions'
   import type { JsonErrorMessage } from '../shared/JsonCodeEditor.vue'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
@@ -96,7 +96,6 @@
   import { useReplaceDefinition } from '../../api/definition/useReplaceDefinition'
   import { EMPTY_DEFINITION } from '../../constants/json'
   import { useAbacNavigation } from '../../hooks/useAbacNavigation'
-  import { useDefinitions } from '../../hooks/useDefinitions'
   import { useDefinitionValidation } from '../../hooks/useDefinitionValidation'
   import { useAbacI18n } from '../../i18n/useAbacI18n'
   import { DEFINITION_KINDS } from '../../types/definitions'
@@ -106,13 +105,16 @@
     CLOSE: 'mdi-close',
   } as const
 
-  export type DefinitionDialogMode = 'create' | 'replace' | 'patch'
+  export interface DefinitionDialogProps {
+    mode: 'create' | 'replace' | 'patch'
+    definition?: Definition
+    kind?: DefinitionKind
+  }
 
   const { t, tm, i18nData } = useAbacI18n()
   const navigationStore = useNavigationStore()
 
-  const { selectedPolicyVersion, selectedDefinitionKind, onSelectDefinition } = useAbacNavigation()
-  const { selectedDefinition } = useDefinitions()
+  const { selectedPolicyVersion, onSelectDefinition } = useAbacNavigation()
 
   const { mutateAsync: createDefinition, isPending: isCreating } = useCreateDefinition()
   const { mutateAsync: replaceDefinition, isPending: isReplacing } = useReplaceDefinition()
@@ -121,10 +123,11 @@
   const isPending = computed(() => isCreating.value || isReplacing.value || isPatching.value)
 
   const isOpen = ref(false)
-  const dialogMode = ref<DefinitionDialogMode>('create')
+  const dialogMode = ref<DefinitionDialogProps['mode']>('create')
   const definitionKind = ref<DefinitionKind>()
   const definitionJson = ref('')
   const definitionName = ref<string | null>(null)
+  const currentDefinition = ref<Definition | undefined>(undefined)
   const jsonError = ref<JsonErrorMessage | null>(null)
   const errorLines = ref<number[]>([])
 
@@ -138,21 +141,22 @@
     definitionJson.value = JSON.stringify(EMPTY_DEFINITION[kind || 'attributes'], null, 2)
   })
 
-  function open (mode: DefinitionDialogMode): void {
+  function open ({ mode, definition, kind }: DefinitionDialogProps): void {
     isOpen.value = true
     dialogMode.value = mode
     jsonError.value = null
     errorLines.value = []
-    definitionKind.value = selectedDefinitionKind.value || 'attributes'
-    definitionName.value = null
+    definitionKind.value = kind ?? 'attributes'
+    currentDefinition.value = definition
 
-    if ((mode !== 'create') && selectedDefinition.value && selectedDefinitionKind.value) {
-      const { name, ...rest } = selectedDefinition.value
+    if ((mode !== 'create') && definition) {
+      const { name, ...rest } = definition
       definitionName.value = name
       // Note: name cannot be changed
       definitionJson.value = JSON.stringify(rest, null, 2)
     } else {
-      definitionJson.value = JSON.stringify(EMPTY_DEFINITION[selectedDefinitionKind.value || 'attributes'], null, 2)
+      definitionName.value = null
+      definitionJson.value = JSON.stringify(EMPTY_DEFINITION[kind ?? 'attributes'], null, 2)
     }
   }
 
@@ -166,7 +170,7 @@
     const { payload, error, errorLines: lines } = validateJson({
       json: definitionJson.value,
       kind: definitionKind.value,
-      currentDefinition: dialogMode.value === 'patch' ? selectedDefinition.value : undefined,
+      currentDefinition: dialogMode.value === 'patch' ? currentDefinition.value : undefined,
       name: definitionName.value,
       errorMessages: {
         requiredKind: t('definitions.definitionDialog.requiredKind'),
