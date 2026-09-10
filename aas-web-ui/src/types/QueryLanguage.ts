@@ -34,6 +34,14 @@ export type QueryFilterFieldKey
     | 'specificAssetId'
     | 'semanticId'
     | 'supplementalSemanticId'
+    | 'smId'
+    | 'smIdShort'
+    | 'smSemanticId'
+    | 'smSupplementalSemanticId'
+    | 'smeIdShort'
+    | 'smeValue'
+    | 'smeSemanticId'
+    | 'smeSupplementalSemanticId'
 
 export interface QueryFilter {
   id: string

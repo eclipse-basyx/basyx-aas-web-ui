@@ -178,6 +178,7 @@
 </template>
 
 <script setup lang="ts">
+  import type { InfrastructureTemplate } from '@/types/Infrastructure'
   import type {
     QueryFilter,
     QueryFilterFieldDefinition,
@@ -213,6 +214,7 @@
     advancedDialogOpen?: boolean
     label: string
     loading: boolean
+    infrastructureTemplate?: InfrastructureTemplate
     minWidth?: number | string
     serverSearch: boolean
     target: QueryTarget
@@ -232,7 +234,7 @@
   let nextFilterId = 0
   let lastEmittedExpression: string | undefined
 
-  const fields = computed(() => getQueryFilterFields(props.target))
+  const fields = computed(() => getQueryFilterFields(props.target, props.infrastructureTemplate))
   const draftState = computed<FilterDraftState>(() => parseFilterDraft(draft.value, fields.value))
   const activeField = computed<QueryFilterFieldDefinition | undefined>(() =>
     fields.value.find(field => field.key === draftState.value.field),
@@ -283,7 +285,7 @@
     syncFromExpression(expression)
   }, { immediate: true })
 
-  watch([() => props.target, () => props.serverSearch], () => {
+  watch([() => props.target, () => props.serverSearch, () => props.infrastructureTemplate], () => {
     suggestionsOpen.value = false
     syncFromExpression(searchExpression.value)
   })
@@ -429,7 +431,7 @@
       return
     }
 
-    const parsed = parseQuerySearchExpression(props.target, expression)
+    const parsed = parseQuerySearchExpression(props.target, expression, props.infrastructureTemplate)
     committedFilters.value = parsed.filters.map(filter => ({
       ...filter,
       id: `search-filter-initial-${nextFilterId++}`,

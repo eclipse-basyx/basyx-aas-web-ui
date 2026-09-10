@@ -193,6 +193,34 @@ describe('AAS list query transitions', () => {
     )
   })
 
+  it('uses Submodel hierarchy qualifiers for mono-all AAS searches', async () => {
+    state.infrastructureTemplate.value = 'mono-all'
+    state.repositoryDescription.value = { profiles: [aasRepositoryQueryProfile] }
+    mocks.queryPage.mockResolvedValue({ items: [], hasMore: false, success: true })
+
+    const wrapper = mount(AASList, { shallow: true })
+    await flushPromises()
+
+    ;(wrapper.vm as any).handleSearchInput('smIdShort:Nameplate')
+    await (wrapper.vm as any).submitSearch()
+
+    expect(mocks.queryPage).toHaveBeenCalledWith(
+      'https://infra.example/shells',
+      'aas-repository',
+      {
+        $condition: {
+          $match: [{
+            $contains: [
+              { $field: '$sm#idShort' },
+              { $strVal: 'Nameplate' },
+            ],
+          }],
+        },
+      },
+      { limit: 100 },
+    )
+  })
+
   it.each([false, true])('executes a QR-selected AAS search with server search %s', async serverSearch => {
     state.registryDescription.value = serverSearch ? { profiles: [aasRegistryQueryProfile] } : null
     mocks.fetchAasShellListPage.mockResolvedValue({

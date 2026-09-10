@@ -59,6 +59,37 @@ describe('QuerySearchField', () => {
     expect(document.body.querySelector('.v-list--slim')).not.toBeNull()
   })
 
+  it('offers Submodel hierarchy fields only for AAS Environment searches', async () => {
+    const wrapper = mountSearchField()
+    await wrapper.setProps({ infrastructureTemplate: 'mono-all' })
+
+    await wrapper.get('input').trigger('focus')
+    await nextTick()
+
+    expect(findMenuItem('Submodel ID Short')).toBeDefined()
+    expect(findMenuItem('Submodel Element value')).toBeDefined()
+
+    await wrapper.setProps({ infrastructureTemplate: 'full' })
+    await nextTick()
+    await wrapper.get('input').trigger('focus')
+    await nextTick()
+
+    expect(findMenuItem('Submodel ID Short')).toBeUndefined()
+    expect(findMenuItem('Submodel Element value')).toBeUndefined()
+  })
+
+  it('offers Submodel Element fields for Submodel searches', async () => {
+    const wrapper = mountSearchField()
+    await wrapper.setProps({ target: 'submodel-repository' })
+
+    await wrapper.get('input').trigger('focus')
+    await nextTick()
+
+    expect(findMenuItem('Submodel ID')).toBeDefined()
+    expect(findMenuItem('Submodel Element ID Short')).toBeDefined()
+    expect(findMenuItem('Submodel Element value')).toBeDefined()
+  })
+
   it('guides field, operator, and value selection without inserting a colon', async () => {
     const wrapper = mountSearchField()
     await wrapper.get('input').trigger('focus')

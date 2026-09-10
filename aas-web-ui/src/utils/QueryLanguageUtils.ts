@@ -30,29 +30,33 @@ const ALLOWED_FIELD_ROOTS: Record<QueryTarget, string[]> = {
 
 const MONO_AAS_REPOSITORY_FIELD_ROOTS = ['$aas', '$sm', '$sme']
 
+const AAS_QUICK_SEARCH_FIELDS = [
+  '$aas#id',
+  '$aas#idShort',
+  '$aas#assetInformation.globalAssetId',
+  '$aas#assetInformation.specificAssetIds[].value',
+]
+
+const SUBMODEL_QUICK_SEARCH_FIELDS = [
+  '$sm#id',
+  '$sm#idShort',
+  '$sm#semanticId.keys[].value',
+  '$sm#supplementalSemanticIds[].keys[].value',
+  '$sme#idShort',
+  '$sme#value',
+  '$sme#semanticId.keys[].value',
+  '$sme#supplementalSemanticIds[].keys[].value',
+]
+
 const QUICK_SEARCH_FIELDS: Record<QueryTarget, string[]> = {
-  'aas-repository': [
-    '$aas#id',
-    '$aas#idShort',
-    '$aas#assetInformation.globalAssetId',
-    '$aas#assetInformation.specificAssetIds[].value',
-  ],
+  'aas-repository': AAS_QUICK_SEARCH_FIELDS,
   'aas-registry': [
     '$aasdesc#id',
     '$aasdesc#idShort',
     '$aasdesc#globalAssetId',
     '$aasdesc#specificAssetIds[].value',
   ],
-  'submodel-repository': [
-    '$sm#id',
-    '$sm#idShort',
-    '$sm#semanticId.keys[].value',
-    '$sm#supplementalSemanticIds[].keys[].value',
-    '$sme#idShort',
-    '$sme#value',
-    '$sme#semanticId.keys[].value',
-    '$sme#supplementalSemanticIds[].keys[].value',
-  ],
+  'submodel-repository': SUBMODEL_QUICK_SEARCH_FIELDS,
 }
 
 const TEXT_FILTER_OPERATORS: QueryFilterOperator[] = [
@@ -71,6 +75,13 @@ const ASSET_KIND_OPTIONS = [
   { title: 'Type', value: 'Type' },
   { title: 'Role', value: 'Role' },
   { title: 'Not Applicable', value: 'NotApplicable' },
+]
+
+const SUBMODEL_ELEMENT_FILTER_FIELDS: QueryFilterFieldDefinition[] = [
+  createField('smeIdShort', 'Submodel Element ID Short', '$sme#idShort'),
+  createField('smeValue', 'Submodel Element value', '$sme#value'),
+  createField('smeSemanticId', 'Submodel Element Semantic ID value', '$sme#semanticId.keys[].value'),
+  createField('smeSupplementalSemanticId', 'Submodel Element Supplemental Semantic ID value', '$sme#supplementalSemanticIds[].keys[].value'),
 ]
 
 const QUERY_FILTER_FIELDS: Record<QueryTarget, QueryFilterFieldDefinition[]> = {
@@ -95,8 +106,17 @@ const QUERY_FILTER_FIELDS: Record<QueryTarget, QueryFilterFieldDefinition[]> = {
     createField('idShort', 'ID Short', '$sm#idShort'),
     createField('semanticId', 'Semantic ID value', '$sm#semanticId.keys[].value'),
     createField('supplementalSemanticId', 'Supplemental Semantic ID value', '$sm#supplementalSemanticIds[].keys[].value'),
+    ...SUBMODEL_ELEMENT_FILTER_FIELDS,
   ],
 }
+
+const AAS_ENVIRONMENT_FILTER_FIELDS: QueryFilterFieldDefinition[] = [
+  createField('smId', 'Submodel ID', '$sm#id'),
+  createField('smIdShort', 'Submodel ID Short', '$sm#idShort'),
+  createField('smSemanticId', 'Submodel Semantic ID value', '$sm#semanticId.keys[].value'),
+  createField('smSupplementalSemanticId', 'Submodel Supplemental Semantic ID value', '$sm#supplementalSemanticIds[].keys[].value'),
+  ...SUBMODEL_ELEMENT_FILTER_FIELDS,
+]
 
 export const QUERY_FILTER_OPERATOR_LABELS: Record<QueryFilterOperator, string> = {
   'contains': 'contains',
@@ -169,6 +189,7 @@ export function escapeRegexLiteral (value: string): string {
 export function buildQuickSearchQuery (
   target: QueryTarget,
   searchValue: string,
+  infrastructureTemplate?: InfrastructureTemplate,
 ): QueryLanguageQuery | undefined {
   const search = searchValue.trim()
   if (search === '') {
@@ -176,7 +197,10 @@ export function buildQuickSearchQuery (
   }
 
   const regex = `(?i)${escapeRegexLiteral(search)}`
-  const fieldConditions = QUICK_SEARCH_FIELDS[target].map(field => ({
+  const fields = isAasEnvironmentQuery(target, infrastructureTemplate)
+    ? [...QUICK_SEARCH_FIELDS[target], ...SUBMODEL_QUICK_SEARCH_FIELDS]
+    : QUICK_SEARCH_FIELDS[target]
+  const fieldConditions = fields.map(field => ({
     $regex: [
       { $field: field },
       { $strVal: regex },
@@ -184,7 +208,7 @@ export function buildQuickSearchQuery (
   }))
   return {
     $condition: {
-      $or: target === 'submodel-repository'
+      $or: target === 'submodel-repository' || isAasEnvironmentQuery(target, infrastructureTemplate)
         ? fieldConditions.map(condition => ({ $match: [condition] }))
         : fieldConditions,
     },
@@ -217,15 +241,21 @@ export function resolveAasQueryTarget (
   return activeSource === 'registry' ? 'aas-registry' : 'aas-repository'
 }
 
-export function getQueryFilterFields (target: QueryTarget): QueryFilterFieldDefinition[] {
-  return QUERY_FILTER_FIELDS[target]
+export function getQueryFilterFields (
+  target: QueryTarget,
+  infrastructureTemplate?: InfrastructureTemplate,
+): QueryFilterFieldDefinition[] {
+  return isAasEnvironmentQuery(target, infrastructureTemplate)
+    ? [...QUERY_FILTER_FIELDS[target], ...AAS_ENVIRONMENT_FILTER_FIELDS]
+    : QUERY_FILTER_FIELDS[target]
 }
 
 export function parseQuerySearchExpression (
   target: QueryTarget,
   expression: string,
+  infrastructureTemplate?: InfrastructureTemplate,
 ): ParsedQuerySearchExpression {
-  const fields = QUERY_FILTER_FIELDS[target]
+  const fields = getQueryFilterFields(target, infrastructureTemplate)
   const filters: QueryFilter[] = []
   const textParts: string[] = []
   const tokenPattern = /(?:^|\s)(-?)([a-z][a-z0-9]*)(:|!=|=)(?:"((?:\\.|[^"])*)"|(\S*))/gi
@@ -286,8 +316,12 @@ export function formatQueryFilterExpression (filter: QueryFilter): string {
   return `${filter.field}${separator}${quoteQueryFilterValue(filter.value)}`
 }
 
-export function createQueryFilter (target: QueryTarget, id: string): QueryFilter {
-  const field = QUERY_FILTER_FIELDS[target][0]
+export function createQueryFilter (
+  target: QueryTarget,
+  id: string,
+  infrastructureTemplate?: InfrastructureTemplate,
+): QueryFilter {
+  const field = getQueryFilterFields(target, infrastructureTemplate)[0]
   return {
     id,
     field: field.key,
@@ -301,15 +335,16 @@ export function buildStructuredSearchQuery (
   searchValue: string,
   filters: QueryFilter[],
   matchMode: QueryFilterMatchMode,
+  infrastructureTemplate?: InfrastructureTemplate,
 ): QueryLanguageQuery | undefined {
   const conditions: Array<Record<string, unknown>> = []
-  const quickQuery = buildQuickSearchQuery(target, searchValue)
+  const quickQuery = buildQuickSearchQuery(target, searchValue, infrastructureTemplate)
   if (quickQuery) {
     conditions.push(quickQuery.$condition)
   }
 
   const builtFilters = filters
-    .map(filter => buildQueryFilterCondition(target, filter))
+    .map(filter => buildQueryFilterCondition(target, filter, infrastructureTemplate))
     .filter((filter): filter is BuiltQueryFilter => filter !== undefined)
 
   if (builtFilters.length > 0) {
@@ -429,6 +464,13 @@ function getAllowedConditionFieldRoots (
   return ALLOWED_FIELD_ROOTS[target]
 }
 
+function isAasEnvironmentQuery (
+  target: QueryTarget,
+  infrastructureTemplate?: InfrastructureTemplate,
+): boolean {
+  return target === 'aas-repository' && infrastructureTemplate === 'mono-all'
+}
+
 function collectStringProperties (value: unknown, property: '$field' | '$fragment'): string[] {
   if (Array.isArray(value)) {
     return value.flatMap(item => collectStringProperties(item, property))
@@ -475,8 +517,10 @@ interface BuiltQueryFilter {
 function buildQueryFilterCondition (
   target: QueryTarget,
   filter: QueryFilter,
+  infrastructureTemplate?: InfrastructureTemplate,
 ): BuiltQueryFilter | undefined {
-  const field = QUERY_FILTER_FIELDS[target].find(candidate => candidate.key === filter.field)
+  const field = getQueryFilterFields(target, infrastructureTemplate)
+    .find(candidate => candidate.key === filter.field)
   const value = filter.value.trim()
   if (!field || !field.operators.includes(filter.operator) || value === '') {
     return undefined

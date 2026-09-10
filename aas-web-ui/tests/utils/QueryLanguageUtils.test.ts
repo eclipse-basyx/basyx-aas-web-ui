@@ -72,6 +72,30 @@ describe('QueryLanguageUtils', () => {
     expect(buildQuickSearchQuery('aas-repository', '  ')).toBeUndefined()
   })
 
+  it('extends AAS quick search to the Submodel hierarchy only for mono-all', () => {
+    const regularQuery = buildQuickSearchQuery('aas-repository', 'Nameplate')
+    const environmentQuery = buildQuickSearchQuery('aas-repository', 'Nameplate', 'mono-all')
+    const regularConditions = regularQuery?.$condition.$or as Array<Record<string, any>>
+    const environmentConditions = environmentQuery?.$condition.$or as Array<Record<string, any>>
+
+    expect(regularConditions).toHaveLength(4)
+    expect(environmentConditions).toHaveLength(12)
+    expect(environmentConditions.map(condition => condition.$match[0].$regex[0].$field)).toEqual([
+      '$aas#id',
+      '$aas#idShort',
+      '$aas#assetInformation.globalAssetId',
+      '$aas#assetInformation.specificAssetIds[].value',
+      '$sm#id',
+      '$sm#idShort',
+      '$sm#semanticId.keys[].value',
+      '$sm#supplementalSemanticIds[].keys[].value',
+      '$sme#idShort',
+      '$sme#value',
+      '$sme#semanticId.keys[].value',
+      '$sme#supplementalSemanticIds[].keys[].value',
+    ])
+  })
+
   it('keeps query targets aligned with the loaded source except for mono-all environments', () => {
     expect(resolveAasQueryTarget('mono-all', 'registry', true, true)).toBe('aas-repository')
     expect(resolveAasQueryTarget('mono-repo', 'registry', true, false)).toBe('aas-registry')
@@ -91,7 +115,73 @@ describe('QueryLanguageUtils', () => {
       .toBe('$aasdesc#assetKind')
     expect(submodelFields.find(field => field.key === 'semanticId')?.path)
       .toBe('$sm#semanticId.keys[].value')
+    expect(submodelFields.find(field => field.key === 'smeValue')?.path)
+      .toBe('$sme#value')
+    expect(submodelFields).toHaveLength(8)
     expect(submodelFields.some(field => field.key === 'assetKind')).toBe(false)
+
+    const environmentFields = getQueryFilterFields('aas-repository', 'mono-all')
+    expect(environmentFields.find(field => field.key === 'smIdShort')?.path).toBe('$sm#idShort')
+    expect(environmentFields.find(field => field.key === 'smeValue')?.path).toBe('$sme#value')
+    expect(getQueryFilterFields('aas-repository', 'full').some(field => field.key === 'smIdShort')).toBe(false)
+  })
+
+  it('builds and parses AAS Environment hierarchy filters', () => {
+    const expression = 'smIdShort:Nameplate smeValue="Example value"'
+    const parsed = parseQuerySearchExpression('aas-repository', expression, 'mono-all')
+
+    expect(parsed).toEqual({
+      text: '',
+      filters: [
+        { id: 'search-filter-0-smIdShort', field: 'smIdShort', operator: 'contains', value: 'Nameplate' },
+        { id: 'search-filter-1-smeValue', field: 'smeValue', operator: 'equals', value: 'Example value' },
+      ],
+      incompleteField: undefined,
+    })
+    expect(buildStructuredSearchQuery('aas-repository', parsed.text, parsed.filters, 'all', 'mono-all')).toEqual({
+      $condition: {
+        $match: [
+          {
+            $contains: [
+              { $field: '$sm#idShort' },
+              { $strVal: 'Nameplate' },
+            ],
+          },
+          {
+            $eq: [
+              { $field: '$sme#value' },
+              { $strVal: 'Example value' },
+            ],
+          },
+        ],
+      },
+    })
+    expect(parseQuerySearchExpression('aas-repository', expression, 'full')).toEqual({
+      text: expression,
+      filters: [],
+      incompleteField: undefined,
+    })
+  })
+
+  it('builds explicit Submodel Element filters for Submodel searches', () => {
+    const parsed = parseQuerySearchExpression('submodel-repository', 'smeIdShort:ManufacturerName')
+
+    expect(parsed.filters).toEqual([{
+      id: 'search-filter-0-smeIdShort',
+      field: 'smeIdShort',
+      operator: 'contains',
+      value: 'ManufacturerName',
+    }])
+    expect(buildStructuredSearchQuery('submodel-repository', parsed.text, parsed.filters, 'all')).toEqual({
+      $condition: {
+        $match: [{
+          $contains: [
+            { $field: '$sme#idShort' },
+            { $strVal: 'ManufacturerName' },
+          ],
+        }],
+      },
+    })
   })
 
   it('combines text search and visual filters without generating fragment filters', () => {

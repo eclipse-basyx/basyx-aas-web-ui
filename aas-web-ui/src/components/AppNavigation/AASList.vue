@@ -32,6 +32,7 @@
               v-model="searchValue"
               :advanced-active="querySearch.activeMode.value === 'advanced'"
               :advanced-dialog-open="advancedQueryDialog"
+              :infrastructure-template="selectedInfrastructureTemplate"
               label="Search AAS"
               :loading="querySearch.loading.value"
               :server-search="queryAvailable"
@@ -605,7 +606,11 @@
     aasRepositoryQueryAvailable.value,
     aasRegistryQueryAvailable.value,
   ))
-  const parsedSearch = computed(() => parseQuerySearchExpression(aasQueryTarget.value, searchValue.value))
+  const parsedSearch = computed(() => parseQuerySearchExpression(
+    aasQueryTarget.value,
+    searchValue.value,
+    selectedInfrastructureTemplate.value,
+  ))
   const activeQueryBaseUrl = computed(() => aasQueryTarget.value === 'aas-registry' ? aasRegistryURL.value : aasRepoURL.value)
   const queryAvailable = computed(() => aasQueryTarget.value === 'aas-registry'
     ? aasRegistryQueryAvailable.value
@@ -883,6 +888,7 @@
       parsedSearch.value.text,
       parsedSearch.value.filters,
       'all',
+      selectedInfrastructureTemplate.value,
     )
     if (!query) {
       return false
@@ -902,6 +908,7 @@
         parsedSearch.value.text,
         parsedSearch.value.filters,
         'all',
+        selectedInfrastructureTemplate.value,
       )
       advancedQueryDraft.value = structuredQuery
         ? JSON.stringify(structuredQuery, null, 2)
