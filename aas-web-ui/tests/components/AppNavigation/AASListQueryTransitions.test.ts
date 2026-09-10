@@ -242,6 +242,30 @@ describe('AAS list query transitions', () => {
     expect((wrapper.vm as any).aasList.map((item: any) => item.id)).toEqual(['query-aas'])
   })
 
+  it('keeps the selected AAS visible when it does not match a server query', async () => {
+    state.selectedAAS.value = {
+      ...createAas('selected-aas'),
+      path: 'repository/selected-aas',
+    }
+    state.repositoryDescription.value = { profiles: [aasRepositoryQueryProfile] }
+    mocks.queryPage.mockResolvedValue({
+      items: [createAas('query-aas')],
+      hasMore: false,
+      success: true,
+    })
+
+    const wrapper = mount(AASList, { shallow: true })
+    await flushPromises()
+
+    ;(wrapper.vm as any).handleSearchInput('query-aas')
+    await (wrapper.vm as any).submitSearch()
+
+    expect((wrapper.vm as any).aasList.map((item: any) => item.id)).toEqual([
+      'selected-aas',
+      'query-aas',
+    ])
+  })
+
   it('keeps the normal page transition active when a query fails', async () => {
     let resolvePage!: (page: any) => void
     state.repositoryDescription.value = { profiles: [aasRepositoryQueryProfile] }

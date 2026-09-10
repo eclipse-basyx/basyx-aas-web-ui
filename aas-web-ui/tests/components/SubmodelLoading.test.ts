@@ -322,4 +322,49 @@ describe('Submodel loading invalidation', () => {
       expect((wrapper.vm as any).submodelTree.map((item: any) => item.id)).toEqual(['containing-submodel'])
     },
   )
+
+  it('keeps the selected Submodel visible when a local search filters it out', async () => {
+    const selectedSubmodel = createSubmodel('selected-submodel')
+    state.selectedNode.value = selectedSubmodel
+    mocks.fetchAasSmListById.mockResolvedValue([
+      selectedSubmodel,
+      createSubmodel('matching-submodel'),
+    ])
+
+    const wrapper = mount(SubmodelTree, { shallow: true })
+    await flushPromises()
+
+    ;(wrapper.vm as any).handleSearchInput('matching')
+    await (wrapper.vm as any).submitSearch()
+
+    expect((wrapper.vm as any).submodelTree.map((item: any) => item.id)).toEqual([
+      'selected-submodel',
+      'matching-submodel',
+    ])
+  })
+
+  it('keeps the selected Submodel visible when a repository query filters it out', async () => {
+    const selectedSubmodel = createSubmodel('selected-submodel')
+    state.routeName.value = 'SMViewer'
+    state.submodelDescription.value = { profiles: [submodelQueryProfile] }
+    state.selectedNode.value = selectedSubmodel
+    mocks.fetchSmList.mockResolvedValue([selectedSubmodel])
+    mocks.queryPage.mockResolvedValue({
+      items: [createSubmodel('query-result')],
+      hasMore: false,
+      success: true,
+    })
+
+    const wrapper = mount(SubmodelTree, { shallow: true })
+    await flushPromises()
+
+    ;(wrapper.vm as any).handleSearchInput('query-result')
+    await (wrapper.vm as any).submitSearch()
+    await flushPromises()
+
+    expect((wrapper.vm as any).submodelTree.map((item: any) => item.id)).toEqual([
+      'selected-submodel',
+      'query-result',
+    ])
+  })
 })

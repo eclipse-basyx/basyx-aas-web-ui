@@ -6,48 +6,78 @@
     :open-on-click="false"
   >
     <template #activator="{ props: menuProps }">
-      <v-text-field
-        ref="inputRef"
-        v-bind="menuProps"
-        :clearable="draft.length > 0 || committedFilters.length > 0"
-        density="compact"
-        hide-details
-        :label="label"
-        :loading="loading"
-        :model-value="draft"
-        persistent-placeholder
-        :placeholder="serverSearch ? example : placeholder"
-        variant="outlined"
-        @click:clear="clearSearch"
-        @focus="openSuggestions"
-        @keydown.enter.prevent="submitSearch"
-        @keydown.esc="suggestionsOpen = false"
-        @keydown.space="commitFilterOnSpace"
-        @update:model-value="updateDraft"
-      >
-        <template v-if="committedFilters.length > 0" #prepend-inner>
-          <div class="d-flex ga-1">
-            <v-chip
-              v-for="filter in committedFilters"
-              :key="filter.id"
-              class="flex-shrink-0"
-              closable
-              label
-              size="small"
-              @click:close.stop="removeFilter(filter.id)"
-            >
-              {{ formatQueryFilterExpression(filter) }}
-            </v-chip>
-          </div>
-        </template>
-      </v-text-field>
+      <div ref="inputContainerRef">
+        <v-text-field
+          v-bind="menuProps"
+          :clearable="draft.length > 0 || committedFilters.length > 0"
+          density="compact"
+          hide-details
+          :label="label"
+          :loading="loading"
+          :min-width="minWidth"
+          :model-value="draft"
+          :readonly="advancedActive"
+          variant="outlined"
+          @click:clear="clearSearch"
+          @focus="openSuggestions"
+          @keydown.enter.prevent="submitSearch"
+          @keydown.esc="suggestionsOpen = false"
+          @keydown.space="commitFilterOnSpace"
+          @update:model-value="updateDraft"
+        >
+          <template v-if="advancedActive || committedFilters.length > 0" #prepend-inner>
+            <div class="d-flex ga-1">
+              <v-chip
+                v-if="advancedActive"
+                closable
+                close-label="Clear advanced query"
+                color="primary"
+                label
+                prepend-icon="mdi-code-json"
+                size="small"
+                variant="tonal"
+                @click.stop="openAdvancedQuery"
+                @click:close.stop="clearSearch"
+              >
+                Advanced query
+              </v-chip>
+
+              <template v-else>
+                <v-chip
+                  v-for="filter in committedFilters"
+                  :key="filter.id"
+                  class="flex-shrink-0"
+                  closable
+                  label
+                  size="small"
+                  @click:close.stop="removeFilter(filter.id)"
+                >
+                  {{ formatQueryFilterExpression(filter) }}
+                </v-chip>
+              </template>
+            </div>
+          </template>
+        </v-text-field>
+      </div>
     </template>
 
-    <v-card v-if="serverSearch" max-width="380" min-width="280">
-      <v-list class="py-1" density="compact" max-height="320">
-        <v-list-subheader>{{ suggestionTitle }}</v-list-subheader>
+    <v-sheet
+      v-if="serverSearch"
+      border
+      max-width="380"
+      min-width="280"
+      rounded="lg"
+    >
+      <v-list
+        class="py-0"
+        density="compact"
+        max-height="360"
+        nav
+        slim
+      >
+        <v-list-subheader>{{ advancedActive ? 'Advanced query active' : suggestionTitle }}</v-list-subheader>
 
-        <template v-if="draftState.stage === 'value' && activeField?.valueOptions">
+        <template v-if="!advancedActive && draftState.stage === 'value' && activeField?.valueOptions">
           <v-list-item
             v-for="option in valueSuggestions"
             :key="option.value"
@@ -58,21 +88,25 @@
         </template>
 
         <v-list-item
-          v-else-if="draftState.stage === 'value' && canCommitDraftFilter()"
-          prepend-icon="mdi-plus"
+          v-else-if="!advancedActive && draftState.stage === 'value' && canCommitDraftFilter()"
+          prepend-gap="4"
           subtitle="Add this filter"
           :title="draftState.value.trim()"
-          @click="commitDraftFilter"
-        />
+          @click="commitDraftFilter()"
+        >
+          <template #prepend>
+            <v-icon icon="mdi-plus" size="small" />
+          </template>
+        </v-list-item>
 
         <v-list-item
-          v-else-if="draftState.stage === 'value'"
+          v-else-if="!advancedActive && draftState.stage === 'value'"
           disabled
           subtitle="Press Space to add the filter"
           title="Type a value"
         />
 
-        <template v-else-if="draftState.stage === 'operator' && activeField">
+        <template v-else-if="!advancedActive && draftState.stage === 'operator' && activeField">
           <v-list-item
             v-for="option in operatorSuggestions"
             :key="option.operator"
@@ -82,28 +116,35 @@
           />
         </template>
 
-        <template v-else>
+        <template v-else-if="!advancedActive">
           <v-list-item
             v-for="field in fieldSuggestions"
             :key="field.key"
-            prepend-icon="mdi-filter-outline"
+            prepend-gap="4"
             :subtitle="field.key"
             :title="field.label"
             @click="selectField(field.key)"
-          />
+          >
+            <template #prepend>
+              <v-icon icon="mdi-filter-outline" size="small" />
+            </template>
+          </v-list-item>
         </template>
-      </v-list>
 
-      <v-divider />
+        <v-divider v-if="!advancedActive" />
 
-      <v-list class="py-1" density="compact">
         <v-list-item
-          prepend-icon="mdi-code-json"
+          class="my-1"
+          prepend-gap="4"
           :title="advancedActive ? 'Edit advanced query' : 'Advanced Query Language'"
           @click="openAdvancedQuery"
-        />
+        >
+          <template #prepend>
+            <v-icon icon="mdi-code-json" size="small" />
+          </template>
+        </v-list-item>
       </v-list>
-    </v-card>
+    </v-sheet>
   </v-menu>
 </template>
 
@@ -140,10 +181,10 @@
 
   const props = defineProps<{
     advancedActive?: boolean
-    example: string
+    advancedDialogOpen?: boolean
     label: string
     loading: boolean
-    placeholder: string
+    minWidth?: number | string
     serverSearch: boolean
     target: QueryTarget
   }>()
@@ -156,7 +197,7 @@
 
   const searchExpression = defineModel<string>({ required: true })
   const suggestionsOpen = ref(false)
-  const inputRef = ref<{ focus: () => void } | null>(null)
+  const inputContainerRef = ref<HTMLDivElement | null>(null)
   const committedFilters = ref<QueryFilter[]>([])
   const draft = ref('')
   let nextFilterId = 0
@@ -218,8 +259,12 @@
     syncFromExpression(searchExpression.value)
   })
 
+  watch(() => props.advancedDialogOpen, open => {
+    if (open) suggestionsOpen.value = false
+  })
+
   function openSuggestions (): void {
-    if (props.serverSearch) suggestionsOpen.value = true
+    if (props.serverSearch && !props.advancedDialogOpen) suggestionsOpen.value = true
   }
 
   function clearSearch (): void {
@@ -231,9 +276,14 @@
   }
 
   async function submitSearch (): Promise<void> {
+    if (props.advancedActive) {
+      openAdvancedQuery()
+      return
+    }
+
     if (props.serverSearch) {
       if (canCommitDraftFilter()) {
-        commitDraftFilter()
+        commitDraftFilter(false)
       } else if (draftState.value.stage !== 'field') {
         suggestionsOpen.value = true
         return
@@ -246,6 +296,7 @@
   }
 
   function updateDraft (value: string | null): void {
+    if (props.advancedActive) return
     draft.value = value ?? ''
     updateExpression()
   }
@@ -289,7 +340,7 @@
     commitDraftFilter()
   }
 
-  function commitDraftFilter (): void {
+  function commitDraftFilter (submit = true): void {
     const state = draftState.value
     if (!canCommitDraftFilter() || !state.field || !state.operator) return
 
@@ -303,12 +354,18 @@
     updateExpression()
     suggestionsOpen.value = true
     focusInput()
+    if (submit) submitUpdatedSearch()
   }
 
   function removeFilter (id: string): void {
     committedFilters.value = committedFilters.value.filter(filter => filter.id !== id)
     updateExpression()
     focusInput()
+    submitUpdatedSearch()
+  }
+
+  function submitUpdatedSearch (): void {
+    void nextTick(() => emit('submit'))
   }
 
   function openAdvancedQuery (): void {
@@ -349,7 +406,9 @@
   }
 
   function focusInput (): void {
-    nextTick(() => inputRef.value?.focus())
+    void nextTick(() => {
+      window.setTimeout(() => inputContainerRef.value?.querySelector<HTMLInputElement>('input')?.focus())
+    })
   }
 
   function parseFilterDraft (

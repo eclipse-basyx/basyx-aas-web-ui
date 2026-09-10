@@ -31,10 +31,9 @@
             <QuerySearchField
               v-model="searchValue"
               :advanced-active="querySearch.activeMode.value === 'advanced'"
-              example="idShort:Motor"
+              :advanced-dialog-open="advancedQueryDialog"
               label="Search AAS"
               :loading="querySearch.loading.value"
-              :placeholder="aasList.length.toString() + ' Shells'"
               :server-search="queryAvailable"
               :target="aasQueryTarget"
               @advanced="openSearchDialog"
@@ -761,7 +760,7 @@
 
   function applyCurrentFilter (): void {
     if (querySearch.activeMode.value) {
-      aasList.value = allLoadedAas.value
+      aasList.value = withPinnedSelectedItem(allLoadedAas.value)
       return
     }
 
@@ -776,16 +775,17 @@
           || aasOrAasDescriptor.descLower.includes(trimmedSearch),
       )
 
-    const pinnedSelectedItem = createPinnedSelectedItem()
-    if (pinnedSelectedItem) {
-      aasList.value = [
-        pinnedSelectedItem,
-        ...filteredItems.filter(item => item?.id !== pinnedSelectedItem.id),
-      ]
-      return
-    }
+    aasList.value = withPinnedSelectedItem(filteredItems)
+  }
 
-    aasList.value = filteredItems
+  function withPinnedSelectedItem (items: any[]): any[] {
+    const pinnedSelectedItem = createPinnedSelectedItem()
+    if (!pinnedSelectedItem) return items
+
+    return [
+      pinnedSelectedItem,
+      ...items.filter(item => item?.id !== pinnedSelectedItem.id),
+    ]
   }
 
   function createPinnedSelectedItem (): any | undefined {
@@ -961,7 +961,7 @@
     allLoadedAas.value = querySearch.items.value
       .map(item => preprocessListItem(item))
       .toSorted(compareAasById)
-    aasList.value = allLoadedAas.value
+    applyCurrentFilter()
   }
 
   function activateQueryResults (): void {

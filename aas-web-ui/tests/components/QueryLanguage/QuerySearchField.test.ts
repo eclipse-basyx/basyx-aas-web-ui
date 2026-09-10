@@ -25,12 +25,11 @@ afterEach(() => {
 
 function mountSearchField (serverSearch = true) {
   return mount(QuerySearchField, {
+    attachTo: document.body,
     props: {
-      example: 'idShort:Motor',
       label: 'Search AAS',
       loading: false,
       modelValue: '',
-      placeholder: '3 Shells',
       serverSearch,
       target: 'aas-repository' as const,
     },
@@ -41,12 +40,12 @@ function mountSearchField (serverSearch = true) {
 }
 
 function findMenuItem (text: string): Element | undefined {
-  return [...document.body.querySelectorAll('.v-list-item')]
+  return [...document.body.querySelectorAll('.v-overlay--active .v-list-item')]
     .find(item => item.textContent?.includes(text))
 }
 
 describe('QuerySearchField', () => {
-  it('opens field suggestions on focus without separate filter or search icons', async () => {
+  it('opens compact field suggestions on focus without a result count placeholder', async () => {
     const wrapper = mountSearchField()
 
     await wrapper.get('input').trigger('focus')
@@ -54,7 +53,10 @@ describe('QuerySearchField', () => {
 
     expect(findMenuItem('ID Short')).toBeDefined()
     expect(wrapper.find('[aria-label="Add a field filter"]').exists()).toBe(false)
+    expect(wrapper.get('input').attributes('placeholder')).toBeUndefined()
     expect(wrapper.find('[aria-label="Run search"]').exists()).toBe(false)
+    expect(document.body.querySelector('.v-sheet')).not.toBeNull()
+    expect(document.body.querySelector('.v-list--slim')).not.toBeNull()
   })
 
   it('guides field, operator, and value selection without inserting a colon', async () => {
@@ -63,11 +65,17 @@ describe('QuerySearchField', () => {
     await nextTick()
 
     await new DOMWrapper(findMenuItem('AAS ID')!).trigger('click')
+    await nextTick()
+    await new Promise(resolve => setTimeout(resolve))
     expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual(['id'])
     expect(findMenuItem('contains')).toBeDefined()
+    expect(document.activeElement).toBe(wrapper.get('input').element)
 
     await new DOMWrapper(findMenuItem('contains')!).trigger('click')
+    await nextTick()
+    await new Promise(resolve => setTimeout(resolve))
     expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual(['id:'])
+    expect(document.activeElement).toBe(wrapper.get('input').element)
 
     await wrapper.get('input').setValue('id:Motor')
     await wrapper.get('input').trigger('keydown.space')
@@ -75,6 +83,7 @@ describe('QuerySearchField', () => {
     expect(wrapper.get('.v-chip').text()).toContain('id:Motor')
     expect(wrapper.get('input').element.value).toBe('')
     expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual(['id:Motor'])
+    expect(wrapper.emitted('submit')).toHaveLength(1)
   })
 
   it('allows a complete filter to be typed and commits it on submit', async () => {
@@ -88,7 +97,7 @@ describe('QuerySearchField', () => {
     expect(wrapper.emitted('submit')).toHaveLength(1)
   })
 
-  it('removes committed filter chips through their close control', async () => {
+  it('automatically searches when committed filter chips are removed', async () => {
     const wrapper = mountSearchField()
 
     await wrapper.get('input').setValue('idShort:Motor')
@@ -97,6 +106,7 @@ describe('QuerySearchField', () => {
 
     expect(wrapper.find('.v-chip').exists()).toBe(false)
     expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([''])
+    expect(wrapper.emitted('submit')).toHaveLength(2)
   })
 
   it('offers the advanced query action in the suggestions menu', async () => {
@@ -109,6 +119,41 @@ describe('QuerySearchField', () => {
     expect(wrapper.emitted('advanced')).toHaveLength(1)
   })
 
+  it('closes and suppresses suggestions while the advanced dialog is open', async () => {
+    const wrapper = mountSearchField()
+
+    await wrapper.get('input').trigger('focus')
+    await nextTick()
+    expect(findMenuItem('Advanced Query Language')).toBeDefined()
+
+    await wrapper.setProps({ advancedDialogOpen: true })
+    await nextTick()
+    expect(findMenuItem('Advanced Query Language')).toBeUndefined()
+
+    await wrapper.get('input').trigger('focus')
+    await nextTick()
+    expect(findMenuItem('Advanced Query Language')).toBeUndefined()
+  })
+
+  it('represents an advanced query as one editable and removable chip', async () => {
+    const wrapper = mountSearchField()
+    await wrapper.setProps({ advancedActive: true })
+
+    expect(wrapper.get('.v-chip').text()).toContain('Advanced query')
+    expect(wrapper.get('input').attributes('readonly')).toBeDefined()
+
+    await wrapper.get('input').trigger('focus')
+    await nextTick()
+    expect(findMenuItem('AAS ID')).toBeUndefined()
+    expect(findMenuItem('Edit advanced query')).toBeDefined()
+
+    await wrapper.get('.v-chip').trigger('click')
+    expect(wrapper.emitted('advanced')).toHaveLength(1)
+
+    await wrapper.get('.v-chip__close').trigger('click')
+    expect(wrapper.emitted('clear')).toHaveLength(1)
+  })
+
   it('keeps plain local search behavior on unsupported backends', async () => {
     const wrapper = mountSearchField(false)
 
@@ -116,7 +161,7 @@ describe('QuerySearchField', () => {
     await wrapper.get('input').trigger('keydown.enter')
 
     expect(document.body.querySelector('.v-list-item')).toBeNull()
-    expect(wrapper.get('input').attributes('placeholder')).toBe('3 Shells')
+    expect(wrapper.get('input').attributes('placeholder')).toBeUndefined()
     expect(wrapper.emitted('submit')).toHaveLength(1)
   })
 })

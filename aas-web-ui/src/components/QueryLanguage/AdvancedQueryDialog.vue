@@ -2,17 +2,23 @@
   <v-dialog
     v-model="dialogOpen"
     :fullscreen="mobile"
-    max-width="1100"
-    :transition="mobile ? false : undefined"
+    :max-width="mobile ? undefined : '1100px'"
+    persistent
+    :scrollable="!mobile"
   >
-    <v-card color="card">
-      <v-toolbar color="cardHeader">
-        <v-toolbar-title>{{ title }}</v-toolbar-title>
-        <v-spacer />
-        <v-btn icon="mdi-close" variant="text" @click="dialogOpen = false" />
-      </v-toolbar>
+    <v-sheet
+      border
+      class="d-flex flex-column"
+      :rounded="mobile ? undefined : 'lg'"
+      :style="mobile ? { height: '100svh' } : undefined"
+    >
+      <v-card-title class="bg-cardHeader">{{ title }}</v-card-title>
+      <v-divider />
 
-      <v-card-text>
+      <v-card-text
+        class="overflow-y-auto"
+        :style="mobile ? { flex: '1 1 auto', minHeight: '0' } : { maxHeight: 'calc(100svh - 180px)' }"
+      >
         <v-alert
           class="mb-4"
           density="compact"
@@ -42,21 +48,34 @@
         </v-alert>
       </v-card-text>
 
-      <v-card-actions class="px-6 pb-5">
-        <v-btn text="Reset example" variant="text" @click="emit('reset')" />
+      <v-divider />
+
+      <v-card-actions>
+        <v-btn
+          border
+          color="surface-light"
+          prepend-icon="mdi-restore"
+          rounded="lg"
+          text="Reset example"
+          variant="flat"
+          @click="emit('reset')"
+        />
+
         <v-spacer />
-        <v-btn text="Cancel" variant="text" @click="dialogOpen = false" />
+        <v-btn rounded="lg" text="Cancel" @click="dialogOpen = false" />
 
         <v-btn
+          class="text-buttonText"
           color="primary"
           :disabled="!canExecute"
           :loading="loading"
+          rounded="lg"
           text="Run query"
-          variant="elevated"
+          variant="flat"
           @click="execute"
         />
       </v-card-actions>
-    </v-card>
+    </v-sheet>
   </v-dialog>
 </template>
 

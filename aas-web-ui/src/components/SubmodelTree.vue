@@ -70,10 +70,10 @@
               <QuerySearchField
                 v-model="smSearchValue"
                 :advanced-active="querySearch.activeMode.value === 'advanced'"
-                example="semanticId:0173"
+                :advanced-dialog-open="advancedQueryDialog"
                 label="Search SM/SME"
                 :loading="querySearch.loading.value"
-                :placeholder="submodelTree.length.toString() + ' Submodels'"
+                min-width="160"
                 :server-search="globalQueryAvailable"
                 target="submodel-repository"
                 @advanced="openSearchDialog"
@@ -1703,7 +1703,7 @@
       submodelTree.value = submodelTreeUnfiltered.value
     } else {
       const search = value.toLowerCase()
-      submodelTree.value = deepFilter(
+      const filteredItems = deepFilter(
         submodelTreeUnfiltered.value,
         (item: any) =>
           item.idLower.includes(search)
@@ -1712,7 +1712,56 @@
           || item.descLower.includes(search)
           || item.searchValuesLower.some((value: string) => value.includes(search)),
       )
+      submodelTree.value = withPinnedSelectedSubmodel(filteredItems, submodelTreeUnfiltered.value)
     }
+  }
+
+  function withPinnedSelectedSubmodel (items: Array<any>, selectionSource: Array<any>): Array<any> {
+    const selectedSubmodel = findSelectedSubmodel(selectionSource)
+    if (!selectedSubmodel) return items
+
+    return [
+      selectedSubmodel,
+      ...items.filter(item => !isSameSubmodel(item, selectedSubmodel)),
+    ]
+  }
+
+  function findSelectedSubmodel (items: Array<any>): any | undefined {
+    if (!selectedNode.value || Object.keys(selectedNode.value).length === 0) return undefined
+
+    let selectedRoot = selectedNode.value
+    const visitedNodes = new Set<any>()
+    while (
+      selectedRoot
+      && selectedRoot.modelType !== 'Submodel'
+      && selectedRoot.parent
+      && !visitedNodes.has(selectedRoot)
+    ) {
+      visitedNodes.add(selectedRoot)
+      selectedRoot = selectedRoot.parent
+    }
+
+    if (selectedRoot?.modelType === 'Submodel') {
+      const matchingRoot = items.find(item => isSameSubmodel(item, selectedRoot))
+      if (matchingRoot) return matchingRoot
+    }
+
+    const selectedPath = selectedNode.value.selectionKey || selectedNode.value.path
+    if (typeof selectedPath !== 'string') return undefined
+
+    return items.find(item => {
+      const itemPath = item?.selectionKey || item?.path
+      return typeof itemPath === 'string'
+        && (selectedPath === itemPath || selectedPath.startsWith(`${itemPath}/`))
+    })
+  }
+
+  function isSameSubmodel (left: any, right: any): boolean {
+    if (left?.id && right?.id) return left.id === right.id
+
+    const leftPath = left?.selectionKey || left?.path
+    const rightPath = right?.selectionKey || right?.path
+    return Boolean(leftPath && rightPath && leftPath === rightPath)
   }
 
   function handleSearchInput (value: string | null): void {
@@ -1881,9 +1930,10 @@
   }
 
   function applyQueryItems (): void {
+    const currentItems = submodelTree.value
     const processedList = processSubmodels(querySearch.items.value)
-    submodelTree.value = processedList
     submodelTreeUnfiltered.value = processedList
+    submodelTree.value = withPinnedSelectedSubmodel(processedList, currentItems)
   }
 
   function loadMoreQueryResults (isIntersecting: boolean): void {
