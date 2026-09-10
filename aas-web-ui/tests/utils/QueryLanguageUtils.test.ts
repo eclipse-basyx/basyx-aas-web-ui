@@ -96,8 +96,10 @@ describe('QueryLanguageUtils', () => {
     ])
   })
 
-  it('keeps query targets aligned with the loaded source except for mono-all environments', () => {
-    expect(resolveAasQueryTarget('mono-all', 'registry', true, true)).toBe('aas-repository')
+  it('uses an explicit search scope for mono-all and otherwise follows the loaded source', () => {
+    expect(resolveAasQueryTarget('mono-all', 'registry', true, true)).toBe('aas-registry')
+    expect(resolveAasQueryTarget('mono-all', 'registry', true, true, 'registry')).toBe('aas-registry')
+    expect(resolveAasQueryTarget('mono-all', 'registry', true, true, 'repository')).toBe('aas-repository')
     expect(resolveAasQueryTarget('mono-repo', 'registry', true, false)).toBe('aas-registry')
     expect(resolveAasQueryTarget('full', 'registry', true, true)).toBe('aas-registry')
     expect(resolveAasQueryTarget('full', 'registry', true, false)).toBe('aas-registry')

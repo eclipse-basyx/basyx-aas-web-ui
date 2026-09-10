@@ -1,5 +1,5 @@
 import type { QueryLanguageQuery } from '@/types/QueryLanguage'
-import type { LocationQueryValue } from 'vue-router'
+import type { LocationQueryRaw, LocationQueryValue } from 'vue-router'
 import { useRoute, useRouter } from 'vue-router'
 
 export type QuerySearchRouteState
@@ -23,36 +23,36 @@ export function useQuerySearchRoute (searchParameter: string, queryParameter: st
       : { mode: 'none' }
   })
 
-  async function commitSearch (expression: string): Promise<boolean> {
+  async function commitSearch (expression: string, additionalQuery: LocationQueryRaw = {}): Promise<boolean> {
     const normalized = expression.trim()
-    if (state.value.mode === 'search' && state.value.expression === normalized) {
+    if (state.value.mode === 'search' && state.value.expression === normalized && queryMatches(additionalQuery)) {
       return false
     }
 
-    await pushState(normalized ? { mode: 'search', expression: normalized } : { mode: 'none' })
+    await pushState(normalized ? { mode: 'search', expression: normalized } : { mode: 'none' }, additionalQuery)
     return true
   }
 
-  async function commitAdvancedQuery (query: QueryLanguageQuery): Promise<boolean> {
+  async function commitAdvancedQuery (query: QueryLanguageQuery, additionalQuery: LocationQueryRaw = {}): Promise<boolean> {
     const queryText = JSON.stringify(query)
-    if (state.value.mode === 'advanced' && state.value.queryText === queryText) {
+    if (state.value.mode === 'advanced' && state.value.queryText === queryText && queryMatches(additionalQuery)) {
       return false
     }
 
-    await pushState({ mode: 'advanced', queryText })
+    await pushState({ mode: 'advanced', queryText }, additionalQuery)
     return true
   }
 
-  async function clear (): Promise<boolean> {
-    if (state.value.mode === 'none') {
+  async function clear (additionalQuery: LocationQueryRaw = {}): Promise<boolean> {
+    if (state.value.mode === 'none' && queryMatches(additionalQuery)) {
       return false
     }
 
-    await pushState({ mode: 'none' })
+    await pushState({ mode: 'none' }, additionalQuery)
     return true
   }
 
-  async function pushState (nextState: QuerySearchRouteState): Promise<void> {
+  async function pushState (nextState: QuerySearchRouteState, additionalQuery: LocationQueryRaw): Promise<void> {
     const query = { ...route.query }
     delete query[searchParameter]
     delete query[queryParameter]
@@ -63,7 +63,18 @@ export function useQuerySearchRoute (searchParameter: string, queryParameter: st
       query[queryParameter] = nextState.queryText
     }
 
+    applyAdditionalQuery(query, additionalQuery)
+
     await router.push({ query })
+  }
+
+  function queryMatches (additionalQuery: LocationQueryRaw): boolean {
+    return Object.entries(additionalQuery).every(([key, value]) => {
+      if (value === undefined || value === null) {
+        return route.query[key] === undefined
+      }
+      return String(route.query[key] ?? '') === String(value)
+    })
   }
 
   return {
@@ -71,6 +82,16 @@ export function useQuerySearchRoute (searchParameter: string, queryParameter: st
     commitAdvancedQuery,
     commitSearch,
     state,
+  }
+}
+
+function applyAdditionalQuery (query: LocationQueryRaw, additionalQuery: LocationQueryRaw): void {
+  for (const [key, value] of Object.entries(additionalQuery)) {
+    if (value === undefined || value === null) {
+      delete query[key]
+    } else {
+      query[key] = value
+    }
   }
 }
 

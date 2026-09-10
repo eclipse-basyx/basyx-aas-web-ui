@@ -60,6 +60,7 @@ describe('NavigationStore', () => {
       aas: 'https://example.com/shells/example',
       aasQuery: '{"$condition":{"$boolean":true}}',
       aasSearch: 'idShort:Motor',
+      aasSearchScope: 'repository',
       path: 'https://example.com/submodels/example',
       smQuery: '{"$condition":{"$boolean":true}}',
       smSearch: 'semanticId:0173',

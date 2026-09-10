@@ -463,6 +463,30 @@ describe('Submodel loading invalidation', () => {
     expect(state.routeQuery.value).toEqual({ smSearch: 'first' })
   })
 
+  it('commits the expression that produced a pending Submodel query result', async () => {
+    let resolveQuery!: (page: any) => void
+    state.routeName.value = 'SMViewer'
+    state.submodelDescription.value = { profiles: [submodelQueryProfile] }
+    mocks.queryPage.mockReturnValue(new Promise(resolve => {
+      resolveQuery = resolve
+    }))
+
+    const wrapper = mount(SubmodelTree, { shallow: true })
+    await flushPromises()
+
+    ;(wrapper.vm as any).handleSearchInput('submitted')
+    const submit = (wrapper.vm as any).submitSearch()
+    await nextTick()
+    ;(wrapper.vm as any).handleSearchInput('new draft')
+
+    resolveQuery({ items: [createSubmodel('submitted-result')], hasMore: false, success: true })
+    await submit
+
+    expect((wrapper.vm as any).smSearchValue).toBe('new draft')
+    expect((wrapper.vm as any).submodelTree.map((item: any) => item.id)).toEqual(['submitted-result'])
+    expect(state.routeQuery.value).toEqual({ smSearch: 'submitted' })
+  })
+
   it('does not let a superseded route request clear the current Submodel search', async () => {
     let resolveFirstQuery!: (page: any) => void
     state.routeName.value = 'SMViewer'

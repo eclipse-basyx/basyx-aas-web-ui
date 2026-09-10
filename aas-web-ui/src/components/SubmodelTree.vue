@@ -71,6 +71,7 @@
                 v-model="smSearchValue"
                 :advanced-active="querySearch.activeMode.value === 'advanced'"
                 :advanced-dialog-open="advancedQueryDialog"
+                :advanced-enabled="!isMobile"
                 label="Search SM/SME"
                 :loading="querySearch.loading.value"
                 min-width="160"
@@ -421,7 +422,7 @@
   />
 
   <AdvancedQueryDialog
-    v-if="globalQueryAvailable"
+    v-if="globalQueryAvailable && !isMobile"
     v-model="advancedQueryDialog"
     :endpoint="submodelRepoURL"
     :infrastructure-template="selectedInfrastructureTemplate"
@@ -1779,13 +1780,15 @@
 
   async function submitSearch (): Promise<void> {
     routeSearchGeneration += 1
-    if (isGlobalSmRoute.value && parsedSearch.value.incompleteField) return
-    if (smSearchValue.value.trim() === '') {
+    const submittedExpression = smSearchValue.value
+    const submittedSearch = parseQuerySearchExpression('submodel-repository', submittedExpression)
+    if (isGlobalSmRoute.value && submittedSearch.incompleteField) return
+    if (submittedExpression.trim() === '') {
       await clearQuerySearch()
       return
     }
 
-    const success = await executeSearchExpression()
+    const success = await executeSearchExpression(submittedExpression)
     if (!success) {
       restoreSearchValueFromRoute()
       return
@@ -1793,31 +1796,32 @@
     if (!isGlobalSmRoute.value) return
 
     ignoreNextSearchRouteUpdate = true
-    const changed = await smSearchRoute.commitSearch(smSearchValue.value)
+    const changed = await smSearchRoute.commitSearch(submittedExpression)
     if (!changed) ignoreNextSearchRouteUpdate = false
   }
 
-  async function executeSearchExpression (): Promise<boolean> {
+  async function executeSearchExpression (expression = smSearchValue.value): Promise<boolean> {
+    const search = parseQuerySearchExpression('submodel-repository', expression)
     if (!globalQueryAvailable.value) {
-      filterSubmodelTree(smSearchValue.value)
+      filterSubmodelTree(expression)
       return true
     }
 
-    if (parsedSearch.value.incompleteField) {
+    if (search.incompleteField) {
       return false
     }
 
     const query = buildStructuredSearchQuery(
       'submodel-repository',
-      parsedSearch.value.text,
-      parsedSearch.value.filters,
+      search.text,
+      search.filters,
       'all',
     )
     if (!query) {
       return false
     }
 
-    const success = await querySearch.execute(query, parsedSearch.value.filters.length > 0 ? 'filters' : 'quick')
+    const success = await querySearch.execute(query, search.filters.length > 0 ? 'filters' : 'quick')
     if (!success) return false
 
     treeLoad.invalidate()
@@ -1826,6 +1830,7 @@
   }
 
   function openSearchDialog (): void {
+    if (isMobile.value) return
     if (advancedQueryDraft.value.trim() === '') {
       const structuredQuery = buildStructuredSearchQuery(
         'submodel-repository',

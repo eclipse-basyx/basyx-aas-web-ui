@@ -1,6 +1,7 @@
 import type { ServiceDescription } from '@/types/BaSyx'
 import type { InfrastructureTemplate } from '@/types/Infrastructure'
 import type {
+  AasSearchScope,
   ParsedQuerySearchExpression,
   QueryFilter,
   QueryFilterFieldDefinition,
@@ -220,9 +221,10 @@ export function resolveAasQueryTarget (
   activeSource: AasQuerySource | undefined,
   repositoryAvailable: boolean,
   registryAvailable: boolean,
+  searchScope: AasSearchScope = 'registry',
 ): QueryTarget {
-  if (infrastructureTemplate === 'mono-all' && repositoryAvailable) {
-    return 'aas-repository'
+  if (infrastructureTemplate === 'mono-all') {
+    return searchScope === 'repository' ? 'aas-repository' : 'aas-registry'
   }
 
   if (activeSource === 'repository') {

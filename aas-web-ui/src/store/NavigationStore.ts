@@ -56,6 +56,7 @@ export const useNavigationStore = defineStore('navigationStore', () => {
     'view',
     'aasSearch',
     'aasQuery',
+    'aasSearchScope',
     'smSearch',
     'smQuery',
   ]

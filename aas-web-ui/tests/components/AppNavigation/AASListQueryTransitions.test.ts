@@ -10,7 +10,9 @@ const state = vi.hoisted(() => ({
   infrastructureId: null as any,
   infrastructureTemplate: null as any,
   repositoryDescription: null as any,
+  repositoryLoading: null as any,
   registryDescription: null as any,
+  registryLoading: null as any,
   clearAASList: null as any,
   triggerAASListReload: null as any,
 }))
@@ -107,8 +109,8 @@ vi.mock('@/store/InfrastructureStore', () => ({
     },
     get getBasyxComponents () {
       return {
-        AASRepo: { description: state.repositoryDescription.value, loading: false },
-        AASRegistry: { description: state.registryDescription.value, loading: false },
+        AASRepo: { description: state.repositoryDescription.value, loading: state.repositoryLoading.value },
+        AASRegistry: { description: state.registryDescription.value, loading: state.registryLoading.value },
       }
     },
   }),
@@ -147,7 +149,9 @@ describe('AAS list query transitions', () => {
     state.infrastructureId = ref('infra-1')
     state.infrastructureTemplate = ref('full')
     state.repositoryDescription = ref(null)
+    state.repositoryLoading = ref(false)
     state.registryDescription = ref(null)
+    state.registryLoading = ref(false)
     state.clearAASList = ref(0)
     state.triggerAASListReload = ref(0)
     mocks.aasIsAvailableById.mockResolvedValue(true)
@@ -162,13 +166,10 @@ describe('AAS list query transitions', () => {
     })
   })
 
-  it.each([
-    ['both endpoints', { profiles: [aasRegistryQueryProfile] }],
-    ['only the repository', null],
-  ])('uses the repository query target for a populated mono registry when %s advertise support', async (_name, registryDescription) => {
+  it('uses the registry by default when both mono-all query endpoints advertise support', async () => {
     state.infrastructureTemplate.value = 'mono-all'
     state.repositoryDescription.value = { profiles: [aasRepositoryQueryProfile] }
-    state.registryDescription.value = registryDescription
+    state.registryDescription.value = { profiles: [aasRegistryQueryProfile] }
     mocks.queryPage.mockResolvedValue({
       items: [createAas('query-aas')],
       hasMore: false,
@@ -179,8 +180,34 @@ describe('AAS list query transitions', () => {
     await flushPromises()
 
     expect((wrapper.vm as any).activeSource).toBe('registry')
-    expect((wrapper.vm as any).aasQueryTarget).toBe('aas-repository')
+    expect((wrapper.vm as any).aasQueryTarget).toBe('aas-registry')
     expect((wrapper.vm as any).queryAvailable).toBe(true)
+
+    ;(wrapper.vm as any).handleSearchInput('query-aas')
+    await (wrapper.vm as any).submitSearch()
+
+    expect(mocks.queryPage).toHaveBeenCalledWith(
+      'https://infra.example/shell-descriptors',
+      'aas-registry',
+      expect.any(Object),
+      { limit: 100 },
+    )
+    expect(state.routeQuery.value).toEqual({
+      aasSearch: 'query-aas',
+      aasSearchScope: 'registry',
+    })
+  })
+
+  it('uses the AAS Environment when that scope is selected in mono-all', async () => {
+    state.infrastructureTemplate.value = 'mono-all'
+    state.repositoryDescription.value = { profiles: [aasRepositoryQueryProfile] }
+    state.registryDescription.value = { profiles: [aasRegistryQueryProfile] }
+    state.routeQuery.value = { aasSearchScope: 'repository' }
+
+    const wrapper = mount(AASList, { shallow: true })
+    await flushPromises()
+
+    expect((wrapper.vm as any).aasQueryTarget).toBe('aas-repository')
 
     ;(wrapper.vm as any).handleSearchInput('query-aas')
     await (wrapper.vm as any).submitSearch()
@@ -193,9 +220,22 @@ describe('AAS list query transitions', () => {
     )
   })
 
+  it('automatically uses the only available mono-all query endpoint', async () => {
+    state.infrastructureTemplate.value = 'mono-all'
+    state.repositoryDescription.value = { profiles: [aasRepositoryQueryProfile] }
+
+    const wrapper = mount(AASList, { shallow: true })
+    await flushPromises()
+
+    expect((wrapper.vm as any).aasQueryTarget).toBe('aas-repository')
+    expect((wrapper.vm as any).aasSearchScope).toBe('repository')
+  })
+
   it('uses Submodel hierarchy qualifiers for mono-all AAS searches', async () => {
     state.infrastructureTemplate.value = 'mono-all'
     state.repositoryDescription.value = { profiles: [aasRepositoryQueryProfile] }
+    state.registryDescription.value = { profiles: [aasRegistryQueryProfile] }
+    state.routeQuery.value = { aasSearchScope: 'repository' }
     mocks.queryPage.mockResolvedValue({ items: [], hasMore: false, success: true })
 
     const wrapper = mount(AASList, { shallow: true })
@@ -219,6 +259,69 @@ describe('AAS list query transitions', () => {
       },
       { limit: 100 },
     )
+  })
+
+  it('removes incompatible filters and reruns the search when its mono-all scope changes', async () => {
+    state.infrastructureTemplate.value = 'mono-all'
+    state.repositoryDescription.value = { profiles: [aasRepositoryQueryProfile] }
+    state.registryDescription.value = { profiles: [aasRegistryQueryProfile] }
+    state.routeQuery.value = { aasSearchScope: 'repository' }
+
+    const wrapper = mount(AASList, { shallow: true })
+    await flushPromises()
+
+    ;(wrapper.vm as any).handleSearchInput('smIdShort:Nameplate Motor')
+    await (wrapper.vm as any).submitSearch()
+    await (wrapper.vm as any).changeAasSearchScope('registry')
+
+    expect((wrapper.vm as any).searchValue).toBe('Motor')
+    expect((wrapper.vm as any).aasQueryTarget).toBe('aas-registry')
+    expect(mocks.queryPage).toHaveBeenLastCalledWith(
+      'https://infra.example/shell-descriptors',
+      'aas-registry',
+      expect.any(Object),
+      { limit: 100 },
+    )
+    expect(state.routeQuery.value).toEqual({
+      aasSearch: 'Motor',
+      aasSearchScope: 'registry',
+    })
+    expect(mocks.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({ color: 'info' }))
+  })
+
+  it('keeps the registry default when repository support becomes available later in mono-all', async () => {
+    state.infrastructureTemplate.value = 'mono-all'
+    state.registryDescription.value = { profiles: [aasRegistryQueryProfile] }
+
+    const wrapper = mount(AASList, { shallow: true })
+    await flushPromises()
+
+    expect((wrapper.vm as any).aasQueryTarget).toBe('aas-registry')
+    expect((wrapper.vm as any).queryAvailable).toBe(true)
+
+    state.repositoryDescription.value = { profiles: [aasRepositoryQueryProfile] }
+    await nextTick()
+
+    expect((wrapper.vm as any).aasQueryTarget).toBe('aas-registry')
+    expect((wrapper.vm as any).queryAvailable).toBe(true)
+  })
+
+  it('waits for registry capability detection before falling back to the mono-all environment', async () => {
+    state.infrastructureTemplate.value = 'mono-all'
+    state.repositoryDescription.value = { profiles: [aasRepositoryQueryProfile] }
+    state.registryLoading.value = true
+
+    const wrapper = mount(AASList, { shallow: true })
+    await flushPromises()
+
+    expect((wrapper.vm as any).aasQueryTarget).toBe('aas-registry')
+    expect((wrapper.vm as any).queryCapabilityLoading).toBe(true)
+
+    state.registryLoading.value = false
+    await nextTick()
+
+    expect((wrapper.vm as any).aasQueryTarget).toBe('aas-repository')
+    expect((wrapper.vm as any).queryAvailable).toBe(true)
   })
 
   it.each([false, true])('executes a QR-selected AAS search with server search %s', async serverSearch => {
@@ -353,6 +456,29 @@ describe('AAS list query transitions', () => {
     expect((wrapper.vm as any).searchValue).toBe('first')
     expect((wrapper.vm as any).aasList.map((item: any) => item.id)).toEqual(['first-result'])
     expect(state.routeQuery.value).toEqual({ aasSearch: 'first' })
+  })
+
+  it('commits the expression that produced a pending query result', async () => {
+    let resolveQuery!: (page: any) => void
+    state.registryDescription.value = { profiles: [aasRegistryQueryProfile] }
+    mocks.queryPage.mockReturnValue(new Promise(resolve => {
+      resolveQuery = resolve
+    }))
+
+    const wrapper = mount(AASList, { shallow: true })
+    await flushPromises()
+
+    ;(wrapper.vm as any).handleSearchInput('submitted')
+    const submit = (wrapper.vm as any).submitSearch()
+    await nextTick()
+    ;(wrapper.vm as any).handleSearchInput('new draft')
+
+    resolveQuery({ items: [createAas('submitted-result')], hasMore: false, success: true })
+    await submit
+
+    expect((wrapper.vm as any).searchValue).toBe('new draft')
+    expect((wrapper.vm as any).aasList.map((item: any) => item.id)).toEqual(['submitted-result'])
+    expect(state.routeQuery.value).toEqual({ aasSearch: 'submitted' })
   })
 
   it.each([

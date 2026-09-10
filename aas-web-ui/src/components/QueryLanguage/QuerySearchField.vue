@@ -46,7 +46,7 @@
             </v-chip>
 
             <v-chip
-              v-else
+              v-if="!advancedActive && committedFilters.length > 0"
               :aria-label="`Show ${committedFilters.length} applied ${committedFilters.length === 1 ? 'filter' : 'filters'}`"
               class="ml-n2 mr-2"
               color="primary"
@@ -73,10 +73,41 @@
       <v-list
         class="py-0"
         density="compact"
-        max-height="360"
+        max-height="390"
         nav
         slim
       >
+        <template v-if="!advancedActive && searchScopeOptions.length > 1">
+          <div class="d-flex align-center ga-2 pl-2 pr-0 py-2">
+            <small class="text-disabled flex-shrink-0">Search in</small>
+
+            <v-btn-toggle
+              class="h-auto ml-auto"
+              color="primary"
+              density="compact"
+              divided
+              mandatory
+              :model-value="searchScope"
+              variant="outlined"
+              @update:model-value="updateSearchScope"
+            >
+              <v-btn
+                v-for="option in searchScopeOptions"
+                :key="option.value"
+                class="px-2"
+                height="24"
+                size="x-small"
+                slim
+                :value="option.value"
+              >
+                <small>{{ option.title }}</small>
+              </v-btn>
+            </v-btn-toggle>
+          </div>
+
+          <v-divider class="my-0" />
+        </template>
+
         <template v-if="!advancedActive && committedFilters.length > 0">
           <v-list-subheader>Applied filters</v-list-subheader>
 
@@ -160,9 +191,10 @@
           </v-list-item>
         </template>
 
-        <v-divider v-if="!advancedActive" class="my-1" />
+        <v-divider v-if="!advancedActive && advancedEnabled" class="my-1" />
 
         <v-list-item
+          v-if="advancedEnabled"
           class="my-1"
           prepend-gap="4"
           :title="advancedActive ? 'Edit advanced query' : 'Advanced Query Language'"
@@ -203,27 +235,39 @@
     value: string
   }
 
+  interface SearchScopeOption {
+    title: string
+    value: string
+  }
+
   const FILTER_OPERATOR_SYMBOLS: Partial<Record<QueryFilterOperator, string>> = {
     'contains': ':',
     'equals': '=',
     'not-equals': '!=',
   }
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
     advancedActive?: boolean
     advancedDialogOpen?: boolean
+    advancedEnabled?: boolean
     label: string
     loading: boolean
     infrastructureTemplate?: InfrastructureTemplate
     minWidth?: number | string
+    searchScope?: string
+    searchScopeOptions?: SearchScopeOption[]
     serverSearch: boolean
     target: QueryTarget
-  }>()
+  }>(), {
+    advancedEnabled: true,
+    searchScopeOptions: () => [],
+  })
 
   const emit = defineEmits<{
-    advanced: []
-    clear: []
-    submit: []
+    'advanced': []
+    'clear': []
+    'submit': []
+    'update:search-scope': [scope: string]
   }>()
 
   const searchExpression = defineModel<string>({ required: true })
@@ -285,7 +329,11 @@
     syncFromExpression(expression)
   }, { immediate: true })
 
-  watch([() => props.target, () => props.serverSearch, () => props.infrastructureTemplate], () => {
+  watch(() => props.target, () => {
+    syncFromExpression(searchExpression.value)
+  })
+
+  watch([() => props.serverSearch, () => props.infrastructureTemplate], () => {
     suggestionsOpen.value = false
     syncFromExpression(searchExpression.value)
   })
@@ -295,7 +343,11 @@
   })
 
   function openSuggestions (): void {
-    if (props.serverSearch && !props.advancedDialogOpen) suggestionsOpen.value = true
+    if (
+      props.serverSearch
+      && !props.advancedDialogOpen
+      && (!props.advancedActive || props.advancedEnabled)
+    ) suggestionsOpen.value = true
   }
 
   function clearSearch (): void {
@@ -308,7 +360,7 @@
 
   async function submitSearch (): Promise<void> {
     if (props.advancedActive) {
-      openAdvancedQuery()
+      if (props.advancedEnabled) openAdvancedQuery()
       return
     }
 
@@ -403,8 +455,13 @@
   }
 
   function openAdvancedQuery (): void {
+    if (!props.advancedEnabled) return
     suggestionsOpen.value = false
     emit('advanced')
+  }
+
+  function updateSearchScope (scope: string | null): void {
+    if (scope && scope !== props.searchScope) emit('update:search-scope', scope)
   }
 
   function canCommitDraftFilter (): boolean {

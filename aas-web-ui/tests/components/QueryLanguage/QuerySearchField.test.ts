@@ -59,6 +59,33 @@ describe('QuerySearchField', () => {
     expect(document.body.querySelector('.v-list--slim')).not.toBeNull()
   })
 
+  it('offers a Vuetify scope selector and emits scope changes', async () => {
+    const wrapper = mountSearchField()
+    await wrapper.setProps({
+      searchScope: 'registry',
+      searchScopeOptions: [
+        { title: 'Registry', value: 'registry' },
+        { title: 'Repository', value: 'repository' },
+      ],
+    })
+
+    await wrapper.get('input').trigger('focus')
+    await nextTick()
+
+    expect(document.body.textContent).toContain('Search in')
+    const repositoryButton = [...document.body.querySelectorAll('.v-btn')]
+      .find(button => button.textContent?.includes('Repository'))
+    expect(repositoryButton).toBeDefined()
+    await new DOMWrapper(repositoryButton!).trigger('click')
+
+    expect(wrapper.emitted('update:search-scope')).toEqual([['repository']])
+
+    await wrapper.setProps({ searchScope: 'repository', target: 'aas-registry' })
+    await nextTick()
+    expect(document.body.querySelector('.v-overlay--active')).not.toBeNull()
+    expect(findMenuItem('ID Short')).toBeDefined()
+  })
+
   it('offers Submodel hierarchy fields only for AAS Environment searches', async () => {
     const wrapper = mountSearchField()
     await wrapper.setProps({ infrastructureTemplate: 'mono-all' })
@@ -200,6 +227,19 @@ describe('QuerySearchField', () => {
     await new DOMWrapper(findMenuItem('Advanced Query Language')!).trigger('click')
 
     expect(wrapper.emitted('advanced')).toHaveLength(1)
+  })
+
+  it('does not offer or open advanced queries when they are disabled', async () => {
+    const wrapper = mountSearchField()
+    await wrapper.setProps({ advancedEnabled: false })
+
+    await wrapper.get('input').trigger('focus')
+    await nextTick()
+    expect(findMenuItem('Advanced Query Language')).toBeUndefined()
+
+    await wrapper.setProps({ advancedActive: true })
+    await wrapper.get('.v-chip').trigger('click')
+    expect(wrapper.emitted('advanced')).toBeUndefined()
   })
 
   it('closes and suppresses suggestions while the advanced dialog is open', async () => {

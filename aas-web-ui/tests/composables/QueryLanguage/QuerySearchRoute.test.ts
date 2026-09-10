@@ -62,6 +62,34 @@ describe('useQuerySearchRoute', () => {
     await expect(routeSearch.commitSearch('idShort:Motor')).resolves.toBe(false)
   })
 
+  it('persists additional search context and removes it explicitly', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ component: { template: '<div />' }, path: '/' }],
+    })
+    await router.push('/')
+    await router.isReady()
+
+    let routeSearch!: ReturnType<typeof useQuerySearchRoute>
+    mount({
+      setup () {
+        routeSearch = useQuerySearchRoute('aasSearch', 'aasQuery')
+        return () => h('div')
+      },
+    }, {
+      global: { plugins: [router] },
+    })
+
+    await routeSearch.commitSearch('idShort:Motor', { aasSearchScope: 'repository' })
+    expect(router.currentRoute.value.query).toEqual({
+      aasSearch: 'idShort:Motor',
+      aasSearchScope: 'repository',
+    })
+
+    await routeSearch.clear({ aasSearchScope: undefined })
+    expect(router.currentRoute.value.query).toEqual({})
+  })
+
   it('round-trips UTF-8 and reserved URL characters as one search parameter', async () => {
     const router = createRouter({
       history: createMemoryHistory(),
