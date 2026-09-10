@@ -4,7 +4,6 @@
     label
     size="small"
     v-bind="key"
-    variant="flat"
   >
     <v-icon :icon="icon" size="16" start />
     {{ label }}

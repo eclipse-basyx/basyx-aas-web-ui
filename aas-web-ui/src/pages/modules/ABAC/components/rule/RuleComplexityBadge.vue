@@ -6,7 +6,6 @@
         :color="badgeConfig.color"
         label
         size="x-small"
-        variant="flat"
       >
         <v-icon :icon="badgeConfig.icon" size="14" start />
         {{ badgeConfig.label }}

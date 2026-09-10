@@ -9,7 +9,7 @@ export function useRules () {
 
   const rulesCount = computed(() => rules.value?.length ?? 0)
 
-  const { data: selectedRule, isLoading: isSelectedRuleLoading }
+  const { data: selectedRule, isLoading: isSelectedRuleLoading, isError: isSelectedRuleError }
     = useGetRule(selectedPolicyVersion, selectedRuleIndex)
 
   return {
@@ -19,5 +19,6 @@ export function useRules () {
     ...rest,
     selectedRule,
     isSelectedRuleLoading,
+    isSelectedRuleError,
   }
 }

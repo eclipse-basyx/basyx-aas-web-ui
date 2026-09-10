@@ -1,16 +1,10 @@
 <template>
-  <div class="d-flex flex-grow-1 overflow-hidden">
-    <div class="rules-list-panel">
-      <DefinitionsList @create="openDialog('create')" />
+  <div class="d-flex flex-grow-1 overflow-y-auto">
+    <div class="list-panel">
+      <DefinitionsList @create="openDialog" />
     </div>
 
     <div class="d-flex flex-column ga-0 w-100">
-      <DefinitionActions
-        v-if="policy?.status === 'staged'"
-        @patch="openDialog('patch')"
-        @replace="openDialog('replace')"
-      />
-
       <DefinitionDetail />
     </div>
   </div>
@@ -20,23 +14,22 @@
 </template>
 
 <script setup lang="ts">
-  import { usePolicy } from '../../hooks/usePolicy'
-  import DefinitionDialog, { type DefinitionDialogMode } from './DefinitionDialog.vue'
-  import DefinitionActions from './detail/DefinitionActions.vue'
+  import { DEFINITION_DIALOG_KEY } from '../../constants/inject'
+  import DefinitionDialog, { type DefinitionDialogProps } from './DefinitionDialog.vue'
   import DefinitionDetail from './detail/DefinitionDetail.vue'
   import DefinitionsList from './list/DefinitionsList.vue'
 
-  const { policy } = usePolicy()
-
   const definitionDialog = useTemplateRef<InstanceType<typeof DefinitionDialog>>('definitionDialog')
 
-  function openDialog (mode: DefinitionDialogMode): void {
-    definitionDialog.value?.open(mode)
+  function openDialog (props: DefinitionDialogProps): void {
+    definitionDialog.value?.open(props)
   }
+
+  provide(DEFINITION_DIALOG_KEY, openDialog)
 </script>
 
 <style scoped>
-.rules-list-panel {
+.list-panel {
   width: 35vw;
   min-width: 280px;
   max-width: 360px;
