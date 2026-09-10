@@ -309,7 +309,7 @@ describe('InfrastructureStore', () => {
 
     const description = {
       profiles: [
-        'https://admin-shell.io/aas/API/3/2/AssetAdministrationShellRepositoryServiceSpecification/SSP-003',
+        'https://basyx.org/aas/API/3/2/AssetAdministrationShellRepositoryServiceSpecification/SSP-001',
       ],
     }
     mocks.getRequest.mockResolvedValueOnce({ success: true, data: description })
@@ -321,5 +321,34 @@ describe('InfrastructureStore', () => {
       .mockResolvedValueOnce({ success: true })
     await store.connectComponent('AASRepo')
     expect(component.description).toBeNull()
+  })
+
+  it('discards a description response from a superseded component URL', async () => {
+    const store = useInfrastructureStore()
+    await store.waitForInitialization()
+    const component = store.getBasyxComponents.AASRepo
+    let resolveOldRequest!: (response: unknown) => void
+
+    component.url = 'https://old.example/shells'
+    mocks.getRequest.mockReturnValueOnce(new Promise(resolve => {
+      resolveOldRequest = resolve
+    }))
+    const oldConnection = store.connectComponent('AASRepo')
+
+    component.url = 'https://new.example/shells'
+    const currentDescription = {
+      profiles: ['https://basyx.org/aas/API/3/2/AssetAdministrationShellRepositoryServiceSpecification/SSP-001'],
+    }
+    mocks.getRequest.mockResolvedValueOnce({ success: true, data: currentDescription })
+    await store.connectComponent('AASRepo')
+
+    resolveOldRequest({
+      success: true,
+      data: { profiles: ['https://basyx.org/aas/API/3/2/obsolete'] },
+    })
+    await oldConnection
+
+    expect(component.description).toEqual(currentDescription)
+    expect(component.connected).toBe(true)
   })
 })

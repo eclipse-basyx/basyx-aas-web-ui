@@ -14,18 +14,30 @@ import {
 } from '@/utils/QueryLanguageUtils'
 
 describe('QueryLanguageUtils', () => {
-  it('recognizes version-tolerant IDTA query profiles', () => {
+  it('recognizes target-specific BaSyx Go profiles for AAS API 3.2 and newer', () => {
     expect(supportsQueryProfile({
       profiles: [
-        'https://admin-shell.io/aas/API/3/2/AssetAdministrationShellRepositoryServiceSpecification/SSP-003',
+        'https://basyx.org/aas/API/3/2/AssetAdministrationShellRepositoryServiceSpecification/SSP-001',
       ],
     }, 'aas-repository')).toBe(true)
 
     expect(supportsQueryProfile({
       profiles: [
-        'https://admin-shell.io/aas/API/3/1/SubmodelRepositoryServiceSpecification/SSP-005/',
+        'https://basyx.org/aas/API/3/4/SubmodelRepositoryService/1.0/',
       ],
     }, 'submodel-repository')).toBe(true)
+
+    expect(supportsQueryProfile({
+      profiles: [
+        'https://admin-shell.io/aas/API/3/2/AssetAdministrationShellRegistryServiceSpecification/SSP-004',
+      ],
+    }, 'aas-registry')).toBe(false)
+
+    expect(supportsQueryProfile({
+      profiles: [
+        'https://basyx.org/aas/API/3/1/AssetAdministrationShellRegistryServiceSpecification/SSP-001',
+      ],
+    }, 'aas-registry')).toBe(false)
 
     expect(supportsQueryProfile({ profiles: [] }, 'aas-registry')).toBe(false)
   })
@@ -60,11 +72,12 @@ describe('QueryLanguageUtils', () => {
     expect(buildQuickSearchQuery('aas-repository', '  ')).toBeUndefined()
   })
 
-  it('selects an independently capable AAS query endpoint and prefers hierarchy support in mono mode', () => {
+  it('keeps query targets aligned with the loaded source except for mono-all environments', () => {
     expect(resolveAasQueryTarget('mono-all', 'registry', true, true)).toBe('aas-repository')
-    expect(resolveAasQueryTarget('mono-repo', 'registry', true, false)).toBe('aas-repository')
+    expect(resolveAasQueryTarget('mono-repo', 'registry', true, false)).toBe('aas-registry')
     expect(resolveAasQueryTarget('full', 'registry', true, true)).toBe('aas-registry')
-    expect(resolveAasQueryTarget('full', 'registry', true, false)).toBe('aas-repository')
+    expect(resolveAasQueryTarget('full', 'registry', true, false)).toBe('aas-registry')
+    expect(resolveAasQueryTarget('full', 'repository', false, true)).toBe('aas-repository')
   })
 
   it('exposes stable visual fields with target-specific Query Language paths', () => {
@@ -166,7 +179,7 @@ describe('QueryLanguageUtils', () => {
     ], 'all')).toBeUndefined()
   })
 
-  it('uses a match expression with direct non-equality for exclusions', () => {
+  it('uses not-exists equality semantics for exclusions on multi-valued fields', () => {
     expect(buildStructuredSearchQuery('aas-repository', '', [{
       id: 'excluded-specific-id',
       field: 'specificAssetId',
@@ -174,12 +187,44 @@ describe('QueryLanguageUtils', () => {
       value: 'blocked',
     }], 'all')).toEqual({
       $condition: {
-        $match: [{
-          $ne: [
-            { $field: '$aas#assetInformation.specificAssetIds[].value' },
-            { $strVal: 'blocked' },
-          ],
-        }],
+        $not: {
+          $match: [{
+            $eq: [
+              { $field: '$aas#assetInformation.specificAssetIds[].value' },
+              { $strVal: 'blocked' },
+            ],
+          }],
+        },
+      },
+    })
+  })
+
+  it('keeps exclusions outside the correlated positive match', () => {
+    expect(buildStructuredSearchQuery('aas-repository', '', [
+      { id: 'included', field: 'idShort', operator: 'contains', value: 'Motor' },
+      { id: 'excluded', field: 'specificAssetId', operator: 'not-equals', value: 'blocked' },
+    ], 'all')).toEqual({
+      $condition: {
+        $and: [
+          {
+            $match: [{
+              $contains: [
+                { $field: '$aas#idShort' },
+                { $strVal: 'Motor' },
+              ],
+            }],
+          },
+          {
+            $not: {
+              $match: [{
+                $eq: [
+                  { $field: '$aas#assetInformation.specificAssetIds[].value' },
+                  { $strVal: 'blocked' },
+                ],
+              }],
+            },
+          },
+        ],
       },
     })
   })
@@ -289,7 +334,7 @@ describe('QueryLanguageUtils', () => {
           { $eq: [{ $field: '$sme.ManufacturerName#value' }, { $strVal: 'Example' }] },
         ],
       },
-    }), 'aas-repository', 'mono-repo').isValid).toBe(true)
+    }), 'aas-repository', 'mono-repo').isValid).toBe(false)
 
     const wrongAasRepositoryRoot = validateQueryForTarget(JSON.stringify({
       $condition: { $eq: [{ $field: '$aasdesc#idShort' }, { $strVal: 'Example' }] },
@@ -302,6 +347,6 @@ describe('QueryLanguageUtils', () => {
     }), 'aas-repository', 'full')
     expect(separatedRepositorySubmodelRoot.isValid).toBe(false)
     expect(separatedRepositorySubmodelRoot.message).toContain('Allowed roots: $aas')
-    expect(separatedRepositorySubmodelRoot.message).toContain('only available with mono-repo or mono-all')
+    expect(separatedRepositorySubmodelRoot.message).toContain('only available with mono-all')
   })
 })

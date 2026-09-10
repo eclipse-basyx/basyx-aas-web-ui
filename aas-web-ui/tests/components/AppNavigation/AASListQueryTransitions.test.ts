@@ -107,8 +107,8 @@ vi.mock('@/store/InfrastructureStore', () => ({
     },
     get getBasyxComponents () {
       return {
-        AASRepo: { description: state.repositoryDescription.value },
-        AASRegistry: { description: state.registryDescription.value },
+        AASRepo: { description: state.repositoryDescription.value, loading: false },
+        AASRegistry: { description: state.registryDescription.value, loading: false },
       }
     },
   }),
@@ -130,9 +130,9 @@ vi.mock('@/store/NavigationStore', () => ({
 }))
 
 const aasRepositoryQueryProfile
-  = 'https://admin-shell.io/aas/API/3/2/AssetAdministrationShellRepositoryServiceSpecification/SSP-003'
+  = 'https://basyx.org/aas/API/3/2/AssetAdministrationShellRepositoryServiceSpecification/SSP-001'
 const aasRegistryQueryProfile
-  = 'https://admin-shell.io/aas/API/3/2/AssetAdministrationShellRegistryServiceSpecification/SSP-004'
+  = 'https://basyx.org/aas/API/3/2/AssetAdministrationShellRegistryServiceSpecification/SSP-001'
 
 function createAas (id: string): any {
   return { id, idShort: id }
@@ -217,6 +217,27 @@ describe('AAS list query transitions', () => {
     expect(mocks.queryPage).toHaveBeenCalledTimes(serverSearch ? 1 : 0)
   })
 
+  it('keeps local search when only the inactive AAS source supports queries', async () => {
+    state.repositoryDescription.value = { profiles: [aasRepositoryQueryProfile] }
+    mocks.fetchAasShellListPage.mockResolvedValue({
+      items: [createAas('registry-aas')],
+      hasMore: true,
+      source: 'registry',
+    })
+
+    const wrapper = mount(AASList, { shallow: true })
+    await flushPromises()
+
+    expect((wrapper.vm as any).aasQueryTarget).toBe('aas-registry')
+    expect((wrapper.vm as any).queryAvailable).toBe(false)
+
+    ;(wrapper.vm as any).handleSearchInput('registry')
+    await (wrapper.vm as any).submitSearch()
+
+    expect(mocks.queryPage).not.toHaveBeenCalled()
+    expect((wrapper.vm as any).aasList.map((item: any) => item.id)).toEqual(['registry-aas'])
+  })
+
   it('ignores an unfiltered page that resolves after a successful query', async () => {
     let resolvePage!: (page: any) => void
     state.repositoryDescription.value = { profiles: [aasRepositoryQueryProfile] }
@@ -247,7 +268,7 @@ describe('AAS list query transitions', () => {
       ...createAas('selected-aas'),
       path: 'repository/selected-aas',
     }
-    state.repositoryDescription.value = { profiles: [aasRepositoryQueryProfile] }
+    state.registryDescription.value = { profiles: [aasRegistryQueryProfile] }
     mocks.queryPage.mockResolvedValue({
       items: [createAas('query-aas')],
       hasMore: false,
@@ -285,6 +306,54 @@ describe('AAS list query transitions', () => {
 
     expect((wrapper.vm as any).aasList.map((item: any) => item.id)).toEqual(['missing-normal-aas'])
     expect((wrapper.vm as any).pageLoading).toBe(false)
+  })
+
+  it('restores the last committed search when a replacement query fails', async () => {
+    state.registryDescription.value = { profiles: [aasRegistryQueryProfile] }
+    mocks.queryPage
+      .mockResolvedValueOnce({ items: [createAas('first-result')], hasMore: false, success: true })
+      .mockResolvedValueOnce({ items: [], hasMore: false, success: false })
+
+    const wrapper = mount(AASList, { shallow: true })
+    await flushPromises()
+
+    ;(wrapper.vm as any).handleSearchInput('first')
+    await (wrapper.vm as any).submitSearch()
+    ;(wrapper.vm as any).handleSearchInput('replacement')
+    await (wrapper.vm as any).submitSearch()
+
+    expect((wrapper.vm as any).searchValue).toBe('first')
+    expect((wrapper.vm as any).aasList.map((item: any) => item.id)).toEqual(['first-result'])
+    expect(state.routeQuery.value).toEqual({ aasSearch: 'first' })
+  })
+
+  it.each([
+    ['malformed advanced query', '{invalid'],
+    ['schema-invalid advanced query', JSON.stringify({ $condition: { $unsupported: [] } })],
+  ])('clears an invalid AAS route and keeps the normal list for a %s', async (_name, aasQuery) => {
+    state.routeQuery.value = { aasQuery }
+    state.registryDescription.value = { profiles: [aasRegistryQueryProfile] }
+
+    const wrapper = mount(AASList, { shallow: true })
+    await flushPromises()
+
+    expect((wrapper.vm as any).aasList.map((item: any) => item.id)).toEqual(['registry-aas'])
+    expect(state.routeQuery.value).toEqual({})
+    expect(mocks.dispatchSnackbar).toHaveBeenCalled()
+    expect(mocks.queryPage).not.toHaveBeenCalled()
+  })
+
+  it('clears a shared AAS search when its query request fails', async () => {
+    state.routeQuery.value = { aasSearch: 'missing' }
+    state.registryDescription.value = { profiles: [aasRegistryQueryProfile] }
+    mocks.queryPage.mockResolvedValue({ items: [], hasMore: false, success: false })
+
+    const wrapper = mount(AASList, { shallow: true })
+    await flushPromises()
+
+    expect((wrapper.vm as any).aasList.map((item: any) => item.id)).toEqual(['registry-aas'])
+    expect(state.routeQuery.value).toEqual({})
+    expect(mocks.dispatchSnackbar).toHaveBeenCalled()
   })
 
   it('clears the active filter and reloads the AAS list from the reload button', async () => {

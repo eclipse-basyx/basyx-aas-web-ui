@@ -10,10 +10,10 @@ import type {
   QueryTarget,
 } from '@/types/QueryLanguage'
 
-const QUERY_PROFILE_SUFFIXES: Record<QueryTarget, string> = {
-  'aas-repository': '/AssetAdministrationShellRepositoryServiceSpecification/SSP-003',
-  'aas-registry': '/AssetAdministrationShellRegistryServiceSpecification/SSP-004',
-  'submodel-repository': '/SubmodelRepositoryServiceSpecification/SSP-005',
+const BASYX_QUERY_SERVICE_PATHS: Record<QueryTarget, string> = {
+  'aas-repository': 'AssetAdministrationShellRepositoryServiceSpecification/',
+  'aas-registry': 'AssetAdministrationShellRegistryServiceSpecification/',
+  'submodel-repository': 'SubmodelRepositoryService/',
 }
 
 const QUERY_RESOURCE_PATHS: Record<QueryTarget, { collection: string, query: string }> = {
@@ -123,13 +123,22 @@ export function supportsQueryProfile (
     return false
   }
 
-  const suffix = QUERY_PROFILE_SUFFIXES[target]
+  const servicePath = BASYX_QUERY_SERVICE_PATHS[target]
   return description.profiles.some(profile => {
     if (typeof profile !== 'string') {
       return false
     }
+
     const normalized = profile.trim().replace(/\/$/, '')
-    return normalized.startsWith('https://admin-shell.io/aas/API/3/') && normalized.endsWith(suffix)
+    const match = normalized.match(/^https:\/\/basyx\.org\/aas\/API\/(\d+)\/(\d+)\/(.+)$/)
+    if (!match) {
+      return false
+    }
+
+    const major = Number(match[1])
+    const minor = Number(match[2])
+    const isAas32OrNewer = major > 3 || (major === 3 && minor >= 2)
+    return isAas32OrNewer && match[3].startsWith(servicePath)
   })
 }
 
@@ -188,15 +197,14 @@ export function resolveAasQueryTarget (
   repositoryAvailable: boolean,
   registryAvailable: boolean,
 ): QueryTarget {
-  const isMonoInfrastructure = infrastructureTemplate === 'mono-repo' || infrastructureTemplate === 'mono-all'
-  if (isMonoInfrastructure && repositoryAvailable) {
+  if (infrastructureTemplate === 'mono-all' && repositoryAvailable) {
     return 'aas-repository'
   }
 
-  if (activeSource === 'repository' && repositoryAvailable) {
+  if (activeSource === 'repository') {
     return 'aas-repository'
   }
-  if (activeSource === 'registry' && registryAvailable) {
+  if (activeSource === 'registry') {
     return 'aas-registry'
   }
   if (registryAvailable) {
@@ -300,14 +308,27 @@ export function buildStructuredSearchQuery (
     conditions.push(quickQuery.$condition)
   }
 
-  const filterConditions = filters
+  const builtFilters = filters
     .map(filter => buildQueryFilterCondition(target, filter))
-    .filter((condition): condition is Record<string, unknown> => condition !== undefined)
+    .filter((filter): filter is BuiltQueryFilter => filter !== undefined)
 
-  if (filterConditions.length > 0) {
-    conditions.push(matchMode === 'all'
-      ? { $match: filterConditions }
-      : { $or: filterConditions.map(condition => ({ $match: [condition] })) })
+  if (builtFilters.length > 0) {
+    if (matchMode === 'all') {
+      const positiveConditions = builtFilters
+        .filter(filter => !filter.excludes)
+        .map(filter => filter.condition)
+      if (positiveConditions.length > 0) {
+        conditions.push({ $match: positiveConditions })
+      }
+      conditions.push(...builtFilters
+        .filter(filter => filter.excludes)
+        .map(filter => ({ $not: { $match: [filter.condition] } })))
+    } else {
+      const alternatives = builtFilters.map(filter => filter.excludes
+        ? { $not: { $match: [filter.condition] } }
+        : { $match: [filter.condition] })
+      conditions.push(alternatives.length === 1 ? alternatives[0] : { $or: alternatives })
+    }
   }
 
   if (conditions.length === 0) {
@@ -366,7 +387,7 @@ export function validateQueryForTarget (
   if (invalidConditionField) {
     const invalidRoot = invalidConditionField.split(/[.#(]/, 1)[0]
     const monoRootHint = target === 'aas-repository' && ['$sm', '$sme'].includes(invalidRoot)
-      ? ' $sm and $sme roots for /query/shells are only available with mono-repo or mono-all infrastructures.'
+      ? ' $sm and $sme roots for /query/shells are only available with mono-all infrastructures.'
       : ''
     return {
       isValid: false,
@@ -400,7 +421,7 @@ function getAllowedConditionFieldRoots (
 ): string[] {
   if (
     target === 'aas-repository'
-    && (infrastructureTemplate === 'mono-repo' || infrastructureTemplate === 'mono-all')
+    && infrastructureTemplate === 'mono-all'
   ) {
     return MONO_AAS_REPOSITORY_FIELD_ROOTS
   }
@@ -446,10 +467,15 @@ function quoteQueryFilterValue (value: string): string {
     : value
 }
 
+interface BuiltQueryFilter {
+  condition: Record<string, unknown>
+  excludes: boolean
+}
+
 function buildQueryFilterCondition (
   target: QueryTarget,
   filter: QueryFilter,
-): Record<string, unknown> | undefined {
+): BuiltQueryFilter | undefined {
   const field = QUERY_FILTER_FIELDS[target].find(candidate => candidate.key === filter.field)
   const value = filter.value.trim()
   if (!field || !field.operators.includes(filter.operator) || value === '') {
@@ -459,19 +485,19 @@ function buildQueryFilterCondition (
   const fieldOperand = { $field: field.path }
   const stringOperand = { $strVal: value }
   if (filter.operator === 'equals') {
-    return { $eq: [fieldOperand, stringOperand] }
+    return { condition: { $eq: [fieldOperand, stringOperand] }, excludes: false }
   }
   if (filter.operator === 'not-equals') {
-    return { $ne: [fieldOperand, stringOperand] }
+    return { condition: { $eq: [fieldOperand, stringOperand] }, excludes: true }
   }
   if (filter.operator === 'contains') {
-    return { $contains: [fieldOperand, stringOperand] }
+    return { condition: { $contains: [fieldOperand, stringOperand] }, excludes: false }
   }
   if (filter.operator === 'starts-with') {
-    return { '$starts-with': [fieldOperand, stringOperand] }
+    return { condition: { '$starts-with': [fieldOperand, stringOperand] }, excludes: false }
   }
   if (filter.operator === 'ends-with') {
-    return { '$ends-with': [fieldOperand, stringOperand] }
+    return { condition: { '$ends-with': [fieldOperand, stringOperand] }, excludes: false }
   }
-  return { $regex: [fieldOperand, stringOperand] }
+  return { condition: { $regex: [fieldOperand, stringOperand] }, excludes: false }
 }

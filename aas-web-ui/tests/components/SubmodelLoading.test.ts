@@ -116,7 +116,7 @@ vi.mock('@/store/InfrastructureStore', () => ({
     },
     get getBasyxComponents () {
       return {
-        SubmodelRepo: { description: state.submodelDescription.value },
+        SubmodelRepo: { description: state.submodelDescription.value, loading: false },
       }
     },
     getIsAuthenticating: false,
@@ -154,7 +154,7 @@ const slotStub = {
   template: '<div><slot /></div>',
 }
 
-const submodelQueryProfile = 'https://admin-shell.io/aas/API/3/2/SubmodelRepositoryServiceSpecification/SSP-005'
+const submodelQueryProfile = 'https://basyx.org/aas/API/3/2/SubmodelRepositoryService/1.0'
 
 function createSubmodel (id: string, submodelElements: any[] = []): any {
   return {
@@ -308,8 +308,9 @@ describe('Submodel loading invalidation', () => {
   it.each([
     ['incomplete compact search', { smSearch: 'idShort:' }, true],
     ['malformed advanced query', { smQuery: '{invalid' }, true],
+    ['schema-invalid advanced query', { smQuery: JSON.stringify({ $condition: { $unsupported: [] } }) }, true],
     ['failed query request', { smSearch: 'missing' }, false],
-  ])('loads the normal repository list for an %s route', async (_name, routeQuery, querySuccess) => {
+  ])('loads the normal repository list for a %s route', async (_name, routeQuery, querySuccess) => {
     state.routeName.value = 'SMViewer'
     state.routeQuery.value = routeQuery
     state.submodelDescription.value = { profiles: [submodelQueryProfile] }
@@ -367,6 +368,24 @@ describe('Submodel loading invalidation', () => {
     ])
   })
 
+  it('preserves filtered children when the selected Submodel contains a local match', async () => {
+    const selectedSubmodel = createSubmodel('selected-submodel', [
+      { idShort: 'matching-child', modelType: 'Property', value: 'match' },
+      { idShort: 'hidden-child', modelType: 'Property', value: 'other' },
+    ])
+    state.selectedNode.value = selectedSubmodel
+    mocks.fetchAasSmListById.mockResolvedValue([selectedSubmodel])
+
+    const wrapper = mount(SubmodelTree, { shallow: true })
+    await flushPromises()
+
+    ;(wrapper.vm as any).handleSearchInput('matching-child')
+    await (wrapper.vm as any).submitSearch()
+
+    expect((wrapper.vm as any).submodelTree[0].submodelElements.map((item: any) => item.idShort))
+      .toEqual(['matching-child'])
+  })
+
   it('keeps the selected Submodel visible when a repository query filters it out', async () => {
     const selectedSubmodel = createSubmodel('selected-submodel')
     state.routeName.value = 'SMViewer'
@@ -390,5 +409,85 @@ describe('Submodel loading invalidation', () => {
       'selected-submodel',
       'query-result',
     ])
+  })
+
+  it('renders a pinned selected Submodel when a repository query has no matches', async () => {
+    const selectedSubmodel = createSubmodel('selected-submodel')
+    state.routeName.value = 'SMViewer'
+    state.submodelDescription.value = { profiles: [submodelQueryProfile] }
+    state.selectedNode.value = selectedSubmodel
+    mocks.fetchSmList.mockResolvedValue([selectedSubmodel])
+    mocks.queryPage.mockResolvedValue({ items: [], hasMore: false, success: true })
+
+    const wrapper = mount(SubmodelTree, {
+      shallow: true,
+      global: {
+        stubs: {
+          ...editorFormStubs,
+          'Treeview': treeviewStub,
+          'v-container': slotStub,
+          'v-card': slotStub,
+          'v-card-title': slotStub,
+          'v-card-text': slotStub,
+        },
+      },
+    })
+    await flushPromises()
+
+    ;(wrapper.vm as any).handleSearchInput('no-match')
+    await (wrapper.vm as any).submitSearch()
+    await flushPromises()
+
+    expect((wrapper.vm as any).submodelTree.map((item: any) => item.id)).toEqual(['selected-submodel'])
+    expect(wrapper.findComponent(treeviewStub).exists()).toBe(true)
+    expect(wrapper.text()).not.toContain('No matching Submodels')
+  })
+
+  it('restores the last committed Submodel search when a replacement query fails', async () => {
+    state.routeName.value = 'SMViewer'
+    state.submodelDescription.value = { profiles: [submodelQueryProfile] }
+    mocks.queryPage
+      .mockResolvedValueOnce({ items: [createSubmodel('first-result')], hasMore: false, success: true })
+      .mockResolvedValueOnce({ items: [], hasMore: false, success: false })
+
+    const wrapper = mount(SubmodelTree, { shallow: true })
+    await flushPromises()
+
+    ;(wrapper.vm as any).handleSearchInput('first')
+    await (wrapper.vm as any).submitSearch()
+    ;(wrapper.vm as any).handleSearchInput('replacement')
+    await (wrapper.vm as any).submitSearch()
+
+    expect((wrapper.vm as any).smSearchValue).toBe('first')
+    expect((wrapper.vm as any).submodelTree.map((item: any) => item.id)).toEqual(['first-result'])
+    expect(state.routeQuery.value).toEqual({ smSearch: 'first' })
+  })
+
+  it('does not let a superseded route request clear the current Submodel search', async () => {
+    let resolveFirstQuery!: (page: any) => void
+    state.routeName.value = 'SMViewer'
+    state.submodelDescription.value = { profiles: [submodelQueryProfile] }
+    mocks.fetchSmList.mockResolvedValue([createSubmodel('normal-result')])
+    mocks.queryPage
+      .mockReturnValueOnce(new Promise(resolve => {
+        resolveFirstQuery = resolve
+      }))
+      .mockResolvedValueOnce({ items: [createSubmodel('second-result')], hasMore: false, success: true })
+
+    const wrapper = mount(SubmodelTree, { shallow: true })
+    await flushPromises()
+
+    state.routeQuery.value = { smSearch: 'first' }
+    await nextTick()
+    expect(mocks.queryPage).toHaveBeenCalledTimes(1)
+
+    state.routeQuery.value = { smSearch: 'second' }
+    await flushPromises()
+
+    resolveFirstQuery({ items: [], hasMore: false, success: false })
+    await flushPromises()
+
+    expect(state.routeQuery.value).toEqual({ smSearch: 'second' })
+    expect((wrapper.vm as any).submodelTree.map((item: any) => item.id)).toEqual(['second-result'])
   })
 })

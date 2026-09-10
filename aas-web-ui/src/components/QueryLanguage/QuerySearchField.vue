@@ -25,28 +25,33 @@
           @keydown.space="commitFilterOnSpace"
           @update:model-value="updateDraft"
         >
-          <template v-if="advancedActive || committedFilters.length > 0" #prepend-inner>
-            <div class="d-flex ga-1">
-              <v-chip
-                v-if="advancedActive"
-                closable
-                close-label="Clear advanced query"
-                color="primary"
-                label
-                prepend-icon="mdi-code-json"
-                size="small"
-                variant="tonal"
-                @click.stop="openAdvancedQuery"
-                @click:close.stop="clearSearch"
-              >
-                Advanced query
-              </v-chip>
+          <template v-if="advancedActive || committedFilters.length > 0" #default>
+            <v-chip
+              v-if="advancedActive"
+              closable
+              close-label="Clear advanced query"
+              color="primary"
+              label
+              prepend-icon="mdi-code-json"
+              size="small"
+              variant="tonal"
+              @click.stop="openAdvancedQuery"
+              @click:close.stop="clearSearch"
+            >
+              Advanced query
+            </v-chip>
 
-              <template v-else>
+            <v-slide-group
+              v-else
+              class="flex-grow-1 overflow-hidden w-0"
+              show-arrows
+            >
+              <v-slide-group-item
+                v-for="filter in committedFilters"
+                :key="filter.id"
+              >
                 <v-chip
-                  v-for="filter in committedFilters"
-                  :key="filter.id"
-                  class="flex-shrink-0"
+                  class="mx-1"
                   closable
                   label
                   size="small"
@@ -54,8 +59,8 @@
                 >
                   {{ formatQueryFilterExpression(filter) }}
                 </v-chip>
-              </template>
-            </div>
+              </v-slide-group-item>
+            </v-slide-group>
           </template>
         </v-text-field>
       </div>
@@ -284,7 +289,10 @@
     if (props.serverSearch) {
       if (canCommitDraftFilter()) {
         commitDraftFilter(false)
-      } else if (draftState.value.stage !== 'field') {
+      } else if (
+        draftState.value.stage !== 'field'
+        && !(draftState.value.stage === 'operator' && draftState.value.operatorFragment === '' && !/\s$/.test(draft.value))
+      ) {
         suggestionsOpen.value = true
         return
       }

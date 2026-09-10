@@ -223,9 +223,9 @@
           >
             <template
               v-if="
-                submodelTreeUnfiltered &&
-                  Array.isArray(submodelTreeUnfiltered) &&
-                  submodelTreeUnfiltered.length > 0
+                submodelTree &&
+                  Array.isArray(submodelTree) &&
+                  submodelTree.length > 0
               "
             >
               <!-- TODO: Evaluate and Replace with Vuetify Treeview Component when it gets fully released in Q1 2025 -->
@@ -453,6 +453,7 @@
   import { verifyForEditor } from '@/composables/MetamodelVerification'
   import { useQuerySearch } from '@/composables/QueryLanguage/QuerySearch'
   import { useQuerySearchRoute } from '@/composables/QueryLanguage/QuerySearchRoute'
+  import { validateQueryLanguageSchema } from '@/pages/modules/queryLanguage/queryLanguageSchemaValidation'
   import { useAASStore } from '@/store/AASDataStore'
   import { useClipboardStore } from '@/store/ClipboardStore'
   import { useEnvStore } from '@/store/EnvironmentStore'
@@ -505,6 +506,7 @@
   const advancedQueryDialog = ref(false)
   const advancedQueryDraft = ref('')
   let ignoreNextSearchRouteUpdate = false
+  let routeSearchGeneration = 0
   const treeLoad = useLoadGeneration()
   const treeLoading = treeLoad.loading // Variable to store if the Submodel Tree is loading
   const selectSMETypeToAddDialog = ref(false) // Variable to store if the Add SubmodelElement Dialog should be shown
@@ -580,6 +582,10 @@
       unref(infrastructureStore.getBasyxComponents.SubmodelRepo.description),
       'submodel-repository',
     ),
+  )
+  const globalQueryCapabilityLoading = computed(() =>
+    isGlobalSmRoute.value
+    && unref(infrastructureStore.getBasyxComponents.SubmodelRepo.loading),
   )
   const activeTreePath = computed(() => {
     if (
@@ -664,8 +670,8 @@
     },
   )
 
-  watch(globalQueryAvailable, available => {
-    if (available && smSearchRoute.state.value.mode !== 'none' && !querySearch.activeMode.value) {
+  watch([globalQueryAvailable, globalQueryCapabilityLoading], ([, loading]) => {
+    if (!loading && smSearchRoute.state.value.mode !== 'none' && !querySearch.activeMode.value) {
       void applySearchFromRoute(false)
     }
   })
@@ -1720,9 +1726,12 @@
     const selectedSubmodel = findSelectedSubmodel(selectionSource)
     if (!selectedSubmodel) return items
 
+    const filteredSelectedSubmodel = items.find(item => isSameSubmodel(item, selectedSubmodel))
+    const pinnedSelectedSubmodel = filteredSelectedSubmodel ?? selectedSubmodel
+
     return [
-      selectedSubmodel,
-      ...items.filter(item => !isSameSubmodel(item, selectedSubmodel)),
+      pinnedSelectedSubmodel,
+      ...items.filter(item => !isSameSubmodel(item, pinnedSelectedSubmodel)),
     ]
   }
 
@@ -1769,6 +1778,7 @@
   }
 
   async function submitSearch (): Promise<void> {
+    routeSearchGeneration += 1
     if (isGlobalSmRoute.value && parsedSearch.value.incompleteField) return
     if (smSearchValue.value.trim() === '') {
       await clearQuerySearch()
@@ -1776,7 +1786,11 @@
     }
 
     const success = await executeSearchExpression()
-    if (!success || !isGlobalSmRoute.value) return
+    if (!success) {
+      restoreSearchValueFromRoute()
+      return
+    }
+    if (!isGlobalSmRoute.value) return
 
     ignoreNextSearchRouteUpdate = true
     const changed = await smSearchRoute.commitSearch(smSearchValue.value)
@@ -1831,6 +1845,7 @@
   }
 
   async function executeAdvancedQuery (query: QueryLanguageQuery): Promise<void> {
+    routeSearchGeneration += 1
     const success = await runAdvancedQuery(query)
     if (!success) return
 
@@ -1851,6 +1866,7 @@
   }
 
   async function clearQuerySearch (): Promise<void> {
+    routeSearchGeneration += 1
     if (isGlobalSmRoute.value) {
       ignoreNextSearchRouteUpdate = true
       const changed = await smSearchRoute.clear()
@@ -1864,16 +1880,21 @@
   async function applySearchFromRoute (reloadWhenEmpty: boolean): Promise<boolean> {
     if (!isGlobalSmRoute.value) return false
 
+    const generation = ++routeSearchGeneration
     const state = smSearchRoute.state.value
+    const stateKey = JSON.stringify(state)
     if (state.mode === 'search') {
       smSearchValue.value = state.expression
       if (parsedSearch.value.incompleteField) {
-        await clearInvalidRouteSearch('The shared Submodel search is incomplete.')
-        if (reloadWhenEmpty) await initialize()
+        if (isCurrentRouteSearch(generation, stateKey)) {
+          await clearInvalidRouteSearch('The shared Submodel search is incomplete.')
+          if (reloadWhenEmpty) await initialize()
+        }
         return false
       }
 
       const success = await executeSearchExpression()
+      if (!isCurrentRouteSearch(generation, stateKey)) return false
       if (success) return true
 
       await clearInvalidRouteSearch('The shared Submodel search could not be applied.')
@@ -1881,8 +1902,16 @@
       return false
     }
     if (state.mode === 'advanced') {
+      if (globalQueryCapabilityLoading.value) return false
       if (!globalQueryAvailable.value) {
         await clearInvalidRouteSearch('Advanced Submodel search is not available for this infrastructure.')
+        if (reloadWhenEmpty) await initialize()
+        return false
+      }
+      const schemaValidation = await validateQueryLanguageSchema(state.queryText)
+      if (!isCurrentRouteSearch(generation, stateKey)) return false
+      if (!schemaValidation.isValid) {
+        await clearInvalidRouteSearch(schemaValidation.message)
         if (reloadWhenEmpty) await initialize()
         return false
       }
@@ -1898,6 +1927,7 @@
       }
       advancedQueryDraft.value = JSON.stringify(validation.query, null, 2)
       const success = await runAdvancedQuery(validation.query)
+      if (!isCurrentRouteSearch(generation, stateKey)) return false
       if (success) return true
 
       await clearInvalidRouteSearch('The shared Submodel query could not be applied.')
@@ -1911,6 +1941,15 @@
       await initialize()
     }
     return false
+  }
+
+  function isCurrentRouteSearch (generation: number, stateKey: string): boolean {
+    return generation === routeSearchGeneration && JSON.stringify(smSearchRoute.state.value) === stateKey
+  }
+
+  function restoreSearchValueFromRoute (): void {
+    const state = smSearchRoute.state.value
+    smSearchValue.value = state.mode === 'search' ? state.expression : ''
   }
 
   async function clearInvalidRouteSearch (message: string): Promise<void> {

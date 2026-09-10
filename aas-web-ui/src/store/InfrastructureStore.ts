@@ -142,6 +142,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       additionalParams: '?limit=1',
     },
   })
+  const componentConnectionGenerations = new Map<BaSyxComponentKey, number>()
 
   // Getters
   const getInfrastructures = computed(() => infrastructures.value)
@@ -618,6 +619,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
     for (const repoKey of keys) {
       if (!activeKeys.includes(repoKey)) {
+        invalidateComponentConnection(repoKey)
         basyxComponents[repoKey].connected = null
         basyxComponents[repoKey].loading = false
         basyxComponents[repoKey].description = null
@@ -628,6 +630,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       const infraUrl = selectedInfra.components[repoKey]?.url || ''
 
       if (infraUrl.trim() === '') {
+        invalidateComponentConnection(repoKey)
         // If infrastructure has no URL for this component, mark as not connected
         basyxComponents[repoKey].connected = false
         basyxComponents[repoKey].description = null
@@ -647,8 +650,32 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     await Promise.all(connectionPromises)
   }
 
+  function invalidateComponentConnection (componentKey: BaSyxComponentKey): number {
+    const generation = (componentConnectionGenerations.get(componentKey) ?? 0) + 1
+    componentConnectionGenerations.set(componentKey, generation)
+    return generation
+  }
+
+  function isCurrentComponentConnection (
+    componentKey: BaSyxComponentKey,
+    generation: number,
+    infrastructureId: string | null,
+    requestedUrl: string,
+  ): boolean {
+    return componentConnectionGenerations.get(componentKey) === generation
+      && selectedInfrastructureId.value === infrastructureId
+      && normalizeComponentUrl(basyxComponents[componentKey].url) === requestedUrl
+  }
+
+  function normalizeComponentUrl (url: string): string {
+    return url.trim().replace(/\/+$/, '')
+  }
+
   async function connectComponent (componentKey: keyof typeof basyxComponents): Promise<void> {
     const basyxComponent = basyxComponents[componentKey]
+    const connectionGeneration = invalidateComponentConnection(componentKey)
+    const infrastructureId = selectedInfrastructureId.value
+    const requestedUrl = normalizeComponentUrl(basyxComponent.url)
     basyxComponent.description = null
     if (basyxComponent.url && basyxComponent.url.trim() !== '') {
       basyxComponent.loading = true
@@ -678,6 +705,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         path += '/description'
 
         const response = await getRequest(path, context, disableMessage)
+        if (!isCurrentComponentConnection(componentKey, connectionGeneration, infrastructureId, requestedUrl)) {
+          return
+        }
         basyxComponent.loading = false
 
         if (response.success) {
@@ -708,6 +738,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
           disableMessage = false
           const response = await getRequest(path, context, disableMessage)
+          if (!isCurrentComponentConnection(componentKey, connectionGeneration, infrastructureId, requestedUrl)) {
+            return
+          }
           basyxComponent.loading = false
 
           if (response.success) {
@@ -726,6 +759,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
           }
         }
       } catch (error) {
+        if (!isCurrentComponentConnection(componentKey, connectionGeneration, infrastructureId, requestedUrl)) {
+          return
+        }
         basyxComponent.loading = false
         console.error(`Error connecting to ${basyxComponent.label}:`, error)
 

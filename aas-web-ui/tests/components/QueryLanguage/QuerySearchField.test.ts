@@ -97,6 +97,30 @@ describe('QuerySearchField', () => {
     expect(wrapper.emitted('submit')).toHaveLength(1)
   })
 
+  it.each(['id', 'idShort'])('submits the exact field name %s as free text', async value => {
+    const wrapper = mountSearchField()
+
+    await wrapper.get('input').setValue(value)
+    await wrapper.get('input').trigger('keydown.enter')
+    await nextTick()
+
+    expect(wrapper.find('.v-chip').exists()).toBe(false)
+    expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([value])
+    expect(wrapper.emitted('submit')).toHaveLength(1)
+  })
+
+  it('uses a Vuetify slide group to keep multiple filter chips reachable', async () => {
+    const wrapper = mountSearchField()
+
+    for (const expression of ['id:one', 'idShort:two', 'globalAssetId:three']) {
+      await wrapper.get('input').setValue(expression)
+      await wrapper.get('input').trigger('keydown.space')
+    }
+
+    expect(wrapper.find('.v-slide-group').exists()).toBe(true)
+    expect(wrapper.findAll('.v-chip')).toHaveLength(3)
+  })
+
   it('automatically searches when committed filter chips are removed', async () => {
     const wrapper = mountSearchField()
 
