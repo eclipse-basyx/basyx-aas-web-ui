@@ -3,6 +3,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useGetPolicies } from './api/policy/useGetPolicies'
   import { useAbacServiceDiscovery } from './api/useAbacServiceDiscovery'
   import AbacLayout from './components/AbacLayout.vue'
   import { ABAC_I18N_KEY } from './constants/i18n'
@@ -25,7 +26,7 @@
 
   // URL <-> store sync
   const { data: discoveredServices, isPending } = useAbacServiceDiscovery()
-  const { selectedService, onSelectService } = useAbacNavigation()
+  const { selectedService, onSelectService, selectedPolicyVersion, onSelectPolicy } = useAbacNavigation()
 
   watch(
     discoveredServices,
@@ -49,6 +50,14 @@
     const match = configStore.services.find(s => s.componentKey === key)
     if (match) configStore.setApiUrl(match.url)
   })
+
+  // Select active policy if no policy param is passed
+  const { data: policies } = useGetPolicies()
+  watch([policies, selectedService], ([list, service]) => {
+    if (selectedPolicyVersion.value || !service) return
+    const active = list?.find(policy => policy.status === 'active')
+    if (active) onSelectPolicy(active.version_id)
+  }, { immediate: true, flush: 'post' })
 
   watch(
     () => configStore.language,
