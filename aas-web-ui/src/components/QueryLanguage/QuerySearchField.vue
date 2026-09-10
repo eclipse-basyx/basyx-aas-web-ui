@@ -9,13 +9,16 @@
       <div ref="inputContainerRef">
         <v-text-field
           v-bind="menuProps"
+          :aria-label="label"
           :clearable="draft.length > 0 || committedFilters.length > 0"
           density="compact"
+          :dirty="draft.length > 0 || committedFilters.length > 0"
           hide-details
-          :label="label"
+          :label="advancedActive || committedFilters.length > 0 ? undefined : label"
           :loading="loading"
           :min-width="minWidth"
           :model-value="draft"
+          :persistent-clear="committedFilters.length > 0"
           :readonly="advancedActive"
           variant="outlined"
           @click:clear="clearSearch"
@@ -28,6 +31,7 @@
           <template v-if="advancedActive || committedFilters.length > 0" #default>
             <v-chip
               v-if="advancedActive"
+              class="ml-n2"
               closable
               close-label="Clear advanced query"
               color="primary"
@@ -41,26 +45,19 @@
               Advanced query
             </v-chip>
 
-            <v-slide-group
+            <v-chip
               v-else
-              class="flex-grow-1 overflow-hidden w-0"
-              show-arrows
+              :aria-label="`Show ${committedFilters.length} applied ${committedFilters.length === 1 ? 'filter' : 'filters'}`"
+              class="ml-n2 mr-2"
+              color="primary"
+              label
+              prepend-icon="mdi-filter-variant"
+              size="small"
+              variant="tonal"
+              @click.stop="suggestionsOpen = true"
             >
-              <v-slide-group-item
-                v-for="filter in committedFilters"
-                :key="filter.id"
-              >
-                <v-chip
-                  class="mx-1"
-                  closable
-                  label
-                  size="small"
-                  @click:close.stop="removeFilter(filter.id)"
-                >
-                  {{ formatQueryFilterExpression(filter) }}
-                </v-chip>
-              </v-slide-group-item>
-            </v-slide-group>
+              {{ committedFilters.length }} {{ committedFilters.length === 1 ? 'filter' : 'filters' }}
+            </v-chip>
           </template>
         </v-text-field>
       </div>
@@ -80,6 +77,33 @@
         nav
         slim
       >
+        <template v-if="!advancedActive && committedFilters.length > 0">
+          <v-list-subheader>Applied filters</v-list-subheader>
+
+          <v-list-item
+            v-for="filter in committedFilters"
+            :key="filter.id"
+            prepend-gap="4"
+            :title="formatQueryFilterExpression(filter)"
+          >
+            <template #prepend>
+              <v-icon icon="mdi-filter-check-outline" size="small" />
+            </template>
+
+            <template #append>
+              <v-btn
+                :aria-label="`Remove ${formatQueryFilterExpression(filter)}`"
+                icon="mdi-close"
+                size="x-small"
+                variant="text"
+                @click.stop="removeFilter(filter.id)"
+              />
+            </template>
+          </v-list-item>
+
+          <v-divider />
+        </template>
+
         <v-list-subheader>{{ advancedActive ? 'Advanced query active' : suggestionTitle }}</v-list-subheader>
 
         <template v-if="!advancedActive && draftState.stage === 'value' && activeField?.valueOptions">
@@ -136,7 +160,7 @@
           </v-list-item>
         </template>
 
-        <v-divider v-if="!advancedActive" />
+        <v-divider v-if="!advancedActive" class="my-1" />
 
         <v-list-item
           class="my-1"

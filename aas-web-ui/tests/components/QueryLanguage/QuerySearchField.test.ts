@@ -80,7 +80,8 @@ describe('QuerySearchField', () => {
     await wrapper.get('input').setValue('id:Motor')
     await wrapper.get('input').trigger('keydown.space')
 
-    expect(wrapper.get('.v-chip').text()).toContain('id:Motor')
+    expect(wrapper.get('.v-chip').text()).toContain('1 filter')
+    expect(findMenuItem('id:Motor')).toBeDefined()
     expect(wrapper.get('input').element.value).toBe('')
     expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual(['id:Motor'])
     expect(wrapper.emitted('submit')).toHaveLength(1)
@@ -93,7 +94,10 @@ describe('QuerySearchField', () => {
     await wrapper.get('input').trigger('keydown.enter')
     await nextTick()
 
-    expect(wrapper.get('.v-chip').text()).toContain('globalAssetId=urn:asset:42')
+    expect(wrapper.get('.v-chip').text()).toContain('1 filter')
+    await wrapper.get('.v-chip').trigger('click')
+    await nextTick()
+    expect(findMenuItem('globalAssetId=urn:asset:42')).toBeDefined()
     expect(wrapper.emitted('submit')).toHaveLength(1)
   })
 
@@ -109,7 +113,7 @@ describe('QuerySearchField', () => {
     expect(wrapper.emitted('submit')).toHaveLength(1)
   })
 
-  it('uses a Vuetify slide group to keep multiple filter chips reachable', async () => {
+  it('summarizes filters in the field and lists each applied filter in the menu', async () => {
     const wrapper = mountSearchField()
 
     for (const expression of ['id:one', 'idShort:two', 'globalAssetId:three']) {
@@ -117,8 +121,14 @@ describe('QuerySearchField', () => {
       await wrapper.get('input').trigger('keydown.space')
     }
 
-    expect(wrapper.find('.v-slide-group').exists()).toBe(true)
-    expect(wrapper.findAll('.v-chip')).toHaveLength(3)
+    expect(wrapper.find('.v-slide-group').exists()).toBe(false)
+    expect(wrapper.get('.v-chip').text()).toContain('3 filters')
+    expect(wrapper.get('.v-chip').classes()).toContain('ml-n2')
+    expect(wrapper.get('.v-chip').classes()).toContain('mr-2')
+    expect(document.body.textContent).toContain('Applied filters')
+    expect(findMenuItem('id:one')).toBeDefined()
+    expect(findMenuItem('idShort:two')).toBeDefined()
+    expect(findMenuItem('globalAssetId:three')).toBeDefined()
   })
 
   it('automatically searches when committed filter chips are removed', async () => {
@@ -126,11 +136,29 @@ describe('QuerySearchField', () => {
 
     await wrapper.get('input').setValue('idShort:Motor')
     await wrapper.get('input').trigger('keydown.space')
-    await wrapper.get('.v-chip__close').trigger('click')
+    const removeButton = document.body.querySelector('[aria-label="Remove idShort:Motor"]')
+    expect(removeButton).not.toBeNull()
+    await new DOMWrapper(removeButton!).trigger('click')
 
     expect(wrapper.find('.v-chip').exists()).toBe(false)
     expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([''])
     expect(wrapper.emitted('submit')).toHaveLength(2)
+  })
+
+  it('keeps the clear action visible when filters are active without search text', async () => {
+    const wrapper = mountSearchField()
+
+    await wrapper.get('input').setValue('idShort:Motor')
+    await wrapper.get('input').trigger('keydown.space')
+
+    expect(wrapper.get('input').element.value).toBe('')
+    expect(wrapper.get('.v-field').classes()).toContain('v-field--persistent-clear')
+
+    await wrapper.get('.v-field__clearable .v-icon').trigger('click')
+
+    expect(wrapper.find('.v-chip').exists()).toBe(false)
+    expect(wrapper.emitted('update:modelValue')?.at(-1)).toEqual([''])
+    expect(wrapper.emitted('clear')).toHaveLength(1)
   })
 
   it('offers the advanced query action in the suggestions menu', async () => {
@@ -164,6 +192,9 @@ describe('QuerySearchField', () => {
     await wrapper.setProps({ advancedActive: true })
 
     expect(wrapper.get('.v-chip').text()).toContain('Advanced query')
+    expect(wrapper.get('.v-chip').classes()).toContain('ml-n2')
+    expect(wrapper.find('.v-field-label').exists()).toBe(false)
+    expect(wrapper.get('input').attributes('aria-label')).toBe('Search AAS')
     expect(wrapper.get('input').attributes('readonly')).toBeDefined()
 
     await wrapper.get('input').trigger('focus')
