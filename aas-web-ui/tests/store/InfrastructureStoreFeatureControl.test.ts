@@ -6,7 +6,6 @@ import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
 
 const mocks = vi.hoisted(() => ({
-  getRequest: vi.fn().mockResolvedValue({ success: true }),
   appliedOverrides: [] as unknown[],
   getRequest: vi.fn(),
   loadInfrastructuresFromStorage: vi.fn(),
@@ -115,7 +114,6 @@ function infrastructure (id: string, features: string[]): InfrastructureConfig {
 describe('InfrastructureStore', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.getRequest.mockResolvedValue({ success: true })
     mocks.appliedOverrides.length = 0
     mocks.getRequest.mockReset()
     mocks.getRequest.mockResolvedValue({ success: true })
