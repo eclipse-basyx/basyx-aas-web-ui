@@ -4,8 +4,9 @@ import { useClipboardUtil } from '@/composables/ClipboardUtil'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
 
 const mockState = vi.hoisted(() => ({
+  routeName: 'SMEditor',
   routeQuery: {} as Record<string, unknown>,
-  selectedAAS: { submodels: [] as Array<any> },
+  selectedAAS: { id: 'urn:aas', submodels: [] as Array<any> },
   submodelRepoUrl: 'https://example.test/submodels',
   clipboardContent: undefined as any,
 }))
@@ -17,13 +18,14 @@ const mockDeps = vi.hoisted(() => ({
   postSubmodel: vi.fn().mockResolvedValue(true),
   postSubmodelElement: vi.fn().mockResolvedValue(true),
   getSmEndpointById: vi.fn(),
+  fetchAasUpdateCapability: vi.fn(),
   putAas: vi.fn().mockResolvedValue(true),
   generateIri: vi.fn(() => 'https://example.com/ids/sm/new-id'),
   dispatchSelectedAAS: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
-  useRoute: () => ({ query: mockState.routeQuery }),
+  useRoute: () => ({ name: mockState.routeName, query: mockState.routeQuery }),
   useRouter: () => ({ push: mockDeps.routerPush }),
 }))
 
@@ -41,7 +43,7 @@ vi.mock('@/store/ClipboardStore', () => ({
 }))
 
 vi.mock('@/store/InfrastructureStore', () => ({
-  useInfrastructureStore: () => ({
+  useInfrastructureStore: () => ({ supportsResourceAccess: () => true,
     getSubmodelRepoURL: mockState.submodelRepoUrl,
   }),
 }))
@@ -64,6 +66,7 @@ vi.mock('@/composables/Client/SMRepositoryClient', () => ({
 vi.mock('@/composables/Client/AASRepositoryClient', () => ({
   useAASRepositoryClient: () => ({
     putAas: mockDeps.putAas,
+    fetchAasUpdateCapability: mockDeps.fetchAasUpdateCapability,
   }),
 }))
 
@@ -79,8 +82,9 @@ describe('ClipboardUtil.ts', () => {
     vi.clearAllMocks()
     vi.useRealTimers()
 
+    mockState.routeName = 'SMEditor'
     mockState.routeQuery = {}
-    mockState.selectedAAS = { submodels: [] }
+    mockState.selectedAAS = { id: 'urn:aas', submodels: [] }
     mockState.submodelRepoUrl = 'https://example.test/submodels'
     mockState.clipboardContent = undefined
     mockDeps.getSmEndpointById.mockImplementation(
@@ -179,10 +183,23 @@ describe('ClipboardUtil.ts', () => {
     })
   })
 
+  it.each([false, undefined])('blocks AAS editor pasting without verified update access (%s)', async capability => {
+    mockState.routeName = 'AASEditor'
+    mockDeps.fetchAasUpdateCapability.mockResolvedValue(capability)
+    mockState.clipboardContent = { modelType: 'Submodel', id: 'urn:old' }
+    const { pasteElement } = useClipboardUtil()
+    await pasteElement()
+    await vi.waitFor(() => expect(mockDeps.dispatchSnackbar).toHaveBeenCalled())
+    expect(mockDeps.fetchAasUpdateCapability).toHaveBeenCalledWith('urn:aas')
+    expect(mockDeps.postSubmodel).not.toHaveBeenCalled()
+    expect(mockDeps.putAas).not.toHaveBeenCalled()
+    expect(mockDeps.routerPush).not.toHaveBeenCalled()
+  })
+
   it('pastes Submodel and updates routing to new submodel endpoint', async () => {
     const { pasteElement } = useClipboardUtil()
 
-    mockState.selectedAAS = { submodels: [] }
+    mockState.selectedAAS = { id: 'urn:aas', submodels: [] }
     mockState.clipboardContent = { modelType: 'Submodel', id: 'old-id' }
 
     vi.spyOn(jsonization, 'submodelFromJsonable').mockReturnValue({

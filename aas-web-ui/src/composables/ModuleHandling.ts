@@ -1,4 +1,5 @@
 import type { ModuleNavigationRoute } from '@/types/Application'
+import type { BaSyxComponentKey } from '@/types/BaSyx'
 import { useRoute } from 'vue-router'
 import { useAASStore } from '@/store/AASDataStore'
 import { useEnvStore } from '@/store/EnvironmentStore'
@@ -112,6 +113,10 @@ export function useModuleHandling (): ModuleHandling {
       return false
     }
     if (!matchesNeedsInfrastructureEndpoints(moduleRoute)) {
+      return false
+    }
+    if (moduleRoute.path.toLowerCase().endsWith('/resourceaccess')
+      && !['AASRepo', 'SubmodelRepo', 'AASRegistry', 'SubmodelRegistry', 'AASDiscovery', 'ConceptDescriptionRepo'].some(key => infrastructureStore.supportsResourceAccess?.(key as BaSyxComponentKey))) {
       return false
     }
     if (!matchesNeedsAuthentication(moduleRoute)) {

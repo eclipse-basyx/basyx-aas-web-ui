@@ -1,4 +1,5 @@
 import type { UserData } from '@/types/Infrastructure'
+import type { AccessPrincipal } from '@/types/ResourceAccess'
 import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
 export type TokenPayload = Record<string, unknown>
@@ -50,4 +51,14 @@ export function getUserFromToken (accessToken: string): UserData {
     family_name: accessTokenPayload.family_name,
     email: accessTokenPayload.email,
   } as UserData
+}
+
+export function getAccessPrincipalFromToken (accessToken: string): AccessPrincipal {
+  const payload = getTokenPayload(accessToken)
+  const issuer = typeof payload.iss === 'string' ? payload.iss.trim() : ''
+  const subject = typeof payload.sub === 'string' ? payload.sub.trim() : ''
+  if (!issuer || !subject) {
+    throw new Error('The token does not contain non-empty iss and sub claims.')
+  }
+  return { issuer, subject }
 }

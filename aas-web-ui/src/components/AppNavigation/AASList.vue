@@ -276,6 +276,22 @@
                           <v-list-item-subtitle>Delete AAS</v-list-item-subtitle>
                         </v-list-item>
 
+                        <v-list-item v-if="infrastructureStore.supportsResourceAccess('AASRepo')" @click="openAccessDialog(item, 'aas')">
+                          <template #prepend>
+                            <v-icon size="x-small">mdi-account-lock</v-icon>
+                          </template>
+
+                          <v-list-item-subtitle>Share</v-list-item-subtitle>
+                        </v-list-item>
+
+                        <v-list-item v-if="canManageDescriptorAccess" @click="openAccessDialog(item, 'aas-descriptor')">
+                          <template #prepend>
+                            <v-icon size="x-small">mdi-file-key</v-icon>
+                          </template>
+
+                          <v-list-item-subtitle>Manage descriptor access</v-list-item-subtitle>
+                        </v-list-item>
+
                         <v-divider
                           v-if="
                             item.assetKind === 'Type' ||
@@ -396,6 +412,8 @@
   <!-- Dialog for QR Scanner -->
   <QRScanner v-model="qrScannerDialog" @select-aas="handleAasSelected" />
 
+  <ResourceAccessDialog v-model="accessDialog" :target="accessTarget" />
+
   <AdvancedQueryDialog
     v-if="queryAvailable && !isMobile"
     v-model="advancedQueryDialog"
@@ -414,6 +432,7 @@
 
 <script lang="ts" setup>
   import type { AasSearchScope, QueryLanguageQuery, QueryTarget } from '@/types/QueryLanguage'
+  import type { ResourceAccessTarget } from '@/types/ResourceAccess'
   import type { ComponentPublicInstance, Ref } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'
@@ -431,6 +450,7 @@
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
+  import { usesAasEnvironment } from '@/utils/InfrastructureUtils'
   import {
     buildStructuredSearchQuery,
     createQueryExample,
@@ -441,6 +461,7 @@
     supportsQueryProfile,
     validateQueryForTarget,
   } from '@/utils/QueryLanguageUtils'
+  import { buildResourceAccessTarget } from '@/utils/ResourceAccessTargets'
 
   // Extend the ComponentPublicInstance type to include scrollToIndex
   interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -501,6 +522,8 @@
   const instanceDialog = ref(false) // Variable to store if the Instance Creation Dialog should be shown
   const aasToInstantiate = ref({}) // Variable to store the AAS to be instantiated
   const qrScannerDialog = ref(false)
+  const accessDialog = ref(false)
+  const accessTarget = ref<ResourceAccessTarget>()
   let queryScrollContainer: HTMLElement | null = null
   let changingAasSearchScope = false
   let ignoreNextSearchRouteUpdate = false
@@ -598,6 +621,7 @@
   const copyIconAsRef = computed(() => copyIcon)
   const isAuthenticating = computed(() => infrastructureStore.getIsAuthenticating) // Check if authentication is in progress
   const isTestingConnections = computed(() => infrastructureStore.getIsTestingConnections) // Check if testing connections
+  const canManageDescriptorAccess = computed(() => !usesAasEnvironment(infrastructureStore.getSelectedInfrastructure) && infrastructureStore.supportsResourceAccess('AASRegistry'))
   const selectedInfrastructureId = computed(() => infrastructureStore.getSelectedInfrastructureId) // Get selected infrastructure ID
   const selectedInfrastructureTemplate = computed(() => infrastructureStore.getSelectedInfrastructure?.template ?? 'full')
   const aasRepositoryQueryAvailable = computed(() => supportsQueryProfile(
@@ -1275,6 +1299,17 @@
   function openDeleteDialog (aasOrAasDescriptor: any): void {
     deleteDialog.value = true
     aasToDelete.value = aasOrAasDescriptor
+  }
+
+  function openAccessDialog (aasOrAasDescriptor: any, kind: 'aas' | 'aas-descriptor'): void {
+    if (kind === 'aas-descriptor' && !canManageDescriptorAccess.value) return
+    if (!infrastructureStore.supportsResourceAccess(kind === 'aas' ? 'AASRepo' : 'AASRegistry')) return
+    accessTarget.value = buildResourceAccessTarget({
+      kind,
+      baseUrl: kind === 'aas' ? aasRepoURL.value : aasRegistryURL.value,
+      resourceId: aasOrAasDescriptor.id,
+    })
+    accessDialog.value = true
   }
 
   function openDownloadDialog (aasDescriptor: any): void {

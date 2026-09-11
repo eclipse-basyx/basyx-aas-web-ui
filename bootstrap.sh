@@ -29,7 +29,7 @@ if [ "$build_images" = "y" ]; then
     docker buildx create --use --name basyx-builder
 
     # Build and push the Docker images
-    docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t eclipsebasyx/aas-gui:v2-$DATE . --push
+    docker buildx build --platform linux/amd64,linux/arm64 -t registry.erbenschell.iese.fraunhofer.de/basyx/uni_bw_bruecken/aas-gui:rebac-1.0.0 . --push
 else
     pnpm dev --host
 fi

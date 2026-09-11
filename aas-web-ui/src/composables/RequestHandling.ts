@@ -16,6 +16,14 @@ export interface RequestErrorHandlingOptions {
   signal?: AbortSignal
 }
 
+export interface RequestResult<T = unknown> {
+  success: boolean
+  data?: T
+  status?: number
+  raw?: Response
+  aborted?: true
+}
+
 export function useRequestHandling () {
   let lastRequestFailureStatus: number | undefined
   let lastRequestFailureDetails: string | undefined
@@ -368,8 +376,7 @@ export function useRequestHandling () {
         ) {
           return { response, data: await response.blob() } // Return the response as Blob
         } else if (!response.ok) {
-          // No content but received an HTTP error status
-          throw new Error('Error status: ' + response.status)
+          return { response, data: undefined }
         } else if (response.ok && response.status >= 200 && response.status < 300) {
           return { response, data: await response.blob() } // Return the response as Blob
         } else {
@@ -441,22 +448,24 @@ export function useRequestHandling () {
         } else if (response.ok) {
           return { response, data: undefined } // Return without content
         } else {
-          // No content but received an HTTP error status
-          throw new Error('Error status: ' + response.status)
+          return { response, data: undefined }
         }
       })
       .then(({ response, data }) => {
         // Check if the Server responded with an error
         const payloadStatus = extractErrorStatusFromPayload(data)
         if (payloadStatus !== undefined) {
-          return handlePayloadFailure(
-            payloadStatus,
-            data,
-            context,
-            disableMessage,
-            errorHandlingOptions,
-            requestOwnerId,
-          )
+          return {
+            ...handlePayloadFailure(
+              payloadStatus,
+              data,
+              context,
+              disableMessage,
+              errorHandlingOptions,
+              requestOwnerId,
+            ),
+            raw: response,
+          }
         } else if (!response.ok) {
           setLastRequestFailureStatus(response.status)
           setLastRequestFailureDetails(buildErrorDetailsFromPayload(data) || undefined)
@@ -472,6 +481,7 @@ export function useRequestHandling () {
             success: false,
             status: response.status,
             data: shouldSuppressStatus(response.status, errorHandlingOptions) ? data : undefined,
+            raw: response,
           }
         } else if (data) {
           setLastRequestFailureStatus(undefined)
@@ -491,124 +501,165 @@ export function useRequestHandling () {
       .catch(error => handleRequestError(error, disableMessage, errorHandlingOptions, requestOwnerId))
   }
 
-  function putRequest (path: string, body: any, headers: Headers, context: string, disableMessage: boolean): any {
+  function putRequest (
+    path: string,
+    body: any,
+    headers: Headers,
+    context: string,
+    disableMessage: boolean,
+    errorHandlingOptions: RequestErrorHandlingOptions = {},
+  ): any {
     const requestOwnerId = getRequestOwnerId()
-    return fetchWithAuthentication(path, { method: 'PUT', body, headers })
-      .then(response => {
+    return fetchWithAuthentication(path, { method: 'PUT', body, headers, signal: errorHandlingOptions.signal })
+      .then(async response => {
         const contentType = getResponseContentType(response)
         // Check if the Server responded with content
         if (
           contentType === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
-          return parseJsonIfPresent(response) // Return the response as JSON
+          return { response, data: await parseJsonIfPresent(response) } // Return the response as JSON
         } else if (response.ok) {
-          return // Return without content
+          return { response, data: undefined } // Return without content
         } else {
-          // No content but received an HTTP error status
-          throw new Error('Error status: ' + response.status)
+          return { response, data: undefined }
         }
       })
-      .then(data => {
+      .then(({ response, data }) => {
         // Check if the Server responded with an error
         const payloadStatus = extractErrorStatusFromPayload(data)
         if (payloadStatus !== undefined) {
-          return handlePayloadFailure(payloadStatus, data, context, disableMessage, {}, requestOwnerId)
+          return {
+            ...handlePayloadFailure(payloadStatus, data, context, disableMessage, errorHandlingOptions, requestOwnerId),
+            raw: response,
+          }
+        } else if (!response.ok) {
+          return {
+            ...handlePayloadFailure(response.status, data, context, disableMessage, errorHandlingOptions, requestOwnerId),
+            raw: response,
+          }
         } else if (data) {
           setLastRequestFailureStatus(undefined)
           setLastRequestFailureDetails(undefined)
           // Successful response from the server
-          return { success: true, data }
+          return { success: true, data, status: response.status, raw: response }
         } else if (data === null || data === undefined) {
           setLastRequestFailureStatus(undefined)
           setLastRequestFailureDetails(undefined)
           // in this case no content is expected
-          return { success: true }
+          return { success: true, status: response.status, raw: response }
         } else {
           // Unexpected response format
           throw new Error('Unexpected response format')
         }
       })
-      .catch(error => handleRequestError(error, disableMessage, {}, requestOwnerId))
+      .catch(error => handleRequestError(error, disableMessage, errorHandlingOptions, requestOwnerId))
   }
 
-  function patchRequest (path: string, body: any, headers: Headers, context: string, disableMessage: boolean): any {
+  function patchRequest (
+    path: string,
+    body: any,
+    headers: Headers,
+    context: string,
+    disableMessage: boolean,
+    errorHandlingOptions: RequestErrorHandlingOptions = {},
+  ): any {
     const requestOwnerId = getRequestOwnerId()
-    return fetchWithAuthentication(path, { method: 'PATCH', body, headers })
-      .then(response => {
+    return fetchWithAuthentication(path, { method: 'PATCH', body, headers, signal: errorHandlingOptions.signal })
+      .then(async response => {
         const contentType = getResponseContentType(response)
         // Check if the Server responded with content
         if (
           contentType === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
-          return parseJsonIfPresent(response) // Return the response as JSON
+          return { response, data: await parseJsonIfPresent(response) } // Return the response as JSON
         } else if (response.ok) {
-          return // Return without content
+          return { response, data: undefined } // Return without content
         } else {
-          // No content but received an HTTP error status
-          throw new Error('Error status: ' + response.status)
+          return { response, data: undefined }
         }
       })
-      .then(data => {
+      .then(({ response, data }) => {
         // Check if the Server responded with an error
         const payloadStatus = extractErrorStatusFromPayload(data)
         if (payloadStatus !== undefined) {
-          return handlePayloadFailure(payloadStatus, data, context, disableMessage, {}, requestOwnerId)
+          return {
+            ...handlePayloadFailure(payloadStatus, data, context, disableMessage, errorHandlingOptions, requestOwnerId),
+            raw: response,
+          }
+        } else if (!response.ok) {
+          return {
+            ...handlePayloadFailure(response.status, data, context, disableMessage, errorHandlingOptions, requestOwnerId),
+            raw: response,
+          }
         } else if (data) {
           setLastRequestFailureStatus(undefined)
           setLastRequestFailureDetails(undefined)
           // Successful response from the server
-          return { success: true, data }
+          return { success: true, data, status: response.status, raw: response }
         } else if (data === null || data === undefined) {
           setLastRequestFailureStatus(undefined)
           setLastRequestFailureDetails(undefined)
           // in this case no content is expected
-          return { success: true }
+          return { success: true, status: response.status, raw: response }
         } else {
           // Unexpected response format
           throw new Error('Unexpected response format')
         }
       })
-      .catch(error => handleRequestError(error, disableMessage, {}, requestOwnerId))
+      .catch(error => handleRequestError(error, disableMessage, errorHandlingOptions, requestOwnerId))
   }
 
-  function deleteRequest (path: string, headers: Headers, context: string, disableMessage: boolean): any {
+  function deleteRequest (
+    path: string,
+    headers: Headers,
+    context: string,
+    disableMessage: boolean,
+    errorHandlingOptions: RequestErrorHandlingOptions = {},
+  ): any {
     const requestOwnerId = getRequestOwnerId()
-    return fetchWithAuthentication(path, { method: 'DELETE', headers })
-      .then(response => {
+    return fetchWithAuthentication(path, { method: 'DELETE', headers, signal: errorHandlingOptions.signal })
+      .then(async response => {
         const contentType = getResponseContentType(response)
         // Check if the Server responded with content
         if (
           contentType === 'application/json'
           && response.headers.get('Content-Length') !== '0'
         ) {
-          return parseJsonIfPresent(response) // Return the response as JSON
+          return { response, data: await parseJsonIfPresent(response) } // Return the response as JSON
         } else if (response.ok) {
-          return // Return without content
+          return { response, data: undefined } // Return without content
         } else {
-          // No content but received an HTTP error status
-          throw new Error('Error status: ' + response.status)
+          return { response, data: undefined }
         }
       })
-      .then(data => {
+      .then(({ response, data }) => {
         // Check if the Server responded with an error
         const payloadStatus = extractErrorStatusFromPayload(data)
         if (payloadStatus !== undefined) {
-          return handlePayloadFailure(payloadStatus, data, context, disableMessage, {}, requestOwnerId)
+          return {
+            ...handlePayloadFailure(payloadStatus, data, context, disableMessage, errorHandlingOptions, requestOwnerId),
+            raw: response,
+          }
+        } else if (!response.ok) {
+          return {
+            ...handlePayloadFailure(response.status, data, context, disableMessage, errorHandlingOptions, requestOwnerId),
+            raw: response,
+          }
         } else if (data) {
           setLastRequestFailureStatus(undefined)
           setLastRequestFailureDetails(undefined)
           // Successful response from the server
-          return { success: true, data }
+          return { success: true, data, status: response.status, raw: response }
         } else {
           setLastRequestFailureStatus(undefined)
           setLastRequestFailureDetails(undefined)
           // in this case no content is expected
-          return { success: true }
+          return { success: true, status: response.status, raw: response }
         }
       })
-      .catch(error => handleRequestError(error, disableMessage, {}, requestOwnerId))
+      .catch(error => handleRequestError(error, disableMessage, errorHandlingOptions, requestOwnerId))
   }
 
   // Convert header construction failures to rejections handled by each request's catch block.

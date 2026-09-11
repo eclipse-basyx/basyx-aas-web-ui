@@ -127,6 +127,32 @@ describe('InfrastructureStore', () => {
     })
   })
 
+  it('enables ReBAC only for the current service with an exact advertised profile', async () => {
+    const store = useInfrastructureStore()
+    await store.waitForInitialization()
+    const selected = store.getSelectedInfrastructure!
+    selected.template = 'full'
+    selected.components.AASRepo.url = 'https://aas.example'
+    selected.components.SubmodelRepo.url = 'https://sm.example'
+    store.getBasyxComponents.AASRepo.url = 'https://aas.example'
+    store.getBasyxComponents.SubmodelRepo.url = 'https://sm.example'
+    mocks.getRequest.mockImplementation(async path => ({ success: true, data: { profiles: path === 'https://aas.example/description'
+      ? ['https://basyx.org/aas/API/3/2/ResourceBoundAccessControl/1.0']
+      : [] } }))
+    await store.connectComponent('AASRepo')
+    await store.connectComponent('SubmodelRepo')
+    expect(store.supportsResourceAccess('AASRepo')).toBe(true)
+    expect(store.supportsResourceAccess('SubmodelRepo')).toBe(false)
+    expect(store.supportsResourceAccessEndpoint('https://aas.example/shells/YWFz/submodels/c20')).toBe(true)
+    expect(store.supportsResourceAccess('AASRepo', 'https://other.example/shells/YWFz')).toBe(false)
+    selected.components.AASRepo.url = 'https://new.example'
+    expect(store.supportsResourceAccess('AASRepo')).toBe(false)
+    selected.components.AASRepo.url = 'https://aas.example'
+    mocks.getRequest.mockResolvedValue({ success: false })
+    await store.connectComponent('AASRepo')
+    expect(store.supportsResourceAccess('AASRepo')).toBe(false)
+  })
+
   it('follows restoration, infrastructure switching, refresh, invalidation, and token removal', async () => {
     const store = useInfrastructureStore()
     await store.waitForInitialization()
