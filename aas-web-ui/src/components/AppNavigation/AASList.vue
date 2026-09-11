@@ -450,7 +450,6 @@
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
-  import { debounce } from '@/utils/generalUtils'
   import { usesAasEnvironment } from '@/utils/InfrastructureUtils'
   import {
     buildStructuredSearchQuery,
