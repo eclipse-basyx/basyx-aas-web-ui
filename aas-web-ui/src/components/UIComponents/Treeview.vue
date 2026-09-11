@@ -279,6 +279,14 @@
                         <v-list-item-subtitle>Delete Submodel</v-list-item-subtitle>
                       </v-list-item>
 
+                      <v-list-item v-if="infrastructureStore.supportsResourceAccessEndpoint(String(item.path ?? ''))" @click="openAccessDialog(item, isActive)">
+                        <template #prepend>
+                          <v-icon size="x-small">mdi-account-lock</v-icon>
+                        </template>
+
+                        <v-list-item-subtitle>Share</v-list-item-subtitle>
+                      </v-list-item>
+
                       <v-divider />
                       <!-- Copy SM to internal clipboard -->
                       <v-list-item
@@ -413,6 +421,14 @@
                         <v-list-item-subtitle>Delete {{ item.modelType }}</v-list-item-subtitle>
                       </v-list-item>
 
+                      <v-list-item v-if="infrastructureStore.supportsResourceAccessEndpoint(String(item.path ?? ''))" @click="openAccessDialog(item, isActive)">
+                        <template #prepend>
+                          <v-icon size="x-small">mdi-account-lock</v-icon>
+                        </template>
+
+                        <v-list-item-subtitle>Share</v-list-item-subtitle>
+                      </v-list-item>
+
                       <template v-if="item.isDirectOperationVariable">
                         <v-divider />
 
@@ -537,6 +553,7 @@
         @open-add-submodel-element-dialog="$emit('open-add-submodel-element-dialog', $event)"
         @open-edit-submodel-element-dialog="$emit('open-edit-submodel-element-dialog', $event)"
         @open-json-insert-dialog="$emit('open-json-insert-dialog', $event)"
+        @open-resource-access-dialog="$emit('open-resource-access-dialog', $event)"
         @paste-operation-owned-element="$emit('paste-operation-owned-element', $event)"
         @show-delete-dialog="$emit('show-delete-dialog', $event)"
       />
@@ -551,6 +568,7 @@
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { useAASStore } from '@/store/AASDataStore'
   import { useClipboardStore } from '@/store/ClipboardStore'
+  import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { operationVariableDirections } from '@/types/OperationTree'
   import { isOperationOwnedNode } from '@/utils/AAS/OperationTreeUtils'
@@ -565,6 +583,7 @@
   const { copyToClipboard, copyJsonToClipboard, pasteElement } = useClipboardUtil()
 
   // Stores
+  const infrastructureStore = useInfrastructureStore()
   const navigationStore = useNavigationStore()
   const aasStore = useAASStore()
   const clipboardStore = useClipboardStore()
@@ -589,6 +608,7 @@
     'open-add-submodel-element-dialog': [item: any]
     'open-add-operation-variable-dialog': [payload: any]
     'open-json-insert-dialog': [item: any]
+    'open-resource-access-dialog': [item: any]
     'open-edit-submodel-element-dialog': [item: any]
     'move-operation-variable': [payload: any]
     'paste-operation-owned-element': [item: any]
@@ -807,6 +827,12 @@
   function openDeleteDialog (item: any, isActive: Ref<boolean>): void {
     isActive.value = false
     emit('show-delete-dialog', item)
+  }
+
+  function openAccessDialog (item: any, isActive: Ref<boolean>): void {
+    if (!infrastructureStore.supportsResourceAccessEndpoint(String(item.path ?? ''))) return
+    isActive.value = false
+    emit('open-resource-access-dialog', item)
   }
 
   function openConversionDialog (item: any, isActive: Ref<boolean>): void {

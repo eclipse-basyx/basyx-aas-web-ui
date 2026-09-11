@@ -232,6 +232,7 @@
                 @open-edit-dialog="openEditDialog(false, $event)"
                 @open-edit-submodel-element-dialog="openEditSubmodelElementDialogForElement"
                 @open-json-insert-dialog="openJsonInsertDialog('SubmodelElement', $event)"
+                @open-resource-access-dialog="openResourceAccessDialog"
                 @paste-operation-owned-element="pasteOperationOwnedElement"
                 @show-delete-dialog="openDeleteDialog"
               />
@@ -395,10 +396,13 @@
     v-model="conversionDialog"
     :submodel="submodelToConvert"
   />
+
+  <ResourceAccessDialog v-model="accessDialog" :target="accessTarget" />
 </template>
 
 <script lang="ts" setup>
   import type { OperationNodeLocator, OperationVariableDirection } from '@/types/OperationTree'
+  import type { ResourceAccessTarget } from '@/types/ResourceAccess'
   import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization'
   import type { Ref } from 'vue'
   import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
@@ -504,6 +508,8 @@
   const draftFormType = ref('')
   const draftFormDetached = ref(false)
   const draftFormIsNew = ref(false)
+  const accessDialog = ref(false)
+  const accessTarget = ref<ResourceAccessTarget>()
 
   // Computed Properties
   const isMobile = computed(() => navigationStore.getIsMobile) // Check if the current Device is a Mobile Device
@@ -1036,6 +1042,18 @@
   function openDeleteDialog (element: any): void {
     deleteDialog.value = true
     elementToDelete.value = element
+  }
+
+  function openResourceAccessDialog (element: any): void {
+    const endpoint = String(element?.path ?? '').replace(/\/$/, '')
+    if (!endpoint || !infrastructureStore.supportsResourceAccessEndpoint(endpoint)) return
+    accessTarget.value = {
+      kind: element.modelType === 'Submodel' ? 'submodel' : 'submodel-element',
+      label: `${element.modelType ?? 'Submodel Element'}: ${element.idShort ?? element.id ?? ''}`,
+      endpoint,
+      componentKey: infrastructureStore.resourceAccessComponent(endpoint)!,
+    }
+    accessDialog.value = true
   }
 
   function openConversionDialog (submodel: any): void {

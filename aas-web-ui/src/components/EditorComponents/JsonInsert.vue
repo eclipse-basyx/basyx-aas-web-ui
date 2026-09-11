@@ -32,11 +32,12 @@
 
       <v-card-actions>
         <v-spacer />
-        <v-btn rounded="lg" @click="closeDialog">Cancel</v-btn>
+        <v-btn :disabled="checkingAccess" rounded="lg" @click="closeDialog">Cancel</v-btn>
 
         <v-btn
           class="text-buttonText"
           color="primary"
+          :loading="checkingAccess"
           rounded="lg"
           variant="flat"
           @click="insertJson"
@@ -50,6 +51,7 @@
   import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization'
   import { types as aasTypes, jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { useRoute, useRouter } from 'vue-router'
+  import { useSubmodelCreationGuard } from '@/composables/AAS/SubmodelCreationGuard'
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
@@ -76,6 +78,7 @@
 
   // Vue Router
   const route = useRoute()
+  const { canCreateSubmodel, checkingAccess } = useSubmodelCreationGuard()
   const router = useRouter()
 
   // Stores
@@ -159,6 +162,8 @@
       return
     }
     const submodel = instanceOrError.mustValue()
+
+    if (!await canCreateSubmodel()) return
 
     // Create Submodel
     const created = await postSubmodel(submodel, true)

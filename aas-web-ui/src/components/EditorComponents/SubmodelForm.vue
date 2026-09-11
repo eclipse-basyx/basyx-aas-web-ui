@@ -181,8 +181,8 @@
 
       <v-card-actions>
         <v-spacer />
-        <v-btn @click="closeDialog">Cancel</v-btn>
-        <v-btn color="primary" @click="saveSubmodel">Save</v-btn>
+        <v-btn :disabled="checkingAccess" @click="closeDialog">Cancel</v-btn>
+        <v-btn color="primary" :loading="checkingAccess" @click="saveSubmodel">Save</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -192,6 +192,7 @@
   import { types as aasTypes, jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { useRoute, useRouter } from 'vue-router'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
+  import { useSubmodelCreationGuard } from '@/composables/AAS/SubmodelCreationGuard'
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
@@ -213,6 +214,7 @@
 
   // Vue Router
   const route = useRoute()
+  const { canCreateSubmodel, checkingAccess } = useSubmodelCreationGuard()
   const router = useRouter()
 
   // Composables
@@ -464,6 +466,8 @@
     }
 
     if (props.newSm) {
+      if (!await canCreateSubmodel()) return
+
       // Create new Submodel
       const created = await postSubmodel(submodelObject.value, true)
       if (!created) {

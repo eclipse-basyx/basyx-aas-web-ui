@@ -16,6 +16,7 @@ import { discoverOpenIdConfiguration, oidcIssuersMatch } from '@/composables/Aut
 import { useAuth } from '@/composables/Auth/useAuth'
 import { watchFeatureControlRoutes } from '@/composables/FeatureControl'
 import { useRouteHandling } from '@/composables/routeHandling'
+import { captureInvitation } from '@/composables/ShareInvitation'
 import AASEditor from '@/pages/AASEditor.vue'
 import AASSubmodelViewer from '@/pages/AASSubmodelViewer.vue'
 import AASViewer from '@/pages/AASViewer.vue'
@@ -175,6 +176,7 @@ const staticRoutes: Array<RouteRecordRaw> = [
     component: About,
     meta: { name: 'About' },
   },
+  { path: '/share-access', name: 'ShareAccess', component: () => import('@/pages/ShareAccess.vue'), meta: { name: 'Accept invitation' } },
   { path: '/404', name: 'NotFound404', component: Page404, meta: { name: 'Page not found | 404' } },
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: Page404 },
 ]
@@ -908,6 +910,9 @@ export async function createAppRouter (): Promise<Router> {
   }
 
   router.beforeEach(async function (to, from) {
+    if (captureInvitation()) {
+      return { name: 'ShareAccess', replace: true }
+    }
     if (!infrastructureInitializationEnsured) {
       await infrastructureStore.waitForInitialization()
       infrastructureInitializationEnsured = true
@@ -921,6 +926,10 @@ export async function createAppRouter (): Promise<Router> {
     const logoutRedirect = consumeLogoutTransaction(to.path)
     if (logoutRedirect) {
       return { ...logoutRedirect, replace: true }
+    }
+
+    if (to.name === 'ShareAccess') {
+      return true
     }
 
     // Handle redirection of `globalAssetId`, `aasId` and `smId`
