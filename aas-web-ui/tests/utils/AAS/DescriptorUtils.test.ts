@@ -210,3 +210,61 @@ describe('DescriptorUtils.ts; Tests for \'extractEndpointHref()\'', () => {
     })
   }
 })
+
+describe.each(['AAS', 'SUBMODEL'])('%s 3.x endpoint resolution', interfaceName => {
+  function descriptor (...interfaces: string[]) {
+    return {
+      endpoints: interfaces.map(name => ({
+        interface: name,
+        protocolInformation: { href: `https://example.com/${name}` },
+      })),
+    }
+  }
+
+  it.each(['3.0', '3.1', '3.2', '3.10', '3.123', '3.2.1'])('accepts version %s', version => {
+    const advertisedInterface = `${interfaceName}-${version}`
+    expect(extractEndpointHref(descriptor(advertisedInterface), `${interfaceName}-3.0`))
+      .toBe(`https://example.com/${advertisedInterface}`)
+  })
+
+  it('matches other 3.x versions when the requested minor version is newer', () => {
+    expect(extractEndpointHref(descriptor(`${interfaceName}-3.0`), `${interfaceName}-3.2`))
+      .toBe(`https://example.com/${interfaceName}-3.0`)
+  })
+
+  it('prefers an exact match regardless of endpoint order', () => {
+    expect(extractEndpointHref(descriptor(`${interfaceName}-3.2`, `${interfaceName}-3.0`), `${interfaceName}-3.0`))
+      .toBe(`https://example.com/${interfaceName}-3.0`)
+  })
+
+  it.each(['3.0', '3.2', '3.10', '3.2.1'])('falls back to a repository endpoint with version %s', version => {
+    const advertisedInterface = `${interfaceName}-REPOSITORY-${version}`
+    expect(extractEndpointHref(descriptor(advertisedInterface), `${interfaceName}-3.0`))
+      .toBe(`https://example.com/${advertisedInterface}`)
+  })
+
+  it('prefers a direct 3.x endpoint over a repository fallback', () => {
+    expect(extractEndpointHref(descriptor(`${interfaceName}-REPOSITORY-3.0`, `${interfaceName}-3.2`), `${interfaceName}-3.0`))
+      .toBe(`https://example.com/${interfaceName}-3.2`)
+  })
+
+  it('prefers the requested repository version over other repository versions', () => {
+    expect(extractEndpointHref(descriptor(`${interfaceName}-REPOSITORY-3.2`, `${interfaceName}-REPOSITORY-3.0`), `${interfaceName}-3.0`))
+      .toBe(`https://example.com/${interfaceName}-REPOSITORY-3.0`)
+  })
+
+  it.each(['2.0', '4.0', '30.0', '3', '3.', '3.x', '3.2-preview', '3.2junk'])('rejects incompatible or malformed version %s', version => {
+    expect(extractEndpointHref(descriptor(`${interfaceName}-${version}`, `${interfaceName}-REPOSITORY-${version}`), `${interfaceName}-3.0`))
+      .toBe('')
+  })
+
+  it('does not match other interface families', () => {
+    const otherInterface = interfaceName === 'AAS' ? 'SUBMODEL' : 'AAS'
+    expect(extractEndpointHref(descriptor(`${otherInterface}-3.2`, `${interfaceName}-REGISTRY-3.2`), `${interfaceName}-3.0`))
+      .toBe('')
+  })
+
+  it('does not extend matching to other requested major versions', () => {
+    expect(extractEndpointHref(descriptor(`${interfaceName}-3.2`), `${interfaceName}-4.0`)).toBe('')
+  })
+})
