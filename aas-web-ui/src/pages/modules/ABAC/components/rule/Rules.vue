@@ -1,16 +1,10 @@
 <template>
-  <div class="d-flex flex-grow-1 overflow-hidden">
-    <div class="rules-list-panel">
-      <RulesList @create="openDialog('create')" />
+  <div class="d-flex flex-grow-1 overflow-y-auto">
+    <div class="list-panel">
+      <RulesList @create="openDialog" />
     </div>
 
     <div class="d-flex flex-column ga-0 w-100">
-      <RuleActions
-        v-if="policy?.status === 'staged'"
-        @patch="openDialog('patch')"
-        @replace="openDialog('replace')"
-      />
-
       <RuleDetail />
     </div>
   </div>
@@ -20,24 +14,22 @@
 </template>
 
 <script setup lang="ts">
-  import RuleActions from '@/pages/modules/ABAC/components/rule/detail/RuleActions.vue'
-  import RuleDetail from '@/pages/modules/ABAC/components/rule/detail/RuleDetail.vue'
-  import RulesList from '@/pages/modules/ABAC/components/rule/list/RulesList.vue'
-  import RuleDialog, { type RuleDialogMode } from '@/pages/modules/ABAC/components/rule/RuleDialog.vue'
-  import { usePolicy } from '@/pages/modules/ABAC/hooks/usePolicy'
-
-  const { policy } = usePolicy()
+  import { RULE_DIALOG_KEY } from '../../constants/inject'
+  import RuleDetail from './detail/RuleDetail.vue'
+  import RulesList from './list/RulesList.vue'
+  import RuleDialog, { type RuleDialogProps } from './RuleDialog.vue'
 
   const ruleDialog = useTemplateRef<InstanceType<typeof RuleDialog>>('ruleDialog')
 
-  function openDialog (mode: RuleDialogMode): void {
-    ruleDialog.value?.open(mode)
+  function openDialog (props: RuleDialogProps): void {
+    ruleDialog.value?.open(props)
   }
 
+  provide(RULE_DIALOG_KEY, openDialog)
 </script>
 
 <style scoped>
-.rules-list-panel {
+.list-panel {
   width: 35vw;
   min-width: 280px;
   max-width: 360px;

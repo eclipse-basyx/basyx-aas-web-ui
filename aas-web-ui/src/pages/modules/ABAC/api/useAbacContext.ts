@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/vue-query'
-import { useAbacClient } from '@/pages/modules/ABAC/api/useAbacClient'
-import { ABAC_CACHE_KEYS } from '@/pages/modules/ABAC/constants/cache'
-import { useAbacConfigStore } from '@/pages/modules/ABAC/stores/useAbacConfigStore'
+import { ABAC_CACHE_KEYS } from '../constants/cache'
+import { useAbacConfigStore } from '../stores/useAbacConfigStore'
+import { useAbacClient } from './useAbacClient'
 
 export function useAbacContext (disableMessage = false) {
   const client = useAbacClient(disableMessage)

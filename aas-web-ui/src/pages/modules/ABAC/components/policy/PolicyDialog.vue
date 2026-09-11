@@ -78,13 +78,13 @@
 </template>
 
 <script setup lang="ts">
-  import { useImportPolicy } from '@/pages/modules/ABAC/api/policy/useImportPolicy'
-  import JsonCodeEditor, { type JsonErrorMessage } from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
-  import { EMPTY_POLICY } from '@/pages/modules/ABAC/constants/json'
-  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
-  import { usePolicyValidation } from '@/pages/modules/ABAC/hooks/usePolicyValidation'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
   import { useNavigationStore } from '@/store/NavigationStore'
+  import { useImportPolicy } from '../../api/policy/useImportPolicy'
+  import { EMPTY_POLICY } from '../../constants/json'
+  import { useAbacNavigation } from '../../hooks/useAbacNavigation'
+  import { usePolicyValidation } from '../../hooks/usePolicyValidation'
+  import { useAbacI18n } from '../../i18n/useAbacI18n'
+  import JsonCodeEditor, { type JsonErrorMessage } from '../shared/JsonCodeEditor.vue'
 
   const ICONS = {
     CLOSE: 'mdi-close',

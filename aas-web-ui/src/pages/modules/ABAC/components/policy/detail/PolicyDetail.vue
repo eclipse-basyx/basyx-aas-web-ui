@@ -1,109 +1,78 @@
 <template>
-  <div v-if="policy" class="flex-grow-1 d-flex flex-column">
-    <v-card variant="flat">
-      <v-card-title class="px-2">
-        <v-row class="ga-3">
-          <v-col class="d-flex align-center ga-4" cols="12">
-            <span class="text-primary text-headline-small" v-bind="i18nData('policies.policy.title')">
-              {{ t("policies.policy.title", {version: selectedPolicyVersion }) }}
-            </span>
+  <v-container class="pa-0 px-4" style="max-width: 1440px; min-width: 0">
+    <StateView
+      :empty="!policy && !isError && !isLoading"
+      :empty-label="t('policies.policy.empty')"
+      :error="!policy && isError && !!selectedPolicyVersion"
+      :error-label="t('policies.policy.notFound')"
+      :icon-empty="ICONS.POLICIES"
+      :icon-error="ICONS.ERROR"
+      :icon-size="128"
+      :loading="isLoading"
+      :loading-label="t('policies.policy.loading')"
+      :loading-size="70"
+      :loading-width="8"
+    >
+      <v-card border class="d-flex flex-column h-100 w-100 overflow-hidden" rounded>
+        <v-card-title class="flex-0-0 px-2 py-2">
+          <v-row class="d-flex align-center justify-space-between">
+            <v-col class="d-flex align-center">
+              <span class="text-headline-small mr-4" v-bind="i18nData('policies.policy.title')">
+                {{ t("policies.policy.title", {version: selectedPolicyVersion }) }}
+              </span>
 
-            <PolicyStatus :status="policy.status" />
-          </v-col>
+              <PolicyStatus :status="policy!.status" />
+            </v-col>
 
-          <v-col class="d-flex flex-wrap align-center ga-2" cols="12">
-            <v-chip density="comfortable" v-bind="i18nData('policies.policy.ruleCount')" variant="elevated">
-              <v-icon :icon="ICONS.RULES" start />
-              {{ t("policies.policy.ruleCount", {count: rulesCount}) }}
-            </v-chip>
-
-            <v-chip density="comfortable" variant="elevated">
-              <v-icon :icon="ICONS.SCOPE" start />
-              {{ policy.service_scope ?? '—' }}
-            </v-chip>
-
-            <v-chip density="comfortable" variant="elevated">
-              <v-icon :icon="ICONS.CREATED" start />
-              {{ policy.created_at ? formatDate(new Date (policy.created_at)): '—' }}
-            </v-chip>
-
-            <v-chip density="comfortable" variant="elevated">
-              <v-icon :icon="ICONS.UPDATED" start />
-              {{ policy.updated_at ? formatDate(new Date (policy.updated_at)): '—' }}
-            </v-chip>
-          </v-col>
-
-          <v-col cols="12">
-            <PolicyActions />
-          </v-col>
-
-          <v-col cols="12">
-            <v-btn-toggle
-              v-model="selectedView"
-              color="primary"
-              density="compact"
-              divided
-              mandatory
-              variant="outlined"
-              @update:model-value="onChangeView"
-            >
-              <v-btn v-for="(v) in Object.values(VIEW)" :key="v" :value="v">
-                <v-icon start>{{ ICONS[v] }}</v-icon>
-
-                <span class="hidden-sm-and-down" v-bind="i18nData(`policies.policy.views.${v}`)">
+            <v-col>
+              <v-tabs
+                v-model="selectedView"
+                color="primary"
+                density="compact"
+                mandatory
+                @update:model-value="onChangeView"
+              >
+                <v-tab v-for="(v) in Object.values(VIEW)" :key="v" :value="v">
+                  <v-icon start>{{ ICONS[v] }}</v-icon>
                   {{ t(`policies.policy.views.${v}`) }}
-                </span>
-              </v-btn>
-            </v-btn-toggle>
-          </v-col>
-        </v-row>
-      </v-card-title>
+                </v-tab>
+              </v-tabs>
+            </v-col>
 
-    </v-card>
+            <v-col cols="auto">
+              <PolicyOptions icon-size="small" :policy="policy!" />
+            </v-col>
+          </v-row>
+        </v-card-title>
 
-    <v-divider />
+        <v-divider />
 
-    <Rules v-if="selectedView === VIEW.RULES" />
-    <Definitions v-else-if="selectedView === VIEW.DEFINITIONS" />
-    <PolicyRaw v-else-if="selectedView === VIEW.RAW" />
-  </div>
-
-  <v-container v-else-if="isLoading" class="h-100 d-flex align-center justify-center">
-    <v-progress-circular color="primary" indeterminate />
-  </v-container>
-
-  <v-container v-else class="d-flex flex-column align-center justify-center text-grey fill-height">
-    <v-icon class="mb-4" size="128">{{ ICONS.POLICIES }}</v-icon>
-    <h2 class="text-h5" v-bind="i18nData('policies.policy.empty')">{{ t('policies.policy.empty') }}</h2>
+        <Rules v-if="selectedView === VIEW.RULES" />
+        <Definitions v-else-if="selectedView === VIEW.DEFINITIONS" />
+      </v-card>
+    </StateView>
   </v-container>
 </template>
 
 <script setup lang="ts">
-  import Definitions from '@/pages/modules/ABAC/components/definition/Definitions.vue'
-  import PolicyActions from '@/pages/modules/ABAC/components/policy/detail/PolicyActions.vue'
-  import PolicyRaw from '@/pages/modules/ABAC/components/policy/detail/PolicyRaw.vue'
-  import PolicyStatus from '@/pages/modules/ABAC/components/policy/PolicyStatus.vue'
-  import Rules from '@/pages/modules/ABAC/components/rule/Rules.vue'
-  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
-  import { usePolicy } from '@/pages/modules/ABAC/hooks/usePolicy'
-  import { useRules } from '@/pages/modules/ABAC/hooks/useRules'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
-  import { VIEW } from '@/pages/modules/ABAC/types/view'
-  import { formatDate } from '@/utils/DateUtils'
+  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
+  import { usePolicy } from '../../../hooks/usePolicy'
+  import { useAbacI18n } from '../../../i18n/useAbacI18n'
+  import { VIEW } from '../../../types/view'
+  import Definitions from '../../definition/Definitions.vue'
+  import Rules from '../../rule/Rules.vue'
+  import StateView from '../../shared/StateView.vue'
+  import PolicyOptions from '../options/PolicyOptions.vue'
+  import PolicyStatus from '../PolicyStatus.vue'
 
   const ICONS = {
-    RULES: 'mdi-playlist-check',
-    SCOPE: 'mdi-server',
-    CREATED: 'mdi-calendar-clock',
-    UPDATED: 'mdi-calendar-edit',
     POLICIES: 'mdi-source-repository',
+    ERROR: 'mdi-alert-circle-outline',
     [VIEW.DEFINITIONS]: 'mdi-book-open-variant',
     [VIEW.RULES]: 'mdi-playlist-check',
-    [VIEW.RAW]: 'mdi-code-json',
   } as const
 
   const { t, i18nData } = useAbacI18n()
   const { selectedView, onChangeView } = useAbacNavigation()
-  const { selectedPolicyVersion, policy, isLoading } = usePolicy()
-  const { rulesCount } = useRules()
+  const { selectedPolicyVersion, policy, isLoading, isError } = usePolicy()
 </script>

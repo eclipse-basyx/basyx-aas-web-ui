@@ -5,12 +5,12 @@
         class="text-subtitle-2"
         v-bind="i18nData('definitions.title')"
       >
-        {{ t('definitions.title') }}
+        {{ t('definitions.title', { count: list.length }) }}
       </span>
 
       <v-spacer />
 
-      <v-menu v-model="isMenuOpen">
+      <ActionMenu v-model="isMenuOpen">
         <template #activator="{ props: menuProps }">
           <v-badge
             color="primary"
@@ -28,33 +28,30 @@
           </v-badge>
         </template>
 
-        <v-sheet border>
-          <v-list class="py-0" density="compact">
-            <v-list-item
-              v-for="option in ['all', ...DEFINITION_KINDS]"
-              :key="option"
-              :active="activeFilter === option"
-              slim
-              @click="onFilter(option)"
-            >
+        <v-list-item
+          v-for="option in ['all', ...DEFINITION_KINDS]"
+          :key="option"
+          :active="activeFilter === option"
+          slim
+          @click="onFilter(option)"
+        >
 
-              <v-list-item-title v-bind="i18nData(`definitions.${option}`)">
-                {{ t(`definitions.${option}`) }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-sheet>
-      </v-menu>
+          <v-list-item-subtitle v-bind="i18nData(`definitions.${option}`)">
+            {{ t(`definitions.${option}`) }}
+          </v-list-item-subtitle>
+        </v-list-item>
+      </ActionMenu>
 
       <v-tooltip location="bottom" :open-delay="600">
         <template #activator="{ props: tipProps }">
           <v-btn
-            v-if="policy?.status === 'staged'"
+            v-if="staged"
             v-bind="tipProps"
             density="comfortable"
             :icon="ICONS.ADD"
             size="small"
             variant="text"
-            @click="emit('create')"
+            @click="emit('create', { mode: 'create', kind: activeFilter !== 'all' ? activeFilter : undefined })"
           />
         </template>
 
@@ -83,7 +80,13 @@
       </v-list>
 
       <v-list v-else-if="hasItems(list)" class="pa-0 pb-2 h-100 bg-card" nav>
-        <DefinitionItem v-for="({definition, kind}) in list" :key="`${kind}-${definition.name}`" :definition="definition" :kind="kind" />
+        <DefinitionItem
+          v-for="({definition, kind}) in list"
+          :key="`${kind}-${definition.name}`"
+          :definition="definition"
+          :kind="kind"
+          :staged="staged"
+        />
       </v-list>
 
       <v-container
@@ -101,14 +104,15 @@
 </template>
 
 <script setup lang="ts">
-  import type { DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
-  import DefinitionItem from '@/pages/modules/ABAC/components/definition/list/DefinitionItem.vue'
-  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
-  import { useDefinitions } from '@/pages/modules/ABAC/hooks/useDefinitions'
-  import { usePolicy } from '@/pages/modules/ABAC/hooks/usePolicy'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
-  import { DEFINITION_KINDS } from '@/pages/modules/ABAC/types/definitions'
+  import type { DefinitionKind } from '../../../types/definitions'
+  import type { DefinitionDialogProps } from '../DefinitionDialog.vue'
   import { hasItems } from '@/utils/array'
+  import { useDefinitions } from '../../../hooks/useDefinitions'
+  import { usePolicy } from '../../../hooks/usePolicy'
+  import { useAbacI18n } from '../../../i18n/useAbacI18n'
+  import { DEFINITION_KINDS } from '../../../types/definitions'
+  import ActionMenu from '../../shared/menu/ActionMenu.vue'
+  import DefinitionItem from './DefinitionItem.vue'
 
   type KindFilter = DefinitionKind | 'all'
 
@@ -118,15 +122,15 @@
     DEFINITIONS: 'mdi-book-open-variant',
   } as const
 
-  const emit = defineEmits<{ (e: 'create'): void }>()
+  const emit = defineEmits<{ (e: 'create', props: DefinitionDialogProps): void }>()
 
   const { t, i18nData } = useAbacI18n()
   const { policy } = usePolicy()
-  const { selectedDefinitionKind, onSelectDefinitionKind } = useAbacNavigation()
+  const staged = computed(() => policy.value?.status === 'staged')
   const { definitions, isLoading, isError } = useDefinitions()
 
   const isMenuOpen = ref(false)
-  const activeFilter = ref<KindFilter>(selectedDefinitionKind.value ?? 'all')
+  const activeFilter = ref<KindFilter>('all')
 
   const list = computed(() => {
     if (!definitions.value) return []
@@ -146,7 +150,6 @@
 
   function onFilter (value: KindFilter): void {
     activeFilter.value = value
-    onSelectDefinitionKind(value)
   }
 
 </script>

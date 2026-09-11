@@ -1,12 +1,12 @@
-import type { AbacResponse } from '@/pages/modules/ABAC/types/api'
-import type { Definition, DefinitionCreate, DefinitionDelete, DefinitionKind, DefinitionPatch, DefinitionReplace, DefinitionsMap } from '@/pages/modules/ABAC/types/definitions'
-import type { ActivePolicy, PolicyImport, PolicyValidationResult, PolicyVersion } from '@/pages/modules/ABAC/types/policy'
-import type { Rule, RuleCreate, RuleDelete, RuleDuplicate, RuleMove, RulePatch, RuleReplace, RuleToggle } from '@/pages/modules/ABAC/types/rules'
+import type { AbacResponse } from '../types/api'
+import type { Definition, DefinitionCreate, DefinitionDelete, DefinitionKind, DefinitionPatch, DefinitionReplace, DefinitionsMap } from '../types/definitions'
+import type { ActivePolicy, PolicyImport, PolicyValidationResult, PolicyVersion } from '../types/policy'
+import type { Rule, RuleCreate, RuleDelete, RuleDuplicate, RuleMove, RulePatch, RuleReplace, RuleToggle } from '../types/rules'
 import { useRequestHandling } from '@/composables/RequestHandling'
-import { ABAC_ROUTE_PATHS, CONTEXT, RULE_SUB_PATHS, VERSION_SUB_PATHS } from '@/pages/modules/ABAC/constants/api'
-import { useAbacConfigStore } from '@/pages/modules/ABAC/stores/useAbacConfigStore'
-import { buildRuleActionPath, buildVersionPath, jsonHeaders, toJson } from '@/pages/modules/ABAC/utils/api'
 import { hasContent } from '@/utils/StringUtils'
+import { ABAC_ROUTE_PATHS, CONTEXT, RULE_SUB_PATHS, VERSION_SUB_PATHS } from '../constants/api'
+import { useAbacConfigStore } from '../stores/useAbacConfigStore'
+import { buildRuleActionPath, buildVersionPath, jsonHeaders, toJson } from '../utils/api'
 
 export function useAbacClient (disableMessage = false) {
   const {

@@ -1,4 +1,4 @@
-import type { FormulaExpression } from '@/pages/modules/ABAC/types/formula'
+import type { FormulaExpression } from './formula'
 
 export const DEFINITION_KINDS = ['attributes', 'acls', 'objects', 'formulas'] as const
 export type DefinitionKind = (typeof DEFINITION_KINDS)[number]

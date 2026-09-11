@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/vue-query'
-import { useAbacContext } from '@/pages/modules/ABAC/api/useAbacContext'
+import { useAbacContext } from '../useAbacContext'
 
 export function useCreateRule () {
   const { client, invalidate, keys } = useAbacContext()
