@@ -1,4 +1,4 @@
-import type { BaSyxComponent, BaSyxComponentKey } from '@/types/BaSyx'
+import type { BaSyxComponent, BaSyxComponentKey, ServiceDescription } from '@/types/BaSyx'
 import type { InfrastructureConfig } from '@/types/Infrastructure'
 import { defineStore } from 'pinia'
 import { ASS_DISCOVERY_ENDPOINT_PATH } from '@/composables/Client/AASDiscoveryClient'
@@ -76,6 +76,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       url: AASDiscoveryURL,
       loading: ref(false),
       connected: ref(null),
+      description: ref(null),
       connect: () => connectComponent('AASDiscovery'),
       label: 'AAS Discovery URL',
       pathCheck: ASS_DISCOVERY_ENDPOINT_PATH,
@@ -85,6 +86,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       url: AASRegistryURL,
       loading: ref(false),
       connected: ref(null),
+      description: ref(null),
       connect: () => connectComponent('AASRegistry'),
       label: 'AAS Registry URL',
       pathCheck: ASS_REGISTRY_ENDPOINT_PATH,
@@ -94,6 +96,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       url: SubmodelRegistryURL,
       loading: ref(false),
       connected: ref(null),
+      description: ref(null),
       connect: () => connectComponent('SubmodelRegistry'),
       label: 'Submodel Registry URL',
       pathCheck: SUBMODEL_REGISTRY_ENDPOINT_PATH,
@@ -103,6 +106,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       url: AASRepoURL,
       loading: ref(false),
       connected: ref(null),
+      description: ref(null),
       connect: () => connectComponent('AASRepo'),
       label: 'AAS Repository URL',
       pathCheck: ASS_REPOSITORY_ENDPOINT_PATH,
@@ -112,6 +116,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       url: SubmodelRepoURL,
       loading: ref(false),
       connected: ref(null),
+      description: ref(null),
       connect: () => connectComponent('SubmodelRepo'),
       label: 'Submodel Repository URL',
       pathCheck: SUBMODEL_REPOSITORY_ENDPOINT_PATH,
@@ -121,6 +126,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       url: ConceptDescriptionRepoURL,
       loading: ref(false),
       connected: ref(null),
+      description: ref(null),
       connect: () => connectComponent('ConceptDescriptionRepo'),
       label: 'Concept Description Repository URL',
       pathCheck: CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH,
@@ -130,12 +136,14 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       url: CompanyLookupURL,
       loading: ref(false),
       connected: ref(null),
+      description: ref(null),
       connect: () => connectComponent('CompanyLookup'),
       label: 'Company Lookup URL',
       pathCheck: COMPANY_LOOKUP_ENDPOINT_PATHS.COMPANIES,
       additionalParams: '?limit=1',
     },
   })
+  const componentConnectionGenerations = new Map<BaSyxComponentKey, number>()
 
   // Getters
   const getInfrastructures = computed(() => infrastructures.value)
@@ -151,17 +159,17 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       const infrastructure = getSelectedInfrastructure.value
       return infrastructure?.token?.accessToken
         ? {
-            accessToken: infrastructure.token.accessToken,
-            expiresAt: infrastructure.token.expiresAt,
-            isAuthenticated: infrastructure.isAuthenticated,
-          }
+          accessToken: infrastructure.token.accessToken,
+          expiresAt: infrastructure.token.expiresAt,
+          isAuthenticated: infrastructure.isAuthenticated,
+        }
         : undefined
     },
     () => envStore.getFeatureControlClaimMappings,
     overrides => envStore.setFeatureControlOverrides(overrides),
   )
   const getOpenInfrastructureEditMode = computed(() => openInfrastructureEditMode.value)
-  function getActiveComponentUrl (componentKey: BaSyxComponentKey, url: string): string {
+  function getActiveComponentUrl(componentKey: BaSyxComponentKey, url: string): string {
     const selectedInfra = getSelectedInfrastructure.value
     if (!selectedInfra) {
       return url
@@ -202,7 +210,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
   let nextProfileRequest = 0
 
-  function supportsResourceAccess (key: BaSyxComponentKey, endpoint?: string): boolean {
+  function supportsResourceAccess(key: BaSyxComponentKey, endpoint?: string): boolean {
     const profile = resourceAccessProfiles.value[key]
     const url = basyxComponentUrlGetters[key]?.value.trim().replace(/\/+$/, '')
     const configuredUrl = getSelectedInfrastructure.value?.components[key]?.url.trim().replace(/\/+$/, '')
@@ -211,7 +219,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       && (!endpoint || resourceAccessComponent(endpoint) === key))
   }
 
-  function resourceAccessComponent (endpoint: string): BaSyxComponentKey | undefined {
+  function resourceAccessComponent(endpoint: string): BaSyxComponentKey | undefined {
     for (const key of Object.keys(basyxComponentUrlGetters) as BaSyxComponentKey[]) {
       const path = basyxComponents[key].pathCheck
       const url = basyxComponentUrlGetters[key].value.trim().replace(/\/+$/, '')
@@ -226,12 +234,12 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     return undefined
   }
 
-  function supportsResourceAccessEndpoint (endpoint: string): boolean {
+  function supportsResourceAccessEndpoint(endpoint: string): boolean {
     const key = resourceAccessComponent(endpoint)
     return key !== undefined && supportsResourceAccess(key, endpoint)
   }
 
-  function isEndpointSet (componentKey: BaSyxComponentKey): boolean {
+  function isEndpointSet(componentKey: BaSyxComponentKey): boolean {
     const activeComponentUrl = basyxComponentUrlGetters[componentKey]?.value
     return !!activeComponentUrl && activeComponentUrl.trim() !== ''
   }
@@ -275,7 +283,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
   })
 
-  function getDefaultInfrastructureId (): string {
+  function getDefaultInfrastructureId(): string {
     // Look for infrastructure marked as default
     const defaultInfra = infrastructures.value.find(infra => infra.isDefault)
     if (defaultInfra) {
@@ -288,7 +296,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   const { createEmptyInfrastructure } = infrastructureStorage
 
   // Wrapper functions that delegate to storage composable
-  async function loadInfrastructuresFromStorage (): Promise<void> {
+  async function loadInfrastructuresFromStorage(): Promise<void> {
     const envConfig = {
       aasDiscoveryPath: EnvAASDiscoveryPath.value,
       aasRegistryPath: EnvAASRegistryPath.value,
@@ -317,11 +325,11 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     infrastructures.value = result.infrastructures
   }
 
-  function saveInfrastructuresToStorage (): void {
+  function saveInfrastructuresToStorage(): void {
     infrastructureStorage.saveInfrastructuresToStorage(infrastructures.value, selectedInfrastructureId.value)
   }
 
-  function dispatchSetDefaultInfrastructure (infrastructureId: string): void {
+  function dispatchSetDefaultInfrastructure(infrastructureId: string): void {
     for (const infra of infrastructures.value) {
       infra.isDefault = infra.id === infrastructureId ? true : false
       saveInfrastructuresToStorage()
@@ -370,7 +378,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   })
 
   // Actions
-  function dispatchComponentURL (componentKey: BaSyxComponentKey, url: string): void {
+  function dispatchComponentURL(componentKey: BaSyxComponentKey, url: string): void {
     switch (componentKey) {
       case 'AASDiscovery': {
         AASDiscoveryURL.value = url
@@ -414,7 +422,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   }
 
   // Infrastructure Actions
-  async function dispatchSelectInfrastructure (infrastructureId: string, connect = true): Promise<void> {
+  async function dispatchSelectInfrastructure(infrastructureId: string, connect = true): Promise<void> {
     if (!infrastructures.value.some(i => i.id === infrastructureId)) {
       console.error(`[InfrastructureStore] Infrastructure with ID ${infrastructureId} not found`)
       return
@@ -438,11 +446,11 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     // Note: AAS list and treeview reload automatically via watchers when component URLs change
   }
 
-  function dispatchIsTestingConnections (state: boolean): void {
+  function dispatchIsTestingConnections(state: boolean): void {
     isTestingConnections.value = state
   }
 
-  function dispatchAddInfrastructure (infrastructure: InfrastructureConfig): void {
+  function dispatchAddInfrastructure(infrastructure: InfrastructureConfig): void {
     // If this infrastructure is marked as default, unmark all others
     if (infrastructure.isDefault) {
       for (const infra of infrastructures.value) {
@@ -454,7 +462,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     saveInfrastructuresToStorage()
   }
 
-  function dispatchUpdateInfrastructure (infrastructure: InfrastructureConfig): void {
+  function dispatchUpdateInfrastructure(infrastructure: InfrastructureConfig): void {
     const index = infrastructures.value.findIndex(i => i.id === infrastructure.id)
     if (index !== -1) {
       // If this infrastructure is marked as default, unmark all others
@@ -490,7 +498,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
   }
 
-  async function dispatchDeleteInfrastructure (infrastructureId: string): Promise<void> {
+  async function dispatchDeleteInfrastructure(infrastructureId: string): Promise<void> {
     const index = infrastructures.value.findIndex(i => i.id === infrastructureId)
     if (index !== -1) {
       const wasSelected = selectedInfrastructureId.value === infrastructureId
@@ -529,7 +537,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
   }
 
-  function dispatchUpdateInfrastructureAuth (infrastructureId: string, auth: InfrastructureConfig['auth']): void {
+  function dispatchUpdateInfrastructureAuth(infrastructureId: string, auth: InfrastructureConfig['auth']): void {
     const infrastructure = infrastructures.value.find(i => i.id === infrastructureId)
     if (infrastructure && auth) {
       infrastructure.auth = auth
@@ -537,7 +545,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
   }
 
-  async function dispatchResetToDefaultInfrastructures (): Promise<void> {
+  async function dispatchResetToDefaultInfrastructures(): Promise<void> {
     // Store the currently selected infrastructure ID before clearing
     const previousSelectedId = selectedInfrastructureId.value
 
@@ -593,7 +601,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   }
 
   // Wrapper functions that delegate to auth composable
-  async function refreshInfrastructureTokens (
+  async function refreshInfrastructureTokens(
     infrastructureId?: string,
   ): Promise<Array<{ infraId: string, infraName: string, error: string }>> {
     const failures = await infrastructureAuth.refreshInfrastructureTokens(infrastructures.value, infrastructureId)
@@ -610,7 +618,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     return failures
   }
 
-  function setAuthenticationStatusForInfrastructure (infrastructureId: string, state: boolean): void {
+  function setAuthenticationStatusForInfrastructure(infrastructureId: string, state: boolean): void {
     infrastructureAuth.setAuthenticationStatusForInfrastructure(infrastructures.value, infrastructureId, state)
   }
 
@@ -618,7 +626,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
    * Wait for the store to finish initializing
    * Used by router to ensure infrastructures are loaded before processing OAuth2 callbacks
    */
-  async function waitForInitialization (): Promise<void> {
+  async function waitForInitialization(): Promise<void> {
     if (isInitialized.value) {
       return
     }
@@ -627,7 +635,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
   }
 
-  async function connectComponents (): Promise<void> {
+  async function connectComponents(): Promise<void> {
     // Ensure that Object.keys returns RepositoryKey[]
     const keys = Object.keys(basyxComponents) as BaSyxComponentKey[]
 
@@ -645,8 +653,10 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
     for (const repoKey of keys) {
       if (!activeKeys.includes(repoKey)) {
+        invalidateComponentConnection(repoKey)
         basyxComponents[repoKey].connected = null
         basyxComponents[repoKey].loading = false
+        basyxComponents[repoKey].description = null
         continue
       }
 
@@ -654,8 +664,10 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       const infraUrl = selectedInfra.components[repoKey]?.url || ''
 
       if (infraUrl.trim() === '') {
+        invalidateComponentConnection(repoKey)
         // If infrastructure has no URL for this component, mark as not connected
         basyxComponents[repoKey].connected = false
+        basyxComponents[repoKey].description = null
       } else {
         // Normalize URLs for comparison (trim and remove trailing slash)
         const currentUrl = basyxComponents[repoKey].url.trim().replace(/\/$/, '')
@@ -672,12 +684,37 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     await Promise.all(connectionPromises)
   }
 
-  async function connectComponent (componentKey: keyof typeof basyxComponents): Promise<void> {
+  function invalidateComponentConnection(componentKey: BaSyxComponentKey): number {
+    const generation = (componentConnectionGenerations.get(componentKey) ?? 0) + 1
+    componentConnectionGenerations.set(componentKey, generation)
+    return generation
+  }
+
+  function isCurrentComponentConnection(
+    componentKey: BaSyxComponentKey,
+    generation: number,
+    infrastructureId: string | null,
+    requestedUrl: string,
+  ): boolean {
+    return componentConnectionGenerations.get(componentKey) === generation
+      && selectedInfrastructureId.value === infrastructureId
+      && normalizeComponentUrl(basyxComponents[componentKey].url) === requestedUrl
+  }
+
+  function normalizeComponentUrl(url: string): string {
+    return url.trim().replace(/\/+$/, '')
+  }
+
+  async function connectComponent(componentKey: keyof typeof basyxComponents): Promise<void> {
     const basyxComponent = basyxComponents[componentKey]
     const profileUrl = basyxComponent.url.trim().replace(/\/+$/, '')
     const profileInfrastructureId = getSelectedInfrastructure.value?.id ?? ''
     const profile = { url: profileUrl, infrastructureId: profileInfrastructureId, enabled: false, requestId: ++nextProfileRequest }
     resourceAccessProfiles.value[componentKey] = profile
+    const connectionGeneration = invalidateComponentConnection(componentKey)
+    const infrastructureId = selectedInfrastructureId.value
+    const requestedUrl = normalizeComponentUrl(basyxComponent.url)
+    basyxComponent.description = null
     if (basyxComponent.url && basyxComponent.url.trim() !== '') {
       basyxComponent.loading = true
       let basyxComponentURL = basyxComponent.url
@@ -706,6 +743,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         path += '/description'
 
         const response = await getRequest(path, context, disableMessage)
+        if (!isCurrentComponentConnection(componentKey, connectionGeneration, infrastructureId, requestedUrl)) {
+          return
+        }
         basyxComponent.loading = false
 
         if (response.success) {
@@ -715,6 +755,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
           }
           // Update the connected status
           basyxComponent.connected = true
+          basyxComponent.description = normalizeServiceDescription(response.data)
         } else {
           // If connect to components via `/description`fails, second attempt to connect via main endpoints
           const lastPath = path
@@ -739,6 +780,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
           disableMessage = false
           const response = await getRequest(path, context, disableMessage)
+          if (!isCurrentComponentConnection(componentKey, connectionGeneration, infrastructureId, requestedUrl)) {
+            return
+          }
           basyxComponent.loading = false
 
           if (response.success) {
@@ -757,6 +801,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
           }
         }
       } catch (error) {
+        if (!isCurrentComponentConnection(componentKey, connectionGeneration, infrastructureId, requestedUrl)) {
+          return
+        }
         basyxComponent.loading = false
         console.error(`Error connecting to ${basyxComponent.label}:`, error)
 
@@ -765,7 +812,23 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       }
     } else {
       basyxComponent.connected = false
+      basyxComponent.description = null
       console.warn(`Repository URL for ${componentKey} is not defined or empty.`)
+    }
+  }
+
+  function normalizeServiceDescription(value: unknown): ServiceDescription | null {
+    if (!value || typeof value !== 'object') {
+      return null
+    }
+
+    const profiles = (value as { profiles?: unknown }).profiles
+    if (!Array.isArray(profiles)) {
+      return null
+    }
+
+    return {
+      profiles: profiles.filter((profile): profile is string => typeof profile === 'string'),
     }
   }
 

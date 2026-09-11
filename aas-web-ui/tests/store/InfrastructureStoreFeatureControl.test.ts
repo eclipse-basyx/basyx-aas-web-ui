@@ -8,6 +8,7 @@ import { base64Encode } from '@/utils/EncodeDecodeUtils'
 const mocks = vi.hoisted(() => ({
   getRequest: vi.fn().mockResolvedValue({ success: true }),
   appliedOverrides: [] as unknown[],
+  getRequest: vi.fn(),
   loadInfrastructuresFromStorage: vi.fn(),
   saveInfrastructuresToStorage: vi.fn(),
   refreshInfrastructureTokens: vi.fn().mockResolvedValue([]),
@@ -116,6 +117,8 @@ describe('InfrastructureStore', () => {
     vi.clearAllMocks()
     mocks.getRequest.mockResolvedValue({ success: true })
     mocks.appliedOverrides.length = 0
+    mocks.getRequest.mockReset()
+    mocks.getRequest.mockResolvedValue({ success: true })
     setActivePinia(createPinia())
     mocks.loadInfrastructuresFromStorage.mockResolvedValue({
       selectedInfrastructureId: 'viewer',
@@ -324,5 +327,56 @@ describe('InfrastructureStore', () => {
 
       expect(store.getHasAuthenticationCredentials, scenario.name).toBe(scenario.expected)
     }
+  })
+
+  it('stores description profiles and clears them when only the fallback endpoint connects', async () => {
+    const store = useInfrastructureStore()
+    await store.waitForInitialization()
+    const component = store.getBasyxComponents.AASRepo
+    component.url = 'https://example.com/shells'
+
+    const description = {
+      profiles: [
+        'https://basyx.org/aas/API/3/2/AssetAdministrationShellRepositoryServiceSpecification/SSP-001',
+      ],
+    }
+    mocks.getRequest.mockResolvedValueOnce({ success: true, data: description })
+    await store.connectComponent('AASRepo')
+    expect(component.description).toEqual(description)
+
+    mocks.getRequest
+      .mockResolvedValueOnce({ success: false })
+      .mockResolvedValueOnce({ success: true })
+    await store.connectComponent('AASRepo')
+    expect(component.description).toBeNull()
+  })
+
+  it('discards a description response from a superseded component URL', async () => {
+    const store = useInfrastructureStore()
+    await store.waitForInitialization()
+    const component = store.getBasyxComponents.AASRepo
+    let resolveOldRequest!: (response: unknown) => void
+
+    component.url = 'https://old.example/shells'
+    mocks.getRequest.mockReturnValueOnce(new Promise(resolve => {
+      resolveOldRequest = resolve
+    }))
+    const oldConnection = store.connectComponent('AASRepo')
+
+    component.url = 'https://new.example/shells'
+    const currentDescription = {
+      profiles: ['https://basyx.org/aas/API/3/2/AssetAdministrationShellRepositoryServiceSpecification/SSP-001'],
+    }
+    mocks.getRequest.mockResolvedValueOnce({ success: true, data: currentDescription })
+    await store.connectComponent('AASRepo')
+
+    resolveOldRequest({
+      success: true,
+      data: { profiles: ['https://basyx.org/aas/API/3/2/obsolete'] },
+    })
+    await oldConnection
+
+    expect(component.description).toEqual(currentDescription)
+    expect(component.connected).toBe(true)
   })
 })
