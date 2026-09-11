@@ -1,5 +1,7 @@
 /**
  * Extracts the endpoint from a descriptor based on the given interface short name.
+ * AAS and Submodel 3.x requests also accept other numeric 3.x versions,
+ * preferring exact matches and direct interfaces over repository fallbacks.
  *
  * @param {Object} descriptor_or_model - The descriptor or model (AAS / Submodel) containing endpoint information.
  * @param {string} interfaceShortName - The short name of the interface to match against endpoint interfaces.
@@ -52,22 +54,15 @@ export function extractEndpointHref (descriptor_or_model: any, interfaceShortNam
     return endpoint?.interface === interfaceShortName
   })
 
-  // If not found and it's AAS-3.X, try AAS-REPOSITORY-3.X as fallback
-  if (!endpoint && /^AAS-3\.[^-]+$/.test(interfaceShortName)) {
-    const versionPart = interfaceShortName.slice('AAS-'.length) // e.g., "3.0"
-    const fallbackInterface = 'AAS-REPOSITORY-' + versionPart
-    endpoint = endpoints.find((endpoint: any) => {
-      return endpoint?.interface === fallbackInterface
-    })
-  }
+  const versionedInterface = /^(AAS|SUBMODEL)-(3\.\d+(?:\.\d+)*)$/.exec(interfaceShortName)
+  if (!endpoint && versionedInterface) {
+    const [, interfaceName, version] = versionedInterface
+    const directInterfacePattern = new RegExp(String.raw`^${interfaceName}-3\.\d+(?:\.\d+)*$`)
+    const repositoryInterfacePattern = new RegExp(String.raw`^${interfaceName}-REPOSITORY-3\.\d+(?:\.\d+)*$`)
 
-  // If not found and it's SUBMODEL-3.X, try SUBMODEL-REPOSITORY-3.X as fallback
-  if (!endpoint && /^SUBMODEL-3\.[^-]+$/.test(interfaceShortName)) {
-    const versionPart = interfaceShortName.slice('SUBMODEL-'.length) // e.g., "3.0"
-    const fallbackInterface = 'SUBMODEL-REPOSITORY-' + versionPart
-    endpoint = endpoints.find((endpoint: any) => {
-      return endpoint?.interface === fallbackInterface
-    })
+    endpoint = endpoints.find((endpoint: any) => directInterfacePattern.test(endpoint?.interface))
+      ?? endpoints.find((endpoint: any) => endpoint?.interface === `${interfaceName}-REPOSITORY-${version}`)
+      ?? endpoints.find((endpoint: any) => repositoryInterfacePattern.test(endpoint?.interface))
   }
 
   return endpoint?.protocolInformation?.href || ''
