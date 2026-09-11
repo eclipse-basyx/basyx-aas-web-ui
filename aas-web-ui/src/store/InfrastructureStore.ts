@@ -159,17 +159,17 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       const infrastructure = getSelectedInfrastructure.value
       return infrastructure?.token?.accessToken
         ? {
-          accessToken: infrastructure.token.accessToken,
-          expiresAt: infrastructure.token.expiresAt,
-          isAuthenticated: infrastructure.isAuthenticated,
-        }
+            accessToken: infrastructure.token.accessToken,
+            expiresAt: infrastructure.token.expiresAt,
+            isAuthenticated: infrastructure.isAuthenticated,
+          }
         : undefined
     },
     () => envStore.getFeatureControlClaimMappings,
     overrides => envStore.setFeatureControlOverrides(overrides),
   )
   const getOpenInfrastructureEditMode = computed(() => openInfrastructureEditMode.value)
-  function getActiveComponentUrl(componentKey: BaSyxComponentKey, url: string): string {
+  function getActiveComponentUrl (componentKey: BaSyxComponentKey, url: string): string {
     const selectedInfra = getSelectedInfrastructure.value
     if (!selectedInfra) {
       return url
@@ -210,7 +210,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
   let nextProfileRequest = 0
 
-  function supportsResourceAccess(key: BaSyxComponentKey, endpoint?: string): boolean {
+  function supportsResourceAccess (key: BaSyxComponentKey, endpoint?: string): boolean {
     const profile = resourceAccessProfiles.value[key]
     const url = basyxComponentUrlGetters[key]?.value.trim().replace(/\/+$/, '')
     const configuredUrl = getSelectedInfrastructure.value?.components[key]?.url.trim().replace(/\/+$/, '')
@@ -219,7 +219,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       && (!endpoint || resourceAccessComponent(endpoint) === key))
   }
 
-  function resourceAccessComponent(endpoint: string): BaSyxComponentKey | undefined {
+  function resourceAccessComponent (endpoint: string): BaSyxComponentKey | undefined {
     for (const key of Object.keys(basyxComponentUrlGetters) as BaSyxComponentKey[]) {
       const path = basyxComponents[key].pathCheck
       const url = basyxComponentUrlGetters[key].value.trim().replace(/\/+$/, '')
@@ -234,12 +234,12 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     return undefined
   }
 
-  function supportsResourceAccessEndpoint(endpoint: string): boolean {
+  function supportsResourceAccessEndpoint (endpoint: string): boolean {
     const key = resourceAccessComponent(endpoint)
     return key !== undefined && supportsResourceAccess(key, endpoint)
   }
 
-  function isEndpointSet(componentKey: BaSyxComponentKey): boolean {
+  function isEndpointSet (componentKey: BaSyxComponentKey): boolean {
     const activeComponentUrl = basyxComponentUrlGetters[componentKey]?.value
     return !!activeComponentUrl && activeComponentUrl.trim() !== ''
   }
@@ -283,7 +283,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
   })
 
-  function getDefaultInfrastructureId(): string {
+  function getDefaultInfrastructureId (): string {
     // Look for infrastructure marked as default
     const defaultInfra = infrastructures.value.find(infra => infra.isDefault)
     if (defaultInfra) {
@@ -296,7 +296,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   const { createEmptyInfrastructure } = infrastructureStorage
 
   // Wrapper functions that delegate to storage composable
-  async function loadInfrastructuresFromStorage(): Promise<void> {
+  async function loadInfrastructuresFromStorage (): Promise<void> {
     const envConfig = {
       aasDiscoveryPath: EnvAASDiscoveryPath.value,
       aasRegistryPath: EnvAASRegistryPath.value,
@@ -325,11 +325,11 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     infrastructures.value = result.infrastructures
   }
 
-  function saveInfrastructuresToStorage(): void {
+  function saveInfrastructuresToStorage (): void {
     infrastructureStorage.saveInfrastructuresToStorage(infrastructures.value, selectedInfrastructureId.value)
   }
 
-  function dispatchSetDefaultInfrastructure(infrastructureId: string): void {
+  function dispatchSetDefaultInfrastructure (infrastructureId: string): void {
     for (const infra of infrastructures.value) {
       infra.isDefault = infra.id === infrastructureId ? true : false
       saveInfrastructuresToStorage()
@@ -378,7 +378,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   })
 
   // Actions
-  function dispatchComponentURL(componentKey: BaSyxComponentKey, url: string): void {
+  function dispatchComponentURL (componentKey: BaSyxComponentKey, url: string): void {
     switch (componentKey) {
       case 'AASDiscovery': {
         AASDiscoveryURL.value = url
@@ -422,7 +422,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   }
 
   // Infrastructure Actions
-  async function dispatchSelectInfrastructure(infrastructureId: string, connect = true): Promise<void> {
+  async function dispatchSelectInfrastructure (infrastructureId: string, connect = true): Promise<void> {
     if (!infrastructures.value.some(i => i.id === infrastructureId)) {
       console.error(`[InfrastructureStore] Infrastructure with ID ${infrastructureId} not found`)
       return
@@ -446,11 +446,11 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     // Note: AAS list and treeview reload automatically via watchers when component URLs change
   }
 
-  function dispatchIsTestingConnections(state: boolean): void {
+  function dispatchIsTestingConnections (state: boolean): void {
     isTestingConnections.value = state
   }
 
-  function dispatchAddInfrastructure(infrastructure: InfrastructureConfig): void {
+  function dispatchAddInfrastructure (infrastructure: InfrastructureConfig): void {
     // If this infrastructure is marked as default, unmark all others
     if (infrastructure.isDefault) {
       for (const infra of infrastructures.value) {
@@ -462,7 +462,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     saveInfrastructuresToStorage()
   }
 
-  function dispatchUpdateInfrastructure(infrastructure: InfrastructureConfig): void {
+  function dispatchUpdateInfrastructure (infrastructure: InfrastructureConfig): void {
     const index = infrastructures.value.findIndex(i => i.id === infrastructure.id)
     if (index !== -1) {
       // If this infrastructure is marked as default, unmark all others
@@ -498,7 +498,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
   }
 
-  async function dispatchDeleteInfrastructure(infrastructureId: string): Promise<void> {
+  async function dispatchDeleteInfrastructure (infrastructureId: string): Promise<void> {
     const index = infrastructures.value.findIndex(i => i.id === infrastructureId)
     if (index !== -1) {
       const wasSelected = selectedInfrastructureId.value === infrastructureId
@@ -537,7 +537,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
   }
 
-  function dispatchUpdateInfrastructureAuth(infrastructureId: string, auth: InfrastructureConfig['auth']): void {
+  function dispatchUpdateInfrastructureAuth (infrastructureId: string, auth: InfrastructureConfig['auth']): void {
     const infrastructure = infrastructures.value.find(i => i.id === infrastructureId)
     if (infrastructure && auth) {
       infrastructure.auth = auth
@@ -545,7 +545,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
   }
 
-  async function dispatchResetToDefaultInfrastructures(): Promise<void> {
+  async function dispatchResetToDefaultInfrastructures (): Promise<void> {
     // Store the currently selected infrastructure ID before clearing
     const previousSelectedId = selectedInfrastructureId.value
 
@@ -601,7 +601,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   }
 
   // Wrapper functions that delegate to auth composable
-  async function refreshInfrastructureTokens(
+  async function refreshInfrastructureTokens (
     infrastructureId?: string,
   ): Promise<Array<{ infraId: string, infraName: string, error: string }>> {
     const failures = await infrastructureAuth.refreshInfrastructureTokens(infrastructures.value, infrastructureId)
@@ -618,7 +618,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     return failures
   }
 
-  function setAuthenticationStatusForInfrastructure(infrastructureId: string, state: boolean): void {
+  function setAuthenticationStatusForInfrastructure (infrastructureId: string, state: boolean): void {
     infrastructureAuth.setAuthenticationStatusForInfrastructure(infrastructures.value, infrastructureId, state)
   }
 
@@ -626,7 +626,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
    * Wait for the store to finish initializing
    * Used by router to ensure infrastructures are loaded before processing OAuth2 callbacks
    */
-  async function waitForInitialization(): Promise<void> {
+  async function waitForInitialization (): Promise<void> {
     if (isInitialized.value) {
       return
     }
@@ -635,7 +635,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
   }
 
-  async function connectComponents(): Promise<void> {
+  async function connectComponents (): Promise<void> {
     // Ensure that Object.keys returns RepositoryKey[]
     const keys = Object.keys(basyxComponents) as BaSyxComponentKey[]
 
@@ -684,13 +684,13 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     await Promise.all(connectionPromises)
   }
 
-  function invalidateComponentConnection(componentKey: BaSyxComponentKey): number {
+  function invalidateComponentConnection (componentKey: BaSyxComponentKey): number {
     const generation = (componentConnectionGenerations.get(componentKey) ?? 0) + 1
     componentConnectionGenerations.set(componentKey, generation)
     return generation
   }
 
-  function isCurrentComponentConnection(
+  function isCurrentComponentConnection (
     componentKey: BaSyxComponentKey,
     generation: number,
     infrastructureId: string | null,
@@ -701,11 +701,11 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       && normalizeComponentUrl(basyxComponents[componentKey].url) === requestedUrl
   }
 
-  function normalizeComponentUrl(url: string): string {
+  function normalizeComponentUrl (url: string): string {
     return url.trim().replace(/\/+$/, '')
   }
 
-  async function connectComponent(componentKey: keyof typeof basyxComponents): Promise<void> {
+  async function connectComponent (componentKey: keyof typeof basyxComponents): Promise<void> {
     const basyxComponent = basyxComponents[componentKey]
     const profileUrl = basyxComponent.url.trim().replace(/\/+$/, '')
     const profileInfrastructureId = getSelectedInfrastructure.value?.id ?? ''
@@ -817,7 +817,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     }
   }
 
-  function normalizeServiceDescription(value: unknown): ServiceDescription | null {
+  function normalizeServiceDescription (value: unknown): ServiceDescription | null {
     if (!value || typeof value !== 'object') {
       return null
     }
