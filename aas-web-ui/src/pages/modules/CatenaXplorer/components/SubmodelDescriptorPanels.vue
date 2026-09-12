@@ -119,7 +119,9 @@
           <template v-if="edcAccessEnabled">
             <div class="d-flex justify-end mt-4">
               <v-btn
-                v-if="!hasSubmodelData(submodelDescriptor) && !hasDspEndpoint(submodelDescriptor)"
+                v-if="!hasSubmodelData(submodelDescriptor)
+                  && !hasDspEndpoint(submodelDescriptor)
+                  && edcCounterPartyAddress === edcDefaultCounterPartyAddress"
                 class="mr-2"
                 data-testid="load-submodel"
                 :disabled="hasSubmodelData(submodelDescriptor)"
@@ -271,6 +273,8 @@
   const props = withDefaults(defineProps<{
     descriptors: any[]
     edcAccessEnabled?: boolean
+    edcCounterPartyAddress?: string
+    edcDefaultCounterPartyAddress?: string
     edcSubmodels?: Record<string, EdcSubmodelViewState>
     inlineError?: string
     inlineErrorKey?: string

@@ -50,6 +50,8 @@
           <DescriptorDetails
             :descriptor="selectedDescriptor"
             :edc-access-enabled="isEdcAccessMode"
+            :edc-counter-party-address="edcCounterPartyAddress"
+            :edc-default-counter-party-address="selectedEdcConfig?.defaultCounterPartyAddress ?? ''"
             :edc-submodels="edcSubmodels"
             :inline-error="inlineErrorDescriptor"
             :inline-error-key="inlineErrorDescriptorKey"
@@ -138,6 +140,8 @@
             <DescriptorDetails
               :descriptor="selectedDescriptor"
               :edc-access-enabled="isEdcAccessMode"
+              :edc-counter-party-address="edcCounterPartyAddress"
+              :edc-default-counter-party-address="selectedEdcConfig?.defaultCounterPartyAddress ?? ''"
               :edc-submodels="edcSubmodels"
               :inline-error="inlineErrorDescriptor"
               :inline-error-key="inlineErrorDescriptorKey"

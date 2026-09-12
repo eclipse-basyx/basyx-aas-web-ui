@@ -78,6 +78,8 @@
         <SubmodelDescriptorPanels
           :descriptors="submodelDescriptors"
           :edc-access-enabled="edcAccessEnabled"
+          :edc-counter-party-address="edcCounterPartyAddress"
+          :edc-default-counter-party-address="edcDefaultCounterPartyAddress"
           :edc-submodels="edcSubmodels"
           :inline-error="inlineError"
           :inline-error-key="inlineErrorKey"
@@ -114,6 +116,8 @@
   const props = defineProps<{
     descriptor: any | null
     edcAccessEnabled?: boolean
+    edcCounterPartyAddress?: string
+    edcDefaultCounterPartyAddress?: string
     inlineError?: string
     inlineErrorKey?: string
     edcSubmodels?: Record<string, EdcSubmodelViewState>
