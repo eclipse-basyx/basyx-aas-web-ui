@@ -119,7 +119,7 @@
           <template v-if="edcAccessEnabled">
             <div class="d-flex justify-end mt-4">
               <v-btn
-                v-if="!hasSubmodelData(submodelDescriptor)"
+                v-if="!hasSubmodelData(submodelDescriptor) && !hasDspEndpoint(submodelDescriptor)"
                 class="mr-2"
                 data-testid="load-submodel"
                 :disabled="hasSubmodelData(submodelDescriptor)"
@@ -261,6 +261,7 @@
     getReferenceKeyValues,
     getSubmodelEdcEndpointInfo,
     getSubmodelMarkerValues,
+    hasDspEndpoint,
     normalizeSupplementalSemanticIds,
   } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
   import EndpointTable from '@/pages/modules/CatenaXplorer/components/EndpointTable.vue'

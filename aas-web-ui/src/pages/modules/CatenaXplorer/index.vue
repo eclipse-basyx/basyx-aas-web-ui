@@ -206,6 +206,7 @@
     getDirectSubmodelEndpointHref,
     getSubmodelDescriptors,
     getSubmodelEdcEndpointInfo,
+    hasMatchingDspEndpoint,
   } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
   import CatenaXplorerNavigationDrawer from '@/pages/modules/CatenaXplorer/components/CatenaXplorerNavigationDrawer.vue'
   import DeleteDescriptorDialog from '@/pages/modules/CatenaXplorer/components/DeleteDescriptorDialog.vue'
@@ -704,6 +705,11 @@
     if (submodelsPath === '') {
       inlineErrorDescriptor.value = 'The direct endpoint href does not contain a /submodels/ path (submodel descriptor endpoint not compliant to IDTA-01002-3-2 API spec).'
       console.log(inlineErrorDescriptor.value)
+      return
+    }
+
+    if (hasMatchingDspEndpoint(submodelDescriptor, dspEndpoint)) {
+      inlineErrorDescriptor.value = 'The submodel descriptor already has a DSP endpoint with this dspEndpoint value.'
       return
     }
 
