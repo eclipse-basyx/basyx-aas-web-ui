@@ -140,11 +140,6 @@ async function handleRequest (
     return
   }
 
-  if (route.action === 'asset/dtr' && request.method === 'GET') {
-    await handleDtrAssetRequest(request, response, proxy)
-    return
-  }
-
   if (route.action === 'asset/sm-service' && request.method === 'GET') {
     await handleSmServiceAssetRequest(request, response, proxy)
     return
@@ -176,19 +171,6 @@ async function handleRequest (
   }
 
   throw createHttpError('Route not found', 404)
-}
-
-async function handleDtrAssetRequest (
-  request: IncomingMessage,
-  response: ServerResponse,
-  proxy: EdcProxyConfig,
-): Promise<void> {
-  const { status, data } = await fetchCatalogAssetByTaxonomyType(
-    proxy,
-    'https://w3id.org/catenax/taxonomy#DigitalTwinRegistry',
-    'Digital Twin Registry asset not found',
-  )
-  writeJsonResponse(response, status, data)
 }
 
 async function handleSmServiceAssetRequest (

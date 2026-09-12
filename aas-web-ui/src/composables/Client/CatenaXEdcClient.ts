@@ -70,7 +70,6 @@ export interface CatenaXEdcDtrResponse<T = unknown> {
 
 export function useCatenaXEdcClient (): {
   fetchStatus: (proxyId: string) => Promise<CatenaXEdcStatus | null>
-  fetchDtrAsset: (proxyId: string) => Promise<CatenaXEdcAsset | null>
   fetchSmServiceAsset: (proxyId: string) => Promise<CatenaXEdcAsset | null>
   discoverConnector: (proxyId: string, request: CatenaXEdcDiscoveryRequest) => Promise<unknown | null>
   requestCatalog: (proxyId: string, request: CatenaXEdcCatalogRequest) => Promise<unknown | null>
@@ -108,10 +107,6 @@ export function useCatenaXEdcClient (): {
     )
 
     return result.success ? result.data as CatenaXEdcStatus : null
-  }
-
-  async function fetchDtrAsset (proxyId: string): Promise<CatenaXEdcAsset | null> {
-    return fetchEdcAsset(proxyId, 'asset/dtr', 'fetching Digital Twin Registry asset through EDC')
   }
 
   async function fetchSmServiceAsset (proxyId: string): Promise<CatenaXEdcAsset | null> {
@@ -245,7 +240,6 @@ export function useCatenaXEdcClient (): {
 
   return {
     fetchStatus,
-    fetchDtrAsset,
     fetchSmServiceAsset,
     discoverConnector,
     requestCatalog,
