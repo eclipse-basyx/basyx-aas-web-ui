@@ -145,7 +145,7 @@
             </div>
 
             <v-alert
-              v-if="inlineError"
+              v-if="inlineError && inlineErrorKey === getDescriptorKey(submodelDescriptor)"
               class="my-3"
               density="comfortable"
               icon="mdi-alert-circle-outline"
@@ -273,10 +273,12 @@
     edcAccessEnabled?: boolean
     edcSubmodels?: Record<string, EdcSubmodelViewState>
     inlineError?: string
+    inlineErrorKey?: string
     openingSubmodelKey?: string
   }>(), {
     edcAccessEnabled: false,
     edcSubmodels: () => ({}),
+    inlineErrorKey: '',
     openingSubmodelKey: '',
   })
 

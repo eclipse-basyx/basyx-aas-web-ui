@@ -80,6 +80,7 @@
           :edc-access-enabled="edcAccessEnabled"
           :edc-submodels="edcSubmodels"
           :inline-error="inlineError"
+          :inline-error-key="inlineErrorKey"
           :opening-submodel-key="openingSubmodelKey"
           @add-dsp-endpoint="emit('add-dsp-endpoint', $event)"
           @load-edc-submodel="emit('load-edc-submodel', $event)"
@@ -114,6 +115,7 @@
     descriptor: any | null
     edcAccessEnabled?: boolean
     inlineError?: string
+    inlineErrorKey?: string
     edcSubmodels?: Record<string, EdcSubmodelViewState>
     openingSubmodelKey?: string
   }>()

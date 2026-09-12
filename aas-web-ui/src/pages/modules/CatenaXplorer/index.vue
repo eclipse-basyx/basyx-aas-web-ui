@@ -52,6 +52,7 @@
             :edc-access-enabled="isEdcAccessMode"
             :edc-submodels="edcSubmodels"
             :inline-error="inlineErrorDescriptor"
+            :inline-error-key="inlineErrorDescriptorKey"
             :opening-submodel-key="openingSubmodelKey"
             @add-dsp-endpoint="addDspEndpoint"
             @load-edc-submodel="loadEdcSubmodel"
@@ -139,6 +140,7 @@
               :edc-access-enabled="isEdcAccessMode"
               :edc-submodels="edcSubmodels"
               :inline-error="inlineErrorDescriptor"
+              :inline-error-key="inlineErrorDescriptorKey"
               :opening-submodel-key="openingSubmodelKey"
               @add-dsp-endpoint="addDspEndpoint"
               @load-edc-submodel="loadEdcSubmodel"
@@ -288,6 +290,7 @@
   const assetIdValue = ref('')
   const inlineError = ref('')
   const inlineErrorDescriptor = ref('')
+  const inlineErrorDescriptorKey = ref('')
   const isLoading = ref(false)
   const descriptorDialog = ref(false)
   const descriptorDialogMode = ref<'create' | 'edit'>('create')
@@ -492,6 +495,8 @@
 
   async function loadDescriptors (assetIds?: Array<{ name: string, value: string }>): Promise<void> {
     inlineError.value = ''
+    inlineErrorDescriptor.value = ''
+    inlineErrorDescriptorKey.value = ''
 
     if (!isDescriptorSourceConfigured()) {
       descriptors.value = []
@@ -663,6 +668,9 @@
   }
 
   async function addDspEndpoint (submodelDescriptor: any): Promise<void> {
+    inlineErrorDescriptor.value = ''
+    inlineErrorDescriptorKey.value = getDescriptorKey(submodelDescriptor)
+
     const aasDescriptor = selectedDescriptor.value
     if (!aasDescriptor) {
       inlineError.value = 'No AAS descriptor is selected.'
@@ -742,6 +750,8 @@
       return
     }
 
+    inlineErrorDescriptor.value = ''
+    inlineErrorDescriptorKey.value = ''
     await reloadSelectedDescriptor()
   }
 
@@ -1107,6 +1117,8 @@
     selectedDescriptorId.value = ''
     selectedDescriptorFallback.value = null
     inlineError.value = ''
+    inlineErrorDescriptor.value = ''
+    inlineErrorDescriptorKey.value = ''
     resetDescriptorPaginationState()
     if (hadSelectedDescriptor) {
       updateSelectedDescriptorRoute('')
@@ -1402,6 +1414,8 @@
   }
 
   function setSelectedDescriptorById (descriptorId: string): void {
+    inlineErrorDescriptor.value = ''
+    inlineErrorDescriptorKey.value = ''
     selectedDescriptorId.value = descriptorId
     updateSelectedDescriptorRoute(descriptorId)
     void ensureSelectedDescriptorLoaded()
