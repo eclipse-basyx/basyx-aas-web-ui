@@ -51,7 +51,9 @@
             :descriptor="selectedDescriptor"
             :edc-access-enabled="isEdcAccessMode"
             :edc-submodels="edcSubmodels"
+            :inline-error="inlineErrorDescriptor"
             :opening-submodel-key="openingSubmodelKey"
+            @add-dsp-endpoint="addDspEndpoint"
             @load-edc-submodel="loadEdcSubmodel"
             @open-submodel="openSubmodel"
           />
@@ -136,7 +138,9 @@
               :descriptor="selectedDescriptor"
               :edc-access-enabled="isEdcAccessMode"
               :edc-submodels="edcSubmodels"
+              :inline-error="inlineErrorDescriptor"
               :opening-submodel-key="openingSubmodelKey"
+              @add-dsp-endpoint="addDspEndpoint"
               @load-edc-submodel="loadEdcSubmodel"
               @open-submodel="openSubmodel"
             />
@@ -191,12 +195,16 @@
     rememberRecentCatenaXPartner,
   } from '@/pages/modules/CatenaXplorer/catenaXplorerPartners'
   import {
+    asArray,
     buildAssetIdNameSuggestions,
     buildEdcShellDescriptorsCurlCommand,
     buildShellDescriptorEndpointUrl,
     buildShellDescriptorsCurlCommand,
+    extractSubmodelsPath,
     getAssetIdNameSuggestions,
     getDescriptorKey,
+    getDirectSubmodelEndpointHref,
+    getSubmodelDescriptors,
     getSubmodelEdcEndpointInfo,
   } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
   import CatenaXplorerNavigationDrawer from '@/pages/modules/CatenaXplorer/components/CatenaXplorerNavigationDrawer.vue'
@@ -246,8 +254,10 @@
   } = useAASRegistryClient()
   const {
     consumeLastRequestFailureDetails: consumeEdcRequestFailureDetails,
+    fetchSmServiceAsset,
     fetchDtrShellDescriptorById,
     fetchDtrShellDescriptors,
+    fetchStatus,
     fetchSubmodel,
   } = useCatenaXEdcClient()
   const {
@@ -276,6 +286,7 @@
   const assetIdName = ref(defaultAssetIdName)
   const assetIdValue = ref('')
   const inlineError = ref('')
+  const inlineErrorDescriptor = ref('')
   const isLoading = ref(false)
   const descriptorDialog = ref(false)
   const descriptorDialogMode = ref<'create' | 'edit'>('create')
@@ -648,6 +659,111 @@
     rememberCurrentEdcPartner(edcRequest)
     rememberEdcTransferProcessId(edcDtrAssetKey, response.edc, edcRequest.counterPartyAddress)
     return response.data
+  }
+
+  async function addDspEndpoint (submodelDescriptor: any): Promise<void> {
+    const aasDescriptor = selectedDescriptor.value
+    if (!aasDescriptor) {
+      inlineError.value = 'No AAS descriptor is selected.'
+      return
+    }
+
+    if (edcProxyId.value === '') {
+      inlineErrorDescriptor.value = 'The selected Catena-X infrastructure has no EDC proxy ID (needed for DSP endpoint).'
+      return
+    }
+
+    const status = await fetchStatus(edcProxyId.value)
+    if (!status) {
+      inlineErrorDescriptor.value = buildEdcFailureMessage('Could not load the EDC proxy status for DSP endpoint resp. data plane proxy URL determination (both needed for DSP endpoint)')
+      return
+    }
+
+    const dspEndpoint = status.dspEndpoint?.trim()
+    const dataPlaneProxyUrl = status.dataPlaneProxyUrl?.trim()
+    if (!dspEndpoint || !dataPlaneProxyUrl) {
+      inlineErrorDescriptor.value = 'The EDC proxy has no configured DSP endpoint or data plane proxy URL (needed for DSP endpoint)'
+      return
+    }
+
+    const smServiceAsset = await fetchSmServiceAsset(edcProxyId.value)
+    if (!smServiceAsset) {
+      inlineErrorDescriptor.value = buildEdcFailureMessage('Could not load the Submodel Service asset through EDC (needed for DSP endpoint).')
+      return
+    }
+
+    const smServiceAssetId = smServiceAsset['@id']
+
+    const directEndpointHref = getDirectSubmodelEndpointHref(submodelDescriptor, infrastructureStore.getSubmodelRepoURL)
+    if (directEndpointHref === '') {
+      inlineErrorDescriptor.value = 'The submodel descriptor has no direct (non-DSP) endpoint (needed for adding DSP endpoint).'
+      return
+    }
+
+    const submodelsPath = extractSubmodelsPath(directEndpointHref)
+    if (submodelsPath === '') {
+      inlineErrorDescriptor.value = 'The direct endpoint href does not contain a /submodels/ path (submodel descriptor endpoint not compliant to IDTA-01002-3-2 API spec).'
+      console.log(inlineErrorDescriptor.value)
+      return
+    }
+
+    const dspEndpointEntry = {
+      interface: 'SUBMODEL-3.0',
+      protocolInformation: {
+        endpointProtocol: 'https',
+        href: dataPlaneProxyUrl + submodelsPath,
+        subprotocol: 'DSP',
+        subprotocolBody: `id=${smServiceAssetId};dspEndpoint=${dspEndpoint}`,
+      },
+    }
+
+    const updatedAasDescriptor = cloneDescriptor(aasDescriptor)
+    const updatedSubmodelDescriptor = getSubmodelDescriptors(updatedAasDescriptor)
+      .find(descriptor => descriptor?.id === submodelDescriptor?.id)
+    if (!updatedSubmodelDescriptor) {
+      inlineErrorDescriptor.value = 'Could not find the Submodel descriptor in the selected AAS descriptor.'
+      return
+    }
+
+    updatedSubmodelDescriptor.endpoints = [
+      ...asArray(updatedSubmodelDescriptor.endpoints),
+      dspEndpointEntry,
+    ]
+
+    const saved = await putAasDescriptor(updatedAasDescriptor as any)
+    if (!saved) {
+      inlineErrorDescriptor.value = 'Could not add the DSP endpoint to the Submodel descriptor in the Digital Twin Registry.'
+      return
+    }
+
+    await reloadSelectedDescriptor()
+  }
+
+  async function reloadSelectedDescriptor (): Promise<void> {
+    const descriptorId = selectedDescriptorId.value.trim()
+    if (descriptorId === '') {
+      return
+    }
+
+    const generation = descriptorPaginationGeneration.value
+    const refreshedDescriptor = await fetchDescriptorById(descriptorId, generation)
+    if (generation !== descriptorPaginationGeneration.value) {
+      return
+    }
+    if (!refreshedDescriptor || Object.keys(refreshedDescriptor).length === 0) {
+      return
+    }
+
+    const listIndex = descriptors.value.findIndex(descriptor => descriptor?.id === descriptorId)
+    if (listIndex === -1) {
+      selectedDescriptorFallback.value = refreshedDescriptor
+    } else {
+      descriptors.value = [
+        ...descriptors.value.slice(0, listIndex),
+        refreshedDescriptor,
+        ...descriptors.value.slice(listIndex + 1),
+      ]
+    }
   }
 
   async function loadEdcSubmodel (submodelDescriptor: any): Promise<void> {

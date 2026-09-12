@@ -79,7 +79,9 @@
           :descriptors="submodelDescriptors"
           :edc-access-enabled="edcAccessEnabled"
           :edc-submodels="edcSubmodels"
+          :inline-error="inlineError"
           :opening-submodel-key="openingSubmodelKey"
+          @add-dsp-endpoint="emit('add-dsp-endpoint', $event)"
           @load-edc-submodel="emit('load-edc-submodel', $event)"
           @open-submodel="emit('open-submodel', $event)"
         />
@@ -111,11 +113,13 @@
   const props = defineProps<{
     descriptor: any | null
     edcAccessEnabled?: boolean
+    inlineError?: string
     edcSubmodels?: Record<string, EdcSubmodelViewState>
     openingSubmodelKey?: string
   }>()
 
   const emit = defineEmits<{
+    'add-dsp-endpoint': [descriptor: any]
     'load-edc-submodel': [descriptor: any]
     'open-submodel': [descriptor: any]
   }>()

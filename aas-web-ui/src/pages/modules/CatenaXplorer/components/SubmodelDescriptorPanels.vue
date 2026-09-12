@@ -119,6 +119,19 @@
           <template v-if="edcAccessEnabled">
             <div class="d-flex justify-end mt-4">
               <v-btn
+                v-if="!hasSubmodelData(submodelDescriptor)"
+                class="mr-2"
+                data-testid="load-submodel"
+                :disabled="hasSubmodelData(submodelDescriptor)"
+                prepend-icon="mdi-upload-network-outline"
+                size="small"
+                variant="tonal"
+                @click="emit('add-dsp-endpoint', submodelDescriptor)"
+              >
+                {{ 'Add DSP Endpoint to Descriptor' }}
+              </v-btn>
+
+              <v-btn
                 data-testid="load-submodel"
                 :disabled="!canLoadSubmodel(submodelDescriptor)"
                 :loading="getSubmodelState(submodelDescriptor).isLoading"
@@ -130,6 +143,16 @@
                 {{ hasSubmodelData(submodelDescriptor) ? 'Reload Submodel' : 'Load Submodel' }}
               </v-btn>
             </div>
+
+            <v-alert
+              v-if="inlineError"
+              class="my-3"
+              density="comfortable"
+              icon="mdi-alert-circle-outline"
+              :text="'Adding DSP Endpoint to Submodel Descriptor failed! (' + inlineError + ')'"
+              type="error"
+              variant="tonal"
+            />
 
             <v-alert
               v-if="!canLoadSubmodel(submodelDescriptor)"
@@ -248,6 +271,7 @@
     descriptors: any[]
     edcAccessEnabled?: boolean
     edcSubmodels?: Record<string, EdcSubmodelViewState>
+    inlineError?: string
     openingSubmodelKey?: string
   }>(), {
     edcAccessEnabled: false,
@@ -256,6 +280,7 @@
   })
 
   const emit = defineEmits<{
+    'add-dsp-endpoint': [descriptor: any]
     'load-edc-submodel': [descriptor: any]
     'open-submodel': [descriptor: any]
   }>()

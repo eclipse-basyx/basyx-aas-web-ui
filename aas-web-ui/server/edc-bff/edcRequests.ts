@@ -19,15 +19,24 @@ const jsonLdContext = {
   edc: 'https://w3id.org/edc/v0.0.1/ns/',
 }
 
-const catalogContext = [
-  {
-    '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
-  },
-]
 const odrlContextUrl = 'http' + '://www.w3.org/ns/odrl/2/'
 const dctContextUrl = 'http' + '://purl.org/dc/terms/'
 const dcatContextUrl = 'http' + '://www.w3.org/ns/dcat#'
 const xsdContextUrl = 'http' + '://www.w3.org/2001/XMLSchema#'
+
+const catalogContext = [
+  {
+    '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
+    'edc': 'https://w3id.org/edc/v0.0.1/ns/',
+    'tx': 'https://w3id.org/tractusx/v0.0.1/ns/',
+    'tx-auth': 'https://w3id.org/tractusx/auth/',
+    'cx-policy': 'https://w3id.org/catenax/policy/',
+    'odrl': odrlContextUrl,
+    'dct': dctContextUrl,
+    'cx-taxo': 'https://w3id.org/catenax/taxonomy#',
+    'cx-common': 'https://w3id.org/catenax/ontology/common#',
+  },
+]
 
 const contractContext = {
   'tx': 'https://w3id.org/tractusx/v0.0.1/ns/',
@@ -45,7 +54,7 @@ const contractContext = {
   '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
 }
 
-const defaultDtrProtocol = 'dataspace-protocol-http'
+export const defaultDtrProtocol = 'dataspace-protocol-http'
 const dtrTaxonomyId = 'https://w3id.org/catenax/taxonomy#DigitalTwinRegistry'
 const catalogDatasetKeys = [
   'dcat:dataset',
