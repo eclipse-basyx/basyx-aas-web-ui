@@ -78,8 +78,13 @@
         <SubmodelDescriptorPanels
           :descriptors="submodelDescriptors"
           :edc-access-enabled="edcAccessEnabled"
+          :edc-counter-party-address="edcCounterPartyAddress"
+          :edc-default-counter-party-address="edcDefaultCounterPartyAddress"
           :edc-submodels="edcSubmodels"
+          :inline-error="inlineError"
+          :inline-error-key="inlineErrorKey"
           :opening-submodel-key="openingSubmodelKey"
+          @add-dsp-endpoint="emit('add-dsp-endpoint', $event)"
           @load-edc-submodel="emit('load-edc-submodel', $event)"
           @open-submodel="emit('open-submodel', $event)"
         />
@@ -111,11 +116,16 @@
   const props = defineProps<{
     descriptor: any | null
     edcAccessEnabled?: boolean
+    edcCounterPartyAddress?: string
+    edcDefaultCounterPartyAddress?: string
+    inlineError?: string
+    inlineErrorKey?: string
     edcSubmodels?: Record<string, EdcSubmodelViewState>
     openingSubmodelKey?: string
   }>()
 
   const emit = defineEmits<{
+    'add-dsp-endpoint': [descriptor: any]
     'load-edc-submodel': [descriptor: any]
     'open-submodel': [descriptor: any]
   }>()

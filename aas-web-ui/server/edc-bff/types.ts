@@ -21,8 +21,8 @@ export interface RedactedEdcProxyConfig {
   managementUrlConfigured: boolean
   apiKeyConfigured: boolean
   participantId?: string
-  dspEndpointConfigured: boolean
-  dataPlaneProxyUrlConfigured: boolean
+  dspEndpoint?: string
+  dataPlaneProxyUrl?: string
   allowedCounterPartyAddressCount: number
   allowInsecureCounterPartyAddresses: boolean
 }

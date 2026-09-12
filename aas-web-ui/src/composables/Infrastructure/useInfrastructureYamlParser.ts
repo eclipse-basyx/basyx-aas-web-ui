@@ -178,11 +178,11 @@ export function useInfrastructureYamlParser (): {
     }
 
     if (!proxyId) {
-      return accessMode === 'edc' ? { accessMode: 'edc' } : undefined
+      return accessMode === 'edc' || accessMode === 'full' ? { accessMode } : undefined
     }
 
     return {
-      accessMode: 'edc',
+      accessMode: accessMode ?? 'edc',
       edc: {
         proxyId,
         defaultCounterPartyId: defaultPartner?.counterPartyId,
@@ -194,7 +194,8 @@ export function useInfrastructureYamlParser (): {
   }
 
   function normalizeCatenaXAccessMode (value: unknown): CatenaXAccessMode | undefined {
-    return value === 'direct' || value === 'edc' ? value : undefined
+    const accessModes: CatenaXAccessMode[] = ['direct', 'edc', 'full']
+    return accessModes.includes(value as CatenaXAccessMode) ? (value as CatenaXAccessMode) : undefined
   }
 
   function parseCatenaXPartners (yamlConfig: YamlInfrastructureConfig): CatenaXPartner[] {
