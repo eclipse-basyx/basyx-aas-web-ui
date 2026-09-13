@@ -199,8 +199,14 @@ printf "%-38s %s\n" "Integrated Catena-X EDC BFF:" "$CX_EDC_BFF_ENABLED"
 printf "%-38s %s\n" "Catena-X EDC BFF upstream:" "$CX_EDC_BFF_UPSTREAM_URL"
 echo "-------------------------------------------------------------------------------------------------------------------------"
 
-# Replace the placeholders in all relevant files (.js, .html, .css)
-find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css' \) -exec sed -i \
+# Finish discovery before sed -i replaces directory entries. On older Btrfs
+# kernels, modifying files during find can cause them to be visited indefinitely.
+PLACEHOLDER_FILE_LIST=$(mktemp) || exit 1
+trap 'rm -f "$PLACEHOLDER_FILE_LIST"' EXIT
+find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css' \) -print0 > "$PLACEHOLDER_FILE_LIST" || exit 1
+
+# Replace placeholders using the saved, NUL-delimited list of files.
+xargs -0 -r sed -i \
     -e "s|/__BASE_PATH_PLACEHOLDER__/|$BASE_PATH_WITH_SLASH|g" \
     -e "s|/__LOGO_LIGHT_PATH_PLACEHOLDER__/|$LOGO_LIGHT_PATH|g" \
     -e "s|/__LOGO_DARK_PATH_PLACEHOLDER__/|$LOGO_DARK_PATH|g" \
@@ -245,7 +251,10 @@ find /usr/src/app/dist -type f \( -name '*.js' -o -name '*.html' -o -name '*.css
     -e "s|/__AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION_PLACEHOLDER__/|$AUTHORIZATION_HEADER_DESCRIPTION_ENDPOINT_EXEMPTION|g" \
     -e "s|/__START_PAGE_ROUTE_NAME_PLACEHOLDER__/|$START_PAGE_ROUTE_NAME|g" \
     -e "s|/__COMPANY_LOOKUP_DOMAIN_PLACEHOLDER__/|$COMPANY_LOOKUP_DOMAIN|g" \
-    {} \;
+    < "$PLACEHOLDER_FILE_LIST" || exit 1
+
+rm -f "$PLACEHOLDER_FILE_LIST"
+trap - EXIT
 
 BFF_PID=""
 NGINX_PID=""
