@@ -1,9 +1,10 @@
 <template>
-  <v-menu :close-on-content-click="false" location="bottom">
+  <v-menu v-model="menuOpen" :close-on-content-click="false" location="bottom">
     <template #activator="{ props: menuProps }">
       <v-btn
         v-if="isAuthEnabled"
         v-bind="menuProps"
+        aria-label="User menu"
         :icon="hasAuthenticationCredentials ? 'mdi-account-lock' : 'mdi-lock-remove'"
         size="small"
         variant="tonal"
@@ -21,6 +22,7 @@
     <v-card
       v-if="isAuthEnabled"
       color="navigationMenu"
+      max-width="380px"
       min-width="300px"
       rounded="lg"
       style="border-style: solid; border-width: 1px"
@@ -39,6 +41,8 @@
             </v-avatar>
           </template>
         </v-list-item>
+
+        <UserIdControl v-if="menuOpen && userId" :key="currentInfrastructure?.id" :user-id="userId" />
       </v-list>
 
       <template #actions>
@@ -79,7 +83,7 @@
   import { useAuth } from '@/composables/Auth/useAuth'
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
-  import { getUserFromToken } from '@/utils/TokenUtil'
+  import { getTokenPayload, getUserFromToken } from '@/utils/TokenUtil'
 
   // Stores
   const envStore = useEnvStore()
@@ -88,9 +92,23 @@
 
   const { login: performLogin, logout: performLogout } = useAuth(router)
 
+  const menuOpen = ref(false)
+
   // Computed properties
   const currentInfrastructure = computed(() => {
     return infrastructureStore.getSelectedInfrastructure
+  })
+
+  const userId = computed(() => {
+    const infra = currentInfrastructure.value
+    const token = infra?.token?.accessToken ?? infra?.auth?.bearerToken?.token
+    if (!token) return ''
+    try {
+      const subject = getTokenPayload(token).sub
+      return typeof subject === 'string' ? subject.trim() : ''
+    } catch {
+      return ''
+    }
   })
 
   const hasAuthenticationCredentials = computed(() => {

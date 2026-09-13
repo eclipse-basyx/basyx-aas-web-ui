@@ -47,6 +47,30 @@ export function useAASRepositoryClient () {
     return aasRepoUrl.replace(ASS_REPOSITORY_ENDPOINT_PATH, '') + '/upload'
   })
 
+  async function fetchAasUpdateCapability (aasId: string): Promise<boolean | undefined> {
+    if (!infrastructureStore.supportsResourceAccess?.('AASRepo')) {
+      return undefined
+    }
+    const endpoint = getAasEndpointById(aasId)
+    if (!endpoint) {
+      return undefined
+    }
+
+    try {
+      const response = await getRequest(
+        `${endpoint}/$access/capabilities`,
+        'checking AAS editing permission',
+        true,
+      )
+      if (response.success && typeof response.data?.canUpdate === 'boolean') {
+        return response.data.canUpdate
+      }
+    } catch {
+      // Only an explicit successful capability response may permit creation.
+    }
+    return undefined
+  }
+
   /**
    * Fetches one page of AAS from repository.
    *
@@ -787,6 +811,7 @@ export function useAASRepositoryClient () {
   }
 
   return {
+    fetchAasUpdateCapability,
     fetchAasListPage,
     fetchAasList,
     fetchAasById,

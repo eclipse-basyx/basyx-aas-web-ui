@@ -16,6 +16,7 @@ import { useEnvStore } from '@/store/EnvironmentStore'
 import { useNavigationStore } from '@/store/NavigationStore'
 import { isValidCustomHeader } from '@/utils/CustomHeaderUtils'
 import { getActiveComponentKeys, isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
+import { hasResourceAccessProfile } from '@/utils/ResourceAccessProfile'
 import { stripLastCharacter } from '@/utils/StringUtils'
 
 export const useInfrastructureStore = defineStore('infrastructureStore', () => {
@@ -203,6 +204,39 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     SubmodelRepo: getSubmodelRepoURL,
     ConceptDescriptionRepo: getConceptDescriptionRepoURL,
     CompanyLookup: getCompanyLookupURL,
+  }
+
+  const resourceAccessProfiles = ref<Partial<Record<BaSyxComponentKey, { url: string, infrastructureId: string, enabled: boolean, requestId: number }>>>({})
+
+  let nextProfileRequest = 0
+
+  function supportsResourceAccess (key: BaSyxComponentKey, endpoint?: string): boolean {
+    const profile = resourceAccessProfiles.value[key]
+    const url = basyxComponentUrlGetters[key]?.value.trim().replace(/\/+$/, '')
+    const configuredUrl = getSelectedInfrastructure.value?.components[key]?.url.trim().replace(/\/+$/, '')
+    return Boolean(profile?.enabled && url && profile.url === url && profile.url === configuredUrl
+      && profile.infrastructureId === getSelectedInfrastructure.value?.id
+      && (!endpoint || resourceAccessComponent(endpoint) === key))
+  }
+
+  function resourceAccessComponent (endpoint: string): BaSyxComponentKey | undefined {
+    for (const key of Object.keys(basyxComponentUrlGetters) as BaSyxComponentKey[]) {
+      const path = basyxComponents[key].pathCheck
+      const url = basyxComponentUrlGetters[key].value.trim().replace(/\/+$/, '')
+      if (!url || !path || key === 'CompanyLookup') {
+        continue
+      }
+      const root = url.endsWith(path) ? url : `${url}${path}`
+      if (endpoint.startsWith(`${root}/`)) {
+        return key
+      }
+    }
+    return undefined
+  }
+
+  function supportsResourceAccessEndpoint (endpoint: string): boolean {
+    const key = resourceAccessComponent(endpoint)
+    return key !== undefined && supportsResourceAccess(key, endpoint)
   }
 
   function isEndpointSet (componentKey: BaSyxComponentKey): boolean {
@@ -673,6 +707,10 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
   async function connectComponent (componentKey: keyof typeof basyxComponents): Promise<void> {
     const basyxComponent = basyxComponents[componentKey]
+    const profileUrl = basyxComponent.url.trim().replace(/\/+$/, '')
+    const profileInfrastructureId = getSelectedInfrastructure.value?.id ?? ''
+    const profile = { url: profileUrl, infrastructureId: profileInfrastructureId, enabled: false, requestId: ++nextProfileRequest }
+    resourceAccessProfiles.value[componentKey] = profile
     const connectionGeneration = invalidateComponentConnection(componentKey)
     const infrastructureId = selectedInfrastructureId.value
     const requestedUrl = normalizeComponentUrl(basyxComponent.url)
@@ -711,6 +749,10 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         basyxComponent.loading = false
 
         if (response.success) {
+          if (resourceAccessProfiles.value[componentKey]?.requestId === profile.requestId) {
+            profile.enabled = hasResourceAccessProfile(response.data)
+            resourceAccessProfiles.value[componentKey] = { ...profile }
+          }
           // Update the connected status
           basyxComponent.connected = true
           basyxComponent.description = normalizeServiceDescription(response.data)
@@ -827,6 +869,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     waitForInitialization,
     connectComponents,
     connectComponent,
+    supportsResourceAccess,
+    resourceAccessComponent,
+    supportsResourceAccessEndpoint,
     dispatchIsTestingConnections,
   }
 })

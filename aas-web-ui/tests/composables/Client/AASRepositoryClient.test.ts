@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockState = vi.hoisted(() => ({
+  profileEnabled: true,
   aasRepoUrl: 'https://example.test/shells',
 }))
 
@@ -15,7 +16,7 @@ const mockDeps = vi.hoisted(() => ({
 }))
 
 vi.mock('@/store/InfrastructureStore', () => ({
-  useInfrastructureStore: () => ({
+  useInfrastructureStore: () => ({ supportsResourceAccess: () => mockState.profileEnabled,
     getAASRepoURL: mockState.aasRepoUrl,
   }),
 }))
@@ -40,7 +41,52 @@ vi.mock('@/composables/IDUtils', () => ({
 describe('AASRepositoryClient.ts', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockState.profileEnabled = true
     mockState.aasRepoUrl = 'https://example.test/shells'
+  })
+
+  it('does not request capabilities when the ReBAC profile is absent', async () => {
+    mockState.profileEnabled = false
+    const { useAASRepositoryClient } = await import('@/composables/Client/AASRepositoryClient')
+    expect(await useAASRepositoryClient().fetchAasUpdateCapability('urn:aas')).toBeUndefined()
+    expect(mockDeps.getRequest).not.toHaveBeenCalled()
+  })
+
+  it.each([true, false])('returns the explicit AAS update capability %s', async canUpdate => {
+    mockState.aasRepoUrl = 'https://example.test/'
+    mockDeps.getRequest.mockResolvedValueOnce({ success: true, data: { canUpdate } })
+    const { useAASRepositoryClient } = await import('@/composables/Client/AASRepositoryClient')
+    expect(await useAASRepositoryClient().fetchAasUpdateCapability('urn:aas')).toBe(canUpdate)
+    expect(mockDeps.getRequest).toHaveBeenCalledWith(
+      'https://example.test/shells/dXJuOmFhcw/$access/capabilities',
+      'checking AAS editing permission',
+      true,
+    )
+    expect(mockDeps.putRequest).not.toHaveBeenCalled()
+    expect(mockDeps.postRequest).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    { success: false, status: 401 },
+    { success: false, status: 404 },
+    { success: false, status: 500 },
+    { success: false, data: { canUpdate: true } },
+    { success: true, data: { canUpdate: 'true' } },
+    { success: true, data: {} },
+    { success: true },
+  ])('does not authorize an unsuccessful or malformed capability response: %j', async response => {
+    mockDeps.getRequest.mockResolvedValueOnce(response)
+    const { useAASRepositoryClient } = await import('@/composables/Client/AASRepositoryClient')
+    expect(await useAASRepositoryClient().fetchAasUpdateCapability('urn:aas')).toBeUndefined()
+  })
+
+  it('fails closed on network errors and missing resource context', async () => {
+    const { useAASRepositoryClient } = await import('@/composables/Client/AASRepositoryClient')
+    const client = useAASRepositoryClient()
+    expect(await client.fetchAasUpdateCapability('')).toBeUndefined()
+    expect(mockDeps.getRequest).not.toHaveBeenCalled()
+    mockDeps.getRequest.mockRejectedValueOnce(new Error('network'))
+    expect(await client.fetchAasUpdateCapability('urn:aas')).toBeUndefined()
   })
 
   it('passes limit and cursor query params and parses next cursor', async () => {
