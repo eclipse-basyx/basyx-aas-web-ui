@@ -234,6 +234,13 @@
   // Quick action cards linking to the module's sub-tabs
   const quickActions = [
     {
+      title: 'Assets',
+      description: 'Browse and manage available data assets',
+      icon: 'mdi-code-json',
+      color: 'green',
+      route: { path: '/modules/eclipsedataspaceconnector/assets' },
+    },
+    {
       title: 'Policies',
       description: 'Manage access control and usage policies',
       icon: 'mdi-file-sign',
@@ -241,11 +248,11 @@
       route: { path: '/modules/eclipsedataspaceconnector/policies' },
     },
     {
-      title: 'Assets',
-      description: 'Browse and manage available data assets',
-      icon: 'mdi-code-json',
-      color: 'green',
-      route: { path: '/modules/eclipsedataspaceconnector/asset' },
+      title: 'Contracts',
+      description: 'Browse and manage contracts',
+      icon: 'mdi-file-sign',
+      color: 'blue',
+      route: { path: '/modules/eclipsedataspaceconnector/contracts' },
     },
     {
       title: 'Catalog',
@@ -254,13 +261,13 @@
       color: 'orange',
       route: { path: '/modules/eclipsedataspaceconnector/catalog' },
     },
-    {
-      title: 'Configuration',
-      description: 'Set up connector endpoints and security',
-      icon: 'mdi-cog',
-      color: 'blue-grey',
-      route: { path: '/modules/eclipsedataspaceconnector/configuration' },
-    },
+    // {
+    //   title: 'Configuration',
+    //   description: 'Set up connector endpoints and security',
+    //   icon: 'mdi-cog',
+    //   color: 'blue-grey',
+    //   route: { path: '/modules/eclipsedataspaceconnector/configuration' },
+    // },
   ]
 
   // EDC meta lookup from edc.json based on selected type
@@ -306,7 +313,7 @@
     'Policy and Asset Management',
     'Policy-based access control',
     'Business Partner Management',
-    'Tractus-X EDC v0.9 & v0.12.1 support',
+    'Tractus-X EDC v0.12.1 support',
     'API key & OAuth2 token authentication',
   ]
 </script>
