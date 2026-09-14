@@ -121,6 +121,7 @@
               <v-btn
                 v-if="!hasSubmodelData(submodelDescriptor)
                   && !hasDspEndpoint(submodelDescriptor)
+                  && edcAccessMode === 'full'
                   && edcCounterPartyAddress === edcDefaultCounterPartyAddress"
                 class="mr-2"
                 data-testid="load-submodel"
@@ -256,6 +257,7 @@
 
 <script lang="ts" setup>
   import type { EdcSubmodelViewState } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
+  import type { CatenaXAccessMode } from '@/types/Infrastructure'
   import {
     getDescriptorKey,
     getDescriptorTitle,
@@ -273,6 +275,7 @@
   const props = withDefaults(defineProps<{
     descriptors: any[]
     edcAccessEnabled?: boolean
+    edcAccessMode?: CatenaXAccessMode
     edcCounterPartyAddress?: string
     edcDefaultCounterPartyAddress?: string
     edcSubmodels?: Record<string, EdcSubmodelViewState>

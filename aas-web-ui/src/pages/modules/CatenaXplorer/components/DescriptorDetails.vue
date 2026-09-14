@@ -78,6 +78,7 @@
         <SubmodelDescriptorPanels
           :descriptors="submodelDescriptors"
           :edc-access-enabled="edcAccessEnabled"
+          :edc-access-mode="edcAccessMode"
           :edc-counter-party-address="edcCounterPartyAddress"
           :edc-default-counter-party-address="edcDefaultCounterPartyAddress"
           :edc-submodels="edcSubmodels"
@@ -100,6 +101,7 @@
 
 <script lang="ts" setup>
   import type { EdcSubmodelViewState } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
+  import type { CatenaXAccessMode } from '@/types/Infrastructure'
   import {
     displayValue,
     formatDateTime,
@@ -116,6 +118,7 @@
   const props = defineProps<{
     descriptor: any | null
     edcAccessEnabled?: boolean
+    edcAccessMode?: CatenaXAccessMode
     edcCounterPartyAddress?: string
     edcDefaultCounterPartyAddress?: string
     inlineError?: string

@@ -50,6 +50,7 @@
           <DescriptorDetails
             :descriptor="selectedDescriptor"
             :edc-access-enabled="isEdcAccessMode"
+            :edc-access-mode="edcAccessMode"
             :edc-counter-party-address="edcCounterPartyAddress"
             :edc-default-counter-party-address="selectedEdcConfig?.defaultCounterPartyAddress ?? ''"
             :edc-submodels="edcSubmodels"
@@ -140,6 +141,7 @@
             <DescriptorDetails
               :descriptor="selectedDescriptor"
               :edc-access-enabled="isEdcAccessMode"
+              :edc-access-mode="edcAccessMode"
               :edc-counter-party-address="edcCounterPartyAddress"
               :edc-default-counter-party-address="selectedEdcConfig?.defaultCounterPartyAddress ?? ''"
               :edc-submodels="edcSubmodels"
@@ -319,6 +321,7 @@
     selectedInfrastructure.value?.template === 'catena-x'
     && isCatenaXEdcAccessMode(selectedInfrastructure.value),
   )
+  const edcAccessMode = computed(() => selectedInfrastructure.value?.catenaX?.accessMode)
   const dtrUrl = computed(() => isEdcAccessMode.value ? '' : infrastructureStore.getAASRegistryURL)
   const mdAndUp = computed(() => display.mdAndUp.value)
   const smAndDown = computed(() => display.smAndDown.value)
