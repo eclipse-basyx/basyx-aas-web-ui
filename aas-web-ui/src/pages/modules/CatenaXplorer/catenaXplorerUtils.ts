@@ -350,6 +350,35 @@ export function parseSubprotocolBody (value: unknown): Record<string, string> {
   return params
 }
 
+export function hasDspEndpoint (submodelDescriptor: any): boolean {
+  return asArray<any>(submodelDescriptor?.endpoints).some(endpoint => {
+    const protocolInformation = endpoint?.protocolInformation
+    if (toTrimmedString(protocolInformation?.subprotocol).toUpperCase() !== 'DSP') {
+      return false
+    }
+
+    const params = parseSubprotocolBody(protocolInformation?.subprotocolBody)
+    return toTrimmedString(params.dspEndpoint) !== ''
+  })
+}
+
+export function hasMatchingDspEndpoint (submodelDescriptor: any, dspEndpoint: string): boolean {
+  const expectedDspEndpoint = toTrimmedString(dspEndpoint)
+  if (expectedDspEndpoint === '') {
+    return false
+  }
+
+  return asArray<any>(submodelDescriptor?.endpoints).some(endpoint => {
+    const protocolInformation = endpoint?.protocolInformation
+    if (toTrimmedString(protocolInformation?.subprotocol).toUpperCase() !== 'DSP') {
+      return false
+    }
+
+    const params = parseSubprotocolBody(protocolInformation?.subprotocolBody)
+    return toTrimmedString(params.dspEndpoint) === expectedDspEndpoint
+  })
+}
+
 export function getSubmodelEdcEndpointInfo (submodelDescriptor: any): SubmodelEdcEndpointInfo | null {
   const endpoints = asArray<any>(submodelDescriptor?.endpoints)
   const endpoint = endpoints.find(candidate => {
@@ -374,4 +403,24 @@ export function getSubmodelEdcEndpointInfo (submodelDescriptor: any): SubmodelEd
     href,
     subprotocolBody,
   }
+}
+
+export function getDirectSubmodelEndpointHref (submodelDescriptor: any, submodelServiceEndpoint: string): string {
+  const normalizedSubmodelServiceEndpoint = toTrimmedString(submodelServiceEndpoint)
+  const endpoints = asArray<any>(submodelDescriptor?.endpoints)
+
+  const endpoint = endpoints.find(endpoint => {
+    const href = toTrimmedString(endpoint?.protocolInformation?.href)
+    return toTrimmedString(endpoint?.protocolInformation?.subprotocol).toUpperCase() !== 'DSP'
+      && normalizedSubmodelServiceEndpoint !== ''
+      && href.includes(normalizedSubmodelServiceEndpoint)
+  })
+
+  return toTrimmedString(endpoint?.protocolInformation?.href)
+}
+
+export function extractSubmodelsPath (href: string): string {
+  const marker = '/submodels/'
+  const index = href.indexOf(marker)
+  return index === -1 ? '' : href.slice(index)
 }

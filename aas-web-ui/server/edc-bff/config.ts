@@ -106,8 +106,8 @@ export function redactProxyConfig (proxy: EdcProxyConfig | undefined, id: string
     managementUrlConfigured: Boolean(proxy?.managementUrl),
     apiKeyConfigured: Boolean(proxy?.apiKey),
     participantId: proxy?.participantId,
-    dspEndpointConfigured: Boolean(proxy?.dspEndpoint),
-    dataPlaneProxyUrlConfigured: Boolean(proxy?.dataPlaneProxyUrl),
+    dspEndpoint: proxy?.dspEndpoint,
+    dataPlaneProxyUrl: proxy?.dataPlaneProxyUrl,
     allowedCounterPartyAddressCount: proxy?.allowedCounterPartyAddresses.length ?? 0,
     allowInsecureCounterPartyAddresses: proxy?.allowInsecureCounterPartyAddresses ?? false,
   }

@@ -124,6 +124,11 @@
                 rounded="lg"
                 variant="outlined"
               >
+                <v-btn value="full">
+                  <v-icon class="me-2" icon="mdi-shield-sync-outline" size="small" />
+                  Full
+                </v-btn>
+
                 <v-btn value="direct">
                   <v-icon class="me-2" icon="mdi-server-network" size="small" />
                   Direct
@@ -136,7 +141,7 @@
               </v-btn-toggle>
             </template>
 
-            <template v-if="!isEditingCatenaXEdcMode">
+            <template v-if="showComponentEndpointsPanel">
               <v-divider />
               <v-list-subheader class="mb-3">Component Endpoints</v-list-subheader>
               <!-- Component Configurations -->
@@ -406,7 +411,11 @@
     },
   })
   const isEditingCatenaXEdcMode = computed(
-    () => editingInfrastructure.value.template === 'catena-x' && catenaXAccessMode.value === 'edc',
+    () => editingInfrastructure.value.template === 'catena-x'
+      && (catenaXAccessMode.value === 'edc' || catenaXAccessMode.value === 'full'),
+  )
+  const showComponentEndpointsPanel = computed(
+    () => editingInfrastructure.value.template !== 'catena-x' || catenaXAccessMode.value !== 'edc',
   )
 
   const router = useRouter()
@@ -609,7 +618,8 @@
       return true
     }
 
-    if (getCatenaXAccessMode(infra) === 'edc') {
+    const accessMode = getCatenaXAccessMode(infra)
+    if (accessMode === 'edc' || accessMode === 'full') {
       if (!infra.catenaX?.edc?.proxyId?.trim()) {
         navigationStore.dispatchSnackbar({
           status: true,
@@ -620,7 +630,9 @@
         })
         return false
       }
-      return true
+      if (accessMode === 'edc') {
+        return true
+      }
     }
 
     const missingEndpoint = getEndpointFieldsForTemplate(infra)
