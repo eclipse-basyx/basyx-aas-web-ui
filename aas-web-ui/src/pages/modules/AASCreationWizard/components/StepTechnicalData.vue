@@ -161,7 +161,6 @@
   import type { TechnicalDataTemplate } from '../types/template'
   import type { ValidationIssue } from '../types/validation'
   // import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
-  import { computed, onMounted, ref } from 'vue'
   import { buildTechnicalData } from '../builders/buildTechnicalData'
   import { useAASCreationStore } from '../stores/aasCreationForm'
   import template from '../templates/technical-data.json'

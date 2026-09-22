@@ -99,7 +99,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onMounted, ref, toRaw, watch } from 'vue'
   import { useSMEHandling } from '@/composables/AAS/SMEHandling'
   import { useRequestHandling } from '@/composables/RequestHandling'
   import { useAASStore } from '@/store/AASDataStore'

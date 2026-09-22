@@ -1,4 +1,3 @@
-import { inject } from 'vue'
 import { COMPANY_LOOKUP_I18N_KEY, type I18nComposer } from '../constants/i18n'
 
 interface CompanyLookupI18n {

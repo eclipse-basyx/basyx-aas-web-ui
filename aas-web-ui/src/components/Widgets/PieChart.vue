@@ -8,7 +8,6 @@
 
 <script lang="ts" setup>
   import ApexCharts, { type ApexOptions } from 'apexcharts'
-  import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
   import { useTheme } from 'vuetify'
 
   const props = defineProps<{

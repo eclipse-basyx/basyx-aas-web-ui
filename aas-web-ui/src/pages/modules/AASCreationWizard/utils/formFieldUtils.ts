@@ -1,6 +1,5 @@
 import type { FormStateObject, FormStateValue, RangeFormValue } from '../types/form'
 import type { LangString } from '../types/template'
-import { toRaw } from 'vue'
 import { ensurelangStrings } from './langStringFormUtils'
 
 export function asString (value: FormStateValue): string {

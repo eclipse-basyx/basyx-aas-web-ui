@@ -1,5 +1,5 @@
+import type { Ref } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { computed, type Ref, unref } from 'vue'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { CACHE_KEYS } from '../constants/cache'
 import { useCompanyLookupClient } from '../useCompanyLookupClient'

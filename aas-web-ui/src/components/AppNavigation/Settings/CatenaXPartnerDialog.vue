@@ -70,7 +70,6 @@
 
 <script lang="ts" setup>
   import type { CatenaXPartner } from '@/types/Infrastructure'
-  import { ref, watch } from 'vue'
   import {
     createCatenaXPartnerId,
     getCatenaXPartnerKey,

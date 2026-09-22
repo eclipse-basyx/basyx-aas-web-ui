@@ -1,57 +1,3 @@
-<script setup lang="ts">
-  import type { ViewType } from '../../constants/view'
-  import { computed, ref, watch } from 'vue'
-  import { useRoute, useRouter } from 'vue-router'
-  import { useGetCompany } from '@/composables/Client/CompanyLookup/queries/useGetCompany'
-  import CompanyOptions from '../../components/options/CompanyOptions.vue'
-  import { VIEW, VIEWS } from '../../constants/view'
-  import { useCompanyLookupI18n } from '../../i18n/useCompanyLookupI18n'
-  import { hasItems } from '../../utils/array'
-  import CompanyJsonView from './CompanyJsonView.vue'
-  import CompanyProperty from './CompanyProperty.vue'
-
-  const props = withDefaults(defineProps<{
-    detailsOnly?: boolean
-  }>(), {
-    detailsOnly: false,
-  })
-
-  const { t } = useCompanyLookupI18n()
-  const route = useRoute()
-  const router = useRouter()
-
-  const view = ref<ViewType>(
-    !props.detailsOnly && VIEWS.includes(route.query.view as string)
-      ? (route.query.view as ViewType)
-      : VIEW.DETAILS,
-  )
-
-  const selectedId = computed(() => {
-    const paramId = route.query.id as string | undefined
-    return paramId ? decodeURIComponent(paramId) : undefined
-  })
-
-  const { data: company, isLoading } = useGetCompany(selectedId)
-
-  watch(
-    [() => route.query.view, () => props.detailsOnly],
-    ([v, detailsOnly]) => {
-      if (detailsOnly) {
-        view.value = VIEW.DETAILS
-      } else if (v && VIEWS.includes(v as string)) {
-        view.value = v as ViewType
-      } else {
-        view.value = VIEW.DETAILS
-      }
-    },
-  )
-
-  function onChangeView (value: string): void {
-    if (route.query.view === value) return
-    router.replace({ query: { ...route.query, view: value } })
-  }
-</script>
-
 <template>
   <div v-if="company">
 
@@ -178,3 +124,56 @@
     <h2 class="text-h5">{{ t('detail.empty') }}</h2>
   </v-container>
 </template>
+
+<script setup lang="ts">
+  import type { ViewType } from '../../constants/view'
+  import { useRoute, useRouter } from 'vue-router'
+  import { useGetCompany } from '@/composables/Client/CompanyLookup/queries/useGetCompany'
+  import { hasItems } from '@/utils/array'
+  import CompanyOptions from '../../components/options/CompanyOptions.vue'
+  import { VIEW, VIEWS } from '../../constants/view'
+  import { useCompanyLookupI18n } from '../../i18n/useCompanyLookupI18n'
+  import CompanyJsonView from './CompanyJsonView.vue'
+  import CompanyProperty from './CompanyProperty.vue'
+
+  const props = withDefaults(defineProps<{
+    detailsOnly?: boolean
+  }>(), {
+    detailsOnly: false,
+  })
+
+  const { t } = useCompanyLookupI18n()
+  const route = useRoute()
+  const router = useRouter()
+
+  const view = ref<ViewType>(
+    !props.detailsOnly && VIEWS.includes(route.query.view as string)
+      ? (route.query.view as ViewType)
+      : VIEW.DETAILS,
+  )
+
+  const selectedId = computed(() => {
+    const paramId = route.query.id as string | undefined
+    return paramId ? decodeURIComponent(paramId) : undefined
+  })
+
+  const { data: company, isLoading } = useGetCompany(selectedId)
+
+  watch(
+    [() => route.query.view, () => props.detailsOnly],
+    ([v, detailsOnly]) => {
+      if (detailsOnly) {
+        view.value = VIEW.DETAILS
+      } else if (v && VIEWS.includes(v as string)) {
+        view.value = v as ViewType
+      } else {
+        view.value = VIEW.DETAILS
+      }
+    },
+  )
+
+  function onChangeView (value: string): void {
+    if (route.query.view === value) return
+    router.replace({ query: { ...route.query, view: value } })
+  }
+</script>

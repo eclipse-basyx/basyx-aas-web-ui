@@ -13,11 +13,10 @@
 
 <script lang="ts" setup>
   import { VUE_QUERY_CLIENT } from '@tanstack/vue-query'
-  import { onBeforeUnmount, onMounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
+  import { queryClient } from '@/configs/query'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
-  import { queryClient } from './configs/query'
 
   // Vue Router
   const router = useRouter()

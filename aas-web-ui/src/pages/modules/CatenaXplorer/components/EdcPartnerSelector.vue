@@ -109,7 +109,6 @@
 
 <script lang="ts" setup>
   import type { CatenaXPartner } from '@/types/Infrastructure'
-  import { computed } from 'vue'
   import { isValidCatenaXPartnerAddress } from '@/utils/CatenaXPartnerUtils'
 
   const runtimePartnerValue = '__runtime_partner__'

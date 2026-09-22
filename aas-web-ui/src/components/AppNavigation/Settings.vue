@@ -49,7 +49,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref } from 'vue'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { getVersionDisplay } from '@/version'
 

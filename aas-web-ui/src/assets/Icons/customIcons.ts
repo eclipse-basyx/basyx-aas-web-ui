@@ -1,5 +1,4 @@
 import type { IconProps, IconSet } from 'vuetify'
-import { h } from 'vue'
 import aasIcon from './AASIcon.vue'
 import edcIcon from './EDCIcon.vue'
 import tractusxIcon from './TractusXIcon.vue'

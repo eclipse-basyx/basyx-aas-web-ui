@@ -77,7 +77,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { onMounted, ref, watch } from 'vue'
   import { useUrlUtils } from '@/composables/UrlUtils'
 
   const props = defineProps<{

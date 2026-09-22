@@ -1,5 +1,59 @@
+<template>
+  <div class="h-100 w-100 d-flex flex-column">
+    <div v-if="!isDetailsOnly" class="flex-shrink-0 d-flex align-center px-4 py-2 border-b">
+      <v-btn
+        v-if="isMobile"
+        class="mr-2"
+        icon="mdi-menu"
+        size="small"
+        variant="text"
+        @click="drawer = !drawer"
+      />
+
+      <v-btn
+        v-else
+        class="mr-2"
+        :icon="listCollapsed ? 'mdi-chevron-double-right' : 'mdi-chevron-double-left'"
+        size="small"
+        variant="text"
+        @click="listCollapsed = !listCollapsed"
+      >
+        <v-icon>{{ listCollapsed ? 'mdi-chevron-double-right' : 'mdi-chevron-double-left' }}</v-icon>
+
+        <v-tooltip activator="parent" location="bottom" :open-delay="600">
+          {{ listCollapsed ? t('layout.expandList') : t('layout.collapseList') }}
+        </v-tooltip>
+      </v-btn>
+
+      <span class="text-h6">{{ t('layout.title') }}</span>
+
+      <v-spacer />
+
+      <CompanyLookupConfigurator />
+    </div>
+
+    <div class="d-flex flex-grow-1 overflow-hidden">
+      <v-navigation-drawer
+        v-if="isMobile && !isDetailsOnly"
+        v-model="drawer"
+        temporary
+        width="320"
+      >
+        <CompaniesList @select="onSelect" />
+      </v-navigation-drawer>
+
+      <div v-if="!isMobile && !isDetailsOnly && !listCollapsed" class="list">
+        <CompaniesList @select="onSelect" />
+      </div>
+
+      <div class="flex-grow-1 overflow-y-auto">
+        <CompanyDetail :details-only="isDetailsOnly" />
+      </div>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
-  import { computed, ref, watch } from 'vue'
   import { useRoute } from 'vue-router'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
@@ -37,61 +91,6 @@
     if (isMobile.value && hasContent(id)) drawer.value = false
   }
 </script>
-
-<template>
-  <div class="h-100 w-100 d-flex flex-column">
-    <div v-if="!isDetailsOnly" class="flex-shrink-0 d-flex align-center px-4 py-2 border-b">
-      <v-btn
-        v-if="isMobile"
-        class="mr-2"
-        icon="mdi-menu"
-        size="small"
-        variant="text"
-        @click="drawer = !drawer"
-      />
-
-      <v-btn
-        v-else
-        class="mr-2"
-        :icon="listCollapsed ? 'mdi-chevron-double-right' : 'mdi-chevron-double-left'"
-        size="small"
-        variant="text"
-        @click="listCollapsed = !listCollapsed"
-      >
-        <v-icon>{{ listCollapsed ? 'mdi-chevron-double-right' : 'mdi-chevron-double-left' }}</v-icon>
-
-        <v-tooltip activator="parent" location="bottom" :open-delay="600">
-          {{ listCollapsed ? t('layout.expandList') : t('layout.collapseList') }}
-        </v-tooltip>
-      </v-btn>
-
-      <span class="text-h6">{{ t('module.title') }}</span>
-
-      <v-spacer />
-
-      <CompanyLookupConfigurator />
-    </div>
-
-    <div class="cl-body d-flex flex-grow-1 overflow-hidden">
-      <v-navigation-drawer
-        v-if="isMobile && !isDetailsOnly"
-        v-model="drawer"
-        temporary
-        width="320"
-      >
-        <CompaniesList @select="onSelect" />
-      </v-navigation-drawer>
-
-      <div v-if="!isMobile && !isDetailsOnly && !listCollapsed" class="list">
-        <CompaniesList @select="onSelect" />
-      </div>
-
-      <div class="cl-detail flex-grow-1 overflow-y-auto">
-        <CompanyDetail :details-only="isDetailsOnly" />
-      </div>
-    </div>
-  </div>
-</template>
 
 <style scoped>
 .list {

@@ -1,4 +1,3 @@
-import { computed } from 'vue'
 import { useAASHandling } from '@/composables/AAS/AASHandling'
 import { useSMEHandling } from '@/composables/AAS/SMEHandling'
 import { useSMHandling } from '@/composables/AAS/SMHandling'

@@ -76,7 +76,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import { getDescriptorKey } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
   import DescriptorListItem from '@/pages/modules/CatenaXplorer/components/DescriptorListItem.vue'
 

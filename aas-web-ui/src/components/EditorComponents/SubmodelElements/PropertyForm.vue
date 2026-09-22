@@ -180,7 +180,6 @@
     */
 
   import { types as aasTypes, jsonization } from '@aas-core-works/aas-core3.1-typescript'
-  import { computed, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useSMEHandling } from '@/composables/AAS/SMEHandling'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'

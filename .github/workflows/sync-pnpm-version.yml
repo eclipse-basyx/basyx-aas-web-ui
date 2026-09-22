@@ -74,12 +74,23 @@ jobs:
           "
           echo "Updated packageManager to pnpm@${VERSION}+sha512.${HASH}"
 
-      - name: Commit packageManager change
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+
+      - name: Sync pnpm lockfile
+        working-directory: aas-web-ui
+        run: |
+          corepack enable pnpm
+          pnpm install --lockfile-only --no-frozen-lockfile
+
+      - name: Commit packageManager and lockfile changes
         run: |
           TARGET="${{ steps.pnpm-version.outputs.version }}"
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add aas-web-ui/package.json
+          git add aas-web-ui/package.json aas-web-ui/pnpm-lock.yaml
           if git diff --staged --quiet; then
             echo "No pnpm sync changes to commit."
           else

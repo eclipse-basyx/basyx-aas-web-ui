@@ -34,7 +34,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref, watch } from 'vue'
   import { useRouter } from 'vue-router'
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'

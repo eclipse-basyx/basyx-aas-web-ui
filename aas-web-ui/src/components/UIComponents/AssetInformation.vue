@@ -54,8 +54,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-  import GlobalAssetQrCode from '@/components/UIComponents/GlobalAssetQrCode.vue'
   import { useTechnicalData_v1_2Utils } from '@/composables/AAS/SubmodelTemplates/TechnicalData_v1_2Utils'
   import { useUrlUtils } from '@/composables/UrlUtils'
   import { useAASStore } from '@/store/AASDataStore'

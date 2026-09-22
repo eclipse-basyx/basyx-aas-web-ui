@@ -32,7 +32,6 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, nextTick, ref, watch } from 'vue'
   import { allowedChildTypes } from '@/utils/AAS/SubmodelElementRegistry'
 
   const addSMEDialog = ref(false)

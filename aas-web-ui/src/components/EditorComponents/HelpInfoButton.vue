@@ -16,7 +16,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed } from 'vue'
   import helpLinks from './help-links.json'
 
   interface Props {

@@ -102,7 +102,6 @@
 <script lang="ts" setup>
   import type { SubmodelDescriptor } from '@/types/Descriptors'
   import type { jsonization } from '@aas-core-works/aas-core3.1-typescript'
-  import { computed, ref, watch, watchEffect } from 'vue'
   import { detectImportFileKind } from '@/composables/AAS/SerializationFormats'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
   import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient'

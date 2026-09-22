@@ -180,7 +180,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, reactive } from 'vue'
   import { useTheme } from 'vuetify'
   // Import company logos
   import ARENA2036LogoDark from '@/assets/Companies/ARENA2036_Logo_dark.svg'

@@ -182,7 +182,6 @@
   import type { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
   import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization'
   import { jsonization, types } from '@aas-core-works/aas-core3.1-typescript'
-  import { computed, nextTick, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useOperationTreeMutation } from '@/composables/AAS/OperationTreeMutation'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'

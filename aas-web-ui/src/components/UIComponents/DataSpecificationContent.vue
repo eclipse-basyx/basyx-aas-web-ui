@@ -191,7 +191,6 @@
 <script setup lang="ts">
   import type { PropType } from 'vue'
   import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
-  import { computed } from 'vue'
 
   type LanguageValue = {
     language?: string | null

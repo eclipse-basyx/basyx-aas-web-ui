@@ -30,8 +30,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onMounted, ref, watch } from 'vue'
-  import CarbonFootprint_v1_0 from '@/components/Plugins/Submodels/CarbonFootprint_v1_0.vue'
   import { useDppSubmodelResolver } from '@/pages/modules/DPPDemo/submodelResolver'
   import { useAASStore } from '@/store/AASDataStore'
 

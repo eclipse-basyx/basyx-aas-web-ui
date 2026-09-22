@@ -115,7 +115,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onMounted, ref, watch } from 'vue'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useJumpHandling } from '@/composables/JumpHandling'
   import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils'

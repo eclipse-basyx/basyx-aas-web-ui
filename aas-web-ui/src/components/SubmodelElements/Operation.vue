@@ -128,7 +128,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import { useRequestHandling } from '@/composables/RequestHandling'
   import { useNavigationStore } from '@/store/NavigationStore'
 

@@ -79,7 +79,9 @@
           :descriptors="submodelDescriptors"
           :edc-access-enabled="edcAccessEnabled"
           :edc-submodels="edcSubmodels"
+          :opening-submodel-key="openingSubmodelKey"
           @load-edc-submodel="emit('load-edc-submodel', $event)"
+          @open-submodel="emit('open-submodel', $event)"
         />
       </template>
 
@@ -93,7 +95,6 @@
 
 <script lang="ts" setup>
   import type { EdcSubmodelViewState } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
-  import { computed, ref } from 'vue'
   import {
     displayValue,
     formatDateTime,
@@ -111,10 +112,12 @@
     descriptor: any | null
     edcAccessEnabled?: boolean
     edcSubmodels?: Record<string, EdcSubmodelViewState>
+    openingSubmodelKey?: string
   }>()
 
   const emit = defineEmits<{
     'load-edc-submodel': [descriptor: any]
+    'open-submodel': [descriptor: any]
   }>()
 
   const descriptorViewMode = ref<'details' | 'json'>('details')

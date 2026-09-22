@@ -84,7 +84,6 @@
 
 <script lang="ts" setup>
   import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
-  import { onMounted, ref, watch } from 'vue'
   import { useUrlUtils } from '@/composables/UrlUtils'
   import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils'
 

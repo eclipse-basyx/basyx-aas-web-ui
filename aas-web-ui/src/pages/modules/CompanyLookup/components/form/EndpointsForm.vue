@@ -1,25 +1,3 @@
-<script lang="ts" setup>
-  import type { Rule } from '../../utils/zodRule'
-  import type { Endpoint } from '@/composables/Client/CompanyLookup/types/company'
-  import { AAS_INTERFACES, PROTOCOLS } from '../../constants/endpoint'
-  import { useCompanyLookupI18n } from '../../i18n/useCompanyLookupI18n'
-  import { emptyEndpoint } from '../../utils/form'
-
-  const endpoints = defineModel<Endpoint[]>({ required: true })
-  defineProps<{ interfaceRule: Rule<string>, hrefRule: Rule<string> }>()
-
-  const { t } = useCompanyLookupI18n()
-
-  function onAdd (): void {
-    endpoints.value = [...endpoints.value, emptyEndpoint()]
-  }
-
-  function onRemove (i: number): void {
-    if (endpoints.value.length <= 1) return
-    endpoints.value = endpoints.value.filter((_, idx) => idx !== i)
-  }
-</script>
-
 <template>
   <div>
     <span class="text-title-small">{{ `${t('form.field.endpoints')} *` }}</span>
@@ -89,3 +67,25 @@
     </v-btn>
   </div>
 </template>
+
+<script lang="ts" setup>
+  import type { Rule } from '../../utils/zodRule'
+  import type { Endpoint } from '@/composables/Client/CompanyLookup/types/company'
+  import { AAS_INTERFACES, PROTOCOLS } from '../../constants/endpoint'
+  import { useCompanyLookupI18n } from '../../i18n/useCompanyLookupI18n'
+  import { emptyEndpoint } from '../../utils/form'
+
+  const endpoints = defineModel<Endpoint[]>({ required: true })
+  defineProps<{ interfaceRule: Rule<string>, hrefRule: Rule<string> }>()
+
+  const { t } = useCompanyLookupI18n()
+
+  function onAdd (): void {
+    endpoints.value = [...endpoints.value, emptyEndpoint()]
+  }
+
+  function onRemove (i: number): void {
+    if (endpoints.value.length <= 1) return
+    endpoints.value = endpoints.value.filter((_, idx) => idx !== i)
+  }
+</script>

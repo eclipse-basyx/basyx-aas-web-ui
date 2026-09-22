@@ -79,7 +79,6 @@
 
 <script lang="ts" setup>
   import type { InfrastructureConfig } from '@/types/Infrastructure'
-  import { computed } from 'vue'
   import { getInfrastructureSummary, getInfrastructureTemplateDefinition } from '@/utils/InfrastructureUtils'
 
   // Props

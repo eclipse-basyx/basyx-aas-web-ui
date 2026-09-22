@@ -116,7 +116,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { onMounted, reactive, ref } from 'vue'
   import { useIDUtils } from '@/composables/IDUtils'
   import { type AssetDataForm, useAASCreationStore } from '../stores/aasCreationForm'
   import FormField from './FormField.vue'

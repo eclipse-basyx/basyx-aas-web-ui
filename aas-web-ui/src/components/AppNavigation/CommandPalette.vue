@@ -81,7 +81,6 @@
 
 <script setup lang="ts">
   import type { RouteRecordRaw } from 'vue-router'
-  import { computed, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useRouteShortcuts } from '@/composables/Shortcuts/useRouteShortcuts'
   import { useShortcutDefinitions } from '@/composables/Shortcuts/useShortcutDefinitions'

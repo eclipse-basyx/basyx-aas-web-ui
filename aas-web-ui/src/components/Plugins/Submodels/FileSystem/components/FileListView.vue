@@ -150,7 +150,6 @@
 
 <script setup lang="ts">
   import type { FileElement, FileSystemElement, TableHeader } from '../types'
-  import { computed } from 'vue'
   import { useDisplay } from 'vuetify'
   import { checkContentType, mimeToExtension } from '@/utils/FileHandling'
 

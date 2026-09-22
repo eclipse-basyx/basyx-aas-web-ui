@@ -11,6 +11,7 @@ import Fonts from 'unplugin-fonts/vite'
 import Components from 'unplugin-vue-components/vite'
 import { defineConfig, loadEnv } from 'vite'
 import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
+import { vueAutoImportPreset } from './config/auto-imports.js'
 
 function copyWebIfcWasmPlugin () {
   return {
@@ -59,7 +60,7 @@ export default defineConfig(({ mode }) => {
       // basicSsl(), // Uncomment to enable HTTPS — requires BaSyx infrastructure to also support HTTPS
       copyWebIfcWasmPlugin(),
       AutoImport({
-        imports: ['vue'],
+        imports: [vueAutoImportPreset],
         dts: 'src/auto-imports.d.ts',
         eslintrc: {
           enabled: true,

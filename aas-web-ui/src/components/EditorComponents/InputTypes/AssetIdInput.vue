@@ -100,7 +100,6 @@
 
 <script lang="ts" setup>
   import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
-  import { ref, watch } from 'vue'
   import { useIDUtils } from '@/composables/IDUtils'
 
   // Composables

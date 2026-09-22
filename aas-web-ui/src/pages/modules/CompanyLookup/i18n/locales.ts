@@ -18,10 +18,9 @@ const fieldsEN = {
 }
 
 export const en = {
-  module: {
-    title: 'Company Lookup',
-  },
+
   layout: {
+    title: 'Company Lookup',
     collapseList: 'Collapse list',
     expandList: 'Expand list',
   },
@@ -138,10 +137,8 @@ const fieldsDE: typeof fieldsEN = {
 }
 
 export const de: CompanyLookupI18NSchema = {
-  module: {
-    title: 'Unternehmenssuche',
-  },
   layout: {
+    title: 'Unternehmenssuche',
     collapseList: 'Liste einklappen',
     expandList: 'Liste ausklappen',
   },

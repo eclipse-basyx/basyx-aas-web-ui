@@ -394,7 +394,6 @@
 
 <script setup lang="ts">
   import type { Ref } from 'vue'
-  import { onMounted, reactive, ref } from 'vue'
   import FormField from './components/FormField.vue'
   import { useFormStore } from './stores/formData'
   import { createCompanyIdentificationSMC } from './utils/companySmcBuilder'

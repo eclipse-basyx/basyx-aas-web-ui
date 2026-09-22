@@ -6,7 +6,7 @@ import type {
   InfrastructureTemplate,
 } from '@/types/Infrastructure'
 import type { InfrastructureEndpointFieldKey } from '@/utils/InfrastructureUtils'
-import { type Ref, ref } from 'vue'
+import type { Ref } from 'vue'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import {
   BASYX_COMPONENT_KEYS,

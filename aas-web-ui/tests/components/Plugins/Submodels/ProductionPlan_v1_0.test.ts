@@ -36,7 +36,7 @@ vi.mock('@/composables/JumpHandling', () => ({
 const MACHINE_AAS_ID = 'https://aas.dev.chesco.de/ids/aas/machine/AN16'
 
 // Stubs that pass through slot content so nested template logic is testable
-const slotStub = { template: '<slot />' }
+const slotStub = { template: '<div><slot /></div>' }
 
 const globalStubs = {
   'v-container': slotStub,
@@ -55,7 +55,7 @@ const globalStubs = {
   'v-list-item-subtitle': slotStub,
   'v-chip': true,
   'v-spacer': true,
-  'v-btn': { template: '<v-btn-stub><slot /></v-btn-stub>' },
+  'v-btn': { template: '<button><slot /></button>' },
   'v-icon': true,
 }
 
@@ -200,7 +200,7 @@ describe('ProductionPlan_v1_0.vue – MachineRef navigation', () => {
       const wrapper = createWrapper(createSubmodelData(false))
       await nextTick()
 
-      expect(wrapper.find('v-btn-stub').exists()).toBe(false)
+      expect(wrapper.find('button').exists()).toBe(false)
       expect(wrapper.text()).toContain('Welding Robot AN16')
     })
 
@@ -208,17 +208,16 @@ describe('ProductionPlan_v1_0.vue – MachineRef navigation', () => {
       const wrapper = createWrapper(createSubmodelData(true))
       await nextTick()
 
-      expect(wrapper.find('v-btn-stub').exists()).toBe(true)
-      expect(wrapper.find('v-btn-stub').text()).toContain('Welding Robot AN16')
+      expect(wrapper.get('button').text()).toContain('Welding Robot AN16')
     })
   })
 
   describe('navigation', () => {
     it('calls jumpToAasById with the machine AAS ID', async () => {
       const wrapper = createWrapper(createSubmodelData(true))
-      const vm = wrapper.vm as any
+      await nextTick()
 
-      await vm.navigateToMachine(MACHINE_AAS_ID)
+      await wrapper.get('button').trigger('click')
 
       expect(jumpToAasByIdMock).toHaveBeenCalledOnce()
       expect(jumpToAasByIdMock).toHaveBeenCalledWith(MACHINE_AAS_ID)

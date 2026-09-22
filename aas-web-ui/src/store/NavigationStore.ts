@@ -9,7 +9,6 @@ import type {
 } from '@/types/Application'
 import type { LocationQuery } from 'vue-router'
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
 import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils'
 import { useEnvStore } from './EnvironmentStore'
 
@@ -50,7 +49,17 @@ export const useNavigationStore = defineStore('navigationStore', () => {
   const routeTransition = ref<RouteTransition | null>(null)
 
   // Core query params that are always allowed (UI framework params)
-  const coreQueryParams = ['aas', 'path', 'fragment', 'view']
+  const coreQueryParams = [
+    'aas',
+    'path',
+    'fragment',
+    'view',
+    'aasSearch',
+    'aasQuery',
+    'aasSearchScope',
+    'smSearch',
+    'smQuery',
+  ]
 
   // Query params registered by plugins (dynamic, based on active plugin)
   const registeredQueryParams = ref<RegisteredQueryParamType[]>([])

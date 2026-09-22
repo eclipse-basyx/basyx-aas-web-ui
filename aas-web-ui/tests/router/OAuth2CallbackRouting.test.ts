@@ -136,6 +136,7 @@ describe('OAuth2 callback routing', () => {
   })
 
   afterEach(() => {
+    vi.restoreAllMocks()
     vi.unstubAllGlobals()
     sessionStorage.clear()
   })
@@ -279,12 +280,18 @@ describe('OAuth2 callback routing', () => {
   })
 
   it('rejects an issuer injected into the authorization response', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const { state } = startAuthorizationTransaction('infrastructure-1')
     const router = await createAppRouter()
 
     await router.push(`/?code=authorization-code&state=${state}&iss=${encodeURIComponent('https://attacker.example')}`)
 
     expect(mockDeps.exchangeOAuth2AuthorizationCode).not.toHaveBeenCalled()
+    expect(errorSpy).toHaveBeenCalledExactlyOnceWith(
+      '[OAuth2 Callback] Failed:',
+      'OAuth2 response issuer does not match the configured identity provider',
+      expect.objectContaining({ message: 'OAuth2 response issuer does not match the configured identity provider' }),
+    )
     expect(mockDeps.clearOAuth2AuthorizationCodeState).toHaveBeenCalledWith(state)
     expect(mockDeps.navigationStore.dispatchSnackbar).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -1,47 +1,3 @@
-<script setup lang="ts">
-  import type { CompanyDescriptor } from '@/composables/Client/CompanyLookup/types/company'
-  import { ref } from 'vue'
-  import { useClipboardUtil } from '@/composables/ClipboardUtil'
-  import { useEnvStore } from '@/store/EnvironmentStore'
-  import { DEFAULT_COPY_ICON } from '../../constants/icons'
-  import { useCompanyLookupI18n } from '../../i18n/useCompanyLookupI18n'
-  import CompanyDelete from './CompanyDelete.vue'
-  import CompanyDialog from './CompanyDialog.vue'
-
-  const props = withDefaults(defineProps<{
-    company: CompanyDescriptor
-    readOnly?: boolean
-  }>(), {
-    readOnly: false,
-  })
-
-  const { t } = useCompanyLookupI18n()
-  const { copyToClipboard } = useClipboardUtil()
-
-  const envStore = useEnvStore()
-
-  const copyIcon = ref<string>(DEFAULT_COPY_ICON)
-
-  const isMenuOpen = ref(false)
-  const editDialog = useTemplateRef<InstanceType<typeof CompanyDialog>>('editDialog')
-
-  const allowEditing = computed(() => envStore.getAllowEditing && !props.readOnly)
-
-  function openEdit (): void {
-    isMenuOpen.value = false
-    editDialog.value?.open()
-  }
-
-  function onCopy (): void {
-    copyToClipboard(props.company.domain, t('options.domain'), copyIcon)
-    isMenuOpen.value = false
-  }
-
-  function onDelete (): void {
-    isMenuOpen.value = false
-  }
-</script>
-
 <template>
   <v-menu v-model="isMenuOpen">
     <template #activator="{ props: menuProps }">
@@ -91,3 +47,46 @@
 
   <CompanyDialog v-if="!props.readOnly" ref="editDialog" :company="props.company" />
 </template>
+
+<script setup lang="ts">
+  import type { CompanyDescriptor } from '@/composables/Client/CompanyLookup/types/company'
+  import { useClipboardUtil } from '@/composables/ClipboardUtil'
+  import { useEnvStore } from '@/store/EnvironmentStore'
+  import { DEFAULT_COPY_ICON } from '../../constants/icons'
+  import { useCompanyLookupI18n } from '../../i18n/useCompanyLookupI18n'
+  import CompanyDelete from './CompanyDelete.vue'
+  import CompanyDialog from './CompanyDialog.vue'
+
+  const props = withDefaults(defineProps<{
+    company: CompanyDescriptor
+    readOnly?: boolean
+  }>(), {
+    readOnly: false,
+  })
+
+  const { t } = useCompanyLookupI18n()
+  const { copyToClipboard } = useClipboardUtil()
+
+  const envStore = useEnvStore()
+
+  const copyIcon = ref<string>(DEFAULT_COPY_ICON)
+
+  const isMenuOpen = ref(false)
+  const editDialog = useTemplateRef<InstanceType<typeof CompanyDialog>>('editDialog')
+
+  const allowEditing = computed(() => envStore.getAllowEditing && !props.readOnly)
+
+  function openEdit (): void {
+    isMenuOpen.value = false
+    editDialog.value?.open()
+  }
+
+  function onCopy (): void {
+    copyToClipboard(props.company.domain, t('options.domain'), copyIcon)
+    isMenuOpen.value = false
+  }
+
+  function onDelete (): void {
+    isMenuOpen.value = false
+  }
+</script>

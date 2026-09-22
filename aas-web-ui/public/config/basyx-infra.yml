@@ -154,3 +154,18 @@ infrastructures:
   #     type: bearer
   #     config:
   #       token: "your-bearer-token-here"
+
+  # # Infrastructure with a static custom header (e.g. API gateway key)
+  # # WARNING: The header value is stored in plain text and, once loaded in the
+  # # browser, kept in localStorage. Only use for non-production scenarios.
+  # gateway:
+  #   name: Gateway BaSyx
+  #   template: identifiable
+  #   components:
+  #     aasRepository:
+  #       baseUrl: "https://aasenv.gateway.basyx.com"
+  #   security:
+  #     type: custom-header
+  #     config:
+  #       headerName: "X-API-KEY"
+  #       headerValue: "your-api-key-here"

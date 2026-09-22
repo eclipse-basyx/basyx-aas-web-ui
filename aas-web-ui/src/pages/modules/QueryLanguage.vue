@@ -29,16 +29,10 @@
       </v-list>
     </v-menu>
 
-    <v-textarea
+    <QueryLanguageEditor
+      id="query-language-editor"
       v-model="queryText"
-      bg-color="surface"
-      density="compact"
-      :error="!isValidJson && queryText.trim() !== ''"
-      :error-messages="jsonError"
-      flat
-      placeholder="Enter your JSON query here..."
-      rows="15"
-      variant="outlined"
+      @validation-change="updateQueryValidation"
     />
 
     <v-card-actions class="pa-0">
@@ -47,33 +41,39 @@
       <v-btn
         class="text-buttonText"
         color="primary"
+        :disabled="!queryValidation.isValid"
         text="Execute Query"
         variant="elevated"
         @click="executeQuery"
       />
     </v-card-actions>
 
-    <!-- Query Response Display -->
-    <v-textarea
+    <CodeViewer
       v-if="queryResponse"
-      v-model="queryResponse"
-      bg-color="surface"
       class="mt-4"
-      density="compact"
-      flat
-      label="Query Response"
-      readonly
-      rows="15"
-      variant="outlined"
+      :file-name="queryResponseLanguage === 'json' ? 'query-response.json' : 'query-response.txt'"
+      height="360px"
+      :language="queryResponseLanguage"
+      :mime-type="queryResponseLanguage === 'json' ? 'application/json' : 'text/plain'"
+      :text="queryResponse"
+      title="Query Response"
     />
   </v-container>
 </template>
 
-<script lang="ts" setup>
-  import { computed, ref, watch } from 'vue'
+<script lang="ts">
+  import type { PageShortcutDefinitions } from '@/composables/Shortcuts/useRouteShortcuts'
+  import type { QueryLanguageValidation } from '@/pages/modules/queryLanguage/queryLanguageValidation'
+  import type { QueryTarget } from '@/types/QueryLanguage'
   import { useRequestHandling } from '@/composables/RequestHandling'
+  import { querySuggestionsShortcut } from '@/pages/modules/queryLanguage/queryLanguageShortcuts'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
+  import { buildQueryEndpoint } from '@/utils/QueryLanguageUtils'
 
+  export const shortcuts: PageShortcutDefinitions = () => [querySuggestionsShortcut]
+</script>
+
+<script lang="ts" setup>
   const infrastructureStore = useInfrastructureStore()
 
   const { postRequest } = useRequestHandling()
@@ -81,86 +81,37 @@
   // Selected endpoint for the query
   const selectedEndpoint = ref('')
 
-  // Query text and validation
+  // Query text and schema validation
   const queryText = ref('')
-  const isValidJson = ref(true)
-  const jsonError = ref('')
+  const queryValidation = ref<QueryLanguageValidation>({
+    isValid: false,
+    messages: [],
+  })
 
   // Query response
   const queryResponse = ref('')
+  const queryResponseLanguage = ref<'json' | 'plaintext'>('plaintext')
 
-  // Watch for changes in queryText to validate JSON
-  watch(queryText, newValue => {
-    if (newValue.trim() === '') {
-      isValidJson.value = true
-      jsonError.value = ''
-      return
-    }
-
-    try {
-      JSON.parse(newValue)
-      isValidJson.value = true
-      jsonError.value = ''
-    } catch (error) {
-      isValidJson.value = false
-      jsonError.value = `Invalid JSON: ${(error as Error).message}`
-    }
-  })
-
-  // Helper function to transform URLs for query endpoints
   function transformUrlForQuery (url: string, componentType: string): string {
-    if (!url || url.trim() === '') return ''
+    if (url.trim() === '') return ''
 
-    let transformedUrl = url.trim()
-    // Remove trailing slash if present
-    if (transformedUrl.endsWith('/')) {
-      transformedUrl = transformedUrl.slice(0, -1)
+    const targetMap: Partial<Record<string, QueryTarget>> = {
+      'aas-registry': 'aas-registry',
+      'aas-repo': 'aas-repository',
+      'submodel-repo': 'submodel-repository',
     }
+    const target = targetMap[componentType]
+    if (target) return buildQueryEndpoint(url, target)
 
+    let transformedUrl = url.trim().replace(/\/$/, '')
     switch (componentType) {
-      case 'aas-registry': {
-        // Transform shell-descriptors to query/shell-descriptors or add /query/shell-descriptors
-        if (transformedUrl.includes('/shell-descriptors')) {
-          transformedUrl = transformedUrl.replace('/shell-descriptors', '/query/shell-descriptors')
-        } else {
-          transformedUrl += '/query/shell-descriptors'
-        }
-        break
-      }
       case 'submodel-registry': {
-        // Transform submodel-descriptors to query/submodel-descriptors or add /query/submodel-descriptors
-        if (transformedUrl.includes('/submodel-descriptors')) {
-          transformedUrl = transformedUrl.replace('/submodel-descriptors', '/query/submodel-descriptors')
-        } else {
-          transformedUrl += '/query/submodel-descriptors'
-        }
-        break
-      }
-      case 'aas-repo': {
-        // Transform shells to query/shells or add /query/shells
-        if (transformedUrl.includes('/shells')) {
-          transformedUrl = transformedUrl.replace('/shells', '/query/shells')
-        } else {
-          transformedUrl += '/query/shells'
-        }
-        break
-      }
-      case 'submodel-repo': {
-        // Transform submodels to query/submodels or add /query/submodels
-        if (transformedUrl.includes('/submodels')) {
-          transformedUrl = transformedUrl.replace('/submodels', '/query/submodels')
-        } else {
-          transformedUrl += '/query/submodels'
-        }
+        transformedUrl = transformedUrl.replace(/\/submodel-descriptors$/, '') + '/query/submodel-descriptors'
         break
       }
       case 'cd-repo': {
         // Transform concept-descriptions to query/concept-descriptions or add /query/concept-descriptions
-        if (transformedUrl.includes('/concept-descriptions')) {
-          transformedUrl = transformedUrl.replace('/concept-descriptions', '/query/concept-descriptions')
-        } else {
-          transformedUrl += '/query/concept-descriptions'
-        }
+        transformedUrl = transformedUrl.replace(/\/concept-descriptions$/, '') + '/query/concept-descriptions'
         break
       }
       default: {
@@ -211,19 +162,24 @@
     return endpoint ? endpoint.title : ''
   }
 
+  function updateQueryValidation (validation: QueryLanguageValidation): void {
+    queryValidation.value = validation
+  }
+
   defineOptions({
     inheritAttrs: false,
     moduleTitle: 'Query Language', // optional module title
   })
 
   async function executeQuery (): Promise<void> {
+    queryResponseLanguage.value = 'plaintext'
     if (!selectedEndpoint.value) {
       queryResponse.value = 'Error: Please select an API component.'
       return
     }
 
-    if (!isValidJson.value || queryText.value.trim() === '') {
-      queryResponse.value = 'Error: Please enter a valid JSON query.'
+    if (!queryValidation.value.isValid || queryText.value.trim() === '') {
+      queryResponse.value = 'Error: Please enter a query that is valid against the AAS Query Language schema.'
       return
     }
 
@@ -247,6 +203,7 @@
       // send the request
       await postRequest(path, content, headers, context, disableMessage, true).then((response: unknown) => {
         const res = response as { success: boolean, data?: unknown, message?: string }
+        queryResponseLanguage.value = res.success ? 'json' : 'plaintext'
         queryResponse.value = res.success ? JSON.stringify(res.data, null, 2) : `Query failed: ${res.message || 'Unknown error'}`
       })
     } catch (error) {

@@ -210,10 +210,9 @@ jobs:
         run: |
           cat > examples/TimeSeriesData/docker-compose.ci.override.yaml <<'EOF'
           services:
-            influxdb:
-              image: influxdb:2.7.10
             aas-web-ui:
               image: aas-web-ui-pr:${{ github.sha }}
+              pull_policy: never
           EOF
 
           cd examples/TimeSeriesData

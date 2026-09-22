@@ -77,6 +77,9 @@ function createWrapper () {
         'v-col': true,
         'v-text-field': true,
         'v-btn': true,
+        'v-empty-state': true,
+        'AutoRefreshSelector': true,
+        'TimeRangeSelector': true,
         'LineChart': true,
         'AreaChart': true,
         'ScatterChart': true,
@@ -132,7 +135,7 @@ describe('TimeSeries_v1_1.vue parser and linked fetch behavior', () => {
 
     expect(dispatchSnackbarMock).toHaveBeenCalledTimes(1)
     expect(dispatchSnackbarMock.mock.calls[0][0].text).toContain('y-values "rpm" not available in LinkedSegment Data!')
-    expect(vm.timeSeriesValues).toEqual([])
+    expect(vm.timeSeriesValues).toEqual([[]])
   })
 
   it('builds linked request with token header and replaced y-value placeholder', async () => {
@@ -142,6 +145,11 @@ describe('TimeSeries_v1_1.vue parser and linked fetch behavior', () => {
     vm.selectedSegment = createTimeSeriesSubmodelData().submodelElements[0].value.find((segment: any) => segment.idShort === 'LinkedSegment')
     vm.yVariables = [{ idShort: 'AirQuality' }]
     vm.apiToken = 'test-token'
+    vm.timeRangeSelection = {
+      mode: 'absolute',
+      start: '2026-05-13T19:00:00.000Z',
+      stop: '2026-05-13T20:00:00.000Z',
+    }
 
     vm.fetchLinkedData()
     await Promise.resolve()
@@ -152,12 +160,35 @@ describe('TimeSeries_v1_1.vue parser and linked fetch behavior', () => {
     expect(path).toBe('http://localhost:8086/api/v2/query?org=basyx')
     expect(query).toContain('AirQuality')
     expect(query).not.toContain('{{y-value}}')
+    expect(query).toContain('range(start: 2026-05-13T19:00:00.000Z, stop: 2026-05-13T20:00:00.000Z)')
+    expect(query).toContain('aggregateWindow(every: 10000ms')
+    expect(query).not.toMatch(/v\.(timeRangeStart|timeRangeStop|windowPeriod)/)
     expect(headers.get('Authorization')).toBe('Token test-token')
     expect(headers.get('Accept')).toBe('application/csv')
     expect(headers.get('Content-Type')).toBe('application/vnd.flux')
     expect(context).toBe('fetching data from Time Series Database')
     expect(disableMessage).toBe(false)
     expect(allowRaw).toBe(true)
+  })
+
+  it('keeps unsupported Flux variables for explicitly defined query records', async () => {
+    const wrapper = createWrapper()
+    const vm = wrapper.vm as any
+    const linkedSegment = createTimeSeriesSubmodelData().submodelElements[0].value.find((segment: any) => segment.idShort === 'LinkedSegment')
+    linkedSegment.value.find((element: any) => element.idShort === 'Query').value += ' |> filter(fn: (r) => r.host == v.host)'
+
+    vm.selectedSegment = linkedSegment
+    vm.yVariables = [{ idShort: 'AirQuality' }]
+    vm.timeRangeSelection = {
+      mode: 'absolute',
+      start: '2026-05-13T19:00:00.000Z',
+      stop: '2026-05-13T20:00:00.000Z',
+    }
+
+    vm.fetchLinkedData()
+    await Promise.resolve()
+
+    expect(postRequestMock.mock.calls[0][1]).toContain('v.host')
   })
 
   it('returns early and warns when linked fetch is triggered without selected segment', () => {

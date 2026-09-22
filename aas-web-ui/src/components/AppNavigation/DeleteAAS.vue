@@ -52,7 +52,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
   import { useSMHandling } from '@/composables/AAS/SMHandling'

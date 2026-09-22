@@ -2,7 +2,7 @@
  * Composable for drag and drop functionality in the FileSystem component.
  */
 import type { FileSystemElement } from '../types'
-import { type Ref, ref } from 'vue'
+import type { Ref } from 'vue'
 
 export interface UseDragAndDropOptions {
   selectedItems: Ref<FileSystemElement[]>

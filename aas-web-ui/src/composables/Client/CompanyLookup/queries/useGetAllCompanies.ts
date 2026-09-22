@@ -1,6 +1,6 @@
 import type { CompanyLookupResponse, PagedCompanyDescriptors } from '../types/api'
+import type { Ref } from 'vue'
 import { type InfiniteData, useInfiniteQuery } from '@tanstack/vue-query'
-import { computed, type Ref, unref } from 'vue'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { CACHE_KEYS } from '../constants/cache'
 import { useCompanyLookupClient } from '../useCompanyLookupClient'

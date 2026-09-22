@@ -129,7 +129,6 @@
 
 <script setup lang="ts">
   import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
-  import { computed, ref, watch } from 'vue'
   import predefinedQualifierJson from '@/assets/Data/predefinedQualifier.json'
 
   type PredefinedQualifier = {

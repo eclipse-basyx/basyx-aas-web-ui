@@ -226,7 +226,6 @@
 
 <script lang="ts" setup>
   import type { ComponentPublicInstance, Ref } from 'vue'
-  import { computed, onActivated, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
