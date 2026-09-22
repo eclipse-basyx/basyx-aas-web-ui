@@ -271,7 +271,7 @@
                   Select AAS/SM data below to push
                 </span>
 
-                <v-btn
+                <!-- <v-btn
                   class="text-buttonText"
                   :color="dataTranserInProgress ? 'error' : 'primary'"
                   :disabled="!dataTranserInProgress && aasSmDataToPushIsEmpty"
@@ -280,7 +280,7 @@
                   :text="dataTranserInProgress ? 'Cancel Push' : 'Push selected data'"
                   variant="flat"
                   @click="dataTranserInProgress ? pushDataRef?.cancel() : pushDataRef?.pushData()"
-                />
+                /> -->
               </template>
 
               <!--Use case 2: Discovery -->
@@ -297,7 +297,7 @@
                   />
                 </div>
 
-                <v-btn
+                <!-- <v-btn
                   class="text-buttonText"
                   :color="dataTranserInProgress ? 'error' : 'primary'"
                   :disabled="!dataTranserInProgress && discoveryId == ''"
@@ -306,11 +306,11 @@
                   :text="dataTranserInProgress ? 'Cancel Discovery' : 'Discover ID'"
                   variant="flat"
                   @click="dataTranserInProgress ? discoverIdRef?.cancel() : discoverIdRef?.discoverId()"
-                />
+                /> -->
               </template>
 
               <!--Use case 3: Fetch Asset -->
-              <v-btn
+              <!-- <v-btn
                 v-else
                 class="text-buttonText"
                 :color="dataTranserInProgress ? 'error' : 'primary'"
@@ -320,13 +320,13 @@
                 :text="dataTranserInProgress ? 'Cancel Fetch' : 'Fetch Asset'"
                 variant="flat"
                 @click="dataTranserInProgress ? fetchAssetRef?.cancel() : fetchAssetRef?.fetchAsset()"
-              />
+              /> -->
             </v-card-actions>
 
             <v-divider />
 
             <!--Use case 1: Push Data -->
-            <CatalogPushData
+            <!-- <CatalogPushData
               v-if="isPushAsset"
               ref="pushDataRef"
               :full-height="fullHeightAsset"
@@ -337,10 +337,10 @@
               @update:edc-status="edcStatus = $event"
               @update:pushing-asset="dataTranserInProgress = $event"
               @update:selected-sms-count="selectedSmsCount = $event"
-            />
+            /> -->
 
             <!--Use case 2: Discovery -->
-            <CatalogDiscoverId
+            <!-- <CatalogDiscoverId
               v-else-if="isDigitalTwinRegistryAsset"
               ref="discoverIdRef"
               :discovering-id="dataTranserInProgress"
@@ -350,10 +350,10 @@
               :selected-catalog-dataset="selectedCatalogDataset"
               @update:discovering-id="dataTranserInProgress = $event"
               @update:edc-status="edcStatus = $event"
-            />
+            /> -->
 
             <!--Use case 3: Fetch Asset -->
-            <CatalogFetchAsset
+            <!-- <CatalogFetchAsset
               v-else
               ref="fetchAssetRef"
               :fetching-asset="dataTranserInProgress"
@@ -362,7 +362,7 @@
               :selected-catalog-dataset="selectedCatalogDataset"
               @update:edc-status="edcStatus = $event"
               @update:fetching-asset="dataTranserInProgress = $event"
-            />
+            /> -->
 
           </template>
 
@@ -377,9 +377,6 @@
   import type { ComponentPublicInstance, Ref } from 'vue'
   import { useTheme } from 'vuetify'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
-  import CatalogDiscoverId from '@/pages/modules/EclipseDataspaceConnector/components/Catalog//CatalogDiscoverId.vue'
-  import CatalogFetchAsset from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/CatalogFetchAsset.vue'
-  import CatalogPushData from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/CatalogPushData.vue'
   import {
     type CatalogRequest,
     useEdcClient,
@@ -404,25 +401,25 @@
 
   // Constants
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Header - Tabs - Footer - Lines
-  const fullHeightAsset = ref(
-    'calc(100vh - 64px - 48px - 40px - 2px - 60px - 275px  - 60px - 1px)', // Header - Tabs - Footer - Lines - Dataset Header - Dataset Json - Dataset Footer - Line
-  )
+  // const fullHeightAsset = ref(
+  //   'calc(100vh - 64px - 48px - 40px - 2px - 60px - 275px  - 60px - 1px)', // Header - Tabs - Footer - Lines - Dataset Header - Dataset Json - Dataset Footer - Line
+  // )
 
   // Data
-  const aasSmDataToPush = ref({} as any)
+  // const aasSmDataToPush = ref({} as any)
   const catalogList = ref([] as Array<any>) as Ref<Array<any>>
   const catalogListUnfiltered = ref([] as Array<any>) as Ref<Array<any>>
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
   const dataTranserInProgress = ref(false)
-  const discoverIdRef = ref<InstanceType<typeof CatalogDiscoverId> | null>(null)
+  // const discoverIdRef = ref<InstanceType<typeof CatalogDiscoverId> | null>(null)
   const discoveryId = ref<string>('')
   const edcStatus = ref('')
-  const fetchAssetRef = ref<InstanceType<typeof CatalogFetchAsset> | null>(null)
+  // const fetchAssetRef = ref<InstanceType<typeof CatalogFetchAsset> | null>(null)
   const listLoading = ref(false)
-  const pushDataRef = ref<InstanceType<typeof CatalogPushData> | null>(null)
+  // const pushDataRef = ref<InstanceType<typeof CatalogPushData> | null>(null)
   const selectedBusinessPartner = ref<any>(null)
   const selectedCatalogDataset = ref({} as any)
-  const selectedSmsCount = ref(0)
+  // const selectedSmsCount = ref(0)
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null)
 
   // Computed properties
@@ -441,24 +438,24 @@
     const id: string = selectedCatalogDataset.value?.['@id'] ?? ''
     return id.includes('dt-registry') || id.includes('digitaltwin-registry') || id.includes('digital-twin-registry')
   })
-  const isHttpDataPull = computed(() => {
-    const distributions = selectedCatalogDataset.value?.['dcat:distribution'] ?? selectedCatalogDataset.value?.distribution
-    if (!distributions) return false
-    const distArray = Array.isArray(distributions)
-      ? distributions
-      : [distributions]
-    return distArray.some((dist: any) => {
-      const type = String(dist['@type'] ?? '').toLowerCase()
-      const format = dist['dct:format']?.['@id'] ?? dist.format
-      return ['dcat:distribution', 'distribution'].includes(type) && format === 'HttpData-PULL'
-    })
-  })
-  const aasSmDataToPushIsEmpty = computed(() => {
-    return (
-      !aasSmDataToPush.value
-      || Object.keys(aasSmDataToPush.value).length === 0
-    ) && selectedSmsCount.value === 0
-  })
+  // const isHttpDataPull = computed(() => {
+  //   const distributions = selectedCatalogDataset.value?.['dcat:distribution'] ?? selectedCatalogDataset.value?.distribution
+  //   if (!distributions) return false
+  //   const distArray = Array.isArray(distributions)
+  //     ? distributions
+  //     : [distributions]
+  //   return distArray.some((dist: any) => {
+  //     const type = String(dist['@type'] ?? '').toLowerCase()
+  //     const format = dist['dct:format']?.['@id'] ?? dist.format
+  //     return ['dcat:distribution', 'distribution'].includes(type) && format === 'HttpData-PULL'
+  //   })
+  // })
+  // const aasSmDataToPushIsEmpty = computed(() => {
+  //   return (
+  //     !aasSmDataToPush.value
+  //     || Object.keys(aasSmDataToPush.value).length === 0
+  //   ) && selectedSmsCount.value === 0
+  // })
 
   // Watchers
   watch(
@@ -480,7 +477,7 @@
     async value => {
       if (value) {
         await nextTick()
-        pushDataRef.value?.initialize()
+        // pushDataRef.value?.initialize()
       }
     },
   )
