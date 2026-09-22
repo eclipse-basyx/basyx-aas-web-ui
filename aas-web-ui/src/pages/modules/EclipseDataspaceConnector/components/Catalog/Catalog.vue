@@ -224,25 +224,7 @@
 
           <template v-else>
 
-            <div class="d-flex justify-space-between align-center mt-4 mx-4 mb-2">
-              <v-btn-toggle
-                v-model="selectedView"
-                density="compact"
-                mandatory
-                rounded="lg"
-                variant="outlined"
-              >
-                <v-btn value="tree">
-                  <v-icon start>mdi-file-tree-outline</v-icon>
-                  Tree
-                </v-btn>
-
-                <v-btn value="json">
-                  <v-icon start>mdi-code-json</v-icon>
-                  JSON
-                </v-btn>
-              </v-btn-toggle>
-
+            <div class="d-flex justify-end align-center mt-4 mx-4 mb-2">
               <v-list-item-title class="text-body-large pr-2 d-flex align-center">
                 <v-icon class="mr-2" color="primary" size="small">
                   mdi-database-search-outline
@@ -251,23 +233,10 @@
               </v-list-item-title>
             </div>
 
-            <!-- JSON view -->
-            <pre
-              v-if="selectedView === 'json'"
-              class="json-content mt-0 mx-4 mb-0 bg-surface rounded border"
-              style="height: 275px; min-height: 63px"
-            >
-              <code class="mx-5" v-html="selectedCatalogDatasetJsonFormatted" />
-            </pre>
-
-            <!-- Tree view -->
-            <div
-              v-else
-              class="rounded border overflow-y-auto mx-4 mb-0 pa-4"
-              style="height: 275px; min-height: 63px; background-color: #f5f5f5"
-            >
-              <JsonTreeView :data="selectedCatalogDataset" />
-            </div>
+            <JSONPreview
+              :json-content="selectedCatalogDataset"
+              :title="`EDC Asset`"
+            />
 
             <v-card-actions class="mt-0 mb-2 mx-4 pa-0">
               <v-chip
@@ -405,19 +374,8 @@
 </template>
 
 <script lang="ts" setup>
-  import Prism from 'prismjs'
-  import {
-    type ComponentPublicInstance,
-    computed,
-    nextTick,
-    onActivated,
-    onMounted,
-    ref,
-    type Ref,
-    watch,
-  } from 'vue'
+  import type { ComponentPublicInstance, Ref } from 'vue'
   import { useTheme } from 'vuetify'
-  import JsonTreeView from '@/components/UIComponents/JsonTreeView.vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import CatalogDiscoverId from '@/pages/modules/EclipseDataspaceConnector/components/Catalog//CatalogDiscoverId.vue'
   import CatalogFetchAsset from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/CatalogFetchAsset.vue'
@@ -427,9 +385,6 @@
     useEdcClient,
   } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
-  import { formatJSON } from '@/utils/JsonUtils'
-  import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
-  import 'prismjs/themes/prism.css'
 
   // Extend the ComponentPublicInstance type to include scrollToIndex
   interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -467,10 +422,7 @@
   const pushDataRef = ref<InstanceType<typeof CatalogPushData> | null>(null)
   const selectedBusinessPartner = ref<any>(null)
   const selectedCatalogDataset = ref({} as any)
-  const selectedCatalogDatasetJson = ref<string>('')
-  const selectedCatalogDatasetJsonFormatted = ref<string>('')
   const selectedSmsCount = ref(0)
-  const selectedView = ref<'json' | 'tree'>('tree')
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null)
 
   // Computed properties
@@ -533,30 +485,6 @@
     },
   )
 
-  watch(
-    () => selectedCatalogDataset.value,
-    () => {
-      try {
-        selectedCatalogDatasetJson.value = JSON.stringify(
-          selectedCatalogDataset.value,
-        )
-        const formatted = formatJSON(selectedCatalogDatasetJson.value)
-
-        selectedCatalogDatasetJsonFormatted.value
-          = Prism && Prism.highlight
-            ? Prism.highlight(formatted, getPrismJsonLanguage(), 'json')
-            : formatted
-
-        edcStatus.value = ''
-      } catch (error_) {
-        console.error('Error highlighting JSON:', error_)
-        selectedCatalogDatasetJsonFormatted.value
-          = selectedCatalogDatasetJson.value || ''
-      }
-    },
-    { deep: true },
-  )
-
   onMounted(() => {
     initialize()
   })
@@ -568,8 +496,6 @@
     listLoading.value = true
 
     selectedCatalogDataset.value = {}
-    selectedCatalogDatasetJson.value = ''
-    selectedCatalogDatasetJsonFormatted.value = ''
     edcStatus.value = ''
 
     if (selectedBusinessPartner.value?.dsp) {

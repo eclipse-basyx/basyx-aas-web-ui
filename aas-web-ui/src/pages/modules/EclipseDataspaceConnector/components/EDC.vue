@@ -211,7 +211,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed } from 'vue'
   import edcData from '@/pages/modules/EclipseDataspaceConnector/data/edc/edc.json'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
 

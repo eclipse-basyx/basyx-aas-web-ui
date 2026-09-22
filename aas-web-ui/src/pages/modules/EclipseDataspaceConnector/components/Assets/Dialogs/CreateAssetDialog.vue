@@ -32,15 +32,11 @@
           </div>
 
           <!-- EDC Asset Preview -->
-          <div>
-            <p class="text-caption text-medium-emphasis font-weight-bold mb-2">
-              EDC Asset Preview:
-            </p>
-
-            <pre class="json-content bg-surface rounded border overflow-x-auto" style="max-height: 500px; overflow-y: auto">
-              <code v-html="previewJsonFormatted" />
-            </pre>
-          </div>
+          <JSONPreview
+            class="mt-4"
+            :json-content="jsonContent"
+            :title="`EDC Asset`"
+          />
         </v-form>
       </v-card-text>
 
@@ -68,13 +64,10 @@
 </template>
 
 <script lang="ts" setup>
-  import Prism from 'prismjs'
   import { type Asset, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import AssetTemplate_v0_9 from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.9.json'
   import AssetTemplate_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.12.1.json'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
-  import { formatJSON } from '@/utils/JsonUtils'
-  import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
 
   const props = defineProps<{
     modelValue: boolean
@@ -127,23 +120,9 @@
     })
   })
 
-  const previewJsonFormatted = computed(() => {
-    try {
-      let assetJson = JSON.stringify(activeAssetTemplate.value)
-      assetJson = replacePlaceholders(assetJson)
-
-      const asset = JSON.parse(assetJson)
-      const formatted = formatJSON(JSON.stringify(asset))
-
-      if (Prism && Prism.highlight) {
-        return Prism.highlight(formatted, getPrismJsonLanguage(), 'json')
-      }
-      return formatted
-    } catch (error_) {
-      console.error('Error highlighting JSON:', error_)
-      return JSON.stringify(activeAssetTemplate.value, null, 2)
-    }
-  })
+  const jsonContent = computed(() =>
+    replacePlaceholders(JSON.stringify(activeAssetTemplate.value)),
+  )
 
   // Watchers
   watch(
@@ -181,7 +160,7 @@
   function replacePlaceholders (assetJson: string): string {
     let result = assetJson
     for (const placeholder of placeholders.value) {
-      const value = placeholderValues.value[placeholder.attribute] ?? ''
+      const value = placeholderValues.value[placeholder.label] ?? ''
       result = result.replace(
         /\{\{[^}]*\}\}/g,
         match => {

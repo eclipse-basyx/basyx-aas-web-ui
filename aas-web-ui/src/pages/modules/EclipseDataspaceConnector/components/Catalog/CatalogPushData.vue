@@ -471,25 +471,7 @@
         </div>
 
         <template v-else>
-          <div class="d-flex justify-space-between align-center mt-4 mx-4 mb-2">
-            <v-btn-toggle
-              v-model="selectedAasSmDataToPushView"
-              density="compact"
-              mandatory
-              rounded="lg"
-              variant="outlined"
-            >
-              <v-btn value="tree">
-                <v-icon start>mdi-file-tree-outline</v-icon>
-                Tree
-              </v-btn>
-
-              <v-btn value="json">
-                <v-icon start>mdi-code-json</v-icon>
-                JSON
-              </v-btn>
-            </v-btn-toggle>
-
+          <div class="d-flex justify-end align-center mt-4 mx-4 mb-2">
             <v-checkbox
               v-if="selectedSms.length === 1"
               v-model="justPushSmData"
@@ -507,23 +489,12 @@
             </v-list-item-title>
           </div>
 
-          <!-- JSON view -->
           <pre
-            v-if="selectedAasSmDataToPushView === 'json'"
             class="json-content mt-0 mx-4 mb-4 bg-surface rounded border"
             :style="{ height: fullHeightAasSmsDataToPushJson }"
           >
             <code class="mx-5" v-html="aasSmDataToPushJsonFormatted" />
           </pre>
-
-          <!-- Tree view -->
-          <div
-            v-else
-            class="rounded border overflow-y-auto mx-4 mb-4 pa-4"
-            :style="{ height: fullHeightAasSmsDataToPushJson, 'background-color': '#f5f5f5' }"
-          >
-            <JsonTreeView :data="aasSmDataToPushJsonParsed" />
-          </div>
         </template>
 
       </v-container>
@@ -533,17 +504,9 @@
 </template>
 
 <script lang="ts" setup>
-  import Prism from 'prismjs'
-  import {
-    type ComponentPublicInstance,
-    computed,
-    ref,
-    type Ref,
-    watch,
-  } from 'vue'
+  import type { ComponentPublicInstance, Ref } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'
-  import JsonTreeView from '@/components/UIComponents/JsonTreeView.vue'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
   import {
     appendOrMergeSortedAasById,
@@ -559,9 +522,6 @@
   import { extractVersionRevision } from '@/utils/AAS/SemanticIdUtils'
   import { smts } from '@/utils/AAS/SubmodelTemplateUtils'
   import { debounce } from '@/utils/generalUtils'
-  import { formatJSON } from '@/utils/JsonUtils'
-  import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
-  import 'prismjs/themes/prism.css'
 
   // Extend the ComponentPublicInstance type to include scrollToIndex
   interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -597,8 +557,6 @@
   const scrollLoadDebounceMs = 200
   const minPageLoadIntervalMs = 350
 
-  const jsonLanguage = getPrismJsonLanguage()
-
   // Emits
   const emit = defineEmits<{
     'update:aas-sm-data-to-push': [value: any]
@@ -617,7 +575,6 @@
   const allLoadedAas = ref([] as Array<any>) as Ref<Array<any>>
   const cancelled = ref(false)
   const justPushSmData = ref(false)
-  const selectedAasSmDataToPushView = ref<'json' | 'tree'>('tree')
   const selectedSmIds = ref<string[]>([])
   const selectedSms = ref<any[]>([])
   const smList = ref([] as Array<any>) as Ref<Array<any>>

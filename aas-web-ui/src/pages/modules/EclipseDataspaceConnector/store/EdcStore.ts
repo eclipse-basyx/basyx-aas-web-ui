@@ -1,6 +1,5 @@
 import type { EdcConfig, YamlEdcConfig } from '@/pages/modules/EclipseDataspaceConnector/types/Edc'
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
 import { useEdcYamlParser } from '@/pages/modules/EclipseDataspaceConnector/composables/useEdcYamlParser'
 
 export const useEdcStore = defineStore('edcStore', () => {

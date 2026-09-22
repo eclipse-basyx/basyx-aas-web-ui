@@ -165,7 +165,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { nextTick } from 'vue'
   import { type PolicyDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import Policy_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/policy___tractus-x_edc_v0.12.1.json'
   import { formatJSON } from '@/utils/JsonUtils'

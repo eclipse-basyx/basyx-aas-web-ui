@@ -38,7 +38,6 @@
 <script lang="ts" setup>
   import type { YamlEdcConfig } from './types/Edc'
   import { load } from 'js-yaml'
-  import { computed, onMounted, ref, watch } from 'vue'
   import { type LocationQueryRaw, useRoute, useRouter } from 'vue-router'
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useEdcYamlParser } from './composables/useEdcYamlParser'

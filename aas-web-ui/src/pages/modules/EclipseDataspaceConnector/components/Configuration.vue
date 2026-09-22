@@ -409,7 +409,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, onMounted, ref, watch } from 'vue'
   import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import edcData from '@/pages/modules/EclipseDataspaceConnector/data/edc/edc.json'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'

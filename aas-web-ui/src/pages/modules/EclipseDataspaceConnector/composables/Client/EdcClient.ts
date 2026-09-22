@@ -1,4 +1,3 @@
-import { computed } from 'vue'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
 import { stripLastCharacter } from '@/utils/StringUtils'

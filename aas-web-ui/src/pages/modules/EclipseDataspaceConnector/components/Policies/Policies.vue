@@ -275,44 +275,12 @@
           </div>
 
           <template v-else>
-            <!-- View mode tabs -->
-            <div class="d-flex justify-start mb-2">
-              <v-btn-toggle
-                v-model="selectedView"
-                density="compact"
-                mandatory
-                rounded="lg"
-                variant="outlined"
-              >
-                <v-btn value="tree">
-                  <v-icon start>mdi-file-tree-outline</v-icon>
-                  Tree
-                </v-btn>
-
-                <v-btn value="json">
-                  <v-icon start>mdi-code-json</v-icon>
-                  JSON
-                </v-btn>
-              </v-btn-toggle>
-            </div>
-
-            <!-- JSON view -->
-            <pre
-              v-if="selectedView === 'json'"
-              class="json-content bg-surface rounded border"
-              :style="{'height': fullHeightMainWithTabs}"
-            >
-              <code v-html="selectedPolicyJsonFormatted" />
-            </pre>
-
-            <!-- Tree view -->
-            <div
-              v-else
-              class="rounded border overflow-y-auto pa-4"
-              :style="{'height': fullHeightMainWithTabs, 'background-color': '#f5f5f5'}"
-            >
-              <JsonTreeView :data="selectedPolicy" />
-            </div>
+            <JSONPreview
+              :height="fullHeightMainJsonPreview"
+              icon="mdi-shield-check-outline"
+              :json-content="selectedPolicy"
+              title="Policy"
+            />
           </template>
 
         </v-container>
@@ -329,9 +297,7 @@
 </template>
 
 <script lang="ts" setup>
-  import Prism from 'prismjs'
   import { useTheme } from 'vuetify'
-  import JsonTreeView from '@/components/UIComponents/JsonTreeView.vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import CreatePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Policies/Dialogs/CreatePolicyDialog.vue'
   import CreatePolicyFromTemplateDialog from '@/pages/modules/EclipseDataspaceConnector/components/Policies/Dialogs/CreatePolicyFromTemplateDialog.vue'
@@ -339,8 +305,6 @@
   import UpdatePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Policies/Dialogs/UpdatePolicyDialog.vue'
   import { type PolicyDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
-  import { formatJSON } from '@/utils/JsonUtils'
-  import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
 
   // Extend the ComponentPublicInstance type to include scrollToIndex
   interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -361,15 +325,12 @@
   const searchQuery = ref('')
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Full height - header - tabs - footer - border
   const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
-  const fullHeightMainWithTabs = ref('calc(100vh - 64px - 48px - 40px - 32px - 44px - 2px)') // Full height - header - tabs - footer - padding - view toggle - border
-  const selectedView = ref<'json' | 'tree'>('tree')
+  const fullHeightMainJsonPreview = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px - 64px - 32px)') // Full height - header - tabs - footer - padding - border - JSON title - padding
   const policyList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Policy data
   const policyListUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Policy data before filtering
   const listLoading = ref(false) // Variable to store if the AAS List is loading
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null) // Reference to the Virtual Scroll Component
   const selectedPolicy = ref({} as any)
-  const selectedPolicyJson = ref<string>('')
-  const selectedPolicyJsonFormatted = ref<string>('')
   const createPolicyDialog = ref(false) // Variable to store if the Create Policy Dialog should be shown
   const createPolicyFromTemplateDialog = ref(false) // Variable to store if the Create Policy from Template Dialog should be shown
   const updatePolicyDialog = ref(false) // Variable to store if the Update Policy Dialog should be shown
@@ -390,28 +351,6 @@
     () => {
       initialize()
     },
-  )
-
-  watch(
-    () => selectedPolicy.value,
-    () => {
-      try {
-        selectedPolicyJson.value = JSON.stringify(selectedPolicy.value)
-        const formatted = formatJSON(selectedPolicyJson.value)
-
-        // Apply syntax highlighting using Prism
-        if (Prism && Prism.highlight) {
-          selectedPolicyJsonFormatted.value = Prism.highlight(formatted, getPrismJsonLanguage(), 'json')
-        } else {
-          selectedPolicyJsonFormatted.value = formatted
-          console.warn('Prism highlighting not available')
-        }
-      } catch (error_) {
-        console.error('Error highlighting JSON:', error_)
-        selectedPolicyJsonFormatted.value = selectedPolicyJson.value || ''
-      }
-    },
-    { deep: true },
   )
 
   onMounted(() => {
@@ -477,7 +416,7 @@
     // Reload the policy list
     await initialize()
 
-    // Re-select the updated policy so the JSON/Tree view reflects the new data
+    // Re-select the updated policy so the JSON view reflects the new data
     if (previouslySelectedId) {
       const updatedPolicy = policyList.value.find((p: any) => p['@id'] === previouslySelectedId)
       if (updatedPolicy) {

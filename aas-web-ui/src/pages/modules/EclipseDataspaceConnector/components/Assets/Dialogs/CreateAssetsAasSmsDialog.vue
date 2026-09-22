@@ -473,30 +473,17 @@
 
               <template v-else>
 
-                <v-list-item class="pl-3">
-                  <v-list-item-title class="text-body-large">EDC Asset (of AAS)</v-list-item-title>
-                </v-list-item>
-
-                <pre
-                  class="json-content mt-0 mx-4 mb-5 bg-surface rounded border"
-                  style="height: 275px; min-height: 63px"
-                >
-                  <code class="mx-5" v-html="aasEdcAssetJsonFormatted" />
-                </pre>
+                <JSONPreview
+                  :json-content="aasEdcAsset"
+                  title="EDC Asset (of AAS)"
+                />
 
                 <v-divider class="mt-4" />
 
-                <v-list-item class="pl-3">
-                  <v-list-item-title class="text-body-large">EDC Assets (of Submodels)</v-list-item-title>
-                </v-list-item>
-
-                <pre
-                  class="json-content mt-0 mx-4 mb-5 bg-surface rounded border"
-                  style="min-height: 63px"
-                  :style="{'max-height': heightSmJson}"
-                >
-                  <code class="mx-5" v-html="smEdcAssetsJsonFormatted" />
-                </pre>
+                <JSONPreview
+                  :json-content="smEdcAssets"
+                  title="EDC Asset (of Submodels)"
+                />
 
               </template>
 
@@ -543,8 +530,6 @@
 
 <script lang="ts" setup>
   // import { base64Decode } from 'basyx-typescript-sdk'
-  import Prism from 'prismjs'
-  import { computed, onMounted, ref } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
@@ -565,9 +550,6 @@
   import { smts } from '@/utils/AAS/SubmodelTemplateUtils'
   import { base64Encode } from '@/utils/EncodeDecodeUtils'
   import { debounce } from '@/utils/generalUtils'
-  import { formatJSON } from '@/utils/JsonUtils'
-  import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
-  import 'prismjs/themes/prism.css'
 
   // Extend the ComponentPublicInstance type to include scrollToIndex
   interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -607,7 +589,6 @@
   const fullHeight = ref('calc(90vh - 52px - 52px)') // dialog - dialog header - dialog footer
   const fullHeightMain = ref('calc(90vh - 52px - 52px)') // dialog - dialog header - dialog footer
   const fullHeightLists = ref('calc(90vh - 52px - 52px - 64px - 1px)') // Full height -  - search field - search field divider
-  const heightSmJson = ref('calc(90vh - 52px - 52px - 275px)') // Full height -  - padding - border - aasJson - v-list-item - action bar
   const debouncedFilterAasList = debounce(filterAasList, 300) // Debounced function to filter the AAS List
   const itemHeight = 56
   const minPageLimit = 100
@@ -633,15 +614,9 @@
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null) // Reference to the Virtual Scroll Component
   const smVirtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null) // Reference to the Virtual Scroll Component
 
-  const jsonLanguage = getPrismJsonLanguage()
-
   const aasEdcAsset = ref({} as any)
-  const aasEdcAssetJson = ref<string>('')
-  const aasEdcAssetJsonFormatted = ref<string>('')
 
   const smEdcAssets = ref([] as any)
-  const smEdcAssetsJson = ref<string>('')
-  const smEdcAssetsJsonFormatted = ref<string>('')
 
   const selectedSmIds = ref<string[]>([])
 
@@ -717,28 +692,6 @@
   )
 
   watch(
-    () => aasEdcAsset.value,
-    () => {
-      try {
-        aasEdcAssetJson.value = JSON.stringify(aasEdcAsset.value)
-        const formatted = formatJSON(aasEdcAssetJson.value)
-
-        // Apply syntax highlighting using Prism
-        if (Prism && Prism.highlight) {
-          aasEdcAssetJsonFormatted.value = Prism.highlight(formatted, jsonLanguage, 'json')
-        } else {
-          aasEdcAssetJsonFormatted.value = formatted
-          console.warn('Prism highlighting not available')
-        }
-      } catch (error_) {
-        console.error('Error highlighting JSON:', error_)
-        aasEdcAssetJsonFormatted.value = aasEdcAssetJson.value || ''
-      }
-    },
-    { deep: true },
-  )
-
-  watch(
     () => selectedAAS.value,
     async () => {
       applyCurrentFilter()
@@ -759,28 +712,6 @@
         smEdcAssets.value = [...smEdcAssets.value, createEdcAssetJson(selectedAAS.value, sm)]
       }
     },
-  )
-
-  watch(
-    () => smEdcAssets.value,
-    () => {
-      try {
-        smEdcAssetsJson.value = JSON.stringify(smEdcAssets.value)
-        const formatted = formatJSON(smEdcAssetsJson.value)
-
-        // Apply syntax highlighting using Prism
-        if (Prism && Prism.highlight) {
-          smEdcAssetsJsonFormatted.value = Prism.highlight(formatted, jsonLanguage, 'json')
-        } else {
-          smEdcAssetsJsonFormatted.value = formatted
-          console.warn('Prism highlighting not available')
-        }
-      } catch (error_) {
-        console.error('Error highlighting JSON:', error_)
-        smEdcAssetsJsonFormatted.value = smEdcAssetsJson.value || ''
-      }
-    },
-    { deep: true },
   )
 
   function preprocessListItem (item: any): any {

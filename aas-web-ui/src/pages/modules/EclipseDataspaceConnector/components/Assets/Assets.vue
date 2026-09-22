@@ -284,44 +284,11 @@
           </div>
 
           <template v-else>
-            <!-- View mode tabs -->
-            <div class="d-flex justify-start mb-2">
-              <v-btn-toggle
-                v-model="selectedView"
-                density="compact"
-                mandatory
-                rounded="lg"
-                variant="outlined"
-              >
-                <v-btn value="tree">
-                  <v-icon start>mdi-file-tree-outline</v-icon>
-                  Tree
-                </v-btn>
-
-                <v-btn value="json">
-                  <v-icon start>mdi-code-json</v-icon>
-                  JSON
-                </v-btn>
-              </v-btn-toggle>
-            </div>
-
-            <!-- JSON view -->
-            <pre
-              v-if="selectedView === 'json'"
-              class="json-content bg-surface rounded border"
-              :style="{'height': fullHeightMainWithTabs}"
-            >
-              <code v-html="selectedAssetJsonFormatted" />
-            </pre>
-
-            <!-- Tree view -->
-            <div
-              v-else
-              class="rounded border overflow-y-auto pa-4"
-              :style="{'height': fullHeightMainWithTabs, 'background-color': '#f5f5f5'}"
-            >
-              <JsonTreeView :data="selectedAsset" />
-            </div>
+            <JSONPreview
+              :height="fullHeightMainJsonPreview"
+              :json-content="selectedAsset"
+              title="EDC Asset"
+            />
           </template>
 
         </v-container>
@@ -339,9 +306,7 @@
 </template>
 
 <script lang="ts" setup>
-  import Prism from 'prismjs'
   import { useTheme } from 'vuetify'
-  import JsonTreeView from '@/components/UIComponents/JsonTreeView.vue'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import CreateAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetDialog.vue'
   import CreateAssetFromTemplateDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetFromTemplateDialog.vue'
@@ -350,8 +315,6 @@
   import UpdateAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/UpdateAssetDialog.vue'
   import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
-  import { formatJSON } from '@/utils/JsonUtils'
-  import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
 
   // Extend the ComponentPublicInstance type to include scrollToIndex
   interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -372,15 +335,14 @@
   const searchQuery = ref('')
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Full height - header - tabs - footer - border
   const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
-  const fullHeightMainWithTabs = ref('calc(100vh - 64px - 48px - 40px - 32px - 44px - 2px)') // Full height - header - tabs - footer - padding - view toggle - border
-  const selectedView = ref<'json' | 'tree'>('json')
+  const fullHeightMainJsonPreview = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px - 64px - 32px)') // Full height - header - tabs - footer - padding - border - JSON
   const assetList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Asset data
   const assetListUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Asset data before filtering
   const listLoading = ref(false) // Variable to store if the AAS List is loading
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null) // Reference to the Virtual Scroll Component
   const selectedAsset = ref({} as any)
-  const selectedAssetJson = ref<string>('')
-  const selectedAssetJsonFormatted = ref<string>('')
+  // const selectedAssetJson = ref<string>('')
+  // const selectedAssetJsonFormatted = ref<string>('')
   const createAssetDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
   const createAssetsAasSmsDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
   const createAssetFromTemplateDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
@@ -403,27 +365,27 @@
     },
   )
 
-  watch(
-    () => selectedAsset.value,
-    () => {
-      try {
-        selectedAssetJson.value = JSON.stringify(selectedAsset.value)
-        const formatted = formatJSON(selectedAssetJson.value)
+  // watch(
+  //   () => selectedAsset.value,
+  //   () => {
+  //     try {
+  //       selectedAssetJson.value = JSON.stringify(selectedAsset.value)
+  //       const formatted = formatJSON(selectedAssetJson.value)
 
-        // Apply syntax highlighting using Prism
-        if (Prism && Prism.highlight) {
-          selectedAssetJsonFormatted.value = Prism.highlight(formatted, getPrismJsonLanguage(), 'json')
-        } else {
-          selectedAssetJsonFormatted.value = formatted
-          console.warn('Prism highlighting not available')
-        }
-      } catch (error_) {
-        console.error('Error highlighting JSON:', error_)
-        selectedAssetJsonFormatted.value = selectedAssetJson.value || ''
-      }
-    },
-    { deep: true },
-  )
+  //       // Apply syntax highlighting using Prism
+  //       if (Prism && Prism.highlight) {
+  //         selectedAssetJsonFormatted.value = Prism.highlight(formatted, getPrismJsonLanguage(), 'json')
+  //       } else {
+  //         selectedAssetJsonFormatted.value = formatted
+  //         console.warn('Prism highlighting not available')
+  //       }
+  //     } catch (error_) {
+  //       console.error('Error highlighting JSON:', error_)
+  //       selectedAssetJsonFormatted.value = selectedAssetJson.value || ''
+  //     }
+  //   },
+  //   { deep: true },
+  // )
 
   onMounted(() => {
     initialize()
@@ -481,7 +443,7 @@
     // Reload the asset list
     await initialize()
 
-    // Re-select the updated asset so the JSON/Tree view reflects the new data
+    // Re-select the updated asset so the JSON view reflects the new data
     if (previouslySelectedId) {
       const updatedAsset = assetList.value.find((a: any) => a['@id'] === previouslySelectedId)
       if (updatedAsset) {
@@ -558,52 +520,3 @@
   }
 
 </script>
-
-<style scoped>
-    :deep(.token) {
-        line-height: 21px;
-    }
-
-    :deep(code) {
-        line-height: 21px;
-    }
-
-    .json-content {
-        margin: 0;
-        padding: 0 20px 0 20px;
-        word-wrap: normal;
-        font-size: 14px;
-        line-height: 21px;
-        flex-grow: 0;
-        overflow: auto;
-        background-color: #f5f5f5;
-    }
-
-    .json-content code {
-        display: block;
-    }
-
-    :deep(.token.punctuation) {
-        color: #999;
-    }
-
-    :deep(.token.property) {
-        color: #905;
-    }
-
-    :deep(.token.string) {
-        color: #690;
-    }
-
-    :deep(.token.number) {
-        color: #07a;
-    }
-
-    :deep(.token.boolean) {
-        color: #07a;
-    }
-
-    :deep(.token.null) {
-        color: #999;
-    }
-</style>

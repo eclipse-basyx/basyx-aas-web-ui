@@ -93,7 +93,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { nextTick } from 'vue'
   import { type Asset, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import { formatJSON } from '@/utils/JsonUtils'
 

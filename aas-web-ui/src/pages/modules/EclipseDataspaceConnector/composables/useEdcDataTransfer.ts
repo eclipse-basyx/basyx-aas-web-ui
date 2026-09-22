@@ -1,5 +1,4 @@
 import type { Ref } from 'vue'
-import { computed } from 'vue'
 import { type ContractRequest, type DatasetRequest, type TransferRequest, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
 import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
 

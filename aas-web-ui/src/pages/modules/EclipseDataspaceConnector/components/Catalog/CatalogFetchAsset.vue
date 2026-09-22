@@ -8,25 +8,7 @@
         :style="{ height: fullHeight }"
       >
 
-        <div class="d-flex justify-space-between align-center mt-4 mx-4 mb-2">
-          <v-btn-toggle
-            v-model="selectedAssetView"
-            density="compact"
-            mandatory
-            rounded="lg"
-            variant="outlined"
-          >
-            <v-btn value="tree">
-              <v-icon start>mdi-file-tree-outline</v-icon>
-              Tree
-            </v-btn>
-
-            <v-btn value="json">
-              <v-icon start>mdi-code-json</v-icon>
-              JSON
-            </v-btn>
-          </v-btn-toggle>
-
+        <div class="d-flex justify-end align-center mt-4 mx-4 mb-2">
           <v-list-item-title class="text-body-large pr-2 d-flex align-center">
             <template v-if="isValidAAS || isValidSubmodel">
               <v-btn
@@ -62,25 +44,13 @@
           </v-list-item-title>
         </div>
 
-        <!-- Asset JSON view -->
         <pre
-          v-if="selectedAssetView === 'json'"
           class="json-content mt-0 mb-4 mx-4 bg-surface rounded border"
           style="min-height: 63px"
           :style="{ 'height': heightAssetJson }"
         >
           <code class="mx-5" v-html="assetJsonFormatted" />
         </pre>
-
-        <!-- Asset Tree view -->
-        <div
-          v-else
-          class="rounded border overflow-y-auto mt-0 mb-4 mx-4 pa-4"
-          style="min-height: 63px; background-color: #f5f5f5"
-          :style="{ 'height': heightAssetJson }"
-        >
-          <JsonTreeView :data="assetJsonParsed" />
-        </div>
 
       </v-container>
     </v-main>
@@ -89,19 +59,12 @@
 
 <script lang="ts" setup>
   import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
-  import Prism from 'prismjs'
-  import { computed, ref, watch } from 'vue'
-  import JsonTreeView from '@/components/UIComponents/JsonTreeView.vue'
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { useEdcDataTransfer } from '@/pages/modules/EclipseDataspaceConnector/composables/useEdcDataTransfer'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
-  import { formatJSON } from '@/utils/JsonUtils'
-  import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
-  import 'prismjs/themes/prism.css'
-
   // Props
   const props = defineProps<{
     selectedBusinessPartner: any
@@ -127,7 +90,6 @@
   const assetJsonParsed = ref<unknown>({})
   const cancelled = ref(false)
   const importingInProgress = ref<boolean>(false)
-  const selectedAssetView = ref<'json' | 'tree'>('json')
   const selectedDestinationInfrastructureId = ref<string | null>(infrastructureStore.getSelectedInfrastructureId)
   const heightAssetJson = ref(`calc(${props.fullHeight} - 60px - 16px)`)
 

@@ -64,15 +64,11 @@
           </div>
 
           <!-- Contract Preview -->
-          <div>
-            <p class="text-caption text-medium-emphasis font-weight-bold mb-2">
-              Contract Preview:
-            </p>
-
-            <pre class="json-content bg-surface rounded border overflow-x-auto" style="max-height: 500px; overflow-y: auto">
-              <code v-html="previewJsonFormatted" />
-            </pre>
-          </div>
+          <JSONPreview
+            class="mt-4"
+            :json-content="jsonContent"
+            :title="`EDC Asset`"
+          />
         </v-form>
       </v-card-text>
 
@@ -100,13 +96,10 @@
 </template>
 
 <script lang="ts" setup>
-  import Prism from 'prismjs'
   import { type ContractDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import ContractTemplate_v0_9 from '@/pages/modules/EclipseDataspaceConnector/data/contracts/contract___tractux-x_edc_v0.9.json'
   import ContractTemplate_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/contracts/contract___tractux-x_edc_v0.12.1.json'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
-  import { formatJSON } from '@/utils/JsonUtils'
-  import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
 
   const props = defineProps<{
     modelValue: boolean
@@ -161,23 +154,9 @@
     })
   })
 
-  const previewJsonFormatted = computed(() => {
-    try {
-      let contractJson = JSON.stringify(activeContractTemplate.value)
-      contractJson = replacePlaceholders(contractJson)
-
-      const contract = JSON.parse(contractJson)
-      const formatted = formatJSON(JSON.stringify(contract))
-
-      if (Prism && Prism.highlight) {
-        return Prism.highlight(formatted, getPrismJsonLanguage(), 'json')
-      }
-      return formatted
-    } catch (error_) {
-      console.error('Error highlighting JSON:', error_)
-      return JSON.stringify(activeContractTemplate.value, null, 2)
-    }
-  })
+  const jsonContent = computed(() =>
+    replacePlaceholders(JSON.stringify(activeContractTemplate.value)),
+  )
 
   // Watchers
   watch(

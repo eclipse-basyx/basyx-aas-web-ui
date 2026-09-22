@@ -57,15 +57,13 @@
           </div>
 
           <!-- Policy Preview -->
-          <div v-if="selectedTemplate">
-            <p class="text-caption text-medium-emphasis font-weight-bold mb-2">
-              Policy Preview:
-            </p>
-
-            <pre class="json-content bg-surface rounded border overflow-x-auto" style="max-height: 500px; overflow-y: auto">
-              <code v-html="previewJsonFormatted" />
-            </pre>
-          </div>
+          <JSONPreview
+            v-if="selectedTemplate"
+            class="mt-4"
+            icon="mdi-shield-check-outline"
+            :json-content="jsonContent"
+            :title="`Policy`"
+          />
         </v-form>
       </v-card-text>
 
@@ -93,7 +91,6 @@
 </template>
 
 <script lang="ts" setup>
-  import Prism from 'prismjs'
   import { type PolicyDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import AccessBpnPolicy_v0_9 from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_bpn_policy___tractus-x_edc_v0.9.json'
   import AccessBpnPolicy_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_bpn_policy___tractus-x_edc_v0.12.1.json'
@@ -108,8 +105,6 @@
   import UsagePolicyRwxAasService_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_rwx_aas_service___tractus-x_edc_v0.12.1.json'
   import UsagePolicyRwXPush_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_rwx_push___tractus-x_edc_v0.12.1.json'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
-  import { formatJSON } from '@/utils/JsonUtils'
-  import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
 
   const props = defineProps<{
     modelValue: boolean
@@ -222,27 +217,13 @@
     })
   })
 
-  const previewJsonFormatted = computed(() => {
+  const jsonContent = computed(() => {
     if (!selectedTemplate.value) return ''
 
     const template = policyTemplates.value.find(t => t.value === selectedTemplate.value)
     if (!template) return ''
 
-    try {
-      let policyJson = JSON.stringify(template.policy)
-      policyJson = replacePlaceholders(policyJson)
-
-      const policy = JSON.parse(policyJson)
-      const formatted = formatJSON(JSON.stringify(policy))
-
-      if (Prism && Prism.highlight) {
-        return Prism.highlight(formatted, getPrismJsonLanguage(), 'json')
-      }
-      return formatted
-    } catch (error_) {
-      console.error('Error highlighting JSON:', error_)
-      return JSON.stringify(template.policy, null, 2)
-    }
+    return replacePlaceholders(JSON.stringify(template.policy))
   })
 
   // Watchers

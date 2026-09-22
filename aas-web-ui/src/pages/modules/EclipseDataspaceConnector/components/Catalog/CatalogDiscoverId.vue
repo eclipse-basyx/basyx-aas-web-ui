@@ -17,25 +17,7 @@
             class="overflow-y-auto"
             :style="{ flex: '1 1 50%', 'min-width': '0', height: fullHeight }"
           >
-            <div class="d-flex justify-space-between align-center mt-4 mx-4 mb-2">
-              <v-btn-toggle
-                v-model="selectedAasDescriptorView"
-                density="compact"
-                mandatory
-                rounded="lg"
-                variant="outlined"
-              >
-                <v-btn value="tree">
-                  <v-icon start>mdi-file-tree-outline</v-icon>
-                  Tree
-                </v-btn>
-
-                <v-btn value="json">
-                  <v-icon start>mdi-code-json</v-icon>
-                  JSON
-                </v-btn>
-              </v-btn-toggle>
-
+            <div class="d-flex justify-end align-center mt-4 mx-4 mb-2">
               <v-list-item-title class="text-body-large d-flex align-center">
 
                 <v-spacer />
@@ -107,25 +89,13 @@
               </v-list-item-title>
             </div>
 
-            <!-- Asset JSON view -->
             <pre
-              v-if="selectedAasDescriptorView === 'json'"
               class="json-content mt-0 mb-4 mx-4 bg-surface rounded border"
               style="min-height: 63px"
               :style="{ 'height': heightAssetJson }"
             >
               <code class="mx-5" v-html="aasDescriptorJsonFormatted" />
             </pre>
-
-            <!-- Asset Tree view -->
-            <div
-              v-else
-              class="rounded border overflow-y-auto mt-0 mb-4 mx-4 pa-4"
-              style="min-height: 63px; background-color: #f5f5f5"
-              :style="{ 'height': heightAssetJson }"
-            >
-              <JsonTreeView :data="aasDescriptorJsonParsed" />
-            </div>
           </div>
 
           <v-divider vertical />
@@ -134,25 +104,7 @@
             class="overflow-y-auto"
             :style="{ flex: '1 1 50%', 'min-width': '0', height: fullHeight }"
           >
-            <div class="d-flex justify-space-between align-center mt-4 mx-4 mb-2">
-              <v-btn-toggle
-                v-model="selectedAasView"
-                density="compact"
-                mandatory
-                rounded="lg"
-                variant="outlined"
-              >
-                <v-btn value="tree">
-                  <v-icon start>mdi-file-tree-outline</v-icon>
-                  Tree
-                </v-btn>
-
-                <v-btn value="json">
-                  <v-icon start>mdi-code-json</v-icon>
-                  JSON
-                </v-btn>
-              </v-btn-toggle>
-
+            <div class="d-flex justify-end align-center mt-4 mx-4 mb-2">
               <v-list-item-title class="text-body-large pr-2 d-flex align-center">
                 <template v-if="isValidAasEnvironment">
                   <v-btn
@@ -194,25 +146,13 @@
               </v-list-item-title>
             </div>
 
-            <!-- Asset JSON view -->
             <pre
-              v-if="selectedAasView === 'json'"
               class="json-content mt-0 mb-4 mx-4 bg-surface rounded border"
               style="min-height: 63px"
               :style="{ 'height': heightAssetJson }"
             >
               <code class="mx-5" v-html="aasJsonFormatted" />
             </pre>
-
-            <!-- Asset Tree view -->
-            <div
-              v-else
-              class="rounded border overflow-y-auto mt-0 mb-4 mx-4 pa-4"
-              style="min-height: 63px; background-color: #f5f5f5"
-              :style="{ 'height': heightAssetJson }"
-            >
-              <JsonTreeView :data="aasJsonParsed" />
-            </div>
 
           </div>
         </div>
@@ -225,8 +165,6 @@
   import type { AASDescriptor } from '@/types/Descriptors'
   import { types as aasTypes, jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { BaSyxEnvironment } from 'basyx-typescript-sdk'
-  import Prism from 'prismjs'
-  import { ref } from 'vue'
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { useEdcDataTransfer } from '@/pages/modules/EclipseDataspaceConnector/composables/useEdcDataTransfer'
@@ -234,9 +172,6 @@
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { base64Encode } from '@/utils/EncodeDecodeUtils'
-  import { formatJSON } from '@/utils/JsonUtils'
-  import { getPrismJsonLanguage } from '@/utils/prismJsonLanguage'
-  import 'prismjs/themes/prism.css'
 
   // Props
   const props = defineProps<{
@@ -264,9 +199,6 @@
   const aasJson = ref<string>('')
   const aasJsonFormatted = ref<string>('')
   const aasJsonParsed = ref<unknown>({})
-
-  const selectedAasDescriptorView = ref<'json' | 'tree'>('json')
-  const selectedAasView = ref<'json' | 'tree'>('json')
 
   const heightAssetJson = ref(`calc(${props.fullHeight} - 60px - 16px)`)
 
