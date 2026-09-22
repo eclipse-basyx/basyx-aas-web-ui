@@ -65,9 +65,7 @@
 
 <script lang="ts" setup>
   import { type Asset, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
-  import AssetTemplate_v0_9 from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.9.json'
   import AssetTemplate_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.12.1.json'
-  import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
 
   const props = defineProps<{
     modelValue: boolean
@@ -78,9 +76,6 @@
     (event: 'assets-created', assetId: string): void
   }>()
 
-  // Stores
-  const edcStore = useEdcStore()
-
   // Composables
   const { createAsset: createAssetInEdc } = useEdcClient()
 
@@ -90,9 +85,7 @@
   const placeholderValues = ref<Record<string, string>>({})
 
   // Computed properties
-  const activeAssetTemplate = computed(() =>
-    edcStore.getEdcType === 'Tractus-X EDC v0.12.1' ? AssetTemplate_v0_12_1 : AssetTemplate_v0_9,
-  )
+  const activeAssetTemplate = computed(() => AssetTemplate_v0_12_1)
 
   const placeholders = computed(() => {
     const templateStr = JSON.stringify(activeAssetTemplate.value)

@@ -8,7 +8,6 @@ export const useEdcStore = defineStore('edcStore', () => {
 
   // Getters
   const getEdcConfig = computed(() => config.value)
-  const getEdcType = computed(() => config.value?.type || '')
   const getControlplaneEndpoint = computed(() => config.value?.controlplane.endpoint || '')
   const getControlplaneMgmtEndpoint = computed(() => config.value?.controlplane.managementEndpoint || '')
   const getControlplaneDspEndpoint = computed(() => config.value?.controlplane.dspEndpoint || '')
@@ -53,12 +52,6 @@ export const useEdcStore = defineStore('edcStore', () => {
 
   function clearConfig (): void {
     config.value = null
-  }
-
-  function setEdcType (type: string): void {
-    if (config.value) {
-      config.value.type = type as any
-    }
   }
 
   function setControlplaneEndpoint (endpoint: string): void {
@@ -127,7 +120,6 @@ export const useEdcStore = defineStore('edcStore', () => {
   return {
     // Getters
     getEdcConfig,
-    getEdcType,
     getControlplaneEndpoint,
     getControlplaneMgmtEndpoint,
     getControlplaneDspEndpoint,
@@ -140,7 +132,6 @@ export const useEdcStore = defineStore('edcStore', () => {
     // Actions
     saveConfig,
     clearConfig,
-    setEdcType,
     setControlplaneEndpoint,
     setControlplaneMgmtEndpoint,
     setControlplaneDspEndpoint,

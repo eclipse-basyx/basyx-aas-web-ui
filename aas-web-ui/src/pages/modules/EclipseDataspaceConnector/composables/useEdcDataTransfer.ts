@@ -37,9 +37,6 @@ export function useEdcDataTransfer () {
   // Stores
   const edcStore = useEdcStore()
 
-  // Computed
-  const isEdcV0_12_1 = computed(() => edcStore.getEdcType === 'Tractus-X EDC v0.12.1')
-
   const CANCELLED: DataTransferEndpoint = { endpoint: '', headers: new Headers() }
 
   function abort (callbacks: DataTransferCallbacks, msg: string): DataTransferEndpoint {
@@ -245,9 +242,9 @@ export function useEdcDataTransfer () {
       },
       '@type': 'DatasetRequest',
       '@id': assetId,
-      'counterPartyAddress': providerDspEndpoint + (isEdcV0_12_1.value && !providerDspEndpoint.endsWith('/2025-1') ? '/2025-1' : ''),
-      'counterPartyId': (isEdcV0_12_1.value ? 'did:web:' + edcStore.getDataspaceSsiHost + ':' : '') + providerBpn,
-      'protocol': isEdcV0_12_1.value ? 'dataspace-protocol-http:2025-1' : 'dataspace-protocol-http',
+      'counterPartyAddress': providerDspEndpoint + (providerDspEndpoint.endsWith('/2025-1') ? '' : '/2025-1'),
+      'counterPartyId': 'did:web:' + edcStore.getDataspaceSsiHost + ':' + providerBpn,
+      'protocol': 'dataspace-protocol-http:2025-1',
     }
 
     const catalogDataset = await getCatalogDataset(datasetRequest)
@@ -322,28 +319,23 @@ export function useEdcDataTransfer () {
 
     const contractRequest: ContractRequest = {
       '@context': [
-        ...(isEdcV0_12_1.value
-          ? [
-              'https://w3id.org/dspace/2025/1/odrl-profile.jsonld',
-              'https://w3id.org/catenax/2025/9/policy/context.jsonld',
-            ]
-          : [
-              // eslint-disable-next-line unicorn/prefer-https -- exact identifier, not fetch URL.
-              'http://www.w3.org/ns/odrl.jsonld',
-            ]),
+
+        'https://w3id.org/dspace/2025/1/odrl-profile.jsonld',
+        'https://w3id.org/catenax/2025/9/policy/context.jsonld',
+
         {
           '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
         },
       ],
       '@type': 'ContractRequest',
-      'counterPartyAddress': providerDspEndpoint + (isEdcV0_12_1.value && !providerDspEndpoint.endsWith('/2025-1') ? '/2025-1' : ''),
-      'protocol': isEdcV0_12_1.value ? 'dataspace-protocol-http:2025-1' : 'dataspace-protocol-http',
+      'counterPartyAddress': providerDspEndpoint + (providerDspEndpoint.endsWith('/2025-1') ? '' : '/2025-1'),
+      'protocol': 'dataspace-protocol-http:2025-1',
       'policy': {
         '@id': policy['@id'],
         '@type': 'Offer',
-        'assigner': (isEdcV0_12_1.value ? 'did:web:' + edcStore.getDataspaceSsiHost + ':' : '') + providerBpn,
+        'assigner': 'did:web:' + edcStore.getDataspaceSsiHost + ':' + providerBpn,
         'target': providerAssetId,
-        'permission': isEdcV0_12_1.value ? usePermission || defaultPermission : [],
+        'permission': usePermission || defaultPermission,
         'prohibition': [],
         'obligation': [],
       },
@@ -359,10 +351,10 @@ export function useEdcDataTransfer () {
         '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
       },
       '@type': 'TransferRequest',
-      'counterPartyAddress': providerDspEndpoint + (isEdcV0_12_1.value && !providerDspEndpoint.endsWith('/2025-1') ? '/2025-1' : ''),
-      'counterPartyId': (isEdcV0_12_1.value ? 'did:web:' + edcStore.getDataspaceSsiHost + ':' : '') + providerBpn,
+      'counterPartyAddress': providerDspEndpoint + (providerDspEndpoint.endsWith('/2025-1') ? '' : '/2025-1'),
+      'counterPartyId': 'did:web:' + edcStore.getDataspaceSsiHost + ':' + providerBpn,
       'contractId': contractAgreementId,
-      'protocol': isEdcV0_12_1.value ? 'dataspace-protocol-http:2025-1' : 'dataspace-protocol-http',
+      'protocol': 'dataspace-protocol-http:2025-1',
       'assetId': providerAssetId,
       'transferType': 'HttpData-PULL',
     }

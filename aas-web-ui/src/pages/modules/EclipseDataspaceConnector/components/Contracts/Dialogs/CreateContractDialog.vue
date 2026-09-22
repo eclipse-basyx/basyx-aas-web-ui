@@ -97,9 +97,7 @@
 
 <script lang="ts" setup>
   import { type ContractDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
-  import ContractTemplate_v0_9 from '@/pages/modules/EclipseDataspaceConnector/data/contracts/contract___tractux-x_edc_v0.9.json'
   import ContractTemplate_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/contracts/contract___tractux-x_edc_v0.12.1.json'
-  import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
 
   const props = defineProps<{
     modelValue: boolean
@@ -109,9 +107,6 @@
     (event: 'update:model-value', value: boolean): void
     (event: 'contract-created', contractId: string): void
   }>()
-
-  // Stores
-  const edcStore = useEdcStore()
 
   // Composables
   const { createContractDefinition: createContractInEdc, queryAssets, queryPolicyDefinitions } = useEdcClient()
@@ -126,9 +121,7 @@
   const policiesLoading = ref(false)
 
   // Computed properties
-  const activeContractTemplate = computed(() =>
-    edcStore.getEdcType === 'Tractus-X EDC v0.12.1' ? ContractTemplate_v0_12_1 : ContractTemplate_v0_9,
-  )
+  const activeContractTemplate = computed(() => ContractTemplate_v0_12_1)
 
   const placeholders = computed(() => {
     const templateStr = JSON.stringify(activeContractTemplate.value)

@@ -11,12 +11,12 @@
       <v-card-text>
         <v-row align="center">
           <v-col cols="12" md="5">
-            <v-select
-              v-model="edcType"
+            <v-text-field
               flat
               hide-details="auto"
-              :items="edcTypeItems"
               label="EDC Type"
+              model-value="Tractus-X EDC v0.12.1"
+              readonly
               variant="solo-filled"
             >
               <template v-if="selectedEdcMeta" #append-inner>
@@ -32,7 +32,7 @@
                   <v-tooltip activator="parent" location="bottom">{{ selectedEdcMeta.id }} on GitHub</v-tooltip>
                 </v-btn>
               </template>
-            </v-select>
+            </v-text-field>
           </v-col>
 
           <v-col v-if="selectedEdcMeta" cols="12" md="6" offset="1">
@@ -88,7 +88,7 @@
               clearable
               flat
               hide-details="auto"
-              hint="e.g. ssi.dataspace.host (optional for Tractus-X EDC v0.9)"
+              hint="e.g. ssi.dataspace.host"
               label="SSI Host"
               prepend-inner-icon="mdi-web"
               variant="solo-filled"
@@ -412,7 +412,6 @@
   import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
   import edcData from '@/pages/modules/EclipseDataspaceConnector/data/edc/edc.json'
   import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
-  import { EDC_TYPES } from '@/pages/modules/EclipseDataspaceConnector/types/Edc'
 
   // Stores
   const edcStore = useEdcStore()
@@ -424,17 +423,8 @@
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Full height - header - tabs - footer - border
 
   const businessPartners = ref<Array<any>>([])
-  const edcType = ref<null | (typeof EDC_TYPES)[number]>(
-    EDC_TYPES.includes(edcStore.getEdcType as (typeof EDC_TYPES)[number])
-      ? (edcStore.getEdcType as (typeof EDC_TYPES)[number])
-      : null,
-  )
-  const edcTypeItems = EDC_TYPES
-
   // Computed
-  const selectedEdcMeta = computed(() =>
-    edcType.value ? (edcData as any[]).find(e => e.id === edcType.value) ?? null : null,
-  )
+  const selectedEdcMeta = computed(() => (edcData as any[])[0] ?? null)
   const edcControlplaneApiEndpoint = ref(edcStore.getControlplaneEndpoint)
   const edcControlplaneDspEndpoint = ref(edcStore.getControlplaneDspEndpoint)
   const edcDataspaceSsiHost = ref(edcStore.getDataspaceSsiHost)
@@ -532,15 +522,6 @@
 
   // Watchers
   watch(
-    () => edcStore.getEdcType,
-    value => {
-      edcType.value = EDC_TYPES.includes(value as (typeof EDC_TYPES)[number])
-        ? (value as (typeof EDC_TYPES)[number])
-        : null
-    },
-  )
-
-  watch(
     () => edcStore.getControlplaneEndpoint,
     value => {
       edcControlplaneApiEndpoint.value = value
@@ -592,16 +573,6 @@
     () => edcStore.getControlplaneTokenClientSecret,
     value => {
       edcControlplaneTokenClientSecret.value = value
-    },
-  )
-
-  // Watchers to write back to store
-  watch(
-    () => edcType.value,
-    value => {
-      if (value) {
-        edcStore.setEdcType(value)
-      }
     },
   )
 

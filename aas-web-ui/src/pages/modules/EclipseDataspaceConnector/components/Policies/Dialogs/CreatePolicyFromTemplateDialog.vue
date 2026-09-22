@@ -92,11 +92,8 @@
 
 <script lang="ts" setup>
   import { type PolicyDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
-  import AccessBpnPolicy_v0_9 from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_bpn_policy___tractus-x_edc_v0.9.json'
   import AccessBpnPolicy_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_bpn_policy___tractus-x_edc_v0.12.1.json'
-  import AccessPolicy_v0_9 from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_policy___tractus-x_edc_v0.9.json'
   import AccessPolicy_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_policy___tractus-x_edc_v0.12.1.json'
-  import UsagePolicy_v0_9 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy___tractus-x_edc_v0.9.json'
   import UsagePolicy_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy___tractus-x_edc_v0.12.1.json'
   import UsagePolicyCxDtr_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_cx_digitaltwin_registry___tractus-x_edc_v0.12.1.json'
   import UsagePolicyCxDppDbp_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_cx_dpp_dbp___tractus-x_edc_v0.12.1.json'
@@ -104,7 +101,6 @@
   import UsagePolicyCxSmService_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_cx_sm_service___tractus-x_edc_v0.12.1.json'
   import UsagePolicyRwxAasService_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_rwx_aas_service___tractus-x_edc_v0.12.1.json'
   import UsagePolicyRwXPush_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_rwx_push___tractus-x_edc_v0.12.1.json'
-  import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
 
   const props = defineProps<{
     modelValue: boolean
@@ -114,9 +110,6 @@
     (event: 'update:model-value', value: boolean): void
     (event: 'policy-created', policyId: string): void
   }>()
-
-  // Stores
-  const edcStore = useEdcStore()
 
   // Composables
   const { createPolicyDefinition: createPolicyDefinitionInEdc } = useEdcClient()
@@ -128,63 +121,61 @@
   const placeholderValues = ref<Record<string, string>>({})
 
   // Computed properties
-  const isEdcV0_12_1 = computed(() => edcStore.getEdcType === 'Tractus-X EDC v0.12.1')
-
   // Policy Templates
   const policyTemplates = computed(() => [
     {
       value: 'access',
       name: 'Access Policy',
       description: 'Basic policy allowing usage with unrestricted access',
-      policy: isEdcV0_12_1.value ? AccessPolicy_v0_12_1 : AccessPolicy_v0_9,
+      policy: AccessPolicy_v0_12_1,
     },
     {
       value: 'usage',
       name: 'Usage Policy',
       description: 'Policy with permissions, prohibitions, and obligations for complex usage scenarios',
-      policy: isEdcV0_12_1.value ? UsagePolicy_v0_12_1 : UsagePolicy_v0_9,
+      policy: UsagePolicy_v0_12_1,
     },
     {
       value: 'usageCxPcf',
       name: 'Usage Policy for PCF Use Case (Catena-X)',
       description: 'Policy with permissions for the PCF Use Case (Catena-X)',
-      policy: isEdcV0_12_1.value ? UsagePolicyCxPcf_v0_12_1 : null,
+      policy: UsagePolicyCxPcf_v0_12_1,
     },
     {
       value: 'usageCxDppDbp',
       name: 'Usage Policy for PCF DPP/DBP Use Case (Catena-X)',
       description: 'Policy with permissions for the DPP/DBP Use Case (Catena-X)',
-      policy: isEdcV0_12_1.value ? UsagePolicyCxDppDbp_v0_12_1 : null,
+      policy: UsagePolicyCxDppDbp_v0_12_1,
     },
     {
       value: 'usageCxDtr',
       name: 'Usage Policy for Digital Twin Registry (Catena-X)',
       description: 'Policy with permissions for the Digital Twin Registry usage (Catena-X)',
-      policy: isEdcV0_12_1.value ? UsagePolicyCxDtr_v0_12_1 : null,
+      policy: UsagePolicyCxDtr_v0_12_1,
     },
     {
       value: 'usageCxSmService',
       name: 'Usage Policy for Submodel Service (Catena-X)',
       description: 'Policy with permissions for the Submodel Service usage (Catena-X)',
-      policy: isEdcV0_12_1.value ? UsagePolicyCxSmService_v0_12_1 : null,
+      policy: UsagePolicyCxSmService_v0_12_1,
     },
     {
       value: 'usageRwxAasService',
       name: 'Usage Policy for AAS Service (Catena-X)',
       description: 'Policy with permissions for the AAS Service usage (Railway-X)',
-      policy: isEdcV0_12_1.value ? UsagePolicyRwxAasService_v0_12_1 : null,
+      policy: UsagePolicyRwxAasService_v0_12_1,
     },
     {
       value: 'usageRwXPush',
       name: 'Usage Policy for Push Endpoint (Railway-X)',
       description: 'Policy with permissions for the Push Endpoint usage (Railway-X)',
-      policy: isEdcV0_12_1.value ? UsagePolicyRwXPush_v0_12_1 : null,
+      policy: UsagePolicyRwXPush_v0_12_1,
     },
     {
       value: 'bpn',
       name: 'Access BPN Policy',
       description: 'Policy restricting access based on Business Partner Number (BPN) constraint',
-      policy: isEdcV0_12_1.value ? AccessBpnPolicy_v0_12_1 : AccessBpnPolicy_v0_9,
+      policy: AccessBpnPolicy_v0_12_1,
     },
   ].filter(template => template.policy !== null))
 

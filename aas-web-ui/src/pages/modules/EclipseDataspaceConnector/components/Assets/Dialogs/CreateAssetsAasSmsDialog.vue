@@ -540,9 +540,7 @@
   // import { useAASRegistryClient } from '@/composables/Client/AASRegistryClient'
   // import { useSMRegistryClient } from '@/composables/Client/SMRegistryClient'
   import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
-  import assetTemplate_v0_9 from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.9.json'
   import assetTemplate_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.12.1.json'
-  import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { useAASStore } from '@/store/AASDataStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   // import { extractEndpointHref, getEndpointProtocol } from '@/utils/AAS/DescriptorUtils'
@@ -571,8 +569,6 @@
   // Stores
   const navigationStore = useNavigationStore()
   const aasStore = useAASStore()
-  const edcStore = useEdcStore()
-
   // Composables
   const { createAsset } = useEdcClient()
   const { fetchAasShellListPage, fetchAasById, fetchAasSmListById } = useAASHandling()
@@ -663,9 +659,7 @@
 
   const selectedAAS = computed(() => aasStore.getSelectedAAS) // Get the selected AAS from Store
 
-  const activeAssetTemplate = computed(() =>
-    edcStore.getEdcType === 'Tractus-X EDC v0.12.1' ? assetTemplate_v0_12_1 : assetTemplate_v0_9,
-  )
+  const activeAssetTemplate = computed(() => assetTemplate_v0_12_1)
 
   const isSearchLimited = computed(() => aasSearchValue.value.trim() !== '' && hasMorePages.value)
 

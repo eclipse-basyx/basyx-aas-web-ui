@@ -51,7 +51,7 @@
               <v-sheet border>
                 <v-list class="py-0" density="compact">
                   <!-- Create Policy Dialog -->
-                  <v-tooltip v-if="isEdcV0_12_1" location="bottom" open-delay="600">
+                  <v-tooltip location="bottom" open-delay="600">
                     <template #activator="{ props }">
                       <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="createPolicyDialog = true">
                         <template #prepend>
@@ -340,7 +340,6 @@
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
 
   // Computed properties
-  const isEdcV0_12_1 = computed(() => edcStore.getEdcType === 'Tractus-X EDC v0.12.1')
   const isDark = computed(() => theme.global.current.value.dark)
   const primaryColor = computed(() => theme.current.value.colors.primary)
   const copyIconAsRef = computed(() => copyIcon)

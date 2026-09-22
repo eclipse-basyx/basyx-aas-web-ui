@@ -269,18 +269,14 @@
     // },
   ]
 
-  // EDC meta lookup from edc.json based on selected type
-  const selectedEdcMeta = computed(() =>
-    edcStore.getEdcType
-      ? (edcData as any[]).find(e => e.id === edcStore.getEdcType) ?? null
-      : null,
-  )
+  // EDC v0.12.1 is the only supported connector version.
+  const selectedEdcMeta = computed(() => (edcData as any[])[0] ?? null)
 
   // Configuration status derived from store
   const configurationStatus = computed(() => [
     {
-      label: edcStore.getEdcType + (selectedEdcMeta.value?.dataspace_protocol?.version ? ' (DSP ' + selectedEdcMeta.value?.dataspace_protocol?.version + ')' : 'EDC Type'),
-      value: edcStore.getEdcType ? ' ' : '',
+      label: 'Tractus-X EDC v0.12.1' + (selectedEdcMeta.value?.dataspace_protocol?.version ? ' (DSP ' + selectedEdcMeta.value?.dataspace_protocol?.version + ')' : ' EDC Type'),
+      value: ' ',
     },
     {
       label: 'Controlplane Endpoint',

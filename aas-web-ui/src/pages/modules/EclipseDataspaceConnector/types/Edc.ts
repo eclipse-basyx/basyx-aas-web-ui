@@ -1,5 +1,5 @@
 export type EdcSecurityType = 'Key' | 'Token' | 'None'
-export const EDC_TYPES = ['Tractus-X EDC v0.9', 'Tractus-X EDC v0.12.1'] as const
+export const EDC_TYPES = ['Tractus-X EDC v0.12.1'] as const
 export type EdcType = (typeof EDC_TYPES)[number]
 
 export interface EdcControlPlaneConfig {

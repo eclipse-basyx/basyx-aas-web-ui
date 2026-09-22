@@ -423,7 +423,6 @@
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null)
 
   // Computed properties
-  const isEdcV0_12_1 = computed(() => edcStore.getEdcType === 'Tractus-X EDC v0.12.1')
   const businessPartners = computed(
     () => edcStore.getEdcConfig?.businessPartners ?? [],
   )
@@ -503,9 +502,9 @@
           '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
         },
         '@type': 'CatalogRequest',
-        'counterPartyId': (isEdcV0_12_1.value ? 'did:web:' + edcStore.getDataspaceSsiHost + ':' : '') + selectedBusinessPartner.value.bpn,
-        'counterPartyAddress': dspAddress + (isEdcV0_12_1.value && !dspAddress.endsWith('/2025-1') ? '/2025-1' : ''),
-        'protocol': isEdcV0_12_1.value ? 'dataspace-protocol-http:2025-1' : 'dataspace-protocol-http',
+        'counterPartyId': 'did:web:' + edcStore.getDataspaceSsiHost + ':' + selectedBusinessPartner.value.bpn,
+        'counterPartyAddress': dspAddress + (dspAddress.endsWith('/2025-1') ? '' : '/2025-1'),
+        'protocol': 'dataspace-protocol-http:2025-1',
       }
       const catalog = await queryCatalog(catalogRequest)
 
