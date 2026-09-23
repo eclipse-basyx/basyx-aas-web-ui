@@ -92,15 +92,13 @@
 
 <script lang="ts" setup>
   import { type PolicyDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
-  import AccessBpnPolicy_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_bpn_policy___tractus-x_edc_v0.12.1.json'
-  import AccessPolicy_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/access_policy___tractus-x_edc_v0.12.1.json'
-  import UsagePolicy_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy___tractus-x_edc_v0.12.1.json'
-  import UsagePolicyCxDtr_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_cx_digitaltwin_registry___tractus-x_edc_v0.12.1.json'
-  import UsagePolicyCxDppDbp_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_cx_dpp_dbp___tractus-x_edc_v0.12.1.json'
-  import UsagePolicyCxPcf_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_cx_pcf___tractus-x_edc_v0.12.1.json'
-  import UsagePolicyCxSmService_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_cx_sm_service___tractus-x_edc_v0.12.1.json'
-  import UsagePolicyRwxAasService_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_rwx_aas_service___tractus-x_edc_v0.12.1.json'
-  import UsagePolicyRwXPush_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/usage_policy_rwx_push___tractus-x_edc_v0.12.1.json'
+  import AccessPolicy from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_access.json'
+  import AccessPolicyBpn from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_access_bpn.json'
+  import UsagePolicy from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage.json'
+  import UsagePolicyDtr from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage_digitaltwin_registry.json'
+  import UsagePolicyDppDbp from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage_dpp_dbp.json'
+  import UsagePolicyPcf from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage_pcf.json'
+  import UsagePolicySmService from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage_sm_service.json'
 
   const props = defineProps<{
     modelValue: boolean
@@ -127,55 +125,43 @@
       value: 'access',
       name: 'Access Policy',
       description: 'Basic policy allowing usage with unrestricted access',
-      policy: AccessPolicy_v0_12_1,
+      policy: AccessPolicy,
     },
     {
       value: 'usage',
       name: 'Usage Policy',
       description: 'Policy with permissions, prohibitions, and obligations for complex usage scenarios',
-      policy: UsagePolicy_v0_12_1,
+      policy: UsagePolicy,
     },
     {
       value: 'usageCxPcf',
       name: 'Usage Policy for PCF Use Case (Catena-X)',
       description: 'Policy with permissions for the PCF Use Case (Catena-X)',
-      policy: UsagePolicyCxPcf_v0_12_1,
+      policy: UsagePolicyPcf,
     },
     {
       value: 'usageCxDppDbp',
       name: 'Usage Policy for PCF DPP/DBP Use Case (Catena-X)',
       description: 'Policy with permissions for the DPP/DBP Use Case (Catena-X)',
-      policy: UsagePolicyCxDppDbp_v0_12_1,
+      policy: UsagePolicyDppDbp,
     },
     {
       value: 'usageCxDtr',
       name: 'Usage Policy for Digital Twin Registry (Catena-X)',
       description: 'Policy with permissions for the Digital Twin Registry usage (Catena-X)',
-      policy: UsagePolicyCxDtr_v0_12_1,
+      policy: UsagePolicyDtr,
     },
     {
       value: 'usageCxSmService',
       name: 'Usage Policy for Submodel Service (Catena-X)',
       description: 'Policy with permissions for the Submodel Service usage (Catena-X)',
-      policy: UsagePolicyCxSmService_v0_12_1,
-    },
-    {
-      value: 'usageRwxAasService',
-      name: 'Usage Policy for AAS Service (Catena-X)',
-      description: 'Policy with permissions for the AAS Service usage (Railway-X)',
-      policy: UsagePolicyRwxAasService_v0_12_1,
-    },
-    {
-      value: 'usageRwXPush',
-      name: 'Usage Policy for Push Endpoint (Railway-X)',
-      description: 'Policy with permissions for the Push Endpoint usage (Railway-X)',
-      policy: UsagePolicyRwXPush_v0_12_1,
+      policy: UsagePolicySmService,
     },
     {
       value: 'bpn',
       name: 'Access BPN Policy',
       description: 'Policy restricting access based on Business Partner Number (BPN) constraint',
-      policy: AccessBpnPolicy_v0_12_1,
+      policy: AccessPolicyBpn,
     },
   ].filter(template => template.policy !== null))
 

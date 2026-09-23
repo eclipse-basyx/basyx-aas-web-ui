@@ -95,11 +95,9 @@
 
 <script lang="ts" setup>
   import { type Asset, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
-  import AssetTemplateDefault_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/assets/asset___tractus-x_edc_v0.12.1.json'
-  import AssetTemplateDTRegistry_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/assets/templates/digitaltwin_registry_asset___tractus-x_edc_v0.12.1.json'
-  import AssetTemplateAasRepo_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/assets/templates/railway-x_aas_service_asset___tractus-x_edc_v0.12.1.json'
-  import AssetTemplateRailwayXPush_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/assets/templates/railway-x_push_asset___tractus-x_edc_v0.12.1.json'
-  import AssetTemplateSmRepo_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/assets/templates/submodel_service_asset___tractus-x_edc_v0.12.1.json'
+  import AssetTemplateDefault from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset.json'
+  import AssetTemplateDTRegistry from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_digitaltwin_registry.json'
+  import AssetTemplateSmService from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_submodel_service.json'
 
   const props = defineProps<{
     modelValue: boolean
@@ -126,31 +124,19 @@
       value: 'default',
       name: 'Default EDC Asset',
       description: '',
-      asset: AssetTemplateDefault_v0_12_1,
-    },
-    {
-      value: 'railwayXPush',
-      name: 'Railway-X Push Asset',
-      description: 'Allows other participants to push data to this endpoint',
-      asset: AssetTemplateRailwayXPush_v0_12_1,
+      asset: AssetTemplateDefault,
     },
     {
       value: 'digitalTwinRegistry',
       name: 'Digital Twin Registry',
       description: 'The Digital Twin Registry enables the discovery and access of Digital Twins',
-      asset: AssetTemplateDTRegistry_v0_12_1,
+      asset: AssetTemplateDTRegistry,
     },
     {
       value: 'submodelService',
       name: 'Submodel Service',
       description: 'The Submodel service allows to retrieve Submodels of Digital Twins',
-      asset: AssetTemplateSmRepo_v0_12_1,
-    },
-    {
-      value: 'aasService',
-      name: 'AAS Service',
-      description: 'The AAS service allows to retrieve AAS',
-      asset: AssetTemplateAasRepo_v0_12_1,
+      asset: AssetTemplateSmService,
     },
   ].filter(template => template.asset !== null))
 

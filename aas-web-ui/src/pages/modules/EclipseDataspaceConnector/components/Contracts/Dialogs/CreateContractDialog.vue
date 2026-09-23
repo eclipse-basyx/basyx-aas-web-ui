@@ -97,7 +97,7 @@
 
 <script lang="ts" setup>
   import { type ContractDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
-  import ContractTemplate_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/contracts/contract___tractux-x_edc_v0.12.1.json'
+  import ContractTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_contract.json'
 
   const props = defineProps<{
     modelValue: boolean
@@ -121,7 +121,7 @@
   const policiesLoading = ref(false)
 
   // Computed properties
-  const activeContractTemplate = computed(() => ContractTemplate_v0_12_1)
+  const activeContractTemplate = computed(() => ContractTemplate)
 
   const placeholders = computed(() => {
     const templateStr = JSON.stringify(activeContractTemplate.value)

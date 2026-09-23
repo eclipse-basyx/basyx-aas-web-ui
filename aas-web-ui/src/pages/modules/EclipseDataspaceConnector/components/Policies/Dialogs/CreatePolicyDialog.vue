@@ -166,7 +166,7 @@
 
 <script lang="ts" setup>
   import { type PolicyDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
-  import Policy_v0_12_1 from '@/pages/modules/EclipseDataspaceConnector/data/policies/policy___tractus-x_edc_v0.12.1.json'
+  import PolicyTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy.json'
   import { formatJSON } from '@/utils/JsonUtils'
 
   const props = defineProps<{
@@ -215,7 +215,7 @@
   })
 
   const placeholders = computed(() => {
-    const policyStr = JSON.stringify(Policy_v0_12_1)
+    const policyStr = JSON.stringify(PolicyTemplate)
     const matches = policyStr.match(/\{\{([^}]+)\}\}/g) || []
 
     const placeholderList = matches.map(match => {
@@ -308,7 +308,7 @@
   }
 
   function buildPolicy (): PolicyDefinition {
-    let policyJson = JSON.stringify(Policy_v0_12_1)
+    let policyJson = JSON.stringify(PolicyTemplate)
     policyJson = replacePlaceholders(policyJson)
 
     const policy = JSON.parse(policyJson) as PolicyDefinition
@@ -340,7 +340,7 @@
       jsonText.value = formatJSON(JSON.stringify(policy))
       jsonError.value = null
     } catch (error_) {
-      jsonText.value = JSON.stringify(Policy_v0_12_1, null, 2)
+      jsonText.value = JSON.stringify(PolicyTemplate, null, 2)
       jsonError.value = error_ instanceof Error ? error_.message : 'Invalid JSON'
     }
     // Sync DOM content after Vue updates the template
