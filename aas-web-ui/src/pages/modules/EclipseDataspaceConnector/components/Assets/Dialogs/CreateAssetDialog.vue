@@ -6,7 +6,7 @@
   >
     <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">
       <v-card-title class="bg-cardHeader">
-        Create Asset
+        Create EDC Asset
       </v-card-title>
 
       <v-divider />
@@ -35,7 +35,7 @@
           <JSONPreview
             class="mt-4"
             :json-content="jsonContent"
-            :title="`EDC Asset`"
+            title="EDC Asset"
           />
         </v-form>
       </v-card-text>

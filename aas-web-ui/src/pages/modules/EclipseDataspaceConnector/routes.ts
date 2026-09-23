@@ -1,20 +1,11 @@
 export default {
   children: [
     {
-      path: 'edc',
-      name: 'EDC',
-      component: () => import('@/pages/modules/EclipseDataspaceConnector/components/EDC.vue'),
-      meta: {
-        title: 'EDC',
-        icon: 'custom:edcIcon',
-      },
-    },
-    {
       path: 'assets',
-      name: 'Assets',
+      name: 'EDC Assets',
       component: () => import('@/pages/modules/EclipseDataspaceConnector/components/Assets/Assets.vue'),
       meta: {
-        title: 'Assets',
+        title: 'EDC Assets',
         icon: 'mdi-code-json',
       },
     },

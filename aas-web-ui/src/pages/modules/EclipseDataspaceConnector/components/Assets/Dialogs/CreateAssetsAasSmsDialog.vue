@@ -2,7 +2,7 @@
   <v-dialog v-model="createAssetsDialog" height="90%" style="max-width: 1440px" width="90%">
     <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">
       <v-card-title class="bg-cardHeader">
-        Create Assets
+        Create EDC Assets
       </v-card-title>
 
       <v-divider />

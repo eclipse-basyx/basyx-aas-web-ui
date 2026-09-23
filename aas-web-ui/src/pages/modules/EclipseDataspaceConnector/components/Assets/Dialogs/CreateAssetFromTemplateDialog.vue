@@ -6,7 +6,7 @@
   >
     <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">
       <v-card-title class="bg-cardHeader">
-        Create Asset
+        Create EDC Asset
       </v-card-title>
 
       <v-divider />
@@ -21,7 +21,7 @@
             item-title="name"
             item-value="value"
             :items="assetTemplates"
-            label="Select Asset Template"
+            label="Select EDC Asset Template"
             required
             variant="outlined"
           >
@@ -120,11 +120,11 @@
   const placeholderValues = ref<Record<string, string>>({})
 
   // Computed properties
-  // Asset Templates
+  // EDC Asset Templates
   const assetTemplates = computed(() => [
     {
       value: 'default',
-      name: 'Default Asset',
+      name: 'Default EDC Asset',
       description: '',
       asset: AssetTemplateDefault_v0_12_1,
     },

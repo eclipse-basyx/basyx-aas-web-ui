@@ -24,7 +24,7 @@
                 />
               </template>
 
-              <span>Reload Asset List</span>
+              <span>Reload EDC Asset List</span>
             </v-tooltip>
 
             <v-text-field
@@ -32,7 +32,7 @@
               clearable
               density="compact"
               hide-details
-              label="Search for Asset ..."
+              label="Search for EDC Asset ..."
               variant="outlined"
               @update:model-value="filterAssetList"
             />
@@ -51,42 +51,42 @@
               <v-sheet border>
                 <v-list class="py-0" density="compact">
 
-                  <!-- Create Asset Dialog -->
+                  <!-- Create EDC Asset Dialog -->
                   <v-tooltip location="bottom" open-delay="600">
                     <template #activator="{ props }">
                       <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="createAssetDialog = true">
                         <template #prepend>
                           <v-icon size="small">mdi-plus</v-icon>
                         </template>
-                        Create Asset
+                        Create EDC Asset
                       </v-list-item>
                     </template>
 
                     <span>Create a new asset</span>
                   </v-tooltip>
 
-                  <!-- Create Asset AAS/SMs Dialog -->
-                  <v-tooltip location="bottom" open-delay="600">
+                  <!-- Create EDC Asset AAS/SMs Dialog -->
+                  <!-- <v-tooltip location="bottom" open-delay="600">
                     <template #activator="{ props }">
                       <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="createAssetsAasSmsDialog = true">
                         <template #prepend>
                           <v-icon size="small">mdi-plus</v-icon>
                         </template>
-                        Create Assets from AAS/SMs
+                        Create EDC Assets from AAS/SMs
                       </v-list-item>
                     </template>
 
                     <span>Create a new assets from an AAS and its SMs</span>
-                  </v-tooltip>
+                  </v-tooltip> -->
 
-                  <!-- Create Asset from Template Dialog -->
+                  <!-- Create EDC Asset from Template Dialog -->
                   <v-tooltip location="bottom" open-delay="600">
                     <template #activator="{ props }">
                       <v-list-item prepend-icon="mdi-upload" slim v-bind="props" @click="createAssetFromTemplateDialog = true">
                         <template #prepend>
                           <v-icon size="small">mdi-plus</v-icon>
                         </template>
-                        Create Asset from Template
+                        Create EDC Asset from Template
                       </v-list-item>
                     </template>
 
@@ -109,7 +109,7 @@
 
             <template v-else>
 
-              <!-- List of Assets -->
+              <!-- List of EDC Assets -->
               <v-list
                 v-if="assetList.length > 0"
                 class="pa-0"
@@ -124,7 +124,7 @@
                 >
 
                   <template #default="{ item }">
-                    <!-- Single Asset -->
+                    <!-- Single EDC Asset -->
                     <v-list-item
                       :key="item['@id']"
                       :active="isSelected(item)"
@@ -162,7 +162,7 @@
                         open-delay="600"
                         transition="slide-x-transition"
                       >
-                        <!-- Asset ID -->
+                        <!-- EDC Asset ID -->
                         <div v-if="item['@id']" class="text-body-small">
                           <span class="font-weight-bold">{{ 'ID: ' }}</span>
                           {{ item['@id'] }}
@@ -214,7 +214,7 @@
                           <v-sheet border>
                             <v-list class="py-0" dense density="compact" slim>
 
-                              <!-- Update Asset -->
+                              <!-- Update EDC Asset -->
                               <v-list-item @click="openUpdateDialog(item)">
                                 <template #prepend>
                                   <v-icon size="x-small">mdi-pencil</v-icon>
@@ -223,7 +223,7 @@
                                 <v-list-item-subtitle>Edit Asset</v-list-item-subtitle>
                               </v-list-item>
 
-                              <!-- Delete Asset -->
+                              <!-- Delete EDC Asset -->
                               <v-list-item @click="openDeleteDialog(item)">
                                 <template #prepend>
                                   <v-icon size="x-small">mdi-delete</v-icon>
@@ -233,7 +233,7 @@
                               </v-list-item>
 
                               <v-divider />
-                              <!-- Copy Asset ID to clipboard -->
+                              <!-- Copy EDC Asset ID to clipboard -->
                               <v-list-item
                                 @click.stop="
                                   copyToClipboard(item['@id'], 'AssetId', copyIconAsRef)
@@ -274,8 +274,8 @@
 
             <v-empty-state
               icon="mdi-gesture-tap"
-              text="Please select a Asset to view"
-              title="Select Asset"
+              text="Please select a EDC Asset to view"
+              title="Select EDC Asset"
             >
               <template #media>
                 <v-icon size="64" />
@@ -297,7 +297,7 @@
   </v-container>
 
   <CreateAssetDialog v-model="createAssetDialog" @assets-created="onAssetsCreated" />
-  <CreateAssetsAasSmsDialog v-model="createAssetsAasSmsDialog" @assets-created="onAssetsCreated" />
+  <!-- <CreateAssetsAasSmsDialog v-model="createAssetsAasSmsDialog" @assets-created="onAssetsCreated" /> -->
   <CreateAssetFromTemplateDialog v-model="createAssetFromTemplateDialog" @assets-created="onAssetsCreated" />
 
   <UpdateAssetDialog v-model="updateAssetDialog" :asset="assetToUpdate" @asset-updated="onAssetUpdated" />
@@ -310,7 +310,7 @@
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import CreateAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetDialog.vue'
   import CreateAssetFromTemplateDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetFromTemplateDialog.vue'
-  import CreateAssetsAasSmsDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetsAasSmsDialog.vue'
+  // import CreateAssetsAasSmsDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetsAasSmsDialog.vue'
   import DeleteAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/DeleteAssetDialog.vue'
   import UpdateAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/UpdateAssetDialog.vue'
   import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
@@ -341,10 +341,8 @@
   const listLoading = ref(false) // Variable to store if the AAS List is loading
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null) // Reference to the Virtual Scroll Component
   const selectedAsset = ref({} as any)
-  // const selectedAssetJson = ref<string>('')
-  // const selectedAssetJsonFormatted = ref<string>('')
   const createAssetDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
-  const createAssetsAasSmsDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
+  // const createAssetsAasSmsDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
   const createAssetFromTemplateDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
   const updateAssetDialog = ref(false) // Variable to store if the Update Asset Dialog should be shown
   const assetToUpdate = ref<any>({}) // Variable to store the asset to be updated
@@ -364,28 +362,6 @@
       initialize()
     },
   )
-
-  // watch(
-  //   () => selectedAsset.value,
-  //   () => {
-  //     try {
-  //       selectedAssetJson.value = JSON.stringify(selectedAsset.value)
-  //       const formatted = formatJSON(selectedAssetJson.value)
-
-  //       // Apply syntax highlighting using Prism
-  //       if (Prism && Prism.highlight) {
-  //         selectedAssetJsonFormatted.value = Prism.highlight(formatted, getPrismJsonLanguage(), 'json')
-  //       } else {
-  //         selectedAssetJsonFormatted.value = formatted
-  //         console.warn('Prism highlighting not available')
-  //       }
-  //     } catch (error_) {
-  //       console.error('Error highlighting JSON:', error_)
-  //       selectedAssetJsonFormatted.value = selectedAssetJson.value || ''
-  //     }
-  //   },
-  //   { deep: true },
-  // )
 
   onMounted(() => {
     initialize()

@@ -5,7 +5,7 @@
   >
     <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">
       <v-card-title class="bg-cardHeader d-flex align-center">
-        Update Asset
+        Update EDC Asset
         <v-spacer />
 
         <v-tooltip location="bottom" open-delay="600">

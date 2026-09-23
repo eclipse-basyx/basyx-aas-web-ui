@@ -2,14 +2,14 @@
   <v-dialog v-model="deleteAssetDialog" :width="800">
     <v-sheet border rounded="lg">
       <v-card-title class="bg-cardHeader">
-        Confirm Asset Deletion
+        Confirm EDC Asset Deletion
       </v-card-title>
 
       <v-divider />
 
       <v-card-text class="overflow-y-auto" style="max-height: calc(100vh - 296px)">
         <v-alert border="start" variant="tonal">
-          <span>Are you sure you want to delete the Asset with the id </span>
+          <span>Are you sure you want to delete the EDC Asset with the id </span>
           <span class="text-primary font-weight-bold">{{ asset['@id'] }}</span>
           <span>?</span>
         </v-alert>

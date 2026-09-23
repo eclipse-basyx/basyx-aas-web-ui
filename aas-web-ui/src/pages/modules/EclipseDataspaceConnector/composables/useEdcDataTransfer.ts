@@ -200,7 +200,7 @@ export function useEdcDataTransfer () {
       abort(callbacks, 'Data transfer cancelled')
       return null
     }
-    callbacks.setStatus('Fetching Asset Data...')
+    callbacks.setStatus('Fetching EDC Asset Data...')
     const endpoint = (edr as any).endpoint
     const token = (edr as any).authorization
 

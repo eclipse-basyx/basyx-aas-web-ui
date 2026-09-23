@@ -1,23 +1,31 @@
 <template>
   <v-container class="pa-0 ma-0" fluid style="height: 100%">
 
-    <v-tabs
-      v-model="tabs"
-      align-tabs="center"
-      color="primary"
-      @update:model-value="onTabChange"
-    >
-      <template
-        v-for="tabItem in tabItems"
-        :key="tabItem.id"
+    <div class="d-flex align-center">
+      <div class="pl-4 d-flex align-center">
+        <v-icon class="mr-2" icon="custom:edcIcon" size="18" />
+        <span class="text-body-medium">Eclipse Dataspace Connector</span>
+      </div>
+
+      <v-tabs
+        v-model="tabs"
+        align-tabs="center"
+        class="flex-grow-1"
+        color="primary"
+        @update:model-value="onTabChange"
       >
-        <v-tab
-          :prepend-icon="tabItem.icon"
-          :text="tabItem.name"
-          :value="tabItem.id"
-        />
-      </template>
-    </v-tabs>
+        <template
+          v-for="tabItem in tabItems"
+          :key="tabItem.id"
+        >
+          <v-tab
+            :prepend-icon="tabItem.icon"
+            :text="tabItem.name"
+            :value="tabItem.id"
+          />
+        </template>
+      </v-tabs>
+    </div>
 
     <v-divider />
 
@@ -64,7 +72,7 @@
   const edcStore = useEdcStore()
 
   // Data
-  const initialTab = route.path.split('/').findLast(Boolean) || 'edc'
+  const initialTab = route.path.split('/').findLast(Boolean) || 'assets'
   const tabs = ref(initialTab)
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px -  2px)') // Full height - header - tabs - footer - border
 
