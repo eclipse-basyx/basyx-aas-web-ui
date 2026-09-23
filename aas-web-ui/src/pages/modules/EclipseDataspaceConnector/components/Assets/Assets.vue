@@ -296,25 +296,43 @@
     </v-layout>
   </v-container>
 
-  <CreateAssetDialog v-model="createAssetDialog" @assets-created="onAssetsCreated" />
+  <CreateAssetDialog
+    v-model="createAssetDialog"
+    :proxy-id="edcProxyId"
+    @assets-created="onAssetsCreated"
+  />
   <!-- <CreateAssetsAasSmsDialog v-model="createAssetsAasSmsDialog" @assets-created="onAssetsCreated" /> -->
-  <CreateAssetFromTemplateDialog v-model="createAssetFromTemplateDialog" @assets-created="onAssetsCreated" />
+  <CreateAssetFromTemplateDialog
+    v-model="createAssetFromTemplateDialog"
+    :proxy-id="edcProxyId"
+    @assets-created="onAssetsCreated"
+  />
 
-  <UpdateAssetDialog v-model="updateAssetDialog" :asset="assetToUpdate" @asset-updated="onAssetUpdated" />
+  <UpdateAssetDialog
+    v-model="updateAssetDialog"
+    :asset="assetToUpdate"
+    :proxy-id="edcProxyId"
+    @asset-updated="onAssetUpdated"
+  />
 
-  <DeleteAssetDialog v-model="deleteAssetDialog" :asset="assetToDelete" @asset-deleted="onAssetDeleted" />
+  <DeleteAssetDialog
+    v-model="deleteAssetDialog"
+    :asset="assetToDelete"
+    :proxy-id="edcProxyId"
+    @asset-deleted="onAssetDeleted"
+  />
 </template>
 
 <script lang="ts" setup>
   import { useTheme } from 'vuetify'
+  import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import CreateAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetDialog.vue'
   import CreateAssetFromTemplateDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetFromTemplateDialog.vue'
   // import CreateAssetsAasSmsDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetsAasSmsDialog.vue'
   import DeleteAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/DeleteAssetDialog.vue'
   import UpdateAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/UpdateAssetDialog.vue'
-  import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
-  import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
+  import { useInfrastructureStore } from '@/store/InfrastructureStore'
 
   // Extend the ComponentPublicInstance type to include scrollToIndex
   interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -322,10 +340,10 @@
   }
 
   // Stores
-  const edcStore = useEdcStore()
+  const infrastructureStore = useInfrastructureStore()
 
   // Composables
-  const { queryAssets } = useEdcClient()
+  const { queryAssets } = useCatenaXEdcClient()
   const { copyToClipboard } = useClipboardUtil()
 
   // Vuetify
@@ -354,14 +372,8 @@
   const isDark = computed(() => theme.global.current.value.dark)
   const primaryColor = computed(() => theme.current.value.colors.primary)
   const copyIconAsRef = computed(() => copyIcon)
-
-  // Watchers
-  watch(
-    () => edcStore.getEdcConfig,
-    () => {
-      initialize()
-    },
-  )
+  const selectedEdcConfig = computed(() => infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null)
+  const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? 'default')
 
   onMounted(() => {
     initialize()
@@ -374,7 +386,7 @@
   async function initialize (): Promise<void> {
     listLoading.value = true
 
-    const assets = await queryAssets()
+    const assets = await queryAssets(edcProxyId.value)
 
     if (assets && Array.isArray(assets) && assets.length > 0) {
       const assetsSorted = assets.toSorted((assetA: any, assetB: any) => {
@@ -397,9 +409,19 @@
     listLoading.value = false
   }
 
-  async function onAssetsCreated (): Promise<void> {
+  async function onAssetsCreated (assetId?: string): Promise<void> {
+    const hadSelection = !!selectedAsset.value?.['@id']
+
     // Reload the asset list
     await initialize()
+
+    if (!hadSelection && assetId) {
+      const createdAsset = assetList.value.find((asset: any) => asset['@id'] === assetId)
+      if (createdAsset) {
+        selectedAsset.value = createdAsset
+        scrollToSelectedAsset()
+      }
+    }
   }
 
   function openUpdateDialog (asset: any): void {

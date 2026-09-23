@@ -96,12 +96,15 @@
 </template>
 
 <script lang="ts" setup>
-  import { type ContractDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
+  import { type CatenaXEdcContractDefinition, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import ContractTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_contract.json'
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
     modelValue: boolean
-  }>()
+    proxyId?: string
+  }>(), {
+    proxyId: 'default',
+  })
 
   const emit = defineEmits<{
     (event: 'update:model-value', value: boolean): void
@@ -109,7 +112,7 @@
   }>()
 
   // Composables
-  const { createContractDefinition: createContractInEdc, queryAssets, queryPolicyDefinitions } = useEdcClient()
+  const { createContractDefinition: createContractInEdc, queryAssets, queryPolicyDefinitions } = useCatenaXEdcClient()
 
   // Data
   const createContractDialog = ref(false)
@@ -192,7 +195,7 @@
   async function loadAssets (): Promise<void> {
     assetsLoading.value = true
     try {
-      const assets = await queryAssets()
+      const assets = await queryAssets(props.proxyId)
       availableAssets.value = (assets || []).toSorted((a, b) => getEdcAssetDisplayName(a).localeCompare(getEdcAssetDisplayName(b)))
     } catch (error) {
       console.error('Error loading assets:', error)
@@ -204,7 +207,7 @@
   async function loadPolicies (): Promise<void> {
     policiesLoading.value = true
     try {
-      const policies = await queryPolicyDefinitions()
+      const policies = await queryPolicyDefinitions(props.proxyId)
       availablePolicies.value = (policies || []).toSorted((a, b) => getEdcPolicyDisplayName(a).localeCompare(getEdcPolicyDisplayName(b)))
     } catch (error) {
       console.error('Error loading policies:', error)
@@ -256,10 +259,10 @@
       let contractJson = JSON.stringify(activeContractTemplate.value)
       contractJson = replacePlaceholders(contractJson)
 
-      const finalContract = JSON.parse(contractJson) as ContractDefinition
+      const finalContract = JSON.parse(contractJson) as CatenaXEdcContractDefinition
 
       // Create the contract via EDC API
-      const response = await createContractInEdc(finalContract)
+      const response = await createContractInEdc(props.proxyId, finalContract)
       if (response) {
         emit('contract-created', response['@id'])
         createContractDialog.value = false

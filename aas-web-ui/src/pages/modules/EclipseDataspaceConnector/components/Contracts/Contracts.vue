@@ -268,21 +268,21 @@
     </v-layout>
   </v-container>
 
-  <CreateContractDialog v-model="createContractDialog" @contract-created="onContractCreated" />
+  <CreateContractDialog v-model="createContractDialog" :proxy-id="edcProxyId" @contract-created="onContractCreated" />
 
-  <UpdateContractDialog v-model="updateContractDialog" :contract="contractToUpdate" @contract-updated="onContractUpdated" />
+  <UpdateContractDialog v-model="updateContractDialog" :contract="contractToUpdate" :proxy-id="edcProxyId" @contract-updated="onContractUpdated" />
 
-  <DeleteContractDialog v-model="deleteContractDialog" :contract="contractToDelete" @contract-deleted="onContractDeleted" />
+  <DeleteContractDialog v-model="deleteContractDialog" :contract="contractToDelete" :proxy-id="edcProxyId" @contract-deleted="onContractDeleted" />
 </template>
 
 <script lang="ts" setup>
   import { useTheme } from 'vuetify'
+  import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import CreateContractDialog from '@/pages/modules/EclipseDataspaceConnector/components/Contracts/Dialogs/CreateContractDialog.vue'
   import DeleteContractDialog from '@/pages/modules/EclipseDataspaceConnector/components/Contracts/Dialogs/DeleteContractDialog.vue'
   import UpdateContractDialog from '@/pages/modules/EclipseDataspaceConnector/components/Contracts/Dialogs/UpdateContractDialog.vue'
-  import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
-  import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
+  import { useInfrastructureStore } from '@/store/InfrastructureStore'
 
   // Extend the ComponentPublicInstance type to include scrollToIndex
   interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -290,10 +290,10 @@
   }
 
   // Stores
-  const edcStore = useEdcStore()
+  const infrastructureStore = useInfrastructureStore()
 
   // Composables
-  const { queryContractDefinitions } = useEdcClient()
+  const { queryContractDefinitions } = useCatenaXEdcClient()
   const { copyToClipboard } = useClipboardUtil()
 
   // Vuetify
@@ -320,14 +320,8 @@
   const isDark = computed(() => theme.global.current.value.dark)
   const primaryColor = computed(() => theme.current.value.colors.primary)
   const copyIconAsRef = computed(() => copyIcon)
-
-  // Watchers
-  watch(
-    () => edcStore.getEdcConfig,
-    () => {
-      initialize()
-    },
-  )
+  const selectedEdcConfig = computed(() => infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null)
+  const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? 'default')
 
   onMounted(() => {
     initialize()
@@ -340,7 +334,7 @@
   async function initialize (): Promise<void> {
     listLoading.value = true
 
-    const contracts = await queryContractDefinitions()
+    const contracts = await queryContractDefinitions(edcProxyId.value)
 
     if (contracts && Array.isArray(contracts) && contracts.length > 0) {
       const contractsSorted = contracts.toSorted((contractA: any, contractB: any) => {

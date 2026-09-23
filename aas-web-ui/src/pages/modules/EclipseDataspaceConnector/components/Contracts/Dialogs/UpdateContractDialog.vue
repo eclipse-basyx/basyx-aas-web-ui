@@ -93,13 +93,16 @@
 </template>
 
 <script lang="ts" setup>
-  import { type ContractDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
+  import { type CatenaXEdcContractDefinition, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import { formatJSON } from '@/utils/JsonUtils'
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
     modelValue: boolean
     contract: any
-  }>()
+    proxyId?: string
+  }>(), {
+    proxyId: 'default',
+  })
 
   const emit = defineEmits<{
     (event: 'update:model-value', value: boolean): void
@@ -107,7 +110,7 @@
   }>()
 
   // Composables
-  const { updateContractDefinition: updateContractInEdc } = useEdcClient()
+  const { updateContractDefinition: updateContractInEdc } = useCatenaXEdcClient()
 
   // Data
   const updateContractDialog = ref(false)
@@ -249,9 +252,9 @@
     if (!id) return
 
     try {
-      const contractToUpdate = JSON.parse(jsonText.value) as ContractDefinition
+      const contractToUpdate = JSON.parse(jsonText.value) as CatenaXEdcContractDefinition
 
-      const success = await updateContractInEdc(id, contractToUpdate)
+      const success = await updateContractInEdc(props.proxyId, id, contractToUpdate)
       if (success) {
         emit('contract-updated')
         updateContractDialog.value = false

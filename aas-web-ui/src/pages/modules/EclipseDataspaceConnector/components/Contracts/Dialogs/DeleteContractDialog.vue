@@ -39,19 +39,22 @@
 </template>
 
 <script lang="ts" setup>
-  import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
+  import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
     modelValue: boolean
     contract: any
-  }>()
+    proxyId?: string
+  }>(), {
+    proxyId: 'default',
+  })
 
   const emit = defineEmits<{
     (event: 'update:model-value' | 'contract-deleted', value: boolean): void
   }>()
 
   // Composables
-  const { deleteContractDefinition: deleteContractFromEdc } = useEdcClient()
+  const { deleteContractDefinition: deleteContractFromEdc } = useCatenaXEdcClient()
 
   // Data
   const deleteContractDialog = ref(false)
@@ -78,7 +81,7 @@
 
     try {
       // Create the contract via EDC API
-      const response = await deleteContractFromEdc(props.contract['@id'])
+      const response = await deleteContractFromEdc(props.proxyId, props.contract['@id'])
       if (response) {
         emit('contract-deleted', true)
         deleteContractDialog.value = false

@@ -93,13 +93,16 @@
 </template>
 
 <script lang="ts" setup>
-  import { type Asset, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
+  import { type CatenaXEdcAsset, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import { formatJSON } from '@/utils/JsonUtils'
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
     modelValue: boolean
     asset: any
-  }>()
+    proxyId?: string
+  }>(), {
+    proxyId: 'default',
+  })
 
   const emit = defineEmits<{
     (event: 'update:model-value', value: boolean): void
@@ -107,7 +110,7 @@
   }>()
 
   // Composables
-  const { updateAsset: updateAssetInEdc } = useEdcClient()
+  const { updateAsset: updateAssetInEdc } = useCatenaXEdcClient()
 
   // Data
   const updateAssetDialog = ref(false)
@@ -249,9 +252,9 @@
     if (!id) return
 
     try {
-      const assetToUpdate = JSON.parse(jsonText.value) as Asset
+      const assetToUpdate = JSON.parse(jsonText.value) as CatenaXEdcAsset
 
-      const success = await updateAssetInEdc(id, assetToUpdate)
+      const success = await updateAssetInEdc(props.proxyId, id, assetToUpdate)
       if (success) {
         emit('asset-updated')
         updateAssetDialog.value = false

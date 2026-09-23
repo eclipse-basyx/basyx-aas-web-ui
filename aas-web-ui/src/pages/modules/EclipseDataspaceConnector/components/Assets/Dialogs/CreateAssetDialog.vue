@@ -23,10 +23,10 @@
               dense
               :hide-details="placeholder.hint == ''"
               :hint="placeholder.hint"
-              :label="placeholder.label"
+              :label="placeholder.mandatory ? `${placeholder.label} *` : placeholder.label"
               :persistent-hint="placeholder.hint !== ''"
               :placeholder="placeholder.placeholder"
-              required
+              :required="placeholder.mandatory"
               variant="outlined"
             />
           </div>
@@ -52,7 +52,7 @@
         <v-btn
           class="text-buttonText"
           color="primary"
-          :disabled="!mandatoryPlaceholdersFilled()"
+          :disabled="!mandatoryPlaceholdersFilled"
           rounded="lg"
           text="Create"
           variant="flat"
@@ -64,20 +64,26 @@
 </template>
 
 <script lang="ts" setup>
-  import { type Asset, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
+  import { type CatenaXEdcAsset, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import AssetTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset.json'
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
     modelValue: boolean
-  }>()
+    proxyId?: string
+  }>(), {
+    proxyId: 'default',
+  })
 
   const emit = defineEmits<{
     (event: 'update:model-value', value: boolean): void
     (event: 'assets-created', assetId: string): void
   }>()
 
+  // Template attributes the user must fill in before an asset can be created
+  const MANDATORY_ATTRIBUTES = new Set(['@id', 'baseUrl'])
+
   // Composables
-  const { createAsset: createAssetInEdc } = useEdcClient()
+  const { createAsset: createAssetInEdc } = useCatenaXEdcClient()
 
   // Data
   const createAssetDialog = ref(false)
@@ -91,30 +97,41 @@
     const templateStr = JSON.stringify(activeAssetTemplate.value)
     const matches = [...templateStr.matchAll(/"([^"]+)":\s*"(\{\{[^}]+\}\})"/g)]
 
-    const placeholderList = matches.map(match => {
+    // Keyed by label, since the same placeholder may be used for several attributes
+    const uniquePlaceholders = new Map<string, { label: string, placeholder: string, hint: string, mandatory: boolean }>()
+
+    for (const match of matches) {
       const attributeName = match[1]
       const content = match[2].slice(2, -2) // Remove {{ and }}
       const parts = content.split('|')
+      const label = parts[0].trim()
+      const mandatory = MANDATORY_ATTRIBUTES.has(attributeName)
 
-      return {
-        attribute: attributeName,
-        label: parts[0].trim(),
+      const existing = uniquePlaceholders.get(label)
+      if (existing) {
+        existing.mandatory = existing.mandatory || mandatory
+        continue
+      }
+
+      uniquePlaceholders.set(label, {
+        label,
         placeholder: parts[1]?.trim() || '',
         hint: parts[2]?.trim() || '',
-      }
-    })
+        mandatory,
+      })
+    }
 
-    // Return unique placeholders by name
-    const seen = new Set<string>()
-    return placeholderList.filter(p => {
-      if (seen.has(p.label)) return false
-      seen.add(p.label)
-      return true
-    })
+    return [...uniquePlaceholders.values()]
   })
 
   const jsonContent = computed(() =>
     replacePlaceholders(JSON.stringify(activeAssetTemplate.value)),
+  )
+
+  const mandatoryPlaceholdersFilled = computed(() =>
+    placeholders.value
+      .filter(p => p.mandatory)
+      .every(p => !!placeholderValues.value[p.label]?.trim()),
   )
 
   // Watchers
@@ -141,13 +158,6 @@
     if (form.value) {
       form.value.reset()
     }
-  }
-
-  function mandatoryPlaceholdersFilled (): boolean {
-    const mandatoryAttributes = ['@id', 'baseUrl']
-    return mandatoryAttributes
-      .filter(attr => placeholders.value.some(p => p.attribute === attr))
-      .every(attr => !!placeholderValues.value[attr])
   }
 
   function replacePlaceholders (assetJson: string): string {
@@ -201,7 +211,7 @@
   }
 
   async function createAsset (): Promise<void> {
-    if (!mandatoryPlaceholdersFilled()) {
+    if (!mandatoryPlaceholdersFilled.value) {
       console.warn('Placeholders not filled')
       return
     }
@@ -210,16 +220,16 @@
       let assetJson = JSON.stringify(activeAssetTemplate.value)
       assetJson = replacePlaceholders(assetJson)
 
-      const finalAsset = removeUnfilledPlaceholders(JSON.parse(assetJson)) as Asset
+      const finalAsset = removeUnfilledPlaceholders(JSON.parse(assetJson)) as CatenaXEdcAsset
 
       // Create the asset via EDC API
-      const response = await createAssetInEdc(finalAsset)
-      if (response.success && response.data) {
-        emit('assets-created', response.data['@id'])
+      const response = await createAssetInEdc(props.proxyId, finalAsset)
+      if (response) {
+        emit('assets-created', response['@id'])
         createAssetDialog.value = false
         resetForm()
       } else {
-        console.error('Failed to create asset:', response.errorMessage)
+        console.error('Failed to create asset')
       }
     } catch (error_) {
       console.error('Error creating asset:', error_)

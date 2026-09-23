@@ -168,7 +168,6 @@
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { useEdcDataTransfer } from '@/pages/modules/EclipseDataspaceConnector/composables/useEdcDataTransfer'
-  import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { base64Encode } from '@/utils/EncodeDecodeUtils'
@@ -191,7 +190,6 @@
   // Stores
   const navigationStore = useNavigationStore()
   const infrastructureStore = useInfrastructureStore()
-  const edcStore = useEdcStore()
 
   const aasDescriptorJson = ref<string>('')
   const aasDescriptorJsonFormatted = ref<string>('')

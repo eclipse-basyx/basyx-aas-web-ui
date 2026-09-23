@@ -91,7 +91,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { type PolicyDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
+  import { type CatenaXEdcPolicyDefinition, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import AccessPolicy from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_access.json'
   import AccessPolicyBpn from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_access_bpn.json'
   import UsagePolicy from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage.json'
@@ -100,9 +100,12 @@
   import UsagePolicyPcf from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage_pcf.json'
   import UsagePolicySmService from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage_sm_service.json'
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
     modelValue: boolean
-  }>()
+    proxyId?: string
+  }>(), {
+    proxyId: 'default',
+  })
 
   const emit = defineEmits<{
     (event: 'update:model-value', value: boolean): void
@@ -110,7 +113,7 @@
   }>()
 
   // Composables
-  const { createPolicyDefinition: createPolicyDefinitionInEdc } = useEdcClient()
+  const { createPolicyDefinition: createPolicyDefinitionInEdc } = useCatenaXEdcClient()
 
   // Data
   const createPolicyDialog = ref(false)
@@ -278,10 +281,10 @@
       let policyJson = JSON.stringify(template.policy)
       policyJson = replacePlaceholders(policyJson)
 
-      const finalPolicy = JSON.parse(policyJson) as PolicyDefinition
+      const finalPolicy = JSON.parse(policyJson) as CatenaXEdcPolicyDefinition
 
       // Create the policy via EDC API
-      const response = await createPolicyDefinitionInEdc(finalPolicy)
+      const response = await createPolicyDefinitionInEdc(props.proxyId, finalPolicy)
       if (response) {
         emit('policy-created', response['@id'])
         createPolicyDialog.value = false

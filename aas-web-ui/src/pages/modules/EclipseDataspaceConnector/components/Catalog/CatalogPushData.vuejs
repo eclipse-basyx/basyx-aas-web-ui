@@ -516,7 +516,6 @@
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
   import { useEdcDataTransfer } from '@/pages/modules/EclipseDataspaceConnector/composables/useEdcDataTransfer'
-  import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
   import { useAASStore } from '@/store/AASDataStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { extractVersionRevision } from '@/utils/AAS/SemanticIdUtils'
@@ -537,7 +536,6 @@
 
   // Stores
   const navigationStore = useNavigationStore()
-  const edcStore = useEdcStore()
   const aasStore = useAASStore()
 
   // Props

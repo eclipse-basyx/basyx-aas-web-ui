@@ -94,14 +94,17 @@
 </template>
 
 <script lang="ts" setup>
-  import { type Asset, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
+  import { type CatenaXEdcAsset, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import AssetTemplateDefault from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset.json'
   import AssetTemplateDTRegistry from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_digitaltwin_registry.json'
   import AssetTemplateSmService from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_submodel_service.json'
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
     modelValue: boolean
-  }>()
+    proxyId?: string
+  }>(), {
+    proxyId: 'default',
+  })
 
   const emit = defineEmits<{
     (event: 'update:model-value', value: boolean): void
@@ -109,7 +112,7 @@
   }>()
 
   // Composables
-  const { createAsset: createAssetInEdc } = useEdcClient()
+  const { createAsset: createAssetInEdc } = useCatenaXEdcClient()
 
   // Data
   const createAssetDialog = ref(false)
@@ -288,16 +291,16 @@
       let assetJson = JSON.stringify(template.asset)
       assetJson = replacePlaceholders(assetJson)
 
-      const finalAsset = removeUnfilledPlaceholders(JSON.parse(assetJson)) as Asset
+      const finalAsset = removeUnfilledPlaceholders(JSON.parse(assetJson)) as CatenaXEdcAsset
 
       // Create the asset via EDC API
-      const response = await createAssetInEdc(finalAsset)
-      if (response.success && response.data) {
-        emit('assets-created', response.data['@id'])
+      const response = await createAssetInEdc(props.proxyId, finalAsset)
+      if (response) {
+        emit('assets-created', response['@id'])
         createAssetDialog.value = false
         resetForm()
       } else {
-        console.error('Failed to create asset:', response.errorMessage)
+        console.error('Failed to create asset')
       }
     } catch (error_) {
       console.error('Error creating asset:', error_)

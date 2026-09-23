@@ -1,6 +1,4 @@
 export type EdcSecurityType = 'Key' | 'Token' | 'None'
-export const EDC_TYPES = ['Tractus-X EDC v0.12.1'] as const
-export type EdcType = (typeof EDC_TYPES)[number]
 
 export interface EdcControlPlaneConfig {
   endpoint: string
@@ -26,7 +24,6 @@ export interface YamlEdcSecurityConfig {
 
 export interface YamlEdcConfig {
   edc: {
-    'type': EdcType
     'controlplane': EdcControlPlaneConfig
     'dataspace'?: YamlEdcDataspaceConfig
     'security': YamlEdcSecurityConfig
@@ -45,7 +42,6 @@ export interface EdcSecurityConfig {
 }
 
 export interface EdcConfig {
-  type: EdcType
   controlplane: EdcControlPlaneConfig
   dataspace?: EdcDataspaceConfig
   security: EdcSecurityConfig

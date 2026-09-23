@@ -63,19 +63,22 @@
 </template>
 
 <script lang="ts" setup>
-  import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
+  import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
     modelValue: boolean
     asset: any
-  }>()
+    proxyId?: string
+  }>(), {
+    proxyId: 'default',
+  })
 
   const emit = defineEmits<{
     (event: 'update:model-value' | 'asset-deleted', value: boolean): void
   }>()
 
   // Composables
-  const { deleteAsset: deleteAssetFromEdc, queryContractDefinitions, deleteContractDefinition } = useEdcClient()
+  const { deleteAsset: deleteAssetFromEdc, queryContractDefinitions, deleteContractDefinition } = useCatenaXEdcClient()
 
   // Data
   const deleteAssetDialog = ref(false)
@@ -108,7 +111,7 @@
       return
     }
 
-    const contracts = await queryContractDefinitions()
+    const contracts = await queryContractDefinitions(props.proxyId)
     if (!contracts) {
       referencingContracts.value = []
       return
@@ -137,14 +140,14 @@
     try {
       // Delete all referencing contract definitions first
       for (const contract of referencingContracts.value) {
-        const contractDeleted = await deleteContractDefinition(contract['@id'])
+        const contractDeleted = await deleteContractDefinition(props.proxyId, contract['@id'])
         if (!contractDeleted) {
           console.error('Failed to delete referencing contract:', contract['@id'])
         }
       }
 
       // Delete the asset via EDC API
-      const response = await deleteAssetFromEdc(props.asset['@id'])
+      const response = await deleteAssetFromEdc(props.proxyId, props.asset['@id'])
       if (response) {
         emit('asset-deleted', true)
         deleteAssetDialog.value = false

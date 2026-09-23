@@ -36,14 +36,5 @@ export default {
         icon: 'mdi-database-outline',
       },
     },
-    {
-      path: 'configuration',
-      name: 'Configuration',
-      component: () => import('@/pages/modules/EclipseDataspaceConnector/components/Configuration.vue'),
-      meta: {
-        title: 'Configuration',
-        icon: 'mdi-cog',
-      },
-    },
   ],
 }

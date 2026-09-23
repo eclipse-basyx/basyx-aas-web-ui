@@ -9,16 +9,13 @@
               v-model="selectedBusinessPartner"
               density="compact"
               hide-details
-              item-title="name"
+              :item-props="partner => ({ subtitle: partner.counterPartyId })"
+              :item-title="partner => partner.name || partner.counterPartyId"
               :items="businessPartners"
               label="Select Business Partner"
               return-object
               variant="solo"
-            >
-              <template #item="{ props, item }">
-                <v-list-item v-bind="props" :subtitle="item.bpn" />
-              </template>
-            </v-select>
+            />
           </v-card-title>
 
           <v-divider />
@@ -374,14 +371,14 @@
 </template>
 
 <script lang="ts" setup>
+  import type { CatenaXEdcCatalogRequest } from '@/composables/Client/CatenaXEdcClient'
+  import type { CatenaXPartner } from '@/types/Infrastructure'
   import type { ComponentPublicInstance, Ref } from 'vue'
   import { useTheme } from 'vuetify'
+  import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
-  import {
-    type CatalogRequest,
-    useEdcClient,
-  } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
-  import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
+  import { useInfrastructureStore } from '@/store/InfrastructureStore'
+  import { normalizeCatenaXPartners } from '@/utils/CatenaXPartnerUtils'
 
   // Extend the ComponentPublicInstance type to include scrollToIndex
   interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -389,10 +386,10 @@
   }
 
   // Stores
-  const edcStore = useEdcStore()
+  const infrastructureStore = useInfrastructureStore()
 
   // Composables
-  const { queryCatalog } = useEdcClient()
+  const { requestCatalog } = useCatenaXEdcClient()
 
   const { copyToClipboard } = useClipboardUtil()
 
@@ -417,18 +414,18 @@
   // const fetchAssetRef = ref<InstanceType<typeof CatalogFetchAsset> | null>(null)
   const listLoading = ref(false)
   // const pushDataRef = ref<InstanceType<typeof CatalogPushData> | null>(null)
-  const selectedBusinessPartner = ref<any>(null)
+  const selectedBusinessPartner = ref<CatenaXPartner | null>(null)
   const selectedCatalogDataset = ref({} as any)
   // const selectedSmsCount = ref(0)
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null)
 
   // Computed properties
-  const businessPartners = computed(
-    () => edcStore.getEdcConfig?.businessPartners ?? [],
-  )
   const primaryColor = computed(() => theme.current.value.colors.primary)
   const isDark = computed(() => theme.current.value.dark)
   const copyIconAsRef = computed(() => copyIcon)
+  const selectedEdcConfig = computed(() => infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null)
+  const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? 'default')
+  const businessPartners = computed(() => normalizeCatenaXPartners(selectedEdcConfig.value?.partners ?? []))
   const isPushAsset = computed(() => {
     const id: string = selectedCatalogDataset.value?.['@id'] ?? ''
     return id.includes('push-asset') || id.includes('asset-push')
@@ -458,10 +455,16 @@
 
   // Watchers
   watch(
-    () => edcStore.getEdcConfig,
-    () => {
-      initialize()
+    businessPartners,
+    partners => {
+      if (selectedBusinessPartner.value && partners.some(partner => partner.id === selectedBusinessPartner.value?.id)) {
+        return
+      }
+
+      const defaultPartnerId = selectedEdcConfig.value?.defaultPartnerId?.trim() ?? ''
+      selectedBusinessPartner.value = partners.find(partner => partner.id === defaultPartnerId) ?? null
     },
+    { immediate: true },
   )
 
   watch(
@@ -494,19 +497,15 @@
     selectedCatalogDataset.value = {}
     edcStatus.value = ''
 
-    if (selectedBusinessPartner.value?.dsp) {
-      const dspAddress = selectedBusinessPartner.value.dsp
+    if (selectedBusinessPartner.value?.counterPartyAddress) {
+      const dspAddress = selectedBusinessPartner.value.counterPartyAddress
 
-      const catalogRequest: CatalogRequest = {
-        '@context': {
-          '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
-        },
-        '@type': 'CatalogRequest',
-        'counterPartyId': 'did:web:' + edcStore.getDataspaceSsiHost + ':' + selectedBusinessPartner.value.bpn,
-        'counterPartyAddress': dspAddress + (dspAddress.endsWith('/2025-1') ? '' : '/2025-1'),
-        'protocol': 'dataspace-protocol-http:2025-1',
+      const catalogRequest: CatenaXEdcCatalogRequest = {
+        counterPartyId: selectedBusinessPartner.value.counterPartyId,
+        counterPartyAddress: dspAddress + (dspAddress.endsWith('/2025-1') ? '' : '/2025-1'),
+        protocol: 'dataspace-protocol-http:2025-1',
       }
-      const catalog = await queryCatalog(catalogRequest)
+      const catalog = await requestCatalog(edcProxyId.value, catalogRequest)
 
       const catalogDataset = catalog?.['dcat:dataset'] ?? catalog?.dataset
 

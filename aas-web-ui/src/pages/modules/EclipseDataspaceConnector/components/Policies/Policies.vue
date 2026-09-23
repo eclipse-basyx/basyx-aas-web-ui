@@ -288,23 +288,23 @@
     </v-layout>
   </v-container>
 
-  <CreatePolicyDialog v-model="createPolicyDialog" @policy-created="onPolicyCreated" />
-  <CreatePolicyFromTemplateDialog v-model="createPolicyFromTemplateDialog" @policy-created="onPolicyCreated" />
+  <CreatePolicyDialog v-model="createPolicyDialog" :proxy-id="edcProxyId" @policy-created="onPolicyCreated" />
+  <CreatePolicyFromTemplateDialog v-model="createPolicyFromTemplateDialog" :proxy-id="edcProxyId" @policy-created="onPolicyCreated" />
 
-  <UpdatePolicyDialog v-model="updatePolicyDialog" :policy="policyToUpdate" @policy-updated="onPolicyUpdated" />
+  <UpdatePolicyDialog v-model="updatePolicyDialog" :policy="policyToUpdate" :proxy-id="edcProxyId" @policy-updated="onPolicyUpdated" />
 
-  <DeletePolicyDialog v-model="deletePolicyDialog" :policy="policyToDelete" @policy-deleted="onPolicyDeleted" />
+  <DeletePolicyDialog v-model="deletePolicyDialog" :policy="policyToDelete" :proxy-id="edcProxyId" @policy-deleted="onPolicyDeleted" />
 </template>
 
 <script lang="ts" setup>
   import { useTheme } from 'vuetify'
+  import { type CatenaXEdcPolicyDefinition, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import CreatePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Policies/Dialogs/CreatePolicyDialog.vue'
   import CreatePolicyFromTemplateDialog from '@/pages/modules/EclipseDataspaceConnector/components/Policies/Dialogs/CreatePolicyFromTemplateDialog.vue'
   import DeletePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Policies/Dialogs/DeletePolicyDialog.vue'
   import UpdatePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Policies/Dialogs/UpdatePolicyDialog.vue'
-  import { type PolicyDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
-  import { useEdcStore } from '@/pages/modules/EclipseDataspaceConnector/store/EdcStore'
+  import { useInfrastructureStore } from '@/store/InfrastructureStore'
 
   // Extend the ComponentPublicInstance type to include scrollToIndex
   interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -312,10 +312,10 @@
   }
 
   // Stores
-  const edcStore = useEdcStore()
+  const infrastructureStore = useInfrastructureStore()
 
   // Composables
-  const { queryPolicyDefinitions } = useEdcClient()
+  const { queryPolicyDefinitions } = useCatenaXEdcClient()
   const { copyToClipboard } = useClipboardUtil()
 
   // Vuetify
@@ -343,14 +343,8 @@
   const isDark = computed(() => theme.global.current.value.dark)
   const primaryColor = computed(() => theme.current.value.colors.primary)
   const copyIconAsRef = computed(() => copyIcon)
-
-  // Watchers
-  watch(
-    () => edcStore.getEdcConfig,
-    () => {
-      initialize()
-    },
-  )
+  const selectedEdcConfig = computed(() => infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null)
+  const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? 'default')
 
   onMounted(() => {
     initialize()
@@ -363,7 +357,7 @@
   async function initialize (): Promise<void> {
     listLoading.value = true
 
-    const policies = await queryPolicyDefinitions()
+    const policies = await queryPolicyDefinitions(edcProxyId.value)
 
     if (policies && Array.isArray(policies) && policies.length > 0) {
       const policiesSorted = policies.toSorted((policyA: any, policyB: any) => {
@@ -491,7 +485,7 @@
     }
   }
 
-  function getPolicyType (policyDefinition: PolicyDefinition): string {
+  function getPolicyType (policyDefinition: CatenaXEdcPolicyDefinition): string {
     const permission = policyDefinition?.policy?.['odrl:permission'] ?? policyDefinition?.policy?.permission
     const action = permission?.['odrl:action'] ?? permission?.action
     const actionId = action?.['@id']

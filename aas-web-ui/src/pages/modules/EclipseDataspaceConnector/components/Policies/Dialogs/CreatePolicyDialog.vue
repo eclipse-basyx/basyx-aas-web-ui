@@ -165,13 +165,16 @@
 </template>
 
 <script lang="ts" setup>
-  import { type PolicyDefinition, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
+  import { type CatenaXEdcPolicyDefinition, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import PolicyTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy.json'
   import { formatJSON } from '@/utils/JsonUtils'
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
     modelValue: boolean
-  }>()
+    proxyId?: string
+  }>(), {
+    proxyId: 'default',
+  })
 
   const emit = defineEmits<{
     (event: 'update:model-value', value: boolean): void
@@ -179,7 +182,7 @@
   }>()
 
   // Composables
-  const { createPolicyDefinition: createPolicyDefinitionInEdc } = useEdcClient()
+  const { createPolicyDefinition: createPolicyDefinitionInEdc } = useCatenaXEdcClient()
 
   // Data
   const createPolicyDialog = ref(false)
@@ -307,11 +310,11 @@
     return result
   }
 
-  function buildPolicy (): PolicyDefinition {
+  function buildPolicy (): CatenaXEdcPolicyDefinition {
     let policyJson = JSON.stringify(PolicyTemplate)
     policyJson = replacePlaceholders(policyJson)
 
-    const policy = JSON.parse(policyJson) as PolicyDefinition
+    const policy = JSON.parse(policyJson) as CatenaXEdcPolicyDefinition
 
     if (policy.policy) {
       if (selectedType.value === 'access') {
@@ -428,10 +431,10 @@
     if (jsonError.value || !jsonText.value.trim()) return
 
     try {
-      const finalPolicy = JSON.parse(jsonText.value) as PolicyDefinition
+      const finalPolicy = JSON.parse(jsonText.value) as CatenaXEdcPolicyDefinition
 
       // Create the policy via EDC API
-      const response = await createPolicyDefinitionInEdc(finalPolicy)
+      const response = await createPolicyDefinitionInEdc(props.proxyId, finalPolicy)
       if (response) {
         emit('policy-created', response['@id'])
         createPolicyDialog.value = false

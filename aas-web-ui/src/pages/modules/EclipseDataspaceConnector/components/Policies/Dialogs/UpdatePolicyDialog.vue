@@ -93,13 +93,16 @@
 </template>
 
 <script lang="ts" setup>
-  import { type Policy, useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
+  import { type CatenaXEdcPolicyDefinition, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import { formatJSON } from '@/utils/JsonUtils'
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
     modelValue: boolean
     policy: any
-  }>()
+    proxyId?: string
+  }>(), {
+    proxyId: 'default',
+  })
 
   const emit = defineEmits<{
     (event: 'update:model-value', value: boolean): void
@@ -107,7 +110,7 @@
   }>()
 
   // Composables
-  const { updatePolicyDefinition: updatePolicyInEdc } = useEdcClient()
+  const { updatePolicyDefinition: updatePolicyInEdc } = useCatenaXEdcClient()
 
   // Data
   const updatePolicyDialog = ref(false)
@@ -249,9 +252,9 @@
     if (!id) return
 
     try {
-      const policyToUpdate = JSON.parse(jsonText.value) as Policy
+      const policyToUpdate = JSON.parse(jsonText.value) as CatenaXEdcPolicyDefinition
 
-      const success = await updatePolicyInEdc(id, policyToUpdate)
+      const success = await updatePolicyInEdc(props.proxyId, id, policyToUpdate)
       if (success) {
         emit('policy-updated')
         updatePolicyDialog.value = false

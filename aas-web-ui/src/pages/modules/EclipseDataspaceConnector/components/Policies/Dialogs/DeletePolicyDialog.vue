@@ -39,19 +39,22 @@
 </template>
 
 <script lang="ts" setup>
-  import { useEdcClient } from '@/pages/modules/EclipseDataspaceConnector/composables/Client/EdcClient'
+  import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
 
-  const props = defineProps<{
+  const props = withDefaults(defineProps<{
     modelValue: boolean
     policy: any
-  }>()
+    proxyId?: string
+  }>(), {
+    proxyId: 'default',
+  })
 
   const emit = defineEmits<{
     (event: 'update:model-value' | 'policy-deleted', value: boolean): void
   }>()
 
   // Composables
-  const { deletePolicyDefinition: deletePolicyDefinitionFromEdc } = useEdcClient()
+  const { deletePolicyDefinition: deletePolicyDefinitionFromEdc } = useCatenaXEdcClient()
 
   // Data
   const deletePolicyDialog = ref(false)
@@ -78,7 +81,7 @@
 
     try {
       // Create the policy via EDC API
-      const response = await deletePolicyDefinitionFromEdc(props.policy['@id'])
+      const response = await deletePolicyDefinitionFromEdc(props.proxyId, props.policy['@id'])
       if (response) {
         emit('policy-deleted', true)
         deletePolicyDialog.value = false
