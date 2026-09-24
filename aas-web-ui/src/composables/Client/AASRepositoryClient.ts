@@ -191,6 +191,9 @@ export function useAASRepositoryClient () {
     const disableMessage = true
     try {
       const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage)
+      if (aasRepoResponse.blocked) {
+        return failResponse
+      }
       const aasRepoBadRequestError = Array.isArray(aasRepoResponse.data)
         ? aasRepoResponse.data.some((message: any) => Number(message.code) === 400)
         : false

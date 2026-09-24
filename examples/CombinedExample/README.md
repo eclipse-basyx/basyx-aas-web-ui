@@ -73,6 +73,8 @@ After login, the browser must return to the same AAS viewer location, including 
 - Live sensor updates backed by MQTT and Node-RED
 - Bill of Materials editing
 
+The secured infrastructure's `TimeSeriesDemo.aasx` queries InfluxDB at `http://localhost:8086`. Its origin is listed in `trustedOrigins` in [`basyx-infra.yml`](basyx-infra.yml); LinkedSegment requests use the separate `INFLUXDB_TOKEN` from Docker Compose. If you change the InfluxDB host or port, update both the LinkedSegment endpoint and this trusted origin. The second infrastructure does not use InfluxDB and does not grant trust to it.
+
 ## Stop or reset
 
 ```bash
