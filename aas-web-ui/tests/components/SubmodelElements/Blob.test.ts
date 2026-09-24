@@ -82,5 +82,6 @@ describe('Blob.vue', () => {
     expect(putRequestMock.mock.calls[0][0]).toBe(
       'https://example.test/aas/shell-1/submodels/sm/submodel-elements/blob-b/value',
     )
+    expect(putRequestMock.mock.calls[0][1]).toBe(JSON.stringify(btoa('hello')))
   })
 })
