@@ -18,6 +18,10 @@ test('draft connection probes use unsaved endpoints and credentials', async ({ p
   }))
   const draftRequests: Array<string | undefined> = []
   await page.route('https://draft.example/**', route => {
+    // Exercise the authenticated fallback even when /description is exempt from auth.
+    if (route.request().url().endsWith('/description')) {
+      return route.fulfill({ status: 404 })
+    }
     draftRequests.push(route.request().headers().authorization)
     return route.fulfill({ contentType: 'application/json', body: '{"profiles":[]}' })
   })
