@@ -143,6 +143,21 @@ describe('client-side XML Blob import', () => {
     expect(elements.Attachment.value).toBe('/file.txt')
   })
 
+  it.each([
+    ['plain XML', async (xml: string) => importFile('environment.xml', xml)],
+    ['XML-based AASX', aasxFile],
+  ])('imports %s with a wrapped Blob value', async (_label, makeFile) => {
+    const xml = xmlEnvironment.replace('SGVsbG8=', 'SGVs\n  bG8=')
+    const file = await makeFile(xml)
+    const importer = useAASXImport()
+
+    await (file.name.endsWith('.aasx')
+      ? importer.importAasxFileClient(file)
+      : importer.importEnvironmentFileClient(file))
+
+    expect(uploadedElements().Top.value).toBe('SGVsbG8=')
+  })
+
   it('preserves Blob values in JSON imports', async () => {
     const environment = {
       assetAdministrationShells: [{

@@ -93,7 +93,7 @@ function restoreXmlBlobValues (source: unknown, serialized: unknown): void {
   }
 
   if (serializedRecord.modelType === 'Blob' && typeof sourceRecord.value === 'string') {
-    serializedRecord.value = sourceRecord.value
+    serializedRecord.value = sourceRecord.value.replace(/[\t\n\r ]/g, '')
   }
 
   for (const [key, value] of Object.entries(serializedRecord)) {
