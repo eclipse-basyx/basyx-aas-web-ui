@@ -4,6 +4,8 @@ infrastructures:
   infra1:
     name: Secured BaSyx
     template: mono-all
+    trustedOrigins:
+      - "http://localhost:8086"
     components:
       aasEnvironment:
         baseUrl: "http://localhost:8081"
