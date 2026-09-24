@@ -588,6 +588,142 @@ describe('RequestHandling.ts', () => {
     expect(headers.get('Authorization')).toBe('Bearer token-1')
   })
 
+  it('uses an explicit draft infrastructure for both endpoint trust and authentication', async () => {
+    global.fetch = vi.fn().mockResolvedValue(Response.json({ profiles: [] })) as unknown as typeof fetch
+    mockState.selectedInfrastructure = {
+      id: 'selected-infra',
+      auth: { securityType: 'Bearer Token', bearerToken: { token: 'selected-token' } },
+      components: { AASRepo: { url: 'https://old.example' } },
+    }
+    const draftInfrastructure = {
+      id: 'draft-infra',
+      name: 'Draft',
+      template: 'full',
+      auth: {
+        securityType: 'Basic Authentication',
+        basicAuth: { username: 'draft-user', password: 'draft-password' },
+      },
+      components: { AASRepo: { url: 'https://new.example/api' } },
+    } as any
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const result = await useRequestHandling().getRequest(
+      'https://new.example/description',
+      'testing draft connection',
+      true,
+      new Headers(),
+      {},
+      'auto',
+      { infrastructure: draftInfrastructure },
+    )
+
+    expect(result.success).toBe(true)
+    expect(global.fetch).toHaveBeenCalledOnce()
+    const headers = vi.mocked(global.fetch).mock.calls[0][1]?.headers as Headers
+    expect(headers.get('Authorization')).toBe(`Basic ${btoa('draft-user:draft-password')}`)
+  })
+
+  it('does not inherit trusted origins from the selected infrastructure when given a draft context', async () => {
+    global.fetch = vi.fn().mockResolvedValue(Response.json({})) as unknown as typeof fetch
+    mockState.selectedInfrastructure = {
+      id: 'selected-infra',
+      auth: { securityType: 'No Authentication' },
+      components: { AASRepo: { url: 'https://selected.example' } },
+    }
+    const draftInfrastructure = {
+      id: 'draft-infra',
+      name: 'Draft',
+      template: 'full',
+      auth: { securityType: 'No Authentication' },
+      components: { AASRepo: { url: 'https://draft.example' } },
+    } as any
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const result = await useRequestHandling().getRequest(
+      'https://selected.example/description',
+      'testing draft connection',
+      true,
+      new Headers(),
+      {},
+      'auto',
+      { infrastructure: draftInfrastructure },
+    )
+
+    expect(result).toEqual({ success: false, blocked: true })
+    expect(global.fetch).not.toHaveBeenCalled()
+  })
+
+  it('does not apply draft authentication failures to an unrelated selected infrastructure', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response('', { status: 401 })) as unknown as typeof fetch
+    mockState.selectedInfrastructure = {
+      id: 'selected-infra',
+      auth: { securityType: 'No Authentication' },
+      components: { AASRepo: { url: 'https://old.example' } },
+    }
+    const draftInfrastructure = {
+      id: 'draft-infra',
+      name: 'Draft',
+      template: 'full',
+      auth: {
+        securityType: 'Basic Authentication',
+        basicAuth: { username: 'draft-user', password: 'draft-password' },
+      },
+      components: { AASRepo: { url: 'https://new.example/api' } },
+    } as any
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const result = await useRequestHandling().getRequest(
+      'https://new.example/description',
+      'testing draft connection',
+      false,
+      new Headers(),
+      {},
+      'auto',
+      { infrastructure: draftInfrastructure },
+    )
+
+    expect(result).toMatchObject({ success: false, status: 401 })
+    expect(mockDeps.setAuthenticationStatusForInfrastructure).not.toHaveBeenCalled()
+    expect(mockDeps.showLoginRequiredSnackbar).not.toHaveBeenCalled()
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalled()
+  })
+
+  it('isolates draft authentication failures when editing the selected infrastructure', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response('', { status: 401 })) as unknown as typeof fetch
+    mockState.selectedInfrastructure = {
+      id: 'infra-1',
+      auth: { securityType: 'Bearer Token', bearerToken: { token: 'working-token' } },
+      components: { AASRepo: { url: 'https://old.example' } },
+      isAuthenticated: true,
+    }
+    const draftInfrastructure = {
+      id: 'infra-1',
+      name: 'Edited selected infrastructure',
+      template: 'full',
+      auth: {
+        securityType: 'Basic Authentication',
+        basicAuth: { username: 'draft-user', password: 'wrong-password' },
+      },
+      components: { AASRepo: { url: 'https://new.example/api' } },
+    } as any
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const result = await useRequestHandling().getRequest(
+      'https://new.example/description',
+      'testing edited connection',
+      true,
+      new Headers(),
+      {},
+      'auto',
+      { infrastructure: draftInfrastructure, isolateAuthenticationFailures: true },
+    )
+
+    expect(result).toMatchObject({ success: false, status: 401 })
+    expect(mockDeps.setAuthenticationStatusForInfrastructure).not.toHaveBeenCalled()
+    expect(mockDeps.showLoginRequiredSnackbar).not.toHaveBeenCalled()
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalled()
+  })
+
   it('reports an unverified redirect without changing authentication state', async () => {
     global.fetch = vi.fn().mockResolvedValue({ type: 'opaqueredirect' }) as unknown as typeof fetch
     const { useRequestHandling } = await import('@/composables/RequestHandling')

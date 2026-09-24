@@ -558,19 +558,31 @@
 
   // Test individual endpoint field connection
   async function testComponentConnection (fieldKey: InfrastructureEndpointFieldKey): Promise<void> {
+    const draftInfrastructure = await getDraftInfrastructureForConnectionTesting()
     await connectionTesting.testEndpointField(
-      editingInfrastructure.value,
+      draftInfrastructure,
       fieldKey,
-      editingInfrastructure.value.components,
+      draftInfrastructure.components,
     )
   }
 
   // Test all component connections for the currently edited infrastructure
   async function testAllConnections (): Promise<void> {
+    const draftInfrastructure = await getDraftInfrastructureForConnectionTesting()
     await connectionTesting.testAllConnections(
-      editingInfrastructure.value.components,
-      editingInfrastructure.value,
+      draftInfrastructure.components,
+      draftInfrastructure,
     )
+  }
+
+  async function getDraftInfrastructureForConnectionTesting (): Promise<InfrastructureConfig> {
+    const draftInfrastructure = structuredClone(toRaw(editingInfrastructure.value))
+    draftInfrastructure.trustedOrigins = trustedOriginsText.value
+      .split('\n')
+      .map(line => line.trim())
+      .filter(origin => parseTrustedOrigin(origin) !== null)
+    await saveAuthDataToInfrastructure(draftInfrastructure)
+    return draftInfrastructure
   }
 
   function handleTemplateUpdate (template: InfrastructureTemplate | string): void {

@@ -22,7 +22,11 @@ export function useComponentConnectionTesting (): {
   componentConnectionStatus: Ref<ComponentConnectionStatus>
   componentTestingLoading: Ref<ComponentTestingLoading>
   testingAllConnections: Ref<boolean>
-  testComponentConnection: (componentKey: BaSyxComponentKey, url: string) => Promise<void>
+  testComponentConnection: (
+    componentKey: BaSyxComponentKey,
+    url: string,
+    infrastructure?: InfrastructureConfig,
+  ) => Promise<void>
   testEndpointField: (
     templateOrInfrastructure: InfrastructureTemplate | InfrastructureConfig,
     fieldKey: InfrastructureEndpointFieldKey,
@@ -53,7 +57,11 @@ export function useComponentConnectionTesting (): {
   /**
    * Test connection to a single component
    */
-  async function testComponentConnection (componentKey: BaSyxComponentKey, url: string): Promise<void> {
+  async function testComponentConnection (
+    componentKey: BaSyxComponentKey,
+    url: string,
+    infrastructure?: InfrastructureConfig,
+  ): Promise<void> {
     if (!url || url.trim() === '') {
       componentConnectionStatus.value[componentKey] = false
       setComponentTestingLoading(componentKey, false)
@@ -69,7 +77,7 @@ export function useComponentConnectionTesting (): {
       infrastructureStore.getBasyxComponents[componentKey].url = url
 
       // Test the connection
-      await infrastructureStore.connectComponent(componentKey)
+      await infrastructureStore.connectComponent(componentKey, infrastructure)
 
       // Get the connection result
       const connected = infrastructureStore.getBasyxComponents[componentKey].connected
@@ -98,7 +106,11 @@ export function useComponentConnectionTesting (): {
     }
 
     const url = getEndpointFieldValue(components, endpointField)
-    const testPromises = endpointField.componentKeys.map(key => testComponentConnection(key, url))
+    const infrastructure = typeof templateOrInfrastructure === 'string'
+      ? undefined
+      : templateOrInfrastructure
+    const testPromises = endpointField.componentKeys
+      .map(key => testComponentConnection(key, url, infrastructure))
     await Promise.all(testPromises)
   }
 
@@ -111,9 +123,12 @@ export function useComponentConnectionTesting (): {
   ): Promise<void> {
     testingAllConnections.value = true
     try {
+      const infrastructure = typeof templateOrInfrastructure === 'string'
+        ? undefined
+        : templateOrInfrastructure
       const testPromises = getEndpointFieldsForTemplate(templateOrInfrastructure).flatMap(endpointField => {
         const url = getEndpointFieldValue(components, endpointField)
-        return endpointField.componentKeys.map(key => testComponentConnection(key, url))
+        return endpointField.componentKeys.map(key => testComponentConnection(key, url, infrastructure))
       })
       await Promise.all(testPromises)
     } finally {

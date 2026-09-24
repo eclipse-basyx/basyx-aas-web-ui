@@ -1,5 +1,5 @@
 import type { BaSyxComponentKey } from '@/types/BaSyx'
-import type { ComponentConfig } from '@/types/Infrastructure'
+import type { ComponentConfig, InfrastructureConfig } from '@/types/Infrastructure'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useComponentConnectionTesting } from '@/composables/Infrastructure/useComponentConnectionTesting'
 
@@ -53,6 +53,19 @@ function createComponents (): Record<BaSyxComponentKey, ComponentConfig> {
   }
 }
 
+function createInfrastructure (): InfrastructureConfig {
+  return {
+    id: 'draft-infrastructure',
+    name: 'Draft infrastructure',
+    template: 'mono-repo',
+    auth: {
+      securityType: 'Bearer Token',
+      bearerToken: { token: 'draft-token' },
+    },
+    components: createComponents(),
+  }
+}
+
 async function flushPromises (): Promise<void> {
   await Promise.resolve()
   await Promise.resolve()
@@ -95,5 +108,23 @@ describe('useComponentConnectionTesting', () => {
     expect(mocks.components.AASRepo.url).toBe('AASRepo-original')
     expect(mocks.components.SubmodelRepo.url).toBe('SubmodelRepo-original')
     expect(mocks.components.ConceptDescriptionRepo.url).toBe('ConceptDescriptionRepo-original')
+  })
+
+  it('passes the edited infrastructure to every grouped component probe', async () => {
+    const connectionTesting = useComponentConnectionTesting()
+    const draftInfrastructure = createInfrastructure()
+
+    const testPromise = connectionTesting.testEndpointField(
+      draftInfrastructure,
+      'AASEnvironment',
+      draftInfrastructure.components,
+    )
+
+    expect(mocks.connectComponent).toHaveBeenCalledTimes(3)
+    for (const key of ['AASRepo', 'SubmodelRepo', 'ConceptDescriptionRepo'] as const) {
+      expect(mocks.connectComponent).toHaveBeenCalledWith(key, draftInfrastructure)
+      mocks.connectResolvers[key]()
+    }
+    await testPromise
   })
 })
