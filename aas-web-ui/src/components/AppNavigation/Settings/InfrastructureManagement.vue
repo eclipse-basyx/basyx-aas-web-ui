@@ -164,6 +164,18 @@
             <v-divider />
             <v-list-subheader class="mb-3">Security Configuration</v-list-subheader>
 
+            <v-textarea
+              v-model="trustedOriginsText"
+              bg-color="surface-light"
+              class="mb-3"
+              density="compact"
+              hint="One HTTP(S) origin per line. Requests to other origins are blocked."
+              label="Additional Trusted Origins"
+              persistent-hint
+              :rules="[trustedOriginsRule]"
+              variant="outlined"
+            />
+
             <SecurityConfigPanel
               :auth="editingInfrastructure.auth!"
               :auth-flow-options="authFlowOptions"
@@ -314,6 +326,7 @@
     requiredRule,
     setEndpointFieldValue,
   } from '@/utils/InfrastructureUtils'
+  import { parseTrustedOrigin } from '@/utils/TrustedOriginUtils'
 
   // Props
   const props = defineProps<{
@@ -341,6 +354,7 @@
   const resetDialogOpen = ref(false)
   const editMode = ref<'add' | 'edit'>('edit')
   const editingInfrastructure = ref<InfrastructureConfig>(infrastructureStore.createEmptyInfrastructure())
+  const trustedOriginsText = ref('')
   const infrastructureToDelete = ref<InfrastructureConfig | null>(null)
   const expandedPanels = ref<number[]>([])
   const formRef = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null)
@@ -442,6 +456,7 @@
   function addNewInfrastructure (): void {
     editMode.value = 'add'
     editingInfrastructure.value = infrastructureStore.createEmptyInfrastructure()
+    trustedOriginsText.value = ''
     loadAuthDataFromInfrastructure(editingInfrastructure.value)
     expandedPanels.value = []
     editDialogOpen.value = true
@@ -450,6 +465,7 @@
   async function editInfrastructure (infra: InfrastructureConfig): Promise<void> {
     editMode.value = 'edit'
     editingInfrastructure.value = structuredClone(toRaw(infra))
+    trustedOriginsText.value = infra.trustedOrigins?.join('\n') ?? ''
     loadAuthDataFromInfrastructure(editingInfrastructure.value)
     expandedPanels.value = []
     editDialogOpen.value = true
@@ -494,6 +510,11 @@
     }
 
     normalizeGroupedEndpointFields(editingInfrastructure.value)
+    editingInfrastructure.value.trustedOrigins = trustedOriginsText.value
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(origin => parseTrustedOrigin(origin)!)
 
     // Save auth data
     await saveAuthDataToInfrastructure(editingInfrastructure.value)
@@ -505,6 +526,12 @@
     }
 
     editDialogOpen.value = false
+  }
+
+  function trustedOriginsRule (value: string): true | string {
+    return value.split('\n').every(line => !line.trim() || parseTrustedOrigin(line) !== null)
+      ? true
+      : 'Enter one HTTP(S) origin per line, without a path, query, or fragment.'
   }
 
   function cancelEdit (): void {

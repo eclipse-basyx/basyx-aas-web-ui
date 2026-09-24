@@ -16,6 +16,7 @@ import {
   getEndpointFieldsForTemplate,
   normalizeInfrastructureTemplate,
 } from '@/utils/InfrastructureUtils'
+import { parseTrustedOrigin } from '@/utils/TrustedOriginUtils'
 
 /**
  * Composable for parsing YAML infrastructure configuration
@@ -261,6 +262,19 @@ export function useInfrastructureYamlParser (): {
         ConceptDescriptionRepo: { url: '' },
         CompanyLookup: { url: '' },
       },
+    }
+
+    if (Array.isArray(yamlConfig.trustedOrigins)) {
+      const trustedOrigins = yamlConfig.trustedOrigins.flatMap(value => {
+        const origin = parseTrustedOrigin(value)
+        if (!origin) {
+          console.warn(`Ignoring invalid trusted origin: ${String(value)}`)
+        }
+        return origin ? [origin] : []
+      })
+      if (trustedOrigins.length > 0) {
+        infrastructure.trustedOrigins = trustedOrigins
+      }
     }
 
     const catenaX = parseCatenaXConfig(yamlConfig)

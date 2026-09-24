@@ -1,8 +1,23 @@
+import type { InfrastructureConfig } from '@/types/Infrastructure'
 import { useAuth } from '@/composables/Auth/useAuth'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { useNavigationStore } from '@/store/NavigationStore'
 import { isValidCustomHeader } from '@/utils/CustomHeaderUtils'
+import { parseTrustedOrigin } from '@/utils/TrustedOriginUtils'
+
+class UntrustedEndpointError extends Error {
+  constructor (message = 'Untrusted endpoint blocked. Add its origin to the selected infrastructure to allow requests.') {
+    super(message)
+  }
+}
+
+function isInteractiveOAuth2WithoutToken (statusCode: number | undefined, infra: InfrastructureConfig | null | undefined): boolean {
+  return statusCode === 403
+    && infra?.auth?.securityType === 'OAuth2'
+    && infra.auth.oauth2?.authFlow !== 'client-credentials'
+    && !infra.token?.accessToken
+}
 
 export interface RequestErrorHandlingOptions {
   /**
@@ -139,7 +154,20 @@ export function useRequestHandling () {
     disableMessage: boolean,
     errorHandlingOptions: RequestErrorHandlingOptions = {},
     requestOwnerId: string | undefined = getRequestOwnerId(),
-  ): { success: false, status?: number, aborted?: true } {
+  ): { success: false, status?: number, aborted?: true, blocked?: true } {
+    if (error instanceof UntrustedEndpointError) {
+      setLastRequestFailureStatus(undefined)
+      setLastRequestFailureDetails(error.message)
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 8000,
+        color: 'error',
+        btnColor: 'buttonText',
+        text: error.message,
+      })
+      return { success: false, blocked: true }
+    }
+
     if (
       (error instanceof DOMException && error.name === 'AbortError')
       || (error instanceof Error && error.name === 'AbortError')
@@ -160,11 +188,7 @@ export function useRequestHandling () {
 
     const currentInfra = infrastructureStore.getSelectedInfrastructure
     const hasAuth = currentInfra?.auth && currentInfra.auth.securityType !== 'No Authentication'
-    const isInteractiveOAuth2WithoutToken = is403Error
-      && currentInfra?.auth?.securityType === 'OAuth2'
-      && currentInfra.auth.oauth2?.authFlow !== 'client-credentials'
-      && !currentInfra.token?.accessToken
-    const isAuthenticationRequired = is401Error || isInteractiveOAuth2WithoutToken
+    const isAuthenticationRequired = is401Error || isInteractiveOAuth2WithoutToken(statusCode, currentInfra)
 
     // Handle authentication errors
     if (isAuthenticationRequired && hasAuth) {
@@ -614,11 +638,54 @@ export function useRequestHandling () {
   // Convert header construction failures to rejections handled by each request's catch block.
   function fetchWithAuthentication (path: string, options: RequestInit, includeAuth = true): Promise<Response> {
     try {
+      if (!isTrustedRequestTarget(path)) {
+        throw new UntrustedEndpointError()
+      }
       const headers = includeAuth ? addAuthorizationHeader(options.headers) : options.headers
-      return fetch(path, { ...options, headers })
+      // Browsers cannot expose a redirect target in manual mode. Reject it before
+      // a second request can carry infrastructure credentials to another origin.
+      return fetch(path, { ...options, headers, redirect: 'manual' }).then(response => {
+        if (response.type === 'opaqueredirect') {
+          throw new UntrustedEndpointError('Redirect blocked because its destination cannot be verified.')
+        }
+        return response
+      })
     } catch (error) {
       return Promise.reject(error)
     }
+  }
+
+  function isTrustedRequestTarget (path: string): boolean {
+    let target: URL
+    try {
+      target = new URL(path, window.location.origin)
+    } catch {
+      return false
+    }
+    if (target.protocol !== 'http:' && target.protocol !== 'https:') {
+      return false
+    }
+    if (target.origin === window.location.origin) {
+      return true
+    }
+
+    const selectedInfra = infrastructureStore.getSelectedInfrastructure
+    if (!selectedInfra) {
+      return false
+    }
+
+    for (const component of Object.values(selectedInfra.components ?? {})) {
+      try {
+        const componentUrl = new URL(component.url, window.location.origin)
+        if (['http:', 'https:'].includes(componentUrl.protocol) && componentUrl.origin === target.origin) {
+          return true
+        }
+      } catch {
+        // An invalid component URL cannot grant trust.
+      }
+    }
+
+    return selectedInfra.trustedOrigins?.some(origin => parseTrustedOrigin(origin) === target.origin) ?? false
   }
 
   function addAuthorizationHeader (headers: HeadersInit | undefined): Headers {
