@@ -4,12 +4,12 @@
  * Each definition kind has its own schema because the required fields differ.
  */
 
-import type { AbacValidationMessages } from '@/pages/modules/ABAC/i18n/locales'
-import type { DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
+import type { AbacValidationMessages } from '../i18n/locales'
+import type { DefinitionKind } from '../types/definitions'
 import { z } from 'zod'
-import { createFormulaSchema } from '@/pages/modules/ABAC/schemas/formulaSchema'
-import { createSharedSchemas } from '@/pages/modules/ABAC/schemas/sharedSchema'
-import { toNullish } from '@/pages/modules/ABAC/utils/zod'
+import { toNullish } from '../utils/zod'
+import { createFormulaSchema } from './formulaSchema'
+import { createSharedSchemas } from './sharedSchema'
 
 export function createDefinitionSchema (messages: AbacValidationMessages) {
   const { formulaExpressionSchema } = createFormulaSchema(messages)

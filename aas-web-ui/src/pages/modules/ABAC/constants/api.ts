@@ -1,3 +1,5 @@
+import type { BaSyxComponentKey } from '@/types/BaSyx'
+
 export const ABAC_ENDPOINT_PATHS = {
   SECURITY: '/security/abac',
 } as const
@@ -53,3 +55,27 @@ export const RULE_SUB_PATHS = {
   MOVE: 'move',
   ENABLED: 'enabled',
 } as const
+
+// ---------------------------------------------------------------------------
+// ABAC Discovery
+// ---------------------------------------------------------------------------
+
+// Component keys that potentially expose ABAC management APIs
+export const DISCOVERABLE_COMPONENT_KEYS: BaSyxComponentKey[] = [
+  'AASDiscovery',
+  'AASRegistry',
+  'SubmodelRegistry',
+  'AASRepo',
+  'SubmodelRepo',
+  'ConceptDescriptionRepo',
+]
+
+/** Known API suffixes per component, same as the pathCheck values in InfrastructureStore. */
+export const COMPONENT_PATH_CHECK: Partial<Record<BaSyxComponentKey, string>> = {
+  AASDiscovery: '/lookup/shells',
+  AASRegistry: '/shell-descriptors',
+  SubmodelRegistry: '/submodel-descriptors',
+  AASRepo: '/shells',
+  SubmodelRepo: '/submodels',
+  ConceptDescriptionRepo: '/concept-descriptions',
+}

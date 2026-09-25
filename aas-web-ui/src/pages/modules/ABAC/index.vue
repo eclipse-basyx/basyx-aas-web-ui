@@ -3,12 +3,13 @@
 </template>
 
 <script setup lang="ts">
-  import { useAbacServiceDiscovery } from '@/pages/modules/ABAC/api/useAbacServiceDiscovery'
-  import AbacLayout from '@/pages/modules/ABAC/components/AbacLayout.vue'
-  import { ABAC_I18N_KEY } from '@/pages/modules/ABAC/constants/i18n'
-  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
-  import { i18nGlobal } from '@/pages/modules/ABAC/i18n/setup'
-  import { useAbacConfigStore } from '@/pages/modules/ABAC/stores/useAbacConfigStore'
+  import { useGetPolicies } from './api/policy/useGetPolicies'
+  import { useAbacServiceDiscovery } from './api/useAbacServiceDiscovery'
+  import AbacLayout from './components/AbacLayout.vue'
+  import { ABAC_I18N_KEY } from './constants/i18n'
+  import { useAbacNavigation } from './hooks/useAbacNavigation'
+  import { i18nGlobal } from './i18n/setup'
+  import { useAbacConfigStore } from './stores/useAbacConfigStore'
 
   defineOptions({
     moduleName: 'ABAC',
@@ -25,7 +26,7 @@
 
   // URL <-> store sync
   const { data: discoveredServices, isPending } = useAbacServiceDiscovery()
-  const { selectedService, onSelectService } = useAbacNavigation()
+  const { selectedService, onSelectService, selectedPolicyVersion, onSelectPolicy } = useAbacNavigation()
 
   watch(
     discoveredServices,
@@ -49,6 +50,14 @@
     const match = configStore.services.find(s => s.componentKey === key)
     if (match) configStore.setApiUrl(match.url)
   })
+
+  // Select active policy if no policy param is passed
+  const { data: policies } = useGetPolicies()
+  watch([policies, selectedService], ([list, service]) => {
+    if (selectedPolicyVersion.value || !service) return
+    const active = list?.find(policy => policy.status === 'active')
+    if (active) onSelectPolicy(active.version_id)
+  }, { immediate: true, flush: 'post' })
 
   watch(
     () => configStore.language,
