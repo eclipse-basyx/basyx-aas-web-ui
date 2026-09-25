@@ -4,6 +4,8 @@ infrastructures:
   local:
     name: Local BaSyx
     template: mono-all
+    trustedOrigins:
+      - "http://localhost:8086"
     components:
       aasEnvironment:
         baseUrl: "http://localhost:8081"

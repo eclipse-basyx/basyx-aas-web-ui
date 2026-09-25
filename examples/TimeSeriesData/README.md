@@ -95,6 +95,8 @@ Use this segment to query the live machine data stored in InfluxDB:
 
 The Web UI container receives the example token through `INFLUXDB_TOKEN`, so an API-token field normally does not appear. If it does appear, use the token configured in [`docker-compose.yaml`](docker-compose.yaml).
 
+The example's [`basyx-infra.yml`](basyx-infra.yml) includes `http://localhost:8086` in `trustedOrigins` so the Web UI can query InfluxDB. If you change the InfluxDB host or port, update this origin along with the LinkedSegment endpoint.
+
 The MQTT publisher creates a new machine-data sample every second. If the first query is empty immediately after startup, wait a few seconds and fetch again.
 
 ## Time ranges and Flux variables

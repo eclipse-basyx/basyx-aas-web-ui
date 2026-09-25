@@ -15,6 +15,22 @@ function createYamlConfig (
 }
 
 describe('useInfrastructureYamlParser.ts', () => {
+  it('parses only valid additional trusted origins', () => {
+    const { parseYamlConfig } = useInfrastructureYamlParser()
+    const parsed = parseYamlConfig(createYamlConfig({
+      name: 'Multi-origin',
+      components: { aasRepository: { baseUrl: 'https://repo.example' } },
+      trustedOrigins: [
+        'https://extra.example:8443/',
+        'https://extra.example/path',
+        'javascript:alert(1)',
+      ],
+      security: { type: 'none' },
+    }))
+
+    expect(parsed.infrastructures[0].trustedOrigins).toEqual(['https://extra.example:8443'])
+  })
+
   it('defaults missing template values to full', () => {
     const { parseYamlConfig } = useInfrastructureYamlParser()
 
@@ -27,6 +43,7 @@ describe('useInfrastructureYamlParser.ts', () => {
     }))
 
     expect(parsed.infrastructures[0].template).toBe('full')
+    expect(parsed.infrastructures[0].trustedOrigins).toBeUndefined()
     expect(parsed.defaultInfrastructureId).toBe('yaml_local')
   })
 

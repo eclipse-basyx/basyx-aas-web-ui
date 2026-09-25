@@ -26,6 +26,7 @@ function computeInfrastructureHash (infra: InfrastructureConfig): string {
     name: infra.name,
     template: normalizeInfrastructureTemplate(infra.template),
     components: infra.components,
+    trustedOrigins: infra.trustedOrigins,
     catenaX: infra.catenaX,
     auth: infra.auth,
     // Exclude: id (stable), token (runtime), isDefault (user preference), yamlConfigOutdated (runtime flag)

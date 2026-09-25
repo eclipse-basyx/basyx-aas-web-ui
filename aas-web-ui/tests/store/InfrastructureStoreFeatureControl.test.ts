@@ -323,6 +323,36 @@ describe('InfrastructureStore', () => {
     expect(component.description).toBeNull()
   })
 
+  it('forwards an explicit infrastructure context when testing a component connection', async () => {
+    const store = useInfrastructureStore()
+    await store.waitForInitialization()
+    const component = store.getBasyxComponents.AASRepo
+    component.url = 'https://draft.example/shells'
+    const draftInfrastructure = {
+      ...infrastructure('draft', []),
+      auth: {
+        securityType: 'Bearer Token' as const,
+        bearerToken: { token: 'draft-token' },
+      },
+      components: {
+        ...infrastructure('draft', []).components,
+        AASRepo: { url: 'https://draft.example/shells' },
+      },
+    }
+
+    await store.connectComponent('AASRepo', draftInfrastructure)
+
+    expect(mocks.getRequest).toHaveBeenCalledWith(
+      'https://draft.example/description',
+      'Connecting to AAS Repository URL',
+      true,
+      expect.any(Headers),
+      {},
+      'auto',
+      { infrastructure: draftInfrastructure, isolateAuthenticationFailures: true },
+    )
+  })
+
   it('discards a description response from a superseded component URL', async () => {
     const store = useInfrastructureStore()
     await store.waitForInitialization()
