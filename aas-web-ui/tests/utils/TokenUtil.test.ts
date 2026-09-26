@@ -8,6 +8,7 @@ function token (payload: Record<string, unknown>): string {
 describe('getAccessPrincipalFromToken', () => {
   it('uses stable OIDC issuer and subject claims', () => {
     expect(getAccessPrincipalFromToken(token({ iss: 'https://issuer.example', sub: 'user-1' }))).toEqual({
+      type: 'user',
       issuer: 'https://issuer.example',
       subject: 'user-1',
     })

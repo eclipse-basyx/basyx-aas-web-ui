@@ -137,7 +137,7 @@ describe('InfrastructureStore', () => {
     store.getBasyxComponents.AASRepo.url = 'https://aas.example'
     store.getBasyxComponents.SubmodelRepo.url = 'https://sm.example'
     mocks.getRequest.mockImplementation(async path => ({ success: true, data: { profiles: path === 'https://aas.example/description'
-      ? ['https://basyx.org/aas/API/3/2/ResourceBoundAccessControl/1.0']
+      ? ['https://basyx.org/aas/API/3/2/RelationshipBasedAccessControl/1.0']
       : [] } }))
     await store.connectComponent('AASRepo')
     await store.connectComponent('SubmodelRepo')

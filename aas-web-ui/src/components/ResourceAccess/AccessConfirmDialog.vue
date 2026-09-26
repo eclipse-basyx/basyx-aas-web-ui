@@ -43,7 +43,7 @@
   const isMobile = computed(() => navigationStore.getIsMobile)
 
   function confirm (): void {
-    open.value = false
     emit('confirm')
+    open.value = false
   }
 </script>

@@ -10,7 +10,7 @@ afterEach(() => {
 
 describe('Invitation URLs', () => {
   it('keeps the secret and service routing in the fragment, without resource identifiers', () => {
-    const link = buildInvitationUrl(`#/share-access?token=${token}`, 'https://api.example/prefix/shells/', 'AASRepo')
+    const link = buildInvitationUrl(token, 'https://api.example/prefix/shells/', 'AASRepo')
     const url = new URL(link)
     expect(url.origin).toBe(window.location.origin)
     expect(url.search).toBe('')
@@ -31,7 +31,7 @@ describe('Invitation URLs', () => {
   })
 
   it('removes secrets from browser history immediately and resumes across sign-in redirects', () => {
-    const link = buildInvitationUrl(`#/share-access?token=${token}`, 'https://api.example', 'AASRepo')
+    const link = buildInvitationUrl(token, 'https://api.example', 'AASRepo')
     window.history.replaceState(null, '', link)
     expect(captureInvitation()).toBe(true)
     expect(window.location.href).not.toContain(token)

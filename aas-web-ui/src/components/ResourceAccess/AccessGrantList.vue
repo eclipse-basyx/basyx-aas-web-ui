@@ -18,7 +18,7 @@
           </v-avatar>
         </template>
 
-        <v-list-item-title class="d-flex align-center flex-wrap ga-2">
+        <v-list-item-title class="d-flex align-center flex-wrap ga-2 text-wrap">
           <span class="text-break">{{ grant.subject }}</span>
           <v-chip v-if="grant.subjectType === 'group'" label size="x-small">Group</v-chip>
           <v-chip v-if="isMe(grant)" color="primary" size="x-small">You</v-chip>
@@ -36,7 +36,7 @@
               :items="roleItems(grant)"
               :model-value="grant.relation"
               variant="outlined"
-              width="160"
+              :width="smAndDown ? 124 : 160"
               @update:model-value="relation => $emit('change', grant, relation)"
             />
 
@@ -63,6 +63,7 @@
 <script setup lang="ts">
   import type { AccessGrant, AccessPrincipal, GrantRelation } from '@/types/ResourceAccess'
   import type { AccessRoleOption } from '@/utils/AccessRoles'
+  import { useDisplay } from 'vuetify'
   import { grantPrincipal, samePrincipal } from '@/utils/AccessPrincipal'
   import { roleOption } from '@/utils/AccessRoles'
 
@@ -80,6 +81,8 @@
     change: [grant: AccessGrant, relation: GrantRelation]
     remove: [grant: AccessGrant]
   }>()
+
+  const { smAndDown } = useDisplay()
 
   const sortedGrants = computed(() => props.grants.toSorted((left, right) =>
     relationOrder.indexOf(left.relation) - relationOrder.indexOf(right.relation)

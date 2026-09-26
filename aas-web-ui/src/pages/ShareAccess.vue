@@ -92,8 +92,8 @@
           class="text-buttonText"
           color="primary"
           rounded="lg"
-          text="Open viewer"
-          :to="{ name: 'AASViewer' }"
+          :text="viewerRoute.query ? 'Open' : 'Open viewer'"
+          :to="viewerRoute"
           variant="flat"
         />
 
@@ -115,12 +115,15 @@
 
 <script setup lang="ts">
   import type { AcceptedInvitation } from '@/types/ResourceAccess'
+  import type { LocationQueryRaw } from 'vue-router'
   import { useRouter } from 'vue-router'
   import { useAuth } from '@/composables/Auth/useAuth'
   import { useShareInvitationClient } from '@/composables/Client/ShareInvitationClient'
   import { clearInvitation, pendingInvitation } from '@/composables/ShareInvitation'
+  import { useEnvStore } from '@/store/EnvironmentStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { roleOption } from '@/utils/AccessRoles'
+  import { targetFromAccessObject } from '@/utils/ResourceAccessTargets'
 
   const objectLabels: Record<string, string> = {
     aas: 'the shell', submodel: 'the Submodel', element: 'an element of the Submodel', concept_description: 'the Concept Description',
@@ -128,6 +131,7 @@
   }
 
   const infrastructure = useInfrastructureStore()
+  const envStore = useEnvStore()
   const client = useShareInvitationClient()
   const { login } = useAuth(useRouter())
 
@@ -136,6 +140,14 @@
   const message = ref('')
   const authenticated = computed(() => infrastructure.getHasAuthenticationCredentials)
   const matchingService = computed(() => Boolean(pendingInvitation.value && client.canRedeem(pendingInvitation.value)))
+  const viewerRoute = computed((): { name: string, query?: LocationQueryRaw } => {
+    const target = accepted.value
+      ? targetFromAccessObject(accepted.value.object, component => infrastructure.getSelectedInfrastructure?.components[component]?.url)
+      : undefined
+    if (target?.kind === 'aas') return { name: 'AASViewer', query: { aas: target.endpoint } }
+    if (target && envStore.getSmViewerEditor) return { name: 'SMViewer', query: { path: target.endpoint } }
+    return { name: 'AASViewer' }
+  })
 
   onBeforeUnmount(clearInvitation)
 

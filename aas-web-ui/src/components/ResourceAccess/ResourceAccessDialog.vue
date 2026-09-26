@@ -23,7 +23,7 @@
         <v-list-item class="px-0 mb-2" :prepend-icon="resourceAccessIcon(target)">
           <v-list-item-title class="text-break">{{ resourceIdentity }}</v-list-item-title>
 
-          <v-list-item-subtitle class="mt-2">
+          <v-list-item-subtitle v-if="state.loaded.value" class="mt-2">
             <EffectiveAccess :rights="state.effective.value" />
           </v-list-item-subtitle>
         </v-list-item>
@@ -197,10 +197,11 @@
   })
 
   watch([open, () => props.target?.endpoint], ([isOpen]) => {
+    if (!isOpen) return
     tab.value = 'people'
     grantToRemove.value = undefined
-    if (isOpen) void state.load()
-    else state.reset()
+    state.reset()
+    void state.load()
   })
 
   async function run (change: () => Promise<boolean>, successText: string): Promise<void> {

@@ -52,26 +52,37 @@ describe('AASRepositoryClient.ts', () => {
     expect(mockDeps.getRequest).not.toHaveBeenCalled()
   })
 
-  it.each([true, false])('returns the explicit AAS update capability %s', async canUpdate => {
+  it.each([
+    ['rebac', true],
+    ['abac', true],
+    ['none', false],
+  ])('derives the AAS update capability from the effective update right granted by %s', async (source, canUpdate) => {
     mockState.aasRepoUrl = 'https://example.test/'
-    mockDeps.getRequest.mockResolvedValueOnce({ success: true, data: { canUpdate } })
+    mockDeps.getRequest.mockResolvedValueOnce({ success: true, data: { rights: [{ action: 'read', source: 'rebac' }, { action: 'update', source }] } })
     const { useAASRepositoryClient } = await import('@/composables/Client/AASRepositoryClient')
     expect(await useAASRepositoryClient().fetchAasUpdateCapability('urn:aas')).toBe(canUpdate)
     expect(mockDeps.getRequest).toHaveBeenCalledWith(
-      'https://example.test/shells/dXJuOmFhcw/$access/capabilities',
+      'https://example.test/shells/dXJuOmFhcw/$access/effective',
       'checking AAS editing permission',
       true,
+      expect.any(Headers),
+      { suppressStatuses: [404] },
     )
     expect(mockDeps.putRequest).not.toHaveBeenCalled()
     expect(mockDeps.postRequest).not.toHaveBeenCalled()
   })
 
+  it('denies creation when the shell is hidden', async () => {
+    mockDeps.getRequest.mockResolvedValueOnce({ success: false, status: 404 })
+    const { useAASRepositoryClient } = await import('@/composables/Client/AASRepositoryClient')
+    expect(await useAASRepositoryClient().fetchAasUpdateCapability('urn:aas')).toBe(false)
+  })
+
   it.each([
     { success: false, status: 401 },
-    { success: false, status: 404 },
     { success: false, status: 500 },
-    { success: false, data: { canUpdate: true } },
-    { success: true, data: { canUpdate: 'true' } },
+    { success: false, data: { rights: [{ action: 'update', source: 'rebac' }] } },
+    { success: true, data: { rights: 'update' } },
     { success: true, data: {} },
     { success: true },
   ])('does not authorize an unsuccessful or malformed capability response: %j', async response => {

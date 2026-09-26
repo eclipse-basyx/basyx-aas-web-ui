@@ -1,189 +1,87 @@
+import type { AccessGrant } from '@/types/ResourceAccess'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-import { nextTick } from 'vue'
-import GrantManager from '@/components/ResourceAccess/GrantManager.vue'
-import PolicyManager from '@/components/ResourceAccess/PolicyManager.vue'
-import PrincipalManager from '@/components/ResourceAccess/PrincipalManager.vue'
+import { createVuetify } from 'vuetify'
+import AccessGrantList from '@/components/ResourceAccess/AccessGrantList.vue'
+import AccessPrincipalForm from '@/components/ResourceAccess/AccessPrincipalForm.vue'
+import EffectiveAccess from '@/components/ResourceAccess/EffectiveAccess.vue'
+import { accessRoles, rolesFor } from '@/utils/AccessRoles'
 
+const slot = { template: '<div><slot /><slot name="prepend" /><slot name="append" /></div>' }
 const stubs = {
-  VAlert: { template: '<div><slot /><slot name="append" /></div>' },
-  VBtn: { emits: ['click'], props: ['disabled'], template: '<button :disabled="disabled" @click="$emit(\'click\')"><slot /></button>' },
-  VCard: { template: '<div><slot /></div>' },
-  VCardActions: { template: '<div><slot /></div>' },
-  VCardSubtitle: { template: '<div><slot /></div>' },
-  VCardText: { template: '<div><slot /></div>' },
-  VCardTitle: { template: '<div><slot /></div>' },
-  VChip: { template: '<span><slot /></span>' },
-  VList: { template: '<div><slot /></div>' },
-  VListItem: { template: '<div><slot /><slot name="append" /></div>' },
-  VListItemSubtitle: { template: '<div><slot /></div>' },
-  VListItemTitle: { template: '<div><slot /></div>' },
-  VSheet: { template: '<div><slot /></div>' },
-  VSpacer: true,
+  VAlert: { props: ['text'], template: '<div>{{ text }}</div>' },
+  VAvatar: slot,
+  VBtn: { props: ['text'], emits: ['click'], template: '<button @click="$emit(\'click\')">{{ text }}<slot /></button>' },
+  VBtnToggle: slot,
+  VChip: { props: ['text'], template: '<span>{{ text }}<slot /></span>' },
+  VDivider: true,
+  VExpandTransition: slot,
+  VIcon: true,
+  VList: slot,
+  VListItem: slot,
+  VListItemSubtitle: slot,
+  VListItemTitle: slot,
   VSelect: true,
-  CodeEditor: { props: ['modelValue', 'error'], emits: ['update:modelValue'], template: '<textarea :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)" />' },
-  PrincipalInput: true,
-  SharingRolePicker: true,
-  SharingPeopleList: true,
+  VSheet: slot,
+  VSpacer: true,
+  VTextField: true,
+  VTooltip: { template: '<div><slot name="activator" :props="{}" /></div>' },
+}
+
+function grant (relation: AccessGrant['relation'], subject: string): AccessGrant {
+  return {
+    relation, subjectType: 'user', issuer: 'https://issuer', subject,
+  }
 }
 
 describe('Resource access components', () => {
-  it('does not remove the final owner', async () => {
-    const owner = { issuer: 'https://issuer', subject: 'owner' }
-    const wrapper = mount(PrincipalManager, {
-      props: { modelValue: [owner], title: 'Owners', description: 'Owners', required: true },
-      global: { stubs },
-    })
-    ;(wrapper.vm as any).remove(0)
-    await nextTick()
-    expect(wrapper.emitted('update:modelValue')).toBeUndefined()
-    expect(wrapper.text()).toContain('owner')
-  })
-
-  it('adds, de-duplicates, and removes manager principals', async () => {
-    const manager = { issuer: 'https://issuer', subject: 'manager' }
-    const wrapper = mount(PrincipalManager, {
-      props: { modelValue: [], title: 'Managers', description: 'Managers' },
-      global: { stubs },
-    })
-    ;(wrapper.vm as any).add(manager)
-    await wrapper.setProps({ modelValue: [manager] })
-    ;(wrapper.vm as any).add(manager)
-    await nextTick()
-    expect(wrapper.emitted('update:modelValue')).toEqual([[[manager]]])
-    ;(wrapper.vm as any).remove(0)
-    expect(wrapper.emitted('update:modelValue')?.[1]).toEqual([[]])
-  })
-
-  it('keeps a person and group with the same name distinct and recognizes legacy users', async () => {
-    const user = { issuer: 'https://issuer', subject: 'team' }
-    const group = { ...user, type: 'group' as const }
-    const wrapper = mount(PrincipalManager, {
-      props: { modelValue: [user], title: 'Owners', description: '', required: true }, global: { stubs },
-    })
-    ;(wrapper.vm as any).add({ ...user, type: 'user' })
-    expect(wrapper.emitted('update:modelValue')).toBeUndefined()
-    ;(wrapper.vm as any).add(group)
-    expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([[user, group]])
-    await wrapper.setProps({ modelValue: [group] })
-    ;(wrapper.vm as any).remove(0)
-    expect(wrapper.emitted('update:modelValue')).toHaveLength(1)
-  })
-
-  it('lets users prepare sharing while access is inherited', async () => {
-    const wrapper = mount(GrantManager, {
-      props: { grants: [], hasLocalPolicy: false },
-      global: { stubs },
-    })
-    await wrapper.findAll('button').find(button => button.text().includes('Share access'))?.trigger('click')
-    ;(wrapper.vm as any).setPrincipal({ issuer: 'https://issuer', subject: 'reader' })
-    ;(wrapper.vm as any).save()
-    expect(wrapper.emitted('create')?.[0]?.[0]).toEqual({ principal: { issuer: 'https://issuer', subject: 'reader' }, rights: ['READ'] })
-    expect((wrapper.vm as any).formOpen).toBe(true)
-  })
-
-  it('creates and edits grants with issuer, subject, and de-duplicated rights', () => {
-    const wrapper = mount(GrantManager, {
+  it('lists grants by role and marks the signed-in user', () => {
+    const wrapper = mount(AccessGrantList, {
       props: {
-        grants: [{
-          id: 'grant-1',
-          principal: { issuer: 'https://issuer', subject: 'reader' },
-          rights: ['READ'],
-        }],
-        hasLocalPolicy: true,
+        grants: [grant('viewer', 'bob'), grant('owner', 'alice'), grant('editor', 'carol')],
+        roles: accessRoles,
+        currentPrincipal: { type: 'user', issuer: 'https://issuer', subject: 'alice' },
       },
-      global: { stubs },
+      global: { plugins: [createVuetify()], stubs },
     })
-    ;(wrapper.vm as any).setPrincipal({ issuer: 'https://issuer', subject: 'creator' })
-    ;(wrapper.vm as any).rights = ['CREATE', 'CREATE']
-    ;(wrapper.vm as any).save()
-    expect(wrapper.emitted('create')?.[0]?.[0]).toEqual({
-      principal: { issuer: 'https://issuer', subject: 'creator' },
-      rights: ['CREATE'],
-    })
-
-    ;(wrapper.vm as any).edit(wrapper.props('grants')[0])
-    ;(wrapper.vm as any).rights = ['READ', 'VIEW']
-    ;(wrapper.vm as any).save()
-    expect(wrapper.emitted('update')?.[0]).toEqual([
-      'grant-1',
-      { principal: { issuer: 'https://issuer', subject: 'reader' }, rights: ['READ', 'VIEW'] },
-    ])
+    const text = wrapper.text()
+    expect(text.indexOf('alice')).toBeLessThan(text.indexOf('carol'))
+    expect(text.indexOf('carol')).toBeLessThan(text.indexOf('bob'))
+    expect(text).toContain('You')
   })
 
-  it('keeps the draft until the server confirms a successful save', async () => {
-    const wrapper = mount(GrantManager, {
-      props: { grants: [], hasLocalPolicy: true, savedVersion: 0 },
-      global: { stubs },
+  it('shows an empty hint without grants', () => {
+    const wrapper = mount(AccessGrantList, {
+      props: { grants: [], roles: accessRoles, emptyText: 'Not shared with anyone yet.' },
+      global: { plugins: [createVuetify()], stubs },
     })
-    ;(wrapper.vm as any).formOpen = true
-    ;(wrapper.vm as any).setPrincipal({ issuer: 'https://issuer', subject: 'reader' })
-    ;(wrapper.vm as any).save()
-    await nextTick()
-    expect((wrapper.vm as any).principal.subject).toBe('reader')
-    expect((wrapper.vm as any).formOpen).toBe(true)
-    await wrapper.setProps({ savedVersion: 1 })
-    expect((wrapper.vm as any).principal).toBeUndefined()
-    expect((wrapper.vm as any).formOpen).toBe(false)
+    expect(wrapper.text()).toContain('Not shared with anyone yet.')
   })
 
-  it('prevents submissions while saving', () => {
-    const wrapper = mount(GrantManager, {
-      props: { grants: [], hasLocalPolicy: true, loading: true },
-      global: { stubs },
+  it('emits a principal of the signed-in issuer with the selected role', async () => {
+    const wrapper = mount(AccessPrincipalForm, {
+      props: { roles: accessRoles, currentPrincipal: { type: 'user', issuer: 'https://issuer', subject: 'alice' } },
+      global: { plugins: [createVuetify()], stubs },
     })
-    ;(wrapper.vm as any).setPrincipal({ issuer: 'https://issuer', subject: 'reader' })
-    ;(wrapper.vm as any).save()
-    expect(wrapper.emitted('create')).toBeUndefined()
+    const vm = wrapper.vm as any
+    vm.subject = ' bob '
+    vm.submit()
+    expect(wrapper.emitted('add')).toEqual([[{ type: 'user', issuer: 'https://issuer', subject: 'bob' }, 'viewer']])
+    vm.submit()
+    expect(wrapper.emitted('add')).toHaveLength(1)
   })
 
-  it('validates RESOURCE before emitting an advanced policy', async () => {
-    const resource = { IDENTIFIABLE: '$aas("urn:example")' } as const
-    const wrapper = mount(PolicyManager, {
-      props: { resource, localPolicy: { RESOURCE: resource, rules: [] }, effectivePolicy: null },
-      global: {
-        stubs: {
-          ...stubs,
-          VExpansionPanels: { template: '<div><slot /></div>' },
-          VExpansionPanel: { template: '<div><slot /></div>' },
-          VExpansionPanelText: { template: '<div><slot /></div>' },
-          VTextarea: { template: '<textarea />' },
-        },
-      },
+  it('shows only granted effective rights', () => {
+    const wrapper = mount(EffectiveAccess, {
+      props: { rights: { object: { type: 'aas', id: 'aas' }, rights: [{ action: 'read', source: 'rebac' }, { action: 'delete', source: 'none' }] } },
+      global: { plugins: [createVuetify()], stubs },
     })
-    await wrapper.get('textarea').setValue(JSON.stringify({ RESOURCE: { ROUTE: '/shells' }, rules: [] }))
-    ;(wrapper.vm as any).saveJson()
-    await nextTick()
-    expect(wrapper.emitted('save')).toBeUndefined()
-    expect((wrapper.vm as any).validationMessage).toContain('exactly match')
-
-    await wrapper.get('textarea').setValue(JSON.stringify({ RESOURCE: resource, rules: [] }))
-    ;(wrapper.vm as any).saveJson()
-    expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({ RESOURCE: resource, rules: [] })
+    expect(wrapper.text()).toContain('View')
+    expect(wrapper.text()).not.toContain('Delete')
   })
 
-  it('distinguishes inherited and local policies and exposes explicit actions', async () => {
-    const resource = { ROUTE: '/shells' } as const
-    const effectivePolicy = { RESOURCE: resource, rules: [] }
-    const inherited = mount(PolicyManager, {
-      props: { resource, localPolicy: null, effectivePolicy },
-      global: {
-        stubs: {
-          ...stubs,
-          VExpansionPanels: { template: '<div><slot /></div>' },
-          VExpansionPanel: { template: '<div><slot /></div>' },
-          VExpansionPanelText: { template: '<div><slot /></div>' },
-          VTextarea: true,
-        },
-      },
-    })
-    expect(inherited.text()).toContain('Inheriting rules')
-    await inherited.findAll('button').find(button => button.text().includes('Do not inherit access rules'))?.trigger('click')
-    expect(inherited.emitted('request-localize')).toHaveLength(1)
-
-    await inherited.setProps({ localPolicy: effectivePolicy })
-    expect(inherited.text()).toContain('Not inheriting rules')
-    await inherited.findAll('button').find(button => button.text().includes('Inherit access rules'))?.trigger('click')
-    expect(inherited.emitted('request-delete')).toHaveLength(1)
+  it('offers operation execution only for shells, Submodels and elements', () => {
+    expect(rolesFor('submodel-element').map(role => role.value)).toContain('executor')
+    expect(rolesFor('aas-descriptor').map(role => role.value)).not.toContain('executor')
   })
 })

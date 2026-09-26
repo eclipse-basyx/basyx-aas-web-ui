@@ -19,10 +19,11 @@ describe('Invitation redemption', () => {
     mocks.authenticated = true
   })
   it('sends only the token in the body to the configured service', async () => {
-    mocks.post.mockResolvedValue({ success: true, status: 201 })
-    expect((await useShareInvitationClient().redeem(invitation)).ok).toBe(true)
+    mocks.post.mockResolvedValue({ success: true, status: 200, data: { object: { type: 'aas', id: 'urn:aas' }, relation: 'viewer' } })
+    const result = await useShareInvitationClient().redeem(invitation)
+    expect(result).toMatchObject({ ok: true, data: { object: { id: 'urn:aas' }, relation: 'viewer' } })
     expect(mocks.post).toHaveBeenCalledWith(
-      'https://api.example/prefix/security/rebac/share-links/redeem',
+      'https://api.example/prefix/security/rebac/invitations/accept',
       JSON.stringify({ token: invitation.token }),
       expect.any(Headers), expect.any(String), true, false, expect.any(Object),
     )
@@ -42,7 +43,7 @@ describe('Invitation redemption', () => {
   it('does not expose backend error details or resource information', async () => {
     mocks.post.mockResolvedValue({ success: false, status: 404, data: { resource: 'hidden-resource', message: 'wrong-recipient' } })
     const result = await useShareInvitationClient().redeem(invitation)
-    expect(result.message).toBe('This invitation is unavailable. Ask the sender for a new link.')
+    expect(result.message).toBe('This invitation is invalid, expired or already used. Ask the sender for a new link.')
     expect(JSON.stringify(result)).not.toContain('hidden-resource')
     expect(JSON.stringify(result)).not.toContain('wrong-recipient')
   })

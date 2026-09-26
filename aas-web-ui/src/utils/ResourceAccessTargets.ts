@@ -1,5 +1,6 @@
 import type { BaSyxComponentKey } from '@/types/BaSyx'
 import type {
+  AccessObject,
   ResourceAccessTarget,
   ResourceAccessTargetInput,
   ResourceAccessTargetKind,
@@ -15,7 +16,7 @@ interface TargetDefinition {
 
 export const resourceAccessTargets: Record<ResourceAccessTargetKind, TargetDefinition> = {
   'aas': { componentKey: 'AASRepo', root: '/shells', label: 'Asset Administration Shell', icon: 'custom:aasIcon' },
-  'submodel': { componentKey: 'SubmodelRepo', root: '/submodels', label: 'Submodel', icon: 'custom:submodelIcon' },
+  'submodel': { componentKey: 'SubmodelRepo', root: '/submodels', label: 'Submodel', icon: 'mdi-folder-outline' },
   'submodel-element': { componentKey: 'SubmodelRepo', root: '/submodels', label: 'Submodel Element', icon: 'mdi-file-tree-outline' },
   'concept-description': { componentKey: 'ConceptDescriptionRepo', root: '/concept-descriptions', label: 'Concept Description', icon: 'mdi-text-box-outline' },
   'aas-descriptor': { componentKey: 'AASRegistry', root: '/shell-descriptors', label: 'AAS Descriptor', icon: 'mdi-card-account-details-outline' },
@@ -50,6 +51,25 @@ export function buildResourceAccessTarget (input: ResourceAccessTargetInput): Re
     endpoint,
     componentKey: definition.componentKey,
   }
+}
+
+const viewableObjectKinds: Partial<Record<string, ResourceAccessTargetKind>> = {
+  aas: 'aas',
+  submodel: 'submodel',
+  element: 'submodel-element',
+}
+
+/**
+ * Builds the target of a shell, Submodel or SubmodelElement returned by the
+ * ReBAC API, so it can be opened in a viewer. Other objects return undefined.
+ */
+export function targetFromAccessObject (object: AccessObject, baseUrlOf: (component: BaSyxComponentKey) => string | undefined): ResourceAccessTarget | undefined {
+  const kind = viewableObjectKinds[object.type]
+  const baseUrl = kind ? baseUrlOf(resourceAccessTargets[kind].componentKey) : undefined
+  if (!kind || !baseUrl) {
+    return undefined
+  }
+  return buildResourceAccessTarget({ kind, baseUrl, resourceId: object.id, submodelId: object.id, idShortPath: object.idShortPath })
 }
 
 /**
