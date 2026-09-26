@@ -1,10 +1,10 @@
 # BaSyx AAS Web UI
 
+![AAS Metamodel](https://img.shields.io/badge/AAS%20metamodel-v3.X-blue)
+![AAS API](https://img.shields.io/badge/AAS%20API-v3.X-blue)
+![AAS Security](https://img.shields.io/badge/AAS%20security-v3.X-blue)
+[![Build AAS Web UI](https://github.com/eclipse-basyx/basyx-aas-web-ui/actions/workflows/build-aas-web-ui.yml/badge.svg?branch=main)](https://github.com/eclipse-basyx/basyx-aas-web-ui/actions/workflows/build-aas-web-ui.yml?query=branch%3Amain)
 ![Docker Pulls](https://img.shields.io/docker/pulls/eclipsebasyx/aas-gui)
-[![Release Security Pipeline](https://github.com/eclipse-basyx/basyx-aas-web-ui/actions/workflows/docker-release-ui.yml/badge.svg)](https://github.com/eclipse-basyx/basyx-aas-web-ui/actions/workflows/docker-release-ui.yml)
-[![Vulnerability Scan](https://github.com/eclipse-basyx/basyx-aas-web-ui/actions/workflows/vuln-scan.yml/badge.svg)](https://github.com/eclipse-basyx/basyx-aas-web-ui/actions/workflows/vuln-scan.yml)
-![Metamodel](https://img.shields.io/badge/Metamodel-v3.X-yellow)
-![API](https://img.shields.io/badge/API-v3.X-yellow)
 
 A modern Vue.js web application for visualizing, managing, and interacting with Asset Administration Shells (AAS), Submodels, and Concept Descriptions in distributed BaSyx infrastructures.
 

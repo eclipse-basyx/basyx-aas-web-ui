@@ -705,12 +705,18 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     return url.trim().replace(/\/+$/, '')
   }
 
-  async function connectComponent (componentKey: keyof typeof basyxComponents): Promise<void> {
+  async function connectComponent (
+    componentKey: keyof typeof basyxComponents,
+    requestInfrastructure?: InfrastructureConfig,
+  ): Promise<void> {
     const basyxComponent = basyxComponents[componentKey]
     const profileUrl = basyxComponent.url.trim().replace(/\/+$/, '')
     const profileInfrastructureId = getSelectedInfrastructure.value?.id ?? ''
     const profile = { url: profileUrl, infrastructureId: profileInfrastructureId, enabled: false, requestId: ++nextProfileRequest }
     resourceAccessProfiles.value[componentKey] = profile
+    const requestSecurityContext = requestInfrastructure
+      ? { infrastructure: requestInfrastructure, isolateAuthenticationFailures: true }
+      : undefined
     const connectionGeneration = invalidateComponentConnection(componentKey)
     const infrastructureId = selectedInfrastructureId.value
     const requestedUrl = normalizeComponentUrl(basyxComponent.url)
@@ -742,7 +748,15 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
         path += '/description'
 
-        const response = await getRequest(path, context, disableMessage)
+        const response = await getRequest(
+          path,
+          context,
+          disableMessage,
+          new Headers(),
+          {},
+          'auto',
+          requestSecurityContext,
+        )
         if (!isCurrentComponentConnection(componentKey, connectionGeneration, infrastructureId, requestedUrl)) {
           return
         }
@@ -779,7 +793,15 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
           }
 
           disableMessage = false
-          const response = await getRequest(path, context, disableMessage)
+          const response = await getRequest(
+            path,
+            context,
+            disableMessage,
+            new Headers(),
+            {},
+            'auto',
+            requestSecurityContext,
+          )
           if (!isCurrentComponentConnection(componentKey, connectionGeneration, infrastructureId, requestedUrl)) {
             return
           }

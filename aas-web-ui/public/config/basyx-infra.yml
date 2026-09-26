@@ -22,6 +22,12 @@
 # - catenaX.edc.proxyId links this infrastructure to a server-side EDC BFF proxy config.
 # - catenaX.edc.partners can preconfigure known counterparties; users may still enter runtime partners.
 # - Do not put the EDC Management API URL or x-api-key in this YAML file.
+# Optional trustedOrigins: HTTP(S) origins of additional endpoints that may receive
+# infrastructure credentials. Requests to other origins are blocked before fetch.
+# Relative and UI same-origin requests, plus configured component origins, are trusted automatically.
+# Example: trustedOrigins: ["https://other-repository.example.com:8443"]
+# Backend requests do not follow redirects because browser APIs cannot reveal the next
+# destination for validation; configure the final endpoint URL directly instead.
 
 infrastructures:
   # Specify which infrastructure should be selected by default

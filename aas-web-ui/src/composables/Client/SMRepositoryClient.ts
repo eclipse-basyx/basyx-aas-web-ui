@@ -205,6 +205,9 @@ export function useSMRepositoryClient () {
     const disableMessage = true
     try {
       const smRepoResponse = await getRequest(smRepoPath, smRepoContext, disableMessage)
+      if (smRepoResponse.blocked) {
+        return failResponse
+      }
       const smRepoBadRequestError = Array.isArray(smRepoResponse.data)
         ? smRepoResponse.data.some((message: any) => Number(message.code) === 400)
         : false
@@ -290,6 +293,9 @@ export function useSMRepositoryClient () {
     const disableMessage = true
     try {
       const smRepoResponse = await getRequest(smRepoPath, smRepoContext, disableMessage)
+      if (smRepoResponse.blocked) {
+        return failResponse
+      }
       const smRepoBadRequestError = Array.isArray(smRepoResponse.data)
         ? smRepoResponse.data.some((message: any) => Number(message.code) === 400)
         : false

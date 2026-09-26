@@ -125,6 +125,7 @@ export interface InfrastructureConfig {
   components: {
     [key in BaSyxComponentKey]: ComponentConfig;
   }
+  trustedOrigins?: string[]
   catenaX?: CatenaXConfig
   /**
    * Hash of the original YAML configuration (if loaded from YAML)
@@ -254,6 +255,7 @@ export interface YamlInfrastructureConfig {
     submodelService?: YamlComponentConfig
     companyLookup?: YamlComponentConfig
   }
+  trustedOrigins?: string[]
   catenaX?: {
     accessMode?: CatenaXAccessMode | string
     edc?: {

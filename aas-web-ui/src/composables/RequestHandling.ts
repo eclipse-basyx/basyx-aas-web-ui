@@ -1,8 +1,23 @@
+import type { InfrastructureConfig } from '@/types/Infrastructure'
 import { useAuth } from '@/composables/Auth/useAuth'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { useNavigationStore } from '@/store/NavigationStore'
 import { isValidCustomHeader } from '@/utils/CustomHeaderUtils'
+import { parseTrustedOrigin } from '@/utils/TrustedOriginUtils'
+
+class UntrustedEndpointError extends Error {
+  constructor (message = 'Untrusted endpoint blocked. Add its origin to the selected infrastructure to allow requests.') {
+    super(message)
+  }
+}
+
+function isInteractiveOAuth2WithoutToken (statusCode: number | undefined, infra: InfrastructureConfig | null | undefined): boolean {
+  return statusCode === 403
+    && infra?.auth?.securityType === 'OAuth2'
+    && infra.auth.oauth2?.authFlow !== 'client-credentials'
+    && !infra.token?.accessToken
+}
 
 export interface RequestErrorHandlingOptions {
   /**
@@ -22,6 +37,17 @@ export interface RequestResult<T = unknown> {
   status?: number
   raw?: Response
   aborted?: true
+}
+
+export interface RequestSecurityContext {
+  /**
+   * Infrastructure whose configured endpoints and credentials authorize this request.
+   */
+  infrastructure: InfrastructureConfig
+  /**
+   * Prevents a request with draft credentials from changing the saved login state.
+   */
+  isolateAuthenticationFailures?: boolean
 }
 
 export function useRequestHandling () {
@@ -147,7 +173,22 @@ export function useRequestHandling () {
     disableMessage: boolean,
     errorHandlingOptions: RequestErrorHandlingOptions = {},
     requestOwnerId: string | undefined = getRequestOwnerId(),
-  ): { success: false, status?: number, aborted?: true } {
+    requestInfrastructure: InfrastructureConfig | null | undefined = infrastructureStore.getSelectedInfrastructure,
+    isolateAuthenticationFailures = false,
+  ): { success: false, status?: number, aborted?: true, blocked?: true } {
+    if (error instanceof UntrustedEndpointError) {
+      setLastRequestFailureStatus(undefined)
+      setLastRequestFailureDetails(error.message)
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 8000,
+        color: 'error',
+        btnColor: 'buttonText',
+        text: error.message,
+      })
+      return { success: false, blocked: true }
+    }
+
     if (
       (error instanceof DOMException && error.name === 'AbortError')
       || (error instanceof Error && error.name === 'AbortError')
@@ -166,30 +207,26 @@ export function useRequestHandling () {
       return { success: false, status: statusCode }
     }
 
-    const currentInfra = infrastructureStore.getSelectedInfrastructure
-    const hasAuth = currentInfra?.auth && currentInfra.auth.securityType !== 'No Authentication'
-    const isInteractiveOAuth2WithoutToken = is403Error
-      && currentInfra?.auth?.securityType === 'OAuth2'
-      && currentInfra.auth.oauth2?.authFlow !== 'client-credentials'
-      && !currentInfra.token?.accessToken
-    const isAuthenticationRequired = is401Error || isInteractiveOAuth2WithoutToken
+    const hasAuth = requestInfrastructure?.auth && requestInfrastructure.auth.securityType !== 'No Authentication'
+    const isAuthenticationRequired
+      = is401Error || isInteractiveOAuth2WithoutToken(statusCode, requestInfrastructure)
 
     // Handle authentication errors
-    if (isAuthenticationRequired && hasAuth) {
-      if (currentInfra?.id) {
-        infrastructureStore.setAuthenticationStatusForInfrastructure(currentInfra.id, false)
+    if (isAuthenticationRequired && hasAuth && !isolateAuthenticationFailures) {
+      if (requestInfrastructure?.id) {
+        infrastructureStore.setAuthenticationStatusForInfrastructure(requestInfrastructure.id, false)
       }
       showLoginRequiredSnackbar()
 
       return { success: false, status: statusCode }
     }
 
-    if (is403Error && hasAuth) {
+    if (is403Error && hasAuth && !isolateAuthenticationFailures) {
       const currentSnackbar = navigationStore.getSnackbar
       if (
         !currentSnackbar.status
         || currentSnackbar.kind !== 'access-denied'
-        || currentSnackbar.infrastructureId !== currentInfra?.id
+        || currentSnackbar.infrastructureId !== requestInfrastructure?.id
       ) {
         navigationStore.dispatchSnackbar({
           status: true,
@@ -198,7 +235,7 @@ export function useRequestHandling () {
           btnColor: 'buttonText',
           baseError: 'Access denied!',
           extendedError: 'You are not allowed to perform this action.',
-          infrastructureId: currentInfra?.id,
+          infrastructureId: requestInfrastructure?.id,
           kind: 'access-denied',
         })
       }
@@ -298,6 +335,8 @@ export function useRequestHandling () {
     disableMessage: boolean,
     errorHandlingOptions: RequestErrorHandlingOptions = {},
     requestOwnerId: string | undefined = getRequestOwnerId(),
+    requestInfrastructure: InfrastructureConfig | null | undefined = infrastructureStore.getSelectedInfrastructure,
+    isolateAuthenticationFailures = false,
   ): { success: false, status: number, data?: any } {
     const details = buildErrorDetailsFromPayload(data)
     setLastRequestFailureStatus(status)
@@ -308,7 +347,14 @@ export function useRequestHandling () {
     }
 
     if (status === 401 || status === 403) {
-      handleRequestError(new Error('Error status: ' + status), disableMessage, errorHandlingOptions, requestOwnerId)
+      handleRequestError(
+        new Error('Error status: ' + status),
+        disableMessage,
+        errorHandlingOptions,
+        requestOwnerId,
+        requestInfrastructure,
+        isolateAuthenticationFailures,
+      )
       setLastRequestFailureStatus(status)
       setLastRequestFailureDetails(details)
       return { success: false, status }
@@ -330,12 +376,15 @@ export function useRequestHandling () {
     headers: Headers = new Headers(),
     errorHandlingOptions: RequestErrorHandlingOptions = {},
     responseType: 'auto' | 'blob' = 'auto',
+    securityContext?: RequestSecurityContext,
   ): any {
-    const requestOwnerId = getRequestOwnerId()
+    const requestInfrastructure = securityContext?.infrastructure ?? infrastructureStore.getSelectedInfrastructure
+    const requestOwnerId = requestInfrastructure?.id
     return fetchWithAuthentication(
       path,
       { method: 'GET', headers, signal: errorHandlingOptions.signal },
       shouldAddAuthorizationHeader(path),
+      requestInfrastructure,
     )
       .then(async response => {
         // File previews need the original bytes, including malformed JSON and its whitespace.
@@ -396,6 +445,8 @@ export function useRequestHandling () {
               disableMessage,
               errorHandlingOptions,
               requestOwnerId,
+              requestInfrastructure,
+              securityContext?.isolateAuthenticationFailures,
             ),
             raw: response,
           }
@@ -414,7 +465,14 @@ export function useRequestHandling () {
           throw new Error('Unexpected response format')
         }
       })
-      .catch(error => handleRequestError(error, disableMessage, errorHandlingOptions, requestOwnerId))
+      .catch(error => handleRequestError(
+        error,
+        disableMessage,
+        errorHandlingOptions,
+        requestOwnerId,
+        requestInfrastructure,
+        securityContext?.isolateAuthenticationFailures,
+      ))
   }
 
   function postRequest (
@@ -663,23 +721,77 @@ export function useRequestHandling () {
   }
 
   // Convert header construction failures to rejections handled by each request's catch block.
-  function fetchWithAuthentication (path: string, options: RequestInit, includeAuth = true): Promise<Response> {
+  function fetchWithAuthentication (
+    path: string,
+    options: RequestInit,
+    includeAuth = true,
+    requestInfrastructure: InfrastructureConfig | null | undefined = infrastructureStore.getSelectedInfrastructure,
+  ): Promise<Response> {
     try {
-      const headers = includeAuth ? addAuthorizationHeader(options.headers) : options.headers
-      return fetch(path, { ...options, headers })
+      if (!isTrustedRequestTarget(path, requestInfrastructure)) {
+        throw new UntrustedEndpointError()
+      }
+      const headers = includeAuth
+        ? addAuthorizationHeader(options.headers, requestInfrastructure)
+        : options.headers
+      // Browsers cannot expose a redirect target in manual mode. Reject it before
+      // a second request can carry infrastructure credentials to another origin.
+      return fetch(path, { ...options, headers, redirect: 'manual' }).then(response => {
+        if (response.type === 'opaqueredirect') {
+          throw new UntrustedEndpointError('Redirect blocked because its destination cannot be verified.')
+        }
+        return response
+      })
     } catch (error) {
       return Promise.reject(error)
     }
   }
 
-  function addAuthorizationHeader (headers: HeadersInit | undefined): Headers {
-    const requestHeaders = new Headers(headers)
-    // Try to find which infrastructure component this request is for
-    const selectedInfra = infrastructureStore.getSelectedInfrastructure
+  function isTrustedRequestTarget (
+    path: string,
+    requestInfrastructure: InfrastructureConfig | null | undefined,
+  ): boolean {
+    let target: URL
+    try {
+      target = new URL(path, window.location.origin)
+    } catch {
+      return false
+    }
+    if (target.protocol !== 'http:' && target.protocol !== 'https:') {
+      return false
+    }
+    if (target.origin === window.location.origin) {
+      return true
+    }
 
-    if (selectedInfra) {
+    if (!requestInfrastructure) {
+      return false
+    }
+
+    for (const component of Object.values(requestInfrastructure.components ?? {})) {
+      try {
+        const componentUrl = new URL(component.url, window.location.origin)
+        if (['http:', 'https:'].includes(componentUrl.protocol) && componentUrl.origin === target.origin) {
+          return true
+        }
+      } catch {
+        // An invalid component URL cannot grant trust.
+      }
+    }
+
+    return requestInfrastructure.trustedOrigins
+      ?.some(origin => parseTrustedOrigin(origin) === target.origin) ?? false
+  }
+
+  function addAuthorizationHeader (
+    headers: HeadersInit | undefined,
+    requestInfrastructure: InfrastructureConfig | null | undefined,
+  ): Headers {
+    const requestHeaders = new Headers(headers)
+
+    if (requestInfrastructure) {
       // Use infrastructure-level authentication if configured
-      const auth = selectedInfra.auth
+      const auth = requestInfrastructure.auth
       const authorizationPrefix = environmentStore.getAuthorizationPrefix
       if (auth && auth.securityType !== 'No Authentication') {
         if (auth.securityType === 'Bearer Token' && auth.bearerToken?.token) {
@@ -691,8 +803,8 @@ export function useRequestHandling () {
             'Basic ' + btoa(auth.basicAuth.username + ':' + auth.basicAuth.password),
           )
           return requestHeaders
-        } else if (auth.securityType === 'OAuth2' && selectedInfra.token?.accessToken) {
-          requestHeaders.set('Authorization', authorizationPrefix + ' ' + selectedInfra.token.accessToken)
+        } else if (auth.securityType === 'OAuth2' && requestInfrastructure.token?.accessToken) {
+          requestHeaders.set('Authorization', authorizationPrefix + ' ' + requestInfrastructure.token.accessToken)
           return requestHeaders
         } else if (auth.securityType === 'Custom Header') {
           if (!isValidCustomHeader(auth.customHeader)) {
