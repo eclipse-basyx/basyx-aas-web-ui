@@ -10,40 +10,64 @@ interface TargetDefinition {
   componentKey: BaSyxComponentKey
   root: string
   label: string
+  icon: string
 }
 
-const definitions: Record<ResourceAccessTargetKind, TargetDefinition> = {
-  'aas': { componentKey: 'AASRepo', root: '/shells', label: 'Asset Administration Shell' },
-  'submodel': { componentKey: 'SubmodelRepo', root: '/submodels', label: 'Submodel' },
-  'nested-submodel': { componentKey: 'AASRepo', root: '/shells', label: 'Submodel in an AAS' },
-  'submodel-element': { componentKey: 'SubmodelRepo', root: '/submodels', label: 'Submodel Element' },
-  'nested-submodel-element': { componentKey: 'AASRepo', root: '/shells', label: 'Submodel Element in an AAS' },
-  'aas-descriptor': { componentKey: 'AASRegistry', root: '/shell-descriptors', label: 'AAS descriptor' },
-  'nested-submodel-descriptor': { componentKey: 'AASRegistry', root: '/shell-descriptors', label: 'Nested Submodel descriptor' },
-  'submodel-descriptor': { componentKey: 'SubmodelRegistry', root: '/submodel-descriptors', label: 'Submodel descriptor' },
-  'discovery': { componentKey: 'AASDiscovery', root: '/lookup/shells', label: 'AAS Discovery entry' },
-  'concept-description': { componentKey: 'ConceptDescriptionRepo', root: '/concept-descriptions', label: 'Concept Description' },
+export const resourceAccessTargets: Record<ResourceAccessTargetKind, TargetDefinition> = {
+  'aas': { componentKey: 'AASRepo', root: '/shells', label: 'Asset Administration Shell', icon: 'custom:aasIcon' },
+  'submodel': { componentKey: 'SubmodelRepo', root: '/submodels', label: 'Submodel', icon: 'custom:submodelIcon' },
+  'submodel-element': { componentKey: 'SubmodelRepo', root: '/submodels', label: 'Submodel Element', icon: 'mdi-file-tree-outline' },
+  'concept-description': { componentKey: 'ConceptDescriptionRepo', root: '/concept-descriptions', label: 'Concept Description', icon: 'mdi-text-box-outline' },
+  'aas-descriptor': { componentKey: 'AASRegistry', root: '/shell-descriptors', label: 'AAS Descriptor', icon: 'mdi-card-account-details-outline' },
+  'submodel-descriptor': { componentKey: 'SubmodelRegistry', root: '/submodel-descriptors', label: 'Submodel Descriptor', icon: 'mdi-card-text-outline' },
+  'discovery': { componentKey: 'AASDiscovery', root: '/lookup/shells', label: 'Discovery Entry', icon: 'mdi-magnify' },
 }
 
-export const resourceAccessTargetOptions = Object.entries(definitions).map(([value, definition]) => ({
+export const resourceAccessTargetOptions = Object.entries(resourceAccessTargets).map(([value, definition]) => ({
   title: definition.label,
   componentKey: definition.componentKey,
   value: value as ResourceAccessTargetKind,
 }))
 
+/**
+ * Builds the target of an individual resource from its identifiers.
+ * Identifiers are base64url encoded, idShort paths are URL encoded as in the
+ * AAS API, so `list[0]` becomes `list%5B0%5D`.
+ */
 export function buildResourceAccessTarget (input: ResourceAccessTargetInput): ResourceAccessTarget {
-  const definition = definitions[input.kind]
+  const definition = resourceAccessTargets[input.kind]
   if (!definition) {
-    throw new Error('Resource access is only supported for individual resources.')
+    throw new Error('Sharing is only available for individual resources.')
   }
-  const rootEndpoint = ensureEndpointRoot(input.baseUrl, definition.root)
-  const endpoint = buildConcreteEndpoint(input, rootEndpoint)
-
+  const root = ensureEndpointRoot(input.baseUrl, definition.root)
+  const endpoint = input.kind === 'submodel-element'
+    ? `${root}/${encodeRequired(input.submodelId, 'Submodel ID')}/submodel-elements/${encodeIdShortPath(input.idShortPath)}`
+    : `${root}/${encodeRequired(input.resourceId, 'resource ID')}`
+  const identity = input.kind === 'submodel-element' ? input.idShortPath : input.resourceId
   return {
     kind: input.kind,
-    label: buildLabel(input, definition),
+    label: identity ? `${definition.label}: ${identity}` : definition.label,
     endpoint,
     componentKey: definition.componentKey,
+  }
+}
+
+/**
+ * Builds the target of a Submodel or SubmodelElement from its repository
+ * endpoint as used by the tree views, for example
+ * `…/submodels/{id}/submodel-elements/a.b%5B0%5D`.
+ */
+export function targetFromSubmodelEndpoint (endpoint: string, label: string): ResourceAccessTarget | undefined {
+  const normalized = endpoint.trim().replace(/\/+$/, '')
+  const match = /\/submodels\/[^/]+(\/submodel-elements\/[^/]+)?$/.exec(normalized)
+  if (!match || normalized.includes('/shells/')) {
+    return undefined
+  }
+  return {
+    kind: match[1] ? 'submodel-element' : 'submodel',
+    label,
+    endpoint: normalized,
+    componentKey: 'SubmodelRepo',
   }
 }
 
@@ -51,37 +75,16 @@ export function accessEndpoint (target: ResourceAccessTarget): string {
   return `${target.endpoint.replace(/\/$/, '')}/$access`
 }
 
-function buildConcreteEndpoint (input: ResourceAccessTargetInput, rootEndpoint: string): string {
-  switch (input.kind) {
-    case 'aas':
-    case 'aas-descriptor':
-    case 'submodel':
-    case 'submodel-descriptor':
-    case 'discovery':
-    case 'concept-description': {
-      return `${rootEndpoint}/${encodeRequired(input.resourceId, 'resource ID')}`
-    }
-    case 'submodel-element': {
-      return `${rootEndpoint}/${encodeRequired(input.submodelId, 'Submodel ID')}/submodel-elements/${encodePath(input.idShortPath)}`
-    }
-    case 'nested-submodel': {
-      return `${rootEndpoint}/${encodeRequired(input.aasId, 'AAS ID')}/submodels/${encodeRequired(input.submodelId, 'Submodel ID')}`
-    }
-    case 'nested-submodel-element': {
-      return `${rootEndpoint}/${encodeRequired(input.aasId, 'AAS ID')}/submodels/${encodeRequired(input.submodelId, 'Submodel ID')}/submodel-elements/${encodePath(input.idShortPath)}`
-    }
-    case 'nested-submodel-descriptor': {
-      return `${rootEndpoint}/${encodeRequired(input.aasId, 'AAS ID')}/submodel-descriptors/${encodeRequired(input.submodelId, 'Submodel ID')}`
-    }
-    default: {
-      throw new Error('Resource access requires an individual resource.')
-    }
-  }
+export function resourceAccessIcon (target?: ResourceAccessTarget): string {
+  return target ? resourceAccessTargets[target.kind].icon : 'mdi-account-lock-outline'
 }
 
-function buildLabel (input: ResourceAccessTargetInput, definition: TargetDefinition): string {
-  const identity = input.idShortPath || input.resourceId || input.submodelId || input.aasId
-  return identity ? `${definition.label}: ${identity}` : definition.label
+export function encodeIdShortPath (value: string | undefined): string {
+  const path = value?.trim()
+  if (!path) {
+    throw new Error('idShort path is required.')
+  }
+  return encodeURIComponent(path)
 }
 
 function ensureEndpointRoot (baseUrl: string, root: string): string {
@@ -93,17 +96,9 @@ function ensureEndpointRoot (baseUrl: string, root: string): string {
 }
 
 function encodeRequired (value: string | undefined, name: string): string {
-  const encoded = base64Encode(value ?? '')
-  if (!encoded) {
+  const trimmed = value?.trim() ?? ''
+  if (!trimmed) {
     throw new Error(`${name} is required.`)
   }
-  return encoded
-}
-
-function encodePath (value: string | undefined): string {
-  const path = value?.trim()
-  if (!path) {
-    throw new Error('ID-short path is required.')
-  }
-  return encodeURIComponent(path)
+  return base64Encode(trimmed)
 }

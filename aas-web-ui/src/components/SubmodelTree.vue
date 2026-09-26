@@ -422,7 +422,7 @@
     :submodel="submodelToConvert"
   />
 
-  <ResourceAccessDialog v-model="accessDialog" :target="accessTarget" />
+  <ResourceAccessDialog v-model="accessDialog" :context-aas-id="aasStore.getSelectedAAS?.id" :target="accessTarget" />
 
   <AdvancedQueryDialog
     v-if="globalQueryAvailable && !isMobile"
@@ -482,6 +482,7 @@
     supportsQueryProfile,
     validateQueryForTarget,
   } from '@/utils/QueryLanguageUtils'
+  import { targetFromSubmodelEndpoint } from '@/utils/ResourceAccessTargets'
   import { isEmptyString } from '@/utils/StringUtils'
 
   // Vue Router
@@ -1207,14 +1208,10 @@
   }
 
   function openResourceAccessDialog (element: any): void {
-    const endpoint = String(element?.path ?? '').replace(/\/$/, '')
-    if (!endpoint || !infrastructureStore.supportsResourceAccessEndpoint(endpoint)) return
-    accessTarget.value = {
-      kind: element.modelType === 'Submodel' ? 'submodel' : 'submodel-element',
-      label: `${element.modelType ?? 'Submodel Element'}: ${element.idShort ?? element.id ?? ''}`,
-      endpoint,
-      componentKey: infrastructureStore.resourceAccessComponent(endpoint)!,
-    }
+    const label = `${element?.modelType ?? 'Submodel Element'}: ${element?.idShort ?? element?.id ?? ''}`
+    const target = targetFromSubmodelEndpoint(String(element?.path ?? ''), label)
+    if (!target || !infrastructureStore.supportsResourceAccessEndpoint(target.endpoint)) return
+    accessTarget.value = target
     accessDialog.value = true
   }
 

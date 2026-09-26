@@ -60,5 +60,5 @@ export function getAccessPrincipalFromToken (accessToken: string): AccessPrincip
   if (!issuer || !subject) {
     throw new Error('The token does not contain non-empty iss and sub claims.')
   }
-  return { issuer, subject }
+  return { type: 'user', issuer, subject }
 }

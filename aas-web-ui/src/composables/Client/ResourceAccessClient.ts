@@ -1,160 +1,183 @@
 import type { RequestResult } from '@/composables/RequestHandling'
+import type { BaSyxComponentKey } from '@/types/BaSyx'
 import type {
-  AccessPrincipal,
-  GrantInput,
-  ManagedGrant,
-  ResourceAccessOverview,
+  AccessDocument,
+  AccessGrant,
+  AuditEvent,
+  AuditVerification,
+  EffectiveRights,
+  Invitation,
+  InvitationRequest,
+  ReconcileReport,
+  RepositoryKind,
   ResourceAccessResult,
   ResourceAccessTarget,
-  ResourceBoundPolicy,
-  ShareLinkInput,
-  ShareLinkResponse,
 } from '@/types/ResourceAccess'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { accessEndpoint } from '@/utils/ResourceAccessTargets'
+import { managementUrl } from '@/utils/ShareLinks'
 
-const expectedStatuses = [400, 401, 403, 404, 405, 409, 412, 413, 428]
+const expectedStatuses = [400, 404, 409, 412, 428, 503]
 
 const statusMessages: Record<number, string> = {
-  400: 'The access configuration is invalid.',
+  400: 'The access change is invalid.',
   401: 'Please sign in before managing access.',
-  403: 'Only an owner or manager may administer this resource.',
-  404: 'The resource or access entry no longer exists.',
-  405: 'This access operation is not supported by the component.',
-  409: 'Create a local policy before changing grants or managers.',
-  412: 'Access was changed by someone else. The latest version has been loaded; review and retry.',
-  413: 'The policy is larger than the 1 MiB limit.',
-  428: 'The access version is missing. Reload the resource and retry.',
+  403: 'You are not allowed to manage access here.',
+  404: 'Only owners and administrators can manage access to this resource.',
+  409: 'The change was rejected, for example because the last owner would be removed.',
+  412: 'Access was changed by someone else. The latest state has been loaded; review and retry.',
+  428: 'The access version is missing. Reload and retry.',
+  503: 'Access management is currently unavailable. Please try again later.',
 }
 
+/**
+ * Client for the relationship-based access control (ReBAC) management API
+ * of BaSyx: `$access` sub-resources of individual resources, repository
+ * grants and the administrator endpoints below `/security/rebac`.
+ */
 export function useResourceAccessClient () {
   const infrastructureStore = useInfrastructureStore()
   const { getRequest, postRequest, putRequest, deleteRequest } = useRequestHandling()
 
-  async function getOverview (target: ResourceAccessTarget): Promise<ResourceAccessResult<ResourceAccessOverview>> {
-    if (!infrastructureStore.supportsResourceAccess?.(target.componentKey, target.endpoint)) {
+  async function getAccess (target: ResourceAccessTarget): Promise<ResourceAccessResult<AccessDocument>> {
+    return read<AccessDocument>(target, accessEndpoint(target), 'loading access')
+  }
+
+  async function replaceGrants (target: ResourceAccessTarget, grants: AccessGrant[], etag: string): Promise<ResourceAccessResult<AccessDocument>> {
+    return write<AccessDocument>(target, 'put', `${accessEndpoint(target)}/grants`, { grants: withoutMetadata(grants) }, etag)
+  }
+
+  async function getEffectiveRights (target: ResourceAccessTarget): Promise<ResourceAccessResult<EffectiveRights>> {
+    return read<EffectiveRights>(target, `${accessEndpoint(target)}/effective`, 'loading your access')
+  }
+
+  async function replaceInheritance (target: ResourceAccessTarget, aasIds: string[], etag: string): Promise<ResourceAccessResult<AccessDocument>> {
+    return write<AccessDocument>(target, 'put', `${accessEndpoint(target)}/inheritance`, { aasIds }, etag)
+  }
+
+  async function listInvitations (target: ResourceAccessTarget): Promise<ResourceAccessResult<Invitation[]>> {
+    const result = await read<{ invitations: Invitation[] }>(target, `${accessEndpoint(target)}/invitations`, 'loading invitations')
+    return { ...result, data: result.data?.invitations }
+  }
+
+  async function createInvitation (target: ResourceAccessTarget, invitation: InvitationRequest): Promise<ResourceAccessResult<Invitation>> {
+    return write<Invitation>(target, 'post', `${accessEndpoint(target)}/invitations`, invitation)
+  }
+
+  async function revokeInvitation (target: ResourceAccessTarget, invitationId: string): Promise<ResourceAccessResult> {
+    return write(target, 'delete', `${accessEndpoint(target)}/invitations/${encodeURIComponent(invitationId)}`)
+  }
+
+  async function getRepositoryAccess (component: BaSyxComponentKey, kind: RepositoryKind): Promise<ResourceAccessResult<AccessDocument>> {
+    return readManagement<AccessDocument>(component, `/repositories/${kind}/$access`, 'loading repository access')
+  }
+
+  async function replaceRepositoryGrants (component: BaSyxComponentKey, kind: RepositoryKind, grants: AccessGrant[], etag: string): Promise<ResourceAccessResult<AccessDocument>> {
+    const url = componentManagementUrl(component)
+    if (!url) {
       return unavailable()
     }
-    const result = await getRequest(
-      accessEndpoint(target),
-      'loading resource access',
-      true,
-      new Headers(),
-      { suppressStatuses: expectedStatuses },
-    ) as RequestResult<ResourceAccessOverview>
+    return send<AccessDocument>('put', `${url}/repositories/${kind}/$access/grants`, { grants: withoutMetadata(grants) }, etag)
+  }
+
+  async function listAudit (component: BaSyxComponentKey, afterId = 0, limit = 50): Promise<ResourceAccessResult<AuditEvent[]>> {
+    const result = await readManagement<{ events: AuditEvent[] }>(component, `/admin/audit?afterId=${afterId}&limit=${limit}`, 'loading the audit trail')
+    return { ...result, data: result.data?.events }
+  }
+
+  async function verifyAudit (component: BaSyxComponentKey, expectedHead?: string): Promise<ResourceAccessResult<AuditVerification>> {
+    const query = expectedHead?.trim() ? `?expectedHead=${encodeURIComponent(expectedHead.trim())}` : ''
+    return readManagement<AuditVerification>(component, `/admin/audit/verify${query}`, 'verifying the audit trail')
+  }
+
+  async function reconcile (component: BaSyxComponentKey): Promise<ResourceAccessResult<ReconcileReport>> {
+    const url = componentManagementUrl(component)
+    if (!url) {
+      return unavailable()
+    }
+    return send<ReconcileReport>('post', `${url}/admin/reconcile`)
+  }
+
+  async function read<T> (target: ResourceAccessTarget, url: string, context: string): Promise<ResourceAccessResult<T>> {
+    if (!infrastructureStore.supportsResourceAccess(target.componentKey, target.endpoint)) {
+      return unavailable()
+    }
+    const result = await getRequest(url, context, true, new Headers(), { suppressStatuses: expectedStatuses }) as RequestResult<T>
     return normalizeResult(result)
   }
 
-  async function putPolicy (
-    target: ResourceAccessTarget,
-    policy: ResourceBoundPolicy,
-    etag: string,
-  ): Promise<ResourceAccessResult<ResourceBoundPolicy>> {
-    return mutate<ResourceBoundPolicy>('put', `${accessEndpoint(target)}/policy`, policy, etag)
-  }
-
-  async function deletePolicy (target: ResourceAccessTarget, etag: string): Promise<ResourceAccessResult> {
-    return mutate('delete', `${accessEndpoint(target)}/policy`, undefined, etag)
-  }
-
-  async function createGrant (
-    target: ResourceAccessTarget,
-    grant: GrantInput,
-    etag: string,
-  ): Promise<ResourceAccessResult<ManagedGrant>> {
-    return mutate<ManagedGrant>('post', `${accessEndpoint(target)}/grants`, grant, etag)
-  }
-
-  async function createShareLink (target: ResourceAccessTarget, input: ShareLinkInput, etag: string): Promise<ResourceAccessResult<ShareLinkResponse>> {
-    return mutate('post', `${accessEndpoint(target)}/share-links`, input, etag)
-  }
-
-  async function revokeShareLink (target: ResourceAccessTarget, id: string, etag: string): Promise<ResourceAccessResult> {
-    return mutate('delete', `${accessEndpoint(target)}/share-links/${encodeURIComponent(id)}`, undefined, etag)
-  }
-
-  async function updateGrant (
-    target: ResourceAccessTarget,
-    grantId: string,
-    grant: GrantInput,
-    etag: string,
-  ): Promise<ResourceAccessResult<ManagedGrant>> {
-    return mutate<ManagedGrant>('put', `${accessEndpoint(target)}/grants/${encodeURIComponent(grantId)}`, grant, etag)
-  }
-
-  async function deleteGrant (
-    target: ResourceAccessTarget,
-    grantId: string,
-    etag: string,
-  ): Promise<ResourceAccessResult> {
-    return mutate('delete', `${accessEndpoint(target)}/grants/${encodeURIComponent(grantId)}`, undefined, etag)
-  }
-
-  async function replaceOwners (
-    target: ResourceAccessTarget,
-    principals: AccessPrincipal[],
-    etag: string,
-  ): Promise<ResourceAccessResult<AccessPrincipal[]>> {
-    if (principals.length === 0) {
-      return { ok: false, status: 400, message: 'At least one owner must remain.' }
-    }
-    return mutate<AccessPrincipal[]>('put', `${accessEndpoint(target)}/owners`, principals, etag)
-  }
-
-  async function replaceManagers (
-    target: ResourceAccessTarget,
-    principals: AccessPrincipal[],
-    etag: string,
-  ): Promise<ResourceAccessResult<AccessPrincipal[]>> {
-    return mutate<AccessPrincipal[]>('put', `${accessEndpoint(target)}/managers`, principals, etag)
-  }
-
-  async function mutate<T> (
-    method: 'post' | 'put' | 'delete',
-    path: string,
-    value: unknown,
-    etag: string,
-  ): Promise<ResourceAccessResult<T>> {
-    if (!infrastructureStore.supportsResourceAccessEndpoint?.(path.split('/$access', 1)[0])) {
+  async function readManagement<T> (component: BaSyxComponentKey, path: string, context: string): Promise<ResourceAccessResult<T>> {
+    const url = componentManagementUrl(component)
+    if (!url) {
       return unavailable()
     }
-    if (!etag.trim()) {
-      return { ok: false, status: 428, message: statusMessages[428] }
-    }
-    const headers = new Headers({ 'If-Match': etag })
-    let result: RequestResult<T>
+    const result = await getRequest(`${url}${path}`, context, true, new Headers(), { suppressStatuses: expectedStatuses }) as RequestResult<T>
+    return normalizeResult(result)
+  }
 
+  async function write<T> (target: ResourceAccessTarget, method: 'post' | 'put' | 'delete', url: string, body?: unknown, etag?: string): Promise<ResourceAccessResult<T>> {
+    if (!infrastructureStore.supportsResourceAccess(target.componentKey, target.endpoint)) {
+      return unavailable()
+    }
+    return send<T>(method, url, body, etag)
+  }
+
+  async function send<T> (method: 'post' | 'put' | 'delete', url: string, body?: unknown, etag?: string): Promise<ResourceAccessResult<T>> {
+    const headers = new Headers()
+    if (etag !== undefined) {
+      if (!etag.trim()) {
+        return { ok: false, status: 428, message: statusMessages[428] }
+      }
+      headers.set('If-Match', etag)
+    }
+    const options = { suppressStatuses: expectedStatuses }
+    let result: RequestResult<T>
     if (method === 'delete') {
-      result = await deleteRequest(path, headers, 'updating resource access', true, {
-        suppressStatuses: expectedStatuses,
-      })
+      result = await deleteRequest(url, headers, 'updating access', true, options)
     } else {
       headers.set('Content-Type', 'application/json')
-      const body = JSON.stringify(value)
+      const payload = JSON.stringify(body ?? {})
       result = method === 'post'
-        ? await postRequest(path, body, headers, 'updating resource access', true, false, {
-            suppressStatuses: expectedStatuses,
-          })
-        : await putRequest(path, body, headers, 'updating resource access', true, {
-            suppressStatuses: expectedStatuses,
-          })
+        ? await postRequest(url, payload, headers, 'updating access', true, false, options)
+        : await putRequest(url, payload, headers, 'updating access', true, options)
     }
     return normalizeResult(result)
+  }
+
+  function componentManagementUrl (component: BaSyxComponentKey): string | undefined {
+    if (!infrastructureStore.supportsResourceAccess(component)) {
+      return undefined
+    }
+    const configured = infrastructureStore.getSelectedInfrastructure?.components[component]?.url
+    if (!configured) {
+      return undefined
+    }
+    try {
+      return managementUrl(configured, component)
+    } catch {
+      return undefined
+    }
   }
 
   return {
-    getOverview,
-    createShareLink,
-    revokeShareLink,
-    putPolicy,
-    deletePolicy,
-    createGrant,
-    updateGrant,
-    deleteGrant,
-    replaceOwners,
-    replaceManagers,
+    getAccess,
+    replaceGrants,
+    getEffectiveRights,
+    replaceInheritance,
+    listInvitations,
+    createInvitation,
+    revokeInvitation,
+    getRepositoryAccess,
+    replaceRepositoryGrants,
+    listAudit,
+    verifyAudit,
+    reconcile,
   }
+}
+
+function withoutMetadata (grants: AccessGrant[]): AccessGrant[] {
+  return grants.map(({ relation, subjectType, issuer, subject }) => ({ relation, subjectType, issuer, subject }))
 }
 
 function normalizeResult<T> (result: RequestResult<T>): ResourceAccessResult<T> {
@@ -167,7 +190,6 @@ function normalizeResult<T> (result: RequestResult<T>): ResourceAccessResult<T> 
     data: result.data,
     status,
     etag: result.raw?.headers.get('ETag') ?? undefined,
-    location: result.raw?.headers.get('Location') ?? undefined,
   }
 }
 

@@ -16,6 +16,9 @@ const roots: Partial<Record<BaSyxComponentKey, string>> = {
   ConceptDescriptionRepo: '/concept-descriptions',
 }
 
+const tokenPattern = /^[\w-]{43}$/
+
+/** Returns the service root of a component URL, without its API path. */
 export function shareServiceUrl (configuredUrl: string, component: BaSyxComponentKey): string {
   const root = roots[component]
   const url = new URL(configuredUrl, window.location.origin)
@@ -29,6 +32,11 @@ export function shareServiceUrl (configuredUrl: string, component: BaSyxComponen
   return url.href.replace(/\/+$/, '')
 }
 
+/** Returns the ReBAC management root (`/security/rebac`) of a component. */
+export function managementUrl (configuredUrl: string, component: BaSyxComponentKey): string {
+  return `${shareServiceUrl(configuredUrl, component)}/security/rebac`
+}
+
 export function parseInvitation (fragment: string): PendingInvitation | undefined {
   if (!fragment.startsWith('#/share-access?')) {
     return undefined
@@ -36,24 +44,24 @@ export function parseInvitation (fragment: string): PendingInvitation | undefine
   const params = new URLSearchParams(fragment.slice('#/share-access?'.length))
   const token = params.get('token') ?? ''
   const component = params.get('component') as BaSyxComponentKey
-  if (!/^[\w-]{43}$/.test(token) || !roots[component]) {
+  if (!tokenPattern.test(token) || !roots[component] || !params.get('service')) {
     return undefined
   }
   try {
     const service = shareServiceUrl(params.get('service') ?? '', component)
-    if (!params.get('service')) {
-      return undefined
-    }
     return { token, service, component, receivedAt: Date.now() }
   } catch {
     return undefined
   }
 }
 
-export function buildInvitationUrl (fragment: string, configuredUrl: string, component: BaSyxComponentKey): string {
-  const token = new URLSearchParams(fragment.split('?', 2)[1]).get('token') ?? ''
-  if (!fragment.startsWith('#/share-access?') || !/^[\w-]{43}$/.test(token)) {
-    throw new Error('Invalid invitation response.')
+/**
+ * Builds the link that lets the recipient accept an invitation in this UI.
+ * The token travels in the URL fragment, so it never reaches a web server log.
+ */
+export function buildInvitationUrl (token: string, configuredUrl: string, component: BaSyxComponentKey): string {
+  if (!tokenPattern.test(token)) {
+    throw new Error('Invalid invitation token.')
   }
   const url = new URL(import.meta.env.BASE_URL, window.location.origin)
   url.hash = '/share-access?' + new URLSearchParams({

@@ -47,6 +47,13 @@ export function useAASRepositoryClient () {
     return aasRepoUrl.replace(ASS_REPOSITORY_ENDPOINT_PATH, '') + '/upload'
   })
 
+  /**
+   * Reports whether the signed-in user may edit an AAS, based on the
+   * effective rights reported by the ReBAC management API.
+   *
+   * @param aasId - Identifier of the AAS.
+   * @returns true or false when known, undefined when it cannot be determined.
+   */
   async function fetchAasUpdateCapability (aasId: string): Promise<boolean | undefined> {
     if (!infrastructureStore.supportsResourceAccess?.('AASRepo')) {
       return undefined
@@ -58,15 +65,20 @@ export function useAASRepositoryClient () {
 
     try {
       const response = await getRequest(
-        `${endpoint}/$access/capabilities`,
+        `${endpoint}/$access/effective`,
         'checking AAS editing permission',
         true,
+        new Headers(),
+        { suppressStatuses: [404] },
       )
-      if (response.success && typeof response.data?.canUpdate === 'boolean') {
-        return response.data.canUpdate
+      if (response.success && Array.isArray(response.data?.rights)) {
+        return response.data.rights.some((right: { action: string, source: string }) => right.action === 'update' && right.source !== 'none')
+      }
+      if (response.status === 404) {
+        return false
       }
     } catch {
-      // Only an explicit successful capability response may permit creation.
+      // Only an explicit successful response may permit creation.
     }
     return undefined
   }
