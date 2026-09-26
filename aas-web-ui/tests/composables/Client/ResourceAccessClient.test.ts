@@ -99,16 +99,18 @@ describe('ResourceAccessClient', () => {
 
   it('addresses repository grants and administration below the management root', async () => {
     const client = useResourceAccessClient()
-    requests.getRequest.mockResolvedValue(response({ events: [] }))
+    requests.getRequest.mockResolvedValue(response({ events: [], hasMore: false }))
     requests.putRequest.mockResolvedValue(response({ grants: [] }))
     await client.getRepositoryAccess('AASRepo', 'aas')
     await client.replaceRepositoryGrants('AASRepo', 'aas', [], '"1"')
-    await client.listAudit('AASRepo', 10, 20)
-    await client.verifyAudit('AASRepo', ' head ')
+    await client.listAudit('AASRepo', { objectType: 'element', objectId: 'urn:sm', idShortPath: 'a[0]', actorSubject: ' ', beforeId: 10, limit: 20 })
+    await client.verifyAudit('AASRepo', { afterId: 7, afterHash: 'hash', expectedHead: ' head ', limit: 1000 })
+    await client.getPrincipal('AASRepo')
     expect(requests.getRequest.mock.calls.map(call => call[0])).toEqual([
       'https://host/api/security/rebac/repositories/aas/$access',
-      'https://host/api/security/rebac/admin/audit?afterId=10&limit=20',
-      'https://host/api/security/rebac/admin/audit/verify?expectedHead=head',
+      'https://host/api/security/rebac/admin/audit?objectType=element&objectId=urn%3Asm&idShortPath=a%5B0%5D&beforeId=10&limit=20',
+      'https://host/api/security/rebac/admin/audit/verify?afterId=7&afterHash=hash&expectedHead=head&limit=1000',
+      'https://host/api/security/rebac/principal',
     ])
     expect(requests.putRequest.mock.calls[0]![0]).toBe('https://host/api/security/rebac/repositories/aas/$access/grants')
   })

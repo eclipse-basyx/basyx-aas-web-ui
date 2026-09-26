@@ -80,10 +80,11 @@
 
 <script lang="ts" setup>
   import { useRouter } from 'vue-router'
+  import { useCurrentPrincipal } from '@/composables/Auth/CurrentPrincipal'
   import { useAuth } from '@/composables/Auth/useAuth'
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
-  import { getTokenPayload, getUserFromToken } from '@/utils/TokenUtil'
+  import { getUserFromToken } from '@/utils/TokenUtil'
 
   // Stores
   const envStore = useEnvStore()
@@ -91,6 +92,7 @@
   const router = useRouter()
 
   const { login: performLogin, logout: performLogout } = useAuth(router)
+  const { currentPrincipal } = useCurrentPrincipal()
 
   const menuOpen = ref(false)
 
@@ -99,17 +101,7 @@
     return infrastructureStore.getSelectedInfrastructure
   })
 
-  const userId = computed(() => {
-    const infra = currentInfrastructure.value
-    const token = infra?.token?.accessToken ?? infra?.auth?.bearerToken?.token
-    if (!token) return ''
-    try {
-      const subject = getTokenPayload(token).sub
-      return typeof subject === 'string' ? subject.trim() : ''
-    } catch {
-      return ''
-    }
-  })
+  const userId = computed(() => currentPrincipal.value?.subject ?? '')
 
   const hasAuthenticationCredentials = computed(() => {
     return infrastructureStore.getHasAuthenticationCredentials

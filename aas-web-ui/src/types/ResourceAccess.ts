@@ -85,6 +85,13 @@ export interface AcceptedInvitation {
   relation: InvitationRelation
 }
 
+/** Public identity of an audited object while it still exists. */
+export interface AuditResource {
+  type: string
+  id: string
+  idShortPath?: string
+}
+
 export interface AuditEvent {
   id: number
   occurredAt: string
@@ -95,16 +102,56 @@ export interface AuditEvent {
   previousHash?: string
   hash: string
   evidence?: Record<string, unknown>
+  resource?: AuditResource
+}
+
+/** One page of the audit trail, newest events first. */
+export interface AuditPage {
+  events: AuditEvent[]
+  hasMore: boolean
+}
+
+/** Filters of the audit trail. The actor is matched by issuer and user ID. */
+export interface AuditFilter {
+  objectType?: string
+  objectId?: string
+  idShortPath?: string
+  object?: string
+  actorIssuer?: string
+  actorSubject?: string
+}
+
+export interface AuditListQuery extends AuditFilter {
+  beforeId?: number
+  limit?: number
+}
+
+/** A verification range continuing from a checkpoint (event ID and hash). */
+export interface AuditRange {
+  afterId?: number
+  afterHash?: string
+  limit?: number
+  expectedHead?: string
 }
 
 export interface AuditVerification {
   valid: boolean
+  complete: boolean
   checked: number
+  lastId?: number
   headHash?: string
   firstInvalidId?: number
   reason?: string
   evidenceVerified: number
   evidenceMissing: number
+}
+
+/** The caller as ReBAC identifies it: the user ID others share with. */
+export interface RebacPrincipal {
+  issuer: string
+  subject: string
+  groups: string[]
+  administrator: boolean
 }
 
 export interface ReconcileReport {

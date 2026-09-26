@@ -65,22 +65,13 @@
 </template>
 
 <script setup lang="ts">
-  import type { BaSyxComponentKey } from '@/types/BaSyx'
   import type { AccessDocument, AccessGrant, AccessPrincipal, GrantRelation, RepositoryKind } from '@/types/ResourceAccess'
   import { useCurrentPrincipal } from '@/composables/Auth/CurrentPrincipal'
   import { useResourceAccessClient } from '@/composables/Client/ResourceAccessClient'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
+  import { repositoryFamilies } from '@/utils/AccessObjects'
   import { repositoryRoles } from '@/utils/AccessRoles'
-
-  const repositoryFamilies: Array<{ title: string, value: RepositoryKind, component: BaSyxComponentKey }> = [
-    { title: 'Asset Administration Shells', value: 'aas', component: 'AASRepo' },
-    { title: 'Submodels', value: 'submodel', component: 'SubmodelRepo' },
-    { title: 'Concept Descriptions', value: 'concept_description', component: 'ConceptDescriptionRepo' },
-    { title: 'AAS Descriptors', value: 'aas_descriptor', component: 'AASRegistry' },
-    { title: 'Submodel Descriptors', value: 'submodel_descriptor', component: 'SubmodelRegistry' },
-    { title: 'Discovery entries', value: 'asset_links', component: 'AASDiscovery' },
-  ]
 
   const client = useResourceAccessClient()
   const infrastructureStore = useInfrastructureStore()

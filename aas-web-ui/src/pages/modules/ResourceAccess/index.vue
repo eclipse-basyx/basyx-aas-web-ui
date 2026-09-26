@@ -44,11 +44,10 @@
 </template>
 
 <script setup lang="ts">
-  import type { BaSyxComponentKey } from '@/types/BaSyx'
+  import { useManagementComponent } from '@/composables/ResourceAccess/ManagementComponent'
   import AuditTrailCard from '@/pages/modules/ResourceAccess/components/AuditTrailCard.vue'
   import RepositoryAccessCard from '@/pages/modules/ResourceAccess/components/RepositoryAccessCard.vue'
   import ResourceLookupCard from '@/pages/modules/ResourceAccess/components/ResourceLookupCard.vue'
-  import { useInfrastructureStore } from '@/store/InfrastructureStore'
 
   defineOptions({
     moduleName: 'ResourceAccess',
@@ -60,11 +59,7 @@
     supportedInfrastructureTemplates: ['full', 'identifiable', 'mono-repo', 'mono-all'],
   })
 
-  const managedComponents: BaSyxComponentKey[] = ['AASRepo', 'SubmodelRepo', 'ConceptDescriptionRepo', 'AASRegistry', 'SubmodelRegistry', 'AASDiscovery']
-
-  const infrastructureStore = useInfrastructureStore()
+  const { managementComponent } = useManagementComponent()
 
   const tab = ref('resources')
-
-  const managementComponent = computed(() => managedComponents.find(component => infrastructureStore.supportsResourceAccess(component)))
 </script>

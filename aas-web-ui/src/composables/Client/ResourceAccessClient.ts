@@ -3,11 +3,14 @@ import type { BaSyxComponentKey } from '@/types/BaSyx'
 import type {
   AccessDocument,
   AccessGrant,
-  AuditEvent,
+  AuditListQuery,
+  AuditPage,
+  AuditRange,
   AuditVerification,
   EffectiveRights,
   Invitation,
   InvitationRequest,
+  RebacPrincipal,
   ReconcileReport,
   RepositoryKind,
   ResourceAccessResult,
@@ -81,14 +84,16 @@ export function useResourceAccessClient () {
     return send<AccessDocument>('put', `${url}/repositories/${kind}/$access/grants`, { grants: withoutMetadata(grants) }, etag)
   }
 
-  async function listAudit (component: BaSyxComponentKey, afterId = 0, limit = 50): Promise<ResourceAccessResult<AuditEvent[]>> {
-    const result = await readManagement<{ events: AuditEvent[] }>(component, `/admin/audit?afterId=${afterId}&limit=${limit}`, 'loading the audit trail')
-    return { ...result, data: result.data?.events }
+  async function listAudit (component: BaSyxComponentKey, query: AuditListQuery = {}): Promise<ResourceAccessResult<AuditPage>> {
+    return readManagement<AuditPage>(component, `/admin/audit${queryString(query)}`, 'loading the audit trail')
   }
 
-  async function verifyAudit (component: BaSyxComponentKey, expectedHead?: string): Promise<ResourceAccessResult<AuditVerification>> {
-    const query = expectedHead?.trim() ? `?expectedHead=${encodeURIComponent(expectedHead.trim())}` : ''
-    return readManagement<AuditVerification>(component, `/admin/audit/verify${query}`, 'verifying the audit trail')
+  async function verifyAudit (component: BaSyxComponentKey, range: AuditRange = {}): Promise<ResourceAccessResult<AuditVerification>> {
+    return readManagement<AuditVerification>(component, `/admin/audit/verify${queryString(range)}`, 'verifying the audit trail')
+  }
+
+  async function getPrincipal (component: BaSyxComponentKey): Promise<ResourceAccessResult<RebacPrincipal>> {
+    return readManagement<RebacPrincipal>(component, '/principal', 'loading your user ID')
   }
 
   async function reconcile (component: BaSyxComponentKey): Promise<ResourceAccessResult<ReconcileReport>> {
@@ -172,6 +177,7 @@ export function useResourceAccessClient () {
     replaceRepositoryGrants,
     listAudit,
     verifyAudit,
+    getPrincipal,
     reconcile,
   }
 }
@@ -191,6 +197,19 @@ function normalizeResult<T> (result: RequestResult<T>): ResourceAccessResult<T> 
     status,
     etag: result.raw?.headers.get('ETag') ?? undefined,
   }
+}
+
+/** Builds a query string from the set, non-empty parameters. */
+function queryString (parameters: object): string {
+  const query = new URLSearchParams()
+  for (const [key, value] of Object.entries(parameters)) {
+    const text = typeof value === 'string' ? value.trim() : (value === undefined ? '' : String(value))
+    if (text) {
+      query.set(key, text)
+    }
+  }
+  const encoded = query.toString()
+  return encoded ? `?${encoded}` : ''
 }
 
 function unavailable<T> (): ResourceAccessResult<T> {
