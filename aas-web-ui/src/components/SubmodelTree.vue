@@ -243,6 +243,7 @@
                 @open-edit-dialog="openEditDialog(false, $event)"
                 @open-edit-submodel-element-dialog="openEditSubmodelElementDialogForElement"
                 @open-json-insert-dialog="openJsonInsertDialog('SubmodelElement', $event)"
+                @open-resource-access-dialog="openResourceAccessDialog"
                 @paste-operation-owned-element="pasteOperationOwnedElement"
                 @show-delete-dialog="openDeleteDialog"
               />
@@ -421,6 +422,8 @@
     :submodel="submodelToConvert"
   />
 
+  <ResourceAccessDialog v-model="accessDialog" :context-aas-id="aasStore.getSelectedAAS?.id" :target="accessTarget" />
+
   <AdvancedQueryDialog
     v-if="globalQueryAvailable && !isMobile"
     v-model="advancedQueryDialog"
@@ -440,6 +443,7 @@
 <script lang="ts" setup>
   import type { OperationNodeLocator, OperationVariableDirection } from '@/types/OperationTree'
   import type { QueryLanguageQuery } from '@/types/QueryLanguage'
+  import type { ResourceAccessTarget } from '@/types/ResourceAccess'
   import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization'
   import type { Ref } from 'vue'
   import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
@@ -478,6 +482,7 @@
     supportsQueryProfile,
     validateQueryForTarget,
   } from '@/utils/QueryLanguageUtils'
+  import { targetFromSubmodelEndpoint } from '@/utils/ResourceAccessTargets'
   import { isEmptyString } from '@/utils/StringUtils'
 
   // Vue Router
@@ -561,6 +566,8 @@
   const draftFormType = ref('')
   const draftFormDetached = ref(false)
   const draftFormIsNew = ref(false)
+  const accessDialog = ref(false)
+  const accessTarget = ref<ResourceAccessTarget>()
 
   // Computed Properties
   const isMobile = computed(() => navigationStore.getIsMobile) // Check if the current Device is a Mobile Device
@@ -1198,6 +1205,14 @@
   function openDeleteDialog (element: any): void {
     deleteDialog.value = true
     elementToDelete.value = element
+  }
+
+  function openResourceAccessDialog (element: any): void {
+    const label = `${element?.modelType ?? 'Submodel Element'}: ${element?.idShort ?? element?.id ?? ''}`
+    const target = targetFromSubmodelEndpoint(String(element?.path ?? ''), label)
+    if (!target || !infrastructureStore.supportsResourceAccessEndpoint(target.endpoint)) return
+    accessTarget.value = target
+    accessDialog.value = true
   }
 
   function openConversionDialog (submodel: any): void {

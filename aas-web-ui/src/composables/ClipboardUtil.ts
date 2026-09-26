@@ -1,6 +1,7 @@
 import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization'
 import { types as aasTypes, jsonization } from '@aas-core-works/aas-core3.1-typescript'
 import { useRoute, useRouter } from 'vue-router'
+import { useSubmodelCreationGuard } from '@/composables/AAS/SubmodelCreationGuard'
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
 import { useIDUtils } from '@/composables/IDUtils'
@@ -15,6 +16,7 @@ import { base64Decode } from '@/utils/EncodeDecodeUtils'
 export function useClipboardUtil () {
   // Vue Router
   const route = useRoute()
+  const { canCreateSubmodel } = useSubmodelCreationGuard()
   const router = useRouter()
 
   // Store
@@ -151,6 +153,10 @@ export function useClipboardUtil () {
 
     // Create new unique ID for the Submodel
     submodel.id = generateIri('Submodel')
+
+    if (!await canCreateSubmodel()) {
+      return
+    }
 
     // Create Submodel
     await postSubmodel(submodel)
