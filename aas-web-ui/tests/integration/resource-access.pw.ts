@@ -85,7 +85,6 @@ for (const width of [1280, 390]) {
     await dialog.getByRole('button', { name: 'Share', exact: true }).click()
     await expect(dialog.getByText('engineering', { exact: true })).toBeVisible()
     expect(grants).toContainEqual({ relation: 'viewer', subjectType: 'group', issuer, subject: 'engineering' })
-    await page.screenshot({ path: `/private/tmp/rebac-share-${width}.png`, fullPage: true })
 
     await dialog.getByRole('button', { name: 'Remove access of engineering', exact: true }).click()
     const confirmation = page.getByRole('dialog').last()

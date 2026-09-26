@@ -75,7 +75,6 @@ for (const width of [1280, 390]) {
     const field = dialog.locator('input[readonly]')
     await expect(field).toHaveValue(/#\/share-access\?token=/)
     await expect(dialog.getByText(/used 0 of 1/)).toBeVisible()
-    await page.screenshot({ path: `/private/tmp/share-link-${width}.png`, fullPage: true })
     const link = await field.inputValue()
     await dialog.getByRole('button', { name: 'Revoke invitation' }).click()
     await expect(page.getByText('Invitation revoked.', { exact: true })).toBeVisible()
