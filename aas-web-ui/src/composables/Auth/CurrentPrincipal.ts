@@ -5,10 +5,11 @@ import { useManagementComponent } from '@/composables/ResourceAccess/ManagementC
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { getAccessPrincipalFromToken } from '@/utils/TokenUtil'
 
-// The identity reported by the server for the current credentials, shared by
+// The identity reported by the server for the latest credentials, shared by
 // all components. It reflects the configured subject claim, e.g. `oid`.
-const reported = shallowRef<{ key: string, principal?: RebacPrincipal }>()
-let pending: { key: string, request: Promise<void> } | undefined
+const reported = shallowRef<{ key: string, principal: RebacPrincipal }>()
+const pending = new Set<string>()
+let latestKey = ''
 
 /**
  * The signed-in user of the selected infrastructure as an access principal.
@@ -44,7 +45,8 @@ export function useCurrentPrincipal () {
   const isAdministrator = computed(() => serverPrincipal.value?.administrator ?? false)
 
   watch(requestKey, key => {
-    if (key && reported.value?.key !== key && pending?.key !== key) {
+    latestKey = key
+    if (key && reported.value?.key !== key && !pending.has(key)) {
       void load(key)
     }
   }, { immediate: true })
@@ -54,15 +56,15 @@ export function useCurrentPrincipal () {
     if (!component) {
       return
     }
-    const request = client.getPrincipal(component).then(result => {
-      if (result.ok && result.data?.issuer && result.data.subject) {
+    pending.add(key)
+    try {
+      const result = await client.getPrincipal(component)
+      // A response for earlier credentials must never replace the current one.
+      if (key === latestKey && result.ok && result.data?.issuer && result.data.subject) {
         reported.value = { key, principal: result.data }
       }
-    })
-    pending = { key, request }
-    await request
-    if (pending?.key === key) {
-      pending = undefined
+    } finally {
+      pending.delete(key)
     }
   }
 

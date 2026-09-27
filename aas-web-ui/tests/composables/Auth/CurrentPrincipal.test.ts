@@ -1,26 +1,43 @@
 import { flushPromises } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { effectScope, reactive } from 'vue'
 
 const token = ['e30', btoa(JSON.stringify({ iss: 'https://idp', sub: 'pairwise' })), 'sig'].join('.')
-const state = vi.hoisted(() => ({ getPrincipal: vi.fn(), auth: {} as Record<string, unknown> }))
-
-vi.mock('@/composables/Client/ResourceAccessClient', () => ({ useResourceAccessClient: () => ({ getPrincipal: state.getPrincipal }) }))
-vi.mock('@/store/InfrastructureStore', () => ({ useInfrastructureStore: () => ({
-  getSelectedInfrastructure: { id: 'infra', auth: state.auth },
+const state = vi.hoisted(() => ({ getPrincipal: vi.fn() }))
+const store = reactive({
+  getSelectedInfrastructure: { id: 'infra', auth: {} as Record<string, unknown> },
   getHasAuthenticationCredentials: true,
   supportsResourceAccess: (component: string) => component === 'SubmodelRepo',
-}) }))
+})
+
+vi.mock('@/composables/Client/ResourceAccessClient', () => ({ useResourceAccessClient: () => ({ getPrincipal: state.getPrincipal }) }))
+vi.mock('@/store/InfrastructureStore', () => ({ useInfrastructureStore: () => store }))
+
+function deferred () {
+  let resolve: (value: unknown) => void = () => undefined
+  const promise = new Promise(done => {
+    resolve = done
+  })
+  return { promise, resolve }
+}
+
+let scope = effectScope()
 
 async function load () {
   vi.resetModules()
   const { useCurrentPrincipal } = await import('@/composables/Auth/CurrentPrincipal')
-  return useCurrentPrincipal()
+  return scope.run(() => useCurrentPrincipal())!
 }
 
 describe('useCurrentPrincipal', () => {
+  afterEach(() => {
+    scope.stop()
+    scope = effectScope()
+  })
+
   beforeEach(() => {
     state.getPrincipal.mockReset()
-    state.auth = { securityType: 'Bearer Token', bearerToken: { token } }
+    store.getSelectedInfrastructure.auth = { securityType: 'Bearer Token', bearerToken: { token } }
   })
 
   it('uses the identity reported by ReBAC, which may come from another claim than sub', async () => {
@@ -46,7 +63,7 @@ describe('useCurrentPrincipal', () => {
   })
 
   it('discovers the principal for custom header authentication', async () => {
-    state.auth = { securityType: 'Custom Header', customHeader: { name: 'Authorization', value: `Bearer ${token}` } }
+    store.getSelectedInfrastructure.auth = { securityType: 'Custom Header', customHeader: { name: 'Authorization', value: `Bearer ${token}` } }
     state.getPrincipal.mockResolvedValue({ ok: true, data: { issuer: 'https://idp', subject: 'object-id', groups: [], administrator: false } })
     const { currentPrincipal } = await load()
     await flushPromises()
@@ -54,8 +71,23 @@ describe('useCurrentPrincipal', () => {
     expect(currentPrincipal.value?.subject).toBe('object-id')
   })
 
+  it('never lets a late response for earlier credentials replace the current identity', async () => {
+    const first = deferred()
+    const second = deferred()
+    state.getPrincipal.mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise)
+    const { currentPrincipal } = await load()
+    store.getSelectedInfrastructure.auth = { securityType: 'Custom Header', customHeader: { name: 'X-API-KEY', value: 'second' } }
+    await flushPromises()
+    expect(state.getPrincipal).toHaveBeenCalledTimes(2)
+    second.resolve({ ok: true, data: { issuer: 'https://idp', subject: 'second', groups: [], administrator: false } })
+    await flushPromises()
+    first.resolve({ ok: true, data: { issuer: 'https://idp', subject: 'first', groups: [], administrator: false } })
+    await flushPromises()
+    expect(currentPrincipal.value?.subject).toBe('second')
+  })
+
   it('asks the server even when the credentials carry no readable token', async () => {
-    state.auth = { securityType: 'Custom Header', customHeader: { name: 'X-API-KEY', value: 'secret' } }
+    store.getSelectedInfrastructure.auth = { securityType: 'Custom Header', customHeader: { name: 'X-API-KEY', value: 'secret' } }
     state.getPrincipal.mockResolvedValue({ ok: true, data: { issuer: 'https://idp', subject: 'service', groups: [], administrator: false } })
     const { currentPrincipal } = await load()
     await flushPromises()
