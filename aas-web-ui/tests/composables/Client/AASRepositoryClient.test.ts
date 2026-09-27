@@ -55,7 +55,9 @@ describe('AASRepositoryClient.ts', () => {
   it.each([
     ['rebac', true],
     ['abac', true],
+    ['administrator', true],
     ['none', false],
+    ['abac-conditional', undefined],
   ])('derives the AAS update capability from the effective update right granted by %s', async (source, canUpdate) => {
     mockState.aasRepoUrl = 'https://example.test/'
     mockDeps.getRequest.mockResolvedValueOnce({ success: true, data: { rights: [{ action: 'read', source: 'rebac' }, { action: 'update', source }] } })

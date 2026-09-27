@@ -14,6 +14,19 @@ export type AasListPageOptions = PaginationPageOptions
 
 export type AasListPageResult<T> = PaginationPageResult<T>
 
+/**
+ * Whether the effective rights confirm updating a shell. A conditional ABAC
+ * right depends on the content of the shell and is not confirmed, so it is
+ * unknown rather than granted.
+ */
+function updateCapability (rights: Array<{ action: string, source: string }>): boolean | undefined {
+  const source = rights.find(right => right.action === 'update')?.source
+  if (['abac', 'rebac', 'administrator'].includes(source ?? '')) {
+    return true
+  }
+  return source === 'abac-conditional' ? undefined : false
+}
+
 export function useAASRepositoryClient () {
   // Stores
   const infrastructureStore = useInfrastructureStore()
@@ -72,7 +85,7 @@ export function useAASRepositoryClient () {
         { suppressStatuses: [404] },
       )
       if (response.success && Array.isArray(response.data?.rights)) {
-        return response.data.rights.some((right: { action: string, source: string }) => right.action === 'update' && right.source !== 'none')
+        return updateCapability(response.data.rights)
       }
       if (response.status === 404) {
         return false

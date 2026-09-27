@@ -56,17 +56,29 @@
       label="Only for one person"
     />
 
-    <v-text-field
-      v-if="restricted"
-      v-model="expectedSubject"
-      class="mt-2"
-      density="compact"
-      :disabled="busy"
-      hint="User ID (subject) of the person who may accept the invitation."
-      label="User ID"
-      persistent-hint
-      variant="outlined"
-    />
+    <template v-if="restricted">
+      <v-text-field
+        v-model="expectedSubject"
+        class="mt-2"
+        density="compact"
+        :disabled="busy"
+        hint="User ID (subject) of the person who may accept the invitation."
+        label="User ID"
+        persistent-hint
+        variant="outlined"
+      />
+
+      <v-text-field
+        v-model="expectedIssuer"
+        class="mt-2"
+        density="compact"
+        :disabled="busy"
+        hint="Issuer (iss) of that person's tokens. It defaults to your own identity provider."
+        label="Identity provider (issuer)"
+        persistent-hint
+        variant="outlined"
+      />
+    </template>
 
     <div class="d-flex mt-3">
       <v-spacer />
@@ -74,7 +86,7 @@
       <v-btn
         class="text-buttonText"
         color="primary"
-        :disabled="restricted && !expectedSubject.trim()"
+        :disabled="restricted && !recipientComplete"
         :loading="busy"
         prepend-icon="mdi-link-plus"
         rounded="lg"
@@ -193,9 +205,16 @@
   const maxUses = ref(1)
   const restricted = ref(false)
   const expectedSubject = ref('')
+  const expectedIssuer = ref(props.currentPrincipal?.issuer ?? '')
   const busy = ref(false)
   const createdLink = ref('')
   const copied = ref(false)
+
+  const recipientComplete = computed(() => Boolean(expectedSubject.value.trim() && expectedIssuer.value.trim()))
+
+  watch(() => props.currentPrincipal?.issuer, issuer => {
+    if (!expectedIssuer.value && issuer) expectedIssuer.value = issuer
+  })
 
   watch(() => props.target.endpoint, () => {
     createdLink.value = ''
@@ -208,14 +227,19 @@
   }
 
   async function create (): Promise<void> {
+    // A restricted invitation must never be created without its recipient.
+    if (restricted.value && !recipientComplete.value) {
+      emit('message', 'Enter the user ID and identity provider of the person who may accept the invitation.', 'error')
+      return
+    }
     busy.value = true
     copied.value = false
     const result = await client.createInvitation(props.target, {
       relation: relation.value,
       expiresAt: new Date(Date.now() + lifetime.value * 1000).toISOString(),
       maxUses: maxUses.value,
-      ...(restricted.value && props.currentPrincipal
-        ? { expectedPrincipal: { issuer: props.currentPrincipal.issuer, subject: expectedSubject.value.trim() } }
+      ...(restricted.value
+        ? { expectedPrincipal: { issuer: expectedIssuer.value.trim(), subject: expectedSubject.value.trim() } }
         : {}),
     })
     busy.value = false

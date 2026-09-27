@@ -81,6 +81,40 @@ describe('ResourceAccessState', () => {
     expect(state.error.value).toBe('Access was changed by someone else.')
   })
 
+  it('ignores a late response for a previous resource and never writes its grants elsewhere', async () => {
+    const other = { ...target.value, endpoint: 'https://host/submodels/b3RoZXI', label: 'Other' }
+    const current = ref(target.value)
+    let answerFirst: (value: unknown) => void = () => undefined
+    client.getAccess
+      .mockReturnValueOnce(new Promise(resolve => {
+        answerFirst = resolve
+      }))
+      .mockResolvedValueOnce({ ok: true, data: document([owner], 1), etag: '"1-other"' })
+    const state = useResourceAccessState(current)
+    const first = state.load()
+    state.reset()
+    current.value = other
+    await state.load()
+    answerFirst({ ok: true, data: document([owner, viewer], 1), etag: '"1-first"' })
+    await first
+    expect(state.document.value?.grants).toEqual([owner])
+    expect(state.etag.value).toBe('"1-other"')
+
+    client.replaceGrants.mockResolvedValue({ ok: true, data: document([owner, viewer], 2), etag: '"2-other"' })
+    await state.addGrant(bob, 'viewer')
+    expect(client.replaceGrants).toHaveBeenCalledWith(other, [owner, viewer], '"1-other"')
+  })
+
+  it('refuses changes while the shown document belongs to another resource', async () => {
+    const current = ref(target.value)
+    const state = useResourceAccessState(current)
+    await state.load()
+    current.value = { ...target.value, endpoint: 'https://host/submodels/b3RoZXI' }
+    expect(await state.addGrant(bob, 'viewer')).toBe(false)
+    expect(client.replaceGrants).not.toHaveBeenCalled()
+    expect(state.error.value).toContain('another resource')
+  })
+
   it('reset clears the loaded state', async () => {
     const state = useResourceAccessState(target)
     await state.load()

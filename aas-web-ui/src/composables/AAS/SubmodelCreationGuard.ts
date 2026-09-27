@@ -49,7 +49,7 @@ export function useSubmodelCreationGuard () {
 
     warn(allowed === false
       ? 'You cannot add a submodel to this AAS because you do not have permission to edit it. Ask the owner for editing access.'
-      : 'Editing access could not be verified. No submodel was created. Check your connection and sign-in, then try again.')
+      : 'Editing access to this AAS could not be confirmed, for example because it depends on the AAS content or the connection failed. No submodel was created. Ask the owner for editing access or try again.')
     return false
   }
 
