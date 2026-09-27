@@ -12,12 +12,14 @@ import { createPinia } from 'pinia'
 // Composables
 import VueApexCharts from 'vue3-apexcharts'
 import App from '@/App.vue'
+import { restoreInvitation } from '@/composables/ShareInvitation'
 // Plugins
 import { registerVuetify } from '@/plugins'
 import { createAppRouter } from '@/router'
 import { useNavigationStore } from '@/store/NavigationStore'
 import 'unfonts.css'
 
+restoreInvitation()
 initialize()
 
 async function initialize (): Promise<void> {

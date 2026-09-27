@@ -1,9 +1,10 @@
 <template>
-  <v-menu :close-on-content-click="false" location="bottom">
+  <v-menu v-model="menuOpen" :close-on-content-click="false" location="bottom">
     <template #activator="{ props: menuProps }">
       <v-btn
         v-if="isAuthEnabled"
         v-bind="menuProps"
+        aria-label="User menu"
         :icon="hasAuthenticationCredentials ? 'mdi-account-lock' : 'mdi-lock-remove'"
         size="small"
         variant="tonal"
@@ -21,6 +22,7 @@
     <v-card
       v-if="isAuthEnabled"
       color="navigationMenu"
+      max-width="380px"
       min-width="300px"
       rounded="lg"
       style="border-style: solid; border-width: 1px"
@@ -39,6 +41,8 @@
             </v-avatar>
           </template>
         </v-list-item>
+
+        <UserIdControl v-if="menuOpen && userId" :key="currentInfrastructure?.id" :user-id="userId" />
       </v-list>
 
       <template #actions>
@@ -76,6 +80,7 @@
 
 <script lang="ts" setup>
   import { useRouter } from 'vue-router'
+  import { useCurrentPrincipal } from '@/composables/Auth/CurrentPrincipal'
   import { useAuth } from '@/composables/Auth/useAuth'
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
@@ -87,11 +92,16 @@
   const router = useRouter()
 
   const { login: performLogin, logout: performLogout } = useAuth(router)
+  const { currentPrincipal } = useCurrentPrincipal()
+
+  const menuOpen = ref(false)
 
   // Computed properties
   const currentInfrastructure = computed(() => {
     return infrastructureStore.getSelectedInfrastructure
   })
+
+  const userId = computed(() => currentPrincipal.value?.subject ?? '')
 
   const hasAuthenticationCredentials = computed(() => {
     return infrastructureStore.getHasAuthenticationCredentials
