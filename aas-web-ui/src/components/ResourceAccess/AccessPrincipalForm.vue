@@ -101,6 +101,7 @@
   const props = defineProps<{
     roles: AccessRoleOption[]
     currentPrincipal?: AccessPrincipal
+    defaultIssuer?: string
     disabled?: boolean
     loading?: boolean
     submitLabel?: string
@@ -112,13 +113,13 @@
 
   const principalType = ref<PrincipalType>('user')
   const subject = ref('')
-  const issuer = ref(props.currentPrincipal?.issuer ?? '')
+  const issuer = ref(props.currentPrincipal?.issuer ?? props.defaultIssuer ?? '')
   const relation = ref<GrantRelation>(props.roles[0]?.value ?? 'viewer')
-  const showIssuer = ref(!props.currentPrincipal)
+  const showIssuer = ref(!issuer.value)
 
   const issuerLabel = computed(() => issuer.value.trim() || 'not set')
 
-  watch(() => props.currentPrincipal?.issuer, value => {
+  watch(() => props.currentPrincipal?.issuer ?? props.defaultIssuer, value => {
     if (!issuer.value && value) issuer.value = value
   })
 

@@ -183,6 +183,7 @@
     target: ResourceAccessTarget
     roles: AccessRoleOption[]
     currentPrincipal?: AccessPrincipal
+    defaultIssuer?: string
   }>()
 
   const emit = defineEmits<{
@@ -205,14 +206,14 @@
   const maxUses = ref(1)
   const restricted = ref(false)
   const expectedSubject = ref('')
-  const expectedIssuer = ref(props.currentPrincipal?.issuer ?? '')
+  const expectedIssuer = ref(props.currentPrincipal?.issuer ?? props.defaultIssuer ?? '')
   const busy = ref(false)
   const createdLink = ref('')
   const copied = ref(false)
 
   const recipientComplete = computed(() => Boolean(expectedSubject.value.trim() && expectedIssuer.value.trim()))
 
-  watch(() => props.currentPrincipal?.issuer, issuer => {
+  watch(() => props.currentPrincipal?.issuer ?? props.defaultIssuer, issuer => {
     if (!expectedIssuer.value && issuer) expectedIssuer.value = issuer
   })
 

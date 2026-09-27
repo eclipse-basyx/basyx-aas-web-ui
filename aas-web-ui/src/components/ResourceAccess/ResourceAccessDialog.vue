@@ -80,6 +80,7 @@
 
               <AccessPrincipalForm
                 :current-principal="currentPrincipal"
+                :default-issuer="currentIssuer"
                 :disabled="state.loading.value"
                 :loading="saving"
                 :roles="roles"
@@ -103,6 +104,7 @@
               <InvitationManager
                 v-if="target"
                 :current-principal="currentPrincipal"
+                :default-issuer="currentIssuer"
                 :roles="invitationRoles"
                 :target="target"
                 @message="notify"
@@ -168,7 +170,7 @@
   const open = defineModel<boolean>({ required: true })
 
   const navigationStore = useNavigationStore()
-  const { currentPrincipal } = useCurrentPrincipal()
+  const { currentPrincipal, currentIssuer } = useCurrentPrincipal()
   const state = useResourceAccessState(toRef(props, 'target'))
 
   const tab = ref('people')

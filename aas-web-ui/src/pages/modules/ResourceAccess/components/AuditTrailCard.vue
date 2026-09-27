@@ -23,7 +23,7 @@
         <AuditVerificationPanel :component="component" />
 
         <v-list-subheader class="mb-1">Access changes</v-list-subheader>
-        <AuditFilterForm v-model="filter" :issuer="currentPrincipal?.issuer" />
+        <AuditFilterForm v-model="filter" :issuer="currentIssuer" />
 
         <v-alert
           v-if="error"
@@ -69,7 +69,7 @@
   const pageSize = 50
 
   const client = useResourceAccessClient()
-  const { currentPrincipal } = useCurrentPrincipal()
+  const { currentIssuer } = useCurrentPrincipal()
 
   const filter = ref<AuditFilter>({})
   const events = ref<AuditEvent[]>([])

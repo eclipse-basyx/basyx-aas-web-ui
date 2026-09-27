@@ -42,6 +42,7 @@
 
         <AccessPrincipalForm
           :current-principal="currentPrincipal"
+          :default-issuer="currentIssuer"
           :disabled="loading"
           :roles="repositoryRoles"
           submit-label="Add"
@@ -77,7 +78,7 @@
   const client = useResourceAccessClient()
   const infrastructureStore = useInfrastructureStore()
   const navigationStore = useNavigationStore()
-  const { currentPrincipal } = useCurrentPrincipal()
+  const { currentPrincipal, currentIssuer } = useCurrentPrincipal()
 
   const bound = useBoundAccessDocument()
 

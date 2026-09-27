@@ -7,7 +7,8 @@ const state = vi.hoisted(() => ({ getPrincipal: vi.fn() }))
 const store = reactive({
   getSelectedInfrastructure: { id: 'infra', auth: {} as Record<string, unknown> },
   getHasAuthenticationCredentials: true,
-  supportsResourceAccess: (component: string) => component === 'SubmodelRepo',
+  rebacEnabled: true,
+  supportsResourceAccess: (component: string) => store.rebacEnabled && component === 'SubmodelRepo',
 })
 
 vi.mock('@/composables/Client/ResourceAccessClient', () => ({ useResourceAccessClient: () => ({ getPrincipal: state.getPrincipal }) }))
@@ -38,6 +39,7 @@ describe('useCurrentPrincipal', () => {
   beforeEach(() => {
     state.getPrincipal.mockReset()
     store.getSelectedInfrastructure.auth = { securityType: 'Bearer Token', bearerToken: { token } }
+    store.rebacEnabled = true
   })
 
   it('uses the identity reported by ReBAC, which may come from another claim than sub', async () => {
@@ -45,8 +47,9 @@ describe('useCurrentPrincipal', () => {
     state.getPrincipal.mockReturnValue(new Promise(resolve => {
       answer = resolve
     }))
-    const { currentPrincipal, isAdministrator } = await load()
-    expect(currentPrincipal.value?.subject).toBe('pairwise')
+    const { currentPrincipal, currentIssuer, isAdministrator } = await load()
+    expect(currentPrincipal.value).toBeUndefined()
+    expect(currentIssuer.value).toBe('https://idp')
     answer({ ok: true, data: { issuer: 'https://idp', subject: 'object-id', groups: [], administrator: true } })
     await flushPromises()
     expect(state.getPrincipal).toHaveBeenCalledWith('SubmodelRepo')
@@ -54,12 +57,21 @@ describe('useCurrentPrincipal', () => {
     expect(isAdministrator.value).toBe(true)
   })
 
-  it('falls back to the token when the server does not answer', async () => {
+  it('never shows the token subject as user ID while ReBAC may use another claim', async () => {
     state.getPrincipal.mockResolvedValue({ ok: false, status: 503 })
-    const { currentPrincipal, isAdministrator } = await load()
+    const { currentPrincipal, currentIssuer, isAdministrator } = await load()
     await flushPromises()
-    expect(currentPrincipal.value).toEqual({ type: 'user', issuer: 'https://idp', subject: 'pairwise' })
+    expect(currentPrincipal.value).toBeUndefined()
+    expect(currentIssuer.value).toBe('https://idp')
     expect(isAdministrator.value).toBe(false)
+  })
+
+  it('uses the token without a ReBAC service', async () => {
+    store.rebacEnabled = false
+    const { currentPrincipal } = await load()
+    await flushPromises()
+    expect(state.getPrincipal).not.toHaveBeenCalled()
+    expect(currentPrincipal.value).toEqual({ type: 'user', issuer: 'https://idp', subject: 'pairwise' })
   })
 
   it('discovers the principal for custom header authentication', async () => {

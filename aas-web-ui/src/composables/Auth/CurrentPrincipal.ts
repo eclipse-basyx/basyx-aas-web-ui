@@ -13,9 +13,10 @@ let latestKey = ''
 
 /**
  * The signed-in user of the selected infrastructure as an access principal.
- * ReBAC may identify users by another claim than `sub`, so the principal is
- * read from the server for every kind of authentication; a bearer token
- * only serves until the server has answered.
+ * ReBAC may identify users by another claim than `sub`, so while a ReBAC
+ * service is available the principal only comes from the server and stays
+ * undefined until it has answered; a wrong user ID is never shown. The
+ * issuer of a bearer token is reliable and serves as a default meanwhile.
  */
 export function useCurrentPrincipal () {
   const infrastructureStore = useInfrastructureStore()
@@ -39,9 +40,13 @@ export function useCurrentPrincipal () {
     }
   })
 
-  const currentPrincipal = computed<AccessPrincipal | undefined>(() => serverPrincipal.value
-    ? { type: 'user', issuer: serverPrincipal.value.issuer, subject: serverPrincipal.value.subject }
-    : tokenPrincipal.value)
+  const currentPrincipal = computed<AccessPrincipal | undefined>(() => {
+    if (serverPrincipal.value) {
+      return { type: 'user', issuer: serverPrincipal.value.issuer, subject: serverPrincipal.value.subject }
+    }
+    return managementComponent.value ? undefined : tokenPrincipal.value
+  })
+  const currentIssuer = computed(() => serverPrincipal.value?.issuer ?? tokenPrincipal.value?.issuer)
   const isAdministrator = computed(() => serverPrincipal.value?.administrator ?? false)
 
   watch(requestKey, key => {
@@ -68,7 +73,7 @@ export function useCurrentPrincipal () {
     }
   }
 
-  return { currentPrincipal, isAdministrator }
+  return { currentPrincipal, currentIssuer, isAdministrator }
 }
 
 /** The access token sent as bearer token, if the credentials contain one. */
