@@ -62,6 +62,7 @@ describe('EDC BFF request helpers', () => {
       counterPartyId: 'TEST_COUNTERPARTY_ID',
       counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp/2025-1',
     })).toMatchObject({
+      '@context': { '@vocab': 'https://w3id.org/edc/v0.0.1/ns/' },
       '@type': 'CatalogRequest',
       'counterPartyId': 'TEST_COUNTERPARTY_ID',
       'counterPartyAddress': 'https://counterparty-dsp.test/api/v1/dsp/2025-1',
@@ -116,7 +117,7 @@ describe('EDC BFF request helpers', () => {
     const offer = extractDigitalTwinRegistryOffer(catalog)
     const body = buildEdrContractRequestBody({
       counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
-      protocol: 'dataspace-protocol-http',
+      protocol: 'dataspace-protocol-http:2025-1',
     }, offer)
 
     expect(buildDigitalTwinRegistryQuerySpec().filterExpression).toHaveLength(1)
@@ -127,7 +128,7 @@ describe('EDC BFF request helpers', () => {
     expect(body).toMatchObject({
       '@type': 'ContractRequest',
       'counterPartyAddress': 'https://counterparty-dsp.test/api/v1/dsp',
-      'protocol': 'dataspace-protocol-http',
+      'protocol': 'dataspace-protocol-http:2025-1',
       'policy': {
         '@id': 'offer-1',
         'odrl:assigner': { '@id': 'TEST_PARTICIPANT_ID' },
@@ -154,6 +155,16 @@ describe('EDC BFF request helpers', () => {
       assetId: 'dtr-asset',
       participantId: 'TEST_PARTICIPANT_ID',
       policy: { '@id': 'offer-1' },
+    })
+    expect(buildEdrContractRequestBody(
+      { counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp' },
+      extractDigitalTwinRegistryOffer(catalog),
+    )).toMatchObject({
+      protocol: 'dataspace-protocol-http:2025-1',
+      policy: {
+        'odrl:assigner': { '@id': 'TEST_PARTICIPANT_ID' },
+        'odrl:target': { '@id': 'dtr-asset' },
+      },
     })
   })
 
@@ -212,7 +223,7 @@ describe('EDC BFF request helpers', () => {
     const result = await fetchDtrShellDescriptors(proxy, {
       counterPartyId: 'TEST_PARTICIPANT_ID',
       counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
-      protocol: 'dataspace-protocol-http',
+      protocol: 'dataspace-protocol-http:2025-1',
       limit: 50,
     }, {
       fetchFn: fetchMock as typeof fetch,
@@ -339,7 +350,7 @@ describe('EDC BFF request helpers', () => {
     const result = await fetchSubmodel(proxy, {
       counterPartyId: 'TEST_PARTICIPANT_ID',
       counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
-      protocol: 'dataspace-protocol-http',
+      protocol: 'dataspace-protocol-http:2025-1',
       submodelDescriptor: {
         endpoints: [{
           protocolInformation: {

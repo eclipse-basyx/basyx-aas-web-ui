@@ -1,0 +1,38 @@
+{
+  "@context": {
+    "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+    "edc": "https://w3id.org/edc/v0.0.1/ns/",
+    "tx": "https://w3id.org/tractusx/v0.0.1/ns/",
+    "tx-auth": "https://w3id.org/tractusx/auth/",
+    "cx-policy": "https://w3id.org/catenax/policy/",
+    "odrl": "http://www.w3.org/ns/odrl/2/",
+    "dct": "http://purl.org/dc/terms/",
+    "cx-taxo": "https://w3id.org/catenax/taxonomy#",
+    "cx-common": "https://w3id.org/catenax/ontology/common#"
+  },
+  "@id": "{{Submodel Service Asset ID|Enter a unique asset identifier, e.g. a UUID|This will be the @id of your asset}}",
+  "@type": "Asset",
+  "properties": {
+    "id": "{{Submodel Service Asset ID|Enter a unique asset identifier, e.g. a UUID|This will be the @id of your asset}}",
+    "name": "Submodel Service",
+    "description": "The Submodel service allows to retrieve Submodels of Digital Twins",
+    "dct:type": {
+      "@id": "cx-taxo:Submodel"
+    },
+    "cx-common:version": "3.0"
+  },
+  "privateProperties": {},
+  "dataAddress": {
+    "@type": "DataAddress",
+    "type": "HttpData",
+    "baseUrl": "{{Submodel Service Endpoint||}}",
+    "proxyBody": "true",
+    "proxyMethod": "true",
+    "proxyPath": "true",
+    "proxyQueryParams": "true",
+    "oauth2:clientId": "{{Submodel Service client ID||}}",
+    "oauth2:clientSecretKey": "{{Submodel Service client secret key||}}",
+    "oauth2:tokenUrl": "{{Submodel Service token endpoint||}}",
+    "oauth2:scope": "{{Submodel Service Token scope||}}"
+  }
+}
