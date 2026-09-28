@@ -319,8 +319,10 @@ function collectAttachmentUploads (
     const modelType = asString(record.modelType).trim()
     const idShort = asString(record.idShort).trim()
 
+    // SubmodelElementList children are addressed by index only, even when they carry an idShort.
+    const isListEntry = parentModelType === 'SubmodelElementList'
     let nextPath = idShortPath
-    if (modelType !== '' && modelType !== 'Submodel' && idShort !== '') {
+    if (modelType !== '' && modelType !== 'Submodel' && idShort !== '' && !isListEntry) {
       nextPath = [...idShortPath, idShort]
     }
 
