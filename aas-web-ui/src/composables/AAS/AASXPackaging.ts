@@ -612,6 +612,9 @@ export function useAASXPackaging (): {
       ? await buildConceptDescriptions(Array.from(semanticIds))
       : []
 
+    // Must run before the environment is built because it rewrites File values to their package paths.
+    const supplementaryParts = formatConfig.isPlain ? [] : await buildSupplementaryParts(fileBindings, warnings)
+
     const coreworksAas = toCoreworksAAS(cleanAas as JsonRecord)
     const coreworksSubmodels = cleanSubmodels.map((submodel, index) => toCoreworksSubmodel(submodel, index))
     const coreworksConceptDescriptions = cleanConceptDescriptions.map((cd, index) =>
@@ -641,7 +644,6 @@ export function useAASXPackaging (): {
       }
     }
 
-    const supplementaryParts = await buildSupplementaryParts(fileBindings, warnings)
     const thumbnailPart = await fetchThumbnailPart(aas, warnings)
 
     const specBytes: Uint8Array = options.format === 'aasx-json'
