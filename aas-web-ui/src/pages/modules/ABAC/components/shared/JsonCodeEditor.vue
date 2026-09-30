@@ -6,7 +6,11 @@
 
     <div
       class="json-editor"
-      :class="{ 'json-editor--grow': grow, 'json-editor--error': isError }"
+      :class="{
+        'json-editor--grow': grow,
+        'json-editor--error': isError,
+        'json-editor--borderless': borderless,
+      }"
       :style="{ height: editorHeight }"
     >
       <div class="json-editor__gutter">
@@ -61,11 +65,13 @@
     /** Number of visible rows, or 'auto' to fill available height. */
     rows?: number | 'auto'
     disabled?: boolean
+    borderless?: boolean
   }>(), {
     label: '',
     errorLines: () => [],
     rows: 'auto',
     disabled: false,
+    borderless: false,
   })
 
   const gutterInner = ref<HTMLElement | null>(null)
@@ -102,6 +108,11 @@
 
   .json-editor--error {
     border-color: rgb(var(--v-theme-error));
+  }
+
+  .json-editor--borderless {
+    border: none;
+    border-radius: 0;
   }
 
   /* Fill the parent when rows === 'auto' */
