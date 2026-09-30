@@ -20,7 +20,7 @@
 
       <v-spacer />
 
-      <ActionMenu v-if="hasItems(sortedPolicies)" v-model="isMenuOpen">
+      <ActionMenu v-if="hasItems(sortedPolicies)" v-model="isMenuOpen" :aria-label="t('policies.list.sortMenu')">
         <template #activator="{ props: menuProps }">
           <v-btn v-bind="menuProps" :icon="ICONS.SORT" size="small" variant="text" />
         </template>

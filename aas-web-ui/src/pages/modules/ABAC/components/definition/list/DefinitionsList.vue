@@ -10,7 +10,7 @@
 
       <v-spacer />
 
-      <ActionMenu v-model="isMenuOpen">
+      <ActionMenu v-model="isMenuOpen" :aria-label="t('definitions.filter')">
         <template #activator="{ props: menuProps }">
           <v-badge
             color="primary"

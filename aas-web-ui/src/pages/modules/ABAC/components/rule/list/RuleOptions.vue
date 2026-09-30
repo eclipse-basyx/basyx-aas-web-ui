@@ -1,5 +1,5 @@
 <template>
-  <ActionMenu v-model="isMenuOpen">
+  <ActionMenu v-model="isMenuOpen" :aria-label="t('rules.menu', { index: rule.rule_index })">
     <ActionMenuItem
       :icon="ICONS.REPLACE"
       :label="t('rules.replace')"
@@ -152,16 +152,14 @@
       switch (action) {
         case 'replace':
         case 'patch': {
-          // Select rule only if it was not selected already
-          if (selectedIndex !== ruleIndex) {
-            onSelectRule(ruleIndex)
-          }
+          onSelectRule(ruleIndex, { force: true })
           openDialog?.({ mode: action, rule })
           return
         }
         case 'duplicate': {
           await duplicateRule({ versionId, ruleIndex })
-          onSelectRule(ruleIndex + 1)
+          // Select duplicated rule at ruleIndex + 1
+          onSelectRule(ruleIndex + 1, { replace: true, force: true })
           break
         }
         case 'move': {
@@ -177,10 +175,8 @@
             ruleIndex,
             payload: { position },
           })
-
-          if (position !== ruleIndex) {
-            onSelectRule(position, true)
-          }
+          // Select the moved rule and replace the route entry (no stale, shifted selection in history)
+          onSelectRule(position, { replace: true, force: true })
           moveDialog.value = false
           break
         }
@@ -201,10 +197,10 @@
 
           // Remove selected rule only if it was selected already
           // e.g. user can select DEF-A but open the menu on DEF-B
-          if (selectedIndex === ruleIndex) onSelectRule(ruleIndex, true)
+          if (selectedIndex === ruleIndex) onSelectRule(ruleIndex, { replace: true })
 
           // Update selected rule index if the deleted index is smaller then the selected
-          else if (selectedIndex > ruleIndex) onSelectRule(selectedIndex - 1, true)
+          else if (selectedIndex > ruleIndex) onSelectRule(selectedIndex - 1, { replace: true })
 
           deleteDialog.value = false
           break

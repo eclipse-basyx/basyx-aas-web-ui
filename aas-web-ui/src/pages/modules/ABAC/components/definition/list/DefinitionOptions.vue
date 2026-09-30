@@ -1,5 +1,5 @@
 <template>
-  <ActionMenu v-model="isMenuOpen">
+  <ActionMenu v-model="isMenuOpen" :aria-label="t('definitions.menu', { name: definition.name })">
     <ActionMenuItem
       :icon="ICONS.REPLACE"
       :label="t('definitions.replace')"
@@ -79,10 +79,7 @@
       switch (action) {
         case 'replace':
         case 'patch': {
-          // Select definition only if it was not selected already
-          if (selectedDefinitionName.value !== name || selectedDefinitionKind.value !== kind) {
-            onSelectDefinition(name, kind)
-          }
+          onSelectDefinition(name, kind, { force: true })
           openDialog?.({ mode: action, definition, kind })
           return
         }
@@ -94,7 +91,7 @@
           await deleteDefinition({ versionId, kind, name })
           // Remove selected definition only if it was selected already
           // e.g. user can select DEF-A but open the menu on DEF-B
-          if (selectedDefinitionName.value === name && selectedDefinitionKind.value === kind) onSelectDefinition(name, kind, true)
+          if (selectedDefinitionName.value === name && selectedDefinitionKind.value === kind) onSelectDefinition(name, kind, { replace: true })
 
           deleteDialog.value = false
           break

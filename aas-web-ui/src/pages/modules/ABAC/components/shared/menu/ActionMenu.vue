@@ -1,9 +1,10 @@
 <template>
   <v-menu v-model="isOpen">
     <template #activator="{ props: menuProps }">
-      <slot name="activator" :props="menuProps">
+      <slot name="activator" :props="{ ...menuProps, 'aria-label': ariaLabel }">
         <v-btn
           v-bind="menuProps"
+          :aria-label="ariaLabel"
           color="listItemText"
           :disabled="disabled"
           icon
@@ -29,7 +30,7 @@
     MENU: 'mdi-dots-vertical',
   } as const
 
-  const { iconSize = 'x-small', disabled = false } = defineProps<{ iconSize?: string, disabled?: boolean }>()
+  const { iconSize = 'x-small', disabled = false, ariaLabel } = defineProps<{ iconSize?: string, disabled?: boolean, ariaLabel?: string }>()
 
   const isOpen = defineModel<boolean>({ default: false })
 

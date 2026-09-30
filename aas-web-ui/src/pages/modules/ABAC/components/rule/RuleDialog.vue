@@ -166,8 +166,8 @@
            * Select rule after creation.
            * Note: if a new rule is created with the same index as the selected one, rule detail will be updated
            */
-          if (currentRule.value?.rule_index !== position.value?.toString() && position.value) {
-            onSelectRule(position.value)
+          if (position.value) {
+            onSelectRule(position.value, { force: true })
           }
           break
         }

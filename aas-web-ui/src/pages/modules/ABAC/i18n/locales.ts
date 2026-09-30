@@ -43,6 +43,7 @@ export const en = {
       loadError: 'Failed to load policy versions',
       empty: 'No policy versions available',
       collapseList: 'Collapse list',
+      sortMenu: 'Sort policies',
       sort: {
         created: 'Created',
         updated: 'Updated',
@@ -51,6 +52,7 @@ export const en = {
     },
     policy: {
       title: 'Policy v{version}',
+      menu: 'Policy actions (v{version})',
       policyHash: 'Policy Hash',
       clone: 'Clone',
       validate: 'Validate',
@@ -101,6 +103,7 @@ export const en = {
   },
   rules: {
     title: 'No rules | One rule | {count} Rules',
+    menu: 'Rule actions (#{index})',
     loading: 'Loading rule...',
     empty: 'No rules loaded',
     emptyRule: 'Select a rule to see the details',
@@ -180,6 +183,8 @@ export const en = {
   },
   definitions: {
     title: 'No definition | One definition | {count} Definitions',
+    menu: 'Definition actions ("{name}")',
+    filter: 'Filter definitions',
     all: 'All',
     attributes: 'Attributes',
     acls: 'ACLs',
@@ -336,6 +341,7 @@ export const de: AbacI18NSchema = {
       loadError: 'Policy-Versionen konnten nicht geladen werden',
       empty: 'Keine Policy-Versionen verfügbar',
       collapseList: 'Liste einklappen',
+      sortMenu: 'Policies sortieren',
       sort: {
         created: 'Erstellt',
         updated: 'Bearbeitet',
@@ -344,6 +350,7 @@ export const de: AbacI18NSchema = {
     },
     policy: {
       title: 'Policy v{version}',
+      menu: 'Policy-Aktionen (v{version})',
       policyHash: 'Policy Hash',
       clone: 'Klonen',
       validate: 'Validieren',
@@ -394,6 +401,7 @@ export const de: AbacI18NSchema = {
   },
   rules: {
     title: 'Keine Regeln | Eine Regel | {count} Regeln',
+    menu: 'Regel-Aktionen (#{index})',
     loading: 'Regel wird geladen...',
     empty: 'Keine Regeln geladen',
     emptyRule: 'Wählen Sie eine Regel aus, um die Details anzuzeigen',
@@ -473,6 +481,8 @@ export const de: AbacI18NSchema = {
   },
   definitions: {
     title: 'Keine Definition | Eine Definition | {count} Definitionen',
+    menu: 'Definition-Aktionen ("{name}")',
+    filter: 'Definitionen filtern',
     all: 'Alle',
     attributes: 'Attribute',
     acls: 'ACLs',

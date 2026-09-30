@@ -56,7 +56,7 @@
   watch([policies, selectedService], ([list, service]) => {
     if (selectedPolicyVersion.value || !service) return
     const active = list?.find(policy => policy.status === 'active')
-    if (active) onSelectPolicy(active.version_id)
+    if (active) onSelectPolicy(active.version_id, { replace: true })
   }, { immediate: true, flush: 'post' })
 
   watch(

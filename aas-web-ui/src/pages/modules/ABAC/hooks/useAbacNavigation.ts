@@ -9,6 +9,17 @@ import { VIEW } from '../types/view'
 // Module-level shared state so all composable consumers mutate the same ref.
 const isListOpen = ref(true)
 
+type NavigateOptions = {
+  /**
+   * navigate with `router.replace` instead of `router.push`, so no history entry is added.
+   */
+  replace?: boolean
+  /**
+   * select the target even when it is already selected instead of toggling it off.
+   */
+  force?: boolean
+}
+
 export function useAbacNavigation () {
   const route = useRoute()
   const router = useRouter()
@@ -40,8 +51,8 @@ export function useAbacNavigation () {
     return paramId
   })
 
-  function onSelectPolicy (version: string | number): void {
-    const isCurrentlySelected = selectedPolicyVersion.value?.toString() === version?.toString()
+  function onSelectPolicy (version: string | number, { replace = false, force = false }: NavigateOptions = {}): void {
+    const isCurrentlySelected = !force && selectedPolicyVersion.value?.toString() === version?.toString()
     const query = { ...route.query }
 
     delete query.rule
@@ -52,6 +63,11 @@ export function useAbacNavigation () {
       delete query.policy
     } else {
       query.policy = (version.toString())
+    }
+
+    if (replace) {
+      router.replace({ query })
+      return
     }
 
     router.push({ query })
@@ -66,8 +82,8 @@ export function useAbacNavigation () {
     return paramIndex
   })
 
-  function onSelectRule (index: string | number, replace?: boolean): void {
-    const isCurrentlySelected = selectedRuleIndex.value?.toString() === index?.toString()
+  function onSelectRule (index: string | number, { replace = false, force = false }: NavigateOptions = {}): void {
+    const isCurrentlySelected = !force && selectedRuleIndex.value?.toString() === index?.toString()
     const query = { ...route.query }
 
     if (isCurrentlySelected) {
@@ -80,6 +96,7 @@ export function useAbacNavigation () {
       router.replace({ query })
       return
     }
+
     router.push({ query })
   }
 
@@ -115,9 +132,9 @@ export function useAbacNavigation () {
     router.push({ query })
   }
 
-  function onSelectDefinition (name: string, kind: DefinitionKind, replace?: boolean): void {
+  function onSelectDefinition (name: string, kind: DefinitionKind, { replace = false, force = false }: NavigateOptions = {}): void {
     // Note: we can have definitions of different kind using the same name
-    const isCurrentlySelected = selectedDefinitionName.value?.toString() === name?.toString() && selectedDefinitionKind.value?.toString() === kind.toString()
+    const isCurrentlySelected = !force && selectedDefinitionName.value?.toString() === name?.toString() && selectedDefinitionKind.value?.toString() === kind.toString()
     const query = { ...route.query }
 
     if (isCurrentlySelected) {

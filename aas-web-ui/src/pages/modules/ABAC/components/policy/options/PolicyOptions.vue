@@ -1,5 +1,9 @@
 <template>
-  <ActionMenu v-model="isMenuOpen" :icon-size="iconSize">
+  <ActionMenu
+    v-model="isMenuOpen"
+    :aria-label="t('policies.policy.menu', { version: policy?.version_id })"
+    :icon-size="iconSize"
+  >
     <ActionMenuItem
       :icon="copyIcon"
       :label="t('policies.policy.copy')"

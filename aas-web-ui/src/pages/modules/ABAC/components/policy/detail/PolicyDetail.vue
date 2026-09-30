@@ -15,7 +15,7 @@
     >
       <v-card border class="d-flex flex-column h-100 w-100 overflow-hidden" rounded>
         <v-card-title class="flex-0-0 px-2 py-2">
-          <v-row class="d-flex align-center justify-space-between">
+          <v-row class="d-flex align-center justify-space-between ga-0">
             <v-col class="d-flex align-center">
               <span class="text-headline-small mr-4" v-bind="i18nData('policies.policy.title')">
                 {{ t("policies.policy.title", {version: selectedPolicyVersion }) }}
