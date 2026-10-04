@@ -71,7 +71,7 @@
               type="button"
               @click="select(bar, $event)"
             >
-              <span class="text-truncate">{{ bar.label }} {{ clock(bar) }}</span>
+              <span class="text-truncate">{{ barText(bar, index) }}</span>
             </button>
           </div>
         </template>
@@ -89,6 +89,8 @@
   import type { CalendarEventItem } from '../types'
   import { formatClock, formatDuration, wallClockMinutes } from '../dates'
   import { timelineTicks } from '../dayTimeline'
+
+  const MIN_LABEL_SHARE = 0.08
 
   // Properties
   const props = defineProps<{
@@ -127,6 +129,11 @@
 
   function barStyle (bar: TimelineBar) {
     return { left: position(bar.start), width: `${((bar.end - bar.start) / span()) * 100}%` }
+  }
+
+  /** Breaks and maintenance inside a shift are too small for a label most of the time */
+  function barText (bar: TimelineBar, index: number): string {
+    return index === 0 || (bar.end - bar.start) / span() >= MIN_LABEL_SHARE ? bar.label : ''
   }
 
   function clock (bar: TimelineBar): string {
