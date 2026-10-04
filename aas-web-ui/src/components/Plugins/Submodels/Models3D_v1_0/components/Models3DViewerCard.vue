@@ -61,8 +61,7 @@
 
       <v-btn-group
         class="models3d-overlay models3d-toolbar position-absolute top-0 right-0 ma-2 text-white"
-        density="comfortable"
-        divided
+        density="compact"
         rounded
         variant="text"
       >
@@ -73,7 +72,7 @@
           size="small"
           @click="cadPreview?.resetView()"
         >
-          <v-icon size="18">mdi-fit-to-screen-outline</v-icon>
+          <v-icon size="16">mdi-fit-to-screen-outline</v-icon>
           <v-tooltip activator="parent" location="bottom">Reset view</v-tooltip>
         </v-btn>
 
@@ -84,7 +83,7 @@
           size="small"
           @click="showImage = !showImage"
         >
-          <v-icon size="18">{{ showImage ? 'mdi-rotate-3d-variant' : 'mdi-image-outline' }}</v-icon>
+          <v-icon size="16">{{ showImage ? 'mdi-rotate-3d-variant' : 'mdi-image-outline' }}</v-icon>
 
           <v-tooltip activator="parent" location="bottom">
             {{ showImage ? 'Show 3D model' : 'Show preview image' }}
@@ -98,7 +97,7 @@
           size="small"
           @click="downloadFile(version.digitalFile)"
         >
-          <v-icon size="18">mdi-download</v-icon>
+          <v-icon size="16">mdi-download</v-icon>
           <v-tooltip activator="parent" location="bottom">Download 3D model</v-tooltip>
         </v-btn>
       </v-btn-group>
