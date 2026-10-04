@@ -14,39 +14,42 @@
 
     <v-expand-transition>
       <div v-show="open">
-        <div v-for="spec in rows" :key="spec.name" class="px-3 pb-3">
-          <v-divider class="mb-3" />
+        <div v-for="spec in rows" :key="spec.name">
+          <v-divider />
 
-          <div class="d-flex align-center ga-2">
-            <v-icon :color="spec.style.color" :icon="spec.style.icon" size="16" />
-            <span class="text-body-medium font-weight-medium text-break">{{ spec.name }}</span>
-            <span v-if="spec.info" class="text-body-small text-subtitleText">{{ spec.info.label }}</span>
+          <div
+            :aria-expanded="spec.file ? opened === spec.name : undefined"
+            class="px-3 py-3"
+            :class="{ 'specification-row': spec.file }"
+            :role="spec.file ? 'button' : undefined"
+            :tabindex="spec.file ? 0 : undefined"
+            @click="toggle(spec)"
+            @keydown.enter.prevent="toggle(spec)"
+            @keydown.space.prevent="toggle(spec)"
+          >
+            <div class="d-flex align-center ga-2">
+              <v-icon :color="spec.style.color" :icon="spec.style.icon" size="16" />
+              <span class="text-body-medium font-weight-medium text-break">{{ spec.name }}</span>
+              <span v-if="spec.info" class="text-body-small text-subtitleText">{{ spec.info.label }}</span>
 
-            <v-spacer />
+              <v-spacer />
 
-            <v-chip
-              v-if="spec.used"
-              color="primary"
-              label
-              size="x-small"
-              variant="tonal"
-            >in use</v-chip>
+              <v-chip
+                v-if="spec.used"
+                color="primary"
+                label
+                size="x-small"
+                variant="tonal"
+              >in use</v-chip>
 
-            <v-btn
-              v-if="spec.file"
-              :aria-label="`Specification of ${spec.name}`"
-              density="comfortable"
-              :icon="opened === spec.name ? 'mdi-chevron-up' : 'mdi-text-box-outline'"
-              size="small"
-              variant="text"
-              @click="toggle(spec)"
-            />
+              <v-icon v-if="spec.file" :icon="opened === spec.name ? 'mdi-chevron-up' : 'mdi-chevron-down'" size="small" />
+            </div>
+
+            <div v-if="spec.info" class="mt-1 text-body-small text-subtitleText">{{ spec.info.description }}</div>
           </div>
 
-          <div v-if="spec.info" class="mt-1 text-body-small text-subtitleText">{{ spec.info.description }}</div>
-
           <v-expand-transition>
-            <div v-show="opened === spec.name">
+            <div v-show="opened === spec.name" class="px-3 pb-3">
               <v-skeleton-loader v-if="states[spec.name]?.loading" class="mt-2" type="paragraph" />
 
               <v-alert v-else-if="states[spec.name]?.error" class="mt-2" type="error" variant="tonal">
@@ -102,6 +105,9 @@
 
   // Methods
   function toggle (spec: VariableSpecification): void {
+    if (!spec.file) {
+      return
+    }
     opened.value = opened.value === spec.name ? '' : spec.name
     if (opened.value) {
       loadSpecification(spec)
@@ -123,6 +129,16 @@
 </script>
 
 <style scoped>
+  .specification-row {
+    cursor: pointer;
+  }
+
+  .specification-row:hover,
+  .specification-row:focus-visible {
+    background: rgba(var(--v-theme-on-surface), var(--v-hover-opacity));
+    outline: none;
+  }
+
   .specification-text {
     white-space: pre-wrap;
     word-break: break-word;

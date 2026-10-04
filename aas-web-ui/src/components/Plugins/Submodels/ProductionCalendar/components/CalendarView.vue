@@ -1,38 +1,36 @@
 <template>
-  <div class="d-flex flex-column">
+  <div class="d-flex flex-column ga-3">
     <CalendarToolbar
       v-model:view-mode="viewMode"
-      class="px-4 py-2"
       :title="title"
       @next="move(1)"
       @prev="move(-1)"
       @today="focus = toDate(now)"
     />
 
-    <v-divider />
+    <v-sheet border class="overflow-hidden" rounded>
+      <v-calendar
+        v-model="focus"
+        class="border-0"
+        :event-overlap-threshold="0"
+        :events="visibleEvents"
+        :first-day-of-week="1"
+        :first-interval="hourRange.first"
+        format="24hr"
+        :interval-count="hourRange.count"
+        :interval-height="40"
+        :interval-minutes="60"
+        :now="now"
+        :type="viewMode"
+        @click:event="selectEvent"
+      >
+        <template v-if="viewMode === 'week'" #day-body="{ date, timeToY }">
+          <div v-if="date === now.slice(0, 10)" class="calendar-now" :style="{ top: `${timeToY(now.slice(11))}px` }" />
+        </template>
+      </v-calendar>
+    </v-sheet>
 
-    <v-calendar
-      v-model="focus"
-      :event-overlap-threshold="0"
-      :events="visibleEvents"
-      :first-day-of-week="1"
-      :first-interval="hourRange.first"
-      format="24hr"
-      :interval-count="hourRange.count"
-      :interval-height="40"
-      :interval-minutes="60"
-      :now="now"
-      :type="viewMode"
-      @click:event="selectEvent"
-    >
-      <template v-if="viewMode === 'week'" #day-body="{ date, timeToY }">
-        <div v-if="date === now.slice(0, 10)" class="calendar-now" :style="{ top: `${timeToY(now.slice(11))}px` }" />
-      </template>
-    </v-calendar>
-
-    <v-divider />
-
-    <div class="d-flex flex-wrap align-center ga-2 px-4 py-2">
+    <div class="d-flex flex-wrap align-center ga-2">
       <v-chip
         v-for="style in legend"
         :key="style.kind"

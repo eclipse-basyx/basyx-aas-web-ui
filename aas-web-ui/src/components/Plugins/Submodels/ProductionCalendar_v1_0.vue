@@ -30,13 +30,15 @@
         <v-alert icon="mdi-alert-circle-outline" type="error" variant="tonal">{{ errorMessage }}</v-alert>
       </div>
 
-      <template v-else-if="calendar">
+      <div v-else-if="calendar" class="d-flex flex-column ga-4 pa-4">
         <CalendarView :calendar="calendar" />
 
-        <div v-if="specifications.length > 0" class="pa-4 pt-0">
-          <VariableSpecifications :specifications="specifications" :x-properties="calendar.xProperties" />
-        </div>
-      </template>
+        <VariableSpecifications
+          v-if="specifications.length > 0"
+          :specifications="specifications"
+          :x-properties="calendar.xProperties"
+        />
+      </div>
 
       <template v-if="!isLoading">
         <v-divider />
