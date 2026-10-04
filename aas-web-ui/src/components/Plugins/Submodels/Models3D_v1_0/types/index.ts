@@ -74,21 +74,15 @@ export type Model3DEntry = {
   boundingBoxes: Model3DBoundingBox[]
 }
 
-export type DetailField = {
+export type DetailRow = {
   label: string
   value: string
+  icon?: string
 }
 
-export type DetailChipGroup = {
-  label: string
-  items: string[]
-  color?: string
-}
-
-export type DetailSection = {
+export type DetailGroup = {
   key: string
   title: string
   icon: string
-  fields: DetailField[]
-  chipGroups: DetailChipGroup[]
+  rows: DetailRow[]
 }

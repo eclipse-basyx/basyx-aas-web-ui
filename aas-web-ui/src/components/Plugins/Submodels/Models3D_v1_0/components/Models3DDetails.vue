@@ -1,46 +1,36 @@
 <template>
-  <div>
-    <v-sheet
-      v-for="(section, index) in sections"
-      :key="section.key"
-      border
-      class="pa-3"
-      :class="{ 'mt-4': index > 0 }"
-      rounded
+  <v-sheet v-if="groups.length > 0" border rounded>
+    <v-btn
+      block
+      class="justify-start px-3"
+      :prepend-icon="open ? 'mdi-chevron-down' : 'mdi-chevron-right'"
+      size="large"
+      variant="text"
+      @click="open = !open"
     >
-      <div class="d-flex align-center mb-3">
-        <v-icon class="mr-2" color="primary" size="small">{{ section.icon }}</v-icon>
-        <div class="text-title-small">{{ section.title }}</div>
-      </div>
+      <span class="text-title-small">Technical details</span>
+    </v-btn>
 
-      <Models3DFieldGrid v-if="section.fields.length > 0" :fields="section.fields" />
+    <v-expand-transition>
+      <div v-show="open">
+        <div v-for="group in groups" :key="group.key" class="px-3 pb-3">
+          <v-divider class="mb-3" />
 
-      <template v-for="group in section.chipGroups" :key="group.label">
-        <div v-if="group.items.length > 0" class="mt-3">
-          <div class="mb-1 text-body-small text-subtitleText">{{ group.label }}</div>
-
-          <div class="d-flex flex-wrap ga-1">
-            <v-chip
-              v-for="item in group.items"
-              :key="item"
-              :border="!group.color"
-              :color="group.color"
-              label
-              size="x-small"
-              :variant="group.color ? 'tonal' : 'flat'"
-            >
-              {{ item }}
-            </v-chip>
+          <div class="d-flex align-center mb-2 text-body-small text-subtitleText">
+            <v-icon class="mr-2" size="16">{{ group.icon }}</v-icon>
+            {{ group.title }}
           </div>
+
+          <Models3DDefinitionList :rows="group.rows" />
         </div>
-      </template>
-    </v-sheet>
-  </div>
+      </div>
+    </v-expand-transition>
+  </v-sheet>
 </template>
 
 <script lang="ts" setup>
   import type { Model3DEntry, Model3DVersion } from '../types'
-  import { buildDetailSections } from '../utils/detailSections'
+  import { technicalGroups } from '../utils/presentation'
 
   // Props
   const props = defineProps<{
@@ -48,6 +38,9 @@
     version: Model3DVersion | undefined
   }>()
 
+  // Reactive data
+  const open = ref(false)
+
   // Computed properties
-  const sections = computed(() => buildDetailSections(props.model, props.version))
+  const groups = computed(() => technicalGroups(props.model, props.version))
 </script>

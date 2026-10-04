@@ -27,7 +27,9 @@ const globalStubs = {
   'v-skeleton-loader': { template: '<div data-test="loading" />' },
   'v-alert': { template: '<div data-test="empty"><slot /></div>' },
   'LastSync': { template: '<div data-test="last-sync" />' },
-  'Models3DModelList': { template: '<div data-test="model-list" />' },
+  'Models3DModelSwitcher': { template: '<div data-test="model-list" />' },
+  'Models3DVersionMenu': { template: '<div data-test="version-menu" />' },
+  'Models3DSummary': { template: '<div data-test="summary" />' },
   'Models3DViewerCard': { template: '<div data-test="viewer" />', props: ['version', 'title'] },
   'Models3DDetails': { template: '<div data-test="details" />' },
 }
@@ -60,6 +62,7 @@ describe('Models3D_v1_0', () => {
     await flushPromises()
 
     expect(wrapper.find('[data-test="viewer"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="summary"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="details"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="model-list"]').exists()).toBe(false)
     expect(wrapper.text()).toContain('UR5e robot arm with PG-85 gripper (visualisation model)')

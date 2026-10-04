@@ -35,68 +35,81 @@
       </v-btn>
     </div>
 
-    <v-chip
-      v-if="viewerFailed"
-      class="position-absolute bottom-0 left-0 ma-2"
-      color="warning"
-      label
-      prepend-icon="mdi-alert-outline"
-      size="x-small"
-      variant="tonal"
-    >
-      3D preview unavailable
-    </v-chip>
-
-    <!-- Toolbar -->
-    <div class="position-absolute top-0 right-0 ma-2 d-flex ga-1">
-      <v-btn
-        v-if="showModel"
-        aria-label="Reset view"
-        density="comfortable"
-        icon
-        size="small"
-        variant="tonal"
-        @click="cadPreview?.resetView()"
+    <!-- The 3D view and its overlays are always dark, regardless of the theme -->
+    <v-theme-provider theme="dark">
+      <v-chip
+        v-if="formatText"
+        class="models3d-overlay position-absolute top-0 left-0 ma-2 text-white"
+        label
+        size="x-small"
+        variant="text"
       >
-        <v-icon>mdi-fit-to-screen-outline</v-icon>
-        <v-tooltip activator="parent" location="bottom">Reset view</v-tooltip>
-      </v-btn>
+        {{ formatText }}
+      </v-chip>
 
-      <v-btn
-        v-if="canToggle"
-        :aria-label="showImage ? 'Show 3D model' : 'Show preview image'"
-        density="comfortable"
-        icon
-        size="small"
-        variant="tonal"
-        @click="showImage = !showImage"
+      <v-chip
+        v-if="viewerFailed"
+        class="models3d-overlay position-absolute bottom-0 left-0 ma-2"
+        color="warning"
+        label
+        prepend-icon="mdi-alert-outline"
+        size="x-small"
+        variant="text"
       >
-        <v-icon>{{ showImage ? 'mdi-rotate-3d-variant' : 'mdi-image-outline' }}</v-icon>
+        3D preview unavailable
+      </v-chip>
 
-        <v-tooltip activator="parent" location="bottom">
-          {{ showImage ? 'Show 3D model' : 'Show preview image' }}
-        </v-tooltip>
-      </v-btn>
+      <div class="models3d-overlay models3d-toolbar position-absolute top-0 right-0 ma-2 d-flex rounded text-white">
+        <v-btn
+          v-if="showModel"
+          aria-label="Reset view"
+          density="comfortable"
+          icon
+          size="small"
+          variant="text"
+          @click="cadPreview?.resetView()"
+        >
+          <v-icon size="18">mdi-fit-to-screen-outline</v-icon>
+          <v-tooltip activator="parent" location="bottom">Reset view</v-tooltip>
+        </v-btn>
 
-      <v-btn
-        v-if="version?.digitalFile"
-        aria-label="Download 3D model"
-        density="comfortable"
-        icon
-        size="small"
-        variant="tonal"
-        @click="downloadFile(version.digitalFile)"
-      >
-        <v-icon>mdi-download</v-icon>
-        <v-tooltip activator="parent" location="bottom">Download 3D model</v-tooltip>
-      </v-btn>
-    </div>
+        <v-btn
+          v-if="canToggle"
+          :aria-label="showImage ? 'Show 3D model' : 'Show preview image'"
+          density="comfortable"
+          icon
+          size="small"
+          variant="text"
+          @click="showImage = !showImage"
+        >
+          <v-icon size="18">{{ showImage ? 'mdi-rotate-3d-variant' : 'mdi-image-outline' }}</v-icon>
+
+          <v-tooltip activator="parent" location="bottom">
+            {{ showImage ? 'Show 3D model' : 'Show preview image' }}
+          </v-tooltip>
+        </v-btn>
+
+        <v-btn
+          v-if="version?.digitalFile"
+          aria-label="Download 3D model"
+          density="comfortable"
+          icon
+          size="small"
+          variant="text"
+          @click="downloadFile(version.digitalFile)"
+        >
+          <v-icon size="18">mdi-download</v-icon>
+          <v-tooltip activator="parent" location="bottom">Download 3D model</v-tooltip>
+        </v-btn>
+      </div>
+    </v-theme-provider>
   </v-sheet>
 </template>
 
 <script lang="ts" setup>
   import type { Model3DVersion } from '../types'
   import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'
+  import { formatLabel } from '../utils/presentation'
 
   // Props
   const props = defineProps<{
@@ -118,6 +131,10 @@
   const canToggle = computed(() => !!props.version?.digitalFile && !!props.version?.previewFile)
   const showModel = computed(() => !!props.version?.digitalFile && !showImage.value && !viewerFailed.value)
   const externalUrl = computed(() => props.version?.externalFiles[0]?.url ?? '')
+  const formatText = computed(() => {
+    const qualifier = props.version?.format.qualifier.match(/\(([^)]+)\)/)?.[1] // "binary (.glb)" → ".glb"
+    return [formatLabel(props.version), qualifier].filter(Boolean).join(' · ')
+  })
 
   // Watchers
   watch(
@@ -135,5 +152,10 @@
     min-height: 260px;
     max-height: min(60svh, 560px);
     width: 100%;
+  }
+
+  .models3d-overlay {
+    background: rgb(0 0 0 / 55%);
+    backdrop-filter: blur(4px);
   }
 </style>

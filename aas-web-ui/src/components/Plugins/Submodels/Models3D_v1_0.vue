@@ -22,43 +22,45 @@
       </div>
 
       <div v-else class="models3d">
-        <div class="models3d__layout pa-4" :class="{ 'models3d__layout--list': models.length > 1 }">
-          <Models3DModelList
+        <div class="d-flex flex-column ga-4 pa-4">
+          <Models3DModelSwitcher
             v-if="models.length > 1"
             :models="models"
             :selected-key="selectedModel?.key ?? ''"
             @select="selectedModelKey = $event"
           />
 
-          <div v-if="selectedModel" class="models3d__main">
-            <div class="d-flex flex-wrap align-center ga-2 mb-3">
+          <template v-if="selectedModel">
+            <div class="d-flex flex-wrap align-center ga-2">
               <div class="text-title-small text-break">{{ selectedTitle }}</div>
+
+              <v-chip
+                v-if="version?.status"
+                :color="statusColor(version.status)"
+                label
+                size="x-small"
+                :variant="statusColor(version.status) ? 'tonal' : 'outlined'"
+              >
+                {{ version.status }}
+              </v-chip>
 
               <v-spacer />
 
-              <v-chip-group
-                v-if="selectedModel.versions.length > 1"
-                v-model="selectedVersionKey"
-                mandatory
-                selected-class="text-primary"
-              >
-                <v-chip
-                  v-for="modelVersion in selectedModel.versions"
-                  :key="modelVersion.key"
-                  border
-                  label
-                  size="x-small"
-                  :value="modelVersion.key"
-                >
-                  {{ modelVersion.versionId ? `v${modelVersion.versionId}` : modelVersion.fileName }}
-                </v-chip>
-              </v-chip-group>
+              <Models3DVersionMenu
+                :selected="version"
+                :versions="selectedModel.versions"
+                @select="selectedVersionKey = $event"
+              />
             </div>
 
-            <Models3DViewerCard class="mb-4" :title="selectedTitle" :version="version" />
+            <div class="models3d__layout">
+              <Models3DViewerCard :title="selectedTitle" :version="version" />
+
+              <Models3DSummary :model="selectedModel" />
+            </div>
 
             <Models3DDetails :model="selectedModel" :version="version" />
-          </div>
+          </template>
         </div>
       </div>
 
@@ -75,6 +77,7 @@
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
   import { latestVersion, parseModels3D, versionTitle } from './Models3D_v1_0/utils/parseModel3D'
+  import { statusColor } from './Models3D_v1_0/utils/presentation'
 
   defineOptions({
     name: 'Models3D',
@@ -162,13 +165,10 @@
     gap: 16px;
   }
 
-  .models3d__main {
-    min-width: 0;
-  }
-
-  @container (min-width: 720px) {
-    .models3d__layout--list {
-      grid-template-columns: 280px minmax(0, 1fr);
+  /* Wide panes (e.g. full screen): viewer and summary side by side */
+  @container (min-width: 880px) {
+    .models3d__layout {
+      grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr);
     }
   }
 </style>
