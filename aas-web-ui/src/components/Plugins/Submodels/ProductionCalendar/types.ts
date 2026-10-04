@@ -1,6 +1,6 @@
 import type ICAL from 'ical.js'
 
-export type ViewMode = 'week' | 'month'
+export type ViewMode = 'day' | 'week' | 'month'
 
 export type EventKind = 'production' | 'break' | 'maintenance' | 'other'
 
@@ -29,6 +29,10 @@ export interface CalendarEventItem {
   color: string
   /** Value of `X-PRODUCTION-DAY`: the event belongs to the previous (-1), same (0) or next (1) production day */
   productionDay?: -1 | 0 | 1
+  /** `YYYY-MM-DD` of the production day the event belongs to */
+  productionDate: string
+  /** Key of the shift a break or maintenance period lies in */
+  parentKey?: string
 }
 
 export interface ParsedCalendar {

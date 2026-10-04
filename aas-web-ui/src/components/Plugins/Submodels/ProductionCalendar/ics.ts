@@ -1,6 +1,7 @@
 import type { CalendarEventItem, EventKind, ParsedCalendar } from './types'
 import ICAL from 'ical.js'
 import { KIND_STYLES, kindFromCategories } from './categories'
+import { addDays } from './dates'
 import { normalizeVariableName } from './variables'
 
 /** Upper bound of occurrences evaluated per event, protects against runaway recurrence rules. */
@@ -249,6 +250,19 @@ function* occurrenceDetails (event: ICAL.Event, rangeEndMs: number) {
   }
 }
 
+/**
+ * The production day an event belongs to. `X-PRODUCTION-DAY` is relative to the calendar day the event ends on
+ * (an event that ends at midnight still belongs to the day it lies in).
+ */
+function productionDateOf (start: string, end: string, timed: boolean, productionDay = 0): string {
+  if (!timed) {
+    return start
+  }
+  const endDate = end.slice(0, 10)
+  const endsAtMidnight = end.slice(11) === '00:00' && end > start
+  return addDays(endsAtMidnight ? addDays(endDate, -1) : endDate, productionDay)
+}
+
 function shift (time: ICAL.Time, seconds: number): ICAL.Time {
   const shifted = time.clone()
   shifted.addDuration(ICAL.Duration.fromSeconds(seconds))
@@ -280,6 +294,8 @@ export function expandEvents (calendar: ParsedCalendar, rangeStart: Date, rangeE
       }
       const start = toWallClock(startDate, calendar.timeZone)
 
+      const endText = toWallClock(timed ? end : lastDay, calendar.timeZone)
+      const productionDate = productionDateOf(start, endText, timed, spec.productionDay)
       const shiftItem: CalendarEventItem = {
         key: `${event.uid}-${start}`,
         uid: event.uid,
@@ -287,13 +303,14 @@ export function expandEvents (calendar: ParsedCalendar, rangeStart: Date, rangeE
         description: item.description,
         location: item.location,
         start,
-        end: toWallClock(timed ? end : lastDay, calendar.timeZone),
+        end: endText,
         timed,
         categories: spec.categories,
         xProperties: spec.xProperties,
         kind: spec.kind,
         color: KIND_STYLES[spec.kind].color,
         productionDay: spec.productionDay,
+        productionDate,
       }
 
       const nested: CalendarEventItem[] = []
@@ -306,19 +323,29 @@ export function expandEvents (calendar: ParsedCalendar, rangeStart: Date, rangeE
         for (const [index, period] of periods.entries()) {
           const periodStart = shift(startDate, period.startOffsetSeconds)
           const periodEnd = shift(periodStart, period.durationSeconds)
+          // Changed occurrences can be shorter than the event the periods were defined for
+          const clippedStart = toWallClock(periodStart, calendar.timeZone)
+          const clippedEnd = toWallClock(periodEnd, calendar.timeZone)
+          const from = [clippedStart, shiftItem.start].toSorted()[1] as string
+          const to = [clippedEnd, shiftItem.end].toSorted()[0] as string
+          if (from >= to) {
+            continue
+          }
           nested.push({
             key: `${event.uid}-${start}-${kind}-${index}`,
             uid: event.uid,
             name: label,
             description: item.summary ? `During ${item.summary}` : '',
             location: item.location,
-            start: toWallClock(periodStart, calendar.timeZone),
-            end: toWallClock(periodEnd, calendar.timeZone),
+            start: from,
+            end: to,
             timed: true,
             categories: spec.categories,
             xProperties: [variable],
             kind,
             color: KIND_STYLES[kind].color,
+            productionDate,
+            parentKey: shiftItem.key,
           })
         }
       }

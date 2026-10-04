@@ -25,6 +25,7 @@
       rounded="lg"
       variant="text"
     >
+      <v-btn value="day">Day</v-btn>
       <v-btn value="week">Week</v-btn>
       <v-btn value="month">Month</v-btn>
     </v-btn-toggle>

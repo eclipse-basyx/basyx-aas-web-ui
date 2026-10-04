@@ -35,6 +35,7 @@ declare module 'vue' {
     BooleanInput: typeof import('./components/EditorComponents/InputTypes/BooleanInput.vue')['default']
     BooleanType: typeof import('./components/SubmodelElements/ValueTypes/BooleanType.vue')['default']
     CADPreview: typeof import('./components/Plugins/CADPreview.vue')['default']
+    CalendarDayView: typeof import('./components/Plugins/Submodels/ProductionCalendar/components/CalendarDayView.vue')['default']
     CalendarEventMenu: typeof import('./components/Plugins/Submodels/ProductionCalendar/components/CalendarEventMenu.vue')['default']
     CalendarToolbar: typeof import('./components/Plugins/Submodels/ProductionCalendar/components/CalendarToolbar.vue')['default']
     CalendarView: typeof import('./components/Plugins/Submodels/ProductionCalendar/components/CalendarView.vue')['default']

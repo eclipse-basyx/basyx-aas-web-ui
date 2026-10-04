@@ -5,10 +5,17 @@
       :title="title"
       @next="move(1)"
       @prev="move(-1)"
-      @today="focus = toDate(now)"
+      @today="goToToday"
     />
 
-    <v-sheet border class="overflow-hidden" rounded>
+    <CalendarDayView
+      v-if="viewMode === 'day'"
+      :now="now"
+      :timeline="timeline"
+      @select="openMenu"
+    />
+
+    <v-sheet v-else border class="overflow-hidden" rounded>
       <v-calendar
         v-model="focus"
         class="border-0"
@@ -22,6 +29,7 @@
         :interval-minutes="60"
         :now="now"
         :type="viewMode"
+        @click:date="openDay"
         @click:event="selectEvent"
       >
         <template v-if="viewMode === 'week'" #day-body="{ date, timeToY }">
@@ -45,7 +53,7 @@
 
       <v-spacer />
 
-      <span v-if="viewMode === 'month'" class="text-body-small text-subtitleText">Breaks are shown in the week view</span>
+      <span v-if="viewMode === 'month'" class="text-body-small text-subtitleText">Breaks are shown in the day and week view</span>
     </div>
 
     <CalendarEventMenu v-model="menu" :event="selectedEvent" :target="menuTarget" />
@@ -55,6 +63,8 @@
 <script lang="ts" setup>
   import type { CalendarEventItem, ParsedCalendar, ViewMode } from '../types'
   import { KIND_STYLES } from '../categories'
+  import { fromDateString, toDateString } from '../dates'
+  import { buildDayTimeline } from '../dayTimeline'
   import { expandEvents, nowInTimeZone } from '../ics'
 
   const DAY_MS = 86_400_000
@@ -67,10 +77,10 @@
   }>()
 
   // Reactive state
-  const viewMode = ref<ViewMode>('week')
+  const viewMode = ref<ViewMode>('day')
   // The calendar is shown in the time zone of the factory, so "now" is the wall-clock time there
   const now = ref(nowInTimeZone(props.calendar.timeZone))
-  const focus = ref(toDate(now.value))
+  const focus = ref(fromDateString(currentProductionDate()))
   const menu = ref(false)
   const selectedEvent = ref<CalendarEventItem | null>(null)
   const menuTarget = ref<HTMLElement | undefined>()
@@ -85,6 +95,8 @@
     const to = new Date(Date.UTC(year, month + 1, 1) + 8 * DAY_MS)
     return expandEvents(props.calendar, from, to)
   })
+
+  const timeline = computed(() => buildDayTimeline(events.value, toDateString(focus.value)))
 
   const visibleEvents = computed(() => {
     return viewMode.value === 'month' ? events.value.filter(event => event.kind !== 'break') : events.value
@@ -111,6 +123,9 @@
   })
 
   const title = computed(() => {
+    if (viewMode.value === 'day') {
+      return focus.value.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    }
     if (viewMode.value === 'month') {
       return focus.value.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
     }
@@ -135,23 +150,38 @@
   })
 
   // Methods
-  function toDate (wallClock: string): Date {
-    const [year, month, day] = wallClock.slice(0, 10).split('-').map(Number) as [number, number, number]
-    return new Date(year, month - 1, day)
+  /** The production day that is running now (a night shift belongs to the day it ends on), otherwise today. */
+  function currentProductionDate (): string {
+    const today = now.value.slice(0, 10)
+    const around = expandEvents(props.calendar, new Date(Date.parse(today) - 2 * DAY_MS), new Date(Date.parse(today) + 3 * DAY_MS))
+    const running = around.find(event => event.timed && !event.parentKey && event.start <= now.value && now.value < event.end)
+    return running?.productionDate ?? today
+  }
+
+  function goToToday (): void {
+    now.value = nowInTimeZone(props.calendar.timeZone)
+    focus.value = fromDateString(currentProductionDate())
   }
 
   function move (direction: 1 | -1): void {
-    focus.value = viewMode.value === 'week'
-      ? new Date(focus.value.getFullYear(), focus.value.getMonth(), focus.value.getDate() + 7 * direction)
-      : new Date(focus.value.getFullYear(), focus.value.getMonth() + direction, 1)
+    const { value } = focus
+    focus.value = viewMode.value === 'month' ? new Date(value.getFullYear(), value.getMonth() + direction, 1) : new Date(value.getFullYear(), value.getMonth(), value.getDate() + (viewMode.value === 'week' ? 7 : 1) * direction)
+  }
+
+  function openDay (_nativeEvent: Event, { date }: { date: string }): void {
+    focus.value = fromDateString(date)
+    viewMode.value = 'day'
   }
 
   function selectEvent (nativeEvent: Event, { event }: { event: Record<string, any> }): void {
-    const target = nativeEvent.currentTarget as HTMLElement
+    openMenu(event as CalendarEventItem, nativeEvent.currentTarget as HTMLElement)
+  }
+
+  function openMenu (event: CalendarEventItem, target: HTMLElement): void {
     // An open menu closes on the same click (outside click handling runs asynchronously), so reopen it afterwards
     menu.value = false
     setTimeout(() => {
-      selectedEvent.value = event as CalendarEventItem
+      selectedEvent.value = event
       menuTarget.value = target
       menu.value = true
     })

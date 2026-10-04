@@ -17,7 +17,7 @@ describe('parseCalendar', () => {
 
     expect(calendar.name).toBe('LINE01 production calendar')
     expect(calendar.timeZone).toBe('Europe/Berlin')
-    expect(calendar.events).toHaveLength(3)
+    expect(calendar.events).toHaveLength(4)
     expect(calendar.xProperties.toSorted()).toEqual(['X-BREAK', 'X-MAINTENANCE', 'X-PRODUCTION-DAY'])
   })
 
@@ -36,25 +36,31 @@ describe('parseCalendar', () => {
 })
 
 describe('expandEvents', () => {
-  it('expands a regular week into shifts with their breaks in factory wall-clock time', () => {
+  it('expands a production day into its shifts with their breaks in factory wall-clock time', () => {
     const events = expand('2026-09-13', '2026-09-21')
-    const monday = events.filter(event => event.start.startsWith('2026-09-14'))
+    const monday = events.filter(event => event.productionDate === '2026-09-14')
 
     expect(monday.map(event => [event.name, event.kind, event.start, event.end])).toEqual([
+      ['Night shift', 'production', '2026-09-13 22:00', '2026-09-14 06:00'],
+      ['Break', 'break', '2026-09-14 02:00', '2026-09-14 02:30'],
       ['Early shift', 'production', '2026-09-14 06:00', '2026-09-14 14:00'],
       ['Break', 'break', '2026-09-14 10:00', '2026-09-14 10:30'],
       ['Late shift', 'production', '2026-09-14 14:00', '2026-09-14 22:00'],
       ['Break', 'break', '2026-09-14 18:00', '2026-09-14 18:30'],
     ])
-    expect(events).toHaveLength(20)
-    expect(events.some(event => event.start.startsWith('2026-09-19') || event.start.startsWith('2026-09-20'))).toBe(false)
+    expect(monday.filter(event => event.parentKey).map(event => event.parentKey)).toEqual([
+      monday[0]?.key,
+      monday[2]?.key,
+      monday[4]?.key,
+    ])
+    expect(events.some(event => event.productionDate === '2026-09-19' || event.productionDate === '2026-09-20')).toBe(false)
   })
 
   it('skips EXDATE occurrences (public holidays) including their breaks', () => {
     const events = expand('2026-05-10', '2026-05-18')
-    const days = new Set(events.map(event => event.start.slice(0, 10)))
+    const days = new Set(events.map(event => event.productionDate))
 
-    expect([...days].toSorted()).toEqual(['2026-05-11', '2026-05-12', '2026-05-13', '2026-05-15'])
+    expect([...days].toSorted()).toEqual(['2026-05-11', '2026-05-12', '2026-05-13', '2026-05-15', '2026-05-18'])
   })
 
   it('keeps the wall-clock time of shifts and breaks across the DST change', () => {
@@ -68,48 +74,98 @@ describe('expandEvents', () => {
       '2026-10-30 06:00',
     ])
     expect(events.filter(event => event.kind === 'break' && event.start.endsWith('10:00'))).toHaveLength(5)
+    // The night shift of the DST night still ends at 06:00 local time
+    expect(events.find(event => event.name === 'Night shift' && event.start === '2026-10-25 22:00')?.end).toBe('2026-10-26 06:00')
   })
 
-  it('places maintenance periods inside the monthly maintenance event', () => {
+  it('places maintenance periods inside the monthly maintenance shift', () => {
     const events = expand('2026-10-01', '2026-12-01')
 
+    expect(events.filter(event => event.name === 'Planned maintenance LINE01').map(event => [event.kind, event.start, event.end])).toEqual([
+      ['production', '2026-10-03 06:00', '2026-10-03 14:00'],
+      ['production', '2026-11-07 06:00', '2026-11-07 14:00'],
+    ])
     expect(events.filter(event => event.kind === 'maintenance').map(event => [event.start, event.end])).toEqual([
       ['2026-10-03 06:00', '2026-10-03 10:00'],
       ['2026-11-07 06:00', '2026-11-07 10:00'],
     ])
-    // The period covers the whole event, so it is shown as one maintenance event instead of a shift with an overlay
-    expect(events.filter(event => event.name === 'Planned maintenance LINE01').map(event => event.kind)).toEqual([
-      'maintenance',
-      'maintenance',
-    ])
   })
 
-  it('keeps the metadata of the event when a period covers all of it', () => {
-    const maintenance = expand('2026-10-03', '2026-10-04').find(event => event.kind === 'maintenance')
+  it('shows a period that covers the whole event as one event with the details of that event', () => {
+    const text = calendarOf([
+      'BEGIN:VEVENT',
+      'UID:window',
+      'SUMMARY:Maintenance window',
+      'DESCRIPTION:Preventive maintenance',
+      'DTSTART:20260103T060000Z',
+      'DTEND:20260103T100000Z',
+      'X-PRODUCTION-DAY:0',
+      'X-MAINTENANCE:20260103T060000Z/PT4H',
+      'END:VEVENT',
+    ])
+    const events = expand('2026-01-03', '2026-01-04', text)
 
-    expect(maintenance).toMatchObject({
-      name: 'Planned maintenance LINE01',
+    expect(events).toHaveLength(1)
+    expect(events[0]).toMatchObject({
+      name: 'Maintenance window',
+      kind: 'maintenance',
       color: 'error',
       productionDay: 0,
       xProperties: ['X-PRODUCTION-DAY', 'X-MAINTENANCE'],
-      description: expect.stringContaining('Monthly preventive maintenance'),
+      description: 'Preventive maintenance',
+    })
+  })
+
+  it('clips periods to changed occurrences that are shorter than the event', () => {
+    const events = expand('2026-10-09', '2026-10-10')
+    const late = events.filter(event => event.uid.startsWith('shift-late'))
+
+    // The master has a break at 18:00, the changed occurrence of that Friday ends at 18:00
+    expect(late.map(event => [event.name, event.start, event.end])).toEqual([
+      ['Late shift (shortened)', '2026-10-09 14:00', '2026-10-09 18:00'],
+    ])
+  })
+
+  it('assigns events to production days using X-PRODUCTION-DAY', () => {
+    const text = calendarOf(...[
+      ['same', 'DTSTART:20250310T060000Z', 'DTEND:20250310T140000Z', 0],
+      ['evening', 'DTSTART:20250309T220000Z', 'DTEND:20250310T000000Z', 1],
+      ['night', 'DTSTART:20250310T220000Z', 'DTEND:20250311T060000Z', -1],
+      ['midnight', 'DTSTART:20250310T160000Z', 'DTEND:20250311T000000Z', 0],
+    ].map(([uid, start, end, day]) => [
+      'BEGIN:VEVENT',
+      `UID:${uid}`,
+      `SUMMARY:${uid}`,
+      start as string,
+      end as string,
+      `X-PRODUCTION-DAY:${day}`,
+      'END:VEVENT',
+    ]))
+    const events = expand('2025-03-09', '2025-03-12', text)
+
+    expect(Object.fromEntries(events.map(event => [event.name, event.productionDate]))).toEqual({
+      same: '2025-03-10',
+      evening: '2025-03-10',
+      night: '2025-03-10',
+      midnight: '2025-03-10',
     })
   })
 
   it('exposes the metadata of shifts and nested periods', () => {
     const events = expand('2026-09-14', '2026-09-15')
     const shift = events.find(event => event.name === 'Early shift')
-    const pause = events.find(event => event.kind === 'break')
+    const pause = events.find(event => event.description === 'During Early shift')
 
     expect(shift).toMatchObject({
       kind: 'production',
       color: 'success',
       timed: true,
       productionDay: 0,
+      productionDate: '2026-09-14',
       xProperties: ['X-PRODUCTION-DAY', 'X-BREAK'],
       description: 'Production time slot, early shift 06:00-14:00 incl. 30 min break',
     })
-    expect(pause).toMatchObject({ name: 'Break', color: 'warning', xProperties: ['X-BREAK'], description: 'During Early shift' })
+    expect(pause).toMatchObject({ name: 'Break', color: 'warning', xProperties: ['X-BREAK'], parentKey: shift?.key })
   })
 
   it('returns nothing for a range without events', () => {
