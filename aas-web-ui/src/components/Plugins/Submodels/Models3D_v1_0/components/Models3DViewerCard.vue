@@ -59,14 +59,18 @@
         3D preview unavailable
       </v-chip>
 
-      <div class="models3d-overlay models3d-toolbar position-absolute top-0 right-0 ma-2 d-flex rounded text-white">
+      <v-btn-group
+        class="models3d-overlay models3d-toolbar position-absolute top-0 right-0 ma-2 text-white"
+        density="comfortable"
+        divided
+        rounded
+        variant="text"
+      >
         <v-btn
           v-if="showModel"
           aria-label="Reset view"
-          density="comfortable"
           icon
           size="small"
-          variant="text"
           @click="cadPreview?.resetView()"
         >
           <v-icon size="18">mdi-fit-to-screen-outline</v-icon>
@@ -76,10 +80,8 @@
         <v-btn
           v-if="canToggle"
           :aria-label="showImage ? 'Show 3D model' : 'Show preview image'"
-          density="comfortable"
           icon
           size="small"
-          variant="text"
           @click="showImage = !showImage"
         >
           <v-icon size="18">{{ showImage ? 'mdi-rotate-3d-variant' : 'mdi-image-outline' }}</v-icon>
@@ -92,16 +94,14 @@
         <v-btn
           v-if="version?.digitalFile"
           aria-label="Download 3D model"
-          density="comfortable"
           icon
           size="small"
-          variant="text"
           @click="downloadFile(version.digitalFile)"
         >
           <v-icon size="18">mdi-download</v-icon>
           <v-tooltip activator="parent" location="bottom">Download 3D model</v-tooltip>
         </v-btn>
-      </div>
+      </v-btn-group>
     </v-theme-provider>
   </v-sheet>
 </template>
