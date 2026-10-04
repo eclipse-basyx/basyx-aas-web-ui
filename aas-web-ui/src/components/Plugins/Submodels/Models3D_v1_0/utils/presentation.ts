@@ -28,17 +28,17 @@ export function versionLabel (version: Model3DVersion, index: number): string {
   return version.versionId ? `v${version.versionId}` : `Version ${index + 1}`
 }
 
-/** Colors well-known status values (IDTA does not define a fixed value list) */
+/** Colors well-known status values (IDTA does not define a fixed value list); negative terms win */
 export function statusColor (status: string): string | undefined {
   const value = status.toLowerCase()
-  if (/released|approved|published|valid|final/.test(value)) {
-    return 'success'
+  if (/\b(?:obsolete|deprecated|withdrawn|rejected|invalid|retired|expired|unreleased|unapproved|not\s+(?:released|approved|published|valid|final))\b/.test(value)) {
+    return 'error'
   }
-  if (/draft|review|progress|preliminary|proposed/.test(value)) {
+  if (/\b(?:draft|review|progress|preliminary|proposed|pending)\b/.test(value)) {
     return 'warning'
   }
-  if (/obsolete|deprecated|withdrawn|rejected|invalid|retired/.test(value)) {
-    return 'error'
+  if (/\b(?:released|approved|published|valid|final)\b/.test(value)) {
+    return 'success'
   }
   return undefined
 }

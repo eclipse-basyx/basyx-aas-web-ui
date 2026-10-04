@@ -6,7 +6,7 @@
       :key="version?.key"
       ref="cadPreview"
       fill
-      :submodel-element-data="version?.digitalFile"
+      :submodel-element-data="digitalFile"
       @error="viewerFailed = true"
     />
 
@@ -112,6 +112,11 @@
   const viewerFailed = ref(false)
 
   // Computed properties
+  /** The File element plus the file name of the version, which tells the format if the File has no usable extension */
+  const digitalFile = computed(() => {
+    const file = props.version?.digitalFile
+    return file && props.version?.fileName ? { ...file, fileName: props.version.fileName } : file
+  })
   const canToggle = computed(() => !!props.version?.digitalFile && !!props.version?.previewFile)
   const showModel = computed(() => !!props.version?.digitalFile && !showImage.value && !viewerFailed.value)
   const toggleLabel = computed(() => (showImage.value ? 'Show 3D model' : 'Show preview image'))

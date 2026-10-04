@@ -262,9 +262,9 @@
     }
     animate()
 
-    // camera pose that frames the loaded model
-    const initialPosition = new THREE.Vector3()
-    const initialTarget = new THREE.Vector3()
+    // camera pose the view is reset to; glTF models replace it with a pose that frames the model
+    const initialPosition = camera.position.clone()
+    const initialTarget = controls.target.clone()
 
     return {
       scene,

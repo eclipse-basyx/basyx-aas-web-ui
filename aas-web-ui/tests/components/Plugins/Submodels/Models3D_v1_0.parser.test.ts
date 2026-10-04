@@ -167,6 +167,11 @@ describe('presentation', () => {
     expect(statusColor('In progress')).toBe('warning')
     expect(statusColor('Deprecated')).toBe('error')
     expect(statusColor('Whatever')).toBeUndefined()
+    expect(statusColor('Invalid')).toBe('error')
+    expect(statusColor('Not approved')).toBe('error')
+    expect(statusColor('Unreleased')).toBe('error')
+    expect(statusColor('Valid')).toBe('success')
+    expect(statusColor('Approved for release')).toBe('success')
   })
 
   it('lists the key facts of the model', () => {

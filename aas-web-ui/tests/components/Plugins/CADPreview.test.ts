@@ -8,6 +8,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import CADPreview from '@/components/Plugins/CADPreview.vue'
 
 const mocks = vi.hoisted(() => ({
+  camera: null as null | { position: { x: number, y: number, z: number, set: (x: number, y: number, z: number) => void } },
+  controlsTarget: null as null | { x: number, y: number, z: number, set: (x: number, y: number, z: number) => void },
   disposeRenderer: vi.fn(),
   disposeControls: vi.fn(),
   fetch: vi.fn(),
@@ -43,6 +45,12 @@ vi.mock('three/examples/jsm/controls/OrbitControls.js', async () => {
   return {
     OrbitControls: class {
       target = new Vector3()
+
+      constructor (camera: never) {
+        mocks.camera = camera
+        mocks.controlsTarget = this.target
+      }
+
       update () {}
       dispose () {
         mocks.disposeControls()
@@ -191,6 +199,25 @@ describe('CADPreview attachment requests', () => {
     expect(mesh.material).toBe(material)
     expect(mesh.scale.x).toBe(1)
     expect(wrapper.emitted('loaded')).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it.each([
+    { format: 'STL', contentType: 'model/stl' },
+    { format: 'OBJ', contentType: 'application/obj' },
+  ])('resets the $format view to the initial camera pose', async ({ contentType }) => {
+    mocks.fetch.mockResolvedValue(new Response('bytes'))
+
+    const wrapper = mountPreview(contentType)
+    await flushPromises()
+    expect(mocks.camera?.position).toMatchObject({ x: 0, y: 0, z: 5 })
+
+    mocks.camera?.position.set(10, 20, 30)
+    mocks.controlsTarget?.set(1, 2, 3)
+    ;(wrapper.vm as unknown as { resetView: () => void }).resetView()
+
+    expect(mocks.camera?.position).toMatchObject({ x: 0, y: 0, z: 5 })
+    expect(mocks.controlsTarget).toMatchObject({ x: 0, y: 0, z: 0 })
     wrapper.unmount()
   })
 
