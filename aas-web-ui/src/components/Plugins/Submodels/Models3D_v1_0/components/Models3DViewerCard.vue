@@ -35,73 +35,58 @@
       </v-btn>
     </div>
 
-    <!-- The 3D view and its overlays are always dark, regardless of the theme -->
-    <v-theme-provider theme="dark">
-      <v-chip
-        v-if="formatText"
-        class="models3d-overlay position-absolute top-0 left-0 ma-2 text-white"
-        label
-        size="x-small"
-        variant="text"
+    <v-chip
+      v-if="formatText"
+      class="position-absolute top-0 left-0 ma-2"
+      color="surface"
+      label
+      size="x-small"
+      theme="dark"
+      variant="flat"
+    >
+      {{ formatText }}
+    </v-chip>
+
+    <v-chip
+      v-if="viewerFailed"
+      class="position-absolute bottom-0 left-0 ma-2"
+      color="warning"
+      label
+      prepend-icon="mdi-alert-outline"
+      size="x-small"
+      theme="dark"
+      variant="elevated"
+    >
+      3D preview unavailable
+    </v-chip>
+
+    <!-- Toolbar -->
+    <v-btn-group class="position-absolute top-0 right-0 ma-2" size="small" theme="dark">
+      <v-btn v-if="showModel" aria-label="Reset view" icon @click="cadPreview?.resetView()">
+        <v-icon>mdi-fit-to-screen-outline</v-icon>
+        <v-tooltip activator="parent" location="bottom" open-delay="600">Reset view</v-tooltip>
+      </v-btn>
+
+      <v-btn
+        v-if="canToggle"
+        :aria-label="toggleLabel"
+        icon
+        @click="showImage = !showImage"
       >
-        {{ formatText }}
-      </v-chip>
+        <v-icon>{{ showImage ? 'mdi-rotate-3d-variant' : 'mdi-image-outline' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom" open-delay="600">{{ toggleLabel }}</v-tooltip>
+      </v-btn>
 
-      <v-chip
-        v-if="viewerFailed"
-        class="models3d-overlay position-absolute bottom-0 left-0 ma-2"
-        color="warning"
-        label
-        prepend-icon="mdi-alert-outline"
-        size="x-small"
-        variant="text"
+      <v-btn
+        v-if="version?.digitalFile"
+        aria-label="Download 3D model"
+        icon
+        @click="downloadFile(version.digitalFile)"
       >
-        3D preview unavailable
-      </v-chip>
-
-      <v-btn-group
-        class="models3d-overlay models3d-toolbar position-absolute top-0 right-0 ma-2 text-white"
-        density="compact"
-        rounded
-        variant="text"
-      >
-        <v-btn
-          v-if="showModel"
-          aria-label="Reset view"
-          icon
-          size="small"
-          @click="cadPreview?.resetView()"
-        >
-          <v-icon size="16">mdi-fit-to-screen-outline</v-icon>
-          <v-tooltip activator="parent" location="bottom">Reset view</v-tooltip>
-        </v-btn>
-
-        <v-btn
-          v-if="canToggle"
-          :aria-label="showImage ? 'Show 3D model' : 'Show preview image'"
-          icon
-          size="small"
-          @click="showImage = !showImage"
-        >
-          <v-icon size="16">{{ showImage ? 'mdi-rotate-3d-variant' : 'mdi-image-outline' }}</v-icon>
-
-          <v-tooltip activator="parent" location="bottom">
-            {{ showImage ? 'Show 3D model' : 'Show preview image' }}
-          </v-tooltip>
-        </v-btn>
-
-        <v-btn
-          v-if="version?.digitalFile"
-          aria-label="Download 3D model"
-          icon
-          size="small"
-          @click="downloadFile(version.digitalFile)"
-        >
-          <v-icon size="16">mdi-download</v-icon>
-          <v-tooltip activator="parent" location="bottom">Download 3D model</v-tooltip>
-        </v-btn>
-      </v-btn-group>
-    </v-theme-provider>
+        <v-icon>mdi-download</v-icon>
+        <v-tooltip activator="parent" location="bottom" open-delay="600">Download 3D model</v-tooltip>
+      </v-btn>
+    </v-btn-group>
   </v-sheet>
 </template>
 
@@ -129,6 +114,7 @@
   // Computed properties
   const canToggle = computed(() => !!props.version?.digitalFile && !!props.version?.previewFile)
   const showModel = computed(() => !!props.version?.digitalFile && !showImage.value && !viewerFailed.value)
+  const toggleLabel = computed(() => (showImage.value ? 'Show 3D model' : 'Show preview image'))
   const externalUrl = computed(() => props.version?.externalFiles[0]?.url ?? '')
   const formatText = computed(() => {
     const qualifier = props.version?.format.qualifier.match(/\(([^)]+)\)/)?.[1] // "binary (.glb)" → ".glb"
@@ -151,10 +137,5 @@
     min-height: 260px;
     max-height: min(60svh, 560px);
     width: 100%;
-  }
-
-  .models3d-overlay {
-    background: rgb(0 0 0 / 55%);
-    backdrop-filter: blur(4px);
   }
 </style>
