@@ -1,46 +1,62 @@
 <template>
-  <v-menu v-model="open" :close-on-content-click="false" min-width="280" :target="target">
-    <v-card v-if="event">
-      <v-card-title class="d-flex align-center ga-2 text-body-large">
-        <v-icon :color="style.color" :icon="style.icon" />
-        <span>{{ event.name }}</span>
-      </v-card-title>
+  <v-menu
+    v-model="open"
+    :close-on-content-click="false"
+    max-width="400"
+    min-width="280"
+    :target="target"
+  >
+    <v-sheet v-if="event" border rounded="lg">
+      <div class="d-flex align-center ga-2 px-4 py-2 bg-cardHeader">
+        <v-icon :color="style.color" :icon="style.icon" size="small" />
+        <div class="text-title-small text-break">{{ event.name }}</div>
+        <v-spacer />
+        <v-chip :color="style.color" label size="x-small" variant="tonal">{{ style.label }}</v-chip>
+      </div>
 
-      <v-card-subtitle>{{ timeRange }}</v-card-subtitle>
+      <v-divider />
 
-      <v-card-text class="d-flex flex-column ga-2">
-        <p v-if="event.description" class="text-body-medium">{{ event.description }}</p>
+      <div class="d-flex flex-column ga-2 pa-4 text-body-medium">
+        <div class="d-flex align-center ga-2">
+          <v-icon icon="mdi-clock-outline" size="16" />
+          <span>{{ timeRange }}</span>
+        </div>
 
-        <div v-if="event.location" class="d-flex align-center ga-2 text-body-medium">
-          <v-icon icon="mdi-map-marker-outline" size="small" />
+        <div v-if="productionDayText" class="d-flex align-center ga-2">
+          <v-icon icon="mdi-calendar-arrow-right" size="16" />
+          <span>{{ productionDayText }}</span>
+        </div>
+
+        <div v-if="event.location" class="d-flex align-center ga-2">
+          <v-icon icon="mdi-map-marker-outline" size="16" />
           <span>{{ event.location }}</span>
         </div>
 
-        <div class="d-flex flex-wrap ga-1">
-          <v-chip :color="style.color" size="small" variant="tonal">{{ style.label }}</v-chip>
+        <p v-if="event.description" class="text-body-small text-subtitleText">{{ event.description }}</p>
 
-          <v-chip v-for="category in event.categories" :key="category" size="small" variant="outlined">
-            {{ category }}
-          </v-chip>
-
+        <div v-if="chips.length > 0" class="d-flex flex-wrap ga-1">
           <v-chip
-            v-for="property in event.xProperties"
-            :key="property"
-            prepend-icon="mdi-code-tags"
-            size="small"
-            variant="outlined"
-          >
-            {{ property }}
-          </v-chip>
+            v-for="chip in chips"
+            :key="chip"
+            border
+            label
+            size="x-small"
+          >{{ chip }}</v-chip>
         </div>
-      </v-card-text>
-    </v-card>
+      </div>
+    </v-sheet>
   </v-menu>
 </template>
 
 <script lang="ts" setup>
   import type { CalendarEventItem } from '../types'
   import { KIND_STYLES } from '../categories'
+
+  const PRODUCTION_DAY_TEXT = {
+    '-1': 'Belongs to the previous production day',
+    '0': 'Belongs to the production day of its calendar day',
+    '1': 'Belongs to the following production day',
+  } as const
 
   // Properties
   const props = defineProps<{
@@ -53,6 +69,13 @@
 
   // Computed properties
   const style = computed(() => KIND_STYLES[props.event?.kind ?? 'other'])
+
+  const chips = computed(() => [...(props.event?.categories ?? []), ...(props.event?.xProperties ?? [])])
+
+  const productionDayText = computed(() => {
+    const day = props.event?.productionDay
+    return day === undefined ? '' : PRODUCTION_DAY_TEXT[day]
+  })
 
   const timeRange = computed(() => {
     const event = props.event

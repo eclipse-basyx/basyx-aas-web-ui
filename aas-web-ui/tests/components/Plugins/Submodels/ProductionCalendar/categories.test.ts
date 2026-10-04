@@ -1,20 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { KIND_STYLES, resolveKind } from '@/components/Plugins/Submodels/ProductionCalendar/categories'
+import { KIND_STYLES, kindFromCategories } from '@/components/Plugins/Submodels/ProductionCalendar/categories'
 
-describe('resolveKind', () => {
+describe('kindFromCategories', () => {
   it.each([
-    [['PRODUCTION'], [], 'production'],
-    [['Shift'], [], 'production'],
-    [['BREAK'], [], 'break'],
-    [['Maintenance'], [], 'maintenance'],
-    [[], ['X-BREAK'], 'break'],
-    [[], ['X-MAINTENANCE'], 'maintenance'],
-    [[], ['X-PRODUCTION-DAY'], 'production'],
-    [['BREAK'], ['X-PRODUCTION-DAY'], 'break'],
-    [['Holiday'], [], 'other'],
-    [[], [], 'other'],
-  ] as const)('%j + %j -> %s', (categories, xProperties, expected) => {
-    expect(resolveKind([...categories], [...xProperties])).toBe(expected)
+    [['PRODUCTION'], 'production'],
+    [['Shift'], 'production'],
+    [['BREAK'], 'break'],
+    [['Maintenance'], 'maintenance'],
+    [['Holiday'], undefined],
+    [[], undefined],
+  ] as const)('%j -> %s', (categories, expected) => {
+    expect(kindFromCategories([...categories])).toBe(expected)
   })
 
   it('has a style for every kind', () => {

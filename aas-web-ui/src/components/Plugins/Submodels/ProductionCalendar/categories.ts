@@ -7,23 +7,14 @@ export const KIND_STYLES: Record<EventKind, KindStyle> = {
   other: { kind: 'other', label: 'Other', color: 'grey', icon: 'mdi-calendar-blank-outline' },
 }
 
-const KIND_RULES: { kind: EventKind, pattern: RegExp }[] = [
+const CATEGORY_RULES: { kind: EventKind, pattern: RegExp }[] = [
   { kind: 'break', pattern: /break|pause/ },
   { kind: 'maintenance', pattern: /maint|service/ },
   { kind: 'production', pattern: /production|shift/ },
 ]
 
-/**
- * Classifies an event from its CATEGORIES and X- property names (e.g. `X-BREAK`).
- * Categories win over X- properties; the first matching rule wins.
- */
-export function resolveKind (categories: string[], xProperties: string[]): EventKind {
-  for (const candidates of [categories, xProperties]) {
-    const text = candidates.join(' ').toLowerCase()
-    const rule = KIND_RULES.find(rule => rule.pattern.test(text))
-    if (rule) {
-      return rule.kind
-    }
-  }
-  return 'other'
+/** Classifies an event by its CATEGORIES. The IDTA template does not define categories, this is a fallback. */
+export function kindFromCategories (categories: string[]): EventKind | undefined {
+  const text = categories.join(' ').toLowerCase()
+  return CATEGORY_RULES.find(rule => rule.pattern.test(text))?.kind
 }

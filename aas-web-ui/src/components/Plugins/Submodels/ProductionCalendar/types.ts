@@ -27,6 +27,8 @@ export interface CalendarEventItem {
   xProperties: string[]
   kind: EventKind
   color: string
+  /** Value of `X-PRODUCTION-DAY`: the event belongs to the previous (-1), same (0) or next (1) production day */
+  productionDay?: -1 | 0 | 1
 }
 
 export interface ParsedCalendar {
@@ -34,7 +36,7 @@ export interface ParsedCalendar {
   /** IANA time zone used to display the events */
   timeZone: string
   events: ICAL.Event[]
-  /** Names of all X- properties found on events, upper-case */
+  /** Normalized names (see `normalizeVariableName`) of all X- properties found on events */
   xProperties: string[]
 }
 
