@@ -1,11 +1,11 @@
 import type { CalendarEventItem, EventKind } from './types'
 import { KIND_STYLES } from './categories'
-import { wallClockMinutes } from './dates'
+import { addDays } from './dates'
+import { ceilToLocalHour, clockAt, floorToLocalHour, zonedToAbsolute } from './timeZones'
 
-const MINUTES_PER_DAY = 1440
 const MINUTES_PER_HOUR = 60
 
-/** A bar on the timeline. Start and end are minutes on the common scale of `wallClockMinutes`. */
+/** A bar on the timeline. Start and end are absolute minutes (since the epoch), so durations stay right when the clocks change. */
 export interface TimelineBar {
   key: string
   start: number
@@ -48,8 +48,8 @@ export interface DayTimeline {
 function toBar (event: CalendarEventItem): TimelineBar {
   return {
     key: event.key,
-    start: wallClockMinutes(event.start),
-    end: wallClockMinutes(event.end),
+    start: event.startAt,
+    end: event.endAt,
     kind: event.kind,
     color: event.color,
     label: event.name,
@@ -103,22 +103,35 @@ function combine (shifts: TimelineBar[], breaks: TimelineBar[], maintenance: Tim
   return { combined, ...totals }
 }
 
-/** Lays out everything that belongs to the production day `date` (`YYYY-MM-DD`). */
-export function buildDayTimeline (events: CalendarEventItem[], date: string): DayTimeline {
+/** An all-day event covers the whole day, whatever the length of the day is. */
+function toDayBar (event: CalendarEventItem, dayStart: number, dayEnd: number): TimelineBar {
+  return { ...toBar(event), start: dayStart, end: dayEnd }
+}
+
+/**
+ * Lays out everything that belongs to the production day `date` (`YYYY-MM-DD`): the timed events assigned to it
+ * and the all-day events that cover it. `timeZone` is the time zone of the calendar.
+ */
+export function buildDayTimeline (events: CalendarEventItem[], date: string, timeZone: string): DayTimeline {
+  const dayStart = zonedToAbsolute(date, timeZone)
+  const dayEnd = zonedToAbsolute(addDays(date, 1), timeZone)
+
   const own = events.filter(event => event.timed && event.productionDate === date)
-  const rows: TimelineRow[] = own
-    .filter(event => !event.parentKey)
-    .map(event => ({
-      key: event.key,
-      label: event.name,
-      bars: [toBar(event), ...own.filter(nested => nested.parentKey === event.key).map(nested => toBar(nested))],
-    }))
-    .toSorted((left, right) => (left.bars[0]?.start ?? 0) - (right.bars[0]?.start ?? 0))
+  const allDay = events.filter(event => !event.timed && event.start <= date && date <= event.end)
+  const rows: TimelineRow[] = [
+    ...own
+      .filter(event => !event.parentKey)
+      .map(event => ({
+        key: event.key,
+        label: event.name,
+        bars: [toBar(event), ...own.filter(nested => nested.parentKey === event.key).map(nested => toBar(nested))],
+      })),
+    ...allDay.map(event => ({ key: `${event.key}-${date}`, label: event.name, bars: [toDayBar(event, dayStart, dayEnd)] })),
+  ].toSorted((left, right) => (left.bars[0]?.start ?? 0) - (right.bars[0]?.start ?? 0))
 
   const bars = rows.flatMap(row => row.bars)
-  const dayStart = wallClockMinutes(date)
-  const start = Math.floor(Math.min(dayStart, ...bars.map(bar => bar.start)) / MINUTES_PER_HOUR) * MINUTES_PER_HOUR
-  const end = Math.ceil(Math.max(dayStart + MINUTES_PER_DAY, ...bars.map(bar => bar.end)) / MINUTES_PER_HOUR) * MINUTES_PER_HOUR
+  const start = floorToLocalHour(Math.min(dayStart, ...bars.map(bar => bar.start)), timeZone)
+  const end = ceilToLocalHour(Math.max(dayEnd, ...bars.map(bar => bar.end)), timeZone)
 
   const shifts = rows.map(row => row.bars[0]).filter((bar): bar is TimelineBar => bar?.kind === 'production')
   return {
@@ -131,17 +144,13 @@ export function buildDayTimeline (events: CalendarEventItem[], date: string): Da
 }
 
 /** Hour marks for the axis, sparser for long windows. */
-export function timelineTicks (timeline: DayTimeline): TimelineTick[] {
+export function timelineTicks (timeline: DayTimeline, timeZone: string): TimelineTick[] {
   const hours = (timeline.end - timeline.start) / MINUTES_PER_HOUR
   const step = (hours <= 14 ? 1 : (hours <= 30 ? 2 : 3)) * MINUTES_PER_HOUR
   const ticks: TimelineTick[] = []
   for (let minute = timeline.start; minute <= timeline.end; minute += step) {
-    const minuteOfDay = ((minute % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY
-    ticks.push({
-      minute,
-      label: String(minuteOfDay / MINUTES_PER_HOUR).padStart(2, '0'),
-      midnight: minuteOfDay === 0,
-    })
+    const clock = clockAt(minute, timeZone)
+    ticks.push({ minute, label: clock.slice(0, 2), midnight: clock === '00:00' })
   }
   return ticks
 }

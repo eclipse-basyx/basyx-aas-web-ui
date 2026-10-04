@@ -10,7 +10,8 @@
 
     <CalendarDayView
       v-if="viewMode === 'day'"
-      :now="now"
+      :now-at="nowAt"
+      :time-zone="calendar.timeZone"
       :timeline="timeline"
       @select="openMenu"
     />
@@ -65,11 +66,12 @@
   import { KIND_STYLES } from '../categories'
   import { fromDateString, toDateString } from '../dates'
   import { buildDayTimeline } from '../dayTimeline'
-  import { expandEvents, nowInTimeZone } from '../ics'
+  import { expandEvents } from '../ics'
+  import { absoluteMinutes, nowInTimeZone } from '../timeZones'
+  import { visibleHours } from '../weekHours'
 
   const DAY_MS = 86_400_000
   const MINUTE_MS = 60_000
-  const DEFAULT_HOURS = { first: 6, count: 16 }
 
   // Properties
   const props = defineProps<{
@@ -80,6 +82,7 @@
   const viewMode = ref<ViewMode>('day')
   // The calendar is shown in the time zone of the factory, so "now" is the wall-clock time there
   const now = ref(nowInTimeZone(props.calendar.timeZone))
+  const nowAt = ref(absoluteMinutes(Date.now()))
   const focus = ref(fromDateString(currentProductionDate()))
   const menu = ref(false)
   const selectedEvent = ref<CalendarEventItem | null>(null)
@@ -96,26 +99,14 @@
     return expandEvents(props.calendar, from, to)
   })
 
-  const timeline = computed(() => buildDayTimeline(events.value, toDateString(focus.value)))
+  const timeline = computed(() => buildDayTimeline(events.value, toDateString(focus.value), props.calendar.timeZone))
 
   const visibleEvents = computed(() => {
     return viewMode.value === 'month' ? events.value.filter(event => event.kind !== 'break') : events.value
   })
 
   // Show only the hours in which something happens
-  const hourRange = computed(() => {
-    const timed = events.value.filter(event => event.timed)
-    if (timed.length === 0) {
-      return DEFAULT_HOURS
-    }
-    const first = Math.min(...timed.map(event => Number(event.start.slice(11, 13))))
-    const last = Math.max(...timed.map(event => {
-      const endsNextDay = event.end.slice(0, 10) !== event.start.slice(0, 10)
-      return endsNextDay ? 24 : Math.ceil(Number(event.end.slice(11, 13)) + Number(event.end.slice(14, 16)) / 60)
-    }))
-    const firstHour = Math.max(0, first - 1)
-    return { first: firstHour, count: Math.min(24, last + 1) - firstHour }
-  })
+  const hourRange = computed(() => visibleHours(events.value))
 
   const legend = computed(() => {
     const kinds = new Set(events.value.map(event => event.kind))
@@ -141,7 +132,7 @@
   // Lifecycle hooks
   onMounted(() => {
     clock = setInterval(() => {
-      now.value = nowInTimeZone(props.calendar.timeZone)
+      refreshNow()
     }, MINUTE_MS)
   })
 
@@ -158,8 +149,13 @@
     return running?.productionDate ?? today
   }
 
-  function goToToday (): void {
+  function refreshNow (): void {
     now.value = nowInTimeZone(props.calendar.timeZone)
+    nowAt.value = absoluteMinutes(Date.now())
+  }
+
+  function goToToday (): void {
+    refreshNow()
     focus.value = fromDateString(currentProductionDate())
   }
 

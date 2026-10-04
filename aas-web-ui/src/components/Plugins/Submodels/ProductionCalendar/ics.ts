@@ -2,6 +2,7 @@ import type { CalendarEventItem, EventKind, ParsedCalendar } from './types'
 import ICAL from 'ical.js'
 import { KIND_STYLES, kindFromCategories } from './categories'
 import { addDays } from './dates'
+import { absoluteMinutes, formatInstant, isValidTimeZone, zonedToAbsolute } from './timeZones'
 import { normalizeVariableName } from './variables'
 
 /** Upper bound of occurrences evaluated per event, protects against runaway recurrence rules. */
@@ -27,47 +28,6 @@ interface EventSpec {
   maintenance: NestedPeriod[]
 }
 
-const formatters = new Map<string, Intl.DateTimeFormat>()
-
-function isValidTimeZone (timeZone: string): boolean {
-  try {
-    new Intl.DateTimeFormat('en-US', { timeZone })
-    return true
-  } catch {
-    return false
-  }
-}
-
-function getFormatter (timeZone: string): Intl.DateTimeFormat {
-  let formatter = formatters.get(timeZone)
-  if (!formatter) {
-    formatter = new Intl.DateTimeFormat('en-CA', {
-      timeZone,
-      hourCycle: 'h23',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-    formatters.set(timeZone, formatter)
-  }
-  return formatter
-}
-
-function formatInstant (milliseconds: number, timeZone: string): string {
-  const parts: Record<string, string> = {}
-  for (const part of getFormatter(timeZone).formatToParts(milliseconds)) {
-    parts[part.type] = part.value
-  }
-  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}`
-}
-
-/** Current wall-clock time (`YYYY-MM-DD HH:mm`) in the time zone of the calendar. */
-export function nowInTimeZone (timeZone: string): string {
-  return formatInstant(Date.now(), timeZone)
-}
-
 /** Formats a point in time as naive `YYYY-MM-DD HH:mm` wall-clock time of the given time zone. */
 function toWallClock (time: ICAL.Time, timeZone: string): string {
   if (time.isDate) {
@@ -76,6 +36,14 @@ function toWallClock (time: ICAL.Time, timeZone: string): string {
   // Floating times carry no zone, their fields already are the wall-clock time.
   const zone = time.zone === ICAL.Timezone.localTimezone ? 'UTC' : timeZone
   return formatInstant(time.toUnixTime() * 1000, zone)
+}
+
+/** Absolute minutes of a point in time. All-day and floating times are taken as local time of the calendar. */
+function toAbsolute (time: ICAL.Time, timeZone: string): number {
+  if (time.isDate || time.zone === ICAL.Timezone.localTimezone) {
+    return zonedToAbsolute(toWallClock(time, timeZone), timeZone)
+  }
+  return absoluteMinutes(time.toUnixTime() * 1000)
 }
 
 function resolveTimeZone (root: ICAL.Component): string {
@@ -167,11 +135,18 @@ function isProductionDay (value: number): value is -1 | 0 | 1 {
 }
 
 /**
- * Reads the meaning of an event. Following the IDTA template an event is a shift whose `X-BREAK` and
+ * Reads the meaning of an event or of a changed occurrence of it (which replaces all properties of the series). Following the IDTA template an event is a shift whose `X-BREAK` and
  * `X-MAINTENANCE` properties list periods inside of it. Calendars that mark whole events as break or
  * maintenance (`X-BREAK:TRUE` or a matching category) are accepted as well.
  */
-function describeEvent (event: ICAL.Event, allDay: boolean): EventSpec {
+const specs = new WeakMap<ICAL.Event, EventSpec>()
+
+function describeEvent (event: ICAL.Event): EventSpec {
+  const known = specs.get(event)
+  if (known) {
+    return known
+  }
+  const allDay = event.startDate.isDate
   const categories = getCategories(event)
   const breakValues = getXValues(event, 'X-BREAK')
   const maintenanceValues = getXValues(event, 'X-MAINTENANCE')
@@ -184,7 +159,7 @@ function describeEvent (event: ICAL.Event, allDay: boolean): EventSpec {
     kind = 'maintenance'
   }
 
-  return {
+  const spec: EventSpec = {
     categories,
     xProperties: getXPropertyNames(event),
     kind,
@@ -192,6 +167,8 @@ function describeEvent (event: ICAL.Event, allDay: boolean): EventSpec {
     breaks: parsePeriods(breakValues, event),
     maintenance: parsePeriods(maintenanceValues, event),
   }
+  specs.set(event, spec)
+  return spec
 }
 
 /**
@@ -208,7 +185,8 @@ export function parseCalendar (text: string): ParsedCalendar {
     ICAL.TimezoneService.register(timezone)
   }
 
-  const events = root.getAllSubcomponents('vevent').map(component => new ICAL.Event(component))
+  // ical.js would relate every changed occurrence of the calendar to every event, so relate them by UID below
+  const events = root.getAllSubcomponents('vevent').map(component => new ICAL.Event(component, { exceptions: [] }))
   const masters = events.filter(event => !event.recurrenceId)
   for (const exception of events.filter(event => event.recurrenceId)) {
     const master = masters.find(event => event.uid === exception.uid)
@@ -228,6 +206,12 @@ export function parseCalendar (text: string): ParsedCalendar {
   }
 }
 
+function isExcluded (event: ICAL.Event, time: ICAL.Time): boolean {
+  return event.component
+    .getAllProperties('exdate')
+    .some(property => property.getValues().some(value => value instanceof ICAL.Time && value.compare(time) === 0))
+}
+
 function* occurrenceDetails (event: ICAL.Event, rangeEndMs: number) {
   if (!event.isRecurring()) {
     yield { item: event, startDate: event.startDate, endDate: event.endDate }
@@ -235,17 +219,29 @@ function* occurrenceDetails (event: ICAL.Event, rangeEndMs: number) {
   }
   // DTSTART is the first instance of the recurrence set, ical.js only expands it together with an RRULE.
   const hasRule = event.component.hasProperty('rrule')
-  if (!hasRule) {
+  if (!hasRule && !isExcluded(event, event.startDate)) {
     yield { item: event, startDate: event.startDate, endDate: event.endDate }
   }
+
+  const iterated = new Set<string>()
   const iterator = event.iterator()
   for (let count = 0; count < MAX_OCCURRENCES_PER_EVENT; count++) {
     const next = iterator.next()
     if (!next || next.toUnixTime() * 1000 >= rangeEndMs) {
-      return
+      break
     }
+    iterated.add(next.toString())
+    iterated.add(next.convertToZone(ICAL.Timezone.utcTimezone).toString())
     if (hasRule || next.compare(event.startDate) !== 0) {
       yield event.getOccurrenceDetails(next)
+    }
+  }
+
+  // The original date of a changed occurrence can lie behind the range although it was moved into it
+  const exceptions = Object.entries(event.exceptions as unknown as Record<string, ICAL.Event>)
+  for (const [id, exception] of exceptions) {
+    if (!iterated.has(id)) {
+      yield event.getOccurrenceDetails(exception.recurrenceId)
     }
   }
 }
@@ -276,16 +272,17 @@ export function expandEvents (calendar: ParsedCalendar, rangeStart: Date, rangeE
   const rangeEndMs = rangeEnd.getTime()
 
   for (const event of calendar.events) {
-    const spec = describeEvent(event, event.startDate.isDate)
-
     for (const { item, startDate, endDate } of occurrenceDetails(event, rangeEndMs)) {
-      if (!startDate || startDate.toUnixTime() * 1000 >= rangeEndMs) {
+      if (!startDate) {
         continue
       }
       const end = endDate ?? startDate
-      if (end.toUnixTime() * 1000 <= rangeStartMs) {
+      const startAt = toAbsolute(startDate, calendar.timeZone)
+      const endAt = toAbsolute(end, calendar.timeZone)
+      if (startAt * 60_000 >= rangeEndMs || endAt * 60_000 <= rangeStartMs) {
         continue
       }
+      const spec = describeEvent(item)
       const timed = !startDate.isDate
       // DTEND of all-day events is exclusive, v-calendar expects the last day itself.
       const lastDay = end.clone()
@@ -293,7 +290,6 @@ export function expandEvents (calendar: ParsedCalendar, rangeStart: Date, rangeE
         lastDay.adjust(-1, 0, 0, 0)
       }
       const start = toWallClock(startDate, calendar.timeZone)
-
       const endText = toWallClock(timed ? end : lastDay, calendar.timeZone)
       const productionDate = productionDateOf(start, endText, timed, spec.productionDay)
       const shiftItem: CalendarEventItem = {
@@ -304,6 +300,8 @@ export function expandEvents (calendar: ParsedCalendar, rangeStart: Date, rangeE
         location: item.location,
         start,
         end: endText,
+        startAt,
+        endAt,
         timed,
         categories: spec.categories,
         xProperties: spec.xProperties,
@@ -323,12 +321,13 @@ export function expandEvents (calendar: ParsedCalendar, rangeStart: Date, rangeE
         for (const [index, period] of periods.entries()) {
           const periodStart = shift(startDate, period.startOffsetSeconds)
           const periodEnd = shift(periodStart, period.durationSeconds)
-          // Changed occurrences can be shorter than the event the periods were defined for
-          const clippedStart = toWallClock(periodStart, calendar.timeZone)
-          const clippedEnd = toWallClock(periodEnd, calendar.timeZone)
-          const from = [clippedStart, shiftItem.start].toSorted()[1] as string
-          const to = [clippedEnd, shiftItem.end].toSorted()[0] as string
-          if (from >= to) {
+          const periodStartAt = toAbsolute(periodStart, calendar.timeZone)
+          const periodEndAt = toAbsolute(periodEnd, calendar.timeZone)
+          // Periods are compared by absolute time, wall-clock times are ambiguous when the clocks change.
+          // Periods can reach beyond an event that is shorter than the one they were written for.
+          const fromAt = Math.max(periodStartAt, startAt)
+          const toAt = Math.min(periodEndAt, endAt)
+          if (fromAt >= toAt) {
             continue
           }
           nested.push({
@@ -337,8 +336,10 @@ export function expandEvents (calendar: ParsedCalendar, rangeStart: Date, rangeE
             name: label,
             description: item.summary ? `During ${item.summary}` : '',
             location: item.location,
-            start: from,
-            end: to,
+            start: fromAt === periodStartAt ? toWallClock(periodStart, calendar.timeZone) : start,
+            end: toAt === periodEndAt ? toWallClock(periodEnd, calendar.timeZone) : endText,
+            startAt: fromAt,
+            endAt: toAt,
             timed: true,
             categories: spec.categories,
             xProperties: [variable],
@@ -351,7 +352,7 @@ export function expandEvents (calendar: ParsedCalendar, rangeStart: Date, rangeE
       }
 
       // A period that covers the whole event leaves no production time: show it as the one event it is
-      const covering = nested.find(period => period.start <= shiftItem.start && period.end >= shiftItem.end)
+      const covering = nested.find(period => period.startAt <= startAt && period.endAt >= endAt)
       if (covering) {
         items.push({ ...shiftItem, kind: covering.kind, color: covering.color })
       } else {
@@ -362,6 +363,6 @@ export function expandEvents (calendar: ParsedCalendar, rangeStart: Date, rangeE
 
   // Shifts first, so that nested breaks and maintenance periods are drawn on top of them.
   return items.toSorted((left, right) => {
-    return left.start.localeCompare(right.start) || Number(left.kind !== 'production') - Number(right.kind !== 'production')
+    return left.startAt - right.startAt || Number(left.kind !== 'production') - Number(right.kind !== 'production')
   })
 }

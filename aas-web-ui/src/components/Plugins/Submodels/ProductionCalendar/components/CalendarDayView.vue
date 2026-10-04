@@ -25,7 +25,7 @@
             :style="{ left: position(tick.minute) }"
           />
 
-          <div v-if="nowVisible" class="day-view__now" :style="{ left: position(nowMinute) }" />
+          <div v-if="nowVisible" class="day-view__now" :style="{ left: position(nowAt) }" />
         </div>
 
         <div />
@@ -87,16 +87,19 @@
 <script lang="ts" setup>
   import type { DayTimeline, TimelineBar } from '../dayTimeline'
   import type { CalendarEventItem } from '../types'
-  import { formatClock, formatDuration, wallClockMinutes } from '../dates'
+  import { formatDuration } from '../dates'
   import { timelineTicks } from '../dayTimeline'
+  import { clockAt } from '../timeZones'
 
   const MIN_LABEL_SHARE = 0.08
 
   // Properties
   const props = defineProps<{
     timeline: DayTimeline
-    /** Current wall-clock time (`YYYY-MM-DD HH:mm`) in the time zone of the calendar */
-    now: string
+    /** Current time in absolute minutes (since the epoch) */
+    nowAt: number
+    /** Time zone of the calendar, for the clock times */
+    timeZone: string
   }>()
 
   // Emits
@@ -105,9 +108,8 @@
   }>()
 
   // Computed properties
-  const ticks = computed(() => timelineTicks(props.timeline))
-  const nowMinute = computed(() => wallClockMinutes(props.now))
-  const nowVisible = computed(() => nowMinute.value >= props.timeline.start && nowMinute.value < props.timeline.end)
+  const ticks = computed(() => timelineTicks(props.timeline, props.timeZone))
+  const nowVisible = computed(() => props.nowAt >= props.timeline.start && props.nowAt < props.timeline.end)
 
   const figures = computed(() => [
     { label: 'Planned operating time', value: formatDuration(props.timeline.operating), color: 'success', hint: 'Time covered by the shifts of this production day' },
@@ -137,7 +139,7 @@
   }
 
   function clock (bar: TimelineBar): string {
-    return `${formatClock(bar.start)}–${formatClock(bar.end)}`
+    return `${clockAt(bar.start, props.timeZone)}–${clockAt(bar.end, props.timeZone)}`
   }
 
   function barTitle (bar: TimelineBar): string {

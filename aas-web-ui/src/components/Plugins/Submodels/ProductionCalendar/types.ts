@@ -21,6 +21,9 @@ export interface CalendarEventItem {
   /** `YYYY-MM-DD HH:mm` for timed events, `YYYY-MM-DD` for all-day events */
   start: string
   end: string
+  /** Absolute start and end in minutes since the epoch (all-day events: local midnights), for ordering and durations */
+  startAt: number
+  endAt: number
   timed: boolean
   categories: string[]
   /** Names of the X- properties set on the event (e.g. `X-BREAK`) */

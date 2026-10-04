@@ -25,15 +25,6 @@ export function formatDuration (minutes: number): string {
   return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`
 }
 
-const MINUTES_PER_DAY = 1440
-
-/** Formats minutes on the common scale of `wallClockMinutes` as `HH:mm`. */
-export function formatClock (minutes: number): string {
-  const minuteOfDay = ((minutes % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY
-  const hours = Math.floor(minuteOfDay / 60)
-  return `${String(hours).padStart(2, '0')}:${String(minuteOfDay % 60).padStart(2, '0')}`
-}
-
 /** `YYYY-MM-DD` of the local date fields of a Date. */
 export function toDateString (date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`

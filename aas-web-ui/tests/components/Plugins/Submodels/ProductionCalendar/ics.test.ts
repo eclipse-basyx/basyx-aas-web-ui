@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { expandEvents, nowInTimeZone, parseCalendar } from '@/components/Plugins/Submodels/ProductionCalendar/ics'
+import { expandEvents, parseCalendar } from '@/components/Plugins/Submodels/ProductionCalendar/ics'
+import { nowInTimeZone } from '@/components/Plugins/Submodels/ProductionCalendar/timeZones'
 import flagged from '../fixtures/production-calendar-flagged-events.ics?raw'
 import line01 from '../fixtures/production-calendar-line01.ics?raw'
 
