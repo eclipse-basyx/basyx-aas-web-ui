@@ -280,7 +280,7 @@ export function expandEvents (calendar: ParsedCalendar, rangeStart: Date, rangeE
       }
       const start = toWallClock(startDate, calendar.timeZone)
 
-      items.push({
+      const shiftItem: CalendarEventItem = {
         key: `${event.uid}-${start}`,
         uid: event.uid,
         name: item.summary || KIND_STYLES[spec.kind].label,
@@ -294,19 +294,19 @@ export function expandEvents (calendar: ParsedCalendar, rangeStart: Date, rangeE
         kind: spec.kind,
         color: KIND_STYLES[spec.kind].color,
         productionDay: spec.productionDay,
-      })
-
-      if (!timed) {
-        continue
       }
-      for (const [kind, label, variable, periods] of [
-        ['break', 'Break', 'X-BREAK', spec.breaks],
-        ['maintenance', 'Maintenance', 'X-MAINTENANCE', spec.maintenance],
-      ] as const) {
+
+      const nested: CalendarEventItem[] = []
+      for (const [kind, label, variable, periods] of timed
+        ? ([
+            ['break', 'Break', 'X-BREAK', spec.breaks],
+            ['maintenance', 'Maintenance', 'X-MAINTENANCE', spec.maintenance],
+          ] as const)
+        : []) {
         for (const [index, period] of periods.entries()) {
           const periodStart = shift(startDate, period.startOffsetSeconds)
           const periodEnd = shift(periodStart, period.durationSeconds)
-          items.push({
+          nested.push({
             key: `${event.uid}-${start}-${kind}-${index}`,
             uid: event.uid,
             name: label,
@@ -321,6 +321,14 @@ export function expandEvents (calendar: ParsedCalendar, rangeStart: Date, rangeE
             color: KIND_STYLES[kind].color,
           })
         }
+      }
+
+      // A period that covers the whole event leaves no production time: show it as the one event it is
+      const covering = nested.find(period => period.start <= shiftItem.start && period.end >= shiftItem.end)
+      if (covering) {
+        items.push({ ...shiftItem, kind: covering.kind, color: covering.color })
+      } else {
+        items.push(shiftItem, ...nested)
       }
     }
   }

@@ -77,7 +77,23 @@ describe('expandEvents', () => {
       ['2026-10-03 06:00', '2026-10-03 10:00'],
       ['2026-11-07 06:00', '2026-11-07 10:00'],
     ])
-    expect(events.filter(event => event.name === 'Planned maintenance LINE01')).toHaveLength(2)
+    // The period covers the whole event, so it is shown as one maintenance event instead of a shift with an overlay
+    expect(events.filter(event => event.name === 'Planned maintenance LINE01').map(event => event.kind)).toEqual([
+      'maintenance',
+      'maintenance',
+    ])
+  })
+
+  it('keeps the metadata of the event when a period covers all of it', () => {
+    const maintenance = expand('2026-10-03', '2026-10-04').find(event => event.kind === 'maintenance')
+
+    expect(maintenance).toMatchObject({
+      name: 'Planned maintenance LINE01',
+      color: 'error',
+      productionDay: 0,
+      xProperties: ['X-PRODUCTION-DAY', 'X-MAINTENANCE'],
+      description: expect.stringContaining('Monthly preventive maintenance'),
+    })
   })
 
   it('exposes the metadata of shifts and nested periods', () => {

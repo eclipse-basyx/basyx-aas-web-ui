@@ -56,7 +56,7 @@
                 {{ states[spec.name]?.error }}
               </v-alert>
 
-              <pre v-else class="specification-text mt-2 pa-3 rounded border bg-cardHeader text-body-small">{{ states[spec.name]?.text }}</pre>
+              <pre v-else class="specification-text mt-2 mb-0 pa-3 rounded border bg-cardHeader text-body-small">{{ states[spec.name]?.text }}</pre>
             </div>
           </v-expand-transition>
         </div>
