@@ -74,10 +74,10 @@
 
 <script setup lang="ts">
   import type { VForm } from 'vuetify/components'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
-  import { useAbacConfigStore } from '@/pages/modules/ABAC/stores/useAbacConfigStore'
-  import { type Locale, Locales } from '@/pages/modules/ABAC/types/locale'
   import { useNavigationStore } from '@/store/NavigationStore'
+  import { useAbacI18n } from '../../i18n/useAbacI18n'
+  import { useAbacConfigStore } from '../../stores/useAbacConfigStore'
+  import { type Locale, Locales } from '../../types/locale'
 
   const ICONS = {
     CONFIGS: 'mdi-cog',

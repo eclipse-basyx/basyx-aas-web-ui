@@ -1,5 +1,5 @@
 import { hasItems } from '@/utils/array'
-import { normalizeBaseUrl } from '@/utils/url'
+import { normalizeBaseUrl, stripLastSegmentOf } from '@/utils/url'
 
 describe('Array Utilities (array.ts)', () => {
   describe('hasItems', () => {
@@ -50,6 +50,46 @@ describe('URL Utilities (url.ts)', () => {
     it('should return original string if endpoint is already present', () => {
       expect(normalizeBaseUrl('https://example.com/companies', endpoint))
         .toBe('https://example.com/companies')
+    })
+  })
+
+  describe('stripLastSegmentOf', () => {
+    it('should return url unchanged when suffix is undefined', () => {
+      expect(stripLastSegmentOf('https://example.com/shells')).toBe('https://example.com/shells')
+    })
+
+    it('should return url unchanged when suffix is empty string', () => {
+      expect(stripLastSegmentOf('https://example.com/shells', '')).toBe('https://example.com/shells')
+    })
+
+    it('should strip matching suffix', () => {
+      expect(stripLastSegmentOf('https://example.com/shells', '/shells'))
+        .toBe('https://example.com')
+    })
+
+    it('should strip matching suffix with trailing slash on url', () => {
+      expect(stripLastSegmentOf('https://example.com/shells/', '/shells'))
+        .toBe('https://example.com')
+    })
+
+    it('should strip multi-segment suffix', () => {
+      expect(stripLastSegmentOf('https://example.com/lookup/shells', '/lookup/shells'))
+        .toBe('https://example.com')
+    })
+
+    it('should strip suffix preserving path prefix', () => {
+      expect(stripLastSegmentOf('https://example.com/my-prefix/shells', '/shells'))
+        .toBe('https://example.com/my-prefix')
+    })
+
+    it('should return url unchanged when suffix does not match', () => {
+      expect(stripLastSegmentOf('https://example.com/submodels', '/shells'))
+        .toBe('https://example.com/submodels')
+    })
+
+    it('should return url unchanged when suffix is only a partial match', () => {
+      expect(stripLastSegmentOf('https://example.com/shell-descriptors', '/shells'))
+        .toBe('https://example.com/shell-descriptors')
     })
   })
 })
