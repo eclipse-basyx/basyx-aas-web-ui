@@ -43,7 +43,7 @@ export function useSMEHandling () {
       return failResponse
     }
 
-    const smOrSme = await fetchSme(smePath, withConceptDescriptions, operationFragment)
+    const smOrSme = await fetchSme(smePath, withConceptDescriptions, operationFragment, true)
 
     if (!smOrSme || Object.keys(smOrSme).length === 0) {
       return failResponse
@@ -60,12 +60,15 @@ export function useSMEHandling () {
    * @async
    * @param {string} smePath - The path URL of the SME to fetch.
    * @param {boolean} withConceptDescriptions - Flag to specify if SME should be fetched with ConceptDescriptions (CDs)
+   * @param {string} operationFragment - Optional fragment pointing to a node inside an Operation SME
+   * @param {boolean} withBlobValue - Flag to specify if the value of a requested Blob SME should be included
    * @returns {Promise<any>} A promise that resolves to a SME.
    */
   async function fetchSme (
     smePath: string,
     withConceptDescriptions = false,
     operationFragment?: string,
+    withBlobValue = false,
   ): Promise<any> {
     const failResponse = {}
 
@@ -90,6 +93,15 @@ export function useSMEHandling () {
     if (!smOrSme || Object.keys(smOrSme).length === 0) {
       console.warn('Fetching SM/SME (' + smePath + ') failed!')
       return failResponse
+    }
+
+    // Repositories omit the value of Blobs by default. Only fetch it when the Blob itself is requested,
+    // because the extent would also apply to all Blobs nested in a SMC/SML.
+    if (withBlobValue && smOrSme.modelType === 'Blob' && smOrSme.value === undefined) {
+      const blobWithValue = await fetchSmeFromRepo(`${smePath}?extent=withBlobValue`)
+      if (blobWithValue && Object.keys(blobWithValue).length > 0) {
+        smOrSme = blobWithValue
+      }
     }
 
     if (operationFragment !== undefined && operationFragment !== '') {
