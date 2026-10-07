@@ -71,7 +71,6 @@
   import { useSMEHandling } from '@/composables/AAS/SMEHandling'
   import { useRequestHandling } from '@/composables/RequestHandling'
   import { useAASStore } from '@/store/AASDataStore'
-  import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils'
 
   const props = defineProps({
     blobObject: {
@@ -89,7 +88,7 @@
 
   // Composables
   const { fetchAndDispatchSme } = useSMEHandling()
-  const { putRequest } = useRequestHandling()
+  const { patchRequest } = useRequestHandling()
 
   // State
   const blobData = ref<Uint8Array | null>(null)
@@ -99,7 +98,6 @@
   const isLoading = ref<boolean>(false)
 
   // Computed values
-  const selectedAAS = computed(() => aasStore.getSelectedAAS)
   const selectedNode = computed(() => aasStore.getSelectedNode)
 
   // Watch for selected node changes
@@ -225,15 +223,14 @@
         base64Value = btoa(binary)
       }
 
-      const aasEndpoint = extractEndpointHref(selectedAAS.value, 'AAS-3.0')
-      const path = aasEndpoint + '/' + selectedNode.value.path + '/value'
-      const content = JSON.stringify(base64Value)
+      const path = props.blobObject.path + '/$value'
+      const content = JSON.stringify({ contentType: props.blobObject.contentType, value: base64Value })
       const headers = new Headers()
       headers.append('Content-Type', 'application/json')
       const context = 'updating ' + props.blobObject.modelType + ' "' + props.blobObject.idShort + '"'
 
       // Send request to update blob
-      putRequest(path, content, headers, context, false).then((response: any) => {
+      patchRequest(path, content, headers, context, false).then((response: any) => {
         if (response.success) {
           // After successful update, fetch and dispatch updated SME
           fetchAndDispatchSme(selectedNode.value.path, false)
