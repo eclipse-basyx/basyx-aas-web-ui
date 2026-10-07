@@ -421,7 +421,7 @@
     if (node?.persistence?.kind === 'operation') {
       return fetchSme(node.persistence.operationPath, true, node.persistence.fragment)
     }
-    return fetchSme(node?.path, true)
+    return fetchSme(node?.path, true, undefined, true)
   }
 
   async function updateOperationOwnedValue (value: unknown): Promise<void> {
