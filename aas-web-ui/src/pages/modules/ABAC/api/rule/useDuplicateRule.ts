@@ -6,6 +6,6 @@ export function useDuplicateRule () {
 
   return useMutation({
     mutationFn: client.duplicateRule,
-    onSuccess: (_, { versionId }) => invalidate(keys.rules(versionId), keys.policy(versionId)),
+    onSuccess: (_, { versionId }) => invalidate(keys.rules(versionId), keys.policies()),
   })
 }

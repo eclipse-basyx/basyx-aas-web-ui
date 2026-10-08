@@ -42,6 +42,30 @@ export function toJson (body: unknown): string {
 }
 
 /**
+ * Extracts human-readable backend error text from common error payloads:
+ * BaSyx-style arrays (`[{ messageType, text, code, ... }]`) and plain objects
+ * (`{ message | error | text }`). Returns undefined when nothing usable exists.
+ */
+export function backendErrorMessage (data: unknown): string | undefined {
+  const entries: unknown[] = Array.isArray(data) ? data : [data]
+  const texts = entries
+    .map(entry => {
+      if (typeof entry === 'string') {
+        return entry.trim()
+      }
+      if (typeof entry !== 'object' || entry === null) {
+        return undefined
+      }
+      const source = entry as Record<string, unknown>
+      const text = source.text ?? source.message ?? source.error
+      return typeof text === 'string' && text.trim() !== '' ? text.trim() : undefined
+    })
+    .filter((text): text is string => typeof text === 'string' && text !== '')
+
+  return texts.length > 0 ? texts.join('\n') : undefined
+}
+
+/**
  * Returns candidate ABAC URL from a basyx component URL.
  *
  * Uses the same approach as `connectComponent` in InfrastructureStore:

@@ -1,15 +1,9 @@
 <template>
   <ActionMenu v-model="isMenuOpen" :aria-label="t('rules.menu', { index: rule.rule_index })">
     <ActionMenuItem
-      :icon="ICONS.REPLACE"
-      :label="t('rules.replace')"
-      @click="doAction('replace')"
-    />
-
-    <ActionMenuItem
-      :icon="ICONS.PATCH"
-      :label="t('rules.patch')"
-      @click="doAction('patch')"
+      :icon="ICONS.UPDATE"
+      :label="t('rules.update')"
+      @click="doAction('update')"
     />
 
     <ActionMenuItem
@@ -106,11 +100,10 @@
   import ActionMenu from '../../shared/menu/ActionMenu.vue'
   import ActionMenuItem from '../../shared/menu/ActionMenuItem.vue'
 
-  type RuleAction = 'replace' | 'patch' | 'duplicate' | 'move' | 'toggle' | 'delete'
+  type RuleAction = 'update' | 'duplicate' | 'move' | 'toggle' | 'delete'
 
   const ICONS = {
-    REPLACE: 'mdi-pencil',
-    PATCH: 'mdi-pencil-box',
+    UPDATE: 'mdi-pencil',
     DUPLICATE: 'mdi-content-copy',
     MOVE: 'mdi-arrow-right',
     ENABLE: 'mdi-toggle-switch',
@@ -150,8 +143,7 @@
 
     try {
       switch (action) {
-        case 'replace':
-        case 'patch': {
+        case 'update': {
           onSelectRule(ruleIndex, { force: true })
           openDialog?.({ mode: action, rule })
           return
@@ -193,7 +185,7 @@
             deleteDialog.value = true
             return
           }
-          await deleteRule({ versionId, ruleIndex })
+          await deleteRule({ versionId, ruleIndex }, { onSettled: () => deleteDialog.value = false })
 
           // Remove selected rule only if it was selected already
           // e.g. user can select DEF-A but open the menu on DEF-B
@@ -201,8 +193,6 @@
 
           // Update selected rule index if the deleted index is smaller then the selected
           else if (selectedIndex > ruleIndex) onSelectRule(selectedIndex - 1, { replace: true })
-
-          deleteDialog.value = false
           break
         }
       }

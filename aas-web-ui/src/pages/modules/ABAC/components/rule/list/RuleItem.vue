@@ -41,6 +41,7 @@
 <script setup lang="ts">
   import type { Rule } from '../../../types/rules'
   import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
+  import { isObject } from '../../../utils/object'
   import SelectableListItem from '../../shared/SelectableListItem.vue'
   import RuleComplexityBadge from '../RuleComplexityBadge.vue'
   import RuleOptions from './RuleOptions.vue'
@@ -62,15 +63,16 @@
   })
 
   const ruleSummary = computed(() => {
-    if (!rule?.configured_rule_json) return ''
+    const ruleJson = rule?.configured_rule_json
+    if (!ruleJson) return ''
 
     const parts: string[] = []
-    if (rule?.configured_rule_json.USEACL) parts.push(`ACL: ${rule?.configured_rule_json.USEACL}`)
-    else if (rule?.configured_rule_json.ACL) parts.push(`ACL inline (${rule?.configured_rule_json.ACL.ACCESS})`)
-    if (rule?.configured_rule_json.USEFORMULA) parts.push(`FORMULA: ${rule?.configured_rule_json.USEFORMULA}`)
-    else if (rule?.configured_rule_json.FORMULA) parts.push('FORMULA inline')
-    if (rule?.configured_rule_json.USEOBJECTS) parts.push(`OBJ: ${rule?.configured_rule_json.USEOBJECTS.join(', ')}`)
-    else if (rule?.configured_rule_json.OBJECTS) parts.push(`OBJ: ${rule?.configured_rule_json.OBJECTS.length} route(s)`)
+    if (typeof ruleJson.USEACL === 'string' && ruleJson.USEACL) parts.push(`ACL: ${ruleJson.USEACL}`)
+    else if (isObject(ruleJson.ACL)) parts.push(`ACL inline (${typeof ruleJson.ACL.ACCESS === 'string' ? ruleJson.ACL.ACCESS : '?'})`)
+    if (typeof ruleJson.USEFORMULA === 'string' && ruleJson.USEFORMULA) parts.push(`FORMULA: ${ruleJson.USEFORMULA}`)
+    else if (isObject(ruleJson.FORMULA)) parts.push('FORMULA inline')
+    if (Array.isArray(ruleJson.USEOBJECTS)) parts.push(`OBJ: ${ruleJson.USEOBJECTS.filter(value => typeof value === 'string').join(', ')}`)
+    else if (Array.isArray(ruleJson.OBJECTS)) parts.push(`OBJ: ${ruleJson.OBJECTS.length} route(s)`)
     return parts.join('\n') || '—'
   })
 </script>

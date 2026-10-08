@@ -1,5 +1,6 @@
 <template>
   <v-btn
+    :aria-label="t('config.title')"
     density="comfortable"
     :icon="ICONS.CONFIGS"
     size="small"
