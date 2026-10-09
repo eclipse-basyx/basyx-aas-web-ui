@@ -7,7 +7,7 @@ export function useDeleteDefinition () {
   return useMutation({
     mutationFn: client.deleteDefinition,
     onSuccess: (_, { versionId, kind, name }) => {
-      invalidate(keys.definitions(versionId), keys.policy(versionId))
+      invalidate(keys.definitions(versionId), keys.policies())
       remove(keys.definition(versionId, kind, name))
     },
   })

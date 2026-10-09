@@ -6,6 +6,6 @@ export function useToggleRule () {
 
   return useMutation({
     mutationFn: client.toggleRule,
-    onSuccess: (_, { versionId }) => invalidate(keys.rules(versionId), keys.policy(versionId)),
+    onSuccess: (_, { versionId }) => invalidate(keys.rules(versionId), keys.policies()),
   })
 }

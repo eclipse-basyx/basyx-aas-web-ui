@@ -1,4 +1,4 @@
-import type { Definition, DefinitionKind } from '../types/definitions'
+import type { DefinitionFor, DefinitionKind } from '../types/definitions'
 
 export const EMPTY_POLICY = {
   AllAccessPermissionRules: {
@@ -59,7 +59,7 @@ export const EMPTY_RULE = {
   },
 }
 
-export const EMPTY_DEFINITION: Record<DefinitionKind, Definition> = {
+export const EMPTY_DEFINITION: { [K in DefinitionKind]: DefinitionFor<K> } = {
   attributes: {
     name: 'adminClaims',
     attributes: [

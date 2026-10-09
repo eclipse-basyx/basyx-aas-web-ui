@@ -1,106 +1,39 @@
-import type { FormulaExpression } from './formula'
+import type { JsonObject } from './json'
+import type { DefinitionKind } from '@/schemas/access-rules/types/definitions'
 
-export const DEFINITION_KINDS = ['attributes', 'acls', 'objects', 'formulas'] as const
-export type DefinitionKind = (typeof DEFINITION_KINDS)[number]
+export type { DefinitionFor, DefinitionKind, DefinitionSchemaProperty } from '@/schemas/access-rules/types/definitions'
+export { DEFINITION_KINDS, DEFINITION_SCHEMA_PROPERTIES } from '@/schemas/access-rules/types/definitions'
 
-export type GlobalAttribute = 'LOCALNOW' | 'UTCNOW' | 'CLIENTNOW' | 'ANONYMOUS'
-export interface AttributeSource {
-  CLAIM?: string
-  GLOBAL?: GlobalAttribute
-  REFERENCE?: string
-}
-
-export interface DefAttribute {
+export interface DefinitionBase {
   name: string
-  attributes?: AttributeSource[]
-  USEATTRIBUTES?: string[]
+  versionId: string
+  kind: DefinitionKind
 }
-
-export type AccessRight = 'CREATE' | 'READ' | 'UPDATE' | 'DELETE' | 'EXECUTE' | 'VIEW' | 'ALL'
-export type AccessDecision = 'ALLOW' | 'DISABLED'
-
-export interface AclEntry {
-  ACCESS: AccessDecision
-  RIGHTS: AccessRight[]
-  ATTRIBUTES?: AttributeSource[]
-  USEATTRIBUTES?: string
-}
-
-export interface DefAcl {
-  name: string
-  acl: AclEntry
-}
-
-export type RouteObject
-  = | { ROUTE: string }
-    | { IDENTIFIABLE: string }
-    | { REFERABLE: string }
-    | { FRAGMENT: string }
-    | { DESCRIPTOR: string }
-
-export interface DefObject {
-  name: string
-  objects?: RouteObject[]
-  USEOBJECTS?: string[]
-}
-
-export interface DefFormula {
-  name: string
-  formula: FormulaExpression
-}
-
-export interface AccessPermissionRuleFilter {
-  FRAGMENT: string
-  MATCH?: boolean
-  CONDITION?: FormulaExpression
-  USEFORMULA?: string
-}
-
-export type Definition = DefAttribute | DefAcl | DefObject | DefFormula
 
 // ---------------------------------------------------------------------------
 // Request / Response
 // ---------------------------------------------------------------------------
 
-export interface DefinitionsMap {
-  attributes: DefAttribute[]
-  acls: DefAcl[]
-  objects: DefObject[]
-  formulas: DefFormula[]
-}
+export type Definition = JsonObject & { name: string }
+export type DefinitionsMap = Partial<Record<DefinitionKind, Definition[]>>
 
-export interface DefinitionCreatePayload {
-  name: string
-  attributes?: AttributeSource[]
-  USEATTRIBUTES?: string[]
-  acl?: AclEntry
-  objects?: RouteObject[]
-  USEOBJECTS?: string[]
-  formula?: FormulaExpression
-}
-
+// Advisory editor submissions may contain schema-invalid properties.
 export interface DefinitionCreate {
   versionId: string
   kind: DefinitionKind
-  payload: DefinitionCreatePayload
+  payload: JsonObject
 }
 
-export interface DefinitionDelete {
-  versionId: string
-  kind: DefinitionKind
-  name: string
+export interface DefinitionPatch extends DefinitionBase {
+  patch: JsonObject
 }
 
-export interface DefinitionPatch {
-  versionId: string
-  kind: DefinitionKind
-  name: string
-  patch: Partial<DefinitionCreatePayload>
+export interface DefinitionReplace extends DefinitionBase {
+  payload: JsonObject
 }
 
-export interface DefinitionReplace {
-  versionId: string
-  kind: DefinitionKind
-  name: string
-  payload: DefinitionCreatePayload
+export interface DefinitionUpdate extends DefinitionReplace {
+  currentDefinition: Definition
 }
+
+export interface DefinitionDelete extends DefinitionBase {}

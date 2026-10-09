@@ -20,7 +20,7 @@
       <v-divider />
 
       <v-card-text class="pa-4">
-        <v-form ref="form" @submit.prevent="onSubmit">
+        <v-form @submit.prevent="onSubmit">
           <v-select
             v-model="definitionKind"
             class="mb-5"
@@ -46,17 +46,17 @@
             variant="outlined"
           />
 
-          <p v-if="dialogMode === 'patch'" class="text-end mb-0 text-body-small">
-            {{ t('definitions.definitionDialog.patchHint') }}
+          <p v-if="dialogMode === 'update'" class="mb-0 text-body-small">
+            {{ t('definitions.definitionDialog.updateHint') }}
           </p>
 
-          <JsonCodeEditor
+          <AbacEditor
             v-model="definitionJson"
             :disabled="isPending"
-            :error-lines="errorLines"
             :error-message="jsonError"
             :label="t('definitions.definitionDialog.editor')"
             :rows="18"
+            :target="{ kind: definitionKind, mode: dialogMode, viewer: 'definition', }"
           />
         </v-form>
       </v-card-text>
@@ -88,25 +88,24 @@
 
 <script setup lang="ts">
   import type { Definition, DefinitionKind } from '../../types/definitions'
-  import type { JsonErrorMessage } from '../shared/JsonCodeEditor.vue'
+  import type { JsonErrorMessage } from '../../types/json.ts'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
   import { useCreateDefinition } from '../../api/definition/useCreateDefinition'
-  import { usePatchDefinition } from '../../api/definition/usePatchDefinition'
-  import { useReplaceDefinition } from '../../api/definition/useReplaceDefinition'
+  import { useUpdateDefinition } from '../../api/definition/useUpdateDefinition'
   import { EMPTY_DEFINITION } from '../../constants/json'
   import { useAbacNavigation } from '../../hooks/useAbacNavigation'
   import { useDefinitionValidation } from '../../hooks/useDefinitionValidation'
   import { useAbacI18n } from '../../i18n/useAbacI18n'
   import { DEFINITION_KINDS } from '../../types/definitions'
-  import JsonCodeEditor from '../shared/JsonCodeEditor.vue'
+  import AbacEditor from '../shared/AbacEditor.vue'
 
   const ICONS = {
     CLOSE: 'mdi-close',
   } as const
 
   export interface DefinitionDialogProps {
-    mode: 'create' | 'replace' | 'patch'
+    mode: 'create' | 'update'
     definition?: Definition
     kind?: DefinitionKind
   }
@@ -117,10 +116,9 @@
   const { selectedPolicyVersion, onSelectDefinition } = useAbacNavigation()
 
   const { mutateAsync: createDefinition, isPending: isCreating } = useCreateDefinition()
-  const { mutateAsync: replaceDefinition, isPending: isReplacing } = useReplaceDefinition()
-  const { mutateAsync: patchDefinition, isPending: isPatching } = usePatchDefinition()
+  const { mutateAsync: updateDefinition, isPending: isUpdating } = useUpdateDefinition()
 
-  const isPending = computed(() => isCreating.value || isReplacing.value || isPatching.value)
+  const isPending = computed(() => isCreating.value || isUpdating.value)
 
   const isOpen = ref(false)
   const dialogMode = ref<DefinitionDialogProps['mode']>('create')
@@ -129,7 +127,6 @@
   const definitionName = ref<string | null>(null)
   const currentDefinition = ref<Definition | undefined>(undefined)
   const jsonError = ref<JsonErrorMessage | null>(null)
-  const errorLines = ref<number[]>([])
 
   const kindOptions = computed(() => DEFINITION_KINDS.map(k => ({
     title: t(`definitions.${k}`),
@@ -145,7 +142,6 @@
     isOpen.value = true
     dialogMode.value = mode
     jsonError.value = null
-    errorLines.value = []
     definitionKind.value = kind ?? 'attributes'
     currentDefinition.value = definition
 
@@ -164,24 +160,19 @@
     isOpen.value = false
   }
 
-  const { validateJson } = useDefinitionValidation(tm('validation'))
+  const { validateJson } = useDefinitionValidation(tm('definitions.definitionDialog.errors'), tm('validation'))
 
   async function onSubmit (): Promise<void> {
-    const { payload, error, errorLines: lines } = validateJson({
+    const { payload, error } = validateJson({
       json: definitionJson.value,
       kind: definitionKind.value,
-      currentDefinition: dialogMode.value === 'patch' ? currentDefinition.value : undefined,
+      currentDefinition: dialogMode.value === 'update'
+        ? currentDefinition.value
+        : undefined,
       name: definitionName.value,
-      errorMessages: {
-        requiredKind: t('definitions.definitionDialog.requiredKind'),
-        requiredDefinition: t('definitions.definitionDialog.requiredDefinition'),
-        invalidJson: t('definitions.definitionDialog.invalidJson'),
-        invalidDefinition: t('definitions.definitionDialog.invalidDefinition'),
-      },
     })
 
     jsonError.value = error
-    errorLines.value = lines
 
     if (!payload) return
 
@@ -198,23 +189,17 @@
             payload,
           })
 
-          onSelectDefinition(payload.name, kind)
+          if (typeof payload.name === 'string') onSelectDefinition(payload.name, kind)
           break
         }
-        case 'patch': {
-          await patchDefinition({
+        case 'update': {
+          const name = definitionName.value?.trim()
+          if (!hasContent(name)) return
+          await updateDefinition({
             versionId,
             kind,
-            name: payload.name.trim(),
-            patch: payload,
-          })
-          break
-        }
-        case 'replace': {
-          await replaceDefinition({
-            versionId,
-            kind,
-            name: payload.name.trim(),
+            name,
+            currentDefinition: currentDefinition.value!,
             payload,
           })
           break
@@ -231,13 +216,17 @@
 
       close()
     } catch (error) {
-      const message = error instanceof Error ? error.message : t(`definitions.error.${dialogMode.value}`)
+      // Replace validation errors with the save failure.
+      jsonError.value = {
+        title: t(`definitions.error.${dialogMode.value}`),
+        messages: error instanceof Error ? error.message.split('\n') : undefined,
+      }
       navigationStore.dispatchSnackbar({
         status: true,
         timeout: 8000,
         color: 'error',
         btnColor: 'buttonText',
-        text: message,
+        text: t(`definitions.error.${dialogMode.value}`),
       })
     }
   }

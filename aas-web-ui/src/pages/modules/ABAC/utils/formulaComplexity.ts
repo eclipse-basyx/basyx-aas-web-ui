@@ -42,7 +42,10 @@ export function hasFieldAccess (node: unknown): boolean {
   return false
 }
 
-export function classifyFormulaComplexity (formula?: FormulaExpression): Complexity {
+/**
+ * Classifies a formula expression, including not validated backend/editor input.
+ */
+export function classifyFormulaComplexity (formula?: unknown | FormulaExpression): Complexity {
   if (!formula) {
     return 'N/A'
   }

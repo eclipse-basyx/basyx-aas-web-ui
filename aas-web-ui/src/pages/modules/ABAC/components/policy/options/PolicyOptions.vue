@@ -146,8 +146,10 @@
             confirmDialog.value = true
             return
           }
-          await (action === 'activate' ? activate(selectedPolicyVersion.value) : reject(selectedPolicyVersion.value))
-          confirmDialog.value = false
+          await (action === 'activate'
+            ? activate(selectedPolicyVersion.value, { onSettled: () => confirmDialog.value = false })
+            : reject(selectedPolicyVersion.value, { onSettled: () => confirmDialog.value = false })
+          )
           break
         }
       }
