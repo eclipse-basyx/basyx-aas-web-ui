@@ -1,0 +1,2 @@
+# Preserve the pinned upstream bytes for checksum verification on every platform.
+aas-queries-and-access-rules-3.1.schema.json text eol=lf
