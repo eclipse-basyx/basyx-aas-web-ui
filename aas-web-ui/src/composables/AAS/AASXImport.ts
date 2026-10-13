@@ -250,6 +250,16 @@ function parseAas (aasJson: unknown): { core: aasCore.types.AssetAdministrationS
   }
 
   const core = aasOrError.mustValue()
+
+  if (core.administration) {
+    if (!(core.administration as any).createdAt) {
+      (core.administration as any).createdAt = null as any;
+    }
+    if (!(core.administration as any).updatedAt) {
+      (core.administration as any).updatedAt = null as any;
+    }
+  }
+
   return { core, json: aasCore.jsonization.toJsonable(core) as JsonRecord }
 }
 
@@ -260,6 +270,16 @@ function parseSubmodel (submodelJson: unknown): { core: aasCore.types.Submodel, 
   }
 
   const core = submodelOrError.mustValue()
+
+  if (core.administration) {
+    if (!(core.administration as any).createdAt) {
+      (core.administration as any).createdAt = null as any;
+    }
+    if (!(core.administration as any).updatedAt) {
+      (core.administration as any).updatedAt = null as any;
+    }
+  }
+
   return { core, json: aasCore.jsonization.toJsonable(core) as JsonRecord }
 }
 
@@ -270,6 +290,16 @@ function parseConceptDescription (cdJson: unknown): { core: aasCore.types.Concep
   }
 
   const core = cdOrError.mustValue()
+
+  if (core.administration) {
+    if (!(core.administration as any).createdAt) {
+      (core.administration as any).createdAt = null as any;
+    }
+    if (!(core.administration as any).updatedAt) {
+      (core.administration as any).updatedAt = null as any;
+    }
+  }
+
   return { core, json: aasCore.jsonization.toJsonable(core) as JsonRecord }
 }
 
