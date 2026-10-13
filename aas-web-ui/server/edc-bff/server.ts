@@ -5,6 +5,7 @@ import type {
   EdcDtrDescriptorByIdRequest,
   EdcDtrDescriptorRequest,
   EdcProxyConfig,
+  EdcQuerySpecRequest,
   EdcSubmodelFetchRequest,
 } from './types.js'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
@@ -15,11 +16,14 @@ import {
   buildCatalogRequestBody,
   buildConnectorDiscoveryRequestBody,
   buildDspVersionParamsRequestBody,
+  buildQuerySpecRequestBody,
   createHttpError,
   fetchDtrShellDescriptorById,
   fetchDtrShellDescriptors,
   fetchSubmodel,
+  forwardDeleteToEdc,
   forwardJsonToEdc,
+  forwardPutJsonToEdc,
 } from './edcRequests.js'
 
 const proxyUrls = getProxyUrls()
@@ -149,6 +153,18 @@ async function handleRequest (
     return
   }
 
+  if (await handleAssetRoute(request, response, proxy, route.action)) {
+    return
+  }
+
+  if (await handleContractDefinitionRoute(request, response, proxy, route.action)) {
+    return
+  }
+
+  if (await handlePolicyDefinitionRoute(request, response, proxy, route.action)) {
+    return
+  }
+
   if (route.action === 'dtr/shell-descriptors' && request.method === 'POST') {
     await handleDtrShellDescriptorsRequest(request, response, proxy)
     return
@@ -165,6 +181,105 @@ async function handleRequest (
   }
 
   throw createHttpError('Route not found', 404)
+}
+
+async function handleAssetRoute (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+  action: string,
+): Promise<boolean> {
+  if (request.method === 'POST') {
+    if (action === 'assets/request') {
+      await handleQuerySpecRequest(request, response, proxy, '/v3/assets/request')
+      return true
+    }
+    if (action === 'assets') {
+      await handleJsonRequest(request, response, proxy, '/v3/assets', 'POST')
+      return true
+    }
+  }
+
+  if (!action.startsWith('assets/')) {
+    return false
+  }
+
+  if (request.method === 'PUT') {
+    await handleUpdateRequest(request, response, proxy, action, 'assets')
+    return true
+  }
+  if (request.method === 'DELETE') {
+    await handleDeleteRequest(response, proxy, action, 'assets')
+    return true
+  }
+
+  return false
+}
+
+async function handleContractDefinitionRoute (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+  action: string,
+): Promise<boolean> {
+  if (request.method === 'POST') {
+    if (action === 'contractdefinitions/request') {
+      await handleQuerySpecRequest(request, response, proxy, '/v3/contractdefinitions/request')
+      return true
+    }
+    if (action === 'contractdefinitions') {
+      await handleJsonRequest(request, response, proxy, '/v3/contractdefinitions', 'POST')
+      return true
+    }
+  }
+
+  if (!action.startsWith('contractdefinitions/')) {
+    return false
+  }
+
+  if (request.method === 'PUT') {
+    await handleUpdateRequest(request, response, proxy, action, 'contractdefinitions')
+    return true
+  }
+  if (request.method === 'DELETE') {
+    await handleDeleteRequest(response, proxy, action, 'contractdefinitions')
+    return true
+  }
+
+  return false
+}
+
+async function handlePolicyDefinitionRoute (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+  action: string,
+): Promise<boolean> {
+  if (request.method === 'POST') {
+    if (action === 'policydefinitions/request') {
+      await handleQuerySpecRequest(request, response, proxy, '/v3/policydefinitions/request')
+      return true
+    }
+    if (action === 'policydefinitions') {
+      await handleJsonRequest(request, response, proxy, '/v3/policydefinitions', 'POST')
+      return true
+    }
+  }
+
+  if (!action.startsWith('policydefinitions/')) {
+    return false
+  }
+
+  if (request.method === 'PUT') {
+    await handleUpdateRequest(request, response, proxy, action, 'policydefinitions')
+    return true
+  }
+  if (request.method === 'DELETE') {
+    await handleDeleteRequest(response, proxy, action, 'policydefinitions')
+    return true
+  }
+
+  return false
 }
 
 async function handleDiscoveryRequest (
@@ -210,6 +325,67 @@ async function handleCatalogRequest (
     proxy,
     '/v3/catalog/request',
     buildCatalogRequestBody(proxy, body),
+  )
+  writeJsonResponse(response, edcResponse.status, edcResponse.data)
+}
+
+async function handleQuerySpecRequest (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+  path: string,
+): Promise<void> {
+  assertProxyConfigured(proxy)
+  const body = await readJsonBody<EdcQuerySpecRequest>(request)
+  const edcResponse = await forwardJsonToEdc(proxy, path, buildQuerySpecRequestBody(body))
+  writeJsonResponse(response, edcResponse.status, edcResponse.data)
+}
+
+async function handleJsonRequest (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+  path: string,
+  method: 'POST' | 'PUT',
+): Promise<void> {
+  assertProxyConfigured(proxy)
+  const body = await readJsonBody<Record<string, unknown>>(request)
+  const edcResponse = method === 'POST'
+    ? await forwardJsonToEdc(proxy, path, body)
+    : await forwardPutJsonToEdc(proxy, path, body)
+  writeJsonResponse(response, edcResponse.status, edcResponse.data)
+}
+
+async function handleUpdateRequest (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+  action: string,
+  resource: 'assets' | 'contractdefinitions' | 'policydefinitions',
+): Promise<void> {
+  const resourceId = decodeURIComponent(action.slice(resource.length + 1)).trim()
+  if (!resourceId) {
+    throw createHttpError(`Missing EDC ${resource} ID`, 400)
+  }
+
+  await handleJsonRequest(request, response, proxy, `/v3/${resource}`, 'PUT')
+}
+
+async function handleDeleteRequest (
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+  action: string,
+  resource: 'assets' | 'contractdefinitions' | 'policydefinitions',
+): Promise<void> {
+  assertProxyConfigured(proxy)
+  const resourceId = decodeURIComponent(action.slice(resource.length + 1)).trim()
+  if (!resourceId) {
+    throw createHttpError(`Missing EDC ${resource} ID`, 400)
+  }
+
+  const edcResponse = await forwardDeleteToEdc(
+    proxy,
+    `/v3/${resource}/${encodeURIComponent(resourceId)}`,
   )
   writeJsonResponse(response, edcResponse.status, edcResponse.data)
 }

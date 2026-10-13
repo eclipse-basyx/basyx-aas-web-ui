@@ -4,6 +4,7 @@
     :error="error"
     :export-text="text"
     :file-name="`${downloadFileName || submodelElementData?.idShort || 'download'}.json`"
+    :height="height"
     icon="mdi-code-json"
     :loading="loading"
     :text="displayText"
@@ -18,10 +19,12 @@
   const props = withDefaults(defineProps<{
     downloadFileName?: string
     jsonContent?: unknown
+    height?: string
     submodelElementData?: any
     title?: string
   }>(), {
     downloadFileName: '',
+    height: '600px',
     jsonContent: undefined,
     submodelElementData: () => ({}),
     title: 'JSON Preview',
