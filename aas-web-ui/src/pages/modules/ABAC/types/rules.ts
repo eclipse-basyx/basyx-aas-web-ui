@@ -2,8 +2,12 @@
  * ABAC Rule Types
  */
 
-import type { AccessPermissionRuleFilter, AclEntry, AttributeSource, RouteObject } from './definitions'
-import type { FormulaExpression } from './formula'
+import type { JsonObject } from './json'
+
+export interface RuleBase {
+  versionId: string
+  ruleIndex: number
+}
 
 // ---------------------------------------------------------------------------
 // Request / Response
@@ -16,60 +20,51 @@ export interface Rule {
   service_scope: string
   rule_index: number
   matched_rule_id: string
-  configured_rule_json: ConfiguredRule
-  materialized_rule_json: Record<string, unknown>
-  acl_json: AclEntry
-  attributes_json: AttributeSource[]
-  objects_json: RouteObject[]
-  formula_json: FormulaExpression
-  filters_json: AccessPermissionRuleFilter[]
+  configured_rule_json: JsonObject
+  materialized_rule_json: JsonObject
+  acl_json?: JsonObject | null
+  attributes_json?: JsonObject[] | null
+  objects_json?: JsonObject[] | null
+  formula_json?: JsonObject | null
+  filters_json?: JsonObject[] | null
   access: string
   rights: string[]
   rule_hash: string
   materialized_rule_hash: string
   created_at: string
-}
-
-export interface ConfiguredRule {
-  ACL?: AclEntry
-  USEACL?: string
-  OBJECTS?: RouteObject[]
-  USEOBJECTS?: string[]
-  FORMULA?: FormulaExpression
-  USEFORMULA?: string
-  FILTER?: AccessPermissionRuleFilter
-  FILTERLIST?: AccessPermissionRuleFilter[]
+  created_by_subject?: string
+  created_by_issuer?: string
+  created_by_client_id?: string
 }
 
 export interface RuleCreate {
   versionId: string
   payload: {
     position?: number
-    rule: ConfiguredRule
+    rule: JsonObject
   }
 }
 
-interface RuleOperation {
-  versionId: string
-  ruleIndex: number
-}
+export interface RuleDelete extends RuleBase {}
 
-export interface RuleDelete extends RuleOperation {}
+export interface RuleDuplicate extends RuleBase {}
 
-export interface RuleDuplicate extends RuleOperation {}
-
-export interface RuleMove extends RuleOperation {
+export interface RuleMove extends RuleBase {
   payload: { position: number }
 }
 
-export interface RulePatch extends RuleOperation {
-  patch: Partial<ConfiguredRule>
+export interface RulePatch extends RuleBase {
+  patch: JsonObject
 }
 
-export interface RuleReplace extends RuleOperation {
-  rule: ConfiguredRule
+export interface RuleReplace extends RuleBase {
+  rule: JsonObject
 }
 
-export interface RuleToggle extends RuleOperation {
+export interface RuleUpdate extends RuleReplace {
+  currentRule: JsonObject
+}
+
+export interface RuleToggle extends RuleBase {
   payload: { enabled: boolean }
 }

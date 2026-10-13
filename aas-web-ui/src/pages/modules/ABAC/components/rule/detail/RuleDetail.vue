@@ -19,7 +19,6 @@
           divided
           mandatory
           variant="outlined"
-          @update:model-value="onChangeView"
         >
           <v-btn v-for="(v) in Object.values(VIEW)" :key="v" :value="v">
             <v-icon start>{{ ICONS[v] }}</v-icon>
@@ -36,7 +35,7 @@
       <v-divider />
 
       <v-card-text class="d-flex flex-column flex-1-1 pa-0" style="min-height: 0;">
-        <JsonCodeEditor borderless disabled :model-value="ruleJson" />
+        <AbacEditor borderless :model-value="ruleJson" :target="{ mode: 'view', viewer: 'rule' }" />
       </v-card-text>
     </StateView>
   </v-card>
@@ -45,7 +44,7 @@
 <script setup lang="ts">
   import { useRules } from '../../../hooks/useRules'
   import { useAbacI18n } from '../../../i18n/useAbacI18n'
-  import JsonCodeEditor from '../../shared/JsonCodeEditor.vue'
+  import AbacEditor from '../../shared/AbacEditor.vue'
   import StateView from '../../shared/StateView.vue'
   import RuleComplexityBadge from '../RuleComplexityBadge.vue'
 
@@ -67,9 +66,6 @@
   const { selectedRule, selectedRuleIndex, isSelectedRuleLoading, isSelectedRuleError } = useRules()
 
   const selectedView = ref<ViewType>(VIEW.CONFIGURED)
-  function onChangeView (value: ViewType): void {
-    selectedView.value = value
-  }
 
   const ruleJson = computed(() => {
     if (!selectedRule.value) return ''

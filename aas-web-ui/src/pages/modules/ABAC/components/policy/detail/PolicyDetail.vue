@@ -26,10 +26,10 @@
 
             <v-col>
               <v-tabs
-                v-model="selectedView"
                 color="primary"
                 density="compact"
                 mandatory
+                :model-value="selectedView"
                 @update:model-value="onChangeView"
               >
                 <v-tab v-for="(v) in Object.values(VIEW)" :key="v" :value="v">

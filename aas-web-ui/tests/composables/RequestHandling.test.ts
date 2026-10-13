@@ -66,6 +66,41 @@ describe('RequestHandling.ts', () => {
     mockState.authDescriptionExemption = false
   })
 
+  it.each(['postRequest', 'putRequest', 'patchRequest', 'deleteRequest'] as const)(
+    'uses instance error defaults for %s and preserves the failure payload', async method => {
+      const data = { message: 'Invalid document' }
+      global.fetch = vi.fn().mockImplementation(() => Promise.resolve(Response.json(data, {
+        status: 400, headers: { 'Content-Type': 'application/json' },
+      }))) as unknown as typeof fetch
+      const { useRequestHandling } = await import('@/composables/RequestHandling')
+      const requests = useRequestHandling({ suppressStatuses: [400] })
+      const response = method === 'deleteRequest'
+        ? await requests.deleteRequest('/draft', new Headers(), 'updating', false)
+        : await requests[method]('/draft', '{}', new Headers(), 'updating', false)
+      expect(response).toEqual(expect.objectContaining({ success: false, status: 400, data }))
+      expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalled()
+    },
+  )
+
+  it('keeps instance defaults isolated and allows explicit per-request overrides', async () => {
+    global.fetch = vi.fn().mockImplementation(() => Promise.resolve(new Response('{"message":"Invalid document"}', {
+      status: 400, headers: { 'Content-Type': 'application/json' },
+    }))) as unknown as typeof fetch
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const mutations = useRequestHandling({ suppressStatuses: [400] })
+    const reads = useRequestHandling()
+
+    await mutations.putRequest('/draft', '{}', new Headers(), 'updating', false)
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalled()
+    await reads.getRequest('/draft', 'reading', false)
+    expect(mockDeps.dispatchSnackbar).toHaveBeenCalledOnce()
+
+    mockDeps.dispatchSnackbar.mockClear()
+    const response = await mutations.putRequest('/draft', '{}', new Headers(), 'updating', false, {})
+    expect(response.data).toBeUndefined()
+    expect(mockDeps.dispatchSnackbar).toHaveBeenCalledOnce()
+  })
+
   it.each(['{ "value": 1 }\n', '{ malformed JSON', '', 'false'])('preserves attachment bytes in blob mode: %s', async source => {
     global.fetch = vi.fn().mockResolvedValue(new Response(source, {
       status: 200,

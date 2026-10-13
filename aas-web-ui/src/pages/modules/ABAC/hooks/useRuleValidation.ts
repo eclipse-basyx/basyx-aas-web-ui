@@ -1,33 +1,27 @@
-import type { JsonErrorMessage } from '../components/shared/JsonCodeEditor.vue'
-import type { AbacValidationMessages } from '../i18n/locales'
-import type { ConfiguredRule } from '../types/rules'
-import type { ZodError } from 'zod'
+import type { AbacValidationMessages, RuleDialogErrors } from '../i18n/locales'
+import type { JsonErrorMessage, JsonObject } from '../types/json'
+import { createRuleSchema } from '@/schemas/access-rules/validation/accessRulesValidation'
+import { formatSchemaIssues } from '@/schemas/access-rules/validation/formatSchemaIssues'
 import { hasContent } from '@/utils/StringUtils'
-import { createRuleSchema } from '../schemas/ruleSchema'
-import { extractLineFromSyntaxError, findLineForPath } from '../utils/json'
+import { isObject, mergeObjects } from '../utils/object'
+import { detectRuleUpdate } from '../utils/update'
 
 export interface RuleValidationInput {
   json: string
-  currentRule?: ConfiguredRule
-  errorMessages: {
-    required: string
-    invalidJson: string
-    invalidRule: string
-  }
+  currentRule?: JsonObject
 }
 
 export interface RuleValidationResult {
-  rule: ConfiguredRule | null
+  rule: JsonObject | null
   error: JsonErrorMessage | null
-  errorLines: number[]
 }
 
-export function useRuleValidation (messages: AbacValidationMessages) {
-  const { configuredRuleSchema, patchRuleSchema } = createRuleSchema(messages)
+export function useRuleValidation (messages: RuleDialogErrors, validationMessages: AbacValidationMessages) {
+  const { configuredRuleSchema } = createRuleSchema(validationMessages)
 
-  function validateJson ({ json, currentRule, errorMessages }: RuleValidationInput): RuleValidationResult {
+  function validateJson ({ json, currentRule }: RuleValidationInput): RuleValidationResult {
     if (!hasContent(json)) {
-      return { rule: null, error: { title: errorMessages.required }, errorLines: [] }
+      return { rule: null, error: { title: messages.required } }
     }
 
     // JSON syntax validation
@@ -36,63 +30,31 @@ export function useRuleValidation (messages: AbacValidationMessages) {
       parsed = JSON.parse(json)
     } catch (error) {
       const detail = (error as Error).message
-      const errorLine = extractLineFromSyntaxError(json, detail)
       return {
         rule: null,
-        error: { title: errorMessages.invalidJson, messages: [detail] },
-        errorLines: errorLine ? [errorLine] : [],
+        error: { title: messages.invalidJson, messages: [detail] },
       }
     }
 
-    // Patch flow: currentRule is only passed in patch flow
+    if (!isObject(parsed)) {
+      return { rule: null, error: { title: messages.invalidRule } }
+    }
+
+    let effectiveRule = parsed
+    // Update flow: currentRule is only passed in update flow
     if (currentRule) {
-      const patchResult = patchRuleSchema.safeParse(parsed)
-      // Check if passed input is valid
-      if (!patchResult.success) {
-        return formatSchemaError(patchResult.error, errorMessages.invalidRule, json)
-      }
+      const { mode, payload } = detectRuleUpdate(currentRule, parsed)
+      effectiveRule = mode === 'replace' ? payload : mergeObjects(currentRule, payload)
+    }
+    const result = configuredRuleSchema.safeParse(effectiveRule)
 
-      const patch = patchResult.data
-      const base: Record<string, unknown> = { ...currentRule }
-      for (const [key, value] of Object.entries(patch)) {
-        if (value === null) {
-          delete base[key]
-        } else {
-          base[key] = value
-        }
-      }
-
-      // Check if expected rule is valid
-      const mergedResult = configuredRuleSchema.safeParse(base)
-      if (!mergedResult.success) {
-        return formatSchemaError(mergedResult.error, errorMessages.invalidRule, json)
-      }
-
-      return { rule: patch as ConfiguredRule, error: null, errorLines: [] }
+    if (!result.success) {
+      const failure = formatSchemaIssues(result.error, messages.invalidRule, validationMessages)
+      // Schema warnings do not block submission; the backend decides whether to accept the rule.
+      return { rule: parsed, error: failure }
     }
 
-    // Structural validation against full schema
-    const result = configuredRuleSchema.safeParse(parsed)
-
-    return result.success
-      ? { rule: result.data as ConfiguredRule, error: null, errorLines: [] }
-      : formatSchemaError(result.error, errorMessages.invalidRule, json)
-  }
-
-  function formatSchemaError (error: ZodError, title: string, json: string): RuleValidationResult {
-    return {
-      rule: null,
-      error: {
-        title,
-        messages: error.issues.map(issue => {
-          const path = issue.path.join('.') || '(root)'
-          return `${path}: ${issue.message}`
-        }),
-      },
-      errorLines: error.issues
-        .map(issue => findLineForPath(json, issue.path))
-        .filter((n): n is number => n !== null),
-    }
+    return { rule: parsed, error: null }
   }
 
   return { validateJson }

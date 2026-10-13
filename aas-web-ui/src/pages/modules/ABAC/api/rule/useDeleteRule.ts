@@ -7,7 +7,7 @@ export function useDeleteRule () {
   return useMutation({
     mutationFn: client.deleteRule,
     onSuccess: (_, { versionId, ruleIndex }) => {
-      invalidate(keys.rules(versionId), keys.policy(versionId))
+      invalidate(keys.rules(versionId), keys.policies())
       remove(keys.rule(versionId, ruleIndex))
     },
   })

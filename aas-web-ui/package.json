@@ -96,6 +96,7 @@
     "eslint-plugin-jsdoc": "^64.3.6",
     "eslint-plugin-vue": "^10.11.0",
     "jsdom": "^30.0.1",
+    "json-schema-to-typescript": "16.0.0",
     "npm-run-all2": "^9.0.3",
     "pnpm": "12.3.4",
     "sass-embedded": "^1.104.0",

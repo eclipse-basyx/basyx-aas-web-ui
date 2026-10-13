@@ -6,6 +6,6 @@ export function useMoveRule () {
 
   return useMutation({
     mutationFn: client.moveRule,
-    onSuccess: (_, { versionId }) => invalidate(keys.rules(versionId), keys.policy(versionId)),
+    onSuccess: (_, { versionId }) => invalidate(keys.rules(versionId), keys.policies()),
   })
 }

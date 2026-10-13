@@ -32,7 +32,7 @@
           <v-switch
             id="activateOnImport"
             v-model="activateOnImport"
-            class="mx-2 my-4"
+            class="mx-2 my-4 mb-0"
             color="warning"
             density="compact"
             hide-details
@@ -40,13 +40,13 @@
             :label="t('policies.import.activateOnImport')"
           />
 
-          <JsonCodeEditor
+          <AbacEditor
             v-model="policyJson"
             :disabled="isImportPending"
-            :error-lines="errorLines"
             :error-message="jsonError"
             :label="t('policies.import.editor')"
             :rows="16"
+            :target="{ mode: 'create', viewer: 'policy', }"
           />
         </v-form>
       </v-card-text>
@@ -78,13 +78,14 @@
 </template>
 
 <script setup lang="ts">
+  import type { JsonErrorMessage } from '../../types/json'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { useImportPolicy } from '../../api/policy/useImportPolicy'
   import { EMPTY_POLICY } from '../../constants/json'
   import { useAbacNavigation } from '../../hooks/useAbacNavigation'
   import { usePolicyValidation } from '../../hooks/usePolicyValidation'
   import { useAbacI18n } from '../../i18n/useAbacI18n'
-  import JsonCodeEditor, { type JsonErrorMessage } from '../shared/JsonCodeEditor.vue'
+  import AbacEditor from '../shared/AbacEditor.vue'
 
   const ICONS = {
     CLOSE: 'mdi-close',
@@ -101,34 +102,27 @@
   const activateOnImport = ref(false)
   const policyJson = ref('')
   const jsonError = ref<JsonErrorMessage | null>(null)
-  const errorLines = ref<number[]>([])
 
   function open (): void {
     isOpen.value = true
     sourceRef.value = ''
     activateOnImport.value = false
     jsonError.value = null
-    errorLines.value = []
     policyJson.value = JSON.stringify(EMPTY_POLICY, null, 2)
   }
 
   function close (): void {
     isOpen.value = false
   }
-  const { validateJson } = usePolicyValidation(tm('validation'))
+
+  const { validateJson } = usePolicyValidation(tm('policies.import.errors'), tm('validation'))
 
   async function onSubmit (): Promise<void> {
-    const { policy, error, errorLines: lines } = validateJson({
+    const { policy, error } = validateJson({
       json: policyJson.value,
-      errorMessages: {
-        required: t('policies.import.required'),
-        invalidJson: t('policies.import.invalidJson'),
-        invalidPolicy: t('policies.import.invalidPolicy'),
-      },
     })
 
     jsonError.value = error
-    errorLines.value = lines
 
     if (!policy) return
 
@@ -151,13 +145,17 @@
 
       close()
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('policies.import.failed')
+      // Replace validation errors with the import failure.
+      jsonError.value = {
+        title: t('policies.import.failed'),
+        messages: error instanceof Error ? error.message.split('\n') : undefined,
+      }
       navigationStore.dispatchSnackbar({
         status: true,
-        timeout: 4000,
+        timeout: 8000,
         color: 'error',
         btnColor: 'buttonText',
-        text: message,
+        text: t('policies.import.failed'),
       })
     }
   }

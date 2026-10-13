@@ -1,10 +1,10 @@
 <template>
-  <div class="d-flex flex-grow-1 overflow-y-auto">
+  <div class="d-flex flex-grow-1 overflow-x-hidden overflow-y-auto">
     <div class="list-panel">
       <RulesList @create="openDialog" />
     </div>
 
-    <div class="d-flex flex-column ga-0 w-100">
+    <div class="detail-panel d-flex flex-column flex-1-1 ga-0">
       <RuleDetail />
     </div>
   </div>
@@ -29,6 +29,7 @@
 </script>
 
 <style scoped>
+.detail-panel { min-width: 0; }
 .list-panel {
   width: 35vw;
   min-width: 280px;

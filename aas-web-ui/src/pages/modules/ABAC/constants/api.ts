@@ -56,6 +56,13 @@ export const RULE_SUB_PATHS = {
   ENABLED: 'enabled',
 } as const
 
+/**
+ * Failure statuses whose payloads are returned to mutation callers instead of
+ * being displayed by RequestHandling. Dialogs pair the localized failure text
+ * with the backend message; authentication statuses keep native handling.
+ */
+export const ABAC_MUTATION_SUPPRESSED_STATUSES = [400, 404, 409, 422, 500] as const
+
 // ---------------------------------------------------------------------------
 // ABAC Discovery
 // ---------------------------------------------------------------------------

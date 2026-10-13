@@ -1,15 +1,9 @@
 <template>
   <ActionMenu v-model="isMenuOpen" :aria-label="t('definitions.menu', { name: definition.name })">
     <ActionMenuItem
-      :icon="ICONS.REPLACE"
-      :label="t('definitions.replace')"
-      @click="doAction('replace')"
-    />
-
-    <ActionMenuItem
-      :icon="ICONS.PATCH"
-      :label="t('definitions.patch')"
-      @click="doAction('patch')"
+      :icon="ICONS.UPDATE"
+      :label="t('definitions.update')"
+      @click="doAction('update')"
     />
 
     <v-divider />
@@ -46,11 +40,10 @@
   import ActionMenu from '../../shared/menu/ActionMenu.vue'
   import ActionMenuItem from '../../shared/menu/ActionMenuItem.vue'
 
-  type DefinitionAction = 'replace' | 'patch' | 'delete'
+  type DefinitionAction = 'update' | 'delete'
 
   const ICONS = {
-    REPLACE: 'mdi-pencil',
-    PATCH: 'mdi-pencil-box',
+    UPDATE: 'mdi-pencil',
     DELETE: 'mdi-delete',
   } as const
 
@@ -77,8 +70,7 @@
 
     try {
       switch (action) {
-        case 'replace':
-        case 'patch': {
+        case 'update': {
           onSelectDefinition(name, kind, { force: true })
           openDialog?.({ mode: action, definition, kind })
           return
@@ -88,12 +80,11 @@
             deleteDialog.value = true
             return
           }
-          await deleteDefinition({ versionId, kind, name })
+          await deleteDefinition({ versionId, kind, name }, { onSettled: () => deleteDialog.value = false })
           // Remove selected definition only if it was selected already
           // e.g. user can select DEF-A but open the menu on DEF-B
           if (selectedDefinitionName.value === name && selectedDefinitionKind.value === kind) onSelectDefinition(name, kind, { replace: true })
 
-          deleteDialog.value = false
           break
         }
       }

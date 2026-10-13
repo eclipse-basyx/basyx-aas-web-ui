@@ -6,6 +6,6 @@ export function useCreateRule () {
 
   return useMutation({
     mutationFn: client.createRule,
-    onSuccess: (_, { versionId }) => invalidate(keys.rules(versionId), keys.policy(versionId)),
+    onSuccess: (_, { versionId }) => invalidate(keys.rules(versionId), keys.policies()),
   })
 }

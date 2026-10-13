@@ -4,18 +4,19 @@ import type { ActivePolicy, PolicyImport, PolicyValidationResult, PolicyVersion 
 import type { Rule, RuleCreate, RuleDelete, RuleDuplicate, RuleMove, RulePatch, RuleReplace, RuleToggle } from '../types/rules'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { hasContent } from '@/utils/StringUtils'
-import { ABAC_ROUTE_PATHS, CONTEXT, RULE_SUB_PATHS, VERSION_SUB_PATHS } from '../constants/api'
+import { ABAC_MUTATION_SUPPRESSED_STATUSES, ABAC_ROUTE_PATHS, CONTEXT, RULE_SUB_PATHS, VERSION_SUB_PATHS } from '../constants/api'
 import { useAbacConfigStore } from '../stores/useAbacConfigStore'
-import { buildRuleActionPath, buildVersionPath, jsonHeaders, toJson } from '../utils/api'
+import { backendErrorMessage, buildRuleActionPath, buildVersionPath, jsonHeaders, toJson } from '../utils/api'
 
 export function useAbacClient (disableMessage = false) {
+  const { getRequest } = useRequestHandling()
+  // Mutations return their failure payload to the caller for error display.
   const {
-    getRequest,
     postRequest,
     putRequest,
     patchRequest,
     deleteRequest,
-  } = useRequestHandling()
+  } = useRequestHandling({ suppressStatuses: ABAC_MUTATION_SUPPRESSED_STATUSES })
 
   const configStore = useAbacConfigStore()
   const apiUrl = computed(() => configStore.apiUrl)
@@ -30,8 +31,13 @@ export function useAbacClient (disableMessage = false) {
     try {
       const response = await fn(url)
 
-      if (!response.success || !response.data) {
-        throw new Error(`ABAC request failed with status ${response.status ?? 'unknown'}`)
+      if (!response.success) {
+        const error = backendErrorMessage(response.data)
+        throw new Error(error ?? `ABAC request failed with status ${response.status ?? 'unknown'}`)
+      }
+
+      if (response.data === undefined || response.data === null) {
+        throw new Error(`ABAC request returned no data (status ${response.status ?? 'unknown'})`)
       }
 
       return response.data

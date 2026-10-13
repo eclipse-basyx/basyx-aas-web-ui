@@ -5,6 +5,7 @@
         <template #activator="{ props: tipProps }">
           <v-btn
             v-bind="{ ...tipProps, ...i18nData('policies.list.refresh') }"
+            :aria-label="t('policies.list.refresh')"
             :icon="ICONS.REFRESH"
             :loading="isFetching"
             size="small"
@@ -52,6 +53,7 @@
         <template #activator="{ props: tipProps }">
           <v-btn
             v-bind="{ ...tipProps, ...i18nData('policies.list.import') }"
+            :aria-label="t('policies.list.import')"
             :icon="ICONS.IMPORT"
             size="small"
             variant="text"
@@ -107,11 +109,12 @@
 
     <div class="d-flex align-center flex-row justify-space-between py-2 px-2">
       <v-btn
+        v-bind="i18nData('policies.list.collapseList')"
+        :aria-label="t('policies.list.collapseList')"
         density="comfortable"
         :icon="ICONS.COLLAPSE"
         size="small"
         variant="text"
-        v-bind="i18nData('policies.list.collapseList')"
         @click="emit('collapse')"
       >
         <v-icon>{{ ICONS.COLLAPSE }}</v-icon>

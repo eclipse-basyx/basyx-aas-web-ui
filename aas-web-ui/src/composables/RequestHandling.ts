@@ -21,7 +21,7 @@ function isInteractiveOAuth2WithoutToken (statusCode: number | undefined, infra:
 
 export interface RequestErrorHandlingOptions {
   /**
-   * Status codes which are an expected outcome for this specific request.
+   * Status codes which are an expected outcome for this request or handler instance.
    * Authentication and authorization failures are never suppressed.
    */
   suppressStatuses?: ReadonlyArray<number>
@@ -50,7 +50,12 @@ export interface RequestSecurityContext {
   isolateAuthenticationFailures?: boolean
 }
 
-export function useRequestHandling () {
+/**
+ * Sets default error handling options for requests made through this instance.
+ * Explicit per-request options replace these defaults; they are not merged.
+ * Other instances keep their own defaults.
+ */
+export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOptions = {}) {
   let lastRequestFailureStatus: number | undefined
   let lastRequestFailureDetails: string | undefined
 
@@ -374,7 +379,7 @@ export function useRequestHandling () {
     context: string,
     disableMessage: boolean,
     headers: Headers = new Headers(),
-    errorHandlingOptions: RequestErrorHandlingOptions = {},
+    errorHandlingOptions: RequestErrorHandlingOptions = defaultErrorOptions,
     responseType: 'auto' | 'blob' = 'auto',
     securityContext?: RequestSecurityContext,
   ): any {
@@ -482,7 +487,7 @@ export function useRequestHandling () {
     context: string,
     disableMessage: boolean,
     isTSRequest = false,
-    errorHandlingOptions: RequestErrorHandlingOptions = {},
+    errorHandlingOptions: RequestErrorHandlingOptions = defaultErrorOptions,
   ): any {
     const requestOwnerId = getRequestOwnerId()
     return fetchWithAuthentication(
@@ -565,7 +570,7 @@ export function useRequestHandling () {
     headers: Headers,
     context: string,
     disableMessage: boolean,
-    errorHandlingOptions: RequestErrorHandlingOptions = {},
+    errorHandlingOptions: RequestErrorHandlingOptions = defaultErrorOptions,
   ): any {
     const requestOwnerId = getRequestOwnerId()
     return fetchWithAuthentication(path, { method: 'PUT', body, headers, signal: errorHandlingOptions.signal })
@@ -620,7 +625,7 @@ export function useRequestHandling () {
     headers: Headers,
     context: string,
     disableMessage: boolean,
-    errorHandlingOptions: RequestErrorHandlingOptions = {},
+    errorHandlingOptions: RequestErrorHandlingOptions = defaultErrorOptions,
   ): any {
     const requestOwnerId = getRequestOwnerId()
     return fetchWithAuthentication(path, { method: 'PATCH', body, headers, signal: errorHandlingOptions.signal })
@@ -674,7 +679,7 @@ export function useRequestHandling () {
     headers: Headers,
     context: string,
     disableMessage: boolean,
-    errorHandlingOptions: RequestErrorHandlingOptions = {},
+    errorHandlingOptions: RequestErrorHandlingOptions = defaultErrorOptions,
   ): any {
     const requestOwnerId = getRequestOwnerId()
     return fetchWithAuthentication(path, { method: 'DELETE', headers, signal: errorHandlingOptions.signal })

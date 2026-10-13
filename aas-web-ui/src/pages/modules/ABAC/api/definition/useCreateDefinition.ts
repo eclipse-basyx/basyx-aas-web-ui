@@ -6,6 +6,6 @@ export function useCreateDefinition () {
 
   return useMutation({
     mutationFn: client.createDefinition,
-    onSuccess: (_, { versionId }) => invalidate(keys.definitions(versionId), keys.policy(versionId)),
+    onSuccess: (_, { versionId }) => invalidate(keys.definitions(versionId), keys.policies()),
   })
 }
