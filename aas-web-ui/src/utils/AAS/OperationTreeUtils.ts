@@ -7,9 +7,11 @@ import type {
 } from '@/types/OperationTree'
 import type { JsonValue } from '@aas-core-works/aas-core3.1-typescript/jsonization'
 import { operationVariableDirections } from '@/types/OperationTree'
+import { treeMetadataKeys } from '@/utils/AAS/cleanTreeObject'
 
 const operationDirectionSet = new Set<string>(operationVariableDirections)
 const childCollectionSet = new Set(['value', 'statements', 'annotations'])
+const ignoredTreeKeys = new Set<string>(['children', ...treeMetadataKeys])
 
 type UnknownRecord = Record<string, any>
 
@@ -154,29 +156,8 @@ export function stripTreeMetadata (value: unknown): JsonValue {
 
   const source = value as UnknownRecord
   const result: UnknownRecord = {}
-  const ignoredKeys = new Set([
-    'children',
-    'parent',
-    'path',
-    'selectionKey',
-    'persistence',
-    'operationVariableDirection',
-    'operationVariableIndex',
-    'isDirectOperationVariable',
-    'showChildren',
-    'timestamp',
-    'conceptDescriptions',
-    'listIndex',
-    'idLower',
-    'idShortLower',
-    'nameLower',
-    'descLower',
-    'endpoints',
-    'validationError',
-  ])
-
   for (const [key, entry] of Object.entries(source)) {
-    if (!ignoredKeys.has(key)) {
+    if (!ignoredTreeKeys.has(key)) {
       result[key] = stripTreeMetadata(entry)
     }
   }

@@ -100,6 +100,8 @@ describe('ClipboardUtil.ts', () => {
       id: 'submodel-id',
       showChildren: true,
       path: '/submodels/abc',
+      idShortLower: 'submodel',
+      searchValuesLower: ['https://example.com/semanticid'],
       children: [
         {
           modelType: 'SubmodelElementCollection',
@@ -110,7 +112,13 @@ describe('ClipboardUtil.ts', () => {
               modelType: 'Entity',
               id: 'entity-id',
               idShort: 'entity',
-              children: [{ modelType: 'Property', id: 'property-id', idShort: 'temperature' }],
+              children: [{
+                modelType: 'Property',
+                id: 'property-id',
+                idShort: 'temperature',
+                value: '42',
+                searchValuesLower: ['42'],
+              }],
             },
           ],
         },
@@ -119,12 +127,15 @@ describe('ClipboardUtil.ts', () => {
 
     expect(cleaned.showChildren).toBeUndefined()
     expect(cleaned.path).toBeUndefined()
+    expect(cleaned.idShortLower).toBeUndefined()
+    expect(cleaned.searchValuesLower).toBeUndefined()
     expect(cleaned.children).toBeUndefined()
     expect(cleaned.submodelElements).toHaveLength(1)
     expect(cleaned.submodelElements[0].id).toBeUndefined()
     expect(cleaned.submodelElements[0].value).toHaveLength(1)
     expect(cleaned.submodelElements[0].value[0].statements).toHaveLength(1)
     expect(cleaned.submodelElements[0].value[0].statements[0].id).toBeUndefined()
+    expect(cleaned.submodelElements[0].value[0].statements[0].searchValuesLower).toBeUndefined()
   })
 
   it('rejects non-DataElement paste into AnnotatedRelationshipElement parent', async () => {

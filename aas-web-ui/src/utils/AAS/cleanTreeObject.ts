@@ -1,3 +1,26 @@
+// UI-only properties added to AAS/Submodel(Element) objects for the tree and its search.
+// They are not part of the AAS metamodel and must never leave the UI (copy, JSON view, persistence).
+export const treeMetadataKeys = [
+  'showChildren',
+  'parent',
+  'path',
+  'selectionKey',
+  'persistence',
+  'operationVariableDirection',
+  'operationVariableIndex',
+  'isDirectOperationVariable',
+  'timestamp',
+  'listIndex',
+  'conceptDescriptions',
+  'idLower',
+  'idShortLower',
+  'nameLower',
+  'descLower',
+  'searchValuesLower',
+  'endpoints',
+  'validationError',
+] as const
+
 export function cleanObjectRecursively (obj: unknown): unknown {
   if (obj === null || obj === undefined) {
     return obj
@@ -13,23 +36,9 @@ export function cleanObjectRecursively (obj: unknown): unknown {
     const cleaned = { ...(obj as Record<string, unknown>) }
 
     // Remove tree-specific properties that were added by prepareForTree
-    delete cleaned.showChildren
-    delete cleaned.parent
-    delete cleaned.path
-    delete cleaned.selectionKey
-    delete cleaned.persistence
-    delete cleaned.operationVariableDirection
-    delete cleaned.operationVariableIndex
-    delete cleaned.isDirectOperationVariable
-    delete cleaned.timestamp
-    delete cleaned.listIndex
-    delete cleaned.conceptDescriptions
-    delete cleaned.idLower
-    delete cleaned.idShortLower
-    delete cleaned.nameLower
-    delete cleaned.descLower
-    delete cleaned.endpoints
-    delete cleaned.validationError
+    for (const key of treeMetadataKeys) {
+      delete cleaned[key]
+    }
 
     // Remove id property for all elements except Submodels
     if (cleaned.modelType !== 'Submodel') {
