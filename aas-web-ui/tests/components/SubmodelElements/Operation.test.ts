@@ -257,6 +257,19 @@ describe('Operation.vue', () => {
     expect(errorHandlerMock).not.toHaveBeenCalled()
   })
 
+  it('keeps a handleId named operation-status when deriving the result location', async () => {
+    const wrapper = mountOperation()
+    postRequestMock.mockResolvedValue(acceptedResponse('/operation-status/operation-status'))
+    getRequestMock
+      .mockResolvedValueOnce({ success: false, redirected: true })
+      .mockResolvedValueOnce({ success: true, data: { executionState: 'Completed', success: true } })
+
+    await (wrapper.vm as any).executeOperation()
+
+    expect(getRequestMock.mock.calls[1][0]).toBe('https://example.test/operation-results/operation-status')
+    expect(errorHandlerMock).not.toHaveBeenCalled()
+  })
+
   it('does not guess a result location when the status URL has no operation-status segment', async () => {
     const wrapper = mountOperation()
     postRequestMock.mockResolvedValue(acceptedResponse('/status/handle-1'))

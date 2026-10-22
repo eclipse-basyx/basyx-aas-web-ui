@@ -553,8 +553,9 @@
   function resolveOperationResultUrl (statusUrl: string): string | undefined {
     const url = new URL(statusUrl)
     const segments = url.pathname.split('/')
-    const statusIndex = segments.lastIndexOf('operation-status')
-    if (statusIndex === -1 || statusIndex === segments.length - 1) {
+    // Match the resource segment before the handleId, which may itself be named operation-status.
+    const statusIndex = segments.length - 2
+    if (statusIndex < 0 || segments[statusIndex] !== 'operation-status' || !segments.at(-1)) {
       return undefined
     }
     segments[statusIndex] = 'operation-results'
