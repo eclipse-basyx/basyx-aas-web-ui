@@ -57,6 +57,7 @@ const mockDeps = vi.hoisted(() => ({
   aasByEndpointHasSmeByPath: vi.fn(),
   fetchAndDispatchAas: vi.fn(),
   fetchAndDispatchSme: vi.fn(),
+  removeUnauthorizedSelection: vi.fn(),
 }))
 
 vi.mock('@/store/AASDataStore', () => ({
@@ -91,6 +92,7 @@ vi.mock('@/composables/AAS/SMEHandling', () => ({
 vi.mock('@/composables/routeHandling', () => ({
   useRouteHandling: () => ({
     idRedirectHandled: vi.fn().mockResolvedValue(null),
+    removeUnauthorizedSelection: mockDeps.removeUnauthorizedSelection,
   }),
 }))
 
@@ -126,6 +128,7 @@ describe('OAuth2 callback routing', () => {
     mockDeps.fetchAndDispatchAas.mockResolvedValue({ id: 'aas' })
     mockDeps.aasByEndpointHasSmeByPath.mockResolvedValue(true)
     mockDeps.fetchAndDispatchSme.mockResolvedValue({ idShort: 'submodel' })
+    mockDeps.removeUnauthorizedSelection.mockImplementation(async location => location)
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
       json: vi.fn().mockResolvedValue({
@@ -218,6 +221,26 @@ describe('OAuth2 callback routing', () => {
     expect(mockDeps.aasStore.dispatchSelectedNode).toHaveBeenCalledWith({})
     expect(mockDeps.aasByEndpointHasSmeByPath).not.toHaveBeenCalled()
     expect(mockDeps.fetchAndDispatchSme).not.toHaveBeenCalled()
+    expect(mockDeps.navigationStore.dispatchSnackbar).not.toHaveBeenCalled()
+  })
+
+  it('clears an AAS which is no longer authorized after logout without prompting for login', async () => {
+    mockDeps.envStore.getSingleAas = false
+    mockDeps.removeUnauthorizedSelection.mockImplementationOnce(async location => ({ ...location, query: {} }))
+    window.history.replaceState({}, '', '/aasviewer?aas=protected-aas&path=protected-submodel')
+    const { callbackPath } = startLogoutTransaction()
+    const router = await createAppRouter()
+
+    await router.push(callbackPath)
+
+    expect(mockDeps.removeUnauthorizedSelection).toHaveBeenCalledWith(expect.objectContaining({
+      path: '/aasviewer',
+      query: { aas: 'protected-aas', path: 'protected-submodel' },
+    }))
+    expect(router.currentRoute.value.name).toBe('AASViewer')
+    expect(router.currentRoute.value.query).not.toHaveProperty('aas')
+    expect(router.currentRoute.value.query).not.toHaveProperty('path')
+    expect(mockDeps.fetchAndDispatchAas).not.toHaveBeenCalled()
     expect(mockDeps.navigationStore.dispatchSnackbar).not.toHaveBeenCalled()
   })
 
