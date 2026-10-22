@@ -257,7 +257,7 @@ export async function createAppRouter (): Promise<Router> {
   // Composables
   const { fetchAndDispatchAas, aasByEndpointHasSmeByPath } = useAASHandling()
   const { fetchAndDispatchSme } = useSMEHandling()
-  const { idRedirectHandled } = useRouteHandling()
+  const { idRedirectHandled, removeUnauthorizedSelection } = useRouteHandling()
 
   // Data
   const routesStayOnPages: Set<RouteRecordNameGeneric> = new Set(['About', 'NotFound404'])
@@ -925,7 +925,8 @@ export async function createAppRouter (): Promise<Router> {
 
     const logoutRedirect = consumeLogoutTransaction(to.path)
     if (logoutRedirect) {
-      return { ...logoutRedirect, replace: true }
+      // A selection made while logged in may be protected and must not prompt for login again
+      return { ...(await removeUnauthorizedSelection(logoutRedirect)), replace: true }
     }
 
     if (to.name === 'ShareAccess') {
