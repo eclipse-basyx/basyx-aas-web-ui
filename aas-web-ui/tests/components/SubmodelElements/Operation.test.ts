@@ -229,6 +229,49 @@ describe('Operation.vue', () => {
     expect(dispatchSnackbarMock).not.toHaveBeenCalled()
   })
 
+  it('requests the operation result when the status endpoint redirects on completion', async () => {
+    vi.useFakeTimers()
+    const wrapper = mountOperation()
+    getRequestMock
+      .mockResolvedValueOnce({ success: true, data: { executionState: 'Running', success: true } })
+      .mockResolvedValueOnce({ success: false, redirected: true })
+      .mockResolvedValueOnce({
+        success: true,
+        data: {
+          executionState: 'Completed',
+          success: true,
+          outputArguments: [{ value: { modelType: 'Property', value: 'result' } }],
+        },
+      })
+
+    const invocation = (wrapper.vm as any).executeOperation()
+    await vi.advanceTimersByTimeAsync(100)
+    await invocation
+
+    expect(getRequestMock).toHaveBeenCalledTimes(3)
+    expect(getRequestMock.mock.calls[1][4]).toEqual(expect.objectContaining({ acceptRedirect: true }))
+    expect(getRequestMock.mock.calls[2][0]).toBe('https://example.test/operation-results/handle-1')
+    expect(getRequestMock.mock.calls[2][4].acceptRedirect).toBeUndefined()
+    expect((wrapper.vm as any).localOperationObject.outputVariables[0].value.value).toBe('result')
+    expect(dispatchSnackbarMock).toHaveBeenCalledWith(expect.objectContaining({ color: 'success' }))
+    expect(errorHandlerMock).not.toHaveBeenCalled()
+  })
+
+  it('does not guess a result location when the status URL has no operation-status segment', async () => {
+    const wrapper = mountOperation()
+    postRequestMock.mockResolvedValue(acceptedResponse('/status/handle-1'))
+    getRequestMock.mockResolvedValue({ success: false, redirected: true })
+
+    await (wrapper.vm as any).executeOperation()
+
+    expect(getRequestMock).toHaveBeenCalledOnce()
+    expect(errorHandlerMock).toHaveBeenCalledWith(
+      'The operation status redirected to a result location that cannot be verified.',
+      expect.any(String),
+    )
+    expect(dispatchSnackbarMock).not.toHaveBeenCalled()
+  })
+
   it('does not read data or report success after a failed status request', async () => {
     const wrapper = mountOperation()
     getRequestMock.mockResolvedValue({ success: false, status: 500 })

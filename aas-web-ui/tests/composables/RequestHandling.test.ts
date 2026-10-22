@@ -813,6 +813,23 @@ describe('RequestHandling.ts', () => {
     expect(mockDeps.setAuthenticationStatusForInfrastructure).not.toHaveBeenCalled()
   })
 
+  it('reports an accepted redirect without an error message or a follow-up request', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ type: 'opaqueredirect' }) as unknown as typeof fetch
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const result = await useRequestHandling().getRequest(
+      '/operation-status/handle-1',
+      'requesting operation status',
+      false,
+      new Headers(),
+      { acceptRedirect: true },
+    )
+
+    expect(result).toEqual({ success: false, redirected: true })
+    expect(global.fetch).toHaveBeenCalledOnce()
+    expect(vi.mocked(global.fetch).mock.calls[0][1]?.redirect).toBe('manual')
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalled()
+  })
+
   it('sends the configured custom header verbatim under the given name', async () => {
     global.fetch = vi.fn().mockResolvedValue(new Response('', { status: 202 })) as unknown as typeof fetch
     mockState.selectedInfrastructure = {

@@ -341,7 +341,7 @@
         statusUrl,
         createRequestHeaders(),
         context,
-        `requesting operation status for ${operation.modelType} "${operation.idShort}"`,
+        `${operation.modelType} "${operation.idShort}"`,
         generation,
         controller,
         deadline,
@@ -392,7 +392,7 @@
     statusUrl: string,
     headers: Headers,
     context: string,
-    statusContext: string,
+    operationLabel: string,
     generation: number,
     controller: AbortController,
     deadline: number,
@@ -418,17 +418,35 @@
 
       const response = await getRequest(
         statusUrl,
-        statusContext,
+        `requesting operation status for ${operationLabel}`,
         false,
         headers,
-        { signal: controller.signal },
+        { signal: controller.signal, acceptRedirect: true },
       )
 
       if (
         expireInvocationIfDeadlineReached(deadline, controller, markTimedOut)
         || !isCurrentInvocation(generation, controller)
-        || !response.success
       ) {
+        return
+      }
+
+      // V3.2 signals completion with 302 to operation-results/{handleId}, whose target is hidden in manual redirect mode.
+      if (response.redirected) {
+        await fetchOperationResult(
+          statusUrl,
+          headers,
+          context,
+          operationLabel,
+          generation,
+          controller,
+          deadline,
+          markTimedOut,
+        )
+        return
+      }
+
+      if (!response.success) {
         return
       }
 
@@ -450,6 +468,39 @@
 
       handleOperationResult(result, context)
       return
+    }
+  }
+
+  async function fetchOperationResult (
+    statusUrl: string,
+    headers: Headers,
+    context: string,
+    operationLabel: string,
+    generation: number,
+    controller: AbortController,
+    deadline: number,
+    markTimedOut: () => void,
+  ): Promise<void> {
+    const resultUrl = resolveOperationResultUrl(statusUrl)
+    if (!resultUrl) {
+      errorHandler('The operation status redirected to a result location that cannot be verified.', context)
+      return
+    }
+
+    const response = await getRequest(
+      resultUrl,
+      `requesting operation result for ${operationLabel}`,
+      false,
+      headers,
+      { signal: controller.signal },
+    )
+
+    if (
+      !expireInvocationIfDeadlineReached(deadline, controller, markTimedOut)
+      && isCurrentInvocation(generation, controller)
+      && response.success
+    ) {
+      handleOperationResult(response.data, context)
     }
   }
 
@@ -496,6 +547,19 @@
       throw new Error('The asynchronous invocation returned a Location on a different origin.')
     }
     return resolvedLocation.href
+  }
+
+  // The result shares the handleId of the already trusted status URL.
+  function resolveOperationResultUrl (statusUrl: string): string | undefined {
+    const url = new URL(statusUrl)
+    const segments = url.pathname.split('/')
+    const statusIndex = segments.lastIndexOf('operation-status')
+    if (statusIndex === -1 || statusIndex === segments.length - 1) {
+      return undefined
+    }
+    segments[statusIndex] = 'operation-results'
+    url.pathname = segments.join('/')
+    return url.href
   }
 
   function createRequestHeaders (): Headers {
