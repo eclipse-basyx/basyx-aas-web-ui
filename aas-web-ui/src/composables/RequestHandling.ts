@@ -12,6 +12,12 @@ class UntrustedEndpointError extends Error {
   }
 }
 
+class BlockedRedirectError extends UntrustedEndpointError {
+  constructor () {
+    super('Redirect blocked because its destination cannot be verified.')
+  }
+}
+
 function isInteractiveOAuth2WithoutToken (statusCode: number | undefined, infra: InfrastructureConfig | null | undefined): boolean {
   return statusCode === 403
     && infra?.auth?.securityType === 'OAuth2'
@@ -29,6 +35,11 @@ export interface RequestErrorHandlingOptions {
    * Cancels the request without showing an error message.
    */
   signal?: AbortSignal
+  /**
+   * Reports a redirect as `redirected: true` without an error message.
+   * Its target stays hidden and is never requested.
+   */
+  acceptRedirect?: boolean
 }
 
 export interface RequestResult<T = unknown> {
@@ -180,7 +191,13 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     requestOwnerId: string | undefined = getRequestOwnerId(),
     requestInfrastructure: InfrastructureConfig | null | undefined = infrastructureStore.getSelectedInfrastructure,
     isolateAuthenticationFailures = false,
-  ): { success: false, status?: number, aborted?: true, blocked?: true } {
+  ): { success: false, status?: number, aborted?: true, blocked?: true, redirected?: true } {
+    if (error instanceof BlockedRedirectError && errorHandlingOptions.acceptRedirect) {
+      setLastRequestFailureStatus(undefined)
+      setLastRequestFailureDetails(undefined)
+      return { success: false, redirected: true }
+    }
+
     if (error instanceof UntrustedEndpointError) {
       setLastRequestFailureStatus(undefined)
       setLastRequestFailureDetails(error.message)
@@ -743,7 +760,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
       // a second request can carry infrastructure credentials to another origin.
       return fetch(path, { ...options, headers, redirect: 'manual' }).then(response => {
         if (response.type === 'opaqueredirect') {
-          throw new UntrustedEndpointError('Redirect blocked because its destination cannot be verified.')
+          throw new BlockedRedirectError()
         }
         return response
       })
