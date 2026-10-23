@@ -19,7 +19,7 @@
     />
 
     <ActionMenuItem
-      :color="isEnabled ? 'error' :'green'"
+      :color="isEnabled ? 'error' : 'success'"
       :icon="isEnabled ? ICONS.DISABLE : ICONS.ENABLE"
       :label="t(`rules.${isEnabled ? 'disable' : 'enable'}`)"
       @click="doAction('toggle')"
@@ -35,11 +35,19 @@
     />
   </ActionMenu>
 
-  <v-dialog v-model="moveDialog" max-width="400" persistent>
+  <v-dialog
+    v-model="moveDialog"
+    class="abac-dialog"
+    max-width="400"
+    persistent
+    :z-index="ABAC_DIALOG_Z_INDEX"
+  >
     <v-card>
-      <v-card-title class="pa-4">
+      <v-card-title class="pa-4 bg-cardHeader">
         {{ t('rules.moveDialog.title') }}
       </v-card-title>
+
+      <v-divider />
 
       <v-card-text class="pa-4">
         <v-select
@@ -55,8 +63,8 @@
 
       <v-divider />
 
-      <v-card-actions class="pa-4">
-        <v-btn variant="text" @click="moveDialog = false">
+      <v-card-actions class="pa-4 bg-cardHeader">
+        <v-btn :disabled="isMoving" variant="text" @click="moveDialog = false">
           {{ t('rules.moveDialog.cancel') }}
         </v-btn>
 
@@ -93,10 +101,11 @@
   import { useMoveRule } from '../../../api/rule/useMoveRule'
   import { useToggleRule } from '../../../api/rule/useToggleRule'
   import { RULE_DIALOG_KEY } from '../../../constants/inject'
-  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
-  import { useRules } from '../../../hooks/useRules'
+  import { ABAC_DIALOG_Z_INDEX } from '../../../constants/ui'
+  import { useAbacNavigation } from '../../../hooks/navigation/useAbacNavigation'
+  import { useRules } from '../../../hooks/resources/useRules'
   import { useAbacI18n } from '../../../i18n/useAbacI18n'
-  import ConfirmDialog from '../../shared/ConfirmDialog.vue'
+  import ConfirmDialog from '../../shared/dialog/ConfirmDialog.vue'
   import ActionMenu from '../../shared/menu/ActionMenu.vue'
   import ActionMenuItem from '../../shared/menu/ActionMenuItem.vue'
 

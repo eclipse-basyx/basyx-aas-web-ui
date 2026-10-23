@@ -14,8 +14,9 @@
 </template>
 
 <script setup lang="ts">
+  import type { DefinitionDialogProps } from '../../types/definitions'
   import { DEFINITION_DIALOG_KEY } from '../../constants/inject'
-  import DefinitionDialog, { type DefinitionDialogProps } from './DefinitionDialog.vue'
+  import DefinitionDialog from './DefinitionDialog.vue'
   import DefinitionDetail from './detail/DefinitionDetail.vue'
   import DefinitionsList from './list/DefinitionsList.vue'
 

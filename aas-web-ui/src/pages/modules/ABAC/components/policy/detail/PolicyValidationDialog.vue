@@ -1,5 +1,14 @@
 <template>
-  <v-dialog v-model="isOpen" max-width="720" persistent scrollable>
+  <v-dialog
+    v-model="isOpen"
+    :aria-label="t('policies.policy.validationDialog.title')"
+    class="abac-dialog"
+    :fullscreen="isMobile"
+    :max-width="isMobile ? undefined : 720"
+    persistent
+    scrollable
+    :z-index="ABAC_DIALOG_Z_INDEX"
+  >
     <v-card>
       <v-card-title class="pa-4 bg-cardHeader d-flex align-center">
         <span class="text-h6" v-bind="i18nData('policies.policy.validationDialog.title')">
@@ -9,6 +18,7 @@
         <v-spacer />
 
         <v-btn
+          :aria-label="t('policies.policy.validationDialog.close')"
           density="comfortable"
           :icon="ICONS.CLOSE"
           size="small"
@@ -75,6 +85,8 @@
 <script setup lang="ts">
   import type { PolicyValidationResult } from '../../../types/policy'
   import { hasContent } from '@/utils/StringUtils'
+  import { ABAC_DIALOG_Z_INDEX } from '../../../constants/ui'
+  import { useAbacNavigation } from '../../../hooks/navigation/useAbacNavigation'
   import { useAbacI18n } from '../../../i18n/useAbacI18n'
 
   const ICONS = {
@@ -85,6 +97,7 @@
   } as const
 
   const { t, i18nData } = useAbacI18n()
+  const { isMobile } = useAbacNavigation()
 
   const isOpen = ref(false)
   const result = ref<PolicyValidationResult | null>(null)

@@ -5,12 +5,19 @@ records the separate Query Language schema differences.
 
 ## Baselines and evidence limits
 
-- Frontend: untouched IDTA 3.1 JSON snapshot at `aas-web-ui/src/schemas/access-rules/aas-queries-and-access-rules-3.1.schema.json`.
-- Schema commit: [`5eb746834d9c5353af751c9fc9d62df9e9b41b05`](https://github.com/admin-shell-io/aas-specs-security/commit/5eb746834d9c5353af751c9fc9d62df9e9b41b05), commit date `2026-07-21`.
-- Backend commit: `91d31432f198f3b46fa1fa1a25a969b088792928`, commit date `2026-10-06`.
+- Frontend: untouched IDTA 3.2 working draft JSON snapshot at `aas-web-ui/src/schemas/access-rules/aas-queries-and-access-rules-3.2.schema.json`.
+- Schema commit: [`0171f14ceb32bc396653100b5a9a93cf2c984e79`](https://github.com/admin-shell-io/aas-specs-security/commit/0171f14ceb32bc396653100b5a9a93cf2c984e79), commit date `2026-10-14`.
+- Original backend audit commit: `91d31432f198f3b46fa1fa1a25a969b088792928`, commit date `2026-10-06`.
+- Targeted source recheck on `2026-10-23`: local backend HEAD
+  `d47a6e96168dd5685e16b7b9169fd76cb15046a5` (commit date `2026-10-22`).
+  Comparison operand grammar files are unchanged from the original audit commit.
+  This recheck confirms the operand-shape observations below; it is not a full
+  refresh of every table entry. Other grammar changes concern query handling.
+  The local checkout also has modifications in policy setup and the example compose
+  configuration. Neither checkout HEAD nor these notes establish the running service's version.
 - Schema and backend revisions are independent. Recheck the comparison when either changes.
 - Findings come from schema constraints and backend source. They distinguish decoding, materialization, and endpoint behavior; they are not an executed end-to-end acceptance matrix.
-- Frontend validation follows JSON Schema only. Backend extensions may produce frontend advisories; schema-valid input can still fail backend processing. Neither condition changes the submitted raw data.
+- Frontend validation and new guided operand choices follow the pinned JSON Schema. Backend extensions may produce frontend advisories; schema-valid input can still fail backend processing. Neither condition changes the submitted raw data.
 
 ## Query Language schema differences
 
@@ -26,6 +33,7 @@ Compared Query Language file SHA-256: `86beb6610e57143b14d41cb1b80c4064c6432fbcb
 - stringItems alternatives differ.
 - logicalExpression: Query Language has no `$boolCast` property or corresponding oneOf branch.
 - ACL USEATTRIBUTES: Query Language retains an array of strings; upstream and the backend use one string.
+- DEFOBJECTS: Query Language retains exclusive `objects`/`USEOBJECTS` alternatives (`oneOf`); the pinned v3.2 access-rule schema allows both (`anyOf`).
 
 
 ## Confirmed differences
@@ -37,14 +45,14 @@ In the table, grammar paths are relative to `internal/common/model/grammar`; sec
 | `definitions.standardString` | Nonempty restricted character class, which includes `$` | `standard_string.go`, `StandardString.UnmarshalJSON`: `^([^$].*\|)$` accepts empty/non-ASCII strings but rejects leading `$`. Example: empty string is backend-only; `$value` is schema-only. Go `.` does not match newline by default, so this pattern does not accept arbitrary multiline strings. |
 | `attributeItem` | CLAIM, GLOBAL, REFERENCE only | `attribute_item.go`, `AttributeItem.UnmarshalJSON` additionally accepts CLAIMPATH. It validates nonempty RFC 6901 pointers and escape sequences. `/roles` is a backend extension. |
 | CLAIMPATH formula operands | No CLAIMPATH representation | `logical_expression.go`, `validateComparisonItems` and `validateStringItems`: direct CLAIMPATH is allowed in `$eq` paired with `$strVal`/`$strCast`, or as the first `$contains` operand with a scalar-string second operand. Other direct positions/operators are rejected. |
-| `stringItems` | At least one operand is a non-field string value | `logical_expression.go`, `validateStringItems` accepts two string-value operands without imposing that field/non-field distinction, aside from CLAIMPATH restrictions. Two valid `$field` operands can decode even though the schema rejects that pairing for string matching. |
+| `stringItems` | At least one operand is a non-field string value | `logical_expression.go`, `validateStringItems` accepts two string-value operands without imposing that field/non-field distinction, aside from CLAIMPATH restrictions. Two valid `$field` operands can decode even though the schema rejects that pairing for string matching and ordered/equality comparisons. Guided choices exclude this pairing; existing expressions are preserved with advisories. |
 | `objectItem` values | Compact strings | `object_item.go`, `ObjectItem.UnmarshalJSON` also accepts structured Route/Identifiable/Referable/Fragment/Descriptor objects. These extensions are not added to frontend validation. |
 | Compact identifier patterns | Fixed character classes and syntax | `object_item.go`, `reIdentifiable`, `reReferable`, `reDescriptor`: whitespace is tolerated and quoted instances accept any non-quote character. For example a percent sign in an instance differs from the schema's restricted class. |
 | `objectItem.FRAGMENT` / `FragmentIdentifier` | FragmentIdentifier references FragmentFieldIdentifier | `object_item.go`, `parseFragment` uses a compact SME instance plus path and fragment strings. The published schema and backend describe different forms; the pinned upstream artifact remains unchanged. |
 | `objectItem.ROUTE` | Any string, including empty/whitespace | `object_item.go`, `parseRoute` trims the string and rejects an empty result. Structured fallback is a separate decoding path and does not call this parser. |
 | `ReferenceIdentifier` | Anchored pattern, no surrounding whitespace | `identifier_patterns.go`, `ValidateReferenceIdentifier` trims before checking. Surrounding whitespace can be backend-valid but schema-invalid. |
 | `FieldIdentifier` | No `$bd` field family | `fieldidentifier_processing.go` supports `$bd#...` fields, including `createdAt` in the backend fixtures. This is a backend extension, not an upstream schema addition. |
-| `DEFATTRIBUTES.items` | Exactly one of attributes/USEATTRIBUTES | `access_rule_model_schema_json_all_access_permission_rules_def_attributes_e_lem.go` requires at least one and permits both. In contrast DEFOBJECTS enforces exactly one, matching the pinned schema. |
+| `DEFATTRIBUTES.items` | Exactly one of attributes/USEATTRIBUTES | `access_rule_model_schema_json_all_access_permission_rules_def_attributes_e_lem.go` requires at least one and permits both. The audited backend revision enforced exactly one source for DEFOBJECTS; the v3.2 schema now allows both. |
 | Definition names | String required, no nonblank/uniqueness rule | `abac_engine_materialization.go`, `buildDefinitionIndex` trims names, rejects empty names, and rejects duplicates within each kind. `a` and ` a ` collide. |
 | Rule ACL/USEACL and FORMULA/USEFORMULA; filter CONDITION/USEFORMULA | Exclusivity uses property presence | `access_permission_rule.go` and `access_permission_rule_filter.go` treat whitespace-only reference strings as unset and nil pointers as absent. Presence and semantic availability are not equivalent. |
 | ACL attributes | Schema requires ATTRIBUTES or USEATTRIBUTES | `acl.go` is a struct without that custom presence check. `abac_engine_materialization.go`, `materializeRule` gathers either source if present without requiring one. Attribute-free ACLs therefore pass this materialization step. |
@@ -64,7 +72,7 @@ against the project's Go toolchain and should not be treated as confirmed differ
 ## Agreements and scope boundaries
 
 - Rules require an ACL alternative, a formula alternative, and an object source. Rule OBJECTS and USEOBJECTS may coexist; ACL ATTRIBUTES and USEATTRIBUTES may coexist.
-- DEFOBJECTS alternatives remain exclusive. Do not automatically generalize the DEFATTRIBUTES discrepancy to them.
+- DEFOBJECTS now allows inline `objects` and `USEOBJECTS` together. The frontend supports both sources in forms and preserves omitted sources during JSON merges. Backend support is reported by the project maintainer; it has not been re-probed against the running service. The older backend audit above does not establish current exclusivity.
 - Backend expression decoding checks a single operator and imposes minimum sizes on non-nil `$and`, `$or`, and `$match` arrays. Equality/ordered comparison shape counting uses exactly one matching shape; it should not be replaced with a general permissive union.
 - JSON Schema acceptance is not full specification conformance. Calendar semantics, reference resolution, and runtime authorization are separate concerns.
 
@@ -107,5 +115,5 @@ differences do not change ABAC validation.
 
 ## Sources
 
-All backend paths above refer to [this pinned backend tree](https://github.com/eclipse-basyx/basyx-go-components/tree/91d31432f198f3b46fa1fa1a25a969b088792928/internal/common).
+Unless explicitly rechecked above, backend observations refer to [the original pinned backend tree](https://github.com/eclipse-basyx/basyx-go-components/tree/91d31432f198f3b46fa1fa1a25a969b088792928/internal/common).
 Schema provenance remains in the [shared schema README](README.md).

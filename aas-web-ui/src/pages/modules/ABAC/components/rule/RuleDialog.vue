@@ -1,100 +1,77 @@
 <template>
-  <v-dialog v-model="isOpen" max-width="800" persistent scrollable>
-    <v-card>
-      <v-card-title class="pa-4 bg-cardHeader d-flex align-center">
-        <span class="text-h6" v-bind="i18nData(`rules.ruleDialog.title.${dialogMode}`) ">
-          {{ t(`rules.ruleDialog.title.${dialogMode}`) }}
-        </span>
+  <AbacDialog
+    v-model="isOpen"
+    :advisory="advisory"
+    :editor-mode="editorMode"
+    :error="jsonError"
+    :form-limitation="formLimitation"
+    :loading="isPending"
+    :messages="tm(`rules.ruleDialog.${dialogMode}`)"
+    @submit="onSubmit"
+    @switch="switchEditorMode"
+  >
+    <v-select
+      v-if="dialogMode === 'create'"
+      v-model.number="position"
+      class="mb-3"
+      density="comfortable"
+      hide-details
+      :items="Array.from({ length: rulesCount + 1 }, (_, i) => i + 1)"
+      v-bind="i18nData('rules.ruleDialog.position')"
+      :label="t('rules.ruleDialog.position')"
+      variant="outlined"
+    />
 
-        <v-spacer />
+    <p v-if="dialogMode === 'update'" class="mb-0 text-body-small">
+      {{ t('rules.ruleDialog.updateHint') }}
+    </p>
 
-        <v-btn
-          density="comfortable"
-          :icon="ICONS.CLOSE"
-          size="small"
-          variant="text"
-          @click="close"
+    <template #form>
+      <div class="mt-4">
+        <RuleForm
+          v-if="formDocument"
+          :doc="formDocument"
+          :error-paths="errorPaths"
+          :warning-paths="advisory?.paths"
+          @update:doc="updateFormDocument"
         />
-      </v-card-title>
+      </div>
+    </template>
 
-      <v-divider />
-
-      <v-card-text class="pa-4">
-        <v-form @submit.prevent="onSubmit">
-          <v-select
-            v-if="dialogMode === 'create'"
-            v-model.number="position"
-            class="mb-3"
-            density="comfortable"
-            hide-details
-            :items="Array.from({ length: rulesCount + 1 }, (_, i) => i + 1)"
-            v-bind="i18nData('rules.ruleDialog.position')"
-            :label="t('rules.ruleDialog.position')"
-            variant="outlined"
-          />
-
-          <p v-if="dialogMode === 'update'" class="mb-0 text-body-small">
-            {{ t('rules.ruleDialog.updateHint') }}
-          </p>
-
-          <AbacEditor
-            v-model="ruleJson"
-            :disabled="isPending"
-            :error-message="jsonError"
-            :label="t('rules.ruleDialog.editor')"
-            :rows="18"
-            :target="{ mode: dialogMode, viewer: 'rule' }"
-          />
-        </v-form>
-      </v-card-text>
-
-      <v-divider />
-
-      <v-card-actions class="pa-4">
-        <v-btn
-          variant="text"
-          v-bind="i18nData('rules.ruleDialog.cancel')"
-          @click="close"
-        >
-          {{ t('rules.ruleDialog.cancel') }}
-        </v-btn>
-
-        <v-btn
-          color="primary"
-          :loading="isPending"
-          variant="flat"
-          v-bind="i18nData(`rules.ruleDialog.${dialogMode}`)"
-          @click="onSubmit"
-        >
-          {{ t(`rules.ruleDialog.${dialogMode}`) }}
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    <template #json>
+      <div class="mt-4">
+        <AbacEditor
+          v-model="jsonText"
+          :active="editorMode === 'json'"
+          :disabled="isPending"
+          :label="t('rules.ruleDialog.editor')"
+          :rows="18"
+          :target="{ mode: dialogMode, viewer: 'rule' }"
+        />
+      </div>
+    </template>
+  </AbacDialog>
 </template>
 
 <script setup lang="ts">
-  import type { JsonErrorMessage } from '../../types/json.ts'
-  import type { Rule } from '../../types/rules'
+  import type { Rule, RuleDialogProps } from '../../types/rules'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
   import { useCreateRule } from '../../api/rule/useCreateRule'
   import { useUpdateRule } from '../../api/rule/useUpdateRule'
   import { EMPTY_RULE } from '../../constants/json'
-  import { useAbacNavigation } from '../../hooks/useAbacNavigation'
-  import { useRules } from '../../hooks/useRules'
-  import { useRuleValidation } from '../../hooks/useRuleValidation'
+  import { useDocumentEditor } from '../../hooks/forms/useDocumentEditor'
+  import { useAbacNavigation } from '../../hooks/navigation/useAbacNavigation'
+  import { useRules } from '../../hooks/resources/useRules'
+  import { useLiveValidation } from '../../hooks/validations/useLiveValidation'
+  import { useRuleValidation } from '../../hooks/validations/useRuleValidation'
   import { useAbacI18n } from '../../i18n/useAbacI18n'
+  import { toSaveError } from '../../utils/api'
+  import { representRule } from '../../utils/forms/rule'
+  import { detectRuleUpdate, resolveUpdateDocument } from '../../utils/update'
   import AbacEditor from '../shared/AbacEditor.vue'
-
-  const ICONS = {
-    CLOSE: 'mdi-close',
-  } as const
-
-  export interface RuleDialogProps {
-    mode: 'create' | 'update'
-    rule?: Rule
-  }
+  import AbacDialog from '../shared/dialog/AbacDialog.vue'
+  import RuleForm from './form/RuleForm.vue'
 
   const { t, tm, i18nData } = useAbacI18n()
   const navigationStore = useNavigationStore()
@@ -110,22 +87,52 @@
   const isOpen = ref(false)
   const dialogMode = ref<RuleDialogProps['mode']>('create')
   const position = ref<number>()
-  const ruleJson = ref('')
   const currentRule = ref<Rule | undefined>(undefined)
-  const jsonError = ref<JsonErrorMessage | null>(null)
+
+  const {
+    formDocument,
+    mergeBaseDocument,
+    jsonText,
+    editorMode,
+    formLimitation,
+    updateFormDocument,
+    initializeNewDocument,
+    loadJsonDocument,
+    switchEditorMode,
+  } = useDocumentEditor({
+    checkFormSupport: representRule,
+    resolveJsonDocument: (base, draft) => {
+      if (dialogMode.value !== 'update') return draft
+      const update = detectRuleUpdate(base, draft)
+      return resolveUpdateDocument(base, update)
+    },
+  })
+
+  const { validateJson } = useRuleValidation(tm('rules.ruleDialog.errors'), tm('validation'))
+  const { error: jsonError, errorPaths, advisory, saveError, validateNow } = useLiveValidation({
+    enabled: () => isOpen.value,
+    input: () => ({
+      json: jsonText.value,
+      currentRule: dialogMode.value === 'update'
+        ? currentRule.value?.configured_rule_json
+        : undefined,
+      inputMode: editorMode.value === 'form' ? 'complete' as const : 'merge' as const,
+      mergeBase: mergeBaseDocument.value,
+    }),
+    validate: validateJson,
+  })
 
   function open ({ mode, rule }: RuleDialogProps): void {
     isOpen.value = true
     dialogMode.value = mode
     position.value = undefined
-    jsonError.value = null
     currentRule.value = rule
 
     if (mode === 'create') {
       position.value = rulesCount.value + 1
-      ruleJson.value = JSON.stringify(EMPTY_RULE, null, 2)
+      initializeNewDocument(EMPTY_RULE)
     } else if (rule) {
-      ruleJson.value = JSON.stringify(rule?.configured_rule_json, null, 2)
+      loadJsonDocument(JSON.stringify(rule?.configured_rule_json, null, 2))
     }
   }
 
@@ -133,17 +140,10 @@
     isOpen.value = false
   }
 
-  const { validateJson } = useRuleValidation(tm('rules.ruleDialog.errors'), tm('validation'))
-
   async function onSubmit (): Promise<void> {
-    const { rule, error } = validateJson({
-      json: ruleJson.value,
-      currentRule: dialogMode.value === 'update'
-        ? currentRule.value?.configured_rule_json
-        : undefined,
-    })
+    const { payload: rule } = validateNow()
 
-    jsonError.value = error
+    saveError.value = null
 
     if (!rule) return
 
@@ -168,7 +168,7 @@
           const ruleIndex = currentRule.value?.rule_index
           if (!hasContent(ruleIndex?.toString())) return
 
-          await updateRule({ versionId, ruleIndex, currentRule: currentRule.value!.configured_rule_json, rule })
+          await updateRule({ versionId, ruleIndex, currentRule: currentRule.value!.configured_rule_json, payload: rule, inputMode: editorMode.value === 'form' ? 'complete' : 'merge', mergeBase: mergeBaseDocument.value })
           break
         }
       }
@@ -183,11 +183,7 @@
 
       close()
     } catch (error) {
-      // Replace validation errors with the save failure.
-      jsonError.value = {
-        title: t(`rules.error.${dialogMode.value}`),
-        messages: error instanceof Error ? error.message.split('\n') : undefined,
-      }
+      saveError.value = toSaveError(error, t(`rules.error.${dialogMode.value}`))
       navigationStore.dispatchSnackbar({
         status: true,
         timeout: 8000,

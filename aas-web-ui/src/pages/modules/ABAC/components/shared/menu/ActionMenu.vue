@@ -30,7 +30,7 @@
     MENU: 'mdi-dots-vertical',
   } as const
 
-  const { iconSize = 'x-small', disabled = false, ariaLabel } = defineProps<{ iconSize?: string, disabled?: boolean, ariaLabel?: string }>()
+  const { iconSize = 'x-small', disabled = false } = defineProps<{ iconSize?: string, disabled?: boolean, ariaLabel?: string }>()
 
   const isOpen = defineModel<boolean>({ default: false })
 

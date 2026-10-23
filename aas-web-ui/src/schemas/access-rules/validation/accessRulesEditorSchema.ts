@@ -1,6 +1,6 @@
 import type { DefinitionKind } from '../types/definitions'
 import type { CodeSchema } from '@/components/Code/codeSchema'
-import source from '@/schemas/access-rules/aas-queries-and-access-rules-3.1.schema.json'
+import source from '@/schemas/access-rules/aas-queries-and-access-rules-3.2.schema.json'
 import { DEFINITION_SCHEMA_PROPERTIES } from '../types/definitions'
 
 export type AccessRulesEditorViewer = 'policy' | 'rule' | 'definition'

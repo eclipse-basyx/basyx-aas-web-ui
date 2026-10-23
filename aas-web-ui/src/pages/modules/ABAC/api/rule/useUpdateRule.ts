@@ -7,15 +7,15 @@ export function useUpdateRule () {
   const { client, invalidate, keys } = useAbacContext()
 
   return useMutation({
-    mutationFn: async ({ versionId, ruleIndex, currentRule, rule }: RuleUpdate) => {
-      const { mode, payload } = detectRuleUpdate(currentRule, rule)
+    mutationFn: async ({ versionId, ruleIndex, currentRule, payload: updatedRule, inputMode, mergeBase }: RuleUpdate) => {
+      const { mode, payload } = detectRuleUpdate(currentRule, updatedRule, { inputMode, mergeBase })
       if (mode === 'unchanged') {
         return
       }
       // Schema warnings do not block submission; the backend decides whether to accept the rule.
       return mode === 'replace'
-        ? client.replaceRule({ versionId, ruleIndex, rule: payload })
-        : client.patchRule({ versionId, ruleIndex, patch: payload })
+        ? client.replaceRule({ versionId, ruleIndex, payload })
+        : client.patchRule({ versionId, ruleIndex, payload })
     },
     onSuccess: (result, { versionId }) => {
       if (result) {

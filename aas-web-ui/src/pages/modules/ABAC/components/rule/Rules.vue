@@ -14,10 +14,11 @@
 </template>
 
 <script setup lang="ts">
+  import type { RuleDialogProps } from '../../types/rules'
   import { RULE_DIALOG_KEY } from '../../constants/inject'
   import RuleDetail from './detail/RuleDetail.vue'
   import RulesList from './list/RulesList.vue'
-  import RuleDialog, { type RuleDialogProps } from './RuleDialog.vue'
+  import RuleDialog from './RuleDialog.vue'
 
   const ruleDialog = useTemplateRef<InstanceType<typeof RuleDialog>>('ruleDialog')
 
