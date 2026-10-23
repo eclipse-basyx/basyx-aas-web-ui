@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-  import { useRules } from '../../../hooks/useRules'
+  import { useRules } from '../../../hooks/resources/useRules'
   import { useAbacI18n } from '../../../i18n/useAbacI18n'
   import AbacEditor from '../../shared/AbacEditor.vue'
   import StateView from '../../shared/StateView.vue'

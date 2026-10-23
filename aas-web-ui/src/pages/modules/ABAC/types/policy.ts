@@ -2,7 +2,9 @@
  * ABAC Policy Types
  */
 
+import type { DefinitionKind, DefinitionUsage } from './definitions'
 import type { JsonObject } from './json'
+import type { ComputedRef } from 'vue'
 
 export type PolicyStatus = 'staged' | 'active' | 'superseded' | 'rejected'
 
@@ -55,4 +57,23 @@ export interface PolicyImport {
   source_ref?: string
   activate?: boolean
   policy: JsonObject
+}
+
+// ---------------------------------------------------------------------------
+// Form editing
+// ---------------------------------------------------------------------------
+
+export interface PolicyFormContext {
+  readonly definitionNames: ComputedRef<Record<DefinitionKind, string[]>>
+  usagesOf: (kind: DefinitionKind, name: string) => DefinitionUsage[]
+}
+
+export interface PolicyDraftDefinition {
+  kind: DefinitionKind
+  doc: JsonObject
+}
+
+export interface PolicyDraft {
+  definitions: PolicyDraftDefinition[]
+  rules: JsonObject[]
 }

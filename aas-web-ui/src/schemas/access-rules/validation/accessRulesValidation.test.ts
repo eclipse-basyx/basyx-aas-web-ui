@@ -10,8 +10,17 @@ const rule = { USEACL: 'acl', USEOBJECTS: ['object'], USEFORMULA: 'formula' }
 
 describe('upstream ABAC advisory validation', () => {
   it('preserves the pinned upstream artifact byte for byte', () => {
-    const bytes = readFileSync(fileURLToPath(import.meta.resolve('../aas-queries-and-access-rules-3.1.schema.json')))
-    expect(createHash('sha256').update(bytes).digest('hex')).toBe('12a298f893dd137b0d0d92c76db32d938ff6006a89411f146537b05f460e83fb')
+    const bytes = readFileSync(fileURLToPath(import.meta.resolve('../aas-queries-and-access-rules-3.2.schema.json')))
+    expect(createHash('sha256').update(bytes).digest('hex')).toBe('cb8ac7c7eecc21e0c8e4d0655428c9a583faf49b4e50c86de5b7159026475030')
+  })
+
+  it('accepts either or both object-definition sources, but requires at least one', () => {
+    const schema = createDefinitionSchema(en).SCHEMA_FOR_KIND.objects
+    for (const sources of [{ objects: [] }, { USEOBJECTS: ['other'] }, { objects: [{ ROUTE: '/shells' }], USEOBJECTS: ['other'] }]) {
+      expect(schema.safeParse({ name: 'routes', ...sources }).success).toBe(true)
+    }
+    expect(schema.safeParse({ name: 'routes' }).success).toBe(false)
+    expect(schema.safeParse({ name: 'routes', objects: [], USEOBJECTS: [123] }).success).toBe(false)
   })
 
   it('explains enum failures with the allowed values', () => {

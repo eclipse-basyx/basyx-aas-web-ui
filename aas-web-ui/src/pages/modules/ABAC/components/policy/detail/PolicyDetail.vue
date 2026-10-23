@@ -16,7 +16,7 @@
       <v-card border class="d-flex flex-column h-100 w-100 overflow-hidden" rounded>
         <v-card-title class="flex-0-0 px-2 py-2">
           <v-row class="d-flex align-center justify-space-between ga-0">
-            <v-col class="d-flex align-center">
+            <v-col class="d-flex align-center" order="1">
               <span class="text-headline-small mr-4" v-bind="i18nData('policies.policy.title')">
                 {{ t("policies.policy.title", {version: selectedPolicyVersion }) }}
               </span>
@@ -24,8 +24,9 @@
               <PolicyStatus :status="policy!.status" />
             </v-col>
 
-            <v-col>
+            <v-col :cols="isMobile ? 12 : undefined" :order="isMobile ? 3 : 2">
               <v-tabs
+                :align-tabs="isMobile ? 'center' : 'start'"
                 color="primary"
                 density="compact"
                 mandatory
@@ -39,7 +40,7 @@
               </v-tabs>
             </v-col>
 
-            <v-col cols="auto">
+            <v-col cols="auto" :order="isMobile ? 2 : 3">
               <PolicyOptions icon-size="small" :policy="policy!" />
             </v-col>
           </v-row>
@@ -55,8 +56,8 @@
 </template>
 
 <script setup lang="ts">
-  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
-  import { usePolicy } from '../../../hooks/usePolicy'
+  import { useAbacNavigation } from '../../../hooks/navigation/useAbacNavigation'
+  import { usePolicy } from '../../../hooks/resources/usePolicy'
   import { useAbacI18n } from '../../../i18n/useAbacI18n'
   import { VIEW } from '../../../types/view'
   import Definitions from '../../definition/Definitions.vue'
@@ -73,6 +74,6 @@
   } as const
 
   const { t, i18nData } = useAbacI18n()
-  const { selectedView, onChangeView } = useAbacNavigation()
+  const { isMobile, selectedView, onChangeView } = useAbacNavigation()
   const { selectedPolicyVersion, policy, isLoading, isError } = usePolicy()
 </script>

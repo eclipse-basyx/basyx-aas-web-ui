@@ -6,7 +6,7 @@ export function useGetRule (
   versionId: MaybeRefOrGetter<string | undefined>,
   ruleIndex: MaybeRefOrGetter<string | undefined>,
 ) {
-  const { client, keys, hasApiUrl } = useAbacContext(true)
+  const { client, keys, hasApiUrl } = useAbacContext()
   const idRef = computed(() => toValue(versionId))
   const indexRef = computed(() => toValue(ruleIndex))
 

@@ -1,0 +1,24 @@
+import { useGetRule } from '../../api/rule/useGetRule'
+import { useGetRules } from '../../api/rule/useGetRules'
+import { useAbacNavigation } from '../navigation/useAbacNavigation'
+
+export function useRules () {
+  const { selectedPolicyVersion, selectedRuleIndex } = useAbacNavigation()
+
+  const { data: rules, ...rest } = useGetRules(selectedPolicyVersion)
+
+  const rulesCount = computed(() => rules.value?.length ?? 0)
+
+  const { data: selectedRule, isLoading: isSelectedRuleLoading, isError: isSelectedRuleError }
+    = useGetRule(selectedPolicyVersion, selectedRuleIndex)
+
+  return {
+    selectedRuleIndex,
+    rules,
+    rulesCount,
+    ...rest,
+    selectedRule,
+    isSelectedRuleLoading,
+    isSelectedRuleError,
+  }
+}

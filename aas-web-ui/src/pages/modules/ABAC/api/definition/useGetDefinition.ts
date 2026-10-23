@@ -8,7 +8,7 @@ export function useGetDefinition<K extends DefinitionKind> (
   kind: MaybeRefOrGetter<K | undefined>,
   name: MaybeRefOrGetter<string | undefined>,
 ) {
-  const { client, keys, hasApiUrl } = useAbacContext(true)
+  const { client, keys, hasApiUrl } = useAbacContext()
   const idRef = computed(() => toValue(versionId))
   const kindRef = computed(() => toValue(kind))
   const nameRef = computed(() => toValue(name))

@@ -2,7 +2,7 @@ import type { DefinitionKind, DefinitionSchemaProperty } from '../types/definiti
 import type { SchemaValidationMessages } from './validationMessages'
 import type { ErrorObject, ValidateFunction } from 'ajv'
 import Ajv from 'ajv'
-import source from '@/schemas/access-rules/aas-queries-and-access-rules-3.1.schema.json'
+import source from '@/schemas/access-rules/aas-queries-and-access-rules-3.2.schema.json'
 import { DEFINITION_KINDS, DEFINITION_SCHEMA_PROPERTIES } from '../types/definitions'
 
 /**
@@ -15,7 +15,7 @@ const ajv = new Ajv({ strict: false, unicodeRegExp: false, allErrors: true, igno
 const validators = new Map<string, ValidateFunction>()
 
 /** Localized schema issues consumed by the shared error formatter. */
-export interface SchemaIssueError {
+export interface SchemaIssues {
   issues: { path: string[], message: string }[]
 }
 
@@ -94,7 +94,7 @@ function schema (pointer: string, messages: SchemaValidationMessages) {
   }
   const compiled = validate
   return {
-    safeParse (value: unknown): { success: true } | { success: false, error: SchemaIssueError } {
+    safeParse (value: unknown): { success: true } | { success: false, error: SchemaIssues } {
       if (compiled(value)) {
         return { success: true }
       }
