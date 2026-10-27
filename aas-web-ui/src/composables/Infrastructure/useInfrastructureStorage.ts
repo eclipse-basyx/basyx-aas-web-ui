@@ -223,7 +223,7 @@ export function useInfrastructureStorage (): {
     const proxyId = edc?.proxyId?.trim() ?? ''
 
     if (proxyId === '') {
-      infrastructure.catenaX = { accessMode: 'edc' }
+      infrastructure.catenaX = { accessMode }
       return
     }
 
@@ -236,7 +236,7 @@ export function useInfrastructureStorage (): {
     const defaultPartner = partners.find(partner => partner.id === defaultPartnerId) ?? partners[0]
 
     infrastructure.catenaX = {
-      accessMode: 'edc',
+      accessMode,
       edc: {
         proxyId,
         defaultCounterPartyId: defaultPartner?.counterPartyId,
@@ -249,7 +249,8 @@ export function useInfrastructureStorage (): {
 
   function getNormalizedCatenaXAccessMode (infrastructure: InfrastructureConfig): CatenaXAccessMode {
     const accessMode = infrastructure.catenaX?.accessMode
-    if (accessMode === 'direct' || accessMode === 'edc') {
+    const accessModes: CatenaXAccessMode[] = ['direct', 'edc', 'full']
+    if (accessMode && accessModes.includes(accessMode)) {
       return accessMode
     }
 
