@@ -52,6 +52,7 @@
     moduleTitle: 'Eclipse Dataspace Connector',
     isDesktopModule: true,
     isMobileModule: false,
+    supportedInfrastructureTemplates: ['catena-x'],
     preserveRouteQuery: true,
   })
 
