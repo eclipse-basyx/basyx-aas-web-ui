@@ -18,6 +18,7 @@
           <v-select
             v-model="selectedTemplate"
             dense
+            hide-details
             item-title="name"
             item-value="value"
             :items="assetTemplates"
@@ -43,7 +44,7 @@
           </v-select>
 
           <!-- Dynamic Placeholder Fields -->
-          <div v-if="selectedTemplate" class="d-flex flex-column gap-3">
+          <div v-if="selectedTemplate" class="d-flex flex-column gap-3 mt-4">
             <v-text-field
               v-for="(placeholder, index) in placeholders"
               :key="placeholder.label"
@@ -69,6 +70,8 @@
           />
         </v-form>
       </v-card-text>
+
+      <v-divider />
 
       <v-card-actions>
         <v-spacer />
