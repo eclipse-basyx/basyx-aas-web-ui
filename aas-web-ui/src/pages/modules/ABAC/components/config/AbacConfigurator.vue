@@ -15,13 +15,21 @@
     </v-tooltip>
   </v-btn>
 
-  <v-dialog v-model="isDialogOpen" max-width="560" persistent>
+  <v-dialog
+    v-model="isDialogOpen"
+    class="abac-dialog"
+    :fullscreen="isMobile"
+    :max-width="isMobile ? undefined : 560"
+    persistent
+    :z-index="ABAC_DIALOG_Z_INDEX"
+  >
     <v-card>
       <v-card-title class="pa-4 bg-cardHeader d-flex align-center">
         <span class="text-h6" v-bind="i18nData('config.title')">{{ t('config.title') }}</span>
         <v-spacer />
 
         <v-btn
+          :aria-label="t('config.cancel')"
           density="comfortable"
           :icon="ICONS.CLOSE"
           size="small"
@@ -76,6 +84,8 @@
 <script setup lang="ts">
   import type { VForm } from 'vuetify/components'
   import { useNavigationStore } from '@/store/NavigationStore'
+  import { ABAC_DIALOG_Z_INDEX } from '../../constants/ui'
+  import { useAbacNavigation } from '../../hooks/navigation/useAbacNavigation'
   import { useAbacI18n } from '../../i18n/useAbacI18n'
   import { useAbacConfigStore } from '../../stores/useAbacConfigStore'
   import { type Locale, Locales } from '../../types/locale'
@@ -86,6 +96,7 @@
   } as const
 
   const { t, i18nData } = useAbacI18n()
+  const { isMobile } = useAbacNavigation()
   const configStore = useAbacConfigStore()
   const navigationStore = useNavigationStore()
 

@@ -39,7 +39,9 @@ export const CONTEXT = {
   TEST_CONNECTION: 'testing ABAC service connection',
 } as const
 
-/** Path segments appended after a version_id path parameter. */
+/**
+ * Path segments appended after a version_id path parameter.
+ */
 export const VERSION_SUB_PATHS = {
   CLONE: 'clone',
   VALIDATE: 'validate',
@@ -49,7 +51,9 @@ export const VERSION_SUB_PATHS = {
   DEFINITIONS: 'definitions',
 } as const
 
-/** Path segments appended after /rules/{index}. */
+/**
+ * Path segments appended after /rules/{index}.
+ */
 export const RULE_SUB_PATHS = {
   DUPLICATE: 'duplicate',
   MOVE: 'move',
@@ -77,7 +81,9 @@ export const DISCOVERABLE_COMPONENT_KEYS: BaSyxComponentKey[] = [
   'ConceptDescriptionRepo',
 ]
 
-/** Known API suffixes per component, same as the pathCheck values in InfrastructureStore. */
+/**
+ * Known API suffixes per component, same as the pathCheck values in InfrastructureStore.
+ */
 export const COMPONENT_PATH_CHECK: Partial<Record<BaSyxComponentKey, string>> = {
   AASDiscovery: '/lookup/shells',
   AASRegistry: '/shell-descriptors',

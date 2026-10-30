@@ -27,32 +27,12 @@
 </template>
 
 <script setup lang="ts">
-  import { useAbacNavigation } from '../hooks/useAbacNavigation'
+  import { useAbacNavigation } from '../hooks/navigation/useAbacNavigation'
   import PolicyDetail from './policy/detail/PolicyDetail.vue'
   import PoliciesList from './policy/list/PoliciesList.vue'
-  import ListExpand from './shared/ListExpand.vue'
+  import ListExpand from './shared/list/ListExpand.vue'
 
   defineProps<{ loading: boolean }>()
 
   const { isListOpen, isMobile } = useAbacNavigation()
 </script>
-
-<style scoped>
-.abac-scroll :deep(::-webkit-scrollbar) {
-  width: 4px;
-  height: 4px;
-}
-
-.abac-scroll :deep(::-webkit-scrollbar-track) {
-  background: transparent;
-}
-
-.abac-scroll :deep(::-webkit-scrollbar-thumb) {
-  background: rgba(var(--v-theme-on-surface), 0.2);
-  border-radius: 2px;
-}
-
-.abac-scroll :deep(::-webkit-scrollbar-thumb:hover) {
-  background: rgba(var(--v-theme-on-surface), 0.4);
-}
-</style>

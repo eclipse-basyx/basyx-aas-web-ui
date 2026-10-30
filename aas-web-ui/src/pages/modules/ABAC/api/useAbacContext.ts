@@ -1,10 +1,11 @@
+import type { AbacClientOptions } from '../types/api'
 import { useQueryClient } from '@tanstack/vue-query'
 import { ABAC_CACHE_KEYS } from '../constants/cache'
 import { useAbacConfigStore } from '../stores/useAbacConfigStore'
 import { useAbacClient } from './useAbacClient'
 
-export function useAbacContext (disableMessage = false) {
-  const client = useAbacClient(disableMessage)
+export function useAbacContext (options: AbacClientOptions = {}) {
+  const client = useAbacClient(options)
   const queryClient = useQueryClient()
   const configStore = useAbacConfigStore()
 
@@ -34,9 +35,5 @@ export function useAbacContext (disableMessage = false) {
     }
   }
 
-  function removeAll () {
-    queryClient.removeQueries({ queryKey: [...keys.all()] })
-  }
-
-  return { client, queryClient, invalidate, remove, removeAll, apiUrl, hasApiUrl, keys }
+  return { client, invalidate, remove, hasApiUrl, keys }
 }

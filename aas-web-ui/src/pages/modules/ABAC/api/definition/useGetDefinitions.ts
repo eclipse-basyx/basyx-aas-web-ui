@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/vue-query'
 import { useAbacContext } from '../useAbacContext'
 
 export function useGetDefinitions (versionId: MaybeRefOrGetter<string | undefined>) {
-  const { client, keys, hasApiUrl } = useAbacContext(true)
+  const { client, keys, hasApiUrl } = useAbacContext()
   const idRef = computed(() => toValue(versionId))
 
   return useQuery({

@@ -7,9 +7,9 @@ export function useUpdateDefinition () {
   const { client, invalidate, keys } = useAbacContext()
 
   return useMutation({
-    mutationFn: async ({ versionId, kind, name, currentDefinition, payload: submitted }: DefinitionUpdate) => {
+    mutationFn: async ({ versionId, kind, name, currentDefinition, payload: submitted, inputMode, mergeBase }: DefinitionUpdate) => {
       // The dialog validation rejects name changes; use the current identity for update detection.
-      const { mode, payload } = detectDefinitionUpdate(currentDefinition, { ...submitted, name: currentDefinition.name }, kind)
+      const { mode, payload } = detectDefinitionUpdate(currentDefinition, { ...submitted, name: currentDefinition.name }, kind, { inputMode, mergeBase })
       if (mode === 'unchanged') {
         return
       }

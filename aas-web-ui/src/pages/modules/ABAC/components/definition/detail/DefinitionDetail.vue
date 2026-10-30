@@ -13,6 +13,8 @@
     >
       <v-card-title class="pa-2 py-3 text-subtitle-2">
         {{ selectedDefinition!.name }}
+        <DefinitionUsageBadge :usages="usages" />
+
       </v-card-title>
 
       <v-divider />
@@ -25,10 +27,12 @@
 </template>
 
 <script setup lang="ts">
-  import { useDefinitions } from '../../../hooks/useDefinitions'
+  import { useDefinitions } from '../../../hooks/resources/useDefinitions'
+  import { useDefinitionUsage } from '../../../hooks/resources/useDefinitionUsage'
   import { useAbacI18n } from '../../../i18n/useAbacI18n'
   import AbacEditor from '../../shared/AbacEditor.vue'
   import StateView from '../../shared/StateView.vue'
+  import DefinitionUsageBadge from '../DefinitionUsageBadge.vue'
 
   const ICONS = {
     DEFINITIONS: 'mdi-book-open-variant',
@@ -37,6 +41,7 @@
 
   const { t } = useAbacI18n()
   const { selectedDefinition, selectedDefinitionName, selectedDefinitionKind, isSelectedDefinitionLoading, isSelectedDefinitionError } = useDefinitions()
+  const { usages } = useDefinitionUsage(selectedDefinition, selectedDefinitionKind)
 
   const definitionJson = computed(() => {
     if (!selectedDefinition.value) return ''

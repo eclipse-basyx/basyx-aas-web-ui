@@ -40,9 +40,9 @@
 
 <script setup lang="ts">
   import type { Rule } from '../../../types/rules'
-  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
+  import { useAbacNavigation } from '../../../hooks/navigation/useAbacNavigation'
   import { isObject } from '../../../utils/object'
-  import SelectableListItem from '../../shared/SelectableListItem.vue'
+  import SelectableListItem from '../../shared/list/SelectableListItem.vue'
   import RuleComplexityBadge from '../RuleComplexityBadge.vue'
   import RuleOptions from './RuleOptions.vue'
 
@@ -52,7 +52,7 @@
     DISABLED: 'mdi-close-circle',
   } as const
 
-  const { rule, loading, staged } = defineProps<{ rule?: Rule, loading?: boolean, staged?: boolean }>()
+  const { rule } = defineProps<{ rule?: Rule, loading?: boolean, staged?: boolean }>()
 
   const { selectedRuleIndex, onSelectRule } = useAbacNavigation()
   const isSelected = computed(() => selectedRuleIndex.value?.toString() === rule?.rule_index?.toString())

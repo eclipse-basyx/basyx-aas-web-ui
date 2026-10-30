@@ -44,8 +44,8 @@
 
 <script setup lang="ts">
   import type { PolicyVersion } from '../../../types/policy'
-  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
-  import SelectableListItem from '../../shared/SelectableListItem.vue'
+  import { useAbacNavigation } from '../../../hooks/navigation/useAbacNavigation'
+  import SelectableListItem from '../../shared/list/SelectableListItem.vue'
   import PolicyOptions from '../options/PolicyOptions.vue'
   import PolicyStatus from '../PolicyStatus.vue'
 
@@ -56,7 +56,7 @@
     UPDATED: 'mdi-calendar-edit',
   } as const
 
-  const { policy, loading } = defineProps<{ policy?: PolicyVersion, loading?: boolean }>()
+  const { policy } = defineProps<{ policy?: PolicyVersion, loading?: boolean }>()
 
   const { selectedPolicyVersion, onSelectPolicy } = useAbacNavigation()
   const isSelected = computed(() =>

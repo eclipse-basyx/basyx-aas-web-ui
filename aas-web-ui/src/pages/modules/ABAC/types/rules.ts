@@ -2,7 +2,7 @@
  * ABAC Rule Types
  */
 
-import type { JsonObject } from './json'
+import type { DocumentUpdateOptions, JsonObject } from './json'
 
 export interface RuleBase {
   versionId: string
@@ -54,17 +54,26 @@ export interface RuleMove extends RuleBase {
 }
 
 export interface RulePatch extends RuleBase {
-  patch: JsonObject
+  payload: JsonObject
 }
 
 export interface RuleReplace extends RuleBase {
-  rule: JsonObject
+  payload: JsonObject
 }
 
-export interface RuleUpdate extends RuleReplace {
+export interface RuleUpdate extends RuleReplace, DocumentUpdateOptions {
   currentRule: JsonObject
 }
 
 export interface RuleToggle extends RuleBase {
   payload: { enabled: boolean }
+}
+
+// ---------------------------------------------------------------------------
+// Form editing
+// ---------------------------------------------------------------------------
+
+export interface RuleDialogProps {
+  mode: 'create' | 'update'
+  rule?: Rule
 }

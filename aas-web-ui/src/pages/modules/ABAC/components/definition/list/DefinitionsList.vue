@@ -75,7 +75,7 @@
         {{ t('definitions.loadError') }}
       </v-alert>
 
-      <v-list v-else-if="isLoading" class="pa-0 bg-dark" nav>
+      <v-list v-else-if="isLoading" class="pa-0 bg-card" nav>
         <DefinitionItem v-for="i in 4" :key="i" loading />
       </v-list>
 
@@ -104,11 +104,10 @@
 </template>
 
 <script setup lang="ts">
-  import type { DefinitionKind } from '../../../types/definitions'
-  import type { DefinitionDialogProps } from '../DefinitionDialog.vue'
+  import type { DefinitionDialogProps, DefinitionKind } from '../../../types/definitions'
   import { hasItems } from '@/utils/array'
-  import { useDefinitions } from '../../../hooks/useDefinitions'
-  import { usePolicy } from '../../../hooks/usePolicy'
+  import { useDefinitions } from '../../../hooks/resources/useDefinitions'
+  import { usePolicy } from '../../../hooks/resources/usePolicy'
   import { useAbacI18n } from '../../../i18n/useAbacI18n'
   import { DEFINITION_KINDS } from '../../../types/definitions'
   import ActionMenu from '../../shared/menu/ActionMenu.vue'

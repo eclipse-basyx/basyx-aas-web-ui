@@ -1,5 +1,5 @@
 <template>
-  <v-list-item @click.stop="$emit('click')">
+  <v-list-item :disabled="disabled" @click.stop="$emit('click')">
     <template #prepend>
       <v-icon :color="color" size="x-small">{{ icon }}</v-icon>
     </template>
@@ -9,6 +9,6 @@
 </template>
 
 <script setup lang="ts">
-  defineProps<{ icon: string, label: string, color?: string }>()
+  defineProps<{ icon: string, label: string, color?: string, disabled?: boolean }>()
   defineEmits<{ (e: 'click'): void }>()
 </script>
