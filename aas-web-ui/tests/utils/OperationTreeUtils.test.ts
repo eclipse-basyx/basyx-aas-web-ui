@@ -86,6 +86,8 @@ describe('OperationTreeUtils', () => {
       operationVariableIndex: 0,
       isDirectOperationVariable: true,
       validationError: 'Duplicate idShort',
+      idShortLower: 'synthetic',
+      searchValuesLower: ['ok'],
     })
 
     expect(cleaned).toEqual({ modelType: 'Property', valueType: 'xs:string', value: 'ok' })

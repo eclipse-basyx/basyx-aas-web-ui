@@ -2,19 +2,14 @@ import { mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Blob from '@/components/SubmodelElements/Blob.vue'
 
-const {
-  putRequestMock,
-  fetchAndDispatchSmeMock,
-  extractEndpointHrefMock,
-} = vi.hoisted(() => ({
-  putRequestMock: vi.fn(),
+const { patchRequestMock, fetchAndDispatchSmeMock } = vi.hoisted(() => ({
+  patchRequestMock: vi.fn(),
   fetchAndDispatchSmeMock: vi.fn(),
-  extractEndpointHrefMock: vi.fn(),
 }))
 
 vi.mock('@/composables/RequestHandling', () => ({
   useRequestHandling: () => ({
-    putRequest: putRequestMock,
+    patchRequest: patchRequestMock,
   }),
 }))
 
@@ -22,10 +17,6 @@ vi.mock('@/composables/AAS/SMEHandling', () => ({
   useSMEHandling: () => ({
     fetchAndDispatchSme: fetchAndDispatchSmeMock,
   }),
-}))
-
-vi.mock('@/utils/AAS/DescriptorUtils', () => ({
-  extractEndpointHref: extractEndpointHrefMock,
 }))
 
 vi.mock('@/store/AASDataStore', () => ({
@@ -40,15 +31,13 @@ vi.mock('@/store/AASDataStore', () => ({
 
 describe('Blob.vue', () => {
   beforeEach(() => {
-    putRequestMock.mockReset()
+    patchRequestMock.mockReset()
     fetchAndDispatchSmeMock.mockReset()
-    extractEndpointHrefMock.mockReset()
 
-    putRequestMock.mockResolvedValue({ success: true })
-    extractEndpointHrefMock.mockReturnValue('https://example.test/aas/shell-1')
+    patchRequestMock.mockResolvedValue({ success: true })
   })
 
-  it('targets selected node path when updating blob value', async () => {
+  it('PATCHes the blob value-only payload to the SME own $value endpoint', async () => {
     const wrapper = mount(Blob, {
       props: {
         isEditable: true,
@@ -78,10 +67,11 @@ describe('Blob.vue', () => {
     await (wrapper.vm as any).updateBlob()
     await Promise.resolve()
 
-    expect(putRequestMock).toHaveBeenCalledTimes(1)
-    expect(putRequestMock.mock.calls[0][0]).toBe(
-      'https://example.test/aas/shell-1/submodels/sm/submodel-elements/blob-b/value',
-    )
-    expect(putRequestMock.mock.calls[0][1]).toBe(JSON.stringify(btoa('hello')))
+    expect(patchRequestMock).toHaveBeenCalledTimes(1)
+    const [url, body] = patchRequestMock.mock.calls[0]
+    // Must not be prefixed with an AAS endpoint, the SME path is already a full URL
+    expect(url).toBe('https://example.test/submodels/sm/submodel-elements/blob-a/$value')
+    expect(JSON.parse(body)).toEqual({ contentType: 'text/plain', value: btoa('hello') })
+    expect(fetchAndDispatchSmeMock).toHaveBeenCalledWith('submodels/sm/submodel-elements/blob-b', false)
   })
 })

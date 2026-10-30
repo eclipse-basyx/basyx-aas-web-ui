@@ -13,6 +13,7 @@ import {
   normalizeInfrastructureTemplate,
   setEndpointFieldValue,
   supportsInfrastructureTemplate,
+  usesAasEnvironment,
   usesSubmodelSuperpath,
 } from '@/utils/InfrastructureUtils'
 
@@ -139,5 +140,14 @@ describe('InfrastructureUtils.ts', () => {
     expect(supportsInfrastructureTemplate(['full', 'mono-all'], 'mono-all')).toBe(true)
     expect(supportsInfrastructureTemplate(['full', 'mono-all'], 'catena-x')).toBe(false)
     expect(supportsInfrastructureTemplate(['mono-repo'], createInfrastructure('mono-repo'))).toBe(true)
+  })
+})
+
+describe('AAS Environment templates', () => {
+  it.each(['mono-repo', 'mono-all'] as const)('recognizes %s as an Environment', template => {
+    expect(usesAasEnvironment({ template })).toBe(true)
+  })
+  it.each(['full', 'identifiable', 'catena-x'] as const)('keeps descriptor management available for %s', template => {
+    expect(usesAasEnvironment({ template })).toBe(false)
   })
 })

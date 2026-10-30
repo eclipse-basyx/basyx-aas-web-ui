@@ -73,9 +73,9 @@
 </template>
 
 <script setup lang="ts">
-  import type { PolicyValidationResult } from '@/pages/modules/ABAC/types/policy'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+  import type { PolicyValidationResult } from '../../../types/policy'
   import { hasContent } from '@/utils/StringUtils'
+  import { useAbacI18n } from '../../../i18n/useAbacI18n'
 
   const ICONS = {
     CLOSE: 'mdi-close',

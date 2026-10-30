@@ -1,13 +1,13 @@
-import { useGetDefinition } from '@/pages/modules/ABAC/api/definition/useGetDefinition'
-import { useGetDefinitions } from '@/pages/modules/ABAC/api/definition/useGetDefinitions'
-import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
+import { useGetDefinition } from '../api/definition/useGetDefinition'
+import { useGetDefinitions } from '../api/definition/useGetDefinitions'
+import { useAbacNavigation } from './useAbacNavigation'
 
 export function useDefinitions () {
   const { selectedPolicyVersion, selectedDefinitionKind, selectedDefinitionName } = useAbacNavigation()
 
   const { data: definitions, ...rest } = useGetDefinitions(selectedPolicyVersion)
 
-  const { data: selectedDefinition, isLoading: isSelectedDefinitionLoading }
+  const { data: selectedDefinition, isLoading: isSelectedDefinitionLoading, isError: isSelectedDefinitionError }
     = useGetDefinition(selectedPolicyVersion, selectedDefinitionKind, selectedDefinitionName)
 
   return {
@@ -17,5 +17,6 @@ export function useDefinitions () {
     ...rest,
     selectedDefinition,
     isSelectedDefinitionLoading,
+    isSelectedDefinitionError,
   }
 }

@@ -1,6 +1,6 @@
 import type { MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { useAbacContext } from '@/pages/modules/ABAC/api/useAbacContext'
+import { useAbacContext } from '../useAbacContext'
 
 export function useGetRules (versionId: MaybeRefOrGetter<string | undefined>) {
   const { client, keys, hasApiUrl } = useAbacContext(true)

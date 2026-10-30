@@ -20,7 +20,7 @@
       <v-divider />
 
       <v-card-text class="pa-4">
-        <v-form ref="form" @submit.prevent="onSubmit">
+        <v-form @submit.prevent="onSubmit">
           <v-select
             v-if="dialogMode === 'create'"
             v-model.number="position"
@@ -33,17 +33,17 @@
             variant="outlined"
           />
 
-          <p v-if="dialogMode === 'patch'" class="text-end mb-0 text-body-small">
-            {{ t('rules.ruleDialog.patchHint') }}
+          <p v-if="dialogMode === 'update'" class="mb-0 text-body-small">
+            {{ t('rules.ruleDialog.updateHint') }}
           </p>
 
-          <JsonCodeEditor
+          <AbacEditor
             v-model="ruleJson"
             :disabled="isPending"
-            :error-lines="errorLines"
             :error-message="jsonError"
             :label="t('rules.ruleDialog.editor')"
             :rows="18"
+            :target="{ mode: dialogMode, viewer: 'rule' }"
           />
         </v-form>
       </v-card-text>
@@ -74,55 +74,58 @@
 </template>
 
 <script setup lang="ts">
-  import { useCreateRule } from '@/pages/modules/ABAC/api/rule/useCreateRule'
-  import { usePatchRule } from '@/pages/modules/ABAC/api/rule/usePatchRule'
-  import { useReplaceRule } from '@/pages/modules/ABAC/api/rule/useReplaceRule'
-  import JsonCodeEditor, { type JsonErrorMessage } from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
-  import { EMPTY_RULE } from '@/pages/modules/ABAC/constants/json'
-  import { useAbacNavigation } from '@/pages/modules/ABAC/hooks/useAbacNavigation'
-  import { useRules } from '@/pages/modules/ABAC/hooks/useRules'
-  import { useRuleValidation } from '@/pages/modules/ABAC/hooks/useRuleValidation'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+  import type { JsonErrorMessage } from '../../types/json.ts'
+  import type { Rule } from '../../types/rules'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { hasContent } from '@/utils/StringUtils'
+  import { useCreateRule } from '../../api/rule/useCreateRule'
+  import { useUpdateRule } from '../../api/rule/useUpdateRule'
+  import { EMPTY_RULE } from '../../constants/json'
+  import { useAbacNavigation } from '../../hooks/useAbacNavigation'
+  import { useRules } from '../../hooks/useRules'
+  import { useRuleValidation } from '../../hooks/useRuleValidation'
+  import { useAbacI18n } from '../../i18n/useAbacI18n'
+  import AbacEditor from '../shared/AbacEditor.vue'
 
   const ICONS = {
     CLOSE: 'mdi-close',
   } as const
 
-  export type RuleDialogMode = 'create' | 'replace' | 'patch'
+  export interface RuleDialogProps {
+    mode: 'create' | 'update'
+    rule?: Rule
+  }
 
   const { t, tm, i18nData } = useAbacI18n()
   const navigationStore = useNavigationStore()
 
-  const { selectedPolicyVersion, selectedRuleIndex, onSelectRule } = useAbacNavigation()
-  const { rulesCount, selectedRule } = useRules()
+  const { selectedPolicyVersion, onSelectRule } = useAbacNavigation()
+  const { rulesCount } = useRules()
 
   const { mutateAsync: createRule, isPending: isCreating } = useCreateRule()
-  const { mutateAsync: replaceRule, isPending: isReplacing } = useReplaceRule()
-  const { mutateAsync: patchRule, isPending: isPatching } = usePatchRule()
+  const { mutateAsync: updateRule, isPending: isUpdating } = useUpdateRule()
 
-  const isPending = computed(() => isCreating.value || isReplacing.value || isPatching.value)
+  const isPending = computed(() => isCreating.value || isUpdating.value)
 
   const isOpen = ref(false)
-  const dialogMode = ref<RuleDialogMode>('create')
+  const dialogMode = ref<RuleDialogProps['mode']>('create')
   const position = ref<number>()
   const ruleJson = ref('')
+  const currentRule = ref<Rule | undefined>(undefined)
   const jsonError = ref<JsonErrorMessage | null>(null)
-  const errorLines = ref<number[]>([])
 
-  function open (mode: RuleDialogMode): void {
+  function open ({ mode, rule }: RuleDialogProps): void {
     isOpen.value = true
     dialogMode.value = mode
     position.value = undefined
     jsonError.value = null
-    errorLines.value = []
+    currentRule.value = rule
 
     if (mode === 'create') {
       position.value = rulesCount.value + 1
       ruleJson.value = JSON.stringify(EMPTY_RULE, null, 2)
-    } else if (selectedRule) {
-      ruleJson.value = JSON.stringify(selectedRule.value?.configured_rule_json, null, 2)
+    } else if (rule) {
+      ruleJson.value = JSON.stringify(rule?.configured_rule_json, null, 2)
     }
   }
 
@@ -130,21 +133,17 @@
     isOpen.value = false
   }
 
-  const { validateJson } = useRuleValidation(tm('validation'))
+  const { validateJson } = useRuleValidation(tm('rules.ruleDialog.errors'), tm('validation'))
 
   async function onSubmit (): Promise<void> {
-    const { rule, error, errorLines: lines } = validateJson({
+    const { rule, error } = validateJson({
       json: ruleJson.value,
-      currentRule: dialogMode.value === 'patch' ? selectedRule.value?.configured_rule_json : undefined,
-      errorMessages: {
-        required: t('rules.ruleDialog.required'),
-        invalidJson: t('rules.ruleDialog.invalidJson'),
-        invalidRule: t('rules.ruleDialog.invalidRule'),
-      },
+      currentRule: dialogMode.value === 'update'
+        ? currentRule.value?.configured_rule_json
+        : undefined,
     })
 
     jsonError.value = error
-    errorLines.value = lines
 
     if (!rule) return
 
@@ -160,23 +159,16 @@
            * Select rule after creation.
            * Note: if a new rule is created with the same index as the selected one, rule detail will be updated
            */
-          if (selectedRuleIndex.value !== position.value?.toString() && position.value) {
-            onSelectRule(position.value)
+          if (position.value) {
+            onSelectRule(position.value, { force: true })
           }
           break
         }
-        case 'replace': {
-          const ruleIndex = selectedRule.value?.rule_index
+        case 'update': {
+          const ruleIndex = currentRule.value?.rule_index
           if (!hasContent(ruleIndex?.toString())) return
 
-          await replaceRule({ versionId, ruleIndex, rule })
-          break
-        }
-        case 'patch': {
-          const ruleIndex = selectedRule.value?.rule_index
-          if (!hasContent(ruleIndex?.toString())) throw new Error(t('rules.ruleDialog.index'))
-
-          await patchRule({ versionId, ruleIndex, patch: rule })
+          await updateRule({ versionId, ruleIndex, currentRule: currentRule.value!.configured_rule_json, rule })
           break
         }
       }
@@ -191,13 +183,17 @@
 
       close()
     } catch (error) {
-      const message = error instanceof Error ? error.message : t(`rules.error.${dialogMode.value}`)
+      // Replace validation errors with the save failure.
+      jsonError.value = {
+        title: t(`rules.error.${dialogMode.value}`),
+        messages: error instanceof Error ? error.message.split('\n') : undefined,
+      }
       navigationStore.dispatchSnackbar({
         status: true,
         timeout: 8000,
         color: 'error',
         btnColor: 'buttonText',
-        text: message,
+        text: t(`rules.error.${dialogMode.value}`),
       })
     }
   }

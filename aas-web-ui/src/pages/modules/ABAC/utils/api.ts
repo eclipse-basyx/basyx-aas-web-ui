@@ -1,5 +1,6 @@
-import { ABAC_ENDPOINT_PATHS, ABAC_ROUTE_PATHS } from '@/pages/modules/ABAC/constants/api'
-import { normalizeBaseUrl } from '@/utils/url'
+import type { BaSyxComponentKey } from '@/types/BaSyx'
+import { normalizeBaseUrl, stripLastSegmentOf } from '@/utils/url'
+import { ABAC_ENDPOINT_PATHS, ABAC_ROUTE_PATHS, COMPONENT_PATH_CHECK } from '../constants/api'
 
 /**
  * Builds a URL for a version-scoped path.
@@ -41,15 +42,39 @@ export function toJson (body: unknown): string {
 }
 
 /**
- * Build ABAC URL from a basyx component's base URL.
- * Takes the origin of the component URL and appends the ABAC endpoint path.
+ * Extracts human-readable backend error text from common error payloads:
+ * BaSyx-style arrays (`[{ messageType, text, code, ... }]`) and plain objects
+ * (`{ message | error | text }`). Returns undefined when nothing usable exists.
  */
-export function buildAbacUrl (componentUrl: string): string | undefined {
-  try {
-    const urlObj = new URL(componentUrl)
-    const origin = urlObj.origin
-    return normalizeBaseUrl(origin, ABAC_ENDPOINT_PATHS.SECURITY)
-  } catch {
-    return undefined
-  }
+export function backendErrorMessage (data: unknown): string | undefined {
+  const entries: unknown[] = Array.isArray(data) ? data : [data]
+  const texts = entries
+    .map(entry => {
+      if (typeof entry === 'string') {
+        return entry.trim()
+      }
+      if (typeof entry !== 'object' || entry === null) {
+        return undefined
+      }
+      const source = entry as Record<string, unknown>
+      const text = source.text ?? source.message ?? source.error
+      return typeof text === 'string' && text.trim() !== '' ? text.trim() : undefined
+    })
+    .filter((text): text is string => typeof text === 'string' && text !== '')
+
+  return texts.length > 0 ? texts.join('\n') : undefined
+}
+
+/**
+ * Returns candidate ABAC URL from a basyx component URL.
+ *
+ * Uses the same approach as `connectComponent` in InfrastructureStore:
+ * strip the known component endpoint suffix (pathCheck) to derive the
+ * context path, then append /security/abac. Falls back to the raw
+ * component URL if the component key has no known pathCheck mapping.
+ */
+export function buildAbacUrl (componentUrl: string, componentKey: BaSyxComponentKey): string | undefined {
+  const stripped = stripLastSegmentOf(componentUrl, COMPONENT_PATH_CHECK[componentKey])
+  const candidate = normalizeBaseUrl(stripped, ABAC_ENDPOINT_PATHS.SECURITY)
+  return candidate
 }

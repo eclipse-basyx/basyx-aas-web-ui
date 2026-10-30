@@ -1,6 +1,16 @@
 <template>
   <v-card class="h-100 d-flex flex-column" variant="flat">
-    <template v-if="selectedRule">
+    <StateView
+      :empty="!selectedRule && !isSelectedRuleError && !isSelectedRuleLoading"
+      :empty-label="t('rules.emptyRule')"
+      :error="isSelectedRuleError && !!selectedRuleIndex"
+      :error-label="t('rules.notFound')"
+      :icon-empty="ICONS.RULES"
+      :icon-error="ICONS.ERROR"
+      :icon-size="48"
+      :loading="isSelectedRuleLoading"
+      :loading-label="t('rules.loading')"
+    >
       <v-card-title class="d-flex align-center pa-2 ga-2">
         <v-btn-toggle
           v-model="selectedView"
@@ -9,7 +19,6 @@
           divided
           mandatory
           variant="outlined"
-          @update:model-value="onChangeView"
         >
           <v-btn v-for="(v) in Object.values(VIEW)" :key="v" :value="v">
             <v-icon start>{{ ICONS[v] }}</v-icon>
@@ -25,23 +34,19 @@
 
       <v-divider />
 
-      <v-card-text class="d-flex flex-column flex-1-1 bg-card pa-2" style="min-height: 0;">
-        <JsonCodeEditor disabled :model-value="ruleJson" />
+      <v-card-text class="d-flex flex-column flex-1-1 pa-0" style="min-height: 0;">
+        <AbacEditor borderless :model-value="ruleJson" :target="{ mode: 'view', viewer: 'rule' }" />
       </v-card-text>
-    </template>
-
-    <v-card-text v-else class="d-flex flex-column align-center justify-center text-grey">
-      <v-icon class="mb-2" size="48">{{ ICONS.RULES }}</v-icon>
-      <div>{{ t('rules.emptyRule') }}</div>
-    </v-card-text>
+    </StateView>
   </v-card>
 </template>
 
 <script setup lang="ts">
-  import RuleComplexityBadge from '@/pages/modules/ABAC/components/rule/RuleComplexityBadge.vue'
-  import JsonCodeEditor from '@/pages/modules/ABAC/components/shared/JsonCodeEditor.vue'
-  import { useRules } from '@/pages/modules/ABAC/hooks/useRules'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+  import { useRules } from '../../../hooks/useRules'
+  import { useAbacI18n } from '../../../i18n/useAbacI18n'
+  import AbacEditor from '../../shared/AbacEditor.vue'
+  import StateView from '../../shared/StateView.vue'
+  import RuleComplexityBadge from '../RuleComplexityBadge.vue'
 
   const VIEW = {
     CONFIGURED: 'configured',
@@ -52,18 +57,15 @@
 
   const ICONS = {
     RULES: 'mdi-playlist-check',
+    ERROR: 'mdi-alert-circle-outline',
     [VIEW.CONFIGURED]: 'mdi-playlist-check',
     [VIEW.MATERIALIZED]: 'mdi-code-json',
   } as const
 
   const { t, i18nData } = useAbacI18n()
-
-  const { selectedRule } = useRules()
+  const { selectedRule, selectedRuleIndex, isSelectedRuleLoading, isSelectedRuleError } = useRules()
 
   const selectedView = ref<ViewType>(VIEW.CONFIGURED)
-  function onChangeView (value: ViewType): void {
-    selectedView.value = value
-  }
 
   const ruleJson = computed(() => {
     if (!selectedRule.value) return ''

@@ -115,6 +115,18 @@ export default defineConfig(({ mode }) => {
         '.vue',
       ],
     },
+    optimizeDeps: {
+      /**
+       * Monaco is loaded lazily through auto-imported editor components.
+       * Discover its runtime entries at startup to avoid an optimizer-triggered page reload.
+       */
+      include: [
+        'monaco-editor/editor',
+        'monaco-editor/features/register.all',
+        'monaco-editor/languages/definitions/xml/register',
+        'monaco-editor/languages/features/json/register',
+      ],
+    },
     server: {
       port: 3000,
       hmr: true,

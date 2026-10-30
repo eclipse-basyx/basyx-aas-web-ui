@@ -14,6 +14,19 @@ export type AasListPageOptions = PaginationPageOptions
 
 export type AasListPageResult<T> = PaginationPageResult<T>
 
+/**
+ * Whether the effective rights confirm updating a shell. A conditional ABAC
+ * right depends on the content of the shell and is not confirmed, so it is
+ * unknown rather than granted.
+ */
+function updateCapability (rights: Array<{ action: string, source: string }>): boolean | undefined {
+  const source = rights.find(right => right.action === 'update')?.source
+  if (['abac', 'rebac', 'administrator'].includes(source ?? '')) {
+    return true
+  }
+  return source === 'abac-conditional' ? undefined : false
+}
+
 export function useAASRepositoryClient () {
   // Stores
   const infrastructureStore = useInfrastructureStore()
@@ -46,6 +59,42 @@ export function useAASRepositoryClient () {
     // TODO: This is a workaround, as the AAS Repository does not provide an upload endpoint but rather the AAS Environment. This should be changed in the future.
     return aasRepoUrl.replace(ASS_REPOSITORY_ENDPOINT_PATH, '') + '/upload'
   })
+
+  /**
+   * Reports whether the signed-in user may edit an AAS, based on the
+   * effective rights reported by the ReBAC management API.
+   *
+   * @param aasId - Identifier of the AAS.
+   * @returns true or false when known, undefined when it cannot be determined.
+   */
+  async function fetchAasUpdateCapability (aasId: string): Promise<boolean | undefined> {
+    if (!infrastructureStore.supportsResourceAccess?.('AASRepo')) {
+      return undefined
+    }
+    const endpoint = getAasEndpointById(aasId)
+    if (!endpoint) {
+      return undefined
+    }
+
+    try {
+      const response = await getRequest(
+        `${endpoint}/$access/effective`,
+        'checking AAS editing permission',
+        true,
+        new Headers(),
+        { suppressStatuses: [404] },
+      )
+      if (response.success && Array.isArray(response.data?.rights)) {
+        return updateCapability(response.data.rights)
+      }
+      if (response.status === 404) {
+        return false
+      }
+    } catch {
+      // Only an explicit successful response may permit creation.
+    }
+    return undefined
+  }
 
   /**
    * Fetches one page of AAS from repository.
@@ -790,6 +839,7 @@ export function useAASRepositoryClient () {
   }
 
   return {
+    fetchAasUpdateCapability,
     fetchAasListPage,
     fetchAasList,
     fetchAasById,

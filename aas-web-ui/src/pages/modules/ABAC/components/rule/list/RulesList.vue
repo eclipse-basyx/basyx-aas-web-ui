@@ -1,20 +1,22 @@
 <template>
   <v-card class="h-100 d-flex flex-column" variant="flat">
     <v-card-title class="pa-2 d-flex align-center">
-      <span class="text-subtitle-2">{{ t('rules.title') }}</span>
+      <span class="text-subtitle-2 my-1" v-bind="i18nData('rules.title')">
+        {{ t('rules.title', { count: rules?.length ?? 0 }) }}
+      </span>
 
       <v-spacer />
 
       <v-tooltip location="bottom" :open-delay="600">
         <template #activator="{ props: tipProps }">
           <v-btn
-            v-if="policy?.status === 'staged'"
+            v-if="staged"
             v-bind="tipProps"
             density="comfortable"
             :icon="ICONS.ADD"
             size="small"
             variant="text"
-            @click="emit('create')"
+            @click="emit('create', { mode: 'create'})"
           />
         </template>
 
@@ -45,7 +47,7 @@
         class="pa-0 pb-2 h-100 bg-card"
         nav
       >
-        <RuleItem v-for="(rule) in rules" :key="rule.rule_index" :rule="rule" />
+        <RuleItem v-for="(rule) in rules" :key="rule.rule_index" :rule="rule" :staged="staged" />
       </v-list>
 
       <v-container
@@ -63,21 +65,23 @@
 </template>
 
 <script setup lang="ts">
-  import RuleItem from '@/pages/modules/ABAC/components/rule/list/RuleItem.vue'
-  import { usePolicy } from '@/pages/modules/ABAC/hooks/usePolicy'
-  import { useRules } from '@/pages/modules/ABAC/hooks/useRules'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
+  import type { RuleDialogProps } from '../RuleDialog.vue'
   import { hasItems } from '@/utils/array'
+  import { usePolicy } from '../../../hooks/usePolicy'
+  import { useRules } from '../../../hooks/useRules'
+  import { useAbacI18n } from '../../../i18n/useAbacI18n'
+  import RuleItem from './RuleItem.vue'
 
   const ICONS = {
     ADD: 'mdi-plus',
     RULES: 'mdi-playlist-check',
   } as const
 
-  const emit = defineEmits<{ (e: 'create'): void }>()
+  const emit = defineEmits<{ (e: 'create', props: RuleDialogProps): void }>()
 
   const { t, i18nData } = useAbacI18n()
   const { policy } = usePolicy()
+  const staged = computed(() => policy.value?.status === 'staged')
   const { rules, isLoading, isError } = useRules()
 
 </script>

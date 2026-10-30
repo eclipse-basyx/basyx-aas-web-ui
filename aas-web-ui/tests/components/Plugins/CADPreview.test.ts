@@ -1,6 +1,6 @@
 import type * as Three from 'three'
 import { flushPromises, mount } from '@vue/test-utils'
-import { BufferGeometry, Group } from 'three'
+import { BufferGeometry, Group, Mesh, MeshStandardMaterial, Vector3 } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
@@ -8,6 +8,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import CADPreview from '@/components/Plugins/CADPreview.vue'
 
 const mocks = vi.hoisted(() => ({
+  camera: null as null | { position: { x: number, y: number, z: number, set: (x: number, y: number, z: number) => void } },
+  controlsTarget: null as null | { x: number, y: number, z: number, set: (x: number, y: number, z: number) => void },
+  disposeRenderer: vi.fn(),
+  disposeControls: vi.fn(),
   fetch: vi.fn(),
   showLoginRequiredSnackbar: vi.fn(),
   setAuthenticationStatusForInfrastructure: vi.fn(),
@@ -18,14 +22,42 @@ vi.mock('three', async importOriginal => ({
   WebGLRenderer: class {
     domElement = document.createElement('canvas')
     shadowMap = {}
+    autoClear = true
     setSize () {}
+    render () {}
+    dispose () {
+      mocks.disposeRenderer()
+    }
+  },
+  PMREMGenerator: class {
+    fromScene () {
+      return { texture: {}, dispose () {} }
+    }
+
+    dispose () {}
   },
 }))
-vi.mock('three/examples/jsm/controls/OrbitControls.js', () => ({
-  OrbitControls: class {
-    update () {}
-  },
+vi.mock('three/examples/jsm/environments/RoomEnvironment.js', () => ({
+  RoomEnvironment: class {},
 }))
+vi.mock('three/examples/jsm/controls/OrbitControls.js', async () => {
+  const { Vector3 } = await import('three')
+  return {
+    OrbitControls: class {
+      target = new Vector3()
+
+      constructor (camera: never) {
+        mocks.camera = camera
+        mocks.controlsTarget = this.target
+      }
+
+      update () {}
+      dispose () {
+        mocks.disposeControls()
+      }
+    },
+  }
+})
 vi.mock('three/examples/jsm/effects/OutlineEffect.js', () => ({
   OutlineEffect: class {
     render () {}
@@ -34,6 +66,7 @@ vi.mock('three/examples/jsm/effects/OutlineEffect.js', () => ({
 vi.mock('three/examples/jsm/helpers/ViewHelper.js', () => ({
   ViewHelper: class {
     render () {}
+    dispose () {}
   },
 }))
 vi.mock('@/composables/AAS/SubmodelElements/File', () => ({
@@ -65,11 +98,12 @@ const formats = [
   { format: 'STL', contentType: 'model/stl', loader: STLLoader, binary: true },
   { format: 'OBJ', contentType: 'application/obj', loader: OBJLoader, binary: false },
   { format: 'GLTF', contentType: 'model/gltf+json', loader: GLTFLoader, binary: true },
+  { format: 'GLB', contentType: 'model/gltf-binary', loader: GLTFLoader, binary: true },
 ] as const
 
-function mountPreview (contentType: string) {
+function mountPreview (contentType: string, extra: Record<string, unknown> = {}) {
   return mount(CADPreview, {
-    props: { submodelElementData: { modelType: 'File', contentType } },
+    props: { submodelElementData: { modelType: 'File', contentType, ...extra } },
     global: {
       stubs: {
         'v-container': { template: '<div><slot /></div>' },
@@ -87,7 +121,9 @@ describe('CADPreview attachment requests', () => {
     vi.stubGlobal('requestAnimationFrame', vi.fn())
     vi.stubGlobal('ResizeObserver', class {
       observe () {}
+      disconnect () {}
     })
+    vi.stubGlobal('cancelAnimationFrame', vi.fn())
     vi.spyOn(STLLoader.prototype, 'parse').mockReturnValue(new BufferGeometry())
     vi.spyOn(OBJLoader.prototype, 'parse').mockReturnValue(new Group())
     vi.spyOn(GLTFLoader.prototype, 'parse').mockImplementation(() => {})
@@ -126,5 +162,74 @@ describe('CADPreview attachment requests', () => {
     expect(wrapper.get('canvas').isVisible()).toBe(false)
     expect(wrapper.text()).toContain('No available CAD visualization')
     wrapper.unmount()
+  })
+
+  it('resolves the format from the file extension when the content type is generic', async () => {
+    mocks.fetch.mockResolvedValue(new Response('glb bytes'))
+
+    const wrapper = mountPreview('application/octet-stream', { value: '/aasx/files/robot.GLB' })
+    await flushPromises()
+
+    expect(GLTFLoader.prototype.parse).toHaveBeenCalledOnce()
+    wrapper.unmount()
+  })
+
+  it('does not fetch unsupported files and reports an error', async () => {
+    const wrapper = mountPreview('application/pdf', { value: '/aasx/files/doc.pdf' })
+    await flushPromises()
+
+    expect(mocks.fetch).not.toHaveBeenCalled()
+    expect(wrapper.emitted('error')).toHaveLength(1)
+    expect(wrapper.text()).toContain('No available CAD visualization')
+    wrapper.unmount()
+  })
+
+  it('keeps the native materials of a glTF model and frames it', async () => {
+    const material = new MeshStandardMaterial({ color: 0xff_00_00 })
+    const mesh = new Mesh(new BufferGeometry().setFromPoints([new Vector3(0, 0, 0), new Vector3(2, 2, 2), new Vector3(0, 2, 0)]), material)
+    const scene = new Group().add(mesh)
+    vi.mocked(GLTFLoader.prototype.parse).mockImplementation((_data, _path, onLoad) => {
+      onLoad({ scene } as never)
+    })
+    mocks.fetch.mockResolvedValue(new Response('glb bytes'))
+
+    const wrapper = mountPreview('model/gltf-binary')
+    await flushPromises()
+
+    expect(mesh.material).toBe(material)
+    expect(mesh.scale.x).toBe(1)
+    expect(wrapper.emitted('loaded')).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it.each([
+    { format: 'STL', contentType: 'model/stl' },
+    { format: 'OBJ', contentType: 'application/obj' },
+  ])('resets the $format view to the initial camera pose', async ({ contentType }) => {
+    mocks.fetch.mockResolvedValue(new Response('bytes'))
+
+    const wrapper = mountPreview(contentType)
+    await flushPromises()
+    expect(mocks.camera?.position).toMatchObject({ x: 0, y: 0, z: 5 })
+
+    mocks.camera?.position.set(10, 20, 30)
+    mocks.controlsTarget?.set(1, 2, 3)
+    ;(wrapper.vm as unknown as { resetView: () => void }).resetView()
+
+    expect(mocks.camera?.position).toMatchObject({ x: 0, y: 0, z: 5 })
+    expect(mocks.controlsTarget).toMatchObject({ x: 0, y: 0, z: 0 })
+    wrapper.unmount()
+  })
+
+  it('releases the renderer and controls on unmount', async () => {
+    mocks.fetch.mockResolvedValue(new Response('stl bytes'))
+
+    const wrapper = mountPreview('model/stl')
+    await flushPromises()
+    wrapper.unmount()
+
+    expect(mocks.disposeRenderer).toHaveBeenCalledOnce()
+    expect(mocks.disposeControls).toHaveBeenCalledOnce()
+    expect(cancelAnimationFrame).toHaveBeenCalled()
   })
 })

@@ -7,6 +7,8 @@ const state = vi.hoisted(() => ({
   routeName: 'AASEditor',
 }))
 
+vi.mock('@/store/InfrastructureStore', () => ({ useInfrastructureStore: () => ({ supportsResourceAccessEndpoint: () => false }) }))
+
 vi.mock('vue-router', () => ({
   useRoute: () => ({
     get name () {

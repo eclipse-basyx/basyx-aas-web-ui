@@ -1,11 +1,11 @@
-import type { DefinitionKind } from '@/pages/modules/ABAC/types/definitions'
+import type { DefinitionKind } from '../../types/definitions'
 import type { MaybeRefOrGetter } from 'vue'
 import { useQuery } from '@tanstack/vue-query'
-import { useAbacContext } from '@/pages/modules/ABAC/api/useAbacContext'
+import { useAbacContext } from '../useAbacContext'
 
-export function useGetDefinition (
+export function useGetDefinition<K extends DefinitionKind> (
   versionId: MaybeRefOrGetter<string | undefined>,
-  kind: MaybeRefOrGetter<DefinitionKind | undefined>,
+  kind: MaybeRefOrGetter<K | undefined>,
   name: MaybeRefOrGetter<string | undefined>,
 ) {
   const { client, keys, hasApiUrl } = useAbacContext(true)

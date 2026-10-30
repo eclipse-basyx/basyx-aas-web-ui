@@ -66,6 +66,41 @@ describe('RequestHandling.ts', () => {
     mockState.authDescriptionExemption = false
   })
 
+  it.each(['postRequest', 'putRequest', 'patchRequest', 'deleteRequest'] as const)(
+    'uses instance error defaults for %s and preserves the failure payload', async method => {
+      const data = { message: 'Invalid document' }
+      global.fetch = vi.fn().mockImplementation(() => Promise.resolve(Response.json(data, {
+        status: 400, headers: { 'Content-Type': 'application/json' },
+      }))) as unknown as typeof fetch
+      const { useRequestHandling } = await import('@/composables/RequestHandling')
+      const requests = useRequestHandling({ suppressStatuses: [400] })
+      const response = method === 'deleteRequest'
+        ? await requests.deleteRequest('/draft', new Headers(), 'updating', false)
+        : await requests[method]('/draft', '{}', new Headers(), 'updating', false)
+      expect(response).toEqual(expect.objectContaining({ success: false, status: 400, data }))
+      expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalled()
+    },
+  )
+
+  it('keeps instance defaults isolated and allows explicit per-request overrides', async () => {
+    global.fetch = vi.fn().mockImplementation(() => Promise.resolve(new Response('{"message":"Invalid document"}', {
+      status: 400, headers: { 'Content-Type': 'application/json' },
+    }))) as unknown as typeof fetch
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const mutations = useRequestHandling({ suppressStatuses: [400] })
+    const reads = useRequestHandling()
+
+    await mutations.putRequest('/draft', '{}', new Headers(), 'updating', false)
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalled()
+    await reads.getRequest('/draft', 'reading', false)
+    expect(mockDeps.dispatchSnackbar).toHaveBeenCalledOnce()
+
+    mockDeps.dispatchSnackbar.mockClear()
+    const response = await mutations.putRequest('/draft', '{}', new Headers(), 'updating', false, {})
+    expect(response.data).toBeUndefined()
+    expect(mockDeps.dispatchSnackbar).toHaveBeenCalledOnce()
+  })
+
   it.each(['{ "value": 1 }\n', '{ malformed JSON', '', 'false'])('preserves attachment bytes in blob mode: %s', async source => {
     global.fetch = vi.fn().mockResolvedValue(new Response(source, {
       status: 200,
@@ -100,7 +135,7 @@ describe('RequestHandling.ts', () => {
 
     const response = await deleteRequest('/api/submodels/1', new Headers(), 'deleting Submodel', false)
 
-    expect(response).toEqual({ success: false, status: 401 })
+    expect(response).toEqual(expect.objectContaining({ success: false, status: 401, raw: expect.any(Response) }))
     expect(mockDeps.setAuthenticationStatusForInfrastructure).toHaveBeenCalledWith('infra-1', false)
     expect(mockDeps.showLoginRequiredSnackbar).toHaveBeenCalledOnce()
   })
@@ -118,7 +153,7 @@ describe('RequestHandling.ts', () => {
 
     const response = await deleteRequest('/api/submodels/1', new Headers(), 'deleting Submodel', false)
 
-    expect(response).toEqual({ success: false, status: 403 })
+    expect(response).toEqual(expect.objectContaining({ success: false, status: 403, raw: expect.any(Response) }))
     expect(consumeLastRequestFailureStatus()).toBe(403)
     expect(consumeLastRequestFailureStatus()).toBeUndefined()
     expect(mockDeps.setAuthenticationStatusForInfrastructure).not.toHaveBeenCalled()
@@ -129,6 +164,47 @@ describe('RequestHandling.ts', () => {
         extendedError: 'You are not allowed to perform this action.',
       }),
     )
+  })
+
+  it.each([
+    ['GET', 'getRequest'],
+    ['POST', 'postRequest'],
+    ['PUT', 'putRequest'],
+    ['PATCH', 'patchRequest'],
+    ['DELETE', 'deleteRequest'],
+  ] as const)('preserves status and headers for empty %s error responses', async (_method, requestName) => {
+    global.fetch = vi.fn().mockResolvedValue(
+      new Response(null, {
+        status: 412,
+        headers: { ETag: '"revision-2"' },
+      }),
+    ) as unknown as typeof fetch
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const requests = useRequestHandling()
+    const headers = new Headers()
+    const options = { suppressStatuses: [412] }
+    let response
+    switch (requestName) {
+      case 'getRequest': {
+        response = await requests.getRequest('/resource', 'loading', true, headers, options)
+        break
+      }
+      case 'deleteRequest': {
+        response = await requests.deleteRequest('/resource', headers, 'updating', true, options)
+        break
+      }
+      case 'postRequest': {
+        response = await requests.postRequest('/resource', '{}', headers, 'updating', true, false, options)
+        break
+      }
+      default: {
+        response = await requests[requestName]('/resource', '{}', headers, 'updating', true, options)
+      }
+    }
+
+    expect(response).toEqual(expect.objectContaining({ success: false, status: 412, raw: expect.any(Response) }))
+    expect(response.raw.headers.get('ETag')).toBe('"revision-2"')
   })
 
   it('treats a BaSyx Go 403 error payload without an OAuth token as a login-required response', async () => {
@@ -263,7 +339,7 @@ describe('RequestHandling.ts', () => {
 
     const response = await deleteRequest('/api/submodels/1', new Headers(), 'deleting Submodel', false)
 
-    expect(response).toEqual({ success: false, status: 500 })
+    expect(response).toEqual(expect.objectContaining({ success: false, status: 500, raw: expect.any(Response) }))
     expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(
       expect.objectContaining({
         color: 'error',
@@ -335,7 +411,7 @@ describe('RequestHandling.ts', () => {
 
     const response = await putRequest('/api/sme/1', '{}', new Headers(), 'updating Submodel Element', false)
 
-    expect(response).toEqual({ success: false, status: 403 })
+    expect(response).toEqual(expect.objectContaining({ success: false, status: 403, raw: expect.any(Response) }))
     expect(consumeLastRequestFailureStatus()).toBe(403)
     expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -373,7 +449,7 @@ describe('RequestHandling.ts', () => {
 
     const response = await postRequest('/api/submodels', '{}', new Headers(), 'creating Submodel', false)
 
-    expect(response).toEqual({ success: false, status: 403 })
+    expect(response).toEqual(expect.objectContaining({ success: false, status: 403, raw: expect.any(Response) }))
     expect(consumeLastRequestFailureStatus()).toBe(403)
     const details = consumeLastRequestFailureDetails()
     expect(details).toContain('Status: 403')
@@ -403,7 +479,7 @@ describe('RequestHandling.ts', () => {
 
     const response = await postRequest('/api/submodels', '{}', new Headers(), 'creating Submodel', true)
 
-    expect(response).toEqual({ success: false, status: 409 })
+    expect(response).toEqual(expect.objectContaining({ success: false, status: 409, raw: expect.any(Response) }))
     expect(consumeLastRequestFailureStatus()).toBe(409)
   })
 
@@ -433,7 +509,7 @@ describe('RequestHandling.ts', () => {
 
     const response = await postRequest('/api/catena-x/edc/default/submodels/fetch', '{}', new Headers(), 'fetching Submodel', true)
 
-    expect(response).toEqual({ success: false, status: 404 })
+    expect(response).toEqual(expect.objectContaining({ success: false, status: 404, raw: expect.any(Response) }))
     expect(consumeLastRequestFailureStatus()).toBe(404)
     const details = consumeLastRequestFailureDetails()
     expect(details).toContain('Status: 404')
@@ -735,6 +811,23 @@ describe('RequestHandling.ts', () => {
       text: expect.stringContaining('Redirect blocked'),
     }))
     expect(mockDeps.setAuthenticationStatusForInfrastructure).not.toHaveBeenCalled()
+  })
+
+  it('reports an accepted redirect without an error message or a follow-up request', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ type: 'opaqueredirect' }) as unknown as typeof fetch
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const result = await useRequestHandling().getRequest(
+      '/operation-status/handle-1',
+      'requesting operation status',
+      false,
+      new Headers(),
+      { acceptRedirect: true },
+    )
+
+    expect(result).toEqual({ success: false, redirected: true })
+    expect(global.fetch).toHaveBeenCalledOnce()
+    expect(vi.mocked(global.fetch).mock.calls[0][1]?.redirect).toBe('manual')
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalled()
   })
 
   it('sends the configured custom header verbatim under the given name', async () => {

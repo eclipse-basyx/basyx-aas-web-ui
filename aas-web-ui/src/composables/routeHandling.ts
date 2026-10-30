@@ -1,7 +1,9 @@
-import type { LocationQuery, RouteLocationNormalizedGeneric, RouteLocationRaw } from 'vue-router'
+import type { LocationQuery, LocationQueryRaw, RouteLocationNormalizedGeneric, RouteLocationRaw } from 'vue-router'
 import { useAASHandling } from '@/composables/AAS/AASHandling'
 import { useSMHandling } from '@/composables/AAS/SMHandling'
 import { useAASDiscoveryClient } from '@/composables/Client/AASDiscoveryClient'
+import { useRequestHandling } from '@/composables/RequestHandling'
+import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { base64Decode } from '@/utils/EncodeDecodeUtils'
 
 export function useRouteHandling () {
@@ -9,6 +11,10 @@ export function useRouteHandling () {
   const { getAasId } = useAASDiscoveryClient()
   const { getAasEndpointById } = useAASHandling()
   const { getSmEndpointById } = useSMHandling()
+  const { getRequest } = useRequestHandling()
+
+  // Stores
+  const infrastructureStore = useInfrastructureStore()
 
   /**
    * Handles the redirection of `globalAssetId`, `aasId` and `smId` query parameter from the given route location.
@@ -133,5 +139,47 @@ export function useRouteHandling () {
     return null
   }
 
-  return { idRedirectHandled }
+  /**
+   * Removes an `aas` or `path` selection which the current session is not authorized to read,
+   * e.g. a protected AAS restored after logout. The access check does not prompt for login.
+   *
+   * @async
+   * @function removeUnauthorizedSelection
+   * @param {T} location - The route location to check, which contains query parameters.
+   * @returns {Promise<T>} The location without unauthorized selection query parameters.
+   */
+  async function removeUnauthorizedSelection<T extends { query: LocationQueryRaw }> (location: T): Promise<T> {
+    const query = { ...location.query }
+
+    if (await isUnauthorized(query.aas)) {
+      delete query.aas
+      delete query.path
+      delete query.fragment
+    } else if (await isUnauthorized(query.path)) {
+      delete query.path
+      delete query.fragment
+    }
+
+    return { ...location, query }
+  }
+
+  async function isUnauthorized (endpoint: LocationQueryRaw[string]): Promise<boolean> {
+    const infrastructure = infrastructureStore.getSelectedInfrastructure
+    if (!infrastructure || typeof endpoint !== 'string' || endpoint.trim() === '') {
+      return false
+    }
+
+    const response = await getRequest(
+      endpoint.trim(),
+      'checking access to selection',
+      true,
+      new Headers(),
+      {},
+      'auto',
+      { infrastructure, isolateAuthenticationFailures: true },
+    )
+    return [401, 403].includes(Number(response?.status))
+  }
+
+  return { idRedirectHandled, removeUnauthorizedSelection }
 }

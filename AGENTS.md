@@ -12,6 +12,11 @@
 - Structure vue components with the following order: <template>, <script setup>, <style scoped>. Use the <script setup> syntax for all components.
 - Structure the <script> section with the following order: imports, props, emits, refs, reactive state, computed properties, watchers, lifecycle hooks and methods
 
+## UI Conventions
+
+- Always set `open-delay="600"` on `<v-tooltip>`.
+- Prefer Vuetify props and components over custom CSS overrides, e.g. `<v-btn-group border size="small">` with `<v-btn icon>` for compact icon toolbars. Use `v-btn-toggle` only if the buttons keep a selected state.
+
 ## Stack
 
 - Framework: Vue 3 + Vite

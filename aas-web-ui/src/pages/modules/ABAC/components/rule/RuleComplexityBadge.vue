@@ -6,7 +6,6 @@
         :color="badgeConfig.color"
         label
         size="x-small"
-        variant="flat"
       >
         <v-icon :icon="badgeConfig.icon" size="14" start />
         {{ badgeConfig.label }}
@@ -18,9 +17,9 @@
 </template>
 
 <script setup lang="ts">
-  import type { Rule } from '@/pages/modules/ABAC/types/rules'
-  import { useAbacI18n } from '@/pages/modules/ABAC/i18n/useAbacI18n'
-  import { classifyFormulaComplexity } from '@/pages/modules/ABAC/utils/formulaComplexity'
+  import type { Rule } from '../../types/rules'
+  import { useAbacI18n } from '../../i18n/useAbacI18n'
+  import { classifyFormulaComplexity } from '../../utils/formulaComplexity'
 
   const ICONS = {
     LOW: 'mdi-speedometer-slow',

@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/vue-query'
-import { useAbacContext } from '@/pages/modules/ABAC/api/useAbacContext'
+import { useAbacContext } from '../useAbacContext'
 
 export function useDeleteDefinition () {
   const { client, invalidate, remove, keys } = useAbacContext()
@@ -7,7 +7,7 @@ export function useDeleteDefinition () {
   return useMutation({
     mutationFn: client.deleteDefinition,
     onSuccess: (_, { versionId, kind, name }) => {
-      invalidate(keys.definitions(versionId), keys.policy(versionId))
+      invalidate(keys.definitions(versionId), keys.policies())
       remove(keys.definition(versionId, kind, name))
     },
   })
