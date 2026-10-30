@@ -380,27 +380,29 @@
   // Vuetify
   const theme = useTheme()
 
-  // Constants
+  // Data
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Header - Tabs - Footer - Lines
   const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
   const fullHeightMainJsonPreview = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px - 64px - 32px)') // Full height - header - tabs - footer - padding - border - JSON
 
-  // Data
   // const aasSmDataToPush = ref({} as any)
   const catalogList = ref([] as Array<any>) as Ref<Array<any>>
   const catalogListUnfiltered = ref([] as Array<any>) as Ref<Array<any>>
-  const copyIcon = ref<string>('mdi-clipboard-file-outline')
+
+  const listLoading = ref(false)
+  const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null)
   // const dataTranserInProgress = ref(false)
   // const discoverIdRef = ref<InstanceType<typeof CatalogDiscoverId> | null>(null)
   // const discoveryId = ref<string>('')
   // const edcStatus = ref('')
   // const fetchAssetRef = ref<InstanceType<typeof CatalogFetchAsset> | null>(null)
-  const listLoading = ref(false)
   // const pushDataRef = ref<InstanceType<typeof CatalogPushData> | null>(null)
+  // const selectedSmsCount = ref(0)
+
   const selectedBusinessPartner = ref<CatenaXPartner | null>(null)
   const selectedCatalogDataset = ref({} as any)
-  // const selectedSmsCount = ref(0)
-  const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null)
+
+  const copyIcon = ref<string>('mdi-clipboard-file-outline')
 
   // Computed properties
   const primaryColor = computed(() => theme.current.value.colors.primary)

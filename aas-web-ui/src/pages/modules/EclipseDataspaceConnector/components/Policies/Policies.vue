@@ -322,14 +322,19 @@
   const theme = useTheme()
 
   // Data
-  const searchQuery = ref('')
+
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Full height - header - tabs - footer - border
   const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
   const fullHeightMainJsonPreview = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px - 64px - 32px)') // Full height - header - tabs - footer - padding - border - JSON title - padding
+
+  const searchQuery = ref('')
+
   const policyList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Policy data
   const policyListUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Policy data before filtering
+
   const listLoading = ref(false) // Variable to store if the AAS List is loading
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null) // Reference to the Virtual Scroll Component
+
   const selectedPolicy = ref({} as any)
   const createPolicyDialog = ref(false) // Variable to store if the Create Policy Dialog should be shown
   const createPolicyFromTemplateDialog = ref(false) // Variable to store if the Create Policy from Template Dialog should be shown
@@ -337,6 +342,7 @@
   const policyToUpdate = ref<any>({}) // Variable to store the policy to be updated
   const deletePolicyDialog = ref(false) // Variable to store if the Delete Policy Dialog should be shown
   const policyToDelete = ref<any>({}) // Variable to store the policy to be deleted
+
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
 
   // Computed properties

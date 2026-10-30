@@ -300,20 +300,25 @@
   const theme = useTheme()
 
   // Data
-  const searchQuery = ref('')
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Full height - header - tabs - footer - border
   const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
   const fullHeightMainJsonPreview = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px - 64px - 32px)') // Full height - header - tabs - footer - padding - border - JSON
+
+  const searchQuery = ref('')
+
   const contractList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Contract data
   const contractListUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Contract data before filtering
+
   const listLoading = ref(false) // Variable to store if the AAS List is loading
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null) // Reference to the Virtual Scroll Component
+
   const selectedContract = ref({} as any)
   const createContractDialog = ref(false) // Variable to store if the Create Contract Dialog should be shown
   const updateContractDialog = ref(false) // Variable to store if the Update Contract Dialog should be shown
   const contractToUpdate = ref<any>({}) // Variable to store the contract to be updated
   const deleteContractDialog = ref(false) // Variable to store if the Delete Contract Dialog should be shown
   const contractToDelete = ref<any>({}) // Variable to store the contract to be deleted
+
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
 
   // Computed properties

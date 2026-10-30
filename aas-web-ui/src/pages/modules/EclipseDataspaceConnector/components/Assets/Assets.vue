@@ -350,14 +350,18 @@
   const theme = useTheme()
 
   // Data
-  const searchQuery = ref('')
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Full height - header - tabs - footer - border
   const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
   const fullHeightMainJsonPreview = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px - 64px - 32px)') // Full height - header - tabs - footer - padding - border - JSON
+
+  const searchQuery = ref('')
+
   const assetList = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Asset data
   const assetListUnfiltered = ref([] as Array<any>) as Ref<Array<any>> // Variable to store the Asset data before filtering
+
   const listLoading = ref(false) // Variable to store if the AAS List is loading
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null) // Reference to the Virtual Scroll Component
+
   const selectedAsset = ref({} as any)
   const createAssetDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
   // const createAssetsAasSmsDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
@@ -366,6 +370,7 @@
   const assetToUpdate = ref<any>({}) // Variable to store the asset to be updated
   const deleteAssetDialog = ref(false) // Variable to store if the Delete Asset Dialog should be shown
   const assetToDelete = ref<any>({}) // Variable to store the asset to be deleted
+
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
 
   // Computed properties
