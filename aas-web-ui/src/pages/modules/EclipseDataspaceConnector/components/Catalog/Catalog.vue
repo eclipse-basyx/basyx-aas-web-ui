@@ -170,13 +170,8 @@
         </v-card>
       </v-navigation-drawer>
 
-      <v-main class="py-0">
-        <v-container
-          class="ma-0 pa-0"
-          fluid
-          style="overflow-y: auto"
-          :style="{ height: fullHeight }"
-        >
+      <v-main>
+        <v-container fluid>
 
           <!-- Empty states when nothing is selected yet -->
           <div
@@ -186,8 +181,8 @@
                 || !selectedCatalogDataset
                 || Object.keys(selectedCatalogDataset).length === 0
             "
-            class="mx-0 pa-0 d-flex align-center justify-center"
-            :style="{ height: fullHeight }"
+            class="d-flex align-center justify-center"
+            :style="{ height: fullHeightMain }"
           >
             <v-empty-state
               v-if="
@@ -195,7 +190,6 @@
                   || Object.keys(selectedBusinessPartner).length === 0
               "
               icon="mdi-gesture-tap"
-              style="padding-top: 45px"
               text="Please select a Business Partner to load its Catalog"
               title="Select Business Partner"
             >
@@ -220,22 +214,14 @@
           </div>
 
           <template v-else>
-
-            <div class="d-flex justify-end align-center mt-4 mx-4 mb-2">
-              <v-list-item-title class="text-body-large pr-2 d-flex align-center">
-                <v-icon class="mr-2" color="primary" size="small">
-                  mdi-database-search-outline
-                </v-icon>
-                Catalog Dataset
-              </v-list-item-title>
-            </div>
-
             <JSONPreview
+              :height="fullHeightMainJsonPreview"
+              icon="mdi-database-outline"
               :json-content="selectedCatalogDataset"
-              :title="`EDC Asset`"
+              title="Catalog Dataset"
             />
 
-            <v-card-actions class="mt-0 mb-2 mx-4 pa-0">
+            <!-- <v-card-actions v-if="showDatasetActions" class="mt-2 pa-0">
               <v-chip
                 v-if="edcStatus"
                 class="mr-2"
@@ -262,13 +248,13 @@
 
               <v-spacer />
 
-              <!--Use case 1: Push Data -->
+              Use case 1: Push Data
               <template v-if="isPushAsset">
                 <span v-if="!dataTranserInProgress" class="text-body-2 text-medium-emphasis mr-2">
                   Select AAS/SM data below to push
                 </span>
 
-                <!-- <v-btn
+                <v-btn
                   class="text-buttonText"
                   :color="dataTranserInProgress ? 'error' : 'primary'"
                   :disabled="!dataTranserInProgress && aasSmDataToPushIsEmpty"
@@ -277,10 +263,10 @@
                   :text="dataTranserInProgress ? 'Cancel Push' : 'Push selected data'"
                   variant="flat"
                   @click="dataTranserInProgress ? pushDataRef?.cancel() : pushDataRef?.pushData()"
-                /> -->
+                />
               </template>
 
-              <!--Use case 2: Discovery -->
+              Use case 2: Discovery
               <template v-else-if="isDigitalTwinRegistryAsset">
                 <div>
                   <v-text-field
@@ -294,7 +280,7 @@
                   />
                 </div>
 
-                <!-- <v-btn
+                <v-btn
                   class="text-buttonText"
                   :color="dataTranserInProgress ? 'error' : 'primary'"
                   :disabled="!dataTranserInProgress && discoveryId == ''"
@@ -303,11 +289,11 @@
                   :text="dataTranserInProgress ? 'Cancel Discovery' : 'Discover ID'"
                   variant="flat"
                   @click="dataTranserInProgress ? discoverIdRef?.cancel() : discoverIdRef?.discoverId()"
-                /> -->
+                />
               </template>
 
-              <!--Use case 3: Fetch EDC Asset -->
-              <!-- <v-btn
+              Use case 3: Fetch EDC Asset
+              <v-btn
                 v-else
                 class="text-buttonText"
                 :color="dataTranserInProgress ? 'error' : 'primary'"
@@ -317,10 +303,8 @@
                 :text="dataTranserInProgress ? 'Cancel Fetch' : 'Fetch EDC Asset'"
                 variant="flat"
                 @click="dataTranserInProgress ? fetchAssetRef?.cancel() : fetchAssetRef?.fetchAsset()"
-              /> -->
-            </v-card-actions>
-
-            <v-divider />
+              />
+            </v-card-actions> -->
 
             <!--Use case 1: Push Data -->
             <!-- <CatalogPushData
@@ -398,19 +382,18 @@
 
   // Constants
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Header - Tabs - Footer - Lines
-  // const fullHeightAsset = ref(
-  //   'calc(100vh - 64px - 48px - 40px - 2px - 60px - 275px  - 60px - 1px)', // Header - Tabs - Footer - Lines - Dataset Header - Dataset Json - Dataset Footer - Line
-  // )
+  const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
+  const fullHeightMainJsonPreview = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px - 64px - 32px)') // Full height - header - tabs - footer - padding - border - JSON
 
   // Data
   // const aasSmDataToPush = ref({} as any)
   const catalogList = ref([] as Array<any>) as Ref<Array<any>>
   const catalogListUnfiltered = ref([] as Array<any>) as Ref<Array<any>>
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
-  const dataTranserInProgress = ref(false)
+  // const dataTranserInProgress = ref(false)
   // const discoverIdRef = ref<InstanceType<typeof CatalogDiscoverId> | null>(null)
-  const discoveryId = ref<string>('')
-  const edcStatus = ref('')
+  // const discoveryId = ref<string>('')
+  // const edcStatus = ref('')
   // const fetchAssetRef = ref<InstanceType<typeof CatalogFetchAsset> | null>(null)
   const listLoading = ref(false)
   // const pushDataRef = ref<InstanceType<typeof CatalogPushData> | null>(null)
@@ -426,14 +409,14 @@
   const selectedEdcConfig = computed(() => infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null)
   const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? 'default')
   const businessPartners = computed(() => normalizeCatenaXPartners(selectedEdcConfig.value?.partners ?? []))
-  const isPushAsset = computed(() => {
-    const id: string = selectedCatalogDataset.value?.['@id'] ?? ''
-    return id.includes('push-asset') || id.includes('asset-push')
-  })
-  const isDigitalTwinRegistryAsset = computed(() => {
-    const id: string = selectedCatalogDataset.value?.['@id'] ?? ''
-    return id.includes('dt-registry') || id.includes('digitaltwin-registry') || id.includes('digital-twin-registry')
-  })
+  // const isPushAsset = computed(() => {
+  //   const id: string = selectedCatalogDataset.value?.['@id'] ?? ''
+  //   return id.includes('push-asset') || id.includes('asset-push')
+  // })
+  // const isDigitalTwinRegistryAsset = computed(() => {
+  //   const id: string = selectedCatalogDataset.value?.['@id'] ?? ''
+  //   return id.includes('dt-registry') || id.includes('digitaltwin-registry') || id.includes('digital-twin-registry')
+  // })
   // const isHttpDataPull = computed(() => {
   //   const distributions = selectedCatalogDataset.value?.['dcat:distribution'] ?? selectedCatalogDataset.value?.distribution
   //   if (!distributions) return false
@@ -474,15 +457,15 @@
     },
   )
 
-  watch(
-    () => isPushAsset.value,
-    async value => {
-      if (value) {
-        await nextTick()
-        // pushDataRef.value?.initialize()
-      }
-    },
-  )
+  // watch(
+  //   () => isPushAsset.value,
+  //   async value => {
+  //     if (value) {
+  //       await nextTick()
+  //       pushDataRef.value?.initialize()
+  //     }
+  //   },
+  // )
 
   onMounted(() => {
     initialize()
@@ -495,7 +478,7 @@
     listLoading.value = true
 
     selectedCatalogDataset.value = {}
-    edcStatus.value = ''
+    // edcStatus.value = ''
 
     if (selectedBusinessPartner.value?.counterPartyAddress) {
       const dspAddress = selectedBusinessPartner.value.counterPartyAddress
@@ -576,50 +559,3 @@
   }
 
 </script>
-
-<style scoped>
-:deep(.token) {
-  line-height: 21px;
-}
-
-:deep(code) {
-  line-height: 21px;
-}
-
-.json-content {
-  word-wrap: normal;
-  font-size: 14px;
-  line-height: 21px;
-  flex-grow: 0;
-  overflow: auto;
-  background-color: #f5f5f5;
-}
-
-.json-content code {
-  display: block;
-}
-
-:deep(.token.punctuation) {
-  color: #999;
-}
-
-:deep(.token.property) {
-  color: #905;
-}
-
-:deep(.token.string) {
-  color: #690;
-}
-
-:deep(.token.number) {
-  color: #07a;
-}
-
-:deep(.token.boolean) {
-  color: #07a;
-}
-
-:deep(.token.null) {
-  color: #999;
-}
-</style>
