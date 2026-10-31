@@ -318,6 +318,32 @@ export function usesAasEnvironment (
   return template === 'mono-repo' || template === 'mono-all'
 }
 
+/**
+ * Whether AAS and their submodels can be read from the infrastructure's repositories:
+ * AAS and Submodel Repository (full), AAS Repository (identifiable) or AAS Environment (mono-repo, mono-all).
+ */
+export function isAasSourceInfrastructure (infrastructure: InfrastructureConfig): boolean {
+  const hasUrl = (componentKey: BaSyxComponentKey): boolean =>
+    getActiveComponentUrlForTemplate(infrastructure, componentKey) !== ''
+
+  switch (getInfrastructureTemplate(infrastructure)) {
+    case 'full': {
+      return hasUrl('AASRepo') && hasUrl('SubmodelRepo')
+    }
+    case 'identifiable': {
+      return hasUrl('AASRepo')
+    }
+    case 'mono-repo':
+    case 'mono-all': {
+      const aasEnvironmentField = getEndpointFieldByKey(infrastructure, 'AASEnvironment')
+      return !!aasEnvironmentField && getEndpointFieldValue(infrastructure.components, aasEnvironmentField) !== ''
+    }
+    default: {
+      return false
+    }
+  }
+}
+
 export function getDefaultAasUploadMode (
   templateOrInfra?: InfrastructureTemplate | Pick<InfrastructureConfig, 'template'> | null,
 ): InfrastructureAasUploadMode {

@@ -4,6 +4,7 @@ import type {
   EdcDtrDescriptorByIdRequest,
   EdcDtrDescriptorRequest,
   EdcProxyConfig,
+  EdcQuerySpecRequest,
   EdcSubmodelFetchRequest,
 } from './types.js'
 import { isCounterPartyAddressAllowed, joinManagementUrl } from './config.js'
@@ -19,11 +20,9 @@ const jsonLdContext = {
   edc: 'https://w3id.org/edc/v0.0.1/ns/',
 }
 
-const catalogContext = [
-  {
-    '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
-  },
-]
+const catalogContext = {
+  '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
+}
 const odrlContextUrl = 'http' + '://www.w3.org/ns/odrl/2/'
 const dctContextUrl = 'http' + '://purl.org/dc/terms/'
 const dcatContextUrl = 'http' + '://www.w3.org/ns/dcat#'
@@ -45,7 +44,7 @@ const contractContext = {
   '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
 }
 
-const defaultDtrProtocol = 'dataspace-protocol-http'
+const defaultDspProtocol = 'dataspace-protocol-http:2025-1'
 const dtrTaxonomyId = 'https://w3id.org/catenax/taxonomy#DigitalTwinRegistry'
 const catalogDatasetKeys = [
   'dcat:dataset',
@@ -71,6 +70,18 @@ const datasetPolicyKeys = [
   'hasPolicy',
   odrlContextUrl + 'hasPolicy',
 ]
+
+export function buildQuerySpecRequestBody (request: EdcQuerySpecRequest): Record<string, unknown> {
+  return request.querySpec ?? {
+    '@context': {
+      '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
+    },
+    '@type': 'QuerySpec',
+    'offset': 0,
+    'sortOrder': 'ASC',
+    'sortField': 'id',
+  }
+}
 
 export interface EdcAssetOffer {
   assetId: string
@@ -151,7 +162,7 @@ export function buildCatalogRequestBody (
 ): Record<string, unknown> {
   const counterPartyId = trimString(request.counterPartyId)
   const counterPartyAddress = trimString(request.counterPartyAddress)
-  const protocol = trimString(request.protocol) || 'dataspace-protocol-http:2025-1'
+  const protocol = trimString(request.protocol) || defaultDspProtocol
 
   if (!counterPartyId) {
     throw createHttpError('counterPartyId is required for catalog requests', 400)
@@ -184,7 +195,7 @@ export function buildDigitalTwinRegistryQuerySpec (limit = 50): Record<string, u
     'sortOrder': 'ASC',
     'filterExpression': [
       {
-        '@type': 'CriterionDto',
+        '@type': 'Criterion',
         'operandLeft': dctContextUrl + 'type',
         'operator': 'like',
         'operandRight': `%${dtrTaxonomyId}%`,
@@ -278,22 +289,15 @@ export function buildEdrContractRequestBody (
   }
 
   const policy = cloneRecord(offer.policy)
-  const usesPrefixedOdrl = Object.keys(policy).some(key => key.startsWith('odrl:'))
-    || trimString(policy['@type']).startsWith('odrl:')
-
-  if (usesPrefixedOdrl) {
-    policy['odrl:assigner'] = { '@id': offer.participantId }
-    policy['odrl:target'] = { '@id': offer.assetId }
-  } else {
-    policy.assigner = offer.participantId
-    policy.target = offer.assetId
-  }
+  // The request context maps @vocab to the EDC namespace, so assigner/target must stay ODRL-prefixed.
+  policy['odrl:assigner'] = { '@id': offer.participantId }
+  policy['odrl:target'] = { '@id': offer.assetId }
 
   return {
     '@context': contractContext,
     '@type': 'ContractRequest',
     counterPartyAddress,
-    'protocol': trimString(request.protocol) || defaultDtrProtocol,
+    'protocol': trimString(request.protocol) || defaultDspProtocol,
     policy,
   }
 }
@@ -309,11 +313,13 @@ export function buildEdrRequestQueryBody (contractNegotiationId: string): Record
     '@type': 'QuerySpec',
     'offset': 0,
     'limit': 100,
-    'filterExpression': {
-      operandLeft: 'contractNegotiationId',
-      operator: '=',
-      operandRight: normalizedContractNegotiationId,
-    },
+    'filterExpression': [
+      {
+        operandLeft: 'contractNegotiationId',
+        operator: '=',
+        operandRight: normalizedContractNegotiationId,
+      },
+    ],
   }
 }
 
@@ -467,6 +473,50 @@ export async function forwardJsonToEdc (
   }
 }
 
+export async function forwardPutJsonToEdc (
+  proxy: EdcProxyConfig,
+  path: string,
+  body: Record<string, unknown>,
+  fetchFn: typeof fetch = fetch,
+): Promise<EdcForwardResult> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), proxy.requestTimeoutMs)
+
+  try {
+    const response = await fetchFn(joinManagementUrl(proxy, path), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        [proxy.apiKeyHeader]: proxy.apiKey,
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    })
+    const data = await parseResponseBody(response)
+
+    return {
+      status: response.status,
+      headers: {
+        'content-type': response.headers.get('content-type') ?? 'application/json',
+      },
+      data,
+    }
+  } catch (error) {
+    if (isAbortError(error)) {
+      throw error
+    }
+
+    console.error('Error forwarding PUT to EDC:', error)
+    return {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+      data: { error: describeFetchError(error) },
+    }
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 export async function forwardGetToEdc (
   proxy: EdcProxyConfig,
   path: string,
@@ -499,6 +549,48 @@ export async function forwardGetToEdc (
     }
 
     console.error('Error forwarding GET to EDC:', error)
+    return {
+      status: 500,
+      headers: { 'content-type': 'application/json' },
+      data: { error: describeFetchError(error) },
+    }
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+export async function forwardDeleteToEdc (
+  proxy: EdcProxyConfig,
+  path: string,
+  fetchFn: typeof fetch = fetch,
+): Promise<EdcForwardResult> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), proxy.requestTimeoutMs)
+
+  try {
+    const response = await fetchFn(joinManagementUrl(proxy, path), {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        [proxy.apiKeyHeader]: proxy.apiKey,
+      },
+      signal: controller.signal,
+    })
+    const data = await parseResponseBody(response)
+
+    return {
+      status: response.status,
+      headers: {
+        'content-type': response.headers.get('content-type') ?? 'application/json',
+      },
+      data,
+    }
+  } catch (error) {
+    if (isAbortError(error)) {
+      throw error
+    }
+
+    console.error('Error forwarding DELETE to EDC:', error)
     return {
       status: 500,
       headers: { 'content-type': 'application/json' },
@@ -563,7 +655,7 @@ async function ensureDtrAccess (
     buildCatalogRequestBody(proxy, {
       counterPartyId,
       counterPartyAddress,
-      protocol: trimString(request.protocol) || defaultDtrProtocol,
+      protocol: trimString(request.protocol) || defaultDspProtocol,
       querySpec: buildDigitalTwinRegistryQuerySpec(),
     }),
     fetchFn,
@@ -609,7 +701,7 @@ async function ensureSubmodelAccess (
     ...request,
     counterPartyId,
     counterPartyAddress: endpoint.dspEndpoint,
-    protocol: trimString(request.protocol) || defaultDtrProtocol,
+    protocol: trimString(request.protocol) || defaultDspProtocol,
   }
   const catalogResponse = await forwardJsonToEdc(
     proxy,

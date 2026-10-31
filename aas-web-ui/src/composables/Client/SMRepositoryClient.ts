@@ -1,3 +1,4 @@
+import type { InfrastructureConfig } from '@/types/Infrastructure'
 import type { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
 import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
 import { useIDUtils } from '@/composables/IDUtils'
@@ -5,7 +6,7 @@ import { useRequestHandling } from '@/composables/RequestHandling'
 import { useAASStore } from '@/store/AASDataStore'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
-import { usesSubmodelSuperpath } from '@/utils/InfrastructureUtils'
+import { getActiveComponentUrlForTemplate, usesSubmodelSuperpath } from '@/utils/InfrastructureUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
 import { ASS_REPOSITORY_ENDPOINT_PATH } from './AASRepositoryClient'
 
@@ -36,11 +37,33 @@ export function useSMRepositoryClient () {
   const aasRepositoryUrl = computed(() => infrastructureStore.getAASRepoURL)
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
 
-  function shouldUseAasSuperpath (): boolean {
-    return usesSubmodelSuperpath(selectedInfrastructure.value)
+  function shouldUseAasSuperpath (infrastructure?: InfrastructureConfig): boolean {
+    return usesSubmodelSuperpath(infrastructure ?? selectedInfrastructure.value)
   }
 
-  function getAasEndpointById (aasId: string): string {
+  /**
+   * Returns the '/submodels' endpoint of the Submodel Repository of the given or the selected infrastructure.
+   *
+   * @param {InfrastructureConfig} [infrastructure] - Infrastructure to use instead of the selected one.
+   * @returns {string} The '/submodels' endpoint, or an empty string if no Submodel Repository is configured.
+   */
+  function getSubmodelsUrl (infrastructure?: InfrastructureConfig): string {
+    let smRepoUrl = infrastructure
+      ? getActiveComponentUrlForTemplate(infrastructure, 'SubmodelRepo')
+      : submodelRepoUrl.value.trim()
+    if (smRepoUrl === '') {
+      return ''
+    }
+    if (smRepoUrl.endsWith('/')) {
+      smRepoUrl = stripLastCharacter(smRepoUrl)
+    }
+    if (!smRepoUrl.endsWith(SUBMODEL_REPOSITORY_ENDPOINT_PATH)) {
+      smRepoUrl += SUBMODEL_REPOSITORY_ENDPOINT_PATH
+    }
+    return smRepoUrl
+  }
+
+  function getAasEndpointById (aasId: string, infrastructure?: InfrastructureConfig): string {
     const failResponse = ''
 
     if (!aasId) {
@@ -53,7 +76,9 @@ export function useSMRepositoryClient () {
       return failResponse
     }
 
-    let aasRepoUrl = aasRepositoryUrl.value.trim()
+    let aasRepoUrl = infrastructure
+      ? getActiveComponentUrlForTemplate(infrastructure, 'AASRepo')
+      : aasRepositoryUrl.value.trim()
     if (aasRepoUrl === '') {
       return failResponse
     }
@@ -67,7 +92,12 @@ export function useSMRepositoryClient () {
     return aasRepoUrl + '/' + base64Encode(aasId)
   }
 
-  function getAasEndpointForSubmodel (aasId?: string): string {
+  function getAasEndpointForSubmodel (aasId?: string, infrastructure?: InfrastructureConfig): string {
+    if (infrastructure) {
+      // The selected AAS belongs to the selected infrastructure, not to the given one
+      return getAasEndpointById(aasId ?? '', infrastructure)
+    }
+
     const selectedAas = aasStore.getSelectedAAS
     const selectedAasId = typeof selectedAas?.id === 'string' ? selectedAas.id.trim() : ''
     const effectiveAasId = aasId?.trim() || selectedAasId
@@ -87,7 +117,7 @@ export function useSMRepositoryClient () {
     return getAasEndpointById(effectiveAasId)
   }
 
-  function getSuperpathSmEndpointById (smId: string, aasId?: string): string {
+  function getSuperpathSmEndpointById (smId: string, aasId?: string, infrastructure?: InfrastructureConfig): string {
     const failResponse = ''
 
     if (!smId) {
@@ -100,7 +130,7 @@ export function useSMRepositoryClient () {
       return failResponse
     }
 
-    const aasEndpoint = getAasEndpointForSubmodel(aasId)
+    const aasEndpoint = getAasEndpointForSubmodel(aasId, infrastructure)
     if (aasEndpoint === '') {
       return failResponse
     }
@@ -119,15 +149,9 @@ export function useSMRepositoryClient () {
   async function fetchSmList (): Promise<Array<any>> {
     const failResponse = [] as Array<any>
 
-    let smRepoUrl = submodelRepoUrl.value.trim()
+    const smRepoUrl = getSubmodelsUrl()
     if (smRepoUrl === '') {
       return failResponse
-    }
-    if (smRepoUrl.endsWith('/')) {
-      smRepoUrl = stripLastCharacter(smRepoUrl)
-    }
-    if (!smRepoUrl.endsWith(SUBMODEL_REPOSITORY_ENDPOINT_PATH)) {
-      smRepoUrl += SUBMODEL_REPOSITORY_ENDPOINT_PATH
     }
 
     const smRepoPath = smRepoUrl
@@ -151,9 +175,11 @@ export function useSMRepositoryClient () {
    *
    * @async
    * @param {string} smId - The ID of the SM to fetch.
+   * @param {string} [aasId] - The ID of the AAS containing the SM (needed for shell superpaths).
+   * @param {InfrastructureConfig} [infrastructure] - Infrastructure to read from instead of the selected one.
    * @returns {Promise<any>} A promise that resolves to a SM.
    */
-  async function fetchSmById (smId: string, aasId?: string): Promise<any> {
+  async function fetchSmById (smId: string, aasId?: string, infrastructure?: InfrastructureConfig): Promise<any> {
     const failResponse = {} as any
 
     if (!smId) {
@@ -166,10 +192,10 @@ export function useSMRepositoryClient () {
       return failResponse
     }
 
-    const smEndpoint = getSmEndpointById(smId, aasId)
+    const smEndpoint = getSmEndpointById(smId, aasId, infrastructure)
 
     if (smEndpoint && smEndpoint.trim() !== '') {
-      return fetchSm(smEndpoint.trim())
+      return fetchSm(smEndpoint.trim(), infrastructure)
     }
 
     return failResponse
@@ -180,9 +206,10 @@ export function useSMRepositoryClient () {
    *
    * @async
    * @param {string} smEndpoint - The endpoint URL of the SM to fetch.
+   * @param {InfrastructureConfig} [infrastructure] - Infrastructure whose credentials authorize the request.
    * @returns {Promise<any>} A promise that resolves to a SM.
    */
-  async function fetchSm (smEndpoint: string): Promise<any> {
+  async function fetchSm (smEndpoint: string, infrastructure?: InfrastructureConfig): Promise<any> {
     const failResponse = {} as any
 
     if (!smEndpoint) {
@@ -204,7 +231,9 @@ export function useSMRepositoryClient () {
     const smRepoContext = 'retrieving SM'
     const disableMessage = true
     try {
-      const smRepoResponse = await getRequest(smRepoPath, smRepoContext, disableMessage)
+      const smRepoResponse = infrastructure
+        ? await getRequest(smRepoPath, smRepoContext, disableMessage, new Headers(), undefined, 'auto', { infrastructure })
+        : await getRequest(smRepoPath, smRepoContext, disableMessage)
       if (smRepoResponse.blocked) {
         return failResponse
       }
@@ -434,9 +463,11 @@ export function useSMRepositoryClient () {
    * Just concats SM repository URL (from the store) with the Base64UrlEncoded provided SM ID.
    *
    * @param {string} smId - The ID of the SM to retrieve the endpoint for.
+   * @param {string} [aasId] - The ID of the AAS containing the SM (needed for shell superpaths).
+   * @param {InfrastructureConfig} [infrastructure] - Infrastructure to use instead of the selected one.
    * @returns {string} The SM endpoint.
    */
-  function getSmEndpointById (smId: string, aasId?: string): string {
+  function getSmEndpointById (smId: string, aasId?: string, infrastructure?: InfrastructureConfig): string {
     const failResponse = ''
 
     if (!smId) {
@@ -449,19 +480,13 @@ export function useSMRepositoryClient () {
       return failResponse
     }
 
-    if (shouldUseAasSuperpath()) {
-      return getSuperpathSmEndpointById(smId, aasId)
+    if (shouldUseAasSuperpath(infrastructure)) {
+      return getSuperpathSmEndpointById(smId, aasId, infrastructure)
     }
 
-    let smRepoUrl = submodelRepoUrl.value.trim()
+    const smRepoUrl = getSubmodelsUrl(infrastructure)
     if (smRepoUrl === '') {
       return failResponse
-    }
-    if (smRepoUrl.endsWith('/')) {
-      smRepoUrl = stripLastCharacter(smRepoUrl)
-    }
-    if (!smRepoUrl.endsWith(SUBMODEL_REPOSITORY_ENDPOINT_PATH)) {
-      smRepoUrl += SUBMODEL_REPOSITORY_ENDPOINT_PATH
     }
 
     const smEndpoint = smRepoUrl + '/' + base64Encode(smId)

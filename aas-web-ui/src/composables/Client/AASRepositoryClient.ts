@@ -1,3 +1,5 @@
+import type { ServiceDescription } from '@/types/BaSyx'
+import type { InfrastructureConfig } from '@/types/Infrastructure'
 import type { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
 import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
 import { appendQueryParams, normalizeLimit, type PaginationPageOptions, type PaginationPageResult, parseNextCursor } from '@/composables/Client/PaginationUtils'
@@ -6,11 +8,17 @@ import { useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { downloadFile } from '@/utils/generalUtils'
+import { getActiveComponentUrlForTemplate } from '@/utils/InfrastructureUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
 
 export const ASS_REPOSITORY_ENDPOINT_PATH = '/shells'
 
-export type AasListPageOptions = PaginationPageOptions
+export type AasListPageOptions = PaginationPageOptions & {
+  /**
+   * Infrastructure to read from instead of the selected one.
+   */
+  infrastructure?: InfrastructureConfig
+}
 
 export type AasListPageResult<T> = PaginationPageResult<T>
 
@@ -61,6 +69,28 @@ export function useAASRepositoryClient () {
   })
 
   /**
+   * Returns the '/shells' endpoint of the AAS Repository of the given or the selected infrastructure.
+   *
+   * @param {InfrastructureConfig} [infrastructure] - Infrastructure to use instead of the selected one.
+   * @returns {string} The '/shells' endpoint, or an empty string if no AAS Repository is configured.
+   */
+  function getShellsUrl (infrastructure?: InfrastructureConfig): string {
+    let aasRepoUrl = infrastructure
+      ? getActiveComponentUrlForTemplate(infrastructure, 'AASRepo')
+      : aasRepositoryUrl.value.trim()
+    if (aasRepoUrl === '') {
+      return ''
+    }
+    if (aasRepoUrl.endsWith('/')) {
+      aasRepoUrl = stripLastCharacter(aasRepoUrl)
+    }
+    if (!aasRepoUrl.endsWith(ASS_REPOSITORY_ENDPOINT_PATH)) {
+      aasRepoUrl += ASS_REPOSITORY_ENDPOINT_PATH
+    }
+    return aasRepoUrl
+  }
+
+  /**
    * Reports whether the signed-in user may edit an AAS, based on the
    * effective rights reported by the ReBAC management API.
    *
@@ -97,6 +127,33 @@ export function useAASRepositoryClient () {
   }
 
   /**
+   * Fetches the service description (e.g. supported profiles) of the AAS Repository.
+   *
+   * @async
+   * @param {InfrastructureConfig} [infrastructure] - Infrastructure to use instead of the selected one.
+   * @returns {Promise<ServiceDescription | null>} The service description, or null if it is not available.
+   */
+  async function fetchAasRepositoryDescription (infrastructure?: InfrastructureConfig): Promise<ServiceDescription | null> {
+    const aasRepoUrl = getShellsUrl(infrastructure)
+    if (aasRepoUrl === '') {
+      return null
+    }
+
+    const descriptionPath = aasRepoUrl.slice(0, -ASS_REPOSITORY_ENDPOINT_PATH.length) + '/description'
+    const securityContext = infrastructure ? { infrastructure, isolateAuthenticationFailures: true } : undefined
+    const response = await getRequest(
+      descriptionPath,
+      'retrieving AAS Repository description',
+      true,
+      new Headers(),
+      undefined,
+      'auto',
+      securityContext,
+    )
+    return response?.success && Array.isArray(response.data?.profiles) ? response.data : null
+  }
+
+  /**
    * Fetches one page of AAS from repository.
    *
    * @async
@@ -109,15 +166,9 @@ export function useAASRepositoryClient () {
       hasMore: false,
     }
 
-    let aasRepoUrl = aasRepositoryUrl.value.trim()
+    const aasRepoUrl = getShellsUrl(options.infrastructure)
     if (aasRepoUrl === '') {
       return failResponse
-    }
-    if (aasRepoUrl.endsWith('/')) {
-      aasRepoUrl = stripLastCharacter(aasRepoUrl)
-    }
-    if (!aasRepoUrl.endsWith(ASS_REPOSITORY_ENDPOINT_PATH)) {
-      aasRepoUrl += ASS_REPOSITORY_ENDPOINT_PATH
     }
 
     const queryParams = new URLSearchParams()
@@ -134,7 +185,11 @@ export function useAASRepositoryClient () {
     const disableMessage = false
 
     try {
-      const aasRepoResponse = await getRequest(aasRepoPath, aasRepoContext, disableMessage)
+      const aasRepoResponse = options.infrastructure
+        ? await getRequest(aasRepoPath, aasRepoContext, disableMessage, new Headers(), undefined, 'auto', {
+            infrastructure: options.infrastructure,
+          })
+        : await getRequest(aasRepoPath, aasRepoContext, disableMessage)
       const resultItems = Array.isArray(aasRepoResponse?.data?.result)
         ? aasRepoResponse.data.result
         : []
@@ -373,9 +428,10 @@ export function useAASRepositoryClient () {
    * Just concats SM repository URL (from the store) with the Base64UrlEncoded provided AAS ID.
    *
    * @param {string} aasId - The ID of the AAS to retrieve the endpoint for.
+   * @param {InfrastructureConfig} [infrastructure] - Infrastructure to use instead of the selected one.
    * @returns {string} The AAS endpoint.
    */
-  function getAasEndpointById (aasId: string): string {
+  function getAasEndpointById (aasId: string, infrastructure?: InfrastructureConfig): string {
     const failResponse = ''
 
     if (!aasId) {
@@ -388,15 +444,9 @@ export function useAASRepositoryClient () {
       return failResponse
     }
 
-    let aasRepoUrl = aasRepositoryUrl.value.trim()
+    const aasRepoUrl = getShellsUrl(infrastructure)
     if (aasRepoUrl === '') {
       return failResponse
-    }
-    if (aasRepoUrl.endsWith('/')) {
-      aasRepoUrl = stripLastCharacter(aasRepoUrl)
-    }
-    if (!aasRepoUrl.endsWith(ASS_REPOSITORY_ENDPOINT_PATH)) {
-      aasRepoUrl += ASS_REPOSITORY_ENDPOINT_PATH
     }
 
     const aasEndpoint = aasRepoUrl + '/' + base64Encode(aasId)
@@ -840,6 +890,7 @@ export function useAASRepositoryClient () {
 
   return {
     fetchAasUpdateCapability,
+    fetchAasRepositoryDescription,
     fetchAasListPage,
     fetchAasList,
     fetchAasById,

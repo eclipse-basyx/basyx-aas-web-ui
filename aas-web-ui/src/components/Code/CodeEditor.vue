@@ -4,7 +4,7 @@
       ref="container"
       class="code-editor rounded border"
       :class="{ 'code-editor--error': error }"
-      :style="{ height }"
+      :style="containerStyle"
     />
 
     <slot v-if="loading" name="loading">
@@ -34,7 +34,7 @@
     language?: 'json' | 'xml' | 'plaintext'
     readOnly?: boolean
     accessibleLabel: string
-    height?: string
+    height?: string // CSS height, or 'auto' to fit the content height (e.g. wrapped lines) without scrolling
     error?: boolean
     modelNamespace?: string
     schemas?: CodeSchema[]
@@ -58,12 +58,18 @@
   const loading = ref(true)
   const loadError = ref('')
   const theme = useTheme()
+  const contentHeight = ref(0)
   let runtime: typeof MonacoRuntime | undefined
   let instance: editor.IStandaloneCodeEditor | undefined
   let model: editor.ITextModel | undefined
   let subscription: IDisposable | undefined
   let unmounted = false
   let applyingExternalValue = false
+
+  // The border is added to the content height, so no content line is cut off
+  const containerStyle = computed(() => props.height === 'auto'
+    ? { height: `${contentHeight.value}px`, boxSizing: 'content-box' as const }
+    : { height: props.height })
 
   const editorOptions = computed<editor.IStandaloneEditorConstructionOptions>(() => ({
     automaticLayout: true,
@@ -108,6 +114,10 @@
       const uri = monaco.Uri.parse(`inmemory://${props.modelNamespace}/${uuidv4()}.${props.language}`)
       model = monaco.editor.createModel(value.value, props.language, uri)
       instance = monaco.editor.create(container.value, { ...editorOptions.value, model })
+      contentHeight.value = instance.getContentHeight()
+      instance.onDidContentSizeChange(event => {
+        contentHeight.value = event.contentHeight
+      })
       subscription = model.onDidChangeContent(() => {
         if (!model) return
         const text = model.getValue()

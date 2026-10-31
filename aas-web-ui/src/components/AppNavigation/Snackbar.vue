@@ -5,7 +5,7 @@
       <v-divider v-if="snackbar.extendedError" />
 
       <v-card-text v-if="snackbar.extendedError" style="max-height: 200px; overflow-y: auto; max-width: 590px">
-        <pre class="text-subtitleText text-body-small">{{ snackbar.extendedError }}</pre>
+        <pre class="text-subtitleText text-body-small text-pre-wrap">{{ snackbar.extendedError }}</pre>
       </v-card-text>
 
       <v-divider />
