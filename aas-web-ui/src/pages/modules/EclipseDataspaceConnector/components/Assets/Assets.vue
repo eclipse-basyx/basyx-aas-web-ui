@@ -93,6 +93,20 @@
                     <span>Create a new asset from Template</span>
                   </v-tooltip>
 
+                  <!-- Create EDC Asset from AAS Infrastructure Dialog -->
+                  <v-tooltip location="bottom" open-delay="600">
+                    <template #activator="{ props }">
+                      <v-list-item slim v-bind="props" @click="createAssetFromInfrastructureDialog = true">
+                        <template #prepend>
+                          <v-icon size="small">mdi-plus</v-icon>
+                        </template>
+                        Create EDC Asset from AAS Infrastructure
+                      </v-list-item>
+                    </template>
+
+                    <span>Create a new asset from an AAS of a preconfigured infrastructure</span>
+                  </v-tooltip>
+
                 </v-list>
               </v-sheet>
             </v-menu>
@@ -308,6 +322,12 @@
     @assets-created="onAssetsCreated"
   />
 
+  <CreateAssetFromInfrastructureDialog
+    v-model="createAssetFromInfrastructureDialog"
+    :proxy-id="edcProxyId"
+    @assets-created="assetId => onAssetsCreated(assetId, true)"
+  />
+
   <UpdateAssetDialog
     v-model="updateAssetDialog"
     :asset="assetToUpdate"
@@ -328,6 +348,7 @@
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import CreateAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetDialog.vue'
+  import CreateAssetFromInfrastructureDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetFromInfrastructureDialog.vue'
   import CreateAssetFromTemplateDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetFromTemplateDialog.vue'
   // import CreateAssetsAasSmsDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetsAasSmsDialog.vue'
   import DeleteAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/DeleteAssetDialog.vue'
@@ -366,6 +387,7 @@
   const createAssetDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
   // const createAssetsAasSmsDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
   const createAssetFromTemplateDialog = ref(false) // Variable to store if the Create Asset Dialog should be shown
+  const createAssetFromInfrastructureDialog = ref(false) // Variable to store if the Create Asset from AAS Infrastructure Dialog should be shown
   const updateAssetDialog = ref(false) // Variable to store if the Update Asset Dialog should be shown
   const assetToUpdate = ref<any>({}) // Variable to store the asset to be updated
   const deleteAssetDialog = ref(false) // Variable to store if the Delete Asset Dialog should be shown
@@ -414,13 +436,13 @@
     listLoading.value = false
   }
 
-  async function onAssetsCreated (assetId?: string): Promise<void> {
+  async function onAssetsCreated (assetId?: string, replaceSelection = false): Promise<void> {
     const hadSelection = !!selectedAsset.value?.['@id']
 
     // Reload the asset list
     await initialize()
 
-    if (!hadSelection && assetId) {
+    if ((replaceSelection || !hadSelection) && assetId) {
       const createdAsset = assetList.value.find((asset: any) => asset['@id'] === assetId)
       if (createdAsset) {
         selectedAsset.value = createdAsset

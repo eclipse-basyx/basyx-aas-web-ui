@@ -47,7 +47,12 @@ describe('CodeEditor lifecycle', () => {
     mocks.theme = reactive({ global: { current: { value: { dark: false } } } })
     mocks.createModel.mockImplementation(createModel)
     mocks.create.mockImplementation(() => ({
-      updateOptions: vi.fn(), dispose: vi.fn(), focus: vi.fn(), getAction: vi.fn(() => ({ run: vi.fn() })),
+      updateOptions: vi.fn(),
+      dispose: vi.fn(),
+      focus: vi.fn(),
+      getAction: vi.fn(() => ({ run: vi.fn() })),
+      getContentHeight: vi.fn(() => 120),
+      onDidContentSizeChange: vi.fn(),
     }))
   })
 
@@ -105,6 +110,25 @@ describe('CodeEditor lifecycle', () => {
     expect(instance.focus).toHaveBeenCalledOnce()
     expect(instance.getAction).toHaveBeenCalledWith('editor.action.triggerSuggest')
     expect(instance.getAction.mock.results[0].value.run).toHaveBeenCalledOnce()
+    wrapper.unmount()
+  })
+
+  it('fits the content height in auto height and keeps a fixed height otherwise', async () => {
+    const wrapper = mount(CodeEditor, { props: { modelValue: '{}', accessibleLabel: 'JSON', height: 'auto' }, global: { stubs } })
+    await vi.dynamicImportSettled()
+    await flushPromises()
+    const container = wrapper.get('.code-editor').element as HTMLElement
+    expect(container.style.height).toBe('120px')
+    expect(container.style.boxSizing).toBe('content-box')
+
+    const onContentSizeChange = mocks.create.mock.results[0].value.onDidContentSizeChange.mock.calls[0][0]
+    onContentSizeChange({ contentHeight: 240 })
+    await flushPromises()
+    expect(container.style.height).toBe('240px')
+
+    await wrapper.setProps({ height: '300px' })
+    expect(container.style.height).toBe('300px')
+    expect(container.style.boxSizing).toBe('')
     wrapper.unmount()
   })
 

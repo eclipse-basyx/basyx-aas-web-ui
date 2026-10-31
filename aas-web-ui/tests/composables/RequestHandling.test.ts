@@ -699,6 +699,38 @@ describe('RequestHandling.ts', () => {
     expect(headers.get('Authorization')).toBe(`Basic ${btoa('draft-user:draft-password')}`)
   })
 
+  it('posts with the endpoint trust and authentication of an explicit infrastructure', async () => {
+    global.fetch = vi.fn().mockResolvedValue(Response.json({ result: [] })) as unknown as typeof fetch
+    mockState.selectedInfrastructure = {
+      id: 'selected-infra',
+      auth: { securityType: 'Bearer Token', bearerToken: { token: 'selected-token' } },
+      components: { AASRepo: { url: 'https://selected.example' } },
+    }
+    const otherInfrastructure = {
+      id: 'other-infra',
+      name: 'Other',
+      template: 'full',
+      auth: { securityType: 'Bearer Token', bearerToken: { token: 'other-token' } },
+      components: { AASRepo: { url: 'https://other.example/shells' } },
+    } as any
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const result = await useRequestHandling().postRequest(
+      'https://other.example/query/shells',
+      '{}',
+      new Headers(),
+      'executing Query Language search',
+      true,
+      false,
+      {},
+      { infrastructure: otherInfrastructure },
+    )
+
+    expect(result.success).toBe(true)
+    const headers = vi.mocked(global.fetch).mock.calls[0][1]?.headers as Headers
+    expect(headers.get('Authorization')).toBe('Bearer other-token')
+  })
+
   it('does not inherit trusted origins from the selected infrastructure when given a draft context', async () => {
     global.fetch = vi.fn().mockResolvedValue(Response.json({})) as unknown as typeof fetch
     mockState.selectedInfrastructure = {

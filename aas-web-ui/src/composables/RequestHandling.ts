@@ -505,12 +505,15 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     disableMessage: boolean,
     isTSRequest = false,
     errorHandlingOptions: RequestErrorHandlingOptions = defaultErrorOptions,
+    securityContext?: RequestSecurityContext,
   ): any {
-    const requestOwnerId = getRequestOwnerId()
+    const requestInfrastructure = securityContext?.infrastructure ?? infrastructureStore.getSelectedInfrastructure
+    const requestOwnerId = requestInfrastructure?.id
     return fetchWithAuthentication(
       path,
       { method: 'POST', body, headers, signal: errorHandlingOptions.signal },
       !isTSRequest,
+      requestInfrastructure,
     )
       .then(async response => {
         const contentType = getResponseContentType(response)
@@ -543,6 +546,8 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
               disableMessage,
               errorHandlingOptions,
               requestOwnerId,
+              requestInfrastructure,
+              securityContext?.isolateAuthenticationFailures,
             ),
             raw: response,
           }
@@ -578,7 +583,14 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
           throw new Error('Unexpected response format')
         }
       })
-      .catch(error => handleRequestError(error, disableMessage, errorHandlingOptions, requestOwnerId))
+      .catch(error => handleRequestError(
+        error,
+        disableMessage,
+        errorHandlingOptions,
+        requestOwnerId,
+        requestInfrastructure,
+        securityContext?.isolateAuthenticationFailures,
+      ))
   }
 
   function putRequest (

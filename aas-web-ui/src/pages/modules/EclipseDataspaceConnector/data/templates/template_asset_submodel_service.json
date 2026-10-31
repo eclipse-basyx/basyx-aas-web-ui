@@ -16,9 +16,6 @@
     "id": "{{Submodel Service Asset ID|Enter a unique asset identifier, e.g. a UUID|This will be the @id of your asset}}",
     "name": "Submodel Service",
     "description": "The Submodel service allows to retrieve Submodels of Digital Twins",
-    "dct:type": {
-      "@id": "cx-taxo:Submodel"
-    },
     "cx-common:version": "3.0"
   },
   "privateProperties": {},

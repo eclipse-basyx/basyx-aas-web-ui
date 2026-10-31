@@ -1,3 +1,4 @@
+import type { InfrastructureConfig } from '@/types/Infrastructure'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockState = vi.hoisted(() => ({
@@ -126,6 +127,67 @@ describe('AASRepositoryClient.ts', () => {
     expect(result.items).toEqual([{ id: 'aas-1' }])
     expect(result.nextCursor).toBe('cursor-2')
     expect(result.hasMore).toBe(true)
+  })
+
+  it('reads the AAS page from the given infrastructure with its credentials', async () => {
+    mockDeps.getRequest.mockResolvedValueOnce({ success: true, data: { result: [{ id: 'aas-1' }] } })
+    const infrastructure: InfrastructureConfig = {
+      id: 'infra-2',
+      name: 'Other Infrastructure',
+      template: 'mono-repo',
+      components: {
+        AASDiscovery: { url: '' },
+        AASRegistry: { url: '' },
+        SubmodelRegistry: { url: '' },
+        AASRepo: { url: 'https://other.test/' },
+        SubmodelRepo: { url: 'https://other.test/' },
+        ConceptDescriptionRepo: { url: 'https://other.test/' },
+        CompanyLookup: { url: '' },
+      },
+    }
+
+    const { useAASRepositoryClient } = await import('@/composables/Client/AASRepositoryClient')
+    const { fetchAasListPage, getAasEndpointById } = useAASRepositoryClient()
+
+    const result = await fetchAasListPage({ limit: 10, infrastructure })
+
+    expect(mockDeps.getRequest).toHaveBeenCalledWith(
+      'https://other.test/shells?limit=10',
+      'retrieving AAS page',
+      false,
+      expect.any(Headers),
+      undefined,
+      'auto',
+      { infrastructure },
+    )
+    expect(result.items).toEqual([{ id: 'aas-1' }])
+    expect(getAasEndpointById('urn:aas', infrastructure)).toBe('https://other.test/shells/dXJuOmFhcw')
+  })
+
+  it('reads the repository description of the given infrastructure without affecting its login state', async () => {
+    const description = { profiles: ['https://basyx.org/aas/API/3/2/AssetAdministrationShellRepositoryServiceSpecification/SSP-001'] }
+    mockDeps.getRequest.mockResolvedValueOnce({ success: true, data: description })
+    const infrastructure = { id: 'infra-2', template: 'identifiable', components: { AASRepo: { url: 'https://other.test/shells/' } } } as any
+
+    const { useAASRepositoryClient } = await import('@/composables/Client/AASRepositoryClient')
+    await expect(useAASRepositoryClient().fetchAasRepositoryDescription(infrastructure)).resolves.toEqual(description)
+
+    expect(mockDeps.getRequest).toHaveBeenCalledWith(
+      'https://other.test/description',
+      'retrieving AAS Repository description',
+      true,
+      expect.any(Headers),
+      undefined,
+      'auto',
+      { infrastructure, isolateAuthenticationFailures: true },
+    )
+  })
+
+  it('returns no repository description when the request fails', async () => {
+    mockDeps.getRequest.mockResolvedValueOnce({ success: false, status: 404 })
+
+    const { useAASRepositoryClient } = await import('@/composables/Client/AASRepositoryClient')
+    await expect(useAASRepositoryClient().fetchAasRepositoryDescription()).resolves.toBeNull()
   })
 
   it('returns no continuation when response has no cursor', async () => {

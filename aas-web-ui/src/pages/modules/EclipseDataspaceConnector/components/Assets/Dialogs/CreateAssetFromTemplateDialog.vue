@@ -1,8 +1,9 @@
 <template>
+  <!-- Widened by the OAuth2 drawer, so the form keeps its width -->
   <v-dialog
     v-model="createAssetDialog"
     style="min-height: 190px; max-height:90%"
-    width="800px"
+    :width="oauth2Drawer ? '1136px' : '800px'"
   >
     <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">
       <v-card-title class="bg-cardHeader">
@@ -11,64 +12,86 @@
 
       <v-divider />
 
-      <v-card-text class="flex-grow-1 overflow-y-auto">
-        <v-form ref="form" class="d-flex flex-column gap-4">
-
-          <!-- Template Selection -->
-          <v-select
-            v-model="selectedTemplate"
-            dense
-            hide-details
-            item-title="name"
-            item-value="value"
-            :items="assetTemplates"
-            label="Select EDC Asset Template"
-            required
-            variant="outlined"
-          >
-            <template #item="{ props: itemProps, item }">
-              <v-list-item v-bind="itemProps">
-                <template #prepend>
-                  <v-icon class="mr-n5">mdi-code-json</v-icon>
-                </template>
-
-                <template #title>
-                  <span class="font-weight-bold">{{ item.name }}</span>
-                </template>
-
-                <template #subtitle>
-                  {{ item.description }}
-                </template>
-              </v-list-item>
-            </template>
-          </v-select>
-
-          <!-- Dynamic Placeholder Fields -->
-          <div v-if="selectedTemplate" class="d-flex flex-column gap-3 mt-4">
-            <v-text-field
-              v-for="(placeholder, index) in placeholders"
-              :key="placeholder.label"
-              v-model="placeholderValues[placeholder.attribute]"
-              :class="index > 0 ? 'mt-2': ''"
-              dense
-              :hide-details="placeholder.hint == ''"
-              :hint="placeholder.hint"
-              :label="placeholder.label"
-              :persistent-hint="placeholder.hint !== ''"
-              :placeholder="placeholder.placeholder"
-              required
-              variant="outlined"
+      <!-- Only the form scrolls, the OAuth2 drawer keeps the visible height -->
+      <v-card-text class="pa-0 flex-grow-1 d-flex flex-column overflow-hidden">
+        <v-layout class="overflow-hidden">
+          <EdcAssetOAuth2Drawer v-model="oauth2Drawer">
+            <EdcAssetOAuth2Fields
+              v-model="oauth2"
+              subtitle="Used by the data address of the EDC asset"
+              title="EDC Asset"
             />
-          </div>
+          </EdcAssetOAuth2Drawer>
 
-          <!-- EDC Asset Preview -->
-          <JSONPreview
-            v-if="selectedTemplate"
-            class="mt-4"
-            :json-content="jsonContent"
-            :title="`EDC Asset`"
-          />
-        </v-form>
+          <v-main class="d-flex flex-column">
+            <v-form ref="form" class="d-flex flex-column gap-4 pa-4 overflow-y-auto">
+
+              <!-- Template Selection -->
+              <v-select
+                v-model="selectedTemplate"
+                dense
+                hide-details
+                item-title="name"
+                item-value="value"
+                :items="assetTemplates"
+                label="Select EDC Asset Template"
+                required
+                variant="outlined"
+              >
+                <template #item="{ props: itemProps, item }">
+                  <v-list-item v-bind="itemProps">
+                    <template #prepend>
+                      <v-icon class="mr-n5">mdi-code-json</v-icon>
+                    </template>
+
+                    <template #title>
+                      <span class="font-weight-bold">{{ item.name }}</span>
+                    </template>
+
+                    <template #subtitle>
+                      {{ item.description }}
+                    </template>
+                  </v-list-item>
+                </template>
+              </v-select>
+
+              <!-- Full width, across the padding of the form -->
+              <v-divider v-if="selectedTemplate" class="mt-4 mx-n4" />
+
+              <!-- Dynamic Placeholder Fields, the OAuth2 ones are filled in the OAuth2 drawer -->
+              <div v-if="selectedTemplate" class="d-flex flex-column gap-3 mt-4">
+                <v-text-field
+                  v-for="(placeholder, index) in fieldPlaceholders"
+                  :key="placeholder.label"
+                  v-model="placeholderValues[placeholder.attribute]"
+                  :class="index > 0 ? 'mt-2': ''"
+                  dense
+                  :hide-details="placeholder.hint == ''"
+                  :hint="placeholder.hint"
+                  :label="placeholder.label"
+                  :persistent-hint="placeholder.hint !== ''"
+                  :placeholder="placeholder.placeholder"
+                  required
+                  variant="outlined"
+                >
+                  <!-- Next to the field of the Asset ID, aligned with the field above its hint -->
+                  <template v-if="placeholder.attribute === '@id' && oauth2Placeholders.length > 0" #append>
+                    <EdcAssetOAuth2Button v-model="oauth2Drawer" :configured="hasEdcAssetOAuth2(oauth2)" />
+                  </template>
+                </v-text-field>
+              </div>
+
+              <!-- EDC Asset Preview, fits its content, the form scrolls instead of shrinking it -->
+              <JSONPreview
+                v-if="activeAssetTemplate"
+                class="mt-4 flex-shrink-0"
+                height="auto"
+                :json-content="jsonContent"
+                :title="`EDC Asset`"
+              />
+            </v-form>
+          </v-main>
+        </v-layout>
       </v-card-text>
 
       <v-divider />
@@ -98,6 +121,14 @@
 
 <script lang="ts" setup>
   import { type CatenaXEdcAsset, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
+  import EdcAssetOAuth2Button from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Button.vue'
+  import EdcAssetOAuth2Drawer from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Drawer.vue'
+  import EdcAssetOAuth2Fields from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Fields.vue'
+  import {
+    createEmptyEdcAssetOAuth2,
+    type EdcAssetOAuth2,
+    hasEdcAssetOAuth2,
+  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetFromAas'
   import AssetTemplateDefault from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset.json'
   import AssetTemplateDTRegistry from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_digitaltwin_registry.json'
   import AssetTemplateSmService from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_submodel_service.json'
@@ -122,6 +153,8 @@
   const selectedTemplate = ref<'default' | 'railwayXPush' | ''>('')
   const form = ref<any>(null)
   const placeholderValues = ref<Record<string, string>>({})
+  const oauth2Drawer = ref(false)
+  const oauth2 = ref<EdcAssetOAuth2>(createEmptyEdcAssetOAuth2()) // Fills the "oauth2:*" placeholders of the template
 
   // Computed properties
   // EDC Asset Templates
@@ -146,10 +179,10 @@
     },
   ].filter(template => template.asset !== null))
 
-  const placeholders = computed(() => {
-    if (!selectedTemplate.value) return []
+  const activeAssetTemplate = computed(() => assetTemplates.value.find(t => t.value === selectedTemplate.value))
 
-    const template = assetTemplates.value.find(t => t.value === selectedTemplate.value)
+  const placeholders = computed(() => {
+    const template = activeAssetTemplate.value
     if (!template) return []
 
     const templateStr = JSON.stringify(template.asset)
@@ -177,10 +210,17 @@
     })
   })
 
-  const jsonContent = computed(() => {
-    if (!selectedTemplate.value) return ''
+  const oauth2Placeholders = computed(() => placeholders.value.filter(p => p.attribute.startsWith('oauth2:')))
+  const fieldPlaceholders = computed(() => placeholders.value.filter(p => !p.attribute.startsWith('oauth2:')))
 
-    const template = assetTemplates.value.find(t => t.value === selectedTemplate.value)
+  // Values of the placeholder fields and the OAuth2 drawer by attribute, e.g. "oauth2:clientId"
+  const filledPlaceholderValues = computed<Record<string, string>>(() => ({
+    ...placeholderValues.value,
+    ...Object.fromEntries(Object.entries(oauth2.value).map(([key, value]) => ['oauth2:' + key, value.trim()])),
+  }))
+
+  const jsonContent = computed(() => {
+    const template = activeAssetTemplate.value
     if (!template) return ''
 
     return replacePlaceholders(JSON.stringify(template.asset))
@@ -209,6 +249,10 @@
     () => {
       // Reset placeholder values when template changes
       placeholderValues.value = {}
+      oauth2.value = createEmptyEdcAssetOAuth2()
+      if (oauth2Placeholders.value.length === 0) {
+        oauth2Drawer.value = false
+      }
     },
   )
 
@@ -231,7 +275,7 @@
   function replacePlaceholders (assetJson: string): string {
     let result = assetJson
     for (const placeholder of placeholders.value) {
-      const value = placeholderValues.value[placeholder.attribute] ?? ''
+      const value = filledPlaceholderValues.value[placeholder.attribute] ?? ''
       result = result.replace(
         /\{\{[^}]*\}\}/g,
         match => {

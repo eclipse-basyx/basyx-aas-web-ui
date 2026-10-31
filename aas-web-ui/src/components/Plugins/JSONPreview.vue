@@ -5,7 +5,7 @@
     :export-text="text"
     :file-name="`${downloadFileName || submodelElementData?.idShort || 'download'}.json`"
     :height="height"
-    icon="mdi-code-json"
+    :icon="icon"
     :loading="loading"
     :text="displayText"
     :title="title"
@@ -20,11 +20,13 @@
     downloadFileName?: string
     jsonContent?: unknown
     height?: string
+    icon?: string
     submodelElementData?: any
     title?: string
   }>(), {
     downloadFileName: '',
     height: '600px',
+    icon: 'mdi-code-json',
     jsonContent: undefined,
     submodelElementData: () => ({}),
     title: 'JSON Preview',
