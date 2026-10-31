@@ -518,6 +518,90 @@ describe('RequestHandling.ts', () => {
     expect(details).toContain('Route: POST /api/catena-x/edc/default/submodels/fetch')
   })
 
+  it('returns the details of an EDC conflict with the failed POST result', async () => {
+    global.fetch = vi.fn().mockResolvedValue(Response.json(
+      [{ message: 'Asset with ID asset-1 already exists', type: 'ObjectConflict', path: null, invalidValue: null }],
+      { status: 409, headers: { 'Content-Type': 'application/json' } },
+    )) as unknown as typeof fetch
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { postRequest, consumeLastRequestFailureDetails } = useRequestHandling()
+
+    const response = await postRequest('/api/catena-x/edc/default/assets', '{}', new Headers(), 'creating EDC asset', true)
+
+    expect(response).toEqual(expect.objectContaining({
+      success: false,
+      status: 409,
+      details: 'Asset with ID asset-1 already exists',
+    }))
+    expect(consumeLastRequestFailureDetails()).toBe('Asset with ID asset-1 already exists')
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalled()
+  })
+
+  it('lists every distinct message of an EDC validation failure', async () => {
+    const policyPath = 'https://w3id.org/edc/v0.0.1/ns/policy'
+    global.fetch = vi.fn().mockResolvedValue(Response.json(
+      [
+        { message: `mandatory object '${policyPath}' is missing`, type: 'ValidationFailure', path: policyPath, invalidValue: null },
+        { message: `mandatory object '${policyPath}' is missing`, type: 'ValidationFailure', path: policyPath, invalidValue: null },
+        { message: 'value is not allowed', type: 'ValidationFailure', path: 'https://w3id.org/edc/v0.0.1/ns/type', invalidValue: 'Foo' },
+      ],
+      { status: 400, headers: { 'Content-Type': 'application/json' } },
+    )) as unknown as typeof fetch
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { postRequest } = useRequestHandling()
+
+    const response = await postRequest('/api/catena-x/edc/default/policydefinitions', '{}', new Headers(), 'creating EDC policy', true)
+
+    expect(response.details).toBe(
+      `mandatory object '${policyPath}' is missing\nvalue is not allowed (invalid value: Foo)`,
+    )
+  })
+
+  it('leaves out an HTML error page from the failure details', async () => {
+    const htmlPage = '<html>\n<head><title>Error 500 Internal Server Error</title></head>\n<body></body>\n</html>\n'
+    global.fetch = vi.fn().mockResolvedValue(Response.json(
+      htmlPage,
+      { status: 500, headers: { 'Content-Type': 'application/json' } },
+    )) as unknown as typeof fetch
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { postRequest, consumeLastRequestFailureDetails } = useRequestHandling()
+
+    const response = await postRequest('/api/catena-x/edc/default/assets', '{}', new Headers(), 'creating EDC asset', true)
+
+    expect(response).toEqual(expect.objectContaining({ success: false, status: 500 }))
+    expect(response.details).toBeUndefined()
+    expect(consumeLastRequestFailureDetails()).toBeUndefined()
+  })
+
+  it('returns the details of a payload failure with the result of PUT requests', async () => {
+    global.fetch = vi.fn().mockResolvedValue(Response.json(
+      { error: 'Invalid JSON request body', status: 400, code: 'INVALID_JSON' },
+      { status: 400, headers: { 'Content-Type': 'application/json' } },
+    )) as unknown as typeof fetch
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { putRequest } = useRequestHandling()
+
+    const response = await putRequest('/api/catena-x/edc/default/assets/asset-1', '{', new Headers(), 'updating EDC asset', true)
+
+    expect(response).toEqual(expect.objectContaining({ success: false, status: 400 }))
+    expect(response.details).toContain('Message: Invalid JSON request body')
+  })
+
+  it('returns the error message of a failed fetch as details', async () => {
+    global.fetch = vi.fn().mockRejectedValue(new TypeError('Failed to fetch')) as unknown as typeof fetch
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { postRequest } = useRequestHandling()
+
+    const response = await postRequest('/api/catena-x/edc/default/assets', '{}', new Headers(), 'creating EDC asset', true)
+
+    expect(response).toEqual(expect.objectContaining({ success: false, details: 'Failed to fetch' }))
+  })
+
   it('keeps empty text payload as valid response data in getRequest', async () => {
     global.fetch = vi.fn().mockResolvedValue(
       new Response('', {
@@ -911,7 +995,11 @@ describe('RequestHandling.ts', () => {
       requests.deleteRequest('/api', new Headers(), 'deleting', false),
     ])
 
-    expect(results).toEqual(Array.from({ length: 5 }, () => ({ success: false, status: undefined })))
+    expect(results).toEqual(Array.from({ length: 5 }, () => ({
+      success: false,
+      status: undefined,
+      details: expect.stringContaining('Invalid custom header configuration'),
+    })))
     expect(global.fetch).not.toHaveBeenCalled()
     expect(mockDeps.dispatchSnackbar).toHaveBeenCalledTimes(5)
     expect(mockDeps.dispatchSnackbar).toHaveBeenLastCalledWith(expect.objectContaining({

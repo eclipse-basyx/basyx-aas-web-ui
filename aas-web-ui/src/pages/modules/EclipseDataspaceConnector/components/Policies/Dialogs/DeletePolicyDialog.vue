@@ -42,6 +42,10 @@
 
 <script lang="ts" setup>
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
+  import {
+    edcRequestFailureText,
+    useEdcRequestFailureMessage,
+  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
 
   const props = withDefaults(defineProps<{
     modelValue: boolean
@@ -57,6 +61,7 @@
 
   // Composables
   const { deletePolicyDefinition: deletePolicyDefinitionFromEdc } = useCatenaXEdcClient()
+  const { showFailureMessage } = useEdcRequestFailureMessage()
 
   // Data
   const deletePolicyDialog = ref(false)
@@ -82,16 +87,16 @@
     }
 
     try {
-      // Create the policy via EDC API
-      const response = await deletePolicyDefinitionFromEdc(props.proxyId, props.policy['@id'])
-      if (response) {
+      // Delete the policy via EDC API
+      const result = await deletePolicyDefinitionFromEdc(props.proxyId, props.policy['@id'])
+      if (result.success) {
         emit('policy-deleted', true)
         deletePolicyDialog.value = false
       } else {
-        console.error('Failed to delete policy')
+        showFailureMessage('Failed to delete EDC Policy.', edcRequestFailureText(result, 'Policy', 'delete'))
       }
     } catch (error_) {
-      console.error('Error creating policy:', error_)
+      console.error('Error deleting policy:', error_)
     }
   }
 

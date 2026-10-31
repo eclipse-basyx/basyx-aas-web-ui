@@ -84,6 +84,7 @@ async function startBffServer (upstreamPort: number): Promise<string> {
 const crudResources = [
   {
     resource: 'assets',
+    updateUrl: '/management/v3/assets',
     id: 'asset/1',
     entity: {
       '@id': 'asset/1',
@@ -93,6 +94,7 @@ const crudResources = [
   },
   {
     resource: 'contractdefinitions',
+    updateUrl: '/management/v3/contractdefinitions',
     id: 'contract/1',
     entity: {
       '@id': 'contract/1',
@@ -103,6 +105,7 @@ const crudResources = [
   },
   {
     resource: 'policydefinitions',
+    updateUrl: '/management/v3/policydefinitions/policy%2F1',
     id: 'policy/1',
     entity: {
       '@id': 'policy/1',
@@ -284,7 +287,7 @@ describe('EDC BFF server', () => {
 
   it.each(crudResources)(
     'queries, creates, updates and deletes $resource through the configured EDC management API',
-    async ({ resource, id, entity }) => {
+    async ({ resource, updateUrl, id, entity }) => {
       const encodedId = encodeURIComponent(id)
       const upstream = await startUpstreamServer(record => {
         if (record.url?.endsWith(`/${resource}/request`)) {
@@ -342,7 +345,7 @@ describe('EDC BFF server', () => {
           apiKey: 'TEST_API_KEY',
           body: entity,
           method: 'PUT',
-          url: `/management/v3/${resource}`,
+          url: updateUrl,
         },
         {
           apiKey: 'TEST_API_KEY',

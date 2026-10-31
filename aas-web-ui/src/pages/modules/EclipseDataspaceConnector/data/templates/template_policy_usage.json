@@ -18,8 +18,8 @@
             "and": [
               {
                 "leftOperand": "FrameworkAgreement",
-                "operator": "isAnyOf",
-                "rightOperand": ["DataExchangeGovernance:1.0", "circulareconomy:1.0"]
+                "operator": "eq",
+                "rightOperand": "DataExchangeGovernance:1.0"
               },
               {
                 "leftOperand": "Membership",

@@ -1,4 +1,4 @@
-import { useRequestHandling } from '@/composables/RequestHandling'
+import { type RequestResult, useRequestHandling } from '@/composables/RequestHandling'
 import { useEnvStore } from '@/store/EnvironmentStore'
 
 const edcResourceLabels = {
@@ -70,6 +70,26 @@ export interface CatenaXEdcIdResponse {
   'createdAt': number
 }
 
+/**
+ * Failed request to the EDC, with the HTTP status and the error details of the EDC,
+ * e.g. status 409 if a resource with the same ID already exists.
+ */
+export interface CatenaXEdcFailure {
+  success: false
+  status?: number
+  errorDetails?: string
+}
+
+/**
+ * Result of creating an EDC resource.
+ */
+export type CatenaXEdcCreateResult = { success: true, data: CatenaXEdcIdResponse } | CatenaXEdcFailure
+
+/**
+ * Result of updating or deleting an EDC resource.
+ */
+export type CatenaXEdcResult = { success: true } | CatenaXEdcFailure
+
 export interface CatenaXEdcContractDefinition extends Record<string, unknown> {
   '@id'?: string
   'accessPolicyId': string
@@ -123,17 +143,17 @@ export function useCatenaXEdcClient (): {
   discoverConnector: (proxyId: string, request: CatenaXEdcDiscoveryRequest) => Promise<unknown | null>
   requestCatalog: (proxyId: string, request: CatenaXEdcCatalogRequest) => Promise<CatenaXEdcCatalog | null>
   queryAssets: (proxyId: string, request?: CatenaXEdcQuerySpecRequest) => Promise<CatenaXEdcAsset[] | null>
-  createAsset: (proxyId: string, asset: CatenaXEdcAsset) => Promise<CatenaXEdcIdResponse | null>
-  updateAsset: (proxyId: string, assetId: string, asset: CatenaXEdcAsset) => Promise<boolean>
-  deleteAsset: (proxyId: string, assetId: string) => Promise<boolean>
+  createAsset: (proxyId: string, asset: CatenaXEdcAsset) => Promise<CatenaXEdcCreateResult>
+  updateAsset: (proxyId: string, assetId: string, asset: CatenaXEdcAsset) => Promise<CatenaXEdcResult>
+  deleteAsset: (proxyId: string, assetId: string) => Promise<CatenaXEdcResult>
   queryContractDefinitions: (proxyId: string, request?: CatenaXEdcQuerySpecRequest) => Promise<CatenaXEdcContractDefinition[] | null>
-  createContractDefinition: (proxyId: string, contractDefinition: CatenaXEdcContractDefinition) => Promise<CatenaXEdcIdResponse | null>
-  updateContractDefinition: (proxyId: string, contractDefinitionId: string, contractDefinition: CatenaXEdcContractDefinition) => Promise<boolean>
-  deleteContractDefinition: (proxyId: string, contractDefinitionId: string) => Promise<boolean>
+  createContractDefinition: (proxyId: string, contractDefinition: CatenaXEdcContractDefinition) => Promise<CatenaXEdcCreateResult>
+  updateContractDefinition: (proxyId: string, contractDefinitionId: string, contractDefinition: CatenaXEdcContractDefinition) => Promise<CatenaXEdcResult>
+  deleteContractDefinition: (proxyId: string, contractDefinitionId: string) => Promise<CatenaXEdcResult>
   queryPolicyDefinitions: (proxyId: string, request?: CatenaXEdcQuerySpecRequest) => Promise<CatenaXEdcPolicyDefinition[] | null>
-  createPolicyDefinition: (proxyId: string, policyDefinition: CatenaXEdcPolicyDefinition) => Promise<CatenaXEdcIdResponse | null>
-  updatePolicyDefinition: (proxyId: string, policyDefinitionId: string, policyDefinition: CatenaXEdcPolicyDefinition) => Promise<boolean>
-  deletePolicyDefinition: (proxyId: string, policyDefinitionId: string) => Promise<boolean>
+  createPolicyDefinition: (proxyId: string, policyDefinition: CatenaXEdcPolicyDefinition) => Promise<CatenaXEdcCreateResult>
+  updatePolicyDefinition: (proxyId: string, policyDefinitionId: string, policyDefinition: CatenaXEdcPolicyDefinition) => Promise<CatenaXEdcResult>
+  deletePolicyDefinition: (proxyId: string, policyDefinitionId: string) => Promise<CatenaXEdcResult>
   fetchDtrShellDescriptors: (
     proxyId: string,
     request: CatenaXEdcDtrDescriptorPageRequest,
@@ -222,7 +242,7 @@ export function useCatenaXEdcClient (): {
   async function createAsset (
     proxyId: string,
     asset: CatenaXEdcAsset,
-  ): Promise<CatenaXEdcIdResponse | null> {
+  ): Promise<CatenaXEdcCreateResult> {
     return createEdcResource(proxyId, 'assets', asset)
   }
 
@@ -230,11 +250,11 @@ export function useCatenaXEdcClient (): {
     proxyId: string,
     assetId: string,
     asset: CatenaXEdcAsset,
-  ): Promise<boolean> {
+  ): Promise<CatenaXEdcResult> {
     return updateEdcResource(proxyId, 'assets', assetId, asset)
   }
 
-  async function deleteAsset (proxyId: string, assetId: string): Promise<boolean> {
+  async function deleteAsset (proxyId: string, assetId: string): Promise<CatenaXEdcResult> {
     return deleteEdcResource(proxyId, 'assets', assetId)
   }
 
@@ -248,7 +268,7 @@ export function useCatenaXEdcClient (): {
   async function createContractDefinition (
     proxyId: string,
     contractDefinition: CatenaXEdcContractDefinition,
-  ): Promise<CatenaXEdcIdResponse | null> {
+  ): Promise<CatenaXEdcCreateResult> {
     return createEdcResource(proxyId, 'contractdefinitions', contractDefinition)
   }
 
@@ -256,14 +276,14 @@ export function useCatenaXEdcClient (): {
     proxyId: string,
     contractDefinitionId: string,
     contractDefinition: CatenaXEdcContractDefinition,
-  ): Promise<boolean> {
+  ): Promise<CatenaXEdcResult> {
     return updateEdcResource(proxyId, 'contractdefinitions', contractDefinitionId, contractDefinition)
   }
 
   async function deleteContractDefinition (
     proxyId: string,
     contractDefinitionId: string,
-  ): Promise<boolean> {
+  ): Promise<CatenaXEdcResult> {
     return deleteEdcResource(proxyId, 'contractdefinitions', contractDefinitionId)
   }
 
@@ -298,7 +318,7 @@ export function useCatenaXEdcClient (): {
   async function createPolicyDefinition (
     proxyId: string,
     policyDefinition: CatenaXEdcPolicyDefinition,
-  ): Promise<CatenaXEdcIdResponse | null> {
+  ): Promise<CatenaXEdcCreateResult> {
     return createEdcResource(proxyId, 'policydefinitions', policyDefinition)
   }
 
@@ -306,10 +326,10 @@ export function useCatenaXEdcClient (): {
     proxyId: string,
     resource: EdcResource,
     payload: Record<string, unknown>,
-  ): Promise<CatenaXEdcIdResponse | null> {
+  ): Promise<CatenaXEdcCreateResult> {
     const url = buildEdcProxyUrl(proxyId, resource)
     if (!url) {
-      return null
+      return { success: false }
     }
 
     const result = await postRequest(
@@ -320,14 +340,16 @@ export function useCatenaXEdcClient (): {
       true,
     )
 
-    return result.success && result.data ? result.data as CatenaXEdcIdResponse : null
+    return result.success && result.data
+      ? { success: true, data: result.data as CatenaXEdcIdResponse }
+      : { success: false, status: result.status, errorDetails: result.details }
   }
 
   async function updatePolicyDefinition (
     proxyId: string,
     policyDefinitionId: string,
     policyDefinition: CatenaXEdcPolicyDefinition,
-  ): Promise<boolean> {
+  ): Promise<CatenaXEdcResult> {
     return updateEdcResource(proxyId, 'policydefinitions', policyDefinitionId, policyDefinition)
   }
 
@@ -336,11 +358,11 @@ export function useCatenaXEdcClient (): {
     resource: EdcResource,
     resourceId: string,
     payload: Record<string, unknown>,
-  ): Promise<boolean> {
+  ): Promise<CatenaXEdcResult> {
     const normalizedId = resourceId.trim()
     const url = buildEdcProxyUrl(proxyId, `${resource}/${encodeURIComponent(normalizedId)}`)
     if (!url || normalizedId === '') {
-      return false
+      return { success: false }
     }
 
     const result = await putRequest(
@@ -351,13 +373,13 @@ export function useCatenaXEdcClient (): {
       true,
     )
 
-    return result.success
+    return toEdcResult(result)
   }
 
   async function deletePolicyDefinition (
     proxyId: string,
     policyDefinitionId: string,
-  ): Promise<boolean> {
+  ): Promise<CatenaXEdcResult> {
     return deleteEdcResource(proxyId, 'policydefinitions', policyDefinitionId)
   }
 
@@ -365,14 +387,14 @@ export function useCatenaXEdcClient (): {
     proxyId: string,
     resource: EdcResource,
     resourceId: string,
-  ): Promise<boolean> {
+  ): Promise<CatenaXEdcResult> {
     const normalizedResourceId = resourceId.trim()
     const url = buildEdcProxyUrl(
       proxyId,
       `${resource}/${encodeURIComponent(normalizedResourceId)}`,
     )
     if (!url || normalizedResourceId === '') {
-      return false
+      return { success: false }
     }
 
     const result = await deleteRequest(
@@ -381,7 +403,12 @@ export function useCatenaXEdcClient (): {
       `deleting EDC ${edcResourceItemLabels[resource]}`,
       true,
     )
-    return result.success
+
+    return toEdcResult(result)
+  }
+
+  function toEdcResult (result: RequestResult): CatenaXEdcResult {
+    return result.success ? { success: true } : { success: false, status: result.status, errorDetails: result.details }
   }
 
   async function fetchDtrShellDescriptors (

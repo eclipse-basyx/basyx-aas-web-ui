@@ -175,6 +175,10 @@
     hasEdcAssetOAuth2,
     useEdcAssetFromAas,
   } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetFromAas'
+  import {
+    edcRequestFailureText,
+    useEdcRequestFailureMessage,
+  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { getInfrastructureTemplateDefinition, isAasSourceInfrastructure } from '@/utils/InfrastructureUtils'
@@ -200,6 +204,7 @@
   const { smTitleToDisplay } = useSubmodelDisplay()
   const { createAasEdcAsset, createSmEdcAsset } = useEdcAssetFromAas()
   const { createAsset: createAssetInEdc } = useCatenaXEdcClient()
+  const { showFailureMessage } = useEdcRequestFailureMessage()
 
   // Data
   const createAssetDialog = ref(false)
@@ -296,45 +301,65 @@
     if (!selectedAas.value) return
 
     const edcAssets = [
-      createAasEdcAsset(selectedAas.value, aasOAuth2.value),
-      ...selectedSubmodels.value.map(submodel => createSmEdcAsset(selectedAas.value, submodel, smOAuth2.value)),
-    ]
+      { name: 'AAS', asset: createAasEdcAsset(selectedAas.value, aasOAuth2.value) },
+      ...selectedSubmodels.value.map(submodel => ({
+        name: 'Submodel ' + smTitleToDisplay(submodel),
+        asset: createSmEdcAsset(selectedAas.value, submodel, smOAuth2.value),
+      })),
+    ].filter((edcAsset, index, all) =>
+      // Create each ID once, the EDC fails unpredictably on parallel requests with the same ID
+      all.findIndex(other => other.asset['@id'] === edcAsset.asset['@id']) === index,
+    )
 
     creatingAssets.value = true
-    const responses = await Promise.all(edcAssets.map(edcAsset => createAssetInEdc(props.proxyId, edcAsset)))
+    const results = await Promise.all(edcAssets.map(({ asset }) => createAssetInEdc(props.proxyId, asset)))
     creatingAssets.value = false
 
-    const createdCount = responses.filter(Boolean).length
-    const failedCount = responses.length - createdCount
-    const assetsLabel = (count: number) => `${count} EDC Asset${count === 1 ? '' : 's'}`
+    // An already existing asset (409) is no failure, e.g. of a Submodel shared by several AAS
+    const failures = edcAssets.flatMap(({ name }, index) => {
+      const result = results[index]
+      return !result || result.success || result.status === 409 ? [] : [{ name, result }]
+    })
+    const createdCount = results.filter(result => result?.success).length
+    const existingCount = results.length - createdCount - failures.length
+    const failedCount = failures.length
+    const summary = createSummary(createdCount, existingCount, failedCount)
 
     if (failedCount === 0) {
       navigationStore.dispatchSnackbar({
         status: true,
         timeout: 4000,
-        color: 'success',
+        color: createdCount === 0 ? 'info' : 'success',
         btnColor: 'buttonText',
-        text: `Successfully created ${assetsLabel(createdCount)}.`,
+        text: summary,
       })
     } else {
-      navigationStore.dispatchSnackbar({
-        status: true,
-        timeout: 8000,
-        color: createdCount === 0 ? 'error' : 'warning',
-        btnColor: 'buttonText',
-        text: createdCount === 0
-          ? `Failed to create ${assetsLabel(failedCount)}.`
-          : `Created ${assetsLabel(createdCount)}, ${failedCount} failed.`,
-      })
+      showFailureMessage(
+        summary,
+        failures.map(({ name, result }) => `${name}:\n${edcRequestFailureText(result, 'Asset', 'create')}`).join('\n\n'),
+        createdCount + existingCount === 0 ? 'error' : 'warning',
+      )
     }
 
     if (failedCount === 0) {
-      // Select the EDC Asset of the AAS (first response)
-      emit('assets-created', responses[0]?.['@id'])
+      // Select the EDC Asset of the AAS, created or already existing
+      emit('assets-created', edcAssets[0]?.asset['@id'])
       createAssetDialog.value = false
     } else if (createdCount > 0) {
       // Only reload the asset list, the dialog stays open
       emit('assets-created')
     }
+  }
+
+  function createSummary (createdCount: number, existingCount: number, failedCount: number): string {
+    const assetsLabel = (count: number) => `${count} EDC Asset${count === 1 ? '' : 's'}`
+    if (existingCount === 0 && failedCount === 0) return `Successfully created ${assetsLabel(createdCount)}.`
+
+    // The first part names the EDC Assets, e.g. "Created 1 EDC Asset, 1 already existed, 1 failed."
+    const parts: Array<string> = []
+    if (createdCount > 0) parts.push(`Created ${assetsLabel(createdCount)}`)
+    if (existingCount > 0) parts.push(parts.length > 0 ? `${existingCount} already existed` : `${assetsLabel(existingCount)} already existed`)
+    if (failedCount > 0) parts.push(parts.length > 0 ? `${failedCount} failed` : `Failed to create ${assetsLabel(failedCount)}`)
+    return parts.join(', ') + '.'
   }
 </script>

@@ -129,6 +129,10 @@
     type EdcAssetOAuth2,
     hasEdcAssetOAuth2,
   } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetFromAas'
+  import {
+    edcRequestFailureText,
+    useEdcRequestFailureMessage,
+  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import AssetTemplateDefault from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset.json'
   import AssetTemplateDTRegistry from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_digitaltwin_registry.json'
   import AssetTemplateSmService from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_submodel_service.json'
@@ -147,6 +151,7 @@
 
   // Composables
   const { createAsset: createAssetInEdc } = useCatenaXEdcClient()
+  const { showFailureMessage } = useEdcRequestFailureMessage()
 
   // Data
   const createAssetDialog = ref(false)
@@ -341,13 +346,13 @@
       const finalAsset = removeUnfilledPlaceholders(JSON.parse(assetJson)) as CatenaXEdcAsset
 
       // Create the asset via EDC API
-      const response = await createAssetInEdc(props.proxyId, finalAsset)
-      if (response) {
-        emit('assets-created', response['@id'])
+      const result = await createAssetInEdc(props.proxyId, finalAsset)
+      if (result.success) {
+        emit('assets-created', result.data['@id'])
         createAssetDialog.value = false
         resetForm()
       } else {
-        console.error('Failed to create asset')
+        showFailureMessage('Failed to create EDC Asset.', edcRequestFailureText(result, 'Asset', 'create'))
       }
     } catch (error_) {
       console.error('Error creating asset:', error_)

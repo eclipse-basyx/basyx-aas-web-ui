@@ -46,6 +46,7 @@ export interface RequestResult<T = unknown> {
   success: boolean
   data?: T
   status?: number
+  details?: string // Error details of a failed request, built from its error payload
   raw?: Response
   aborted?: true
 }
@@ -87,7 +88,8 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
       return buildObjectErrorDetails(errorData as Record<string, unknown>)
     }
 
-    if (typeof errorData === 'string') {
+    // Leave out HTML error pages, e.g. of a server or proxy behind the EDC BFF
+    if (typeof errorData === 'string' && !/^\s*<(?:!doctype\s+html|html)[\s>]/i.test(errorData)) {
       return errorData
     }
 
@@ -97,6 +99,10 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
   function buildArrayErrorDetails (errorData: any[]): string {
     if (errorData.length === 0) {
       return ''
+    }
+
+    if (errorData.some(error => typeof error?.message === 'string')) {
+      return buildApiErrorDetails(errorData)
     }
 
     const error = errorData[0] as {
@@ -120,6 +126,24 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     appendErrorLine(lines, 'Text', error.text)
 
     return lines.join('\n')
+  }
+
+  /**
+   * Builds the details of an EDC Management API error (`ApiErrorDetail[]`), one line per distinct message.
+   * The path of an entry is left out, as its message already contains it.
+   */
+  function buildApiErrorDetails (errorData: any[]): string {
+    const lines = errorData
+      .filter(error => typeof error?.message === 'string' && error.message.trim() !== '')
+      .map(error => {
+        const message = error.message.trim()
+        const invalidValue = error.invalidValue
+        return [undefined, null, ''].includes(invalidValue)
+          ? message
+          : `${message} (invalid value: ${String(invalidValue)})`
+      })
+
+    return [...new Set(lines)].join('\n')
   }
 
   function buildObjectErrorDetails (errorData: Record<string, unknown>): string {
@@ -191,7 +215,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     requestOwnerId: string | undefined = getRequestOwnerId(),
     requestInfrastructure: InfrastructureConfig | null | undefined = infrastructureStore.getSelectedInfrastructure,
     isolateAuthenticationFailures = false,
-  ): { success: false, status?: number, aborted?: true, blocked?: true, redirected?: true } {
+  ): { success: false, status?: number, details?: string, aborted?: true, blocked?: true, redirected?: true } {
     if (error instanceof BlockedRedirectError && errorHandlingOptions.acceptRedirect) {
       setLastRequestFailureStatus(undefined)
       setLastRequestFailureDetails(undefined)
@@ -226,7 +250,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     setLastRequestFailureDetails(errorMessage)
 
     if (!isCurrentRequestOwner(requestOwnerId)) {
-      return { success: false, status: statusCode }
+      return { success: false, status: statusCode, details: errorMessage }
     }
 
     const hasAuth = requestInfrastructure?.auth && requestInfrastructure.auth.securityType !== 'No Authentication'
@@ -240,7 +264,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
       }
       showLoginRequiredSnackbar()
 
-      return { success: false, status: statusCode }
+      return { success: false, status: statusCode, details: errorMessage }
     }
 
     if (is403Error && hasAuth && !isolateAuthenticationFailures) {
@@ -262,7 +286,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
         })
       }
 
-      return { success: false, status: statusCode }
+      return { success: false, status: statusCode, details: errorMessage }
     }
 
     // Handle other errors
@@ -275,7 +299,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
         text: 'Error! Server responded with: ' + error,
       })
     }
-    return { success: false, status: statusCode }
+    return { success: false, status: statusCode, details: errorMessage }
   }
 
   function shouldSuppressStatus (
@@ -359,13 +383,13 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     requestOwnerId: string | undefined = getRequestOwnerId(),
     requestInfrastructure: InfrastructureConfig | null | undefined = infrastructureStore.getSelectedInfrastructure,
     isolateAuthenticationFailures = false,
-  ): { success: false, status: number, data?: any } {
-    const details = buildErrorDetailsFromPayload(data)
+  ): { success: false, status: number, details?: string, data?: any } {
+    const details = buildErrorDetailsFromPayload(data) || undefined
     setLastRequestFailureStatus(status)
     setLastRequestFailureDetails(details)
 
     if (!isCurrentRequestOwner(requestOwnerId)) {
-      return { success: false, status }
+      return { success: false, status, details }
     }
 
     if (status === 401 || status === 403) {
@@ -379,7 +403,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
       )
       setLastRequestFailureStatus(status)
       setLastRequestFailureDetails(details)
-      return { success: false, status }
+      return { success: false, status, details }
     }
 
     const suppressStatus = shouldSuppressStatus(status, errorHandlingOptions)
@@ -388,7 +412,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
       errorHandler(data, context)
     }
 
-    return { success: false, status, data: suppressStatus ? data : undefined }
+    return { success: false, status, details, data: suppressStatus ? data : undefined }
   }
 
   function getRequest (
@@ -552,8 +576,9 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
             raw: response,
           }
         } else if (!response.ok) {
+          const details = buildErrorDetailsFromPayload(data) || undefined
           setLastRequestFailureStatus(response.status)
-          setLastRequestFailureDetails(buildErrorDetailsFromPayload(data) || undefined)
+          setLastRequestFailureDetails(details)
           if (
             isCurrentRequestOwner(requestOwnerId)
             && !disableMessage
@@ -565,6 +590,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
           return {
             success: false,
             status: response.status,
+            details,
             data: shouldSuppressStatus(response.status, errorHandlingOptions) ? data : undefined,
             raw: response,
           }

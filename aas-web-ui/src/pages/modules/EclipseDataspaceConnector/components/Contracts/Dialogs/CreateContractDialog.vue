@@ -99,6 +99,10 @@
 
 <script lang="ts" setup>
   import { type CatenaXEdcContractDefinition, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
+  import {
+    edcRequestFailureText,
+    useEdcRequestFailureMessage,
+  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import ContractTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_contract.json'
 
   const props = withDefaults(defineProps<{
@@ -115,6 +119,7 @@
 
   // Composables
   const { createContractDefinition: createContractInEdc, queryAssets, queryPolicyDefinitions } = useCatenaXEdcClient()
+  const { showFailureMessage } = useEdcRequestFailureMessage()
 
   // Data
   const createContractDialog = ref(false)
@@ -264,13 +269,13 @@
       const finalContract = JSON.parse(contractJson) as CatenaXEdcContractDefinition
 
       // Create the contract via EDC API
-      const response = await createContractInEdc(props.proxyId, finalContract)
-      if (response) {
-        emit('contract-created', response['@id'])
+      const result = await createContractInEdc(props.proxyId, finalContract)
+      if (result.success) {
+        emit('contract-created', result.data['@id'])
         createContractDialog.value = false
         resetForm()
       } else {
-        console.error('Failed to create contract')
+        showFailureMessage('Failed to create EDC Contract Definition.', edcRequestFailureText(result, 'Contract Definition', 'create'))
       }
     } catch (error_) {
       console.error('Error creating contract:', error_)

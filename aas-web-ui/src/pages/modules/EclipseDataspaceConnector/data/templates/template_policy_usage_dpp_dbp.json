@@ -19,7 +19,7 @@
               {
                 "leftOperand": "FrameworkAgreement",
                 "operator": "eq",
-                "rightOperand": "circulareconomy:1.0"
+                "rightOperand": "DataExchangeGovernance:1.0"
               },
               {
                 "leftOperand": "Membership",
@@ -28,8 +28,8 @@
               },
               {
                 "leftOperand": "UsagePurpose",
-                "operator": "eq",
-                "rightOperand": "cx.circular.dpp:1"
+                "operator": "isAnyOf",
+                "rightOperand": ["cx.circular.dpp:1"]
               }
             ]
           }

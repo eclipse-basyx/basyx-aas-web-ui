@@ -28,8 +28,8 @@
               },
               {
                 "leftOperand": "UsagePurpose",
-                "operator": "eq",
-                "rightOperand": "cx.pcf.base:1"
+                "operator": "isAnyOf",
+                "rightOperand": ["cx.pcf.base:1"]
               }
             ]
           }

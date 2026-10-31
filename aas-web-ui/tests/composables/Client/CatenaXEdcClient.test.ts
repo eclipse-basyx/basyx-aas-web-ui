@@ -212,7 +212,30 @@ describe('CatenaXEdcClient', () => {
       context,
       true,
     )
-    expect(result).toEqual({ '@id': id, 'createdAt': 1 })
+    expect(result).toEqual({ success: true, data: { '@id': id, 'createdAt': 1 } })
+  })
+
+  it('returns the status and error details of a failed creation', async () => {
+    mocks.postRequest.mockResolvedValue({
+      success: false,
+      status: 409,
+      details: 'Asset with ID asset-1 already exists',
+    })
+
+    const result = await useCatenaXEdcClient().createAsset('default', {
+      '@id': 'asset-1',
+      'properties': {},
+      'dataAddress': {},
+    })
+
+    expect(result).toEqual({ success: false, status: 409, errorDetails: 'Asset with ID asset-1 already exists' })
+  })
+
+  it('returns a failure without request when no proxy is given', async () => {
+    const result = await useCatenaXEdcClient().createAsset(' ', { properties: {}, dataAddress: {} })
+
+    expect(mocks.postRequest).not.toHaveBeenCalled()
+    expect(result).toEqual({ success: false })
   })
 
   it.each([
@@ -266,7 +289,7 @@ describe('CatenaXEdcClient', () => {
       context,
       true,
     )
-    expect(result).toBe(true)
+    expect(result).toEqual({ success: true })
   })
 
   it.each([
@@ -299,7 +322,52 @@ describe('CatenaXEdcClient', () => {
       context,
       true,
     )
-    expect(result).toBe(true)
+    expect(result).toEqual({ success: true })
+  })
+
+  it('returns the status and error details of a failed update', async () => {
+    mocks.putRequest.mockResolvedValue({
+      success: false,
+      status: 400,
+      details: 'mandatory object \'https://w3id.org/edc/v0.0.1/ns/dataAddress\' is missing',
+    })
+
+    const result = await useCatenaXEdcClient().updateAsset('default', 'asset-1', {
+      '@id': 'asset-1',
+      'properties': {},
+      'dataAddress': {},
+    })
+
+    expect(result).toEqual({
+      success: false,
+      status: 400,
+      errorDetails: 'mandatory object \'https://w3id.org/edc/v0.0.1/ns/dataAddress\' is missing',
+    })
+  })
+
+  it('returns the status and error details of a failed deletion', async () => {
+    mocks.deleteRequest.mockResolvedValue({
+      success: false,
+      status: 409,
+      details: 'PolicyDefinition policy-1 cannot be deleted as it is referenced by at least one contract definition',
+    })
+
+    const result = await useCatenaXEdcClient().deletePolicyDefinition('default', 'policy-1')
+
+    expect(result).toEqual({
+      success: false,
+      status: 409,
+      errorDetails: 'PolicyDefinition policy-1 cannot be deleted as it is referenced by at least one contract definition',
+    })
+  })
+
+  it('returns a failure without request when updating or deleting without an ID', async () => {
+    await expect(useCatenaXEdcClient().updateAsset('default', ' ', { properties: {}, dataAddress: {} }))
+      .resolves
+      .toEqual({ success: false })
+    await expect(useCatenaXEdcClient().deleteAsset('default', '')).resolves.toEqual({ success: false })
+    expect(mocks.putRequest).not.toHaveBeenCalled()
+    expect(mocks.deleteRequest).not.toHaveBeenCalled()
   })
 
   it('posts DTR descriptor page requests through the EDC proxy', async () => {

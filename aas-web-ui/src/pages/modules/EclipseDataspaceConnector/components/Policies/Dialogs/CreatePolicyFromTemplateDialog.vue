@@ -95,6 +95,10 @@
 
 <script lang="ts" setup>
   import { type CatenaXEdcPolicyDefinition, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
+  import {
+    edcRequestFailureText,
+    useEdcRequestFailureMessage,
+  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import AccessPolicy from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_access.json'
   import AccessPolicyBpn from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_access_bpn.json'
   import UsagePolicy from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage.json'
@@ -117,6 +121,7 @@
 
   // Composables
   const { createPolicyDefinition: createPolicyDefinitionInEdc } = useCatenaXEdcClient()
+  const { showFailureMessage } = useEdcRequestFailureMessage()
 
   // Data
   const createPolicyDialog = ref(false)
@@ -287,13 +292,13 @@
       const finalPolicy = JSON.parse(policyJson) as CatenaXEdcPolicyDefinition
 
       // Create the policy via EDC API
-      const response = await createPolicyDefinitionInEdc(props.proxyId, finalPolicy)
-      if (response) {
-        emit('policy-created', response['@id'])
+      const result = await createPolicyDefinitionInEdc(props.proxyId, finalPolicy)
+      if (result.success) {
+        emit('policy-created', result.data['@id'])
         createPolicyDialog.value = false
         resetForm()
       } else {
-        console.error('Failed to create policy')
+        showFailureMessage('Failed to create EDC Policy.', edcRequestFailureText(result, 'Policy', 'create'))
       }
     } catch (error_) {
       console.error('Error creating policy:', error_)

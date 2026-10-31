@@ -66,6 +66,10 @@
 
 <script lang="ts" setup>
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
+  import {
+    edcRequestFailureText,
+    useEdcRequestFailureMessage,
+  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
 
   const props = withDefaults(defineProps<{
     modelValue: boolean
@@ -81,6 +85,7 @@
 
   // Composables
   const { deleteAsset: deleteAssetFromEdc, queryContractDefinitions, deleteContractDefinition } = useCatenaXEdcClient()
+  const { showFailureMessage } = useEdcRequestFailureMessage()
 
   // Data
   const deleteAssetDialog = ref(false)
@@ -140,25 +145,39 @@
     }
 
     try {
-      // Delete all referencing contract definitions first
+      // Delete all referencing contract definitions first, keep the asset if one of them cannot be deleted
+      const deletedContractIds: Array<string> = []
       for (const contract of referencingContracts.value) {
-        const contractDeleted = await deleteContractDefinition(props.proxyId, contract['@id'])
-        if (!contractDeleted) {
-          console.error('Failed to delete referencing contract:', contract['@id'])
+        const contractResult = await deleteContractDefinition(props.proxyId, contract['@id'])
+        if (!contractResult.success) {
+          const contractFailure = edcRequestFailureText(contractResult, 'Contract Definition', 'delete')
+          const details = `The asset was kept, as the Contract Definition ${contract['@id']} could not be deleted:\n${contractFailure}`
+          showFailureMessage('Failed to delete EDC Asset.', details + deletedContractsText(deletedContractIds))
+          await loadReferencingContracts()
+          return
         }
+        deletedContractIds.push(contract['@id'])
       }
 
-      // Delete the asset via EDC API
-      const response = await deleteAssetFromEdc(props.proxyId, props.asset['@id'])
-      if (response) {
+      // Delete the asset via EDC API, e.g. an asset of a contract agreement cannot be deleted (409)
+      const result = await deleteAssetFromEdc(props.proxyId, props.asset['@id'])
+      if (result.success) {
         emit('asset-deleted', true)
         deleteAssetDialog.value = false
       } else {
-        console.error('Failed to delete asset')
+        showFailureMessage(
+          'Failed to delete EDC Asset.',
+          edcRequestFailureText(result, 'Asset', 'delete') + deletedContractsText(deletedContractIds),
+        )
+        await loadReferencingContracts()
       }
     } catch (error_) {
       console.error('Error deleting asset:', error_)
     }
+  }
+
+  function deletedContractsText (contractIds: Array<string>): string {
+    return contractIds.length > 0 ? `\n\nAlready deleted Contract Definitions:\n${contractIds.join('\n')}` : ''
   }
 
 </script>

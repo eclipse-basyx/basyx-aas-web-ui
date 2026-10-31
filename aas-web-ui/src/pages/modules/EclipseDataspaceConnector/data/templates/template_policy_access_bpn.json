@@ -15,8 +15,10 @@
         "action": "access",
         "constraint": {
           "leftOperand": "BusinessPartnerNumber",
-          "operator": "eq",
-          "rightOperand": "{{BPN|Enter a Business Business Partner Number|The BPN that is allowed to access the data}}"
+          "operator": "isAnyOf",
+          "rightOperand": [
+            "{{BPN|Enter a Business Business Partner Number|The BPN that is allowed to access the data}}"
+          ]
         }
       }
     ]

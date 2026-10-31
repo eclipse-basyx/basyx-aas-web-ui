@@ -368,7 +368,11 @@ async function handleUpdateRequest (
     throw createHttpError(`Missing EDC ${resource} ID`, 400)
   }
 
-  await handleJsonRequest(request, response, proxy, `/v3/${resource}`, 'PUT')
+  // Policy definitions are updated by their ID in the path, assets and contract definitions by the ID in the body
+  const path = resource === 'policydefinitions'
+    ? `/v3/${resource}/${encodeURIComponent(resourceId)}`
+    : `/v3/${resource}`
+  await handleJsonRequest(request, response, proxy, path, 'PUT')
 }
 
 async function handleDeleteRequest (

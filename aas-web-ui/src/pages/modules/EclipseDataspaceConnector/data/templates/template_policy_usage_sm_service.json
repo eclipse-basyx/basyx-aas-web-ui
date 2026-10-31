@@ -29,7 +29,7 @@
               {
                 "leftOperand": "UsagePurpose",
                 "operator": "isAnyOf",
-                "rightOperand": "cx.core.industrycore:1"
+                "rightOperand": ["cx.core.industrycore:1"]
               }
             ]
           }

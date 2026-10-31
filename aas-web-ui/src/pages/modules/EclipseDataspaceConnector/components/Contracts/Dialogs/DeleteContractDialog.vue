@@ -42,6 +42,10 @@
 
 <script lang="ts" setup>
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
+  import {
+    edcRequestFailureText,
+    useEdcRequestFailureMessage,
+  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
 
   const props = withDefaults(defineProps<{
     modelValue: boolean
@@ -57,6 +61,7 @@
 
   // Composables
   const { deleteContractDefinition: deleteContractFromEdc } = useCatenaXEdcClient()
+  const { showFailureMessage } = useEdcRequestFailureMessage()
 
   // Data
   const deleteContractDialog = ref(false)
@@ -82,16 +87,16 @@
     }
 
     try {
-      // Create the contract via EDC API
-      const response = await deleteContractFromEdc(props.proxyId, props.contract['@id'])
-      if (response) {
+      // Delete the contract via EDC API
+      const result = await deleteContractFromEdc(props.proxyId, props.contract['@id'])
+      if (result.success) {
         emit('contract-deleted', true)
         deleteContractDialog.value = false
       } else {
-        console.error('Failed to delete contract')
+        showFailureMessage('Failed to delete EDC Contract Definition.', edcRequestFailureText(result, 'Contract Definition', 'delete'))
       }
     } catch (error_) {
-      console.error('Error creating contract:', error_)
+      console.error('Error deleting contract:', error_)
     }
   }
 

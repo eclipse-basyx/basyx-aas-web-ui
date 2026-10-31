@@ -29,7 +29,7 @@
               {
                 "leftOperand": "UsagePurpose",
                 "operator": "isAnyOf",
-                "rightOperand": "cx.core.digitalTwinRegistry:1"
+                "rightOperand": ["cx.core.digitalTwinRegistry:1"]
               }
             ]
           }

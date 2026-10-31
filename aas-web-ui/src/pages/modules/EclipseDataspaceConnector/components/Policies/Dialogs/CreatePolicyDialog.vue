@@ -168,7 +168,12 @@
 
 <script lang="ts" setup>
   import { type CatenaXEdcPolicyDefinition, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
+  import {
+    edcRequestFailureText,
+    useEdcRequestFailureMessage,
+  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import PolicyTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy.json'
+  import UsagePolicyTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage.json'
   import { formatJSON } from '@/utils/JsonUtils'
 
   const props = withDefaults(defineProps<{
@@ -185,6 +190,7 @@
 
   // Composables
   const { createPolicyDefinition: createPolicyDefinitionInEdc } = useCatenaXEdcClient()
+  const { showFailureMessage } = useEdcRequestFailureMessage()
 
   // Data
   const createPolicyDialog = ref(false)
@@ -327,12 +333,8 @@
           },
         ]
       } else if (selectedType.value === 'usage') {
-        (policy.policy as any).permission = [
-          {
-            action: 'use',
-            constraint: [],
-          },
-        ]
+        // Catena-X requires the constraints of the usage policy template, e.g. UsagePurpose and FrameworkAgreement
+        (policy.policy as any).permission = structuredClone(UsagePolicyTemplate.policy.permission)
       }
     }
 
@@ -436,13 +438,13 @@
       const finalPolicy = JSON.parse(jsonText.value) as CatenaXEdcPolicyDefinition
 
       // Create the policy via EDC API
-      const response = await createPolicyDefinitionInEdc(props.proxyId, finalPolicy)
-      if (response) {
-        emit('policy-created', response['@id'])
+      const result = await createPolicyDefinitionInEdc(props.proxyId, finalPolicy)
+      if (result.success) {
+        emit('policy-created', result.data['@id'])
         createPolicyDialog.value = false
         resetForm()
       } else {
-        console.error('Failed to create policy')
+        showFailureMessage('Failed to create EDC Policy.', edcRequestFailureText(result, 'Policy', 'create'))
       }
     } catch (error_) {
       console.error('Error creating policy:', error_)
