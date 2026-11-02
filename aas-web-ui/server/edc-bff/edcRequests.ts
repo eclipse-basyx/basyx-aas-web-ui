@@ -44,6 +44,10 @@ const contractContext = {
   '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
 }
 
+const dsp2025ContextUrl = 'https://w3id.org/dspace/2025/1/context.jsonld'
+const dsp2025OdrlProfileUrl = 'https://w3id.org/dspace/2025/1/odrl-profile.jsonld'
+const dsp2025PathSuffix = '/2025-1'
+
 const defaultDspProtocol = 'dataspace-protocol-http:2025-1'
 const dtrTaxonomyId = 'https://w3id.org/catenax/taxonomy#DigitalTwinRegistry'
 const catalogDatasetKeys = [
@@ -178,7 +182,7 @@ export function buildCatalogRequestBody (
     '@context': catalogContext,
     '@type': 'CatalogRequest',
     counterPartyId,
-    counterPartyAddress,
+    'counterPartyAddress': versionedCounterPartyAddress(counterPartyAddress, protocol),
     protocol,
     ...(request.querySpec && typeof request.querySpec === 'object'
       ? { querySpec: request.querySpec }
@@ -258,7 +262,8 @@ function extractCatalogDatasetOffer (
   const datasetRecord = dataset as Record<string, unknown>
   const assetId = getDatasetId(datasetRecord)
   const participantId = trimString(getRecordValue(catalogRecord, catalogParticipantIdKeys))
-  const policy = getRecordValue(datasetRecord, datasetPolicyKeys)
+  // DSP 2025-1 catalogs list the offers as an array, older ones as a single object.
+  const policy = asArray(getRecordValue(datasetRecord, datasetPolicyKeys))[0]
 
   if (!assetId) {
     throw createHttpError(options.missingAssetIdMessage, 502)
@@ -275,7 +280,29 @@ function extractCatalogDatasetOffer (
   return {
     assetId,
     participantId,
-    policy: policy as Record<string, unknown>,
+    policy: withCatalogContext(policy as Record<string, unknown>, catalogRecord?.['@context']),
+  }
+}
+
+/**
+ * Catalog terms are compacted against the catalog's own @context (DSP 2025-1 e.g. writes `Offer` without
+ * `odrl:`), so the policy keeps that context instead of the contract request's EDC @vocab. The leading
+ * `null` drops the request context before the catalog context is applied.
+ */
+function withCatalogContext (policy: Record<string, unknown>, context: unknown): Record<string, unknown> {
+  if (context === undefined || context === null) {
+    return policy
+  }
+
+  const contexts = [context].flat()
+  // DSP 2025-1 defines the ODRL terms only inside Dataset nodes, so a policy taken out of its dataset needs them itself.
+  if (contexts.includes(dsp2025ContextUrl)) {
+    contexts.push(dsp2025OdrlProfileUrl)
+  }
+
+  return {
+    '@context': [null, ...contexts],
+    ...policy,
   }
 }
 
@@ -288,18 +315,32 @@ export function buildEdrContractRequestBody (
     throw createHttpError('counterPartyAddress is required for EDR negotiation', 400)
   }
 
+  const protocol = trimString(request.protocol) || defaultDspProtocol
   const policy = cloneRecord(offer.policy)
-  // The request context maps @vocab to the EDC namespace, so assigner/target must stay ODRL-prefixed.
-  policy['odrl:assigner'] = { '@id': offer.participantId }
-  policy['odrl:target'] = { '@id': offer.assetId }
+  // Full IRIs, because the policy may carry the catalog's @context, which needn't define the odrl: prefix.
+  policy[odrlContextUrl + 'assigner'] = { '@id': offer.participantId }
+  policy[odrlContextUrl + 'target'] = { '@id': offer.assetId }
 
   return {
     '@context': contractContext,
     '@type': 'ContractRequest',
-    counterPartyAddress,
-    'protocol': trimString(request.protocol) || defaultDspProtocol,
+    'counterPartyAddress': versionedCounterPartyAddress(counterPartyAddress, protocol),
+    protocol,
     policy,
   }
+}
+
+/**
+ * DSP 2025-1 is served below the version path of the connector's DSP address, e.g. `…/api/v1/dsp/2025-1`.
+ * Partner configs and DTR descriptors usually name the unversioned address, so the path is added here.
+ */
+function versionedCounterPartyAddress (counterPartyAddress: string, protocol: string): string {
+  if (protocol !== defaultDspProtocol) {
+    return counterPartyAddress
+  }
+
+  const address = counterPartyAddress.replace(/\/+$/, '')
+  return address.endsWith(dsp2025PathSuffix) ? address : address + dsp2025PathSuffix
 }
 
 export function buildEdrRequestQueryBody (contractNegotiationId: string): Record<string, unknown> {

@@ -14,6 +14,8 @@ import {
   parseSubprotocolBody,
 } from '../../../server/edc-bff/edcRequests'
 
+const odrlNamespace = 'http' + '://www.w3.org/ns/odrl/2/'
+
 function createProxyConfig (): EdcProxyConfig {
   return {
     id: 'default',
@@ -68,6 +70,19 @@ describe('EDC BFF request helpers', () => {
       'counterPartyAddress': 'https://counterparty-dsp.test/api/v1/dsp/2025-1',
       'protocol': 'dataspace-protocol-http:2025-1',
     })
+  })
+
+  it('adds the DSP 2025-1 version path to the counterparty address only once', () => {
+    const proxy = createProxyConfig()
+    const addressFor = (counterPartyAddress: string, protocol?: string) =>
+      buildCatalogRequestBody(proxy, { counterPartyId: 'TEST_COUNTERPARTY_ID', counterPartyAddress, protocol })
+        .counterPartyAddress
+
+    expect(addressFor('https://counterparty-dsp.test/api/v1/dsp')).toBe('https://counterparty-dsp.test/api/v1/dsp/2025-1')
+    expect(addressFor('https://counterparty-dsp.test/api/v1/dsp/')).toBe('https://counterparty-dsp.test/api/v1/dsp/2025-1')
+    expect(addressFor('https://counterparty-dsp.test/api/v1/dsp/2025-1')).toBe('https://counterparty-dsp.test/api/v1/dsp/2025-1')
+    expect(addressFor('https://counterparty-dsp.test/api/v1/dsp', 'dataspace-protocol-http'))
+      .toBe('https://counterparty-dsp.test/api/v1/dsp')
   })
 
   it('forwards JSON to the configured management URL with the server-side API key', async () => {
@@ -128,12 +143,12 @@ describe('EDC BFF request helpers', () => {
     })
     expect(body).toMatchObject({
       '@type': 'ContractRequest',
-      'counterPartyAddress': 'https://counterparty-dsp.test/api/v1/dsp',
+      'counterPartyAddress': 'https://counterparty-dsp.test/api/v1/dsp/2025-1',
       'protocol': 'dataspace-protocol-http:2025-1',
       'policy': {
         '@id': 'offer-1',
-        'odrl:assigner': { '@id': 'TEST_PARTICIPANT_ID' },
-        'odrl:target': { '@id': 'dtr-asset' },
+        [odrlNamespace + 'assigner']: { '@id': 'TEST_PARTICIPANT_ID' },
+        [odrlNamespace + 'target']: { '@id': 'dtr-asset' },
       },
     })
   })
@@ -163,9 +178,39 @@ describe('EDC BFF request helpers', () => {
     )).toMatchObject({
       protocol: 'dataspace-protocol-http:2025-1',
       policy: {
-        'odrl:assigner': { '@id': 'TEST_PARTICIPANT_ID' },
-        'odrl:target': { '@id': 'dtr-asset' },
+        [odrlNamespace + 'assigner']: { '@id': 'TEST_PARTICIPANT_ID' },
+        [odrlNamespace + 'target']: { '@id': 'dtr-asset' },
       },
+    })
+  })
+
+  it('keeps the DSP 2025-1 catalog context on the first offered policy', () => {
+    const catalogContext = [
+      'https://w3id.org/catenax/2025/9/policy/context.jsonld',
+      'https://w3id.org/dspace/2025/1/context.jsonld',
+    ]
+    const catalog = {
+      '@context': catalogContext,
+      'participantId': 'TEST_PARTICIPANT_ID',
+      'dataset': [{
+        '@id': 'submodel-asset',
+        'hasPolicy': [
+          { '@id': 'offer-1', '@type': 'Offer', 'permission': [{ action: 'use' }] },
+          { '@id': 'offer-2', '@type': 'Offer' },
+        ],
+      }],
+    }
+
+    expect(buildEdrContractRequestBody(
+      { counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp/2025-1' },
+      extractSubmodelOffer(catalog, 'submodel-asset'),
+    ).policy).toEqual({
+      '@context': [null, ...catalogContext, 'https://w3id.org/dspace/2025/1/odrl-profile.jsonld'],
+      '@id': 'offer-1',
+      '@type': 'Offer',
+      'permission': [{ action: 'use' }],
+      [odrlNamespace + 'assigner']: { '@id': 'TEST_PARTICIPANT_ID' },
+      [odrlNamespace + 'target']: { '@id': 'submodel-asset' },
     })
   })
 
