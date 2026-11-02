@@ -4,7 +4,23 @@
 
       <v-navigation-drawer class="leftMenu" color="appNavigation" :width="336">
         <v-card color="rgba(0,0,0,0)" elevation="0">
-          <v-card-title class="py-3">
+          <v-card-title class="pl-0 pr-4 pt-2 pb-1 d-flex align-center">
+            <v-tooltip location="bottom" open-delay="600">
+              <template #activator="{ props: tooltipProps }">
+                <v-btn
+                  class="ma-0"
+                  :disabled="!selectedBusinessPartner"
+                  icon="mdi-reload"
+                  v-bind="tooltipProps"
+                  :loading="listLoading"
+                  variant="plain"
+                  @click="initialize()"
+                />
+              </template>
+
+              <span>Reload Catalog</span>
+            </v-tooltip>
+
             <v-select
               v-model="selectedBusinessPartner"
               density="compact"
@@ -16,17 +32,19 @@
               return-object
               variant="solo"
             />
+          </v-card-title>
 
+          <!-- Aligned with the Business Partner selection next to the reload button -->
+          <div class="pl-12 pr-4 pb-3">
             <v-select
               v-model="selectedCatalogFilter"
-              class="mt-2"
               density="compact"
               hide-details
               :items="assetTypeFilterItems"
               label="Filter by Asset Type"
               variant="solo"
             />
-          </v-card-title>
+          </div>
 
           <v-divider />
 
