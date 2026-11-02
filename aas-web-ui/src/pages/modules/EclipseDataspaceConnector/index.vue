@@ -29,16 +29,10 @@
 
     <v-divider />
 
-    <v-tabs-window v-model="tabs" :style="{ 'height': fullHeight}">
-      <v-tabs-window-item
-        v-for="tabItem in tabItems"
-        :key="tabItem.id"
-        :style="{ 'height': fullHeight}"
-        :value="tabItem.id"
-      >
-        <router-view />
-      </v-tabs-window-item>
-    </v-tabs-window>
+    <!-- One router view for all tabs: a view per tab would render the current tab several times -->
+    <div :style="{ 'height': fullHeight}">
+      <router-view />
+    </div>
 
   </v-container>
 </template>
