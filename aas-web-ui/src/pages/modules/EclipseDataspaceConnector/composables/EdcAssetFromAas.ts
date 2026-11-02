@@ -1,6 +1,12 @@
 import type { CatenaXEdcAsset } from '@/composables/Client/CatenaXEdcClient'
 import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
 import { useSubmodelDisplay } from '@/composables/AAS/SubmodelDisplay'
+import {
+  CX_COMMON_NAMESPACE,
+  CX_TAXO_NAMESPACE,
+  DCT_NAMESPACE,
+  EDC_NAMESPACE,
+} from '@/pages/modules/EclipseDataspaceConnector/data/namespaces'
 import AssetTemplateDefault from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset.json'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
 
@@ -51,12 +57,6 @@ export function fillTemplatePlaceholders (template: unknown, values: Record<stri
   }
   return template
 }
-
-const EDC_NAMESPACE = 'https://w3id.org/edc/v0.0.1/ns/'
-const CX_COMMON_NAMESPACE = 'https://w3id.org/catenax/ontology/common#'
-const CX_TAXO_NAMESPACE = 'https://w3id.org/catenax/taxonomy#'
-// eslint-disable-next-line unicorn/prefer-https -- The Dublin Core namespace is an exact identifier required by CX-0002.
-const DCT_NAMESPACE = 'http://purl.org/dc/terms/'
 
 /**
  * Returns the IRI of an AAS class (e.g. `HasSemantics`) in the given AAS specification version (e.g. `3.0`).

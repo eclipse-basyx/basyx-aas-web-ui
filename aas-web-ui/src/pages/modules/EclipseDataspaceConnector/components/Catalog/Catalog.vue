@@ -16,6 +16,16 @@
               return-object
               variant="solo"
             />
+
+            <v-select
+              v-model="selectedCatalogFilter"
+              class="mt-2"
+              density="compact"
+              hide-details
+              :items="catalogFilterItems"
+              label="Filter by Asset Type"
+              variant="solo"
+            />
           </v-card-title>
 
           <v-divider />
@@ -24,7 +34,7 @@
             class="pt-0 pb-0 px-2"
             style="
               overflow-y: auto;
-              height: calc(100svh - 64px - 48px - 40px - 64px - 3px);
+              height: calc(100svh - 64px - 48px - 40px - 112px - 3px);
             "
           >
             <div v-if="listLoading">
@@ -154,6 +164,17 @@
                   </template>
                 </v-virtual-scroll>
               </v-list>
+
+              <v-empty-state
+                v-else-if="selectedBusinessPartner"
+                icon="mdi-database-off-outline"
+                text="The Catalog of the selected Business Partner contains no Datasets of the selected Asset Type"
+                title="No Catalog Datasets"
+              >
+                <template #media>
+                  <v-icon size="64" />
+                </template>
+              </v-empty-state>
 
               <v-empty-state
                 v-else
@@ -361,6 +382,7 @@
   import { useTheme } from 'vuetify'
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
+  import { catalogFilterItems, catalogFilterPreset } from '@/pages/modules/EclipseDataspaceConnector/data/catalogFilters'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { normalizeCatenaXPartners } from '@/utils/CatenaXPartnerUtils'
 
@@ -401,6 +423,7 @@
 
   const selectedBusinessPartner = ref<CatenaXPartner | null>(null)
   const selectedCatalogDataset = ref({} as any)
+  const selectedCatalogFilter = ref('all')
 
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
 
@@ -453,7 +476,7 @@
   )
 
   watch(
-    () => selectedBusinessPartner.value,
+    [selectedBusinessPartner, selectedCatalogFilter],
     () => {
       initialize()
     },
@@ -484,11 +507,13 @@
 
     if (selectedBusinessPartner.value?.counterPartyAddress) {
       const dspAddress = selectedBusinessPartner.value.counterPartyAddress
+      const catalogFilter = catalogFilterPreset(selectedCatalogFilter.value)
 
       const catalogRequest: CatenaXEdcCatalogRequest = {
         counterPartyId: selectedBusinessPartner.value.counterPartyId,
         counterPartyAddress: dspAddress + (dspAddress.endsWith('/2025-1') ? '' : '/2025-1'),
         protocol: 'dataspace-protocol-http:2025-1',
+        querySpec: catalogFilter?.querySpec,
       }
       const catalog = await requestCatalog(edcProxyId.value, catalogRequest)
 
@@ -504,7 +529,7 @@
             (datasetA['@id'] || '') > (datasetB['@id'] || '') ? 1 : -1,
         )
 
-        catalogList.value = [...datasetsSorted]
+        catalogList.value = datasetsSorted.filter(dataset => catalogFilter?.matches?.(dataset) ?? true)
         catalogListUnfiltered.value = [...datasetsSorted]
       } else {
         catalogList.value = []
