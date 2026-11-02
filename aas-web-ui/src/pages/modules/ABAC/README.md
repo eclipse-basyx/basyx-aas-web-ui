@@ -78,10 +78,21 @@ determines compatible literal types and global attributes. Existing values remai
 visible when changing the operator makes them incompatible, so they can be corrected without losing their contents.
 Existing backend extensions remain preserved and can receive schema advisories.
 
-The Operator and Negated controls represent negation together. Existing `$ne`
-and nested `$not` expressions retain their meaning. Editing a condition may normalize
-these expressions to an equivalent representation. Within Match groups, the
-form offers comparisons and nested Match groups; only Equals can be negated.
+Not equals (`$ne`) is a separate operator. Negated adds an outer `$not`, which
+has different semantics from `$ne` for wildcard fields. Operand and operator edits
+preserve every existing NOT wrapper; explicitly changing Negated sets or removes
+outer negation. Match groups accept comparisons (including Not equals) and nested
+Match groups, but no outer NOT, so their Negated control is disabled.
+
+Switching AND/OR preserves all children and their row state. Other group switches
+reuse the complete child list only when it fits the target group's shape and
+minimum size. Incompatible children are never silently filtered. Each mounted
+formula editor remembers inactive comparison, constant, and group drafts, restoring
+them when switching back where compatible. With no reusable or remembered target,
+a new target draft starts with the usual defaults. Only the active expression is
+included in JSON and submissions. A different expression supplied from JSON or a
+new editing session clears remembered drafts; there is no persistent operator history.
+
 Delete controls preserve the required group sizes: two conditions for AND/OR and
 one for Match.
 

@@ -1,7 +1,7 @@
 import type { ExpressionState } from '../../types/forms'
 import { describe, expect, it } from 'vitest'
 import { encodeExpression } from './expression'
-import { readExpressionNegation, writeExpressionNegation } from './expressionNegation'
+import { readExpressionNegation, replaceExpressionCondition, writeExpressionNegation } from './expressionNegation'
 
 const equality: ExpressionState = {
   kind: 'comparison',
@@ -20,26 +20,34 @@ describe('expression negation controls', () => {
     expect(comparison.operator).toBe('contains')
   })
 
-  it('shows not-equals and NOT equals as the same controls without mutating the source', () => {
+  it('keeps not-equals distinct from outer NOT without mutating the source', () => {
     const notEquals: ExpressionState = { ...equality, operator: 'ne' }
-    expect(readExpressionNegation(notEquals)).toEqual({ condition: equality, negated: true })
+    expect(readExpressionNegation(notEquals)).toEqual({ condition: notEquals, negated: false })
     expect(readExpressionNegation({ kind: 'not', operand: equality })).toEqual({ condition: equality, negated: true })
     expect(notEquals.operator).toBe('ne')
   })
 
-  it('cancels repeated NOTs, including NOT of not-equals', () => {
+  it('reads outer NOT parity without reversing a not-equals operator', () => {
     expect(readExpressionNegation({ kind: 'not', operand: { kind: 'not', operand: equality } }))
       .toEqual({ condition: equality, negated: false })
     expect(readExpressionNegation({ kind: 'not', operand: { ...equality, operator: 'ne' } }))
-      .toEqual({ condition: equality, negated: false })
+      .toEqual({ condition: { ...equality, operator: 'ne' }, negated: true })
   })
 
-  it('encodes negated equality as NE, including within a match group', () => {
-    const negated = writeExpressionNegation(equality, true)
-    expect(encodeExpression({ kind: 'match', items: [negated] })).toEqual({
-      $match: [{ $ne: [{ $strVal: 'admin' }, { $attribute: { CLAIM: 'role' } }] }],
+  it('writes outer NOT without rewriting equality or not-equals', () => {
+    expect(encodeExpression(writeExpressionNegation(equality, true))).toEqual({
+      $not: { $eq: [{ $strVal: 'admin' }, { $attribute: { CLAIM: 'role' } }] },
     })
-    expect(writeExpressionNegation(readExpressionNegation(negated).condition, false)).toEqual(equality)
+    const notEquals: ExpressionState = { ...equality, operator: 'ne' }
+    expect(writeExpressionNegation(notEquals, true)).toEqual({ kind: 'not', operand: notEquals })
+    expect(writeExpressionNegation(notEquals, false)).toBe(notEquals)
+  })
+
+  it('preserves nested NOT wrappers when replacing the condition', () => {
+    const source: ExpressionState = { kind: 'not', operand: { kind: 'not', operand: { ...equality, operator: 'ne' } } }
+    const updated: ExpressionState = { ...equality, operator: 'ne', left: { source: 'field', value: '$aasdesc#specificAssetIds[].value' } }
+    expect(replaceExpressionCondition(source, updated)).toEqual({ kind: 'not', operand: { kind: 'not', operand: updated } })
+    expect(readExpressionNegation(source).condition).toEqual({ ...equality, operator: 'ne' })
   })
 
   it('negates an entire group without changing its children', () => {

@@ -67,7 +67,6 @@
 
     <template v-if="isGroup(editableCondition)">
       <CollapsibleList
-        :key="editableCondition.kind"
         :disabled="disabled"
         :expand-request="expandRequest"
         :model-value="groupItems"
@@ -156,7 +155,8 @@
   import { COMPARISON_OPERATORS } from '../../../constants/forms'
   import { FORMULA_GROUP_MIN_ITEMS } from '../../../constants/formula'
   import { useAbacI18n } from '../../../i18n/useAbacI18n'
-  import { readExpressionNegation, writeExpressionNegation } from '../../../utils/forms/expressionNegation'
+  import { readExpressionNegation, replaceExpressionCondition, writeExpressionNegation } from '../../../utils/forms/expressionNegation'
+  import { equals } from '../../../utils/object'
   import CollapsibleList from '../list/CollapsibleList.vue'
   import DiagnosticIndicator from './DiagnosticIndicator.vue'
   import FormSectionHeading from './FormSectionHeading.vue'
@@ -187,6 +187,10 @@
   const modelValue = defineModel<ExpressionState>({ required: true })
 
   const expandRequest = shallowRef<{ index: number }>()
+  // Inactive drafts belong to this editor instance; only the active expression is emitted.
+  const operatorDrafts = new Map<ExpressionState['kind'], ExpressionState>()
+  let lastEmitted: ExpressionState | undefined
+  let rememberedGroup: Extract<ExpressionState, { items: ExpressionState[] }> | undefined
 
   const { t } = useAbacI18n()
 
@@ -196,10 +200,10 @@
   ])
 
   const operatorItems = computed(() => [
-    ...COMPARISON_OPERATORS.filter(operator => operator !== 'ne').map(operator => ({
+    ...COMPARISON_OPERATORS.map(operator => ({
       title: t(`forms.expression.operators.${operator}`),
       value: operator,
-      props: { disabled: allowed === 'match' && negated.value && operator !== 'eq' },
+      props: { disabled: allowed === 'match' && negated.value },
     })),
     { title: t('forms.expression.operators.and'), value: 'and', props: { disabled: allowed === 'match' } },
     { title: t('forms.expression.operators.match'), value: 'match', props: { disabled: allowed === 'match' && negated.value } },
@@ -216,17 +220,17 @@
   const negated = computed({
     get: () => expressionControls.value.negated,
     set: (value: boolean) => {
-      modelValue.value = writeExpressionNegation(expressionControls.value.condition, value)
+      if (disabled || value === negated.value || (value && !canNegate.value)) return
+      commitExpression(writeExpressionNegation(expressionControls.value.condition, value))
     },
   })
   const editableCondition = computed({
     get: () => expressionControls.value.condition,
     set: (condition: ExpressionState) => {
-      modelValue.value = writeExpressionNegation(condition, negated.value)
+      commitExpression(replaceExpressionCondition(modelValue.value, condition))
     },
   })
-  const canNegate = computed(() => editableCondition.value.kind !== 'empty'
-    && (allowed !== 'match' || (editableCondition.value.kind === 'comparison' && editableCondition.value.operator === 'eq')))
+  const canNegate = computed(() => editableCondition.value.kind !== 'empty' && allowed !== 'match')
 
   const stateOperator = computed<string>(() => {
     const state = editableCondition.value
@@ -234,6 +238,22 @@
   })
 
   const childAllowed = computed(() => allowed === 'match' || editableCondition.value.kind === 'match' ? 'match' : 'expressions')
+
+  watch(modelValue, (value, previous) => {
+    // Parent codecs may recreate equivalent objects after an ordinary form edit.
+    // A different external expression (for example edited JSON) starts fresh draft memory.
+    if (!equals(value, previous) && !equals(value, lastEmitted)) {
+      operatorDrafts.clear()
+      rememberedGroup = undefined
+      expandRequest.value = undefined
+    }
+    lastEmitted = undefined
+  }, { flush: 'sync' })
+
+  function commitExpression (expression: ExpressionState): void {
+    lastEmitted = expression
+    modelValue.value = expression
+  }
 
   /**
    * Follow the serialized group path, including NOT wrappers, to the child editor.
@@ -281,25 +301,37 @@
   }
 
   function onOperatorSelect (value: string): void {
-    if (value === stateOperator.value) return
+    const option = operatorItems.value.find(item => item.value === value)
+    if (disabled || !option || option.props.disabled || value === stateOperator.value) return
     const state = editableCondition.value
+    expandRequest.value = undefined
+    operatorDrafts.set(state.kind, state)
+    if (isGroup(state)) rememberedGroup = state
     if (value === 'boolean') {
-      editableCondition.value = { kind: 'boolean', value: true }
+      editableCondition.value = operatorDrafts.get('boolean') ?? { kind: 'boolean', value: true }
       return
     }
     if (COMPARISON_OPERATORS.includes(value as ComparisonOperator)) {
-      if (state.kind === 'comparison') {
-        // Operator changes within comparisons keep both operands.
-        editableCondition.value = { ...state, operator: value as ComparisonOperator }
-        return
-      }
-      editableCondition.value = defaultComparison(value as ComparisonOperator)
+      const comparison = state.kind === 'comparison' ? state : operatorDrafts.get('comparison')
+      editableCondition.value = comparison?.kind === 'comparison'
+        ? { ...comparison, operator: value as ComparisonOperator }
+        : defaultComparison(value as ComparisonOperator)
       return
     }
-    // groups: and/or/match
+    const kind = value as 'and' | 'or' | 'match'
+    const reusable = rememberedGroup && rememberedGroup.items.length >= FORMULA_GROUP_MIN_ITEMS[kind]
+      && (kind !== 'match' || rememberedGroup.items.every(item => isMatchCondition(item)))
+    if (reusable && rememberedGroup) {
+      editableCondition.value = { ...rememberedGroup, kind }
+      return
+    }
+    const remembered = operatorDrafts.get(kind)
     const child = defaultComparison()
-    const items = value === 'match' ? [child] : [child, defaultComparison()]
-    editableCondition.value = { kind: value as 'and' | 'or' | 'match', items } as ExpressionState
+    editableCondition.value = remembered ?? { kind, items: kind === 'match' ? [child] : [child, defaultComparison()] }
+  }
+
+  function isMatchCondition (state: ExpressionState): boolean {
+    return state.kind === 'comparison' || (state.kind === 'match' && state.items.every(item => isMatchCondition(item)))
   }
 
   function isGroup (state: ExpressionState): state is Extract<ExpressionState, { items: ExpressionState[] }> {

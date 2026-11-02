@@ -1,6 +1,8 @@
 import type { ExpressionState } from '../../types/forms'
 
-/** Present nested NOTs and not-equals as one operator and a negation flag without changing the source. */
+/**
+ * Read outer NOT parity without treating NE as negated equality.
+ */
 export function readExpressionNegation (expression: ExpressionState): { condition: ExpressionState, negated: boolean } {
   let condition = expression
   let negated = false
@@ -8,20 +10,21 @@ export function readExpressionNegation (expression: ExpressionState): { conditio
     negated = !negated
     condition = condition.operand
   }
-  if (condition.kind === 'comparison' && condition.operator === 'ne') {
-    negated = !negated
-    condition = { ...condition, operator: 'eq' }
-  }
   return { condition, negated }
 }
 
-/** Use NE for negated equality, which is also supported inside match groups. */
+/**
+ * An explicit Negated selection controls outer NOT, independently of the comparison.
+ */
 export function writeExpressionNegation (condition: ExpressionState, negated: boolean): ExpressionState {
-  if (!negated) {
-    return condition
-  }
-  if (condition.kind === 'comparison' && condition.operator === 'eq') {
-    return { ...condition, operator: 'ne' }
-  }
-  return { kind: 'not', operand: condition }
+  return negated ? { kind: 'not', operand: condition } : condition
+}
+
+/**
+ * Operand and operator edits retain every original NOT wrapper, including double NOT.
+ */
+export function replaceExpressionCondition (expression: ExpressionState, condition: ExpressionState): ExpressionState {
+  return expression.kind === 'not'
+    ? { ...expression, operand: replaceExpressionCondition(expression.operand, condition) }
+    : condition
 }
