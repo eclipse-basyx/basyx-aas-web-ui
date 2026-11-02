@@ -5,7 +5,7 @@
     icon="mdi-code-json"
     label="Asset"
     label-plural="Assets"
-    :query="queryAssetsOfType"
+    :query="proxyId => queryAssetsOfType(proxyId, selectedAssetTypeFilter)"
     :update="updateAsset"
   >
     <template #filter>
@@ -60,18 +60,18 @@
 </template>
 
 <script lang="ts" setup>
-  import type { CatenaXEdcAsset } from '@/composables/Client/CatenaXEdcClient'
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import CreateAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetDialog.vue'
   import CreateAssetFromInfrastructureDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetFromInfrastructureDialog.vue'
   import CreateAssetFromTemplateDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetFromTemplateDialog.vue'
   import DeleteAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/DeleteAssetDialog.vue'
   import EdcResourceTab from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceTab.vue'
-  import { assetTypeFilterItems, assetTypeFilterPreset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
-  import { EDC_NAMESPACE } from '@/pages/modules/EclipseDataspaceConnector/data/namespaces'
+  import { useEdcAssetTypeQuery } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetTypeQuery'
+  import { assetTypeFilterItems } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
 
   // Composables
-  const { queryAssets, updateAsset } = useCatenaXEdcClient()
+  const { updateAsset } = useCatenaXEdcClient()
+  const { queryAssetsOfType } = useEdcAssetTypeQuery()
 
   // Data
   const resourceTab = useTemplateRef<InstanceType<typeof EdcResourceTab>>('resourceTab')
@@ -90,15 +90,4 @@
   watch(selectedAssetTypeFilter, () => {
     resourceTab.value?.loadResources()
   })
-
-  async function queryAssetsOfType (proxyId: string): Promise<CatenaXEdcAsset[] | null> {
-    const assetTypeFilter = assetTypeFilterPreset(selectedAssetTypeFilter.value)
-
-    // Unlike in a catalog request, the query spec is the request body itself and needs its own context and type
-    const assets = await queryAssets(proxyId, assetTypeFilter?.querySpec && {
-      querySpec: { '@context': { '@vocab': EDC_NAMESPACE }, '@type': 'QuerySpec', ...assetTypeFilter.querySpec },
-    })
-
-    return assets?.filter(asset => assetTypeFilter?.matches?.(asset) ?? true) ?? null
-  }
 </script>
