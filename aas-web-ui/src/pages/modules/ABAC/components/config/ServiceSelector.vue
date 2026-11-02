@@ -42,7 +42,7 @@
 <script setup lang="ts">
   import type { AbacService } from '../../types/service'
   import { hasItems } from '@/utils/array'
-  import { useAbacNavigation } from '../../hooks/useAbacNavigation'
+  import { useAbacNavigation } from '../../hooks/navigation/useAbacNavigation'
   import { useAbacI18n } from '../../i18n/useAbacI18n'
   import { useAbacConfigStore } from '../../stores/useAbacConfigStore'
   import ActionMenu from '../shared/menu/ActionMenu.vue'

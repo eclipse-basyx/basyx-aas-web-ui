@@ -136,7 +136,7 @@
   import type { Sort } from '../../../types/sort'
   import { hasItems } from '@/utils/array'
   import { useGetPolicies } from '../../../api/policy/useGetPolicies'
-  import { useSortPolicies } from '../../../hooks/useSortPolicies'
+  import { useSortPolicies } from '../../../hooks/resources/useSortPolicies'
   import { useAbacI18n } from '../../../i18n/useAbacI18n'
   import AbacConfigurator from '../../config/AbacConfigurator.vue'
   import ServiceSelector from '../../config/ServiceSelector.vue'

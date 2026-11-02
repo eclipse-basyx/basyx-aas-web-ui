@@ -54,7 +54,7 @@
     :cancel-label="t('policies.policy.confirmDialog.cancel')"
     :confirm-color="confirmAction === 'reject' ? 'error' : 'warning'"
     :confirm-label="t(`policies.policy.confirmDialog.${confirmAction}.confirm`)"
-    :message="t(`policies.policy.confirmDialog.${confirmAction}.message`, { version: selectedPolicyVersion })"
+    :message="t(`policies.policy.confirmDialog.${confirmAction}.message`, { version: versionId })"
     :title="t(`policies.policy.confirmDialog.${confirmAction}.title`)"
     @confirm="doAction(confirmAction)"
   />
@@ -72,9 +72,9 @@
   import { useCloneVersion } from '../../../api/policy/useCloneVersion'
   import { useRejectPolicy } from '../../../api/policy/useRejectPolicy'
   import { useValidatePolicy } from '../../../api/policy/useValidatePolicy'
-  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
+  import { useAbacNavigation } from '../../../hooks/navigation/useAbacNavigation'
   import { useAbacI18n } from '../../../i18n/useAbacI18n'
-  import ConfirmDialog from '../../shared/ConfirmDialog.vue'
+  import ConfirmDialog from '../../shared/dialog/ConfirmDialog.vue'
   import ActionMenu from '../../shared/menu/ActionMenu.vue'
   import ActionMenuItem from '../../shared/menu/ActionMenuItem.vue'
   import PolicyValidationDialog from '../detail/PolicyValidationDialog.vue'
@@ -91,14 +91,14 @@
   type ConfirmAction = 'activate' | 'reject'
   type PolicyAction = 'copy' | 'download' | 'clone' | 'validate' | 'activate' | 'reject'
 
-  const { policy, iconSize } = defineProps<{ policy: PolicyVersion, iconSize?: string }>()
+  const { policy } = defineProps<{ policy: PolicyVersion, iconSize?: string }>()
 
   const { t } = useAbacI18n()
   const { copyJsonToClipboard } = useClipboardUtil()
   const navigationStore = useNavigationStore()
   const { onSelectPolicy } = useAbacNavigation()
 
-  const selectedPolicyVersion = computed(() => policy.version_id.toString())
+  const versionId = computed(() => policy.version_id.toString())
 
   const { mutateAsync: clone } = useCloneVersion()
   const { mutateAsync: validate } = useValidatePolicy()
@@ -106,7 +106,7 @@
   const { mutateAsync: reject } = useRejectPolicy()
 
   const copyIcon = ref<string>(ICONS.COPY)
-  const fileName = computed(() => `Policy_v${selectedPolicyVersion.value}.json`)
+  const fileName = computed(() => `Policy_v${versionId.value}.json`)
 
   const isMenuOpen = ref(false)
   const confirmDialog = ref(false)
@@ -117,7 +117,7 @@
   async function doAction (action: PolicyAction): Promise<void> {
     isMenuOpen.value = false
 
-    if (!hasContent(selectedPolicyVersion.value)) return
+    if (!hasContent(versionId.value)) return
 
     try {
       switch (action) {
@@ -130,14 +130,14 @@
           return
         }
         case 'clone': {
-          const clonedPolicy = await clone(selectedPolicyVersion.value)
+          const clonedPolicy = await clone(versionId.value)
           onSelectPolicy(clonedPolicy.version_id)
           break
         }
         case 'validate': {
-          const result = await validate(selectedPolicyVersion.value)
+          const result = await validate(versionId.value)
           if (result) policyValidationDialog.value?.open(result)
-          break
+          return
         }
         case 'activate':
         case 'reject': {
@@ -147,8 +147,8 @@
             return
           }
           await (action === 'activate'
-            ? activate(selectedPolicyVersion.value, { onSettled: () => confirmDialog.value = false })
-            : reject(selectedPolicyVersion.value, { onSettled: () => confirmDialog.value = false })
+            ? activate(versionId.value, { onSettled: () => confirmDialog.value = false })
+            : reject(versionId.value, { onSettled: () => confirmDialog.value = false })
           )
           break
         }

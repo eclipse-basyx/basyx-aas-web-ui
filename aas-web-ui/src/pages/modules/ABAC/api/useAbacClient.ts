@@ -1,4 +1,4 @@
-import type { AbacResponse } from '../types/api'
+import type { AbacClientOptions, AbacResponse } from '../types/api'
 import type { Definition, DefinitionCreate, DefinitionDelete, DefinitionKind, DefinitionPatch, DefinitionReplace, DefinitionsMap } from '../types/definitions'
 import type { ActivePolicy, PolicyImport, PolicyValidationResult, PolicyVersion } from '../types/policy'
 import type { Rule, RuleCreate, RuleDelete, RuleDuplicate, RuleMove, RulePatch, RuleReplace, RuleToggle } from '../types/rules'
@@ -6,9 +6,9 @@ import { useRequestHandling } from '@/composables/RequestHandling'
 import { hasContent } from '@/utils/StringUtils'
 import { ABAC_MUTATION_SUPPRESSED_STATUSES, ABAC_ROUTE_PATHS, CONTEXT, RULE_SUB_PATHS, VERSION_SUB_PATHS } from '../constants/api'
 import { useAbacConfigStore } from '../stores/useAbacConfigStore'
-import { backendErrorMessage, buildRuleActionPath, buildVersionPath, jsonHeaders, toJson } from '../utils/api'
+import { buildRuleActionPath, buildVersionPath, createAbacApiError, jsonHeaders, toJson } from '../utils/api'
 
-export function useAbacClient (disableMessage = false) {
+export function useAbacClient ({ suppressMessages = true }: AbacClientOptions = {}) {
   const { getRequest } = useRequestHandling()
   // Mutations return their failure payload to the caller for error display.
   const {
@@ -23,6 +23,7 @@ export function useAbacClient (disableMessage = false) {
 
   async function withApiUrl<T> (
     fn: (url: string) => Promise<AbacResponse<T>>,
+    body?: unknown,
   ): Promise<T> {
     const url = apiUrl.value
     if (!hasContent(url)) {
@@ -32,8 +33,7 @@ export function useAbacClient (disableMessage = false) {
       const response = await fn(url)
 
       if (!response.success) {
-        const error = backendErrorMessage(response.data)
-        throw new Error(error ?? `ABAC request failed with status ${response.status ?? 'unknown'}`)
+        throw createAbacApiError(response.data, response.status, body)
       }
 
       if (response.data === undefined || response.data === null) {
@@ -56,7 +56,7 @@ export function useAbacClient (disableMessage = false) {
       getRequest(
         `${url}/${ABAC_ROUTE_PATHS.ACTIVE_POLICY}`,
         CONTEXT.GET_ACTIVE_POLICY,
-        disableMessage,
+        suppressMessages,
       ),
     )
   }
@@ -66,7 +66,7 @@ export function useAbacClient (disableMessage = false) {
       getRequest(
         `${url}/${ABAC_ROUTE_PATHS.ACTIVE_POLICY_RULES}`,
         CONTEXT.GET_ACTIVE_POLICY_RULES,
-        disableMessage,
+        suppressMessages,
       ),
     )
   }
@@ -76,7 +76,7 @@ export function useAbacClient (disableMessage = false) {
       getRequest(
         `${url}/${ABAC_ROUTE_PATHS.POLICY_VERSIONS}`,
         CONTEXT.GET_POLICY_VERSIONS,
-        disableMessage,
+        suppressMessages,
       ),
     )
   }
@@ -86,7 +86,7 @@ export function useAbacClient (disableMessage = false) {
       getRequest(
         buildVersionPath(url, versionId),
         CONTEXT.GET_POLICY_VERSION,
-        disableMessage,
+        suppressMessages,
       ),
     )
   }
@@ -98,8 +98,9 @@ export function useAbacClient (disableMessage = false) {
         toJson(payload),
         jsonHeaders(),
         CONTEXT.IMPORT_POLICY,
-        disableMessage,
+        suppressMessages,
       ),
+    payload.policy,
     )
   }
 
@@ -110,7 +111,7 @@ export function useAbacClient (disableMessage = false) {
         undefined,
         new Headers(),
         CONTEXT.CLONE_VERSION,
-        disableMessage,
+        suppressMessages,
       ),
     )
   }
@@ -122,7 +123,7 @@ export function useAbacClient (disableMessage = false) {
         undefined,
         new Headers(),
         CONTEXT.VALIDATE_VERSION,
-        disableMessage,
+        suppressMessages,
       ),
     )
   }
@@ -134,7 +135,7 @@ export function useAbacClient (disableMessage = false) {
         undefined,
         new Headers(),
         CONTEXT.ACTIVATE_VERSION,
-        disableMessage,
+        suppressMessages,
       ),
     )
   }
@@ -146,7 +147,7 @@ export function useAbacClient (disableMessage = false) {
         undefined,
         new Headers(),
         CONTEXT.REJECT_VERSION,
-        disableMessage,
+        suppressMessages,
       ),
     )
   }
@@ -162,7 +163,7 @@ export function useAbacClient (disableMessage = false) {
       getRequest(
         buildVersionPath(url, versionId, VERSION_SUB_PATHS.RULES),
         CONTEXT.GET_RULES,
-        disableMessage,
+        suppressMessages,
       ),
     )
   }
@@ -172,7 +173,7 @@ export function useAbacClient (disableMessage = false) {
       getRequest(
         buildVersionPath(url, versionId, VERSION_SUB_PATHS.RULES, ruleIndex),
         CONTEXT.GET_RULES,
-        disableMessage,
+        suppressMessages,
       ),
     )
   }
@@ -184,32 +185,35 @@ export function useAbacClient (disableMessage = false) {
         toJson(payload),
         jsonHeaders(),
         CONTEXT.CREATE_RULE,
-        disableMessage,
+        suppressMessages,
       ),
+    payload.rule,
     )
   }
 
-  async function replaceRule ({ versionId, ruleIndex, rule }: RuleReplace): Promise<PolicyVersion> {
+  async function replaceRule ({ versionId, ruleIndex, payload }: RuleReplace): Promise<PolicyVersion> {
     return withApiUrl(url =>
       putRequest(
         buildVersionPath(url, versionId, VERSION_SUB_PATHS.RULES, String(ruleIndex)),
-        toJson(rule),
+        toJson(payload),
         jsonHeaders(),
         CONTEXT.REPLACE_RULE,
-        disableMessage,
+        suppressMessages,
       ),
+    payload,
     )
   }
 
-  async function patchRule ({ versionId, ruleIndex, patch }: RulePatch): Promise<PolicyVersion> {
+  async function patchRule ({ versionId, ruleIndex, payload }: RulePatch): Promise<PolicyVersion> {
     return withApiUrl(url =>
       patchRequest(
         buildVersionPath(url, versionId, VERSION_SUB_PATHS.RULES, String(ruleIndex)),
-        toJson(patch),
+        toJson(payload),
         jsonHeaders(),
         CONTEXT.PATCH_RULE,
-        disableMessage,
+        suppressMessages,
       ),
+    payload,
     )
   }
 
@@ -219,7 +223,7 @@ export function useAbacClient (disableMessage = false) {
         buildVersionPath(url, versionId, VERSION_SUB_PATHS.RULES, String(ruleIndex)),
         new Headers(),
         CONTEXT.DELETE_RULE,
-        disableMessage,
+        suppressMessages,
       ),
     )
   }
@@ -231,7 +235,7 @@ export function useAbacClient (disableMessage = false) {
         undefined,
         new Headers(),
         CONTEXT.DUPLICATE_RULE,
-        disableMessage,
+        suppressMessages,
       ),
     )
   }
@@ -243,7 +247,7 @@ export function useAbacClient (disableMessage = false) {
         toJson(payload),
         jsonHeaders(),
         CONTEXT.MOVE_RULE,
-        disableMessage,
+        suppressMessages,
       ),
     )
   }
@@ -255,7 +259,7 @@ export function useAbacClient (disableMessage = false) {
         toJson(payload),
         jsonHeaders(),
         CONTEXT.TOGGLE_RULE,
-        disableMessage,
+        suppressMessages,
       ),
     )
   }
@@ -271,17 +275,7 @@ export function useAbacClient (disableMessage = false) {
       getRequest(
         buildVersionPath(url, versionId, VERSION_SUB_PATHS.DEFINITIONS),
         CONTEXT.GET_DEFINITIONS,
-        disableMessage,
-      ),
-    )
-  }
-
-  async function getDefinitionsByKind (versionId: string, kind: DefinitionKind): Promise<Definition[]> {
-    return withApiUrl(url =>
-      getRequest(
-        buildVersionPath(url, versionId, VERSION_SUB_PATHS.DEFINITIONS, kind),
-        CONTEXT.GET_DEFINITIONS,
-        disableMessage,
+        suppressMessages,
       ),
     )
   }
@@ -291,7 +285,7 @@ export function useAbacClient (disableMessage = false) {
       getRequest(
         buildVersionPath(url, versionId, VERSION_SUB_PATHS.DEFINITIONS, kind, encodeURIComponent(name)),
         CONTEXT.GET_DEFINITIONS,
-        disableMessage,
+        suppressMessages,
       ),
     )
   }
@@ -303,8 +297,9 @@ export function useAbacClient (disableMessage = false) {
         toJson(payload),
         jsonHeaders(),
         CONTEXT.CREATE_DEFINITION,
-        disableMessage,
+        suppressMessages,
       ),
+    payload,
     )
   }
 
@@ -315,8 +310,9 @@ export function useAbacClient (disableMessage = false) {
         toJson(payload),
         jsonHeaders(),
         CONTEXT.REPLACE_DEFINITION,
-        disableMessage,
+        suppressMessages,
       ),
+    payload,
     )
   }
 
@@ -327,8 +323,9 @@ export function useAbacClient (disableMessage = false) {
         toJson(patch),
         jsonHeaders(),
         CONTEXT.PATCH_DEFINITION,
-        disableMessage,
+        suppressMessages,
       ),
+    patch,
     )
   }
 
@@ -338,7 +335,7 @@ export function useAbacClient (disableMessage = false) {
         buildVersionPath(url, versionId, VERSION_SUB_PATHS.DEFINITIONS, kind, encodeURIComponent(name)),
         new Headers(),
         CONTEXT.DELETE_DEFINITION,
-        disableMessage,
+        suppressMessages,
       ),
     )
   }
@@ -369,7 +366,6 @@ export function useAbacClient (disableMessage = false) {
     toggleRule,
     // Definition
     getDefinitions,
-    getDefinitionsByKind,
     getDefinition,
     createDefinition,
     replaceDefinition,

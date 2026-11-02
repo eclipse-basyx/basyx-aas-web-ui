@@ -10,9 +10,7 @@
  *
  */
 
-import type { FormulaExpression } from '../types/formula'
-
-export type Complexity = 'N/A' | 'LOW' | 'DATA_DRIVEN'
+import type { Complexity, FormulaExpression } from '../types/formula'
 
 /**
  * Deep-walk a FormulaExpression tree and return true if any node

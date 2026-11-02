@@ -1,15 +1,16 @@
 /**
  * Detects an update by resolving recognized alternative switches, merging the
  * submitted fields into the current document, and comparing the effective result.
- * Omission preserves fields, null deletes them, and arrays replace in full.
- * An identical result skips the request. Alternative switches or complete submitted
- * documents use PUT with the merged result; other changes use PATCH with a minimal
- * payload that retains deletion markers. These helpers select payloads; validation
+ * Complete form documents bypass merging; their omissions become patch deletions.
+ * For JSON merge input, omission preserves fields, null deletes them, and arrays
+ * replace in full. Alternative switches or complete JSON merge input can use PUT;
+ * complete form documents use a minimal PATCH with derived deletion markers.
+ * An identical result skips the request. These helpers select payloads; validation
  * and HTTP requests are handled by their callers.
  */
 
 import type { DefinitionKind } from '../types/definitions'
-import type { JsonObject } from '../types/json'
+import type { DocumentUpdateOptions, JsonObject } from '../types/json'
 import { FORMULA_OPERATORS } from '../constants/formula'
 import { equals, isObject, mergeObjects } from './object'
 
@@ -31,7 +32,6 @@ const EXPRESSION_KEYS = [
 // siblings. Review these choices alongside backend behavior when the schema changes.
 const EXCLUSIVE_FIELDS: Partial<Record<UpdateContext, readonly (readonly string[])[]>> = {
   rule: [['ACL', 'USEACL'], ['FORMULA', 'USEFORMULA']],
-  objects: [['objects', 'USEOBJECTS']],
   filter: [['CONDITION', 'USEFORMULA']],
   expression: [EXPRESSION_KEYS],
   attribute: [['CLAIM', 'GLOBAL', 'REFERENCE']],
@@ -43,7 +43,7 @@ const EXCLUSIVE_FIELDS: Partial<Record<UpdateContext, readonly (readonly string[
  * while arrays and other values are included as complete replacements.
  *
  * @param original Current document before merging.
- * @param submitted Effective document after applying the submitted merge instructions.
+ * @param submitted Complete desired document after form edits or JSON merge resolution.
  * @returns Minimal patch containing changed fields and deletion markers.
  */
 function createPatch (original: JsonObject, submitted: JsonObject): JsonObject {
@@ -131,12 +131,7 @@ function resolveAlternatives (original: JsonObject, submitted: JsonObject, conte
     const childContext = nestedContext(context, key)
     const previous = Object.hasOwn(original, key) ? original[key] : undefined
     if (childContext && isObject(previous) && isObject(value)) {
-      Object.defineProperty(resolved, key, {
-        value: resolveAlternatives(previous, value, childContext),
-        enumerable: true,
-        configurable: true,
-        writable: true,
-      })
+      resolved[key] = resolveAlternatives(previous, value, childContext)
     }
   }
   return resolved
@@ -150,12 +145,16 @@ function resolveAlternatives (original: JsonObject, submitted: JsonObject, conte
  * @param context Rule or definition category used to resolve recognized alternatives.
  * @returns No-request mode, complete replacement, or minimal patch with deletion markers.
  */
-function detectUpdate (original: JsonObject, submitted: JsonObject, context: 'rule' | DefinitionKind) {
-  const resolved = resolveAlternatives(original, submitted, context)
-  const merged = mergeObjects(original, resolved)
+function detectUpdate (original: JsonObject, submitted: JsonObject, context: 'rule' | DefinitionKind, options: DocumentUpdateOptions = {}) {
+  const base = options.mergeBase ?? original
+  const resolved = options.inputMode === 'complete' ? submitted : resolveAlternatives(base, submitted, context)
+  const merged = options.inputMode === 'complete' ? submitted : mergeObjects(base, resolved)
   const patch = createPatch(original, merged)
   if (Object.keys(patch).length === 0) {
     return { mode: 'unchanged' as const, payload: patch }
+  }
+  if (options.inputMode === 'complete') {
+    return { mode: 'patch' as const, payload: patch }
   }
   // A detected alternative switch replaces the complete merged document. Only
   // the mutually exclusive sibling is removed; other omitted fields survive.
@@ -167,26 +166,38 @@ function detectUpdate (original: JsonObject, submitted: JsonObject, context: 'ru
 
 /**
  * Selects PUT, PATCH, or no request for a rule using its effective merged document.
- * Omitted fields survive, null deletes fields, arrays replace in full, and recognized
+ * For merge input, omitted fields survive, null deletes fields, arrays replace in full, and recognized
  * exclusive alternatives can replace an omitted sibling without dropping other fields.
  *
  * @param original Current rule document.
  * @param submitted Editor input containing changes or a complete rule.
+ * @param options Complete document or merge input, with an optional latest form snapshot.
  * @returns Update mode and its replacement or patch payload; unchanged has an empty payload.
  */
-export function detectRuleUpdate (original: JsonObject, submitted: JsonObject) {
-  return detectUpdate(original, submitted, 'rule')
+export function detectRuleUpdate (original: JsonObject, submitted: JsonObject, options: DocumentUpdateOptions = {}) {
+  return detectUpdate(original, submitted, 'rule', options)
 }
 
 /**
  * Selects PUT, PATCH, or no request within the existing definition category.
  * Uses the same merge semantics as rule updates and resolves category-specific alternatives.
+ * Reattaches the immutable resource name to an optional form merge base.
  *
  * @param original Current definition document, including its immutable name.
  * @param submitted Editor input with the immutable name reattached by the caller.
  * @param kind Existing definition category; pasted fields do not change it.
+ * @param options Complete document or merge input, with an optional latest form snapshot.
  * @returns Update mode and its replacement or patch payload; unchanged has an empty payload.
  */
-export function detectDefinitionUpdate (original: JsonObject, submitted: JsonObject, kind: DefinitionKind) {
-  return detectUpdate(original, submitted, kind)
+export function detectDefinitionUpdate (original: JsonObject, submitted: JsonObject, kind: DefinitionKind, options: DocumentUpdateOptions = {}) {
+  const mergeBase = options.mergeBase ? { ...options.mergeBase, name: original.name } : undefined
+  return detectUpdate(original, submitted, kind, { ...options, mergeBase })
+}
+
+/**
+ * Reconstructs the document used for validation and JSON-to-form switching from
+ * the selected update. Replacement payloads must not resurrect deleted alternatives.
+ */
+export function resolveUpdateDocument (original: JsonObject, update: ReturnType<typeof detectRuleUpdate>): JsonObject {
+  return update.mode === 'replace' ? update.payload : mergeObjects(original, update.payload)
 }

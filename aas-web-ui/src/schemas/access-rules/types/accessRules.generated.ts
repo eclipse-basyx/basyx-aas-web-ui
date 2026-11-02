@@ -1,7 +1,7 @@
 /* eslint-disable -- Generated declarations use the library's formatting and are checked by vue-tsc. */
 // Generated with json-schema-to-typescript by src/schemas/access-rules/generate-types.ts. Do not edit.
-// Source: IDTA 3.1, commit 5eb746834d9c5353af751c9fc9d62df9e9b41b05 (CC BY 4.0).
-// SHA-256: 12a298f893dd137b0d0d92c76db32d938ff6006a89411f146537b05f460e83fb
+// Source: IDTA 3.2 working draft, commit 0171f14ceb32bc396653100b5a9a93cf2c984e79 (CC BY 4.0).
+// SHA-256: cb8ac7c7eecc21e0c8e4d0655428c9a583faf49b4e50c86de5b7159026475030
 // Patterns and overlapping oneOf value alternatives remain Ajv runtime constraints.
 
 export type AttributeItem = {
@@ -1428,11 +1428,11 @@ export interface AllAccessPermissionRules {
     | {
         name?: string
         objects: ObjectItem[]
-        USEOBJECTS?: never
+        USEOBJECTS?: string[]
       }
     | {
         name?: string
-        objects?: never
+        objects?: ObjectItem[]
         USEOBJECTS: string[]
       }
   ) & {

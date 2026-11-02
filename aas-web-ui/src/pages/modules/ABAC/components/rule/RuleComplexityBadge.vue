@@ -1,8 +1,8 @@
 <template>
-  <v-tooltip location="top" :open-delay="400">
-    <template #activator="{ props: tipProps }">
+  <v-tooltip location="top" open-delay="600">
+    <template #activator="{ props: tooltipProps }">
       <v-chip
-        v-bind="tipProps"
+        v-bind="tooltipProps"
         :color="badgeConfig.color"
         label
         size="x-small"
@@ -34,7 +34,7 @@
   const complexity = computed(() => classifyFormulaComplexity(rule?.configured_rule_json?.FORMULA))
 
   const badgeConfig = computed(() => {
-    if (!complexity || complexity.value === 'N/A')
+    if (complexity.value === 'N/A')
       return {
         color: 'grey',
         icon: ICONS.N_A,

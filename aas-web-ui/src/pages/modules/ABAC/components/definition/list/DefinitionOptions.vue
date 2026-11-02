@@ -10,6 +10,7 @@
 
     <ActionMenuItem
       color="error"
+      :disabled="deleteDisabled"
       :icon="ICONS.DELETE"
       :label="t('definitions.delete')"
       @click="doAction('delete')"
@@ -34,9 +35,9 @@
   import { hasContent } from '@/utils/StringUtils'
   import { useDeleteDefinition } from '../../../api/definition/useDeleteDefinition'
   import { DEFINITION_DIALOG_KEY } from '../../../constants/inject'
-  import { useAbacNavigation } from '../../../hooks/useAbacNavigation'
+  import { useAbacNavigation } from '../../../hooks/navigation/useAbacNavigation'
   import { useAbacI18n } from '../../../i18n/useAbacI18n'
-  import ConfirmDialog from '../../shared/ConfirmDialog.vue'
+  import ConfirmDialog from '../../shared/dialog/ConfirmDialog.vue'
   import ActionMenu from '../../shared/menu/ActionMenu.vue'
   import ActionMenuItem from '../../shared/menu/ActionMenuItem.vue'
 
@@ -47,7 +48,7 @@
     DELETE: 'mdi-delete',
   } as const
 
-  const { definition, kind } = defineProps<{ definition: Definition, kind: DefinitionKind }>()
+  const { definition, kind, deleteDisabled } = defineProps<{ definition: Definition, kind: DefinitionKind, deleteDisabled?: boolean }>()
 
   const openDialog = inject(DEFINITION_DIALOG_KEY)
 
@@ -76,6 +77,7 @@
           return
         }
         case 'delete': {
+          if (deleteDisabled) return
           if (!deleteDialog.value) {
             deleteDialog.value = true
             return

@@ -214,13 +214,14 @@
     <v-menu
       v-if="showMobileMenu"
       v-model="mobileMenu"
+      class="app-mobile-menu"
       style="z-index: 9992"
       transition="slide-y-reverse-transition"
     >
       <template #activator="{ props }">
         <v-btn
           v-bind="props"
-          class="text-buttonText"
+          class="app-mobile-menu text-buttonText"
           :color="mobileMenu ? 'invertedButton' : 'primary'"
           :icon="mobileMenu ? 'mdi-close' : 'mdi-dots-vertical'"
           style="position: fixed; bottom: 50px; right: 10px; z-index: 9990"
