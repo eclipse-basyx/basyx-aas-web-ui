@@ -5,9 +5,21 @@
     icon="mdi-shield-check-outline"
     label="Policy"
     label-plural="Policies"
+    :matches="matchesPolicyType"
     :query="queryPolicyDefinitions"
     :update="updatePolicyDefinition"
   >
+    <template #filter>
+      <v-select
+        v-model="selectedPolicyType"
+        density="compact"
+        hide-details
+        :items="policyTypeFilterItems"
+        label="Filter by Policy Type"
+        variant="outlined"
+      />
+    </template>
+
     <template #item-subtitle="{ item }">
       <span class="font-italic">{{ getPolicyType(item) }}</span>
     </template>
@@ -37,6 +49,8 @@
   const { deletePolicyDefinition, queryPolicyDefinitions, updatePolicyDefinition } = useCatenaXEdcClient()
 
   // Data
+  const policyTypeFilterItems = ['All', 'Access', 'Usage']
+  const selectedPolicyType = ref('All')
   const createPolicyDialog = ref(false)
   const createPolicyFromTemplateDialog = ref(false)
 
@@ -44,6 +58,10 @@
     { title: 'Create Policy', tooltip: 'Create a new Policy', onClick: () => (createPolicyDialog.value = true) },
     { title: 'Create Policy from Template', tooltip: 'Create a new Policy from Template', onClick: () => (createPolicyFromTemplateDialog.value = true) },
   ]
+
+  function matchesPolicyType (policyDefinition: CatenaXEdcPolicyDefinition): boolean {
+    return selectedPolicyType.value === 'All' || getPolicyType(policyDefinition) === selectedPolicyType.value
+  }
 
   function getPolicyType (policyDefinition: CatenaXEdcPolicyDefinition): string {
     const permission = policyDefinition?.policy?.['odrl:permission'] ?? policyDefinition?.policy?.permission

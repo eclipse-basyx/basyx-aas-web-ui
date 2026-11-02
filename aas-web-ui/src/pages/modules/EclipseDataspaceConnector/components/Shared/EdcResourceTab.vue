@@ -76,9 +76,14 @@
 
           </v-card-title>
 
+          <!-- Optional filter below the search field, e.g. by asset type -->
+          <div v-if="$slots.filter" class="px-12 pb-2">
+            <slot name="filter" />
+          </div>
+
           <v-divider />
 
-          <v-card-text class="pt-0 pb-0 px-2" style="overflow-y: auto; height: calc(100svh - 64px - 48px - 40px - 64px - 3px)">
+          <v-card-text class="pt-0 pb-0 px-2" style="overflow-y: auto" :style="{ height: listHeight }">
 
             <div v-if="listLoading">
               <v-skeleton-loader type="list-item@6" />
@@ -223,7 +228,12 @@
     query: (proxyId: string) => Promise<Array<any> | null>
     update: (proxyId: string, resourceId: string, resource: any) => Promise<CatenaXEdcResult>
     delete?: (proxyId: string, resourceId: string) => Promise<CatenaXEdcResult> // Not needed with the `delete-dialog` slot
+    matches?: (resource: any) => boolean // Client-side filter of the loaded resources, e.g. by the value of the `filter` slot
   }>()
+
+  defineExpose({ loadResources })
+
+  const slots = useSlots()
 
   // Stores
   const infrastructureStore = useInfrastructureStore()
@@ -246,10 +256,12 @@
   // Computed properties
   const selectedEdcConfig = computed(() => infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null)
   const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? 'default')
+  // Full height - header - tabs - footer - search (and filter) - borders
+  const listHeight = computed(() => `calc(100svh - 64px - 48px - 40px - ${slots.filter ? 112 : 64}px - 3px)`)
   const filteredResources = computed(() => {
     const query = searchQuery.value?.trim().toLowerCase()
-    if (!query) return resources.value
-    return resources.value.filter(resource => resource['@id'].toLowerCase().includes(query))
+    return resources.value.filter(resource =>
+      (!query || resource['@id'].toLowerCase().includes(query)) && (props.matches?.(resource) ?? true))
   })
 
   onMounted(() => {

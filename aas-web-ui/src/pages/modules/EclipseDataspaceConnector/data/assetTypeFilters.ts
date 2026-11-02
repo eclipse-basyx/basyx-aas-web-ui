@@ -1,18 +1,18 @@
 import type { CatenaXEdcQuerySpec } from '@/composables/Client/CatenaXEdcClient'
 import { CX_TAXO_NAMESPACE, DCT_NAMESPACE, EDC_NAMESPACE } from '@/pages/modules/EclipseDataspaceConnector/data/namespaces'
 
-export interface CatalogFilterPreset {
+export interface AssetTypeFilterPreset {
   title: string
   value: string
   querySpec?: CatenaXEdcQuerySpec
-  matches?: (dataset: any) => boolean
+  matches?: (asset: any) => boolean // Catalog dataset or asset of the management API
 }
 
 // Items of the filter select, dividers are rendered by v-select between the groups of presets
-export type CatalogFilterItem = CatalogFilterPreset | { type: 'divider' }
+export type AssetTypeFilterItem = AssetTypeFilterPreset | { type: 'divider' }
 
 /**
- * Returns a query spec that only matches catalog datasets of the given Catena-X taxonomy type (`dct:type`).
+ * Returns a query spec that only matches catalog datasets or assets of the given Catena-X taxonomy type (`dct:type`).
  */
 function assetTypeQuerySpec (taxonomyType: string): CatenaXEdcQuerySpec {
   return {
@@ -54,15 +54,16 @@ function wordPattern (word: string): RegExp {
 }
 
 /**
- * Returns a matcher for catalog datasets whose ID, display name or description contains one of the given texts
+ * Returns a matcher for catalog datasets or assets whose ID, display name or description contains one of the given texts
  * (case-insensitive) or matches one of the given patterns.
  * It is applied client-side, since the criteria of a query spec are AND-combined and can't express this OR.
  */
-function textMatcher (...searchTerms: Array<string | RegExp>): (dataset: any) => boolean {
+function textMatcher (...searchTerms: Array<string | RegExp>): (asset: any) => boolean {
   const patterns = searchTerms.map(searchTerm => typeof searchTerm === 'string'
     ? new RegExp(searchTerm.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i')
     : searchTerm)
-  return dataset => Object.entries(dataset ?? {})
+  // Catalog datasets have their texts on top level, assets of the management API in `properties`
+  return asset => Object.entries({ ...asset, ...asset?.properties })
     .filter(([key]) => key === '@id' || ['description', 'displayName'].includes(key.split(/[#/:]/).pop() ?? ''))
     .flatMap(([, value]) => textValues(value))
     .some(text => patterns.some(pattern => pattern.test(text)))
@@ -73,7 +74,7 @@ const isService = textMatcher('Service')
 const isSubmodel = textMatcher(wordPattern('SM'), 'Submodel')
 const isAssetAdministrationShell = textMatcher('AAS', 'Asset Administration Shell')
 
-export const catalogFilterItems: CatalogFilterItem[] = [
+export const assetTypeFilterItems: AssetTypeFilterItem[] = [
   { title: 'All', value: 'all' },
   { type: 'divider' },
   { title: 'Digital Twin Registry', value: 'digitalTwinRegistry', querySpec: assetTypeQuerySpec('DigitalTwinRegistry') },
@@ -84,14 +85,14 @@ export const catalogFilterItems: CatalogFilterItem[] = [
   {
     title: 'Asset Administration Shell',
     value: 'assetAdministrationShell',
-    matches: dataset => isAssetAdministrationShell(dataset) && !isSubmodel(dataset) && !isService(dataset),
+    matches: asset => isAssetAdministrationShell(asset) && !isSubmodel(asset) && !isService(asset),
   },
-  { title: 'Submodel', value: 'submodel', matches: dataset => isSubmodel(dataset) && !isService(dataset) },
+  { title: 'Submodel', value: 'submodel', matches: asset => isSubmodel(asset) && !isService(asset) },
 ]
 
 /**
  * Returns the filter preset with the given value, skipping the dividers of the filter items.
  */
-export function catalogFilterPreset (value: string): CatalogFilterPreset | undefined {
-  return catalogFilterItems.find((item): item is CatalogFilterPreset => 'value' in item && item.value === value)
+export function assetTypeFilterPreset (value: string): AssetTypeFilterPreset | undefined {
+  return assetTypeFilterItems.find((item): item is AssetTypeFilterPreset => 'value' in item && item.value === value)
 }

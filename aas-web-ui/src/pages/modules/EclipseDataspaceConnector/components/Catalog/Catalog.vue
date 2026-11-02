@@ -22,7 +22,7 @@
               class="mt-2"
               density="compact"
               hide-details
-              :items="catalogFilterItems"
+              :items="assetTypeFilterItems"
               label="Filter by Asset Type"
               variant="solo"
             />
@@ -382,7 +382,7 @@
   import { useTheme } from 'vuetify'
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
-  import { catalogFilterItems, catalogFilterPreset } from '@/pages/modules/EclipseDataspaceConnector/data/catalogFilters'
+  import { assetTypeFilterItems, assetTypeFilterPreset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { normalizeCatenaXPartners } from '@/utils/CatenaXPartnerUtils'
 
@@ -506,12 +506,12 @@
     // edcStatus.value = ''
 
     if (selectedBusinessPartner.value?.counterPartyAddress) {
-      const dspAddress = selectedBusinessPartner.value.counterPartyAddress
-      const catalogFilter = catalogFilterPreset(selectedCatalogFilter.value)
+      const catalogFilter = assetTypeFilterPreset(selectedCatalogFilter.value)
 
       const catalogRequest: CatenaXEdcCatalogRequest = {
         counterPartyId: selectedBusinessPartner.value.counterPartyId,
-        counterPartyAddress: dspAddress + (dspAddress.endsWith('/2025-1') ? '' : '/2025-1'),
+        // The BFF adds the DSP 2025-1 version path to the address
+        counterPartyAddress: selectedBusinessPartner.value.counterPartyAddress,
         protocol: 'dataspace-protocol-http:2025-1',
         querySpec: catalogFilter?.querySpec,
       }

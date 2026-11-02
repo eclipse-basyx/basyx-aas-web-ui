@@ -1,21 +1,21 @@
 import { describe, expect, it } from 'vitest'
-import { catalogFilterItems, catalogFilterPreset } from '@/pages/modules/EclipseDataspaceConnector/data/catalogFilters'
+import { assetTypeFilterItems, assetTypeFilterPreset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
 
 function preset (value: string) {
-  const catalogFilter = catalogFilterPreset(value)
-  if (!catalogFilter) {
-    throw new Error(`Missing catalog filter preset ${value}`)
+  const assetTypeFilter = assetTypeFilterPreset(value)
+  if (!assetTypeFilter) {
+    throw new Error(`Missing asset type filter preset ${value}`)
   }
-  return catalogFilter
+  return assetTypeFilter
 }
 
-describe('catalogFilters', () => {
+describe('assetTypeFilters', () => {
   it('requests the full catalog by default', () => {
-    expect(catalogFilterItems[0]).toEqual({ title: 'All', value: 'all' })
+    expect(assetTypeFilterItems[0]).toEqual({ title: 'All', value: 'all' })
   })
 
   it('separates the preset groups by dividers', () => {
-    const titles = catalogFilterItems.map(item => 'title' in item ? item.title : '---')
+    const titles = assetTypeFilterItems.map(item => 'title' in item ? item.title : '---')
 
     expect(titles.slice(0, 2)).toEqual(['All', '---'])
     expect(titles.slice(titles.indexOf('Push Asset'), titles.indexOf('Push Asset') + 2)).toEqual(['Push Asset', '---'])
@@ -23,7 +23,7 @@ describe('catalogFilters', () => {
   })
 
   it('skips dividers when looking up a preset', () => {
-    expect(catalogFilterPreset('divider')).toBeUndefined()
+    expect(assetTypeFilterPreset('divider')).toBeUndefined()
   })
 
   it('filters the catalog by Catena-X taxonomy type', () => {
@@ -54,6 +54,14 @@ describe('catalogFilters', () => {
       'aas-referables:displayName': [{ 'aas-langstrings:language': 'en', 'aas-langstrings:text': 'Push' }],
     })).toBe(true)
     expect(matches?.({ '@id': 'asset-1', 'name': 'Push', 'displayName': 'Pull' })).toBe(false)
+  })
+
+  it('matches assets of the management API by the texts in their properties', () => {
+    const { matches } = preset('digitalProductPassport')
+
+    expect(matches?.({ '@id': 'asset-1', 'properties': { displayName: 'HARTING DPP TIAP5N' } })).toBe(true)
+    expect(matches?.({ '@id': 'asset-1', 'properties': { description: 'Digital Product Passport' } })).toBe(true)
+    expect(matches?.({ '@id': 'asset-1', 'properties': { name: 'DPP', description: 'Nameplate' } })).toBe(false)
   })
 
   it('matches Asset Administration Shell assets by AAS or its full name', () => {
