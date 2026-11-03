@@ -189,7 +189,7 @@ export function getInfrastructureTemplate (
 }
 
 export function isCatenaXAccessMode (value: unknown): value is CatenaXAccessMode {
-  return value === 'direct' || value === 'edc'
+  return (['direct', 'edc', 'full'] as unknown[]).includes(value)
 }
 
 export function getCatenaXAccessMode (
@@ -208,6 +208,18 @@ export function getCatenaXAccessMode (
   }
 
   return 'direct'
+}
+
+/**
+ * Returns true when the given access mode accesses Catena-X data through the
+ * server-side EDC proxy. Both "edc" and "full" access modes use the EDC proxy;
+ * "full" additionally allows configuring direct component endpoints.
+ */
+export function isCatenaXEdcAccessMode (
+  infrastructure?: Pick<InfrastructureConfig, 'template' | 'catenaX' | 'components'> | null,
+): boolean {
+  const accessMode = getCatenaXAccessMode(infrastructure)
+  return accessMode === 'edc' || accessMode === 'full'
 }
 
 export function getInfrastructureTemplateDefinition (

@@ -7,8 +7,8 @@ export interface CatenaXEdcStatus {
   managementUrlConfigured: boolean
   apiKeyConfigured: boolean
   participantId?: string
-  dspEndpointConfigured: boolean
-  dataPlaneProxyUrlConfigured: boolean
+  dspEndpoint: string
+  dataPlaneProxyUrl: string
   allowedCounterPartyAddressCount: number
   allowInsecureCounterPartyAddresses: boolean
 }
@@ -57,6 +57,12 @@ export interface CatenaXEdcDtrMetadata {
   transferProcessId: string
 }
 
+export interface CatenaXEdcAsset {
+  [key: string]: unknown
+  '@id': string
+  '@type': 'dcat:Dataset'
+}
+
 export interface CatenaXEdcDtrResponse<T = unknown> {
   data: T
   edc: CatenaXEdcDtrMetadata
@@ -64,6 +70,7 @@ export interface CatenaXEdcDtrResponse<T = unknown> {
 
 export function useCatenaXEdcClient (): {
   fetchStatus: (proxyId: string) => Promise<CatenaXEdcStatus | null>
+  fetchSmServiceAsset: (proxyId: string) => Promise<CatenaXEdcAsset | null>
   discoverConnector: (proxyId: string, request: CatenaXEdcDiscoveryRequest) => Promise<unknown | null>
   requestCatalog: (proxyId: string, request: CatenaXEdcCatalogRequest) => Promise<unknown | null>
   fetchDtrShellDescriptors: (
@@ -100,6 +107,25 @@ export function useCatenaXEdcClient (): {
     )
 
     return result.success ? result.data as CatenaXEdcStatus : null
+  }
+
+  async function fetchSmServiceAsset (proxyId: string): Promise<CatenaXEdcAsset | null> {
+    return fetchEdcAsset(proxyId, 'asset/sm-service', 'fetching Submodel Service asset through EDC')
+  }
+
+  async function fetchEdcAsset (proxyId: string, path: string, label: string): Promise<CatenaXEdcAsset | null> {
+    const url = buildEdcProxyUrl(proxyId, path)
+    if (!url) {
+      return null
+    }
+
+    const result = await getRequest(url, label, true)
+    if (!result.success) {
+      return null
+    }
+
+    const asset = result.data as CatenaXEdcAsset | undefined
+    return asset && typeof asset['@id'] === 'string' && asset['@id'].trim() !== '' ? asset : null
   }
 
   async function discoverConnector (
@@ -214,6 +240,7 @@ export function useCatenaXEdcClient (): {
 
   return {
     fetchStatus,
+    fetchSmServiceAsset,
     discoverConnector,
     requestCatalog,
     fetchDtrShellDescriptors,
