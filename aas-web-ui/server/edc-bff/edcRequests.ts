@@ -1,5 +1,6 @@
 import type {
   EdcCatalogRequest,
+  EdcDataFetchRequest,
   EdcDataPushRequest,
   EdcDiscoveryRequest,
   EdcDtrDescriptorByIdRequest,
@@ -439,6 +440,37 @@ export async function fetchSubmodel (
 }
 
 /**
+ * Negotiates the asset of the counterparty and fetches its data from the data plane.
+ */
+export async function fetchData (
+  proxy: EdcProxyConfig,
+  request: EdcDataFetchRequest,
+  options: EdcDtrFetchOptions = {},
+): Promise<EdcDtrFetchResult> {
+  const access = await negotiateAsset(proxy, request, 'fetch', options)
+
+  const fetchFn = options.fetchFn ?? fetch
+  const response = await fetchFn(trimString(access.dataAddress.endpoint), {
+    method: 'GET',
+    headers: {
+      Authorization: trimString(access.dataAddress.authorization),
+      Accept: 'application/json',
+    },
+  })
+  const data = await parseResponseBody(response)
+
+  if (!response.ok) {
+    throw createHttpError(`Data plane fetch failed (${response.status})`, 502)
+  }
+
+  return {
+    status: response.status,
+    data,
+    metadata: access.metadata,
+  }
+}
+
+/**
  * Negotiates the push asset of the counterparty and posts the given data (e.g. an AAS or Submodel) to its data plane.
  */
 export async function pushData (
@@ -446,30 +478,11 @@ export async function pushData (
   request: EdcDataPushRequest,
   options: EdcDtrFetchOptions = {},
 ): Promise<EdcDtrFetchResult> {
-  const assetId = trimString(request.assetId)
-  if (!assetId) {
-    throw createHttpError('assetId is required for EDC data push', 400)
-  }
   if (!request.data || typeof request.data !== 'object') {
     throw createHttpError('data is required for EDC data push', 400)
   }
 
-  const access = await negotiateCatalogOffer(
-    proxy,
-    {
-      counterPartyId: request.counterPartyId,
-      counterPartyAddress: request.counterPartyAddress,
-      protocol: request.protocol,
-      querySpec: buildAssetIdQuerySpec(assetId),
-    },
-    catalog => extractCatalogDatasetOffer(catalog, {
-      assetId,
-      missingDatasetMessage: 'Catalog did not contain the requested push asset',
-      missingAssetIdMessage: 'Push asset dataset did not include an asset ID',
-      missingPolicyMessage: 'Push asset dataset did not include a contract policy',
-    }),
-    options,
-  )
+  const access = await negotiateAsset(proxy, request, 'push', options)
 
   const fetchFn = options.fetchFn ?? fetch
   const response = await fetchFn(trimString(access.dataAddress.endpoint), {
@@ -717,6 +730,39 @@ async function negotiateCatalogOffer (
     fetchFn,
   )
   return negotiateEdrAccess(proxy, offer, negotiationResponse, options, fetchFn)
+}
+
+/**
+ * Negotiates the asset with the given ID in the catalog of the counterparty, e.g. to fetch data from or push data to it.
+ */
+async function negotiateAsset (
+  proxy: EdcProxyConfig,
+  request: EdcDataFetchRequest,
+  transfer: 'fetch' | 'push',
+  options: EdcDtrFetchOptions,
+): Promise<{ dataAddress: Record<string, unknown>, metadata: EdcDtrFetchMetadata }> {
+  const assetId = trimString(request.assetId)
+  if (!assetId) {
+    throw createHttpError(`assetId is required for EDC data ${transfer}`, 400)
+  }
+
+  const assetLabel = transfer === 'push' ? 'push asset' : 'asset'
+  return negotiateCatalogOffer(
+    proxy,
+    {
+      counterPartyId: request.counterPartyId,
+      counterPartyAddress: request.counterPartyAddress,
+      protocol: request.protocol,
+      querySpec: buildAssetIdQuerySpec(assetId),
+    },
+    catalog => extractCatalogDatasetOffer(catalog, {
+      assetId,
+      missingDatasetMessage: `Catalog did not contain the requested ${assetLabel}`,
+      missingAssetIdMessage: `Dataset of the ${assetLabel} did not include an asset ID`,
+      missingPolicyMessage: `Dataset of the ${assetLabel} did not include a contract policy`,
+    }),
+    options,
+  )
 }
 
 async function negotiateEdrAccess (

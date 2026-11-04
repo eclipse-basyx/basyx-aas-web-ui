@@ -11,6 +11,7 @@ import {
   getEndpointFieldValue,
   getInfrastructureSummary,
   isAasSourceInfrastructure,
+  isSubmodelImportInfrastructure,
   normalizeInfrastructureTemplate,
   setEndpointFieldValue,
   supportsInfrastructureTemplate,
@@ -193,5 +194,33 @@ describe('AAS source infrastructures', () => {
       AASRepo: 'http://localhost:8081',
       SubmodelRepo: 'http://localhost:8082',
     }))).toBe(false)
+  })
+})
+
+describe('isSubmodelImportInfrastructure', () => {
+  it('requires the Submodel Repository for full infrastructures', () => {
+    const infrastructure = createInfrastructure('full')
+    infrastructure.components.AASRepo.url = 'http://localhost:8081'
+    expect(isSubmodelImportInfrastructure(infrastructure)).toBe(false)
+
+    infrastructure.components.SubmodelRepo.url = 'http://localhost:8082'
+    expect(isSubmodelImportInfrastructure(infrastructure)).toBe(true)
+  })
+
+  it.each(['mono-repo', 'mono-all'] as const)('requires the AAS Environment for %s infrastructures', template => {
+    const infrastructure = createInfrastructure(template)
+    expect(isSubmodelImportInfrastructure(infrastructure)).toBe(false)
+
+    const aasEnvironmentField = getEndpointFieldsForTemplate(template).find(field => field.key === 'AASEnvironment')!
+    setEndpointFieldValue(infrastructure.components, aasEnvironmentField, 'http://localhost:8081')
+    expect(isSubmodelImportInfrastructure(infrastructure)).toBe(true)
+  })
+
+  it.each(['identifiable', 'catena-x'] as const)('excludes %s infrastructures', template => {
+    const infrastructure = createInfrastructure(template)
+    for (const component of Object.values(infrastructure.components)) {
+      component.url = 'http://localhost:8081'
+    }
+    expect(isSubmodelImportInfrastructure(infrastructure)).toBe(false)
   })
 })

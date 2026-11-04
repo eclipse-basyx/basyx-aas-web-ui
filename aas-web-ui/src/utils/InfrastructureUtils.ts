@@ -335,13 +335,36 @@ export function isAasSourceInfrastructure (infrastructure: InfrastructureConfig)
     }
     case 'mono-repo':
     case 'mono-all': {
-      const aasEnvironmentField = getEndpointFieldByKey(infrastructure, 'AASEnvironment')
-      return !!aasEnvironmentField && getEndpointFieldValue(infrastructure.components, aasEnvironmentField) !== ''
+      return hasAasEnvironmentUrl(infrastructure)
     }
     default: {
       return false
     }
   }
+}
+
+/**
+ * Whether a Submodel can be posted to the infrastructure's Submodel Repository:
+ * Submodel Repository (full) or AAS Environment (mono-repo, mono-all).
+ */
+export function isSubmodelImportInfrastructure (infrastructure: InfrastructureConfig): boolean {
+  switch (getInfrastructureTemplate(infrastructure)) {
+    case 'full': {
+      return getActiveComponentUrlForTemplate(infrastructure, 'SubmodelRepo') !== ''
+    }
+    case 'mono-repo':
+    case 'mono-all': {
+      return hasAasEnvironmentUrl(infrastructure)
+    }
+    default: {
+      return false
+    }
+  }
+}
+
+function hasAasEnvironmentUrl (infrastructure: InfrastructureConfig): boolean {
+  const aasEnvironmentField = getEndpointFieldByKey(infrastructure, 'AASEnvironment')
+  return !!aasEnvironmentField && getEndpointFieldValue(infrastructure.components, aasEnvironmentField) !== ''
 }
 
 export function getDefaultAasUploadMode (

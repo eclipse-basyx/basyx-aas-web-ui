@@ -465,14 +465,19 @@ export function useSMRepositoryClient () {
     return smEndpoint || failResponse
   }
 
+  /**
+   * Creates the Submodel in the selected infrastructure, or in the Submodel Repository of the given infrastructure
+   * with its credentials (AAS superpaths aren't supported for a given infrastructure).
+   */
   async function postSubmodel (
     submodel: aasTypes.Submodel,
     suppressRequestErrorMessage = false,
     aasId?: string,
+    infrastructure?: InfrastructureConfig,
   ): Promise<boolean> {
     const failResponse = false
 
-    if (shouldUseAasSuperpath()) {
+    if (!infrastructure && shouldUseAasSuperpath()) {
       const path = getSuperpathSmEndpointById(submodel.id, aasId)
       if (path === '') {
         return failResponse
@@ -489,15 +494,9 @@ export function useSMRepositoryClient () {
       return response.success
     }
 
-    let smRepoUrl = submodelRepoUrl.value.trim()
+    const smRepoUrl = getSubmodelsUrl(infrastructure)
     if (smRepoUrl === '') {
       return failResponse
-    }
-    if (smRepoUrl.endsWith('/')) {
-      smRepoUrl = stripLastCharacter(smRepoUrl)
-    }
-    if (!smRepoUrl.endsWith(SUBMODEL_REPOSITORY_ENDPOINT_PATH)) {
-      smRepoUrl += SUBMODEL_REPOSITORY_ENDPOINT_PATH
     }
 
     // Convert Submodel to JSON
@@ -511,7 +510,9 @@ export function useSMRepositoryClient () {
     headers.append('Content-Type', 'application/json')
     const body = JSON.stringify(jsonSubmodel)
 
-    const response = await postRequest(path, body, headers, context, disableMessage)
+    const response = infrastructure
+      ? await postRequest(path, body, headers, context, disableMessage, false, undefined, { infrastructure })
+      : await postRequest(path, body, headers, context, disableMessage)
     return response.success
   }
 

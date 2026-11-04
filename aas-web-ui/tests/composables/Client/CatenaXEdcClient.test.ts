@@ -466,6 +466,38 @@ describe('CatenaXEdcClient', () => {
     expect(result?.data).toEqual({ id: 'submodel-1', submodelElements: [] })
   })
 
+  it('posts data fetch requests through the EDC proxy and returns their failures', async () => {
+    const request = {
+      counterPartyId: 'TEST_PARTICIPANT_ID',
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+      assetId: 'asset-1',
+    }
+    mocks.postRequest.mockResolvedValueOnce({
+      success: true,
+      data: { data: { temperature: 42 }, edc: { transferProcessId: 'transfer-1' } },
+    })
+    mocks.postRequest.mockResolvedValueOnce({ success: false, status: 502, details: 'Contract negotiation failed (400)' })
+
+    const { fetchData } = useCatenaXEdcClient()
+
+    expect(await fetchData('default', request)).toEqual({
+      success: true,
+      data: { data: { temperature: 42 }, edc: { transferProcessId: 'transfer-1' } },
+    })
+    expect(mocks.postRequest).toHaveBeenCalledWith(
+      '/ui/api/catena-x/edc/default/data/fetch',
+      JSON.stringify(request),
+      expect.any(Headers),
+      'fetching data through EDC',
+      true,
+    )
+    expect(await fetchData('default', request)).toEqual({
+      success: false,
+      status: 502,
+      details: 'Contract negotiation failed (400)',
+    })
+  })
+
   it('exposes the last EDC request failure details', () => {
     mocks.consumeLastRequestFailureDetails.mockReturnValue('Status: 404')
 

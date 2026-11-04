@@ -119,11 +119,14 @@ export interface CatenaXEdcSubmodelRequest extends CatenaXEdcDtrRequest {
   subprotocolBody?: string
 }
 
-export interface CatenaXEdcDataPushRequest {
+export interface CatenaXEdcDataFetchRequest {
   counterPartyId: string
   counterPartyAddress: string
   protocol?: string
-  assetId: string // ID of the push asset in the catalog of the counterparty
+  assetId: string // ID of the asset in the catalog of the counterparty
+}
+
+export interface CatenaXEdcDataPushRequest extends CatenaXEdcDataFetchRequest {
   data: unknown // JSON posted to the data plane of the push asset, e.g. an AAS or Submodel
 }
 
@@ -141,9 +144,9 @@ export interface CatenaXEdcDtrResponse<T = unknown> {
 }
 
 /**
- * Result of pushing data, with the response of the data plane.
+ * Result of fetching or pushing data, with the response of the data plane.
  */
-export type CatenaXEdcDataPushResult = { success: true, data: CatenaXEdcDtrResponse } | CatenaXEdcFailure
+export type CatenaXEdcDataTransferResult = { success: true, data: CatenaXEdcDtrResponse } | CatenaXEdcFailure
 
 export function useCatenaXEdcClient (): {
   fetchStatus: (proxyId: string) => Promise<CatenaXEdcStatus | null>
@@ -173,7 +176,8 @@ export function useCatenaXEdcClient (): {
     proxyId: string,
     request: CatenaXEdcSubmodelRequest,
   ) => Promise<CatenaXEdcDtrResponse | null>
-  pushData: (proxyId: string, request: CatenaXEdcDataPushRequest) => Promise<CatenaXEdcDataPushResult>
+  fetchData: (proxyId: string, request: CatenaXEdcDataFetchRequest) => Promise<CatenaXEdcDataTransferResult>
+  pushData: (proxyId: string, request: CatenaXEdcDataPushRequest) => Promise<CatenaXEdcDataTransferResult>
   consumeLastRequestFailureDetails: () => string | undefined
 } {
   const {
@@ -483,11 +487,27 @@ export function useCatenaXEdcClient (): {
     return result.success ? result.data as CatenaXEdcDtrResponse : null
   }
 
+  async function fetchData (
+    proxyId: string,
+    request: CatenaXEdcDataFetchRequest,
+  ): Promise<CatenaXEdcDataTransferResult> {
+    return transferData(proxyId, 'data/fetch', request, 'fetching data through EDC')
+  }
+
   async function pushData (
     proxyId: string,
     request: CatenaXEdcDataPushRequest,
-  ): Promise<CatenaXEdcDataPushResult> {
-    const url = buildEdcProxyUrl(proxyId, 'data/push')
+  ): Promise<CatenaXEdcDataTransferResult> {
+    return transferData(proxyId, 'data/push', request, 'pushing data through EDC')
+  }
+
+  async function transferData (
+    proxyId: string,
+    path: string,
+    request: CatenaXEdcDataFetchRequest,
+    context: string,
+  ): Promise<CatenaXEdcDataTransferResult> {
+    const url = buildEdcProxyUrl(proxyId, path)
     if (!url) {
       return { success: false }
     }
@@ -496,7 +516,7 @@ export function useCatenaXEdcClient (): {
       url,
       JSON.stringify(request),
       createJsonHeaders(),
-      'pushing data through EDC',
+      context,
       true,
     )
 
@@ -534,6 +554,7 @@ export function useCatenaXEdcClient (): {
     fetchDtrShellDescriptors,
     fetchDtrShellDescriptorById,
     fetchSubmodel,
+    fetchData,
     pushData,
     consumeLastRequestFailureDetails,
   }

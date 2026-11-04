@@ -8,6 +8,7 @@ import {
   buildEdrContractRequestBody,
   extractDigitalTwinRegistryOffer,
   extractSubmodelOffer,
+  fetchData,
   fetchDtrShellDescriptors,
   fetchSubmodel,
   forwardToEdc,
@@ -685,5 +686,52 @@ describe('EDC BFF request helpers', () => {
       fetchFn: fetchMock as typeof fetch,
       pollingIntervalMs: 0,
     })).rejects.toThrow('Data plane push failed (400)')
+  })
+
+  it('negotiates the asset and fetches the data from the provider data plane', async () => {
+    const proxy = createProxyConfig()
+    const fetchMock = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const urlString = String(url)
+
+      if (urlString.endsWith('/management/v3/catalog/request')) {
+        expect(JSON.parse(String(init?.body))).toMatchObject({
+          querySpec: { filterExpression: [{ operandRight: 'data-asset' }] },
+        })
+        return Response.json({
+          'dspace:participantId': 'TEST_PARTICIPANT_ID',
+          'dcat:dataset': { '@id': 'data-asset', 'odrl:hasPolicy': { '@id': 'offer-data' } },
+        })
+      }
+      if (urlString.endsWith('/management/v3/edrs')) {
+        return Response.json({ '@id': 'data-negotiation-1' })
+      }
+      if (urlString.endsWith('/management/v3/edrs/request')) {
+        return Response.json([{ transferProcessId: 'data-transfer-1' }])
+      }
+      if (urlString.endsWith('/management/v3/edrs/data-transfer-1/dataaddress?auto_refresh=true')) {
+        return Response.json({ endpoint: 'https://data-plane.test/api/public', authorization: 'TEST_DATA_AUTHORIZATION' })
+      }
+      if (urlString === 'https://data-plane.test/api/public') {
+        expect(init).toMatchObject({ method: 'GET', headers: { Authorization: 'TEST_DATA_AUTHORIZATION' } })
+        return Response.json({ temperature: 42 })
+      }
+
+      return Response.json({ error: 'unexpected request' }, { status: 500 })
+    })
+    const request = {
+      counterPartyId: 'TEST_PARTICIPANT_ID',
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+      assetId: 'data-asset',
+    }
+
+    const result = await fetchData(proxy, request, { fetchFn: fetchMock as typeof fetch, pollingIntervalMs: 0 })
+
+    expect(result.data).toEqual({ temperature: 42 })
+    expect(result.metadata).toMatchObject({
+      assetId: 'data-asset',
+      contractNegotiationId: 'data-negotiation-1',
+      transferProcessId: 'data-transfer-1',
+    })
+    await expect(fetchData(proxy, { ...request, assetId: ' ' })).rejects.toThrow('assetId is required for EDC data fetch')
   })
 })

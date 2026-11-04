@@ -21,6 +21,16 @@ export function edcRequestFailureText (failure: CatenaXEdcFailure, resourceLabel
   return failure.status ? `The EDC responded with HTTP ${failure.status}.` : 'The EDC could not be reached.'
 }
 
+/**
+ * Describes why the EDC BFF did not fetch or push data, e.g. the failed step of the contract negotiation.
+ */
+export function edcBffFailureText (failure: CatenaXEdcFailure): string {
+  if (failure.details) {
+    return failure.details
+  }
+  return failure.status ? `The EDC BFF responded with HTTP ${failure.status}.` : 'The EDC BFF could not be reached.'
+}
+
 export function useEdcRequestFailureMessage () {
   // Stores
   const navigationStore = useNavigationStore()

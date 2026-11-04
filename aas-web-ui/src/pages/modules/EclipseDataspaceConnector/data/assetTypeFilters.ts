@@ -69,12 +69,29 @@ function textMatcher (...searchTerms: Array<string | RegExp>): (asset: any) => b
     .some(text => patterns.some(pattern => pattern.test(text)))
 }
 
+/**
+ * Returns a matcher for catalog datasets or assets of the given Catena-X taxonomy type (`dct:type`), with an expanded
+ * (`https://w3id.org/catenax/taxonomy#DigitalTwinRegistry`) or compacted (`cx-taxo:DigitalTwinRegistry`) `@id`.
+ */
+function taxonomyTypeMatcher (taxonomyType: string): (asset: any) => boolean {
+  return asset => Object.entries<any>({ ...asset, ...asset?.properties })
+    .filter(([key]) => key !== '@type' && key.split(/[#/:]/).pop() === 'type')
+    .map(([, value]) => value?.['@id'] ?? value)
+    .some(id => typeof id === 'string' && id.split(/[#:]/).pop() === taxonomyType)
+}
+
 // Service assets (e.g. AAS Service, Submodel Service) give access to many AAS or Submodels, not to a single one
 const isService = textMatcher('Service')
 const isSubmodel = textMatcher(wordPattern('SM'), 'Submodel')
 const isAssetAdministrationShell = textMatcher('AAS', 'Asset Administration Shell')
+const hasDigitalTwinRegistryType = taxonomyTypeMatcher('DigitalTwinRegistry')
+const isDigitalTwinRegistry = textMatcher('dt-registry', /digital[ -]?twin[ -]?registry/i)
 // Push assets receive data, e.g. an AAS or Submodel posted to their data plane
 export const isPushAsset = textMatcher('push')
+// Data of all other assets can be fetched from their data plane, services and registries are queried by their own API
+export function isFetchAsset (asset: any): boolean {
+  return !isPushAsset(asset) && !isService(asset) && !hasDigitalTwinRegistryType(asset) && !isDigitalTwinRegistry(asset)
+}
 
 export const assetTypeFilterItems: AssetTypeFilterItem[] = [
   { title: 'All', value: 'all' },

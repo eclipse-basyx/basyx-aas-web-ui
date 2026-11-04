@@ -1,6 +1,7 @@
 import type {
   EdcBffRuntimeConfig,
   EdcCatalogRequest,
+  EdcDataFetchRequest,
   EdcDataPushRequest,
   EdcDiscoveryRequest,
   EdcDtrDescriptorByIdRequest,
@@ -19,6 +20,7 @@ import {
   buildDspVersionParamsRequestBody,
   buildQuerySpecRequestBody,
   createHttpError,
+  fetchData,
   fetchDtrShellDescriptorById,
   fetchDtrShellDescriptors,
   fetchSubmodel,
@@ -175,6 +177,11 @@ async function handleRequest (
 
   if (route.action === 'submodels/fetch' && request.method === 'POST') {
     await handleSubmodelFetchRequest(request, response, proxy)
+    return
+  }
+
+  if (route.action === 'data/fetch' && request.method === 'POST') {
+    await handleDataFetchRequest(request, response, proxy)
     return
   }
 
@@ -370,6 +377,20 @@ async function handleSubmodelFetchRequest (
   assertProxyConfigured(proxy)
   const body = await readJsonBody<EdcSubmodelFetchRequest>(request)
   const result = await fetchSubmodel(proxy, body)
+  writeJsonResponse(response, 200, {
+    data: result.data,
+    edc: result.metadata,
+  })
+}
+
+async function handleDataFetchRequest (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+): Promise<void> {
+  assertProxyConfigured(proxy)
+  const body = await readJsonBody<EdcDataFetchRequest>(request)
+  const result = await fetchData(proxy, body)
   writeJsonResponse(response, 200, {
     data: result.data,
     edc: result.metadata,

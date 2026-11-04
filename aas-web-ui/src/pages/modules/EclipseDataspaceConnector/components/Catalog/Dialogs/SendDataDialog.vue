@@ -113,7 +113,7 @@
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import JsonPreviewTabs from '@/pages/modules/EclipseDataspaceConnector/components/Assets/JsonPreviewTabs.vue'
   import InfrastructureSelectionDrawers from '@/pages/modules/EclipseDataspaceConnector/components/Shared/InfrastructureSelectionDrawers.vue'
-  import { useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
+  import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil'
 
@@ -214,10 +214,7 @@
     sendingData.value = null
 
     if (!result.success) {
-      showFailureMessage(
-        `Failed to send the ${title}.`,
-        result.details ?? (result.status ? `The EDC BFF responded with HTTP ${result.status}.` : 'The EDC BFF could not be reached.'),
-      )
+      showFailureMessage(`Failed to send the ${title}.`, edcBffFailureText(result))
       return
     }
 

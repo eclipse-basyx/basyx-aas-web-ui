@@ -86,11 +86,14 @@ export interface EdcDtrDescriptorByIdRequest {
   descriptorId?: string
 }
 
-export interface EdcDataPushRequest {
+export interface EdcDataFetchRequest {
   counterPartyId?: string
   counterPartyAddress?: string
   protocol?: string
   assetId?: string
+}
+
+export interface EdcDataPushRequest extends EdcDataFetchRequest {
   data?: unknown
 }
 

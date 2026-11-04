@@ -1,8 +1,10 @@
 import type { InfrastructureConfig } from '@/types/Infrastructure'
+import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockDeps = vi.hoisted(() => ({
   getRequest: vi.fn(),
+  postRequest: vi.fn(),
   selectedInfrastructure: { id: 'infra-1', template: 'full' } as any,
   selectedAas: {} as any,
 }))
@@ -24,7 +26,7 @@ vi.mock('@/store/AASDataStore', () => ({
 vi.mock('@/composables/RequestHandling', () => ({
   useRequestHandling: () => ({
     getRequest: mockDeps.getRequest,
-    postRequest: vi.fn(),
+    postRequest: mockDeps.postRequest,
     putRequest: vi.fn(),
     deleteRequest: vi.fn(),
     consumeLastRequestFailureStatus: vi.fn(),
@@ -96,5 +98,40 @@ describe('SMRepositoryClient.ts', () => {
     await useSMRepositoryClient().fetchSmById('urn:sm')
 
     expect(mockDeps.getRequest).toHaveBeenCalledWith('https://selected.test/submodels/dXJuOnNt', 'retrieving SM', true)
+  })
+
+  it('posts the SM to the Submodel Repository of the given infrastructure with its credentials', async () => {
+    mockDeps.postRequest.mockResolvedValueOnce({ success: true })
+    const infrastructure = createInfrastructure('mono-all', 'https://other.test/')
+
+    const { useSMRepositoryClient } = await import('@/composables/Client/SMRepositoryClient')
+    const success = await useSMRepositoryClient().postSubmodel(new aasTypes.Submodel('urn:sm'), false, undefined, infrastructure)
+
+    expect(mockDeps.postRequest).toHaveBeenCalledWith(
+      'https://other.test/submodels',
+      expect.stringContaining('"id":"urn:sm"'),
+      expect.any(Headers),
+      'creating Submodel',
+      false,
+      false,
+      undefined,
+      { infrastructure },
+    )
+    expect(success).toBe(true)
+  })
+
+  it('posts the SM to the selected infrastructure when no infrastructure is given', async () => {
+    mockDeps.postRequest.mockResolvedValueOnce({ success: true })
+
+    const { useSMRepositoryClient } = await import('@/composables/Client/SMRepositoryClient')
+    await useSMRepositoryClient().postSubmodel(new aasTypes.Submodel('urn:sm'))
+
+    expect(mockDeps.postRequest).toHaveBeenCalledWith(
+      'https://selected.test/submodels',
+      expect.any(String),
+      expect.any(Headers),
+      'creating Submodel',
+      false,
+    )
   })
 })

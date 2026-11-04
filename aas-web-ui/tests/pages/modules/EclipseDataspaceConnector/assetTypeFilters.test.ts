@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { assetTypeFilterItems, assetTypeFilterPreset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
+import { assetTypeFilterItems, assetTypeFilterPreset, isFetchAsset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
 
 function preset (value: string) {
   const assetTypeFilter = assetTypeFilterPreset(value)
@@ -110,5 +110,17 @@ describe('assetTypeFilters', () => {
     expect(matches?.({ '@id': 'aas_SM' })).toBe(true)
     expect(matches?.({ '@id': 'asset-1', 'displayName': 'Nameplate submodel' })).toBe(true)
     expect(matches?.({ '@id': 'small-asset', 'description': 'Smart transmission data' })).toBe(false)
+  })
+
+  it('fetches the data of all assets except push assets, services and Digital Twin Registries', () => {
+    expect(isFetchAsset({ '@id': 'aas-sm-1', 'dct:type': { '@id': 'https://w3id.org/catenax/taxonomy#Submodel' } })).toBe(true)
+    expect(isFetchAsset({ '@id': 'dpp-battery-1' })).toBe(true)
+    expect(isFetchAsset({ '@id': 'asset-PUSH-1' })).toBe(false)
+    expect(isFetchAsset({ '@id': 'asset-1', 'description': 'The Submodel service allows to retrieve Submodels' })).toBe(false)
+    expect(isFetchAsset({ '@id': 'asset-1', 'displayName': 'AAS Service' })).toBe(false)
+    expect(isFetchAsset({ '@id': 'asset-1', 'dct:type': { '@id': 'https://w3id.org/catenax/taxonomy#DigitalTwinRegistry' } })).toBe(false)
+    expect(isFetchAsset({ '@id': 'asset-1', 'properties': { 'dct:type': { '@id': 'cx-taxo:DigitalTwinRegistry' } } })).toBe(false)
+    expect(isFetchAsset({ '@id': 'my-dt-registry' })).toBe(false)
+    expect(isFetchAsset({ '@id': 'asset-1', 'description': 'Digital Twin Registry of the supplier' })).toBe(false)
   })
 })

@@ -254,7 +254,7 @@
 
           <template v-else>
             <JSONPreview
-              :height="isPushAsset(selectedCatalogDataset) ? fullHeightMainJsonPreviewWithActions : fullHeightMainJsonPreview"
+              :height="catalogDatasetPreviewHeight"
               icon="mdi-database-outline"
               :json-content="selectedCatalogDataset"
               title="Catalog Dataset"
@@ -274,6 +274,51 @@
                 @click="sendDataDialog = true"
               />
             </div>
+
+            <!-- Use case: Fetch Data -->
+            <template v-else-if="isFetchAsset(selectedCatalogDataset)">
+              <div class="d-flex mt-2">
+                <v-spacer />
+
+                <!-- Readonly instead of disabled, as disabled would drop the success color -->
+                <v-btn
+                  class="text-buttonText"
+                  :color="dataFetched ? 'success' : 'primary'"
+                  :loading="fetchingData"
+                  :prepend-icon="dataFetched ? 'mdi-check' : 'mdi-download'"
+                  :readonly="dataFetched"
+                  rounded="lg"
+                  :text="dataFetched ? 'Data Fetched' : 'Fetch Data'"
+                  variant="flat"
+                  @click="fetchCatalogDatasetData()"
+                />
+              </div>
+
+              <!-- Shares the height with the Catalog Dataset -->
+              <JSONPreview
+                v-if="dataFetched"
+                class="mt-2"
+                :download-file-name="selectedCatalogDataset['@id']"
+                :height="jsonPreviewHalfHeight"
+                :icon="fetchedDataTypeInfo?.icon ?? 'mdi-download'"
+                :json-content="fetchedData"
+                :title="fetchedDataTypeInfo ? `Fetched ${fetchedDataTypeInfo.title}` : 'Fetched Data'"
+              />
+
+              <div v-if="fetchedSubmodel" class="d-flex mt-2">
+                <v-spacer />
+
+                <v-btn
+                  class="text-buttonText"
+                  color="primary"
+                  prepend-icon="mdi-import"
+                  rounded="lg"
+                  text="Import Submodel"
+                  variant="flat"
+                  @click="importSubmodelDialog = true"
+                />
+              </div>
+            </template>
 
             <!-- <v-card-actions v-if="showDatasetActions" class="mt-2 pa-0">
               <v-chip
@@ -376,6 +421,8 @@
             :proxy-id="edcProxyId"
           />
 
+          <ImportSubmodelDialog v-model="importSubmodelDialog" :submodel="fetchedSubmodel" />
+
         </v-container>
       </v-main>
 
@@ -387,15 +434,20 @@
   import type { CatenaXEdcCatalogRequest } from '@/composables/Client/CatenaXEdcClient'
   import type { CatenaXPartner } from '@/types/Infrastructure'
   import type { ComponentPublicInstance, Ref } from 'vue'
+  import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
   import { useTheme } from 'vuetify'
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
+  import ImportSubmodelDialog from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/Dialogs/ImportSubmodelDialog.vue'
   import SendDataDialog from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/Dialogs/SendDataDialog.vue'
+  import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import {
     assetTypeFilterItems,
     assetTypeFilterPreset,
+    isFetchAsset,
     isPushAsset,
   } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
+  import { fetchedDataType } from '@/pages/modules/EclipseDataspaceConnector/data/fetchedDataType'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { normalizeCatenaXPartners } from '@/utils/CatenaXPartnerUtils'
 
@@ -408,7 +460,8 @@
   const infrastructureStore = useInfrastructureStore()
 
   // Composables
-  const { requestCatalog } = useCatenaXEdcClient()
+  const { fetchData, requestCatalog } = useCatenaXEdcClient()
+  const { showFailureMessage } = useEdcRequestFailureMessage()
 
   const { copyToClipboard } = useClipboardUtil()
 
@@ -420,6 +473,8 @@
   const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
   const fullHeightMainJsonPreview = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px - 64px - 32px)') // Full height - header - tabs - footer - padding - border - JSON
   const fullHeightMainJsonPreviewWithActions = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px - 64px - 32px - 44px)') // JSON preview - actions
+  const fullHeightMainJsonPreviewWithActionsHalf = ref('calc((100vh - 64px - 48px - 40px - 32px - 2px - 2 * (64px + 32px) - 44px - 8px) / 2)') // Two JSON previews (with margin) below each other, the actions in between
+  const fullHeightMainJsonPreviewWithTwoActionsHalf = ref('calc((100vh - 64px - 48px - 40px - 32px - 2px - 2 * (64px + 32px) - 2 * 44px - 8px) / 2)') // As above, with actions below the second JSON preview too
 
   const catalogList = ref([] as Array<any>) as Ref<Array<any>>
   const catalogListUnfiltered = ref([] as Array<any>) as Ref<Array<any>>
@@ -436,6 +491,9 @@
   const selectedCatalogDataset = ref({} as any)
   const selectedCatalogFilter = ref('all')
   const sendDataDialog = ref(false)
+  const importSubmodelDialog = ref(false)
+  const fetchingData = ref(false)
+  const fetchedData = ref<unknown>(undefined) // Data fetched from the data plane of the selected catalog dataset
 
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
 
@@ -446,6 +504,24 @@
   const selectedEdcConfig = computed(() => infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null)
   const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? 'default')
   const businessPartners = computed(() => normalizeCatenaXPartners(selectedEdcConfig.value?.partners ?? []))
+  const dataFetched = computed(() => fetchedData.value !== undefined)
+  const fetchedDataTypeInfo = computed(() => fetchedDataType(fetchedData.value)) // AAS or Submodel, if the fetched data is one
+  const fetchedSubmodel = computed(() => {
+    const instance = fetchedDataTypeInfo.value?.instance
+    return instance instanceof aasTypes.Submodel ? instance : null
+  })
+  // Height of the Catalog Dataset and the Fetched Data, sharing the space below each other
+  const jsonPreviewHalfHeight = computed(() => fetchedSubmodel.value
+    ? fullHeightMainJsonPreviewWithTwoActionsHalf.value
+    : fullHeightMainJsonPreviewWithActionsHalf.value)
+  const catalogDatasetPreviewHeight = computed(() => {
+    if (dataFetched.value) {
+      return jsonPreviewHalfHeight.value
+    }
+    return isPushAsset(selectedCatalogDataset.value) || isFetchAsset(selectedCatalogDataset.value)
+      ? fullHeightMainJsonPreviewWithActions.value
+      : fullHeightMainJsonPreview.value
+  })
   // const isDigitalTwinRegistryAsset = computed(() => {
   //   const id: string = selectedCatalogDataset.value?.['@id'] ?? ''
   //   return id.includes('dt-registry') || id.includes('digitaltwin-registry') || id.includes('digital-twin-registry')
@@ -483,6 +559,10 @@
       initialize()
     },
   )
+
+  watch(selectedCatalogDataset, () => {
+    fetchedData.value = undefined
+  })
 
   onMounted(() => {
     initialize()
@@ -558,6 +638,31 @@
       return false
     }
     return selectedCatalogDataset.value['@id'] === policy['@id']
+  }
+
+  async function fetchCatalogDatasetData (): Promise<void> {
+    const businessPartner = selectedBusinessPartner.value
+    const catalogDataset = selectedCatalogDataset.value
+    if (!businessPartner || !catalogDataset?.['@id']) return
+
+    fetchingData.value = true
+    // The BFF negotiates the asset and fetches the data from the data plane given by the EDR
+    const result = await fetchData(edcProxyId.value, {
+      counterPartyId: businessPartner.counterPartyId,
+      counterPartyAddress: businessPartner.counterPartyAddress,
+      assetId: catalogDataset['@id'],
+    })
+    fetchingData.value = false
+
+    // Ignore the result if another catalog dataset was selected in the meantime
+    if (catalogDataset !== selectedCatalogDataset.value) return
+
+    if (!result.success) {
+      showFailureMessage('Failed to fetch the data.', edcBffFailureText(result))
+      return
+    }
+
+    fetchedData.value = result.data.data
   }
 
   function scrollToSelectedCatalogDataset (): void {
