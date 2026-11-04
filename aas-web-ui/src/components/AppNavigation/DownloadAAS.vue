@@ -51,6 +51,16 @@
           Plain downloads do not include attached files.
         </v-alert>
 
+        <v-alert
+          v-if="backendCompatibilityHint"
+          border="start"
+          class="mt-2"
+          color="info"
+          variant="tonal"
+        >
+          {{ backendCompatibilityHint }}
+        </v-alert>
+
         <v-checkbox v-model="downloadCDs" class="ml-0" hide-details label="Include Concept Descriptions" />
       </v-card-text>
 
@@ -80,6 +90,7 @@
   import {
     defaultSerializationFormat,
     getSerializationFileExtension,
+    getSerializationFormatConfig,
     isPlainSerializationFormat,
     type SerializationFormat,
     serializationFormatOptions,
@@ -130,6 +141,9 @@
   const downloadFormats = serializationFormatOptions
   const downloadFormat = ref<SerializationFormat>(defaultSerializationFormat)
   const isPlainFormatSelected = computed(() => isPlainSerializationFormat(downloadFormat.value))
+  const backendCompatibilityHint = computed(() => downloadMode.value === 'backend'
+    ? getSerializationFormatConfig(downloadFormat.value).backendCompatibilityHint
+    : undefined)
   const downloadCDs = ref<boolean>(true)
 
   watch(
