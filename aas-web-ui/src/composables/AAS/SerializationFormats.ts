@@ -3,7 +3,10 @@ export type SerializationFormat = 'plain-json' | 'plain-xml' | 'aasx-json' | 'aa
 export type SerializationFormatConfig = {
   title: string
   extension: string
-  acceptHeader: string
+  /** Accept header sent to GET /serialization in backend serialization mode. */
+  backendAcceptHeader: string
+  /** Shown when the backend may not support this format. */
+  backendCompatibilityHint?: string
   blobContentType: string
   isPlain: boolean
   isAasx: boolean
@@ -15,7 +18,7 @@ const serializationFormatConfigMap: Record<SerializationFormat, SerializationFor
   'plain-json': {
     title: 'Plain JSON',
     extension: 'json',
-    acceptHeader: 'application/json',
+    backendAcceptHeader: 'application/json',
     blobContentType: 'application/json',
     isPlain: true,
     isAasx: false,
@@ -23,7 +26,7 @@ const serializationFormatConfigMap: Record<SerializationFormat, SerializationFor
   'plain-xml': {
     title: 'Plain XML',
     extension: 'xml',
-    acceptHeader: 'application/xml',
+    backendAcceptHeader: 'application/xml',
     blobContentType: 'application/xml',
     isPlain: true,
     isAasx: false,
@@ -31,7 +34,11 @@ const serializationFormatConfigMap: Record<SerializationFormat, SerializationFor
   'aasx-json': {
     title: 'AASX (JSON content)',
     extension: 'aasx',
-    acceptHeader: 'application/asset-administration-shell-package',
+    // The specification defines no media type for an AASX with JSON content; BaSyx Go accepts this one.
+    backendAcceptHeader: 'application/aasx+json',
+    backendCompatibilityHint: 'Backend serialization requests AASX with JSON content as application/aasx+json, '
+      + 'which BaSyx Go supports but other servers (for example BaSyx Java) may refuse. '
+      + 'Use "AASX (XML content)" or Client Packaging instead.',
     blobContentType: 'application/asset-administration-shell-package',
     isPlain: false,
     isAasx: true,
@@ -41,7 +48,7 @@ const serializationFormatConfigMap: Record<SerializationFormat, SerializationFor
   'aasx-xml': {
     title: 'AASX (XML content)',
     extension: 'aasx',
-    acceptHeader: 'application/asset-administration-shell-package+xml',
+    backendAcceptHeader: 'application/asset-administration-shell-package+xml',
     blobContentType: 'application/asset-administration-shell-package+xml',
     isPlain: false,
     isAasx: true,

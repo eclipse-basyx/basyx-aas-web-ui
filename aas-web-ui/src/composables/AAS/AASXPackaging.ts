@@ -718,11 +718,21 @@ export function useAASXPackaging (): {
 
     const serializationPath = `${environmentEndpoint}/serialization?${params.toString()}`
     const headers = new Headers()
-    headers.append('Accept', formatConfig.acceptHeader)
+    headers.append('Accept', formatConfig.backendAcceptHeader)
 
-    const response = await getRequest(serializationPath, 'retrieving AAS serialization', false, headers)
+    // Request a blob so every format comes back as the original bytes, whatever Content-Type the server sends.
+    const response = await getRequest(
+      serializationPath,
+      'retrieving AAS serialization',
+      false,
+      headers,
+      undefined,
+      'blob',
+    )
     if (!response?.success || !response?.data) {
-      throw new Error(`Failed to retrieve serialized AAS (${formatConfig.title}).`)
+      const status = typeof response?.status === 'number' ? ` (HTTP ${response.status})` : ''
+      const hint = formatConfig.backendCompatibilityHint ? ` ${formatConfig.backendCompatibilityHint}` : ''
+      throw new Error(`Failed to retrieve serialized AAS (${formatConfig.title})${status}.${hint}`)
     }
 
     return response.data as Blob
