@@ -1,6 +1,7 @@
 import type {
   EdcBffRuntimeConfig,
   EdcCatalogRequest,
+  EdcDataPushRequest,
   EdcDiscoveryRequest,
   EdcDtrDescriptorByIdRequest,
   EdcDtrDescriptorRequest,
@@ -22,6 +23,7 @@ import {
   fetchDtrShellDescriptors,
   fetchSubmodel,
   forwardToEdc,
+  pushData,
 } from './edcRequests.js'
 
 const proxyUrls = getProxyUrls()
@@ -86,6 +88,7 @@ function redactCredentials (url: string): string {
 
 const apiBasePath = '/api/catena-x/edc'
 const maxBodyBytes = 64 * 1024
+const maxPushBodyBytes = 16 * 1024 * 1024 // Pushed AAS or Submodels may be large
 const managementResources = ['assets', 'contractdefinitions', 'policydefinitions'] as const
 
 type EdcManagementResource = typeof managementResources[number]
@@ -172,6 +175,11 @@ async function handleRequest (
 
   if (route.action === 'submodels/fetch' && request.method === 'POST') {
     await handleSubmodelFetchRequest(request, response, proxy)
+    return
+  }
+
+  if (route.action === 'data/push' && request.method === 'POST') {
+    await handleDataPushRequest(request, response, proxy)
     return
   }
 
@@ -368,6 +376,20 @@ async function handleSubmodelFetchRequest (
   })
 }
 
+async function handleDataPushRequest (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+): Promise<void> {
+  assertProxyConfigured(proxy)
+  const body = await readJsonBody<EdcDataPushRequest>(request, maxPushBodyBytes)
+  const result = await pushData(proxy, body)
+  writeJsonResponse(response, 200, {
+    data: result.data,
+    edc: result.metadata,
+  })
+}
+
 function parseRoute (request: IncomingMessage): { proxyId: string, action: string } {
   const url = new URL(request.url ?? '', 'http://localhost')
   if (!url.pathname.startsWith(`${apiBasePath}/`)) {
@@ -392,14 +414,14 @@ function assertProxyConfigured (proxy: EdcProxyConfig): void {
   }
 }
 
-async function readJsonBody<T> (request: IncomingMessage): Promise<T> {
+async function readJsonBody<T> (request: IncomingMessage, maxBytes = maxBodyBytes): Promise<T> {
   const chunks: Buffer[] = []
   let totalBytes = 0
 
   for await (const chunk of request) {
     const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
     totalBytes += buffer.length
-    if (totalBytes > maxBodyBytes) {
+    if (totalBytes > maxBytes) {
       throw createHttpError('Request body is too large', 413)
     }
     chunks.push(buffer)

@@ -254,11 +254,26 @@
 
           <template v-else>
             <JSONPreview
-              :height="fullHeightMainJsonPreview"
+              :height="isPushAsset(selectedCatalogDataset) ? fullHeightMainJsonPreviewWithActions : fullHeightMainJsonPreview"
               icon="mdi-database-outline"
               :json-content="selectedCatalogDataset"
               title="Catalog Dataset"
             />
+
+            <!-- Use case: Push Data -->
+            <div v-if="isPushAsset(selectedCatalogDataset)" class="d-flex mt-2">
+              <v-spacer />
+
+              <v-btn
+                class="text-buttonText"
+                color="primary"
+                prepend-icon="mdi-upload"
+                rounded="lg"
+                text="Send Data"
+                variant="flat"
+                @click="sendDataDialog = true"
+              />
+            </div>
 
             <!-- <v-card-actions v-if="showDatasetActions" class="mt-2 pa-0">
               <v-chip
@@ -287,26 +302,8 @@
 
               <v-spacer />
 
-              Use case 1: Push Data
-              <template v-if="isPushAsset">
-                <span v-if="!dataTranserInProgress" class="text-body-2 text-medium-emphasis mr-2">
-                  Select AAS/SM data below to push
-                </span>
-
-                <v-btn
-                  class="text-buttonText"
-                  :color="dataTranserInProgress ? 'error' : 'primary'"
-                  :disabled="!dataTranserInProgress && aasSmDataToPushIsEmpty"
-                  :prepend-icon="dataTranserInProgress ? 'mdi-close' : 'mdi-upload'"
-                  rounded="lg"
-                  :text="dataTranserInProgress ? 'Cancel Push' : 'Push selected data'"
-                  variant="flat"
-                  @click="dataTranserInProgress ? pushDataRef?.cancel() : pushDataRef?.pushData()"
-                />
-              </template>
-
               Use case 2: Discovery
-              <template v-else-if="isDigitalTwinRegistryAsset">
+              <template v-if="isDigitalTwinRegistryAsset">
                 <div>
                   <v-text-field
                     v-model="discoveryId"
@@ -345,23 +342,9 @@
               />
             </v-card-actions> -->
 
-            <!--Use case 1: Push Data -->
-            <!-- <CatalogPushData
-              v-if="isPushAsset"
-              ref="pushDataRef"
-              :full-height="fullHeightAsset"
-              :pushing-asset="dataTranserInProgress"
-              :selected-business-partner="selectedBusinessPartner"
-              :selected-catalog-dataset="selectedCatalogDataset"
-              @update:aas-sm-data-to-push="aasSmDataToPush = $event"
-              @update:edc-status="edcStatus = $event"
-              @update:pushing-asset="dataTranserInProgress = $event"
-              @update:selected-sms-count="selectedSmsCount = $event"
-            /> -->
-
             <!--Use case 2: Discovery -->
             <!-- <CatalogDiscoverId
-              v-else-if="isDigitalTwinRegistryAsset"
+              v-if="isDigitalTwinRegistryAsset"
               ref="discoverIdRef"
               :discovering-id="dataTranserInProgress"
               :discovery-id="discoveryId"
@@ -386,6 +369,13 @@
 
           </template>
 
+          <SendDataDialog
+            v-model="sendDataDialog"
+            :business-partner="selectedBusinessPartner"
+            :catalog-dataset="selectedCatalogDataset"
+            :proxy-id="edcProxyId"
+          />
+
         </v-container>
       </v-main>
 
@@ -400,7 +390,12 @@
   import { useTheme } from 'vuetify'
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
-  import { assetTypeFilterItems, assetTypeFilterPreset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
+  import SendDataDialog from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/Dialogs/SendDataDialog.vue'
+  import {
+    assetTypeFilterItems,
+    assetTypeFilterPreset,
+    isPushAsset,
+  } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { normalizeCatenaXPartners } from '@/utils/CatenaXPartnerUtils'
 
@@ -424,8 +419,8 @@
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Header - Tabs - Footer - Lines
   const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
   const fullHeightMainJsonPreview = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px - 64px - 32px)') // Full height - header - tabs - footer - padding - border - JSON
+  const fullHeightMainJsonPreviewWithActions = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px - 64px - 32px - 44px)') // JSON preview - actions
 
-  // const aasSmDataToPush = ref({} as any)
   const catalogList = ref([] as Array<any>) as Ref<Array<any>>
   const catalogListUnfiltered = ref([] as Array<any>) as Ref<Array<any>>
 
@@ -436,12 +431,11 @@
   // const discoveryId = ref<string>('')
   // const edcStatus = ref('')
   // const fetchAssetRef = ref<InstanceType<typeof CatalogFetchAsset> | null>(null)
-  // const pushDataRef = ref<InstanceType<typeof CatalogPushData> | null>(null)
-  // const selectedSmsCount = ref(0)
 
   const selectedBusinessPartner = ref<CatenaXPartner | null>(null)
   const selectedCatalogDataset = ref({} as any)
   const selectedCatalogFilter = ref('all')
+  const sendDataDialog = ref(false)
 
   const copyIcon = ref<string>('mdi-clipboard-file-outline')
 
@@ -452,10 +446,6 @@
   const selectedEdcConfig = computed(() => infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null)
   const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? 'default')
   const businessPartners = computed(() => normalizeCatenaXPartners(selectedEdcConfig.value?.partners ?? []))
-  // const isPushAsset = computed(() => {
-  //   const id: string = selectedCatalogDataset.value?.['@id'] ?? ''
-  //   return id.includes('push-asset') || id.includes('asset-push')
-  // })
   // const isDigitalTwinRegistryAsset = computed(() => {
   //   const id: string = selectedCatalogDataset.value?.['@id'] ?? ''
   //   return id.includes('dt-registry') || id.includes('digitaltwin-registry') || id.includes('digital-twin-registry')
@@ -471,12 +461,6 @@
   //     const format = dist['dct:format']?.['@id'] ?? dist.format
   //     return ['dcat:distribution', 'distribution'].includes(type) && format === 'HttpData-PULL'
   //   })
-  // })
-  // const aasSmDataToPushIsEmpty = computed(() => {
-  //   return (
-  //     !aasSmDataToPush.value
-  //     || Object.keys(aasSmDataToPush.value).length === 0
-  //   ) && selectedSmsCount.value === 0
   // })
 
   // Watchers
@@ -499,16 +483,6 @@
       initialize()
     },
   )
-
-  // watch(
-  //   () => isPushAsset.value,
-  //   async value => {
-  //     if (value) {
-  //       await nextTick()
-  //       pushDataRef.value?.initialize()
-  //     }
-  //   },
-  // )
 
   onMounted(() => {
     initialize()

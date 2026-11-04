@@ -1,9 +1,7 @@
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
 
-interface CodePreviewSource {
-  path?: string
-  content?: unknown
-}
+// Either inline content (empty if null or undefined) or the path of an attachment file to fetch
+type CodePreviewSource = { content: unknown } | { path?: string }
 
 export function useCodePreviewSource (source: () => CodePreviewSource, language: 'JSON' | 'XML') {
   const { fetchAttachmentFile } = useSMRepositoryClient()
@@ -21,8 +19,10 @@ export function useCodePreviewSource (source: () => CodePreviewSource, language:
     loading.value = false
 
     try {
-      if (input.content !== undefined && input.content !== null) {
-        text.value = typeof input.content === 'string' ? input.content : JSON.stringify(input.content, null, 2)
+      if ('content' in input) {
+        if (input.content !== undefined && input.content !== null) {
+          text.value = typeof input.content === 'string' ? input.content : JSON.stringify(input.content, null, 2)
+        }
         return
       }
       if (!input.path) {

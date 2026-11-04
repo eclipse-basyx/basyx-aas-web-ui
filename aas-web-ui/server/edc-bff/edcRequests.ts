@@ -1,5 +1,6 @@
 import type {
   EdcCatalogRequest,
+  EdcDataPushRequest,
   EdcDiscoveryRequest,
   EdcDtrDescriptorByIdRequest,
   EdcDtrDescriptorRequest,
@@ -208,6 +209,25 @@ export function buildDigitalTwinRegistryQuerySpec (limit = 50): Record<string, u
   }
 }
 
+/**
+ * Returns a query spec that only matches the catalog dataset of the given asset, so it is found in large catalogs, too.
+ */
+export function buildAssetIdQuerySpec (assetId: string): Record<string, unknown> {
+  return {
+    '@type': 'QuerySpec',
+    'offset': 0,
+    'limit': 1,
+    'filterExpression': [
+      {
+        '@type': 'Criterion',
+        'operandLeft': 'https://w3id.org/edc/v0.0.1/ns/id',
+        'operator': '=',
+        'operandRight': assetId,
+      },
+    ],
+  }
+}
+
 export function extractDigitalTwinRegistryOffer (catalog: unknown): DigitalTwinRegistryOffer {
   return extractCatalogDatasetOffer(catalog, {
     datasetTypeId: dtrTaxonomyId,
@@ -307,7 +327,7 @@ function withCatalogContext (policy: Record<string, unknown>, context: unknown):
 }
 
 export function buildEdrContractRequestBody (
-  request: EdcDtrDescriptorRequest | EdcDtrDescriptorByIdRequest | EdcSubmodelFetchRequest,
+  request: Pick<EdcCatalogRequest, 'counterPartyAddress' | 'protocol'>,
   offer: EdcAssetOffer,
 ): Record<string, unknown> {
   const counterPartyAddress = trimString(request.counterPartyAddress)
@@ -416,6 +436,62 @@ export async function fetchSubmodel (
   const endpoint = extractSubmodelEndpointInfo(request)
   const access = await ensureSubmodelAccess(proxy, request, endpoint, options)
   return fetchSubmodelData(access, endpoint.href, options.fetchFn ?? fetch)
+}
+
+/**
+ * Negotiates the push asset of the counterparty and posts the given data (e.g. an AAS or Submodel) to its data plane.
+ */
+export async function pushData (
+  proxy: EdcProxyConfig,
+  request: EdcDataPushRequest,
+  options: EdcDtrFetchOptions = {},
+): Promise<EdcDtrFetchResult> {
+  const assetId = trimString(request.assetId)
+  if (!assetId) {
+    throw createHttpError('assetId is required for EDC data push', 400)
+  }
+  if (!request.data || typeof request.data !== 'object') {
+    throw createHttpError('data is required for EDC data push', 400)
+  }
+
+  const access = await negotiateCatalogOffer(
+    proxy,
+    {
+      counterPartyId: request.counterPartyId,
+      counterPartyAddress: request.counterPartyAddress,
+      protocol: request.protocol,
+      querySpec: buildAssetIdQuerySpec(assetId),
+    },
+    catalog => extractCatalogDatasetOffer(catalog, {
+      assetId,
+      missingDatasetMessage: 'Catalog did not contain the requested push asset',
+      missingAssetIdMessage: 'Push asset dataset did not include an asset ID',
+      missingPolicyMessage: 'Push asset dataset did not include a contract policy',
+    }),
+    options,
+  )
+
+  const fetchFn = options.fetchFn ?? fetch
+  const response = await fetchFn(trimString(access.dataAddress.endpoint), {
+    method: 'POST',
+    headers: {
+      'Authorization': trimString(access.dataAddress.authorization),
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify(request.data),
+  })
+  const data = await parseResponseBody(response)
+
+  if (!response.ok) {
+    throw createHttpError(`Data plane push failed (${response.status})`, 502)
+  }
+
+  return {
+    status: response.status,
+    data,
+    metadata: access.metadata,
+  }
 }
 
 export function extractSubmodelEndpointInfo (request: EdcSubmodelFetchRequest): SubmodelEndpointInfo {
@@ -563,29 +639,17 @@ async function ensureDtrAccess (
     throw createHttpError('counterPartyAddress is required for EDC DTR access', 400)
   }
 
-  const catalogResponse = await forwardToEdc(
+  return negotiateCatalogOffer(
     proxy,
-    'POST',
-    '/v3/catalog/request',
-    buildCatalogRequestBody(proxy, {
+    {
       counterPartyId,
       counterPartyAddress,
-      protocol: trimString(request.protocol) || defaultDspProtocol,
+      protocol: request.protocol,
       querySpec: buildDigitalTwinRegistryQuerySpec(),
-    }),
-    fetchFn,
+    },
+    extractDigitalTwinRegistryOffer,
+    options,
   )
-  assertSuccessfulEdcResponse(catalogResponse, 'Catalog request failed')
-
-  const offer = extractDigitalTwinRegistryOffer(catalogResponse.data)
-  const negotiationResponse = await forwardToEdc(
-    proxy,
-    'POST',
-    '/v3/edrs',
-    buildEdrContractRequestBody(request, offer),
-    fetchFn,
-  )
-  return negotiateEdrAccess(proxy, offer, negotiationResponse, options, fetchFn)
 }
 
 async function ensureSubmodelAccess (
@@ -613,27 +677,43 @@ async function ensureSubmodelAccess (
     throw createHttpError('counterPartyId is required for EDC submodel access', 400)
   }
 
-  const submodelRequest = {
-    ...request,
-    counterPartyId,
-    counterPartyAddress: endpoint.dspEndpoint,
-    protocol: trimString(request.protocol) || defaultDspProtocol,
-  }
+  return negotiateCatalogOffer(
+    proxy,
+    {
+      counterPartyId,
+      counterPartyAddress: endpoint.dspEndpoint,
+      protocol: request.protocol,
+    },
+    catalog => extractSubmodelOffer(catalog, endpoint.assetId),
+    options,
+  )
+}
+
+/**
+ * Requests the catalog of the counterparty, negotiates the offer taken from it and returns the data address of the EDR.
+ */
+async function negotiateCatalogOffer (
+  proxy: EdcProxyConfig,
+  catalogRequest: EdcCatalogRequest,
+  extractOffer: (catalog: unknown) => EdcAssetOffer,
+  options: EdcDtrFetchOptions,
+): Promise<{ dataAddress: Record<string, unknown>, metadata: EdcDtrFetchMetadata }> {
+  const fetchFn = options.fetchFn ?? fetch
   const catalogResponse = await forwardToEdc(
     proxy,
     'POST',
     '/v3/catalog/request',
-    buildCatalogRequestBody(proxy, submodelRequest),
+    buildCatalogRequestBody(proxy, catalogRequest),
     fetchFn,
   )
   assertSuccessfulEdcResponse(catalogResponse, 'Catalog request failed')
 
-  const offer = extractSubmodelOffer(catalogResponse.data, endpoint.assetId)
+  const offer = extractOffer(catalogResponse.data)
   const negotiationResponse = await forwardToEdc(
     proxy,
     'POST',
     '/v3/edrs',
-    buildEdrContractRequestBody(submodelRequest, offer),
+    buildEdrContractRequestBody(catalogRequest, offer),
     fetchFn,
   )
   return negotiateEdrAccess(proxy, offer, negotiationResponse, options, fetchFn)

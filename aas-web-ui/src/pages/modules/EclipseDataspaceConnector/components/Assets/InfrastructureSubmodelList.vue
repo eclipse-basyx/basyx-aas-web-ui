@@ -11,7 +11,7 @@
             :loading="listLoading"
             variant="plain"
             v-bind="activatorProps"
-            @click="loadSubmodels"
+            @click="loadSubmodels()"
           />
         </template>
 
@@ -121,6 +121,7 @@
   const props = defineProps<{
     infrastructure: InfrastructureConfig | null
     aas: any
+    preselectAll?: boolean // Select all Submodels once those of a newly selected AAS are loaded
   }>()
 
   const selectedSubmodels = defineModel<Array<any>>({ default: () => [] })
@@ -160,7 +161,7 @@
     () => {
       searchValue.value = ''
       selectedSubmodels.value = []
-      loadSubmodels()
+      loadSubmodels(props.preselectAll)
     },
     { immediate: true },
   )
@@ -171,7 +172,7 @@
   })
 
   // Methods
-  async function loadSubmodels (): Promise<void> {
+  async function loadSubmodels (selectAll = false): Promise<void> {
     allSubmodels.value = []
 
     const aas = props.aas
@@ -194,7 +195,9 @@
 
       allSubmodels.value = sortSmsForDisplay(filterResolvedSubmodels(submodels))
       // Keep the selection of a reload, replaced by the reloaded Submodels
-      selectedSubmodels.value = allSubmodels.value.filter(sm => submodelIsSelected(sm))
+      selectedSubmodels.value = selectAll
+        ? [...allSubmodels.value]
+        : allSubmodels.value.filter(sm => submodelIsSelected(sm))
     } finally {
       listLoad.finish(generation)
     }

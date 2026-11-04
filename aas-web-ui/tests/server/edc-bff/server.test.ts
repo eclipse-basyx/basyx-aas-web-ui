@@ -54,7 +54,7 @@ async function startUpstreamServer (
   }
 }
 
-async function startBffServer (upstreamPort: number): Promise<string> {
+async function startBffServer (upstreamPort: number, allowedCounterPartyAddresses: string[] = []): Promise<string> {
   const config: EdcBffRuntimeConfig = {
     port: 0,
     auth: { mode: 'none', requiredRoles: [] },
@@ -64,7 +64,7 @@ async function startBffServer (upstreamPort: number): Promise<string> {
         managementUrl: `http://127.0.0.1:${upstreamPort}/management`,
         apiKey: 'TEST_API_KEY',
         apiKeyHeader: 'X-Api-Key',
-        allowedCounterPartyAddresses: [],
+        allowedCounterPartyAddresses,
         allowInsecureCounterPartyAddresses: false,
         requestTimeoutMs: 30_000,
         edrPollingAttempts: 30,
@@ -582,5 +582,57 @@ describe('EDC BFF server', () => {
     })
     expect(JSON.stringify(payload)).not.toContain('TEST_API_KEY')
     expect(JSON.stringify(payload)).not.toContain('TEST_SUBMODEL_AUTHORIZATION')
+  })
+
+  it('pushes data larger than the limit of other requests through the data plane', async () => {
+    let upstreamPort = 0
+    const upstream = await startUpstreamServer(({ url }) => {
+      switch (url) {
+        case '/management/v3/catalog/request': {
+          return {
+            'dspace:participantId': 'TEST_PARTICIPANT_ID',
+            'dcat:dataset': { '@id': 'push-asset', 'odrl:hasPolicy': { '@id': 'offer-push' } },
+          }
+        }
+        case '/management/v3/edrs': {
+          return { '@id': 'push-negotiation-1' }
+        }
+        case '/management/v3/edrs/request': {
+          return [{ transferProcessId: 'push-transfer-1' }]
+        }
+        case '/management/v3/edrs/push-transfer-1/dataaddress?auto_refresh=true': {
+          return { endpoint: `http://127.0.0.1:${upstreamPort}/api/public`, authorization: 'TEST_PUSH_AUTHORIZATION' }
+        }
+        case '/api/public': {
+          return { received: true }
+        }
+        default: {
+          return { error: 'unexpected request' }
+        }
+      }
+    })
+    upstreamPort = upstream.port
+    const baseUrl = await startBffServer(upstream.port, ['https://counterparty-dsp.test/api/v1/dsp'])
+    const data = { id: 'urn:example:submodel:1', description: 'x'.repeat(100 * 1024) }
+
+    const response = await fetch(`${baseUrl}/data/push`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        counterPartyId: 'TEST_PARTICIPANT_ID',
+        counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+        assetId: 'push-asset',
+        data,
+      }),
+    })
+    const payload = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(payload).toMatchObject({
+      data: { received: true },
+      edc: { assetId: 'push-asset', transferProcessId: 'push-transfer-1' },
+    })
+    expect(upstream.requests.find(request => request.url === '/api/public')?.body).toEqual(data)
+    expect(JSON.stringify(payload)).not.toContain('TEST_PUSH_AUTHORIZATION')
   })
 })

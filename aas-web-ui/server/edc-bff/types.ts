@@ -86,6 +86,14 @@ export interface EdcDtrDescriptorByIdRequest {
   descriptorId?: string
 }
 
+export interface EdcDataPushRequest {
+  counterPartyId?: string
+  counterPartyAddress?: string
+  protocol?: string
+  assetId?: string
+  data?: unknown
+}
+
 export interface EdcSubmodelFetchRequest {
   counterPartyId?: string
   counterPartyAddress?: string

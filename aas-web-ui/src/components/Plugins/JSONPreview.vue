@@ -28,13 +28,15 @@
     height: '600px',
     icon: 'mdi-code-json',
     jsonContent: undefined,
-    submodelElementData: () => ({}),
+    submodelElementData: undefined,
     title: 'JSON Preview',
   })
 
-  const { text, loading, error } = useCodePreviewSource(() => ({
-    path: props.submodelElementData?.path,
-    content: props.jsonContent,
-  }), 'JSON')
+  // Inline JSON content takes precedence, otherwise the attachment file of the SubmodelElement (if given) is previewed
+  const { text, loading, error } = useCodePreviewSource(() => (
+    (props.jsonContent === undefined || props.jsonContent === null) && props.submodelElementData
+      ? { path: props.submodelElementData.path }
+      : { content: props.jsonContent }
+  ), 'JSON')
   const displayText = computed(() => formatJsonPreview(text.value))
 </script>

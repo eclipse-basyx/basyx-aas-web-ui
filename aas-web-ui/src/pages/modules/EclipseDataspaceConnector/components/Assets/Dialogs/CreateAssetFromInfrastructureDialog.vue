@@ -11,67 +11,11 @@
 
         <v-layout :style="{ 'height': fullHeight }">
 
-          <v-navigation-drawer
-            class="leftMenu"
-            color="appNavigation"
-            :width="336"
-          >
-            <v-card class="d-flex flex-column" color="rgba(0,0,0,0)" elevation="0" height="100%">
-              <!-- Infrastructure Selection -->
-              <div class="px-2 pt-2">
-                <v-select
-                  v-model="selectedInfrastructureId"
-                  density="compact"
-                  hide-details
-                  item-title="name"
-                  item-value="id"
-                  :items="selectableInfrastructures"
-                  label="Select AAS Infrastructure"
-                  no-data-text="No infrastructure with configured AAS Repository"
-                  variant="outlined"
-                >
-                  <template #item="{ props: itemProps, item }">
-                    <v-list-item v-bind="itemProps" :subtitle="getInfrastructureTemplateDefinition(item).label" />
-                  </template>
-                </v-select>
-              </div>
-
-              <!-- AAS List of the selected Infrastructure -->
-              <InfrastructureAasList
-                v-model="selectedAas"
-                class="flex-grow-1"
-                :infrastructure="selectedInfrastructure"
-              />
-            </v-card>
-          </v-navigation-drawer>
-
-          <v-navigation-drawer
-            color="appNavigation"
-            :width="336"
-          >
-            <v-card class="d-flex flex-column" color="rgba(0,0,0,0)" elevation="0" height="100%">
-              <!-- Selected AAS (same height as the infrastructure selection, so both lists align) -->
-              <div class="px-2 pt-2">
-                <v-text-field
-                  density="compact"
-                  hide-details
-                  label="Selected AAS"
-                  :model-value="selectedAas ? nameToDisplay(selectedAas) : ''"
-                  prepend-inner-icon="custom:aasIcon"
-                  readonly
-                  variant="outlined"
-                />
-              </div>
-
-              <!-- Submodel List of the selected AAS -->
-              <InfrastructureSubmodelList
-                v-model="selectedSubmodels"
-                :aas="selectedAas"
-                class="flex-grow-1"
-                :infrastructure="selectedInfrastructure"
-              />
-            </v-card>
-          </v-navigation-drawer>
+          <InfrastructureSelectionDrawers
+            v-model:aas="selectedAas"
+            v-model:infrastructure-id="selectedInfrastructureId"
+            v-model:submodels="selectedSubmodels"
+          />
 
           <EdcAssetOAuth2Drawer v-model="oauth2Drawer">
             <EdcAssetOAuth2Fields
@@ -99,13 +43,13 @@
                 :style="{ 'height': fullHeight, 'padding-top': drawerHeaderHeight }"
               >
                 <v-empty-state
-                  :class="{ 'text-divider': !selectedInfrastructure }"
+                  :class="{ 'text-divider': !selectedInfrastructureId }"
                   icon="mdi-gesture-tap"
                   text="Select an AAS to register as Asset."
                   title="Select AAS"
                 >
                   <template #media>
-                    <v-icon :color="selectedInfrastructure ? undefined : 'divider'" size="64" />
+                    <v-icon :color="selectedInfrastructureId ? undefined : 'divider'" size="64" />
                   </template>
                 </v-empty-state>
               </div>
@@ -159,16 +103,13 @@
 
 <script lang="ts" setup>
   import type { JsonPreviewTab } from '@/pages/modules/EclipseDataspaceConnector/components/Assets/JsonPreviewTabs.vue'
-  import type { InfrastructureConfig } from '@/types/Infrastructure'
-  import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSubmodelDisplay } from '@/composables/AAS/SubmodelDisplay'
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import EdcAssetOAuth2Button from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Button.vue'
   import EdcAssetOAuth2Drawer from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Drawer.vue'
   import EdcAssetOAuth2Fields from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Fields.vue'
-  import InfrastructureAasList from '@/pages/modules/EclipseDataspaceConnector/components/Assets/InfrastructureAasList.vue'
-  import InfrastructureSubmodelList from '@/pages/modules/EclipseDataspaceConnector/components/Assets/InfrastructureSubmodelList.vue'
   import JsonPreviewTabs from '@/pages/modules/EclipseDataspaceConnector/components/Assets/JsonPreviewTabs.vue'
+  import InfrastructureSelectionDrawers from '@/pages/modules/EclipseDataspaceConnector/components/Shared/InfrastructureSelectionDrawers.vue'
   import {
     createEmptyEdcAssetOAuth2,
     type EdcAssetOAuth2,
@@ -179,9 +120,7 @@
     edcRequestFailureText,
     useEdcRequestFailureMessage,
   } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
-  import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
-  import { getInfrastructureTemplateDefinition, isAasSourceInfrastructure } from '@/utils/InfrastructureUtils'
 
   const props = withDefaults(defineProps<{
     modelValue: boolean
@@ -196,11 +135,9 @@
   }>()
 
   // Stores
-  const infrastructureStore = useInfrastructureStore()
   const navigationStore = useNavigationStore()
 
   // Composables
-  const { nameToDisplay } = useReferableUtils()
   const { smTitleToDisplay } = useSubmodelDisplay()
   const { createAasEdcAsset, createSmEdcAsset } = useEdcAssetFromAas()
   const { createAsset: createAssetInEdc } = useCatenaXEdcClient()
@@ -220,12 +157,6 @@
   const creatingAssets = ref(false)
 
   // Computed Properties
-  const selectableInfrastructures = computed(() =>
-    infrastructureStore.getInfrastructures.filter(infrastructure => isAasSourceInfrastructure(infrastructure)),
-  )
-  const selectedInfrastructure = computed<InfrastructureConfig | null>(() =>
-    selectableInfrastructures.value.find(infrastructure => infrastructure.id === selectedInfrastructureId.value) ?? null,
-  )
   const dataTabs = computed<Array<JsonPreviewTab>>(() => [
     { value: 'aas', title: 'AAS', previewTitle: 'AAS', icon: 'custom:aasIcon', json: selectedAas.value?.aas },
     ...selectedSubmodels.value.map(submodel => ({

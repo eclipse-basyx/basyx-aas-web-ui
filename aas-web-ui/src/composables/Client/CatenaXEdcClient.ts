@@ -119,6 +119,14 @@ export interface CatenaXEdcSubmodelRequest extends CatenaXEdcDtrRequest {
   subprotocolBody?: string
 }
 
+export interface CatenaXEdcDataPushRequest {
+  counterPartyId: string
+  counterPartyAddress: string
+  protocol?: string
+  assetId: string // ID of the push asset in the catalog of the counterparty
+  data: unknown // JSON posted to the data plane of the push asset, e.g. an AAS or Submodel
+}
+
 export interface CatenaXEdcDtrMetadata {
   assetId?: string
   providerId?: string
@@ -131,6 +139,11 @@ export interface CatenaXEdcDtrResponse<T = unknown> {
   data: T
   edc: CatenaXEdcDtrMetadata
 }
+
+/**
+ * Result of pushing data, with the response of the data plane.
+ */
+export type CatenaXEdcDataPushResult = { success: true, data: CatenaXEdcDtrResponse } | CatenaXEdcFailure
 
 export function useCatenaXEdcClient (): {
   fetchStatus: (proxyId: string) => Promise<CatenaXEdcStatus | null>
@@ -160,6 +173,7 @@ export function useCatenaXEdcClient (): {
     proxyId: string,
     request: CatenaXEdcSubmodelRequest,
   ) => Promise<CatenaXEdcDtrResponse | null>
+  pushData: (proxyId: string, request: CatenaXEdcDataPushRequest) => Promise<CatenaXEdcDataPushResult>
   consumeLastRequestFailureDetails: () => string | undefined
 } {
   const {
@@ -469,6 +483,28 @@ export function useCatenaXEdcClient (): {
     return result.success ? result.data as CatenaXEdcDtrResponse : null
   }
 
+  async function pushData (
+    proxyId: string,
+    request: CatenaXEdcDataPushRequest,
+  ): Promise<CatenaXEdcDataPushResult> {
+    const url = buildEdcProxyUrl(proxyId, 'data/push')
+    if (!url) {
+      return { success: false }
+    }
+
+    const result = await postRequest(
+      url,
+      JSON.stringify(request),
+      createJsonHeaders(),
+      'pushing data through EDC',
+      true,
+    )
+
+    return result.success
+      ? { success: true, data: result.data as CatenaXEdcDtrResponse }
+      : toEdcFailure(result)
+  }
+
   function buildEdcProxyUrl (proxyId: string, path: string): string | null {
     const normalizedProxyId = proxyId.trim()
     if (normalizedProxyId === '') {
@@ -498,6 +534,7 @@ export function useCatenaXEdcClient (): {
     fetchDtrShellDescriptors,
     fetchDtrShellDescriptorById,
     fetchSubmodel,
+    pushData,
     consumeLastRequestFailureDetails,
   }
 }

@@ -12,6 +12,7 @@ import {
   fetchSubmodel,
   forwardToEdc,
   parseSubprotocolBody,
+  pushData,
 } from '../../../server/edc-bff/edcRequests'
 
 const odrlNamespace = 'http' + '://www.w3.org/ns/odrl/2/'
@@ -569,5 +570,120 @@ describe('EDC BFF request helpers', () => {
     }, {
       fetchFn: fetchMock as typeof fetch,
     })).rejects.toThrow('EDC dataaddress did not include authorization')
+  })
+
+  it('negotiates the push asset and posts the data to the provider data plane', async () => {
+    const proxy = createProxyConfig()
+    const submodel = { id: 'urn:example:submodel:1', idShort: 'TechnicalData', submodelElements: [] }
+    const fetchMock = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const urlString = String(url)
+
+      if (urlString.endsWith('/management/v3/catalog/request')) {
+        expect(JSON.parse(String(init?.body))).toMatchObject({
+          counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp/2025-1',
+          querySpec: {
+            filterExpression: [{
+              operandLeft: 'https://w3id.org/edc/v0.0.1/ns/id',
+              operator: '=',
+              operandRight: 'push-asset',
+            }],
+          },
+        })
+        return Response.json({
+          'dspace:participantId': 'TEST_PARTICIPANT_ID',
+          'dcat:dataset': {
+            '@id': 'push-asset',
+            'odrl:hasPolicy': { '@id': 'offer-push', '@type': 'odrl:Offer' },
+          },
+        })
+      }
+
+      if (urlString.endsWith('/management/v3/edrs')) {
+        expect(JSON.parse(String(init?.body)).policy).toMatchObject({
+          [odrlNamespace + 'target']: { '@id': 'push-asset' },
+        })
+        return Response.json({ '@id': 'push-negotiation-1' })
+      }
+
+      if (urlString.endsWith('/management/v3/edrs/request')) {
+        return Response.json([{ transferProcessId: 'push-transfer-1', agreementId: 'push-agreement-1' }])
+      }
+
+      if (urlString.endsWith('/management/v3/edrs/push-transfer-1/dataaddress?auto_refresh=true')) {
+        return Response.json({
+          endpoint: 'https://data-plane.test/api/public',
+          authorization: 'TEST_PUSH_AUTHORIZATION',
+        })
+      }
+
+      if (urlString === 'https://data-plane.test/api/public') {
+        expect(init).toMatchObject({
+          method: 'POST',
+          headers: { 'Authorization': 'TEST_PUSH_AUTHORIZATION', 'Content-Type': 'application/json' },
+        })
+        expect(JSON.parse(String(init?.body))).toEqual(submodel)
+        return Response.json({ received: true }, { status: 201 })
+      }
+
+      return Response.json({ error: 'unexpected request' }, { status: 500 })
+    })
+
+    const result = await pushData(proxy, {
+      counterPartyId: 'TEST_PARTICIPANT_ID',
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+      assetId: 'push-asset',
+      data: submodel,
+    }, {
+      fetchFn: fetchMock as typeof fetch,
+      pollingIntervalMs: 0,
+    })
+
+    expect(result.status).toBe(201)
+    expect(result.data).toEqual({ received: true })
+    expect(result.metadata).toMatchObject({
+      assetId: 'push-asset',
+      providerId: 'TEST_PARTICIPANT_ID',
+      agreementId: 'push-agreement-1',
+      contractNegotiationId: 'push-negotiation-1',
+      transferProcessId: 'push-transfer-1',
+    })
+  })
+
+  it('rejects data pushes without asset ID or data and reports failures of the data plane', async () => {
+    const proxy = createProxyConfig()
+    const request = {
+      counterPartyId: 'TEST_PARTICIPANT_ID',
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+      assetId: 'push-asset',
+      data: { id: 'urn:example:aas:1' },
+    }
+
+    await expect(pushData(proxy, { ...request, assetId: ' ' })).rejects.toThrow('assetId is required for EDC data push')
+    await expect(pushData(proxy, { ...request, data: undefined })).rejects.toThrow('data is required for EDC data push')
+
+    const fetchMock = vi.fn(async (url: string | URL | Request) => {
+      const urlString = String(url)
+      if (urlString.endsWith('/management/v3/edrs/push-transfer-1/dataaddress?auto_refresh=true')) {
+        return Response.json({ endpoint: 'https://data-plane.test/api/public', authorization: 'TEST_PUSH_AUTHORIZATION' })
+      }
+      if (urlString.endsWith('/management/v3/catalog/request')) {
+        return Response.json({
+          'dspace:participantId': 'TEST_PARTICIPANT_ID',
+          'dcat:dataset': { '@id': 'push-asset', 'odrl:hasPolicy': { '@id': 'offer-push' } },
+        })
+      }
+      if (urlString.endsWith('/management/v3/edrs')) {
+        return Response.json({ '@id': 'push-negotiation-1' })
+      }
+      if (urlString.endsWith('/management/v3/edrs/request')) {
+        return Response.json([{ transferProcessId: 'push-transfer-1' }])
+      }
+      return Response.json({ error: 'rejected' }, { status: 400 })
+    })
+
+    await expect(pushData(proxy, request, {
+      fetchFn: fetchMock as typeof fetch,
+      pollingIntervalMs: 0,
+    })).rejects.toThrow('Data plane push failed (400)')
   })
 })
