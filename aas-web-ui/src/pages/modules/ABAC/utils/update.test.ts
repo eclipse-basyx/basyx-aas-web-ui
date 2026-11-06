@@ -1,23 +1,58 @@
 import { describe, expect, it } from 'vitest'
-import { useDefinitionValidation } from '../hooks/useDefinitionValidation'
-import { usePolicyValidation } from '../hooks/usePolicyValidation'
-import { useRuleValidation } from '../hooks/useRuleValidation'
+import { useDefinitionValidation } from '../hooks/validations/useDefinitionValidation'
+import { usePolicyValidation } from '../hooks/validations/usePolicyValidation'
+import { useRuleValidation } from '../hooks/validations/useRuleValidation'
 import { en } from '../i18n/locales'
 import { mergeObjects } from './object'
-import { detectDefinitionUpdate, detectRuleUpdate } from './update'
+import { detectDefinitionUpdate, detectRuleUpdate, resolveUpdateDocument } from './update'
 
 describe('ABAC update selection', () => {
+  it('keeps immutable definition identity in a form merge base without mutating it', () => {
+    const original = { name: 'shared', acl: { ACCESS: 'ALLOW', USEATTRIBUTES: 'old' } }
+    const mergeBase = { acl: { ACCESS: 'ALLOW' } }
+    const update = detectDefinitionUpdate(original, { acl: { RIGHTS: ['READ'] } }, 'acls', { mergeBase })
+    expect(resolveUpdateDocument(original, update)).toEqual({ name: 'shared', acl: { ACCESS: 'ALLOW', RIGHTS: ['READ'] } })
+    expect(mergeBase).toEqual({ acl: { ACCESS: 'ALLOW' } })
+    expect(resolveUpdateDocument(original, detectDefinitionUpdate(original, original, 'acls'))).toEqual(original)
+  })
+
+  it('derives deletions from a complete document but preserves omissions in JSON merge input', () => {
+    const original = { ACL: { ACCESS: 'ALLOW', USEATTRIBUTES: 'old' }, FILTER: { FRAGMENT: 'f' }, extra: true }
+    const complete = { ACL: { ACCESS: 'ALLOW' }, extra: true }
+    expect(detectRuleUpdate(original, complete, { inputMode: 'complete' })).toEqual({
+      mode: 'patch', payload: { ACL: { USEATTRIBUTES: null }, FILTER: null },
+    })
+    expect(detectRuleUpdate(original, complete)).toEqual({ mode: 'unchanged', payload: {} })
+  })
+
+  it('keeps prior form deletions when JSON edits use the latest form snapshot as their merge base', () => {
+    const original = { ACL: { ACCESS: 'ALLOW', USEATTRIBUTES: 'old' }, extra: true }
+    const mergeBase = { ACL: { ACCESS: 'ALLOW' }, extra: true }
+    const update = detectRuleUpdate(original, { extra: false }, { inputMode: 'merge', mergeBase })
+    const effective = update.mode === 'replace' ? update.payload : mergeObjects(original, update.payload)
+    expect(effective).toEqual({ ACL: { ACCESS: 'ALLOW' }, extra: false })
+    expect(original.ACL.USEATTRIBUTES).toBe('old')
+  })
+
+  it('derives the cleared ACL reference for a complete definition update', () => {
+    const original = { name: 'shared', acl: { ACCESS: 'ALLOW', USEATTRIBUTES: 'old' } }
+    const complete = { name: 'shared', acl: { ACCESS: 'ALLOW' } }
+    expect(detectDefinitionUpdate(original, complete, 'acls', { inputMode: 'complete' })).toEqual({
+      mode: 'patch', payload: { acl: { USEATTRIBUTES: null } },
+    })
+  })
+
   it.each(['null', '[]', '42', 'true', '"text"'])('blocks non-object editor JSON: %s', json => {
     const rule = useRuleValidation(en.rules.ruleDialog.errors, en.validation).validateJson({
       json,
     })
-    expect(rule.rule).toBeNull()
+    expect(rule.payload).toBeNull()
     expect(rule.error?.title).toBe(en.rules.ruleDialog.errors.invalidRule)
 
     const policy = usePolicyValidation(en.policies.import.errors, en.validation).validateJson({
       json,
     })
-    expect(policy.policy).toBeNull()
+    expect(policy.payload).toBeNull()
     expect(policy.error?.title).toBe(en.policies.import.errors.invalidPolicy)
 
     const definition = useDefinitionValidation(en.definitions.definitionDialog.errors, en.validation).validateJson({
@@ -103,7 +138,7 @@ describe('ABAC update selection', () => {
       currentRule: { USEACL: 'admin', USEOBJECTS: ['routes'], FORMULA: { $boolean: true } },
     })
     expect(result.error).toBeNull()
-    expect(result.rule).toEqual({ FORMULA: null, USEFORMULA: 'shared' })
+    expect(result.payload).toEqual({ FORMULA: null, USEFORMULA: 'shared' })
   })
 
   it('validates an inferred switch to a formula reference', () => {
@@ -113,7 +148,7 @@ describe('ABAC update selection', () => {
       currentRule: { USEACL: 'admin', USEOBJECTS: ['routes'], FORMULA: { $boolean: true } },
     })
     expect(result.error).toBeNull()
-    expect(result.rule).toEqual({ USEFORMULA: 'shared' })
+    expect(result.payload).toEqual({ USEFORMULA: 'shared' })
   })
 
   it('accepts partial nested updates and explicit nested deletions in definitions', () => {
@@ -147,7 +182,7 @@ describe('ABAC update selection', () => {
       json: JSON.stringify({ AllAccessPermissionRules: {} }),
     })
     expect(result.error).not.toBeNull()
-    expect(result.policy).toEqual({ AllAccessPermissionRules: {} })
+    expect(result.payload).toEqual({ AllAccessPermissionRules: {} })
   })
 })
 
@@ -197,11 +232,11 @@ describe('ABAC update detection', () => {
     )).toEqual({ mode: 'patch', payload: { acl: { ATTRIBUTES: [{ CLAIM: 'role' }] } } })
   })
 
-  it('switches object-definition alternatives and preserves the name', () => {
+  it('adds object-definition references without removing inline objects', () => {
     expect(detectDefinitionUpdate(
       { name: 'routes', objects: [{ ROUTE: '/shells' }] },
       { USEOBJECTS: ['other'] }, 'objects',
-    )).toEqual({ mode: 'replace', payload: { name: 'routes', USEOBJECTS: ['other'] } })
+    )).toEqual({ mode: 'patch', payload: { USEOBJECTS: ['other'] } })
   })
 
   it('switches nested attribute operands without replacing the surrounding expression', () => {

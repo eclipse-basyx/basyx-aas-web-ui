@@ -118,6 +118,15 @@ export async function linkSubmodelToAAS (baseUrl: string, aasId: string, submode
 
 const COMPANY_LOGO_PATH = 'CompanyIdentification.CompanyLogo'
 
+// The file name is sent as filename of the file part, where AAS Part 2 V3.2 reads it,
+// and as the fileName field of V3.0/V3.1 servers.
+function attachmentForm (file: File | Blob, fileName: string): FormData {
+  const form = new FormData()
+  form.append('file', file, fileName)
+  form.append('fileName', fileName)
+  return form
+}
+
 export async function uploadCompanyLogo ({
   baseUrl,
   submodelId,
@@ -133,10 +142,7 @@ export async function uploadCompanyLogo ({
   const idShortPath = encodeURIComponent(COMPANY_LOGO_PATH)
   const url = `${baseUrl}/submodels/${submodelIdB64}/submodel-elements/${idShortPath}/attachment`
 
-  const form = new FormData()
-  const name = fileName ?? (file as File).name ?? 'company-logo'
-  form.append('file', file as any, (file as File).name ?? name)
-  form.append('fileName', name)
+  const form = attachmentForm(file, fileName ?? (file as File).name ?? 'company-logo')
 
   const res = await fetch(url, { method: 'PUT', body: form })
   if (!res.ok) {
@@ -163,10 +169,7 @@ export async function uploadConsolidatedDataFile ({
   const idShortPath = encodeURIComponent(CONSOLIDATED_PATH(reportIdShort))
   const url = `${baseUrl}/submodels/${submodelIdB64}/submodel-elements/${idShortPath}/attachment`
 
-  const form = new FormData()
-  const name = fileName ?? (data as File).name ?? 'consolidated-data.pdf'
-  form.append('file', data as any, (data as File).name ?? name)
-  form.append('fileName', name)
+  const form = attachmentForm(data, fileName ?? (data as File).name ?? 'consolidated-data.pdf')
 
   const res = await fetch(url, { method: 'PUT', body: form })
   if (!res.ok) {

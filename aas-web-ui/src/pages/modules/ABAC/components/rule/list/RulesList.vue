@@ -38,7 +38,7 @@
         {{ t('rules.loadError') }}
       </v-alert>
 
-      <v-list v-else-if="isLoading" class="pa-0 bg-dark" nav>
+      <v-list v-else-if="isLoading" class="pa-0 bg-card" nav>
         <RuleItem v-for="i in 4" :key="i" loading />
       </v-list>
 
@@ -65,10 +65,10 @@
 </template>
 
 <script setup lang="ts">
-  import type { RuleDialogProps } from '../RuleDialog.vue'
+  import type { RuleDialogProps } from '../../../types/rules'
   import { hasItems } from '@/utils/array'
-  import { usePolicy } from '../../../hooks/usePolicy'
-  import { useRules } from '../../../hooks/useRules'
+  import { usePolicy } from '../../../hooks/resources/usePolicy'
+  import { useRules } from '../../../hooks/resources/useRules'
   import { useAbacI18n } from '../../../i18n/useAbacI18n'
   import RuleItem from './RuleItem.vue'
 

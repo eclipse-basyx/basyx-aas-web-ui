@@ -1,6 +1,6 @@
 <template>
-  <div class="d-flex flex-column abac-editor" :class="{ 'abac-editor--borderless': borderless, 'flex-1-1': rows === 'auto' }">
-    <span v-if="hasContent(label)" class="pa-4 pb-2 text-body-small" :class="{ 'text-error': isError }">
+  <div class="d-flex flex-column abac-editor" :class="{ 'abac-editor--borderless': borderless, 'abac-editor--resizable': rows !== 'auto', 'flex-1-1': rows === 'auto' }">
+    <span v-if="hasContent(label)" class="px-4 pb-2 text-body-small" :class="{ 'text-error': isError }">
       {{ label }}
     </span>
 
@@ -27,7 +27,7 @@
     >
       <template #loading>
         <div class="position-absolute top-0 bottom-0 left-0 right-0 d-flex align-center justify-center pa-4">
-          <v-progress-circular :aria-label="t('shared.editorLoading')" indeterminate />
+          <v-progress-circular :aria-label="t('shared.editor.loading')" indeterminate />
         </div>
       </template>
     </CodeEditor>
@@ -59,6 +59,7 @@
     rows = 'auto',
     disabled = false,
     borderless = false,
+    active = true,
   } = defineProps<{
     target: AccessRulesEditorTarget
     label?: string
@@ -68,10 +69,14 @@
     /** Temporarily locks create/update editors; view mode is always read-only. */
     disabled?: boolean
     borderless?: boolean
+    /** Restores scrolling when the mounted editor becomes visible again. */
+    active?: boolean
   }>()
 
   const model = defineModel<string>({ required: true })
   const { t } = useAbacI18n()
+  let editorInstance: editor.IStandaloneCodeEditor | undefined
+  let savedScrollPosition: editor.INewScrollPosition | undefined
 
   const schema = computed<CodeSchema | undefined>(() => {
     if (target.viewer === 'definition' && !target.kind) {
@@ -81,12 +86,31 @@
   })
 
   const namespace = computed(() => getAccessRulesEditorNamespace(target))
-  const accessibleLabel = computed(() => label || t('shared.editorLabel'))
+  const accessibleLabel = computed(() => label || t('shared.editor.label'))
   const isReadOnly = computed(() => target.mode === 'view' || disabled)
   const isError = computed(() => !!errorMessage)
   const editorHeight = computed(() => rows === 'auto' ? '100%' : `${rows * 20 + 16}px`)
 
+  watch(() => active, async visible => {
+    if (!visible) {
+      savedScrollPosition = editorInstance
+        ? { scrollTop: editorInstance.getScrollTop(), scrollLeft: editorInstance.getScrollLeft() }
+        : undefined
+      return
+    }
+    await nextTick()
+    if (!active || !editorInstance) return
+    editorInstance.layout()
+    if (savedScrollPosition) editorInstance.setScrollPosition(savedScrollPosition)
+  })
+
+  onBeforeUnmount(() => {
+    editorInstance = undefined
+  })
+
   function handleReady (_model: editor.ITextModel, instance: editor.IStandaloneCodeEditor): void {
+    editorInstance = instance
+    savedScrollPosition = undefined
     // Empty readOnlyMessage options still create a popup. Disable only the
     // notification contribution; Monaco continues enforcing read-only mode.
     instance.getContribution('editor.contrib.readOnlyMessageController')?.dispose()
@@ -98,6 +122,12 @@
 
   .abac-editor :deep(.code-editor) {
     border-radius: 4px;
+  }
+
+  .abac-editor--resizable :deep(.code-editor) {
+    min-height: 160px;
+    overflow: hidden;
+    resize: vertical;
   }
 
   .abac-editor--borderless :deep(.code-editor) {

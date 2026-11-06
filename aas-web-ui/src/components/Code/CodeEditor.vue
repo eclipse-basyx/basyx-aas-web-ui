@@ -90,6 +90,11 @@
     theme: theme.global.current.value.dark ? 'vs-dark' : 'vs',
   }))
 
+  // Leave native resize changes intact during content and diagnostic rerenders.
+  watch([container, () => props.height], ([element, height]) => {
+    if (element) element.style.height = height
+  }, { flush: 'post' })
+
   watch(value, text => {
     if (!model || text === model.getValue()) return
     applyingExternalValue = true

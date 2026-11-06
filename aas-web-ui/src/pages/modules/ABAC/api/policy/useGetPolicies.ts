@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/vue-query'
 import { useAbacContext } from '../useAbacContext'
 
 export function useGetPolicies () {
-  const { client, keys, hasApiUrl } = useAbacContext(true)
+  const { client, keys, hasApiUrl } = useAbacContext()
 
   function group (policies: PolicyVersion[]): PolicyVersion[] {
     const active = policies.filter(({ status }) => status === 'active')

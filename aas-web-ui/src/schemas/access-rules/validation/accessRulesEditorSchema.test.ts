@@ -1,7 +1,7 @@
 import type { SchemaObject as SchemaNode } from 'ajv'
 import Ajv from 'ajv'
 import { describe, expect, it } from 'vitest'
-import upstream from '@/schemas/access-rules/aas-queries-and-access-rules-3.1.schema.json'
+import upstream from '@/schemas/access-rules/aas-queries-and-access-rules-3.2.schema.json'
 import { createAccessRulesEditorSchema, getAccessRulesEditorNamespace } from './accessRulesEditorSchema'
 
 describe('ABAC editor entry roots', () => {
