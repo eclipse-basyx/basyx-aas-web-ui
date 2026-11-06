@@ -75,8 +75,8 @@
       return
     }
 
-    const contracts = await queryContractDefinitions(props.proxyId)
-    if (!contracts) {
+    const result = await queryContractDefinitions(props.proxyId)
+    if (!result.success) {
       referencingContracts.value = []
       return
     }
@@ -84,7 +84,7 @@
     const assetId = props.asset['@id']
     const EDC_ID_OPERAND = 'https://w3id.org/edc/v0.0.1/ns/id'
 
-    referencingContracts.value = contracts.filter((contract: any) => {
+    referencingContracts.value = result.data.filter((contract: any) => {
       const selector: any = contract['assetsSelector'] ?? contract['edc:assetsSelector'] ?? null
       if (selector) {
         const left = selector['operandLeft'] ?? selector['edc:operandLeft'] ?? ''

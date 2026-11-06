@@ -134,8 +134,21 @@
               </v-list>
 
               <v-empty-state
+                v-else-if="listRequestFailed"
+                :class="failedEmptyStateOffsetClass"
+                icon="mdi-database-alert-outline"
+                :text="`The ${labelPlural} could not be loaded. Reload the ${label} List to try again.`"
+                :title="`${labelPlural} Not Available`"
+              >
+                <template #media>
+                  <v-icon size="64" />
+                </template>
+              </v-empty-state>
+
+              <v-empty-state
                 v-else
                 class="text-divider"
+                :class="emptyStateOffsetClass"
                 :title="`No existing ${labelPlural}`"
               />
             </template>
@@ -146,9 +159,28 @@
       <v-main>
         <v-container fluid>
 
-          <div v-if="!selectedResource" class="d-flex align-center justify-center" :style="{'height': fullHeightMain}">
+          <!-- Placeholder of the JSON preview while the list loads -->
+          <v-skeleton-loader
+            v-if="listLoading"
+            class="border rounded-lg"
+            type="list-item-avatar, divider, paragraph@3"
+          />
+
+          <div v-else-if="!selectedResource" class="d-flex align-center justify-center" :style="{'height': fullHeightMain}">
 
             <v-empty-state
+              v-if="listRequestFailed"
+              icon="mdi-database-alert-outline"
+              :text="`No ${label} can be selected, as the ${labelPlural} could not be loaded`"
+              :title="`${labelPlural} Not Available`"
+            >
+              <template #media>
+                <v-icon size="64" />
+              </template>
+            </v-empty-state>
+
+            <v-empty-state
+              v-else
               icon="mdi-gesture-tap"
               :text="`Please select ${/^[AEIOU]/.test(label) ? 'an' : 'a'} ${label} to view`"
               :title="`Select ${label}`"
@@ -204,10 +236,11 @@
 </template>
 
 <script lang="ts" setup>
-  import type { CatenaXEdcResult } from '@/composables/Client/CatenaXEdcClient'
+  import type { CatenaXEdcQueryResult, CatenaXEdcResult } from '@/composables/Client/CatenaXEdcClient'
   import DeleteEdcResourceDialog from '@/pages/modules/EclipseDataspaceConnector/components/Shared/DeleteEdcResourceDialog.vue'
   import EdcResourceListItem from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceListItem.vue'
   import UpdateEdcResourceDialog from '@/pages/modules/EclipseDataspaceConnector/components/Shared/UpdateEdcResourceDialog.vue'
+  import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
 
   // Extend the ComponentPublicInstance type to include scrollToIndex
@@ -225,7 +258,7 @@
     labelPlural: string
     icon: string
     createActions: Array<{ title: string, tooltip: string, onClick: () => void }>
-    query: (proxyId: string) => Promise<Array<any> | null>
+    query: (proxyId: string) => Promise<CatenaXEdcQueryResult<any>>
     update: (proxyId: string, resourceId: string, resource: any) => Promise<CatenaXEdcResult>
     delete?: (proxyId: string, resourceId: string) => Promise<CatenaXEdcResult> // Not needed with the `delete-dialog` slot
     matches?: (resource: any) => boolean // Client-side filter of the loaded resources, e.g. by the value of the `filter` slot
@@ -238,6 +271,9 @@
   // Stores
   const infrastructureStore = useInfrastructureStore()
 
+  // Composables
+  const { showFailureMessage } = useEdcRequestFailureMessage()
+
   // Data
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Full height - header - tabs - footer - border
   const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
@@ -247,6 +283,7 @@
 
   const resources = ref<Array<any>>([]) // Sorted by ID, before filtering
   const listLoading = ref(false)
+  const listRequestFailed = ref(false)
   const virtualScrollRef = ref<VirtualScrollInstance | null>(null)
   const selectedResource = ref<any>(null)
 
@@ -258,6 +295,9 @@
   const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? 'default')
   // Full height - header - tabs - footer - search (and filter) - borders
   const listHeight = computed(() => `calc(100svh - 64px - 48px - 40px - ${slots.filter ? 112 : 64}px - 3px)`)
+  // The list starts below the search (and filter), so its empty state moves up to the title height of the one on the right
+  const emptyStateOffsetClass = computed(() => slots.filter ? 'mt-n9' : 'mt-n3')
+  const failedEmptyStateOffsetClass = computed(() => slots.filter ? 'mt-n12' : 'mt-n6') // With icon and text, like the one on the right
   const filteredResources = computed(() => {
     const query = searchQuery.value?.trim().toLowerCase()
     return resources.value.filter(resource =>
@@ -275,15 +315,20 @@
   async function loadResources (): Promise<void> {
     listLoading.value = true
 
-    const loadedResources = await props.query(edcProxyId.value)
+    const result = await props.query(edcProxyId.value)
+    listRequestFailed.value = !result.success
 
-    // Keep the previous list if the request failed
-    if (Array.isArray(loadedResources)) {
-      resources.value = loadedResources.toSorted((resourceA: any, resourceB: any) => resourceA['@id'] > resourceB['@id'] ? 1 : -1)
+    if (result.success) {
+      resources.value = result.data.toSorted((resourceA: any, resourceB: any) => resourceA['@id'] > resourceB['@id'] ? 1 : -1)
 
       // Point the selection to the reloaded resource, so the JSON view shows updates and drops deleted resources
       const selectedId = selectedResource.value?.['@id']
       selectedResource.value = resources.value.find(resource => resource['@id'] === selectedId) ?? null
+    } else {
+      // A failed reload drops the previous list, like a failed first load
+      resources.value = []
+      selectedResource.value = null
+      showFailureMessage(`Failed to load the ${props.labelPlural}.`, edcBffFailureText(result))
     }
 
     listLoading.value = false

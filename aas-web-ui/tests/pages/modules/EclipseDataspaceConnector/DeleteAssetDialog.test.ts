@@ -68,7 +68,7 @@ async function clickDelete (wrapper: Awaited<ReturnType<typeof openDialog>>): Pr
 describe('DeleteAssetDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.queryContractDefinitions.mockResolvedValue([contractOf('contract-1'), contractOf('contract-2', 'other-asset')])
+    mocks.queryContractDefinitions.mockResolvedValue({ success: true, data: [contractOf('contract-1'), contractOf('contract-2', 'other-asset')] })
     mocks.deleteContractDefinition.mockResolvedValue({ success: true })
     mocks.deleteAsset.mockResolvedValue({ success: true })
   })
@@ -88,7 +88,7 @@ describe('DeleteAssetDialog', () => {
   it('names the already deleted contracts if an agreement keeps the asset', async () => {
     mocks.deleteAsset.mockResolvedValue({ success: false, status: 409, details: agreementConflict })
     const wrapper = await openDialog()
-    mocks.queryContractDefinitions.mockResolvedValue([])
+    mocks.queryContractDefinitions.mockResolvedValue({ success: true, data: [] })
 
     await clickDelete(wrapper)
 
@@ -104,7 +104,7 @@ describe('DeleteAssetDialog', () => {
   })
 
   it('keeps the asset if a referencing contract cannot be deleted', async () => {
-    mocks.queryContractDefinitions.mockResolvedValue([contractOf('contract-1'), contractOf('contract-3')])
+    mocks.queryContractDefinitions.mockResolvedValue({ success: true, data: [contractOf('contract-1'), contractOf('contract-3')] })
     mocks.deleteContractDefinition
       .mockResolvedValueOnce({ success: true })
       .mockResolvedValueOnce({ success: false, status: 404 })

@@ -183,8 +183,22 @@
                 </v-virtual-scroll>
               </v-list>
 
+              <!-- The list starts below the selections, so the empty states move up to the height of the ones on the right -->
+              <v-empty-state
+                v-else-if="selectedBusinessPartner && catalogRequestFailed"
+                class="mt-n12"
+                icon="mdi-database-alert-outline"
+                text="The Catalog of the selected Business Partner could not be requested. Reload the Catalog to try again."
+                title="Catalog Not Available"
+              >
+                <template #media>
+                  <v-icon size="64" />
+                </template>
+              </v-empty-state>
+
               <v-empty-state
                 v-else-if="selectedBusinessPartner"
+                class="mt-n12"
                 icon="mdi-database-off-outline"
                 text="The Catalog of the selected Business Partner contains no Datasets of the selected Asset Type"
                 title="No Catalog Datasets"
@@ -196,6 +210,7 @@
 
               <v-empty-state
                 v-else
+                class="mt-n12"
                 icon="mdi-gesture-tap"
                 text="Please select a Business Partner to load its Catalog"
                 title="Select Business Partner"
@@ -212,9 +227,16 @@
       <v-main>
         <v-container fluid>
 
+          <!-- Placeholder of the Catalog Dataset while the Catalog loads -->
+          <v-skeleton-loader
+            v-if="listLoading"
+            class="border rounded-lg"
+            type="list-item-avatar, divider, paragraph@3"
+          />
+
           <!-- Empty states when nothing is selected yet -->
           <div
-            v-if="
+            v-else-if="
               !selectedBusinessPartner
                 || Object.keys(selectedBusinessPartner).length === 0
                 || !selectedCatalogDataset
@@ -231,6 +253,17 @@
               icon="mdi-gesture-tap"
               text="Please select a Business Partner to load its Catalog"
               title="Select Business Partner"
+            >
+              <template #media>
+                <v-icon size="64" />
+              </template>
+            </v-empty-state>
+
+            <v-empty-state
+              v-else-if="catalogRequestFailed"
+              icon="mdi-database-alert-outline"
+              text="No Catalog Dataset can be selected, as the Catalog of the selected Business Partner could not be requested"
+              title="Catalog Not Available"
             >
               <template #media>
                 <v-icon size="64" />
@@ -480,6 +513,7 @@
   const catalogListUnfiltered = ref([] as Array<any>) as Ref<Array<any>>
 
   const listLoading = ref(false)
+  const catalogRequestFailed = ref(false)
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null)
   // const dataTranserInProgress = ref(false)
   // const discoverIdRef = ref<InstanceType<typeof CatalogDiscoverId> | null>(null)
@@ -575,6 +609,7 @@
     listLoading.value = true
 
     selectedCatalogDataset.value = {}
+    catalogRequestFailed.value = false
     // edcStatus.value = ''
 
     if (selectedBusinessPartner.value?.counterPartyAddress) {
@@ -587,8 +622,13 @@
         protocol: 'dataspace-protocol-http:2025-1',
         querySpec: catalogFilter?.querySpec,
       }
-      const catalog = await requestCatalog(edcProxyId.value, catalogRequest)
+      const result = await requestCatalog(edcProxyId.value, catalogRequest)
+      catalogRequestFailed.value = !result.success
+      if (!result.success) {
+        showFailureMessage('Failed to request the catalog.', edcBffFailureText(result))
+      }
 
+      const catalog = result.success ? result.data : undefined
       const catalogDataset = catalog?.['dcat:dataset'] ?? catalog?.dataset
 
       if (catalog && catalogDataset) {

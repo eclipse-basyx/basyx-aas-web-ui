@@ -118,7 +118,26 @@ describe('CatenaXEdcClient', () => {
       'requesting catalog',
       true,
     )
-    expect(result).toEqual({ dataset: [] })
+    expect(result).toEqual({ success: true, data: { dataset: [] } })
+  })
+
+  it('returns the status and EDC error details of a failed catalog request', async () => {
+    mocks.postRequest.mockResolvedValue({
+      success: false,
+      status: 502,
+      details: 'Unable to obtain credentials: Server response was 503',
+    })
+
+    const result = await useCatenaXEdcClient().requestCatalog('default', {
+      counterPartyId: 'TEST_COUNTERPARTY_ID',
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+    })
+
+    expect(result).toEqual({
+      success: false,
+      status: 502,
+      details: 'Unable to obtain credentials: Server response was 503',
+    })
   })
 
   it.each([
@@ -155,7 +174,15 @@ describe('CatenaXEdcClient', () => {
       context,
       true,
     )
-    expect(result).toEqual(data)
+    expect(result).toEqual({ success: true, data })
+  })
+
+  it('returns the status and EDC error details of a failed resource query', async () => {
+    mocks.postRequest.mockResolvedValue({ success: false, status: 502, details: 'Unable to obtain credentials' })
+
+    const result = await useCatenaXEdcClient().queryAssets('default')
+
+    expect(result).toEqual({ success: false, status: 502, details: 'Unable to obtain credentials' })
   })
 
   it.each([

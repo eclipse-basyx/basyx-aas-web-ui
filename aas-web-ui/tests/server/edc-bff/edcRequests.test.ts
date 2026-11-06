@@ -552,6 +552,38 @@ describe('EDC BFF request helpers', () => {
     })).rejects.toThrow('EDC EDR was not available before polling timed out')
   })
 
+  it('keeps the distinct messages of a refused contract negotiation as error details', async () => {
+    const proxy = createProxyConfig()
+    const fetchMock = vi.fn(async (url: string | URL | Request) => {
+      if (String(url).endsWith('/management/v3/catalog/request')) {
+        return Response.json({
+          'dspace:participantId': 'TEST_PARTICIPANT_ID',
+          'dcat:dataset': {
+            '@id': 'submodel-asset',
+            'odrl:hasPolicy': { '@id': 'offer-submodel', '@type': 'odrl:Offer' },
+          },
+        })
+      }
+      return Response.json([
+        { message: 'policy/@type was expected to be odrl:Offer', type: 'ValidationFailure' },
+        { message: 'policy/assigner is mandatory but missing', type: 'ValidationFailure' },
+        { message: 'policy/@type was expected to be odrl:Offer', type: 'ValidationFailure' },
+      ], { status: 400 })
+    })
+
+    await expect(fetchSubmodel(proxy, {
+      counterPartyId: 'TEST_PARTICIPANT_ID',
+      href: 'https://data-plane.test/submodel',
+      subprotocolBody: 'id=submodel-asset;dspEndpoint=https://counterparty-dsp.test/api/v1/dsp',
+    }, {
+      fetchFn: fetchMock as typeof fetch,
+    })).rejects.toMatchObject({
+      message: 'Contract negotiation failed (400)',
+      status: 502,
+      details: 'policy/@type was expected to be odrl:Offer; policy/assigner is mandatory but missing',
+    })
+  })
+
   it('rejects Submodel dataaddress responses without authorization', async () => {
     const proxy = createProxyConfig()
     const fetchMock = vi.fn(async (url: string | URL | Request) => {

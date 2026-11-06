@@ -27,7 +27,7 @@
 </template>
 
 <script lang="ts" setup>
-  import type { CatenaXEdcContractDefinition } from '@/composables/Client/CatenaXEdcClient'
+  import type { CatenaXEdcContractDefinition, CatenaXEdcQueryResult } from '@/composables/Client/CatenaXEdcClient'
   import type { AssetTypeFilterPreset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import CreateContractDialog from '@/pages/modules/EclipseDataspaceConnector/components/Contracts/Dialogs/CreateContractDialog.vue'
@@ -83,9 +83,13 @@
     resourceTab.value?.loadResources()
   })
 
-  async function queryFilteredContracts (proxyId: string): Promise<CatenaXEdcContractDefinition[] | null> {
-    const loadedContracts = await queryContractDefinitions(proxyId)
-    if (!loadedContracts) return null
+  async function queryFilteredContracts (proxyId: string): Promise<CatenaXEdcQueryResult<CatenaXEdcContractDefinition>> {
+    const contractsResult = await queryContractDefinitions(proxyId)
+    if (!contractsResult.success) {
+      contracts.value = [] // No policy filter items of a previous list
+      return contractsResult
+    }
+    const loadedContracts = contractsResult.data
 
     // The policy filter items are taken from all contracts
     contracts.value = loadedContracts
@@ -93,10 +97,10 @@
     const { type, value } = selectedContractFilter.value
     switch (type) {
       case 'assetType': {
-        const assets = await queryAssetsOfType(proxyId, value)
-        if (!assets) return null
-        const assetIds = new Set(assets.map(asset => asset['@id']))
-        return loadedContracts.filter(contract => selectsAnyAsset(contract, assetIds))
+        const assetsResult = await queryAssetsOfType(proxyId, value)
+        if (!assetsResult.success) return assetsResult
+        const assetIds = new Set(assetsResult.data.map(asset => asset['@id']))
+        return { success: true, data: loadedContracts.filter(contract => selectsAnyAsset(contract, assetIds)) }
       }
       case 'accessPolicy':
       case 'usagePolicy': {
@@ -104,12 +108,12 @@
         // Show all contracts again once no contract uses the policy anymore, e.g. after deleting the last one
         if (policyContracts.length === 0) {
           selectedContractFilter.value = allContractsFilter
-          return loadedContracts
+          return contractsResult
         }
-        return policyContracts
+        return { success: true, data: policyContracts }
       }
     }
-    return loadedContracts
+    return contractsResult
   }
 
   /**

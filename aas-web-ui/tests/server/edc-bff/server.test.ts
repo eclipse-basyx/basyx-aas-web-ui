@@ -584,6 +584,41 @@ describe('EDC BFF server', () => {
     expect(JSON.stringify(payload)).not.toContain('TEST_SUBMODEL_AUTHORIZATION')
   })
 
+  it('returns the messages of a refused EDC request as error details', async () => {
+    upstreamServer = createHttpServer((_request, response) => {
+      response.statusCode = 502
+      response.setHeader('Content-Type', 'application/json')
+      response.end(JSON.stringify([{
+        message: 'Counter-party returned 400 for the catalog request',
+        type: 'BadGateway',
+        path: null,
+        invalidValue: null,
+      }]))
+    })
+    await new Promise<void>(resolve => upstreamServer?.listen(0, resolve))
+    const upstreamAddress = upstreamServer.address()
+    const upstreamPort = typeof upstreamAddress === 'object' && upstreamAddress ? upstreamAddress.port : 0
+    const baseUrl = await startBffServer(upstreamPort, ['https://counterparty-dsp.test/api/v1/dsp'])
+
+    const response = await fetch(`${baseUrl}/submodels/fetch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        counterPartyId: 'TEST_PARTICIPANT_ID',
+        href: 'https://data-plane.test/submodel',
+        subprotocolBody: 'id=submodel-asset;dspEndpoint=https://counterparty-dsp.test/api/v1/dsp',
+      }),
+    })
+    const payload = await response.json()
+
+    expect(response.status).toBe(502)
+    expect(payload).toMatchObject({
+      error: 'Catalog request failed (502)',
+      code: 'CATALOG_REQUEST_FAILED',
+      details: 'Counter-party returned 400 for the catalog request',
+    })
+  })
+
   it('pushes data larger than the limit of other requests through the data plane', async () => {
     let upstreamPort = 0
     const upstream = await startUpstreamServer(({ url }) => {

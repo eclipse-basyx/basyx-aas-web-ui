@@ -157,6 +157,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     appendErrorLine(lines, 'Status', errorData.status)
     appendErrorLine(lines, 'Code', errorData.code)
     appendErrorLine(lines, 'Message', message)
+    appendErrorLine(lines, 'Details', errorData.details)
     appendErrorLine(lines, 'Route', route)
     appendErrorLine(lines, 'Correlation ID', errorData.correlationId)
     appendErrorLine(lines, 'Timestamp', errorData.timestamp)

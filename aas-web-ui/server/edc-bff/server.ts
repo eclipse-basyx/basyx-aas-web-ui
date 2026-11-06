@@ -459,10 +459,12 @@ async function readJsonBody<T> (request: IncomingMessage, maxBytes = maxBodyByte
 function handleError (response: ServerResponse, request: IncomingMessage, error: unknown): void {
   const status = getErrorStatus(error)
   const message = getErrorMessage(error)
+  const details = (error as { details?: unknown }).details
   writeJsonResponse(response, status, {
     error: message,
     status,
     code: getErrorCode(error, message, status),
+    ...(typeof details === 'string' && details !== '' ? { details } : {}),
     method: request.method ?? 'UNKNOWN',
     path: getRequestPath(request),
   })

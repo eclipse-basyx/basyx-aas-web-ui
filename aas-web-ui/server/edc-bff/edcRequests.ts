@@ -615,9 +615,12 @@ function describeFetchError (error: unknown): string {
   return 'Unknown error while forwarding request to EDC'
 }
 
-export function createHttpError (message: string, status: number): Error & { status: number } {
-  const error = new Error(message) as Error & { status: number }
+export function createHttpError (message: string, status: number, details?: string): Error & { status: number, details?: string } {
+  const error = new Error(message) as Error & { status: number, details?: string }
   error.status = status
+  if (details) {
+    error.details = details
+  }
   return error
 }
 
@@ -804,10 +807,25 @@ async function negotiateEdrAccess (
   }
 }
 
+/**
+ * Throws if the EDC refused a request. The messages of the EDC response become the error details, e.g. why the
+ * counterparty rejected a catalog request, while the message keeps the failed step and its status.
+ */
 function assertSuccessfulEdcResponse (result: EdcForwardResult, message: string): void {
   if (result.status < 200 || result.status >= 300) {
-    throw createHttpError(`${message} (${result.status})`, 502)
+    throw createHttpError(`${message} (${result.status})`, 502, getEdcErrorDetails(result.data))
   }
+}
+
+/**
+ * Joins the distinct messages of an EDC error response (`ApiErrorDetail[]`) or of a failed forward (`{ error }`).
+ */
+function getEdcErrorDetails (data: unknown): string | undefined {
+  const messages = asArray<Record<string, unknown>>(data)
+    .map(entry => trimString(entry?.message) || trimString(entry?.error))
+    .filter(Boolean)
+
+  return messages.length > 0 ? [...new Set(messages)].join('; ') : undefined
 }
 
 async function pollEdrEntry (

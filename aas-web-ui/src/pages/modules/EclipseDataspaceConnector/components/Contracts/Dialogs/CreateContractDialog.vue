@@ -202,8 +202,8 @@
   async function loadAssets (): Promise<void> {
     assetsLoading.value = true
     try {
-      const assets = await queryAssets(props.proxyId)
-      availableAssets.value = (assets || []).toSorted((a, b) => getEdcAssetDisplayName(a).localeCompare(getEdcAssetDisplayName(b)))
+      const result = await queryAssets(props.proxyId)
+      availableAssets.value = (result.success ? result.data : []).toSorted((a, b) => getEdcAssetDisplayName(a).localeCompare(getEdcAssetDisplayName(b)))
     } catch (error) {
       console.error('Error loading assets:', error)
     } finally {
@@ -214,8 +214,8 @@
   async function loadPolicies (): Promise<void> {
     policiesLoading.value = true
     try {
-      const policies = await queryPolicyDefinitions(props.proxyId)
-      availablePolicies.value = (policies || []).toSorted((a, b) => getEdcPolicyDisplayName(a).localeCompare(getEdcPolicyDisplayName(b)))
+      const result = await queryPolicyDefinitions(props.proxyId)
+      availablePolicies.value = (result.success ? result.data : []).toSorted((a, b) => getEdcPolicyDisplayName(a).localeCompare(getEdcPolicyDisplayName(b)))
     } catch (error) {
       console.error('Error loading policies:', error)
     } finally {

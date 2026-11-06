@@ -518,6 +518,27 @@ describe('RequestHandling.ts', () => {
     expect(details).toContain('Route: POST /api/catena-x/edc/default/submodels/fetch')
   })
 
+  it('stores the EDC messages of a BFF error payload as details', async () => {
+    global.fetch = vi.fn().mockResolvedValue(Response.json(
+      {
+        error: 'Catalog request failed (502)',
+        status: 502,
+        code: 'CATALOG_REQUEST_FAILED',
+        details: 'Counter-party returned 400 for the catalog request',
+        method: 'POST',
+        path: '/api/catena-x/edc/default/submodels/fetch',
+      },
+      { status: 502, headers: { 'Content-Type': 'application/json' } },
+    )) as unknown as typeof fetch
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { postRequest, consumeLastRequestFailureDetails } = useRequestHandling()
+
+    await postRequest('/api/catena-x/edc/default/submodels/fetch', '{}', new Headers(), 'fetching Submodel', true)
+
+    expect(consumeLastRequestFailureDetails()).toContain('Details: Counter-party returned 400 for the catalog request')
+  })
+
   it('returns the details of an EDC conflict with the failed POST result', async () => {
     global.fetch = vi.fn().mockResolvedValue(Response.json(
       [{ message: 'Asset with ID asset-1 already exists', type: 'ObjectConflict', path: null, invalidValue: null }],
