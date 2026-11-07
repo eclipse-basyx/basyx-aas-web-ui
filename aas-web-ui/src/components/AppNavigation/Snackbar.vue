@@ -5,7 +5,15 @@
       <v-divider v-if="snackbar.extendedError" />
 
       <v-card-text v-if="snackbar.extendedError" style="max-height: 200px; overflow-y: auto; max-width: 590px">
-        <pre class="text-subtitleText text-body-small">{{ snackbar.extendedError }}</pre>
+        <!-- A quoted HTML document, e.g. the error page of a server, is shown apart from the message as code -->
+        <template v-for="(part, index) in extendedErrorParts" :key="index">
+          <pre
+            v-if="part.html"
+            class="embedded-html text-subtitleText text-pre-wrap bg-surface-light border rounded pa-2 my-2"
+          >{{ part.text }}</pre>
+
+          <pre v-else class="text-subtitleText text-body-small text-pre-wrap">{{ part.text }}</pre>
+        </template>
       </v-card-text>
 
       <v-divider />
@@ -42,10 +50,12 @@
 
 <script lang="ts" setup>
   import { useNavigationStore } from '@/store/NavigationStore'
+  import { splitEmbeddedHtml } from '@/utils/StringUtils'
 
   const navigationStore = useNavigationStore()
 
   const snackbar = computed(() => navigationStore.getSnackbar)
+  const extendedErrorParts = computed(() => splitEmbeddedHtml(snackbar.value.extendedError ?? ''))
 
   function closeSnackbar (): void {
     navigationStore.dispatchSnackbar({
@@ -81,3 +91,11 @@
     }
   }
 </script>
+
+<style scoped>
+  .embedded-html {
+    font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+    font-size: 0.6875rem;
+    line-height: 1.4;
+  }
+</style>

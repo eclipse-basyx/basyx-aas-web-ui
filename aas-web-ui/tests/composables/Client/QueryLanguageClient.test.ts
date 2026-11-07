@@ -46,6 +46,25 @@ describe('QueryLanguageClient', () => {
     )
   })
 
+  it('queries the given infrastructure with its credentials', async () => {
+    mocks.postRequest.mockResolvedValue({ success: true, data: { result: [] } })
+    const infrastructure = { id: 'other-infra' } as any
+
+    const query = { $condition: { $boolean: true } }
+    await useQueryLanguageClient().queryPage('https://other.example', 'aas-repository', query, { infrastructure })
+
+    expect(mocks.postRequest).toHaveBeenCalledWith(
+      'https://other.example/query/shells',
+      JSON.stringify(query),
+      expect.any(Headers),
+      'executing Query Language search',
+      false,
+      false,
+      undefined,
+      { infrastructure },
+    )
+  })
+
   it('normalizes a failed protocol response', async () => {
     mocks.postRequest.mockResolvedValue({ success: false })
 

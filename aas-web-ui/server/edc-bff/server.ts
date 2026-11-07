@@ -1,10 +1,13 @@
 import type {
   EdcBffRuntimeConfig,
   EdcCatalogRequest,
+  EdcDataFetchRequest,
+  EdcDataPushRequest,
   EdcDiscoveryRequest,
   EdcDtrDescriptorByIdRequest,
   EdcDtrDescriptorRequest,
   EdcProxyConfig,
+  EdcQuerySpecRequest,
   EdcSubmodelFetchRequest,
 } from './types.js'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
@@ -15,11 +18,14 @@ import {
   buildCatalogRequestBody,
   buildConnectorDiscoveryRequestBody,
   buildDspVersionParamsRequestBody,
+  buildQuerySpecRequestBody,
   createHttpError,
+  fetchData,
   fetchDtrShellDescriptorById,
   fetchDtrShellDescriptors,
   fetchSubmodel,
-  forwardJsonToEdc,
+  forwardToEdc,
+  pushData,
 } from './edcRequests.js'
 
 const proxyUrls = getProxyUrls()
@@ -84,6 +90,10 @@ function redactCredentials (url: string): string {
 
 const apiBasePath = '/api/catena-x/edc'
 const maxBodyBytes = 64 * 1024
+const maxPushBodyBytes = 16 * 1024 * 1024 // Pushed AAS or Submodels may be large
+const managementResources = ['assets', 'contractdefinitions', 'policydefinitions'] as const
+
+type EdcManagementResource = typeof managementResources[number]
 
 export function createEdcBffServer (config: EdcBffRuntimeConfig) {
   return createServer(async (request, response) => {
@@ -149,6 +159,12 @@ async function handleRequest (
     return
   }
 
+  for (const resource of managementResources) {
+    if (await handleManagementResourceRoute(request, response, proxy, route.action, resource)) {
+      return
+    }
+  }
+
   if (route.action === 'dtr/shell-descriptors' && request.method === 'POST') {
     await handleDtrShellDescriptorsRequest(request, response, proxy)
     return
@@ -164,7 +180,51 @@ async function handleRequest (
     return
   }
 
+  if (route.action === 'data/fetch' && request.method === 'POST') {
+    await handleDataFetchRequest(request, response, proxy)
+    return
+  }
+
+  if (route.action === 'data/push' && request.method === 'POST') {
+    await handleDataPushRequest(request, response, proxy)
+    return
+  }
+
   throw createHttpError('Route not found', 404)
+}
+
+async function handleManagementResourceRoute (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+  action: string,
+  resource: EdcManagementResource,
+): Promise<boolean> {
+  if (request.method === 'POST') {
+    if (action === `${resource}/request`) {
+      await handleQuerySpecRequest(request, response, proxy, `/v3/${resource}/request`)
+      return true
+    }
+    if (action === resource) {
+      await handleJsonRequest(request, response, proxy, `/v3/${resource}`, 'POST')
+      return true
+    }
+  }
+
+  if (!action.startsWith(`${resource}/`)) {
+    return false
+  }
+
+  if (request.method === 'PUT') {
+    await handleUpdateRequest(request, response, proxy, action, resource)
+    return true
+  }
+  if (request.method === 'DELETE') {
+    await handleDeleteRequest(response, proxy, action, resource)
+    return true
+  }
+
+  return false
 }
 
 async function handleDiscoveryRequest (
@@ -177,8 +237,9 @@ async function handleDiscoveryRequest (
   const mode = body.mode ?? (body.counterPartyAddress ? 'dspversionparams' : 'connectors')
 
   if (mode === 'connectors') {
-    const edcResponse = await forwardJsonToEdc(
+    const edcResponse = await forwardToEdc(
       proxy,
+      'POST',
       '/v4alpha/connectordiscovery/connectors',
       buildConnectorDiscoveryRequestBody(body),
     )
@@ -187,8 +248,9 @@ async function handleDiscoveryRequest (
   }
 
   if (mode === 'dspversionparams') {
-    const edcResponse = await forwardJsonToEdc(
+    const edcResponse = await forwardToEdc(
       proxy,
+      'POST',
       '/v4alpha/connectordiscovery/dspversionparams',
       buildDspVersionParamsRequestBody(proxy, body),
     )
@@ -206,10 +268,75 @@ async function handleCatalogRequest (
 ): Promise<void> {
   assertProxyConfigured(proxy)
   const body = await readJsonBody<EdcCatalogRequest>(request)
-  const edcResponse = await forwardJsonToEdc(
+  const edcResponse = await forwardToEdc(
     proxy,
+    'POST',
     '/v3/catalog/request',
     buildCatalogRequestBody(proxy, body),
+  )
+  writeJsonResponse(response, edcResponse.status, edcResponse.data)
+}
+
+async function handleQuerySpecRequest (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+  path: string,
+): Promise<void> {
+  assertProxyConfigured(proxy)
+  const body = await readJsonBody<EdcQuerySpecRequest>(request)
+  const edcResponse = await forwardToEdc(proxy, 'POST', path, buildQuerySpecRequestBody(body))
+  writeJsonResponse(response, edcResponse.status, edcResponse.data)
+}
+
+async function handleJsonRequest (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+  path: string,
+  method: 'POST' | 'PUT',
+): Promise<void> {
+  assertProxyConfigured(proxy)
+  const body = await readJsonBody<Record<string, unknown>>(request)
+  const edcResponse = await forwardToEdc(proxy, method, path, body)
+  writeJsonResponse(response, edcResponse.status, edcResponse.data)
+}
+
+async function handleUpdateRequest (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+  action: string,
+  resource: EdcManagementResource,
+): Promise<void> {
+  const resourceId = decodeURIComponent(action.slice(resource.length + 1)).trim()
+  if (!resourceId) {
+    throw createHttpError(`Missing EDC ${resource} ID`, 400)
+  }
+
+  // Policies are updated by their ID in the path, assets and contracts by the ID in the body
+  const path = resource === 'policydefinitions'
+    ? `/v3/${resource}/${encodeURIComponent(resourceId)}`
+    : `/v3/${resource}`
+  await handleJsonRequest(request, response, proxy, path, 'PUT')
+}
+
+async function handleDeleteRequest (
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+  action: string,
+  resource: EdcManagementResource,
+): Promise<void> {
+  assertProxyConfigured(proxy)
+  const resourceId = decodeURIComponent(action.slice(resource.length + 1)).trim()
+  if (!resourceId) {
+    throw createHttpError(`Missing EDC ${resource} ID`, 400)
+  }
+
+  const edcResponse = await forwardToEdc(
+    proxy,
+    'DELETE',
+    `/v3/${resource}/${encodeURIComponent(resourceId)}`,
   )
   writeJsonResponse(response, edcResponse.status, edcResponse.data)
 }
@@ -256,6 +383,34 @@ async function handleSubmodelFetchRequest (
   })
 }
 
+async function handleDataFetchRequest (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+): Promise<void> {
+  assertProxyConfigured(proxy)
+  const body = await readJsonBody<EdcDataFetchRequest>(request)
+  const result = await fetchData(proxy, body)
+  writeJsonResponse(response, 200, {
+    data: result.data,
+    edc: result.metadata,
+  })
+}
+
+async function handleDataPushRequest (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+): Promise<void> {
+  assertProxyConfigured(proxy)
+  const body = await readJsonBody<EdcDataPushRequest>(request, maxPushBodyBytes)
+  const result = await pushData(proxy, body)
+  writeJsonResponse(response, 200, {
+    data: result.data,
+    edc: result.metadata,
+  })
+}
+
 function parseRoute (request: IncomingMessage): { proxyId: string, action: string } {
   const url = new URL(request.url ?? '', 'http://localhost')
   if (!url.pathname.startsWith(`${apiBasePath}/`)) {
@@ -280,14 +435,14 @@ function assertProxyConfigured (proxy: EdcProxyConfig): void {
   }
 }
 
-async function readJsonBody<T> (request: IncomingMessage): Promise<T> {
+async function readJsonBody<T> (request: IncomingMessage, maxBytes = maxBodyBytes): Promise<T> {
   const chunks: Buffer[] = []
   let totalBytes = 0
 
   for await (const chunk of request) {
     const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
     totalBytes += buffer.length
-    if (totalBytes > maxBodyBytes) {
+    if (totalBytes > maxBytes) {
       throw createHttpError('Request body is too large', 413)
     }
     chunks.push(buffer)
@@ -304,10 +459,12 @@ async function readJsonBody<T> (request: IncomingMessage): Promise<T> {
 function handleError (response: ServerResponse, request: IncomingMessage, error: unknown): void {
   const status = getErrorStatus(error)
   const message = getErrorMessage(error)
+  const details = (error as { details?: unknown }).details
   writeJsonResponse(response, status, {
     error: message,
     status,
     code: getErrorCode(error, message, status),
+    ...(typeof details === 'string' && details !== '' ? { details } : {}),
     method: request.method ?? 'UNKNOWN',
     path: getRequestPath(request),
   })

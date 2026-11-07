@@ -167,8 +167,8 @@ importers:
         specifier: ^7.1.0
         version: 7.1.0
       basyx-typescript-sdk:
-        specifier: ^2.2.4
-        version: 2.2.4(@aas-core-works/aas-core3.1-typescript@1.0.1)
+        specifier: ^2.4.2
+        version: 2.4.2(@aas-core-works/aas-core3.1-typescript@1.0.1)
       html5-qrcode:
         specifier: ^2.3.8
         version: 2.3.8
@@ -1485,8 +1485,8 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  basyx-typescript-sdk@2.2.4:
-    resolution: {integrity: sha512-iUxxBUOoRsoQwb19yIn7qQ23xqYbJsj3SMk18KKONKOmakg4eqMdihcVilykCrApizSV3Oah2NeUK+8Vt+86yA==}
+  basyx-typescript-sdk@2.4.2:
+    resolution: {integrity: sha512-qw5flgbgo4/JFXQwZKpfdi4civGLbRFbuOKcibnNzGgVqqitbyn9LSeE7BR5lKU/vZ9dufOZaKI/ZTlHaZEi9w==}
     peerDependencies:
       '@aas-core-works/aas-core3.1-typescript': ^1.0.0
 
@@ -4655,10 +4655,10 @@ snapshots:
 
   baseline-browser-mapping@2.11.18: {}
 
-  basyx-typescript-sdk@2.2.4(@aas-core-works/aas-core3.1-typescript@1.0.1):
+  basyx-typescript-sdk@2.4.2(@aas-core-works/aas-core3.1-typescript@1.0.1):
     dependencies:
       '@aas-core-works/aas-core3.1-typescript': 1.0.1
-      xmlsax-typescript: 1.0.0-rc.2
+      xmlsax-typescript: 1.0.0
 
   bidi-js@1.0.3:
     dependencies:

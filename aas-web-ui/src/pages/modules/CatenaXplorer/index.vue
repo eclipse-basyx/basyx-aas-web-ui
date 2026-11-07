@@ -316,7 +316,7 @@
   const selectedEdcConfig = computed(() => {
     return infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null
   })
-  const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? '')
+  const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? 'default')
   const configuredEdcPartners = computed(() => normalizeCatenaXPartners(selectedEdcConfig.value?.partners ?? []))
   const recentEdcPartnerOptions = computed(() => {
     const mergedPartners = mergeCatenaXPartners(configuredEdcPartners.value, edcRecentPartners.value)

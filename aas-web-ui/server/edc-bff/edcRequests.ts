@@ -1,9 +1,12 @@
 import type {
   EdcCatalogRequest,
+  EdcDataFetchRequest,
+  EdcDataPushRequest,
   EdcDiscoveryRequest,
   EdcDtrDescriptorByIdRequest,
   EdcDtrDescriptorRequest,
   EdcProxyConfig,
+  EdcQuerySpecRequest,
   EdcSubmodelFetchRequest,
 } from './types.js'
 import { isCounterPartyAddressAllowed, joinManagementUrl } from './config.js'
@@ -19,11 +22,9 @@ const jsonLdContext = {
   edc: 'https://w3id.org/edc/v0.0.1/ns/',
 }
 
-const catalogContext = [
-  {
-    '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
-  },
-]
+const catalogContext = {
+  '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
+}
 const odrlContextUrl = 'http' + '://www.w3.org/ns/odrl/2/'
 const dctContextUrl = 'http' + '://purl.org/dc/terms/'
 const dcatContextUrl = 'http' + '://www.w3.org/ns/dcat#'
@@ -45,7 +46,11 @@ const contractContext = {
   '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
 }
 
-const defaultDtrProtocol = 'dataspace-protocol-http'
+const dsp2025ContextUrl = 'https://w3id.org/dspace/2025/1/context.jsonld'
+const dsp2025OdrlProfileUrl = 'https://w3id.org/dspace/2025/1/odrl-profile.jsonld'
+const dsp2025PathSuffix = '/2025-1'
+
+const defaultDspProtocol = 'dataspace-protocol-http:2025-1'
 const dtrTaxonomyId = 'https://w3id.org/catenax/taxonomy#DigitalTwinRegistry'
 const catalogDatasetKeys = [
   'dcat:dataset',
@@ -71,6 +76,18 @@ const datasetPolicyKeys = [
   'hasPolicy',
   odrlContextUrl + 'hasPolicy',
 ]
+
+export function buildQuerySpecRequestBody (request: EdcQuerySpecRequest): Record<string, unknown> {
+  return request.querySpec ?? {
+    '@context': {
+      '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
+    },
+    '@type': 'QuerySpec',
+    'offset': 0,
+    'sortOrder': 'ASC',
+    'sortField': 'id',
+  }
+}
 
 export interface EdcAssetOffer {
   assetId: string
@@ -151,7 +168,7 @@ export function buildCatalogRequestBody (
 ): Record<string, unknown> {
   const counterPartyId = trimString(request.counterPartyId)
   const counterPartyAddress = trimString(request.counterPartyAddress)
-  const protocol = trimString(request.protocol) || 'dataspace-protocol-http:2025-1'
+  const protocol = trimString(request.protocol) || defaultDspProtocol
 
   if (!counterPartyId) {
     throw createHttpError('counterPartyId is required for catalog requests', 400)
@@ -167,7 +184,7 @@ export function buildCatalogRequestBody (
     '@context': catalogContext,
     '@type': 'CatalogRequest',
     counterPartyId,
-    counterPartyAddress,
+    'counterPartyAddress': versionedCounterPartyAddress(counterPartyAddress, protocol),
     protocol,
     ...(request.querySpec && typeof request.querySpec === 'object'
       ? { querySpec: request.querySpec }
@@ -184,7 +201,7 @@ export function buildDigitalTwinRegistryQuerySpec (limit = 50): Record<string, u
     'sortOrder': 'ASC',
     'filterExpression': [
       {
-        '@type': 'CriterionDto',
+        '@type': 'Criterion',
         'operandLeft': dctContextUrl + 'type',
         'operator': 'like',
         'operandRight': `%${dtrTaxonomyId}%`,
@@ -193,10 +210,29 @@ export function buildDigitalTwinRegistryQuerySpec (limit = 50): Record<string, u
   }
 }
 
+/**
+ * Returns a query spec that only matches the catalog dataset of the given asset, so it is found in large catalogs, too.
+ */
+export function buildAssetIdQuerySpec (assetId: string): Record<string, unknown> {
+  return {
+    '@type': 'QuerySpec',
+    'offset': 0,
+    'limit': 1,
+    'filterExpression': [
+      {
+        '@type': 'Criterion',
+        'operandLeft': 'https://w3id.org/edc/v0.0.1/ns/id',
+        'operator': '=',
+        'operandRight': assetId,
+      },
+    ],
+  }
+}
+
 export function extractDigitalTwinRegistryOffer (catalog: unknown): DigitalTwinRegistryOffer {
   return extractCatalogDatasetOffer(catalog, {
     datasetTypeId: dtrTaxonomyId,
-    missingDatasetMessage: 'EDC catalog did not contain a Digital Twin Registry dataset',
+    missingDatasetMessage: 'Catalog did not contain a Digital Twin Registry dataset',
     missingAssetIdMessage: 'Digital Twin Registry dataset did not include an asset ID',
     missingPolicyMessage: 'Digital Twin Registry dataset did not include a contract policy',
   })
@@ -210,7 +246,7 @@ export function extractSubmodelOffer (catalog: unknown, assetId: string): EdcAss
 
   return extractCatalogDatasetOffer(catalog, {
     assetId: normalizedAssetId,
-    missingDatasetMessage: 'EDC catalog did not contain the requested Submodel dataset',
+    missingDatasetMessage: 'Catalog did not contain the requested Submodel dataset',
     missingAssetIdMessage: 'Submodel dataset did not include an asset ID',
     missingPolicyMessage: 'Submodel dataset did not include a contract policy',
   })
@@ -247,14 +283,15 @@ function extractCatalogDatasetOffer (
   const datasetRecord = dataset as Record<string, unknown>
   const assetId = getDatasetId(datasetRecord)
   const participantId = trimString(getRecordValue(catalogRecord, catalogParticipantIdKeys))
-  const policy = getRecordValue(datasetRecord, datasetPolicyKeys)
+  // DSP 2025-1 catalogs list the offers as an array, older ones as a single object.
+  const policy = asArray(getRecordValue(datasetRecord, datasetPolicyKeys))[0]
 
   if (!assetId) {
     throw createHttpError(options.missingAssetIdMessage, 502)
   }
 
   if (!participantId) {
-    throw createHttpError('EDC catalog did not include a provider participant ID', 502)
+    throw createHttpError('Catalog did not include a provider participant ID', 502)
   }
 
   if (!policy || typeof policy !== 'object') {
@@ -264,12 +301,34 @@ function extractCatalogDatasetOffer (
   return {
     assetId,
     participantId,
-    policy: policy as Record<string, unknown>,
+    policy: withCatalogContext(policy as Record<string, unknown>, catalogRecord?.['@context']),
+  }
+}
+
+/**
+ * Catalog terms are compacted against the catalog's own @context (DSP 2025-1 e.g. writes `Offer` without
+ * `odrl:`), so the policy keeps that context instead of the contract request's EDC @vocab. The leading
+ * `null` drops the request context before the catalog context is applied.
+ */
+function withCatalogContext (policy: Record<string, unknown>, context: unknown): Record<string, unknown> {
+  if (context === undefined || context === null) {
+    return policy
+  }
+
+  const contexts = [context].flat()
+  // DSP 2025-1 defines the ODRL terms only inside Dataset nodes, so a policy taken out of its dataset needs them itself.
+  if (contexts.includes(dsp2025ContextUrl)) {
+    contexts.push(dsp2025OdrlProfileUrl)
+  }
+
+  return {
+    '@context': [null, ...contexts],
+    ...policy,
   }
 }
 
 export function buildEdrContractRequestBody (
-  request: EdcDtrDescriptorRequest | EdcDtrDescriptorByIdRequest | EdcSubmodelFetchRequest,
+  request: Pick<EdcCatalogRequest, 'counterPartyAddress' | 'protocol'>,
   offer: EdcAssetOffer,
 ): Record<string, unknown> {
   const counterPartyAddress = trimString(request.counterPartyAddress)
@@ -277,25 +336,32 @@ export function buildEdrContractRequestBody (
     throw createHttpError('counterPartyAddress is required for EDR negotiation', 400)
   }
 
+  const protocol = trimString(request.protocol) || defaultDspProtocol
   const policy = cloneRecord(offer.policy)
-  const usesPrefixedOdrl = Object.keys(policy).some(key => key.startsWith('odrl:'))
-    || trimString(policy['@type']).startsWith('odrl:')
-
-  if (usesPrefixedOdrl) {
-    policy['odrl:assigner'] = { '@id': offer.participantId }
-    policy['odrl:target'] = { '@id': offer.assetId }
-  } else {
-    policy.assigner = offer.participantId
-    policy.target = offer.assetId
-  }
+  // Full IRIs, because the policy may carry the catalog's @context, which needn't define the odrl: prefix.
+  policy[odrlContextUrl + 'assigner'] = { '@id': offer.participantId }
+  policy[odrlContextUrl + 'target'] = { '@id': offer.assetId }
 
   return {
     '@context': contractContext,
     '@type': 'ContractRequest',
-    counterPartyAddress,
-    'protocol': trimString(request.protocol) || defaultDtrProtocol,
+    'counterPartyAddress': versionedCounterPartyAddress(counterPartyAddress, protocol),
+    protocol,
     policy,
   }
+}
+
+/**
+ * DSP 2025-1 is served below the version path of the connector's DSP address, e.g. `…/api/v1/dsp/2025-1`.
+ * Partner configs and DTR descriptors usually name the unversioned address, so the path is added here.
+ */
+function versionedCounterPartyAddress (counterPartyAddress: string, protocol: string): string {
+  if (protocol !== defaultDspProtocol) {
+    return counterPartyAddress
+  }
+
+  const address = counterPartyAddress.replace(/\/+$/, '')
+  return address.endsWith(dsp2025PathSuffix) ? address : address + dsp2025PathSuffix
 }
 
 export function buildEdrRequestQueryBody (contractNegotiationId: string): Record<string, unknown> {
@@ -309,11 +375,13 @@ export function buildEdrRequestQueryBody (contractNegotiationId: string): Record
     '@type': 'QuerySpec',
     'offset': 0,
     'limit': 100,
-    'filterExpression': {
-      operandLeft: 'contractNegotiationId',
-      operator: '=',
-      operandRight: normalizedContractNegotiationId,
-    },
+    'filterExpression': [
+      {
+        operandLeft: 'contractNegotiationId',
+        operator: '=',
+        operandRight: normalizedContractNegotiationId,
+      },
+    ],
   }
 }
 
@@ -371,6 +439,74 @@ export async function fetchSubmodel (
   return fetchSubmodelData(access, endpoint.href, options.fetchFn ?? fetch)
 }
 
+/**
+ * Negotiates the asset of the counterparty and fetches its data from the data plane.
+ */
+export async function fetchData (
+  proxy: EdcProxyConfig,
+  request: EdcDataFetchRequest,
+  options: EdcDtrFetchOptions = {},
+): Promise<EdcDtrFetchResult> {
+  const access = await negotiateAsset(proxy, request, 'fetch', options)
+
+  const fetchFn = options.fetchFn ?? fetch
+  const response = await fetchFn(trimString(access.dataAddress.endpoint), {
+    method: 'GET',
+    headers: {
+      Authorization: trimString(access.dataAddress.authorization),
+      Accept: 'application/json',
+    },
+  })
+  const data = await parseResponseBody(response)
+
+  if (!response.ok) {
+    throw createHttpError(`Data plane fetch failed (${response.status})`, 502)
+  }
+
+  return {
+    status: response.status,
+    data,
+    metadata: access.metadata,
+  }
+}
+
+/**
+ * Negotiates the push asset of the counterparty and posts the given data (e.g. an AAS or Submodel) to its data plane.
+ */
+export async function pushData (
+  proxy: EdcProxyConfig,
+  request: EdcDataPushRequest,
+  options: EdcDtrFetchOptions = {},
+): Promise<EdcDtrFetchResult> {
+  if (!request.data || typeof request.data !== 'object') {
+    throw createHttpError('data is required for EDC data push', 400)
+  }
+
+  const access = await negotiateAsset(proxy, request, 'push', options)
+
+  const fetchFn = options.fetchFn ?? fetch
+  const response = await fetchFn(trimString(access.dataAddress.endpoint), {
+    method: 'POST',
+    headers: {
+      'Authorization': trimString(access.dataAddress.authorization),
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify(request.data),
+  })
+  const data = await parseResponseBody(response)
+
+  if (!response.ok) {
+    throw createHttpError(`Data plane push failed (${response.status})`, 502)
+  }
+
+  return {
+    status: response.status,
+    data,
+    metadata: access.metadata,
+  }
+}
+
 export function extractSubmodelEndpointInfo (request: EdcSubmodelFetchRequest): SubmodelEndpointInfo {
   const requestHref = trimString(request.href)
   const requestSubprotocolBody = trimString(request.subprotocolBody)
@@ -423,10 +559,11 @@ export function parseSubprotocolBody (value: unknown): Record<string, string> {
   return params
 }
 
-export async function forwardJsonToEdc (
+export async function forwardToEdc (
   proxy: EdcProxyConfig,
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
   path: string,
-  body: Record<string, unknown>,
+  body?: Record<string, unknown>,
   fetchFn: typeof fetch = fetch,
 ): Promise<EdcForwardResult> {
   const controller = new AbortController()
@@ -434,12 +571,12 @@ export async function forwardJsonToEdc (
 
   try {
     const response = await fetchFn(joinManagementUrl(proxy, path), {
-      method: 'POST',
+      method,
       headers: {
         'Content-Type': 'application/json',
         [proxy.apiKeyHeader]: proxy.apiKey,
       },
-      body: JSON.stringify(body),
+      body: body === undefined ? undefined : JSON.stringify(body),
       signal: controller.signal,
     })
     const data = await parseResponseBody(response)
@@ -456,49 +593,7 @@ export async function forwardJsonToEdc (
       throw error
     }
 
-    console.error('Error forwarding JSON to EDC:', error)
-    return {
-      status: 500,
-      headers: { 'content-type': 'application/json' },
-      data: { error: describeFetchError(error) },
-    }
-  } finally {
-    clearTimeout(timeout)
-  }
-}
-
-export async function forwardGetToEdc (
-  proxy: EdcProxyConfig,
-  path: string,
-  fetchFn: typeof fetch = fetch,
-): Promise<EdcForwardResult> {
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), proxy.requestTimeoutMs)
-
-  try {
-    const response = await fetchFn(joinManagementUrl(proxy, path), {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        [proxy.apiKeyHeader]: proxy.apiKey,
-      },
-      signal: controller.signal,
-    })
-    const data = await parseResponseBody(response)
-
-    return {
-      status: response.status,
-      headers: {
-        'content-type': response.headers.get('content-type') ?? 'application/json',
-      },
-      data,
-    }
-  } catch (error) {
-    if (isAbortError(error)) {
-      throw error
-    }
-
-    console.error('Error forwarding GET to EDC:', error)
+    console.error(`Error forwarding ${method} to EDC:`, error)
     return {
       status: 500,
       headers: { 'content-type': 'application/json' },
@@ -520,9 +615,12 @@ function describeFetchError (error: unknown): string {
   return 'Unknown error while forwarding request to EDC'
 }
 
-export function createHttpError (message: string, status: number): Error & { status: number } {
-  const error = new Error(message) as Error & { status: number }
+export function createHttpError (message: string, status: number, details?: string): Error & { status: number, details?: string } {
+  const error = new Error(message) as Error & { status: number, details?: string }
   error.status = status
+  if (details) {
+    error.details = details
+  }
   return error
 }
 
@@ -557,27 +655,17 @@ async function ensureDtrAccess (
     throw createHttpError('counterPartyAddress is required for EDC DTR access', 400)
   }
 
-  const catalogResponse = await forwardJsonToEdc(
+  return negotiateCatalogOffer(
     proxy,
-    '/v3/catalog/request',
-    buildCatalogRequestBody(proxy, {
+    {
       counterPartyId,
       counterPartyAddress,
-      protocol: trimString(request.protocol) || defaultDtrProtocol,
+      protocol: request.protocol,
       querySpec: buildDigitalTwinRegistryQuerySpec(),
-    }),
-    fetchFn,
+    },
+    extractDigitalTwinRegistryOffer,
+    options,
   )
-  assertSuccessfulEdcResponse(catalogResponse, 'EDC catalog request failed')
-
-  const offer = extractDigitalTwinRegistryOffer(catalogResponse.data)
-  const negotiationResponse = await forwardJsonToEdc(
-    proxy,
-    '/v3/edrs',
-    buildEdrContractRequestBody(request, offer),
-    fetchFn,
-  )
-  return negotiateEdrAccess(proxy, offer, negotiationResponse, options, fetchFn)
 }
 
 async function ensureSubmodelAccess (
@@ -605,28 +693,79 @@ async function ensureSubmodelAccess (
     throw createHttpError('counterPartyId is required for EDC submodel access', 400)
   }
 
-  const submodelRequest = {
-    ...request,
-    counterPartyId,
-    counterPartyAddress: endpoint.dspEndpoint,
-    protocol: trimString(request.protocol) || defaultDtrProtocol,
-  }
-  const catalogResponse = await forwardJsonToEdc(
+  return negotiateCatalogOffer(
     proxy,
+    {
+      counterPartyId,
+      counterPartyAddress: endpoint.dspEndpoint,
+      protocol: request.protocol,
+    },
+    catalog => extractSubmodelOffer(catalog, endpoint.assetId),
+    options,
+  )
+}
+
+/**
+ * Requests the catalog of the counterparty, negotiates the offer taken from it and returns the data address of the EDR.
+ */
+async function negotiateCatalogOffer (
+  proxy: EdcProxyConfig,
+  catalogRequest: EdcCatalogRequest,
+  extractOffer: (catalog: unknown) => EdcAssetOffer,
+  options: EdcDtrFetchOptions,
+): Promise<{ dataAddress: Record<string, unknown>, metadata: EdcDtrFetchMetadata }> {
+  const fetchFn = options.fetchFn ?? fetch
+  const catalogResponse = await forwardToEdc(
+    proxy,
+    'POST',
     '/v3/catalog/request',
-    buildCatalogRequestBody(proxy, submodelRequest),
+    buildCatalogRequestBody(proxy, catalogRequest),
     fetchFn,
   )
-  assertSuccessfulEdcResponse(catalogResponse, 'EDC catalog request failed')
+  assertSuccessfulEdcResponse(catalogResponse, 'Catalog request failed')
 
-  const offer = extractSubmodelOffer(catalogResponse.data, endpoint.assetId)
-  const negotiationResponse = await forwardJsonToEdc(
+  const offer = extractOffer(catalogResponse.data)
+  const negotiationResponse = await forwardToEdc(
     proxy,
+    'POST',
     '/v3/edrs',
-    buildEdrContractRequestBody(submodelRequest, offer),
+    buildEdrContractRequestBody(catalogRequest, offer),
     fetchFn,
   )
   return negotiateEdrAccess(proxy, offer, negotiationResponse, options, fetchFn)
+}
+
+/**
+ * Negotiates the asset with the given ID in the catalog of the counterparty, e.g. to fetch data from or push data to it.
+ */
+async function negotiateAsset (
+  proxy: EdcProxyConfig,
+  request: EdcDataFetchRequest,
+  transfer: 'fetch' | 'push',
+  options: EdcDtrFetchOptions,
+): Promise<{ dataAddress: Record<string, unknown>, metadata: EdcDtrFetchMetadata }> {
+  const assetId = trimString(request.assetId)
+  if (!assetId) {
+    throw createHttpError(`assetId is required for EDC data ${transfer}`, 400)
+  }
+
+  const assetLabel = transfer === 'push' ? 'push asset' : 'asset'
+  return negotiateCatalogOffer(
+    proxy,
+    {
+      counterPartyId: request.counterPartyId,
+      counterPartyAddress: request.counterPartyAddress,
+      protocol: request.protocol,
+      querySpec: buildAssetIdQuerySpec(assetId),
+    },
+    catalog => extractCatalogDatasetOffer(catalog, {
+      assetId,
+      missingDatasetMessage: `Catalog did not contain the requested ${assetLabel}`,
+      missingAssetIdMessage: `Dataset of the ${assetLabel} did not include an asset ID`,
+      missingPolicyMessage: `Dataset of the ${assetLabel} did not include a contract policy`,
+    }),
+    options,
+  )
 }
 
 async function negotiateEdrAccess (
@@ -636,11 +775,11 @@ async function negotiateEdrAccess (
   options: EdcDtrFetchOptions,
   fetchFn: typeof fetch,
 ): Promise<{ dataAddress: Record<string, unknown>, metadata: EdcDtrFetchMetadata }> {
-  assertSuccessfulEdcResponse(negotiationResponse, 'EDC contract negotiation failed')
+  assertSuccessfulEdcResponse(negotiationResponse, 'Contract negotiation failed')
 
   const contractNegotiationId = trimString((negotiationResponse.data as Record<string, unknown>)?.['@id'])
   if (!contractNegotiationId) {
-    throw createHttpError('EDC contract negotiation did not return a negotiation ID', 502)
+    throw createHttpError('Contract negotiation did not return a negotiation ID', 502)
   }
 
   const edrEntry = await pollEdrEntry(
@@ -668,10 +807,25 @@ async function negotiateEdrAccess (
   }
 }
 
+/**
+ * Throws if the EDC refused a request. The messages of the EDC response become the error details, e.g. why the
+ * counterparty rejected a catalog request, while the message keeps the failed step and its status.
+ */
 function assertSuccessfulEdcResponse (result: EdcForwardResult, message: string): void {
   if (result.status < 200 || result.status >= 300) {
-    throw createHttpError(`${message} (${result.status})`, 502)
+    throw createHttpError(`${message} (${result.status})`, 502, getEdcErrorDetails(result.data))
   }
+}
+
+/**
+ * Joins the distinct messages of an EDC error response (`ApiErrorDetail[]`) or of a failed forward (`{ error }`).
+ */
+function getEdcErrorDetails (data: unknown): string | undefined {
+  const messages = asArray<Record<string, unknown>>(data)
+    .map(entry => trimString(entry?.message) || trimString(entry?.error))
+    .filter(Boolean)
+
+  return messages.length > 0 ? [...new Set(messages)].join('; ') : undefined
 }
 
 async function pollEdrEntry (
@@ -684,8 +838,9 @@ async function pollEdrEntry (
   const maxAttempts = Math.max(1, attempts)
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const edrResponse = await forwardJsonToEdc(
+    const edrResponse = await forwardToEdc(
       proxy,
+      'POST',
       '/v3/edrs/request',
       buildEdrRequestQueryBody(contractNegotiationId),
       fetchFn,
@@ -710,9 +865,11 @@ async function getDataAddress (
   transferProcessId: string,
   fetchFn: typeof fetch,
 ): Promise<Record<string, unknown>> {
-  const dataAddressResponse = await forwardGetToEdc(
+  const dataAddressResponse = await forwardToEdc(
     proxy,
+    'GET',
     `/v3/edrs/${encodeURIComponent(transferProcessId)}/dataaddress?auto_refresh=true`,
+    undefined,
     fetchFn,
   )
   assertSuccessfulEdcResponse(dataAddressResponse, 'EDC dataaddress lookup failed')

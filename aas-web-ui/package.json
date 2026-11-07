@@ -54,7 +54,7 @@
     "aas-package3-typescript": "^1.0.0",
     "ajv": "^8.20.0",
     "apexcharts": "^7.1.0",
-    "basyx-typescript-sdk": "^2.2.4",
+    "basyx-typescript-sdk": "^2.4.2",
     "html5-qrcode": "^2.3.8",
     "i18n-iso-countries": "^7.14.0",
     "ical.js": "^2.2.1",

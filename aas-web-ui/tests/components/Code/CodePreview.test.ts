@@ -59,6 +59,14 @@ describe('attachment previews', () => {
     wrapper.unmount()
   })
 
+  it('shows the empty state instead of an error while the direct content is not available yet', async () => {
+    const wrapper = mount(JSONPreview, { props: { jsonContent: undefined }, global })
+    await flushPromises()
+    expect(mocks.fetch).not.toHaveBeenCalled()
+    expect(wrapper.getComponent(viewer).props()).toMatchObject({ error: null, text: '' })
+    wrapper.unmount()
+  })
+
   it('shows an attachment error and clears it when a new source arrives', async () => {
     mocks.fetch.mockResolvedValue(undefined)
     const wrapper = mount(JSONPreview, { props: { submodelElementData: { path: '/missing' } }, global })
