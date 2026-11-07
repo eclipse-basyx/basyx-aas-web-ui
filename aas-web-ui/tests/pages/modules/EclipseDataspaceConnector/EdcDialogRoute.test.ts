@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
 
-async function setup (url: string) {
+async function setup (url: string, initialState?: () => Record<string, string | null | undefined>) {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [{ component: { template: '<div />' }, path: '/assets' }],
@@ -17,7 +17,7 @@ async function setup (url: string) {
   mount({
     setup () {
       const { dialogOpen, dialogState } = useEdcDialogRoute()
-      dialog = dialogOpen('create-asset')
+      dialog = dialogOpen('create-asset', initialState)
       infrastructure = dialogState('infrastructure')
       return () => h('div')
     },
@@ -48,6 +48,19 @@ describe('useEdcDialogRoute', () => {
 
     expect(router.currentRoute.value.query).toEqual({ proxy: 'default' })
     expect(infrastructure.value).toBeNull()
+  })
+
+  it('keeps the initial state of a dialog when opening it', async () => {
+    const { router, dialog } = await setup('/assets', () => ({ partner: 'provider', dataset: 'push-asset', unset: null }))
+
+    dialog.value = true
+    await flushPromises()
+
+    expect(router.currentRoute.value.query).toEqual({
+      dialog: 'create-asset',
+      dialogPartner: 'provider',
+      dialogDataset: 'push-asset',
+    })
   })
 
   it('restores an open dialog and its state from the query, e.g. after a login redirect', async () => {

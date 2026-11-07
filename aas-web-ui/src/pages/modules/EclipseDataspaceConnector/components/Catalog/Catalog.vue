@@ -447,11 +447,13 @@
 
           </template>
 
+          <!-- Opens once the Catalog Dataset is selected, which a dialog restored from the URL has to wait for -->
           <SendDataDialog
-            v-model="sendDataDialog"
             :business-partner="selectedBusinessPartner"
             :catalog-dataset="selectedCatalogDataset"
+            :model-value="sendDataDialog && isPushAsset(selectedCatalogDataset)"
             :proxy-id="edcProxyId"
+            @update:model-value="sendDataDialog = $event"
           />
 
           <ImportSubmodelDialog v-model="importSubmodelDialog" :submodel="fetchedSubmodel" />
@@ -473,6 +475,7 @@
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import ImportSubmodelDialog from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/Dialogs/ImportSubmodelDialog.vue'
   import SendDataDialog from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/Dialogs/SendDataDialog.vue'
+  import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import {
     assetTypeFilterItems,
@@ -495,6 +498,7 @@
   // Composables
   const { fetchData, requestCatalog } = useCatenaXEdcClient()
   const { showFailureMessage } = useEdcRequestFailureMessage()
+  const { dialogOpen, dialogState } = useEdcDialogRoute()
 
   const { copyToClipboard } = useClipboardUtil()
 
@@ -524,7 +528,13 @@
   const selectedBusinessPartner = ref<CatenaXPartner | null>(null)
   const selectedCatalogDataset = ref({} as any)
   const selectedCatalogFilter = ref('all')
-  const sendDataDialog = ref(false)
+  // The open dialog is kept in the URL with the selection it was opened for, e.g. to return to it after a login
+  const sendDataDialog = dialogOpen('send-data', () => ({
+    partner: selectedBusinessPartner.value?.id,
+    dataset: selectedCatalogDataset.value?.['@id'],
+  }))
+  const sendDataPartnerId = dialogState('partner')
+  const sendDataDatasetId = dialogState('dataset')
   const importSubmodelDialog = ref(false)
   const fetchingData = ref(false)
   const fetchedData = ref<unknown>(undefined) // Data fetched from the data plane of the selected catalog dataset
@@ -581,8 +591,10 @@
         return
       }
 
+      // The Business Partner of a Send Data dialog restored from the URL takes precedence over the default one
       const defaultPartnerId = selectedEdcConfig.value?.defaultPartnerId?.trim() ?? ''
-      selectedBusinessPartner.value = partners.find(partner => partner.id === defaultPartnerId) ?? null
+      const partnerId = (sendDataDialog.value ? sendDataPartnerId.value : null) ?? defaultPartnerId
+      selectedBusinessPartner.value = partners.find(partner => partner.id === partnerId) ?? null
     },
     { immediate: true },
   )
@@ -651,7 +663,24 @@
       scrollToSelectedCatalogDataset()
     }
 
+    restoreSendDataDialog()
     listLoading.value = false
+  }
+
+  // Selects the Catalog Dataset of a Send Data dialog restored from the URL, the dialog then opens.
+  // Without it, e.g. if the Catalog could not be requested, the dialog is closed.
+  function restoreSendDataDialog (): void {
+    if (!sendDataDialog.value) return
+
+    const catalogDataset = selectedBusinessPartner.value?.id === sendDataPartnerId.value
+      ? catalogList.value.find(dataset => dataset['@id'] === sendDataDatasetId.value)
+      : undefined
+    if (catalogDataset && isPushAsset(catalogDataset)) {
+      selectedCatalogDataset.value = catalogDataset
+      scrollToSelectedCatalogDataset()
+    } else {
+      sendDataDialog.value = false
+    }
   }
 
   function selectCatalogDataset (policy: any): void {

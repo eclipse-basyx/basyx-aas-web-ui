@@ -125,6 +125,7 @@
   import JsonPreviewTabs from '@/pages/modules/EclipseDataspaceConnector/components/Assets/JsonPreviewTabs.vue'
   import InfrastructureSelectionDrawers from '@/pages/modules/EclipseDataspaceConnector/components/Shared/InfrastructureSelectionDrawers.vue'
   import SelectAasEmptyState from '@/pages/modules/EclipseDataspaceConnector/components/Shared/SelectAasEmptyState.vue'
+  import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil'
@@ -148,12 +149,13 @@
   // Composables
   const { pushData } = useCatenaXEdcClient()
   const { showFailureMessage } = useEdcRequestFailureMessage()
+  const { dialogState } = useEdcDialogRoute()
 
   // Data
   const sendDataDialog = ref(false)
   const fullHeight = 'calc(90vh - 52px - 52px - 2px)' // dialog - dialog header - dialog footer - 2x divider
   const drawerHeaderHeight = '121px' // selection field (8px + 40px) + list title bar (72px) + divider (1px)
-  const selectedInfrastructureId = ref<string | null>(null)
+  const selectedInfrastructureId = dialogState('infrastructure') // In the URL to return to it after a login, removed on close
   const selectedAas = ref<any>(null)
   const aasUnavailable = ref<AasUnavailableReason | null>(null) // Set by the AAS List of the selected infrastructure
   const submodelListFailed = ref(false) // Set by the Submodel List of the selected AAS
@@ -179,14 +181,13 @@
   }))
 
   // Watchers
+  // Immediate, so a dialog restored from the URL opens
   watch(
     () => props.modelValue,
     value => {
       sendDataDialog.value = value
-      if (!value) {
-        selectedInfrastructureId.value = null
-      }
     },
+    { immediate: true },
   )
 
   watch(

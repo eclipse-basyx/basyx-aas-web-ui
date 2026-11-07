@@ -16,8 +16,12 @@ export function useEdcDialogRoute () {
   /**
    * Whether the dialog with the given name is open.
    * Opening adds a history entry, closing removes the state of the dialog as well.
+   * `initialState` is kept on opening, e.g. the selection of the page the dialog depends on.
    */
-  function dialogOpen (dialog: string): WritableComputedRef<boolean> {
+  function dialogOpen (
+    dialog: string,
+    initialState: () => Record<string, string | null | undefined> = () => ({}),
+  ): WritableComputedRef<boolean> {
     return computed({
       get: () => route.query[dialogParameter] === dialog,
       set: open => {
@@ -27,6 +31,11 @@ export function useEdcDialogRoute () {
 
         const query = withoutDialog(route.query)
         if (open) {
+          for (const [key, value] of Object.entries(initialState())) {
+            if (value) {
+              query[stateParameter(key)] = value
+            }
+          }
           void router.push({ query: { ...query, [dialogParameter]: dialog } })
         } else {
           void router.replace({ query })
@@ -40,7 +49,7 @@ export function useEdcDialogRoute () {
    * Changes are ignored while no dialog is open.
    */
   function dialogState (key: string): WritableComputedRef<string | null> {
-    const parameter = dialogParameter + key.charAt(0).toUpperCase() + key.slice(1)
+    const parameter = stateParameter(key)
 
     return computed({
       get: () => {
@@ -64,6 +73,10 @@ export function useEdcDialogRoute () {
   }
 
   return { dialogOpen, dialogState }
+}
+
+function stateParameter (key: string): string {
+  return dialogParameter + key.charAt(0).toUpperCase() + key.slice(1)
 }
 
 function withoutDialog (query: LocationQuery): LocationQuery {
