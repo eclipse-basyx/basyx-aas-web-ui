@@ -13,7 +13,9 @@
 
           <InfrastructureSelectionDrawers
             v-model:aas="selectedAas"
+            v-model:aas-unavailable="aasUnavailable"
             v-model:infrastructure-id="selectedInfrastructureId"
+            v-model:submodel-list-failed="submodelListFailed"
             v-model:submodels="selectedSubmodels"
             preselect-all-submodels
           />
@@ -23,20 +25,28 @@
 
               <!-- Offset by the drawer header, so the empty state aligns with the one of the Submodel List -->
               <div
-                v-if="!selectedAas"
+                v-if="!selectedAas || submodelListFailed"
                 class="d-flex align-center justify-center"
                 :style="{ 'height': fullHeight, 'padding-top': drawerHeaderHeight }"
               >
+                <!-- Sending needs at least one Submodel -->
                 <v-empty-state
-                  :class="{ 'text-divider': !selectedInfrastructureId }"
-                  icon="mdi-gesture-tap"
-                  text="Select an AAS to send it with all its Submodels. Deselect Submodels to send the AAS with only the remaining ones."
-                  title="Select AAS"
+                  v-if="selectedAas"
+                  icon="mdi-database-alert-outline"
+                  text="The AAS cannot be sent, as its Submodels could not be loaded"
+                  title="Submodels Not Available"
                 >
                   <template #media>
-                    <v-icon :color="selectedInfrastructureId ? undefined : 'divider'" size="64" />
+                    <v-icon size="64" />
                   </template>
                 </v-empty-state>
+
+                <SelectAasEmptyState
+                  v-else
+                  :aas-unavailable="aasUnavailable"
+                  :infrastructure-selected="!!selectedInfrastructureId"
+                  text="Select an AAS to send it with all its Submodels. Deselect Submodels to send the AAS with only the remaining ones."
+                />
               </div>
 
               <template v-else>
@@ -109,10 +119,12 @@
 
 <script lang="ts" setup>
   import type { JsonPreviewTab } from '@/pages/modules/EclipseDataspaceConnector/components/Assets/JsonPreviewTabs.vue'
+  import type { AasUnavailableReason } from '@/pages/modules/EclipseDataspaceConnector/components/Shared/SelectAasEmptyState.vue'
   import type { CatenaXPartner } from '@/types/Infrastructure'
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import JsonPreviewTabs from '@/pages/modules/EclipseDataspaceConnector/components/Assets/JsonPreviewTabs.vue'
   import InfrastructureSelectionDrawers from '@/pages/modules/EclipseDataspaceConnector/components/Shared/InfrastructureSelectionDrawers.vue'
+  import SelectAasEmptyState from '@/pages/modules/EclipseDataspaceConnector/components/Shared/SelectAasEmptyState.vue'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil'
@@ -140,9 +152,11 @@
   // Data
   const sendDataDialog = ref(false)
   const fullHeight = 'calc(90vh - 52px - 52px - 2px)' // dialog - dialog header - dialog footer - 2x divider
-  const drawerHeaderHeight = '113px' // selection field (8px + 40px) + list title bar (64px) + divider (1px)
+  const drawerHeaderHeight = '121px' // selection field (8px + 40px) + list title bar (72px) + divider (1px)
   const selectedInfrastructureId = ref<string | null>(null)
   const selectedAas = ref<any>(null)
+  const aasUnavailable = ref<AasUnavailableReason | null>(null) // Set by the AAS List of the selected infrastructure
+  const submodelListFailed = ref(false) // Set by the Submodel List of the selected AAS
   const selectedSubmodels = ref<Array<any>>([])
   const sendingData = ref<'environment' | 'submodel' | null>(null) // Data currently being sent
 

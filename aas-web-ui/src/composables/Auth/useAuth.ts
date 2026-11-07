@@ -1,3 +1,4 @@
+import type { InfrastructureConfig } from '@/types/Infrastructure'
 import type { Router } from 'vue-router'
 import { startLogoutTransaction } from '@/composables/Auth/OAuth2Navigation'
 import { discoverOpenIdConfiguration } from '@/composables/Auth/OpenIdConnect'
@@ -17,8 +18,14 @@ export function useAuth (router?: Router) {
    * Handles OAuth2 (both flows) authentication
    */
   async function login (): Promise<void> {
-    const infra = infrastructureStore.getSelectedInfrastructure
+    await loginToInfrastructure(infrastructureStore.getSelectedInfrastructure)
+  }
 
+  /**
+   * Perform login for the given infrastructure, which does not need to be the selected one
+   * Handles OAuth2 (both flows) authentication
+   */
+  async function loginToInfrastructure (infra: InfrastructureConfig | null): Promise<void> {
     if (!infra) {
       navStore.dispatchSnackbar({
         status: true,
@@ -168,9 +175,7 @@ export function useAuth (router?: Router) {
   }: { reloadData?: boolean, showSuccess?: boolean } = {}): void {
     const infra = infrastructureStore.getSelectedInfrastructure
     if (infra) {
-      infrastructureStore.setAuthenticationStatusForInfrastructure(infra.id, false)
-      const updatedInfra = { ...infra, token: undefined }
-      infrastructureStore.dispatchUpdateInfrastructure(updatedInfra)
+      clearInfrastructureToken(infra)
       if (reloadData) {
         navStore.dispatchClearAASList()
         navStore.dispatchClearTreeview()
@@ -188,6 +193,15 @@ export function useAuth (router?: Router) {
         })
       }
     }
+  }
+
+  /**
+   * Clear the local token of the given infrastructure, which does not need to be the selected one.
+   * The session at the identity provider is kept.
+   */
+  function clearInfrastructureToken (infra: InfrastructureConfig): void {
+    infrastructureStore.setAuthenticationStatusForInfrastructure(infra.id, false)
+    infrastructureStore.dispatchUpdateInfrastructure({ ...infra, token: undefined })
   }
 
   async function completeLocalLogout (logoutError?: unknown): Promise<void> {
@@ -271,8 +285,10 @@ export function useAuth (router?: Router) {
 
   return {
     login,
+    loginToInfrastructure,
     logout,
     clearLocalToken,
+    clearInfrastructureToken,
     showLoginRequiredSnackbar,
   }
 }

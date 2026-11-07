@@ -4,21 +4,21 @@
     <v-card-title class="px-0 py-2 d-flex align-center">
       <v-tooltip location="bottom" open-delay="600">
         <template #activator="{ props: activatorProps }">
-          <v-btn
-            class="ma-0"
-            :disabled="!aas"
-            icon="mdi-reload"
-            :loading="listLoading"
-            variant="plain"
+          <v-checkbox-btn
+            class="flex-grow-0 ml-1 text-body-large"
+            color="primary"
+            :disabled="submodelList.length === 0"
+            :indeterminate="someListedSelected && !allListedSelected"
+            :model-value="allListedSelected"
             v-bind="activatorProps"
-            @click="loadSubmodels()"
+            @update:model-value="toggleAllListed"
           />
         </template>
 
-        <span>Reload Submodel List</span>
+        <span>{{ allListedSelected ? 'Deselect all submodels' : 'Select all submodels' }}</span>
       </v-tooltip>
 
-      <div class="flex-grow-1 pr-2">
+      <div class="flex-grow-1">
         <v-text-field
           v-model="searchValue"
           clearable
@@ -34,18 +34,18 @@
 
       <v-tooltip location="bottom" open-delay="600">
         <template #activator="{ props: activatorProps }">
-          <v-checkbox-btn
-            class="flex-grow-0 mr-1 text-body-large"
-            color="primary"
-            :disabled="submodelList.length === 0"
-            :indeterminate="someListedSelected && !allListedSelected"
-            :model-value="allListedSelected"
+          <v-btn
+            class="ma-0"
+            :disabled="!aas"
+            icon="mdi-reload"
+            :loading="listLoading"
+            variant="plain"
             v-bind="activatorProps"
-            @update:model-value="toggleAllListed"
+            @click="loadSubmodels()"
           />
         </template>
 
-        <span>{{ allListedSelected ? 'Deselect all submodels' : 'Select all submodels' }}</span>
+        <span>Reload Submodel List</span>
       </v-tooltip>
     </v-card-title>
 
@@ -59,15 +59,21 @@
     >
       <v-skeleton-loader v-if="listLoading" class="mx-2" type="list-item@6" />
 
-      <v-empty-state
-        v-else-if="!aas"
-        :class="{ 'text-divider': !infrastructure }"
-        icon="mdi-gesture-tap"
+      <SelectAasEmptyState
+        v-else-if="aasUnavailable || !aas"
+        :aas-unavailable="aasUnavailable"
+        :infrastructure-selected="!!infrastructure"
         text="Select an AAS to view its Submodels"
-        title="Select AAS"
+      />
+
+      <v-empty-state
+        v-else-if="loadFailure"
+        icon="mdi-database-alert-outline"
+        :text="loadFailureMessage.text"
+        :title="loadFailureMessage.title"
       >
         <template #media>
-          <v-icon :color="infrastructure ? undefined : 'divider'" size="64" />
+          <v-icon size="64" />
         </template>
       </v-empty-state>
 
@@ -104,27 +110,42 @@
           />
         </template>
       </v-virtual-scroll>
+
+      <!-- Some of the referenced Submodels could not be loaded -->
+      <v-list-item v-if="!listLoading && allSubmodels.length > 0 && unloadedCount > 0" class="px-4 py-1" density="compact">
+        <template #prepend>
+          <v-icon color="warning" size="small">mdi-alert-outline</v-icon>
+        </template>
+
+        <v-list-item-subtitle class="text-listItemText">
+          {{ unloadedCount }} of {{ unloadedCount + allSubmodels.length }} Submodels could not be loaded
+        </v-list-item-subtitle>
+      </v-list-item>
     </v-list>
   </v-card>
 </template>
 
 <script lang="ts" setup>
+  import type { AasUnavailableReason } from '@/pages/modules/EclipseDataspaceConnector/components/Shared/SelectAasEmptyState.vue'
   import type { InfrastructureConfig } from '@/types/Infrastructure'
   import type { Ref } from 'vue'
-  import { filterResolvedSubmodels } from '@/composables/AAS/AASHandling'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSubmodelDisplay } from '@/composables/AAS/SubmodelDisplay'
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { useLoadGeneration } from '@/composables/LoadGeneration'
+  import SelectAasEmptyState from '@/pages/modules/EclipseDataspaceConnector/components/Shared/SelectAasEmptyState.vue'
   import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil'
+  import { isSubmodelPayload } from '@/utils/AAS/SubmodelUtils'
 
   const props = defineProps<{
     infrastructure: InfrastructureConfig | null
     aas: any
+    aasUnavailable?: AasUnavailableReason | null // Why the AAS List offers no AAS to select
     preselectAll?: boolean // Select all Submodels once those of a newly selected AAS are loaded
   }>()
 
   const selectedSubmodels = defineModel<Array<any>>({ default: () => [] })
+  const failed = defineModel<boolean>('failed', { default: false }) // None of the referenced Submodels could be loaded
 
   // Composables
   const { fetchSmById } = useSMRepositoryClient()
@@ -136,6 +157,8 @@
   const searchValue = ref<string | null>('')
   const listLoad = useLoadGeneration()
   const listLoading = listLoad.loading
+  const unloadedCount = ref(0) // Referenced Submodels that could not be loaded
+  const loadFailure = ref<{ unauthorized: boolean } | null>(null) // None of the referenced Submodels could be loaded
 
   // Computed Properties
   const submodelList = computed(() => {
@@ -154,6 +177,15 @@
     submodelList.value.length > 0 && submodelList.value.every(sm => submodelIsSelected(sm)),
   )
   const someListedSelected = computed(() => submodelList.value.some(sm => submodelIsSelected(sm)))
+  const loadFailureMessage = computed(() => {
+    if (!loadFailure.value?.unauthorized) {
+      return { title: 'Submodels Not Available', text: 'The Submodels could not be loaded. Reload the Submodel List to try again.' }
+    }
+    const infrastructure = props.infrastructure
+    return infrastructure?.auth?.securityType === 'OAuth2' && !infrastructure.token?.accessToken
+      ? { title: 'Authentication Required', text: `Log in to ${infrastructure.name} to load the Submodels.` }
+      : { title: 'Access Denied', text: 'You are not allowed to read the Submodels of this AAS.' }
+  })
 
   // Watchers
   watch(
@@ -174,6 +206,7 @@
   // Methods
   async function loadSubmodels (selectAll = false): Promise<void> {
     allSubmodels.value = []
+    setLoadFailure(null, 0)
 
     const aas = props.aas
     const infrastructure = props.infrastructure
@@ -193,7 +226,15 @@
       )
       if (!listLoad.isCurrent(generation)) return
 
-      allSubmodels.value = sortSmsForDisplay(filterResolvedSubmodels(submodels))
+      // Failed requests return placeholders like "Submodel Not Authorized!" or an empty object
+      allSubmodels.value = sortSmsForDisplay(submodels.filter(sm => isSubmodelPayload(sm)))
+      const unloaded = submodels.filter(sm => !isSubmodelPayload(sm))
+      setLoadFailure(
+        allSubmodels.value.length === 0 && unloaded.length > 0
+          ? { unauthorized: unloaded.every(sm => sm?.idShort === 'Submodel Not Authorized!') }
+          : null,
+        unloaded.length,
+      )
       // Keep the selection of a reload, replaced by the reloaded Submodels
       selectedSubmodels.value = selectAll
         ? [...allSubmodels.value]
@@ -201,6 +242,12 @@
     } finally {
       listLoad.finish(generation)
     }
+  }
+
+  function setLoadFailure (failure: { unauthorized: boolean } | null, unloaded: number): void {
+    loadFailure.value = failure
+    unloadedCount.value = unloaded
+    failed.value = !!failure
   }
 
   function selectSubmodel (submodel: any): void {

@@ -13,7 +13,9 @@
 
           <InfrastructureSelectionDrawers
             v-model:aas="selectedAas"
+            v-model:aas-unavailable="aasUnavailable"
             v-model:infrastructure-id="selectedInfrastructureId"
+            v-model:submodel-list-failed="submodelListFailed"
             v-model:submodels="selectedSubmodels"
           />
 
@@ -42,16 +44,11 @@
                 class="d-flex align-center justify-center"
                 :style="{ 'height': fullHeight, 'padding-top': drawerHeaderHeight }"
               >
-                <v-empty-state
-                  :class="{ 'text-divider': !selectedInfrastructureId }"
-                  icon="mdi-gesture-tap"
+                <SelectAasEmptyState
+                  :aas-unavailable="aasUnavailable"
+                  :infrastructure-selected="!!selectedInfrastructureId"
                   text="Select an AAS to register as Asset."
-                  title="Select AAS"
-                >
-                  <template #media>
-                    <v-icon :color="selectedInfrastructureId ? undefined : 'divider'" size="64" />
-                  </template>
-                </v-empty-state>
+                />
               </div>
 
               <template v-else>
@@ -78,6 +75,11 @@
       <v-divider />
 
       <v-card-actions>
+        <!-- The Asset of the AAS can be created without its Submodels -->
+        <span v-if="selectedAas && submodelListFailed" class="ml-2 text-warning text-body-medium">
+          Submodels could not be loaded, only AAS Asset can be created
+        </span>
+
         <v-spacer />
 
         <v-btn
@@ -103,6 +105,7 @@
 
 <script lang="ts" setup>
   import type { JsonPreviewTab } from '@/pages/modules/EclipseDataspaceConnector/components/Assets/JsonPreviewTabs.vue'
+  import type { AasUnavailableReason } from '@/pages/modules/EclipseDataspaceConnector/components/Shared/SelectAasEmptyState.vue'
   import { useSubmodelDisplay } from '@/composables/AAS/SubmodelDisplay'
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import EdcAssetOAuth2Button from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Button.vue'
@@ -110,12 +113,14 @@
   import EdcAssetOAuth2Fields from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Fields.vue'
   import JsonPreviewTabs from '@/pages/modules/EclipseDataspaceConnector/components/Assets/JsonPreviewTabs.vue'
   import InfrastructureSelectionDrawers from '@/pages/modules/EclipseDataspaceConnector/components/Shared/InfrastructureSelectionDrawers.vue'
+  import SelectAasEmptyState from '@/pages/modules/EclipseDataspaceConnector/components/Shared/SelectAasEmptyState.vue'
   import {
     createEmptyEdcAssetOAuth2,
     type EdcAssetOAuth2,
     hasEdcAssetOAuth2,
     useEdcAssetFromAas,
   } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetFromAas'
+  import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
   import {
     edcRequestFailureText,
     useEdcRequestFailureMessage,
@@ -142,13 +147,16 @@
   const { createAasEdcAsset, createSmEdcAsset } = useEdcAssetFromAas()
   const { createAsset: createAssetInEdc } = useCatenaXEdcClient()
   const { showFailureMessage } = useEdcRequestFailureMessage()
+  const { dialogState } = useEdcDialogRoute()
 
   // Data
   const createAssetDialog = ref(false)
   const fullHeight = 'calc(90vh - 52px - 52px - 2px)' // dialog - dialog header - dialog footer - 2x divider
-  const drawerHeaderHeight = '113px' // selection field (8px + 40px) + list title bar (64px) + divider (1px)
-  const selectedInfrastructureId = ref<string | null>(null)
+  const drawerHeaderHeight = '121px' // selection field (8px + 40px) + list title bar (72px) + divider (1px)
+  const selectedInfrastructureId = dialogState('infrastructure') // In the URL to return to it after a login, removed on close
   const selectedAas = ref<any>(null)
+  const aasUnavailable = ref<AasUnavailableReason | null>(null) // Set by the AAS List of the selected infrastructure
+  const submodelListFailed = ref(false) // Set by the Submodel List of the selected AAS
   const selectedSubmodels = ref<Array<any>>([])
   const previewTab = ref<string>('aas') // Tab of both previews: 'aas' or the ID of a selected Submodel
   const oauth2Drawer = ref(false)
@@ -187,15 +195,16 @@
   const oauth2Configured = computed(() => hasEdcAssetOAuth2(aasOAuth2.value) || hasEdcAssetOAuth2(smOAuth2.value))
 
   // Watchers
+  // Immediate, so a dialog restored from the URL opens
   watch(
     () => props.modelValue,
     value => {
       createAssetDialog.value = value
       if (!value) {
-        selectedInfrastructureId.value = null
         oauth2Drawer.value = false
       }
     },
+    { immediate: true },
   )
 
   watch(

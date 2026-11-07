@@ -190,6 +190,9 @@ export function useAASRepositoryClient () {
             infrastructure: options.infrastructure,
           })
         : await getRequest(aasRepoPath, aasRepoContext, disableMessage)
+      if (aasRepoResponse?.success === false && !aasRepoResponse.aborted) {
+        return { ...failResponse, failure: { status: aasRepoResponse.status } }
+      }
       const resultItems = Array.isArray(aasRepoResponse?.data?.result)
         ? aasRepoResponse.data.result
         : []
@@ -203,7 +206,7 @@ export function useAASRepositoryClient () {
       }
     } catch (error) {
       console.warn(error)
-      return failResponse
+      return { ...failResponse, failure: {} }
     }
   }
 

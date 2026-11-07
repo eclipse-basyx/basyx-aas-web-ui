@@ -129,6 +129,18 @@ describe('AASRepositoryClient.ts', () => {
     expect(result.hasMore).toBe(true)
   })
 
+  it('reports a failed AAS page request, so it can be told apart from an empty repository', async () => {
+    mockDeps.getRequest.mockResolvedValueOnce({ success: false, status: 401 })
+
+    const { useAASRepositoryClient } = await import('@/composables/Client/AASRepositoryClient')
+    const { fetchAasListPage } = useAASRepositoryClient()
+
+    expect(await fetchAasListPage({ limit: 100 })).toEqual({ items: [], hasMore: false, failure: { status: 401 } })
+
+    mockDeps.getRequest.mockResolvedValueOnce({ success: true, data: { result: [] } })
+    expect((await fetchAasListPage({ limit: 100 })).failure).toBeUndefined()
+  })
+
   it('reads the AAS page from the given infrastructure with its credentials', async () => {
     mockDeps.getRequest.mockResolvedValueOnce({ success: true, data: { result: [{ id: 'aas-1' }] } })
     const infrastructure: InfrastructureConfig = {

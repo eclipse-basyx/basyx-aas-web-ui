@@ -33,6 +33,7 @@
   import CreateContractDialog from '@/pages/modules/EclipseDataspaceConnector/components/Contracts/Dialogs/CreateContractDialog.vue'
   import EdcResourceTab from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceTab.vue'
   import { useEdcAssetTypeQuery } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetTypeQuery'
+  import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
   import { assetTypeFilterItems } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
   import { EDC_NAMESPACE } from '@/pages/modules/EclipseDataspaceConnector/data/namespaces'
 
@@ -54,12 +55,13 @@
   // Composables
   const { deleteContractDefinition, queryContractDefinitions, updateContractDefinition } = useCatenaXEdcClient()
   const { queryAssetsOfType } = useEdcAssetTypeQuery()
+  const { dialogOpen } = useEdcDialogRoute()
 
   // Data
   const resourceTab = useTemplateRef<InstanceType<typeof EdcResourceTab>>('resourceTab')
   const contracts = ref<CatenaXEdcContractDefinition[]>([]) // All contracts, before filtering
   const selectedContractFilter = ref<ContractFilter>(allContractsFilter)
-  const createContractDialog = ref(false)
+  const createContractDialog = dialogOpen('create-contract') // The open dialog is kept in the URL, e.g. to return to it after a login
 
   const createActions = [
     { title: 'Create Contract', tooltip: 'Create a new Contract', onClick: () => (createContractDialog.value = true) },

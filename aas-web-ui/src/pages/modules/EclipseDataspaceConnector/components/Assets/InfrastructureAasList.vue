@@ -2,6 +2,22 @@
   <v-card class="d-flex flex-column" color="card" elevation="0">
     <!-- Title bar -->
     <v-card-title class="px-0 py-2 d-flex align-center">
+      <div class="flex-grow-1 pl-2">
+        <QuerySearchField
+          v-model="searchValue"
+          :advanced-active="querySearch.activeMode.value === 'advanced'"
+          :advanced-dialog-open="advancedQueryDialog"
+          :infrastructure-template="infrastructureTemplate"
+          label="Search AAS"
+          :loading="querySearch.loading.value"
+          :server-search="queryAvailable"
+          :target="queryTarget"
+          @advanced="openSearchDialog"
+          @clear="clearQuerySearch"
+          @submit="submitSearch"
+        />
+      </div>
+
       <v-tooltip location="bottom" open-delay="600">
         <template #activator="{ props: activatorProps }">
           <v-btn
@@ -17,22 +33,6 @@
 
         <span>Reload AAS List</span>
       </v-tooltip>
-
-      <div class="flex-grow-1 pr-2">
-        <QuerySearchField
-          v-model="searchValue"
-          :advanced-active="querySearch.activeMode.value === 'advanced'"
-          :advanced-dialog-open="advancedQueryDialog"
-          :infrastructure-template="infrastructureTemplate"
-          label="Search AAS"
-          :loading="querySearch.loading.value"
-          :server-search="queryAvailable"
-          :target="queryTarget"
-          @advanced="openSearchDialog"
-          @clear="clearQuerySearch"
-          @submit="submitSearch"
-        />
-      </div>
     </v-card-title>
 
     <v-divider />
@@ -79,6 +79,24 @@
           <v-icon size="64" />
         </template>
       </v-empty-state>
+
+      <v-empty-state
+        v-else-if="loadFailure"
+        icon="mdi-database-alert-outline"
+        :text="loadFailureMessage.text"
+        :title="loadFailureMessage.title"
+      >
+        <template #media>
+          <v-icon size="64" />
+        </template>
+      </v-empty-state>
+
+      <v-empty-state
+        v-else-if="repositoryEmpty"
+        class="text-divider"
+        text="The AAS Repository does not contain any AAS"
+        title="No existing AAS"
+      />
 
       <template v-else>
         <v-empty-state
@@ -192,6 +210,7 @@
 </template>
 
 <script lang="ts" setup>
+  import type { AasUnavailableReason } from '@/pages/modules/EclipseDataspaceConnector/components/Shared/SelectAasEmptyState.vue'
   import type { InfrastructureConfig } from '@/types/Infrastructure'
   import type { QueryLanguageQuery, QueryTarget } from '@/types/QueryLanguage'
   import type { ComponentPublicInstance, Ref } from 'vue'
@@ -202,6 +221,7 @@
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { useQueryLanguageClient } from '@/composables/Client/QueryLanguageClient'
   import { useQuerySearch } from '@/composables/QueryLanguage/QuerySearch'
+  import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { getActiveComponentUrlForTemplate } from '@/utils/InfrastructureUtils'
   import {
     buildStructuredSearchQuery,
@@ -220,6 +240,10 @@
   }>()
 
   const selectedAas = defineModel<any>({ default: null })
+  const unavailable = defineModel<AasUnavailableReason | null>('unavailable', { default: null }) // Why no AAS can be selected
+
+  // Stores
+  const infrastructureStore = useInfrastructureStore()
 
   // Composables
   const { fetchAasListPage, fetchAasRepositoryDescription, getAasEndpointById } = useAASRepositoryClient()
@@ -243,6 +267,7 @@
   const advancedQueryDialog = ref(false)
   const advancedQueryDraft = ref('')
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null)
+  const loadFailure = ref<{ status?: number } | null>(null) // Failure of the first page, which leaves the list without AAS
   let queryScrollContainer: HTMLElement | null = null
 
   const {
@@ -264,7 +289,18 @@
     prefetchThresholdInRows,
     scrollLoadDebounceMs: 200,
     minPageLoadIntervalMs: 350,
-    fetchPage: ({ limit, cursor }) => fetchAasListPage({ limit, cursor, infrastructure: props.infrastructure ?? undefined }),
+    fetchPage: async ({ limit, cursor }) => {
+      const infrastructure = props.infrastructure
+      const page = await fetchAasListPage({ limit, cursor, infrastructure: infrastructure ?? undefined })
+      if (!cursor && infrastructure?.id === props.infrastructure?.id) {
+        loadFailure.value = page.failure ?? null
+      }
+      // The app only marks a rejected token of its selected infrastructure, so the login button offers a new login
+      if (infrastructure && page.failure?.status === 401 && infrastructure.id !== infrastructureStore.getSelectedInfrastructureId) {
+        infrastructureStore.setAuthenticationStatusForInfrastructure(infrastructure.id, false)
+      }
+      return page
+    },
     onPageItems: items => {
       const incomingItems = items
         .toSorted(compareAasById)
@@ -301,8 +337,39 @@
   const parsedSearch = computed(() => parseQuerySearchExpression(queryTarget, searchValue.value, infrastructureTemplate.value))
   const isSearchLimited = computed(() => !queryAvailable.value && searchValue.value.trim() !== '' && hasMorePages.value)
   const visiblePageLoading = computed(() => querySearch.loadingMore.value || pageLoading.value)
+  // The repository answered without any AAS, not just a search without matches
+  const repositoryEmpty = computed(() =>
+    !!props.infrastructure
+    && !listLoading.value
+    && !loadFailure.value
+    && !querySearch.activeMode.value
+    && !hasMorePages.value
+    && allLoadedAas.value.length === 0,
+  )
+  const loadFailureMessage = computed(() => {
+    const auth = props.infrastructure?.auth
+    const loggedOutOfOAuth2 = auth?.securityType === 'OAuth2' && !props.infrastructure?.token?.accessToken
+    if (loadFailure.value?.status === 401 || loggedOutOfOAuth2) {
+      return {
+        title: 'Authentication Required',
+        text: auth?.securityType === 'OAuth2'
+          ? `Log in to ${props.infrastructure?.name} to load its AAS.`
+          : (auth && auth.securityType !== 'No Authentication'
+            ? `The AAS Repository rejected the preconfigured ${auth.securityType}.`
+            : 'The AAS Repository requires authentication, but none is configured for this infrastructure.'),
+      }
+    }
+    if (loadFailure.value?.status === 403) {
+      return { title: 'Access Denied', text: 'You are not allowed to read the AAS of this infrastructure.' }
+    }
+    return { title: 'AAS Not Available', text: 'The AAS could not be loaded. Reload the AAS List to try again.' }
+  })
 
   // Watchers
+  watchEffect(() => {
+    unavailable.value = loadFailure.value ? 'failed' : (repositoryEmpty.value ? 'empty' : null)
+  })
+
   watch(
     () => props.infrastructure?.id,
     () => {
@@ -359,6 +426,7 @@
   }
 
   async function loadCompleteAasList (): Promise<void> {
+    loadFailure.value = null
     invalidatePaginationGeneration()
     aasList.value = []
     allLoadedAas.value = []

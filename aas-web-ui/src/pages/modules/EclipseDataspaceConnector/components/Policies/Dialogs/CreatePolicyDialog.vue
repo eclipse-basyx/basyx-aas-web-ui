@@ -249,6 +249,7 @@
   })
 
   // Watchers
+  // Immediate, so a dialog restored from the URL opens
   watch(
     () => props.modelValue,
     value => {
@@ -259,6 +260,7 @@
         resetForm()
       }
     },
+    { immediate: true },
   )
 
   watch(

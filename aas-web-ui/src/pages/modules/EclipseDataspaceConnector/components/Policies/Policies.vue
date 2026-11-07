@@ -44,15 +44,18 @@
   import CreatePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Policies/Dialogs/CreatePolicyDialog.vue'
   import CreatePolicyFromTemplateDialog from '@/pages/modules/EclipseDataspaceConnector/components/Policies/Dialogs/CreatePolicyFromTemplateDialog.vue'
   import EdcResourceTab from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceTab.vue'
+  import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
 
   // Composables
   const { deletePolicyDefinition, queryPolicyDefinitions, updatePolicyDefinition } = useCatenaXEdcClient()
+  const { dialogOpen } = useEdcDialogRoute()
 
   // Data
   const policyTypeFilterItems = ['All', 'Access', 'Usage']
   const selectedPolicyType = ref('All')
-  const createPolicyDialog = ref(false)
-  const createPolicyFromTemplateDialog = ref(false)
+  // The open dialog is kept in the URL, e.g. to return to it after a login
+  const createPolicyDialog = dialogOpen('create-policy')
+  const createPolicyFromTemplateDialog = dialogOpen('create-policy-from-template')
 
   const createActions = [
     { title: 'Create Policy', tooltip: 'Create a new Policy', onClick: () => (createPolicyDialog.value = true) },

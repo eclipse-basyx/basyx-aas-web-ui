@@ -1,13 +1,14 @@
 <template>
   <div class="d-flex flex-column json-preview-tabs">
-    <!-- Tab bar, hidden if the tab is selected by another JsonPreviewTabs sharing the same v-model -->
+    <!-- Tab bar, hidden if the tab is selected by another JsonPreviewTabs sharing the same v-model.
+         With the preview title (64px) and both dividers its height matches the AAS and Submodel List headers (121px). -->
     <div v-if="!hideTabs" class="d-flex align-center">
       <v-tabs
         v-model="tab"
         class="flex-1-1-0"
         color="primary"
         density="compact"
-        height="47"
+        height="55"
         show-arrows
       >
         <v-tab

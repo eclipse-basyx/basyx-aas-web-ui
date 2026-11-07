@@ -67,18 +67,21 @@
   import DeleteAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/DeleteAssetDialog.vue'
   import EdcResourceTab from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceTab.vue'
   import { useEdcAssetTypeQuery } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetTypeQuery'
+  import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
   import { assetTypeFilterItems } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
 
   // Composables
   const { updateAsset } = useCatenaXEdcClient()
   const { queryAssetsOfType } = useEdcAssetTypeQuery()
+  const { dialogOpen } = useEdcDialogRoute()
 
   // Data
   const resourceTab = useTemplateRef<InstanceType<typeof EdcResourceTab>>('resourceTab')
   const selectedAssetTypeFilter = ref('all')
-  const createAssetDialog = ref(false)
-  const createAssetFromTemplateDialog = ref(false)
-  const createAssetFromInfrastructureDialog = ref(false)
+  // The open dialog is kept in the URL, e.g. to return to it after a login
+  const createAssetDialog = dialogOpen('create-asset')
+  const createAssetFromTemplateDialog = dialogOpen('create-asset-from-template')
+  const createAssetFromInfrastructureDialog = dialogOpen('create-asset-from-infrastructure')
 
   const createActions = [
     { title: 'Create Asset', tooltip: 'Create a new asset', onClick: () => (createAssetDialog.value = true) },

@@ -162,24 +162,25 @@
   )
 
   // Watchers
+  // Immediate, so a dialog restored from the URL opens
   watch(
     () => props.modelValue,
     value => {
       createContractDialog.value = value
-      if (!value) {
+      if (value) {
+        loadAssets()
+        loadPolicies()
+      } else {
         resetForm()
       }
     },
+    { immediate: true },
   )
 
   watch(
     () => createContractDialog.value,
     value => {
       emit('update:model-value', value)
-      if (value) {
-        loadAssets()
-        loadPolicies()
-      }
     },
   )
 
