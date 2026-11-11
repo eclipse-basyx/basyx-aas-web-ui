@@ -41,7 +41,7 @@ vi.mock('@/store/NavigationStore', () => ({
 vi.mock('@/store/EnvironmentStore', () => ({ useEnvStore: () => ({}) }))
 vi.mock('@/store/AASDataStore', () => ({ useAASStore: () => ({ getSelectedAAS: {} }) }))
 vi.mock('@/composables/Auth/useAuth', () => ({ useAuth: () => ({ showLoginRequiredSnackbar: vi.fn() }) }))
-vi.mock('@/composables/AAS/SubmodelElements/File', () => ({ useSMEFile: () => ({ determineContentType: vi.fn() }) }))
+vi.mock('@/composables/AAS/SubmodelElements/File', () => ({ useSMEFile: () => ({ determineContentType: () => 'text/plain' }) }))
 vi.mock('@/composables/AAS/SMHandling', () => ({ useSMHandling: () => ({}) }))
 vi.mock('@/composables/Client/AASRegistryClient', () => ({ useAASRegistryClient: () => ({}) }))
 vi.mock('@/composables/Client/SMRegistryClient', () => ({ useSMRegistryClient: () => ({}) }))
@@ -59,6 +59,34 @@ const environment = {
 
 function environmentFile (name = 'environment.json'): File {
   return { name, text: async () => JSON.stringify(environment) } as File
+}
+
+async function aasxFileWithBinaryAssets (): Promise<File> {
+  let bytes: Uint8Array = new Uint8Array()
+  const pkg = await NewPackaging().CreateInStream({
+    readAll: () => bytes.slice(),
+    writeAll: data => {
+      bytes = data.slice()
+    },
+  })
+  const payload = {
+    ...environment,
+    submodels: [{ ...environment.submodels[0], submodelElements: [{
+      modelType: 'File', idShort: 'Manual', contentType: 'text/plain', value: '/aasx-suppl/manual.txt',
+    }] }],
+  }
+  const spec = await pkg.PutPart(new URL('https://package.local/aasx/environment.json'),
+    'application/json', new TextEncoder().encode(JSON.stringify(payload)))
+  await pkg.MakeSpec(spec)
+  const attachment = await pkg.PutPart(new URL('https://package.local/aasx-suppl/manual.txt'),
+    'text/plain', new TextEncoder().encode('Manual'))
+  await pkg.RelateSupplementaryToSpec(attachment, spec)
+  const thumbnail = await pkg.PutPart(new URL('https://package.local/thumbnail.png'),
+    'image/png', new Uint8Array([137, 80, 78, 71]))
+  await pkg.SetThumbnail(thumbnail)
+  const packageBytes = await pkg.Flush()
+  pkg.Close()
+  return { name: 'binary-assets.aasx', arrayBuffer: async () => Uint8Array.from(packageBytes).buffer } as File
 }
 
 function errorResponse (status: number): Response {
@@ -379,5 +407,92 @@ describe('upload report visible to the user', () => {
     expect(wrapper.text()).toContain('FAILED: Concept Description \'urn:test:cd\'')
     expect(wrapper.text()).toContain('CREATED: AAS \'urn:test:aas\'')
     expect(state.reload).toHaveBeenCalledOnce()
+  })
+})
+
+describe('binary upload details in the final report', () => {
+  it.each([
+    ['attachment', 'java'], ['attachment', 'go'],
+    ['thumbnail', 'java'], ['thumbnail', 'go'],
+  ] as const)('retains the %s REST response in %s format', async (asset, format) => {
+    const messages = [{
+      code: '503', messageType: 'Error', text: `${asset} storage is unavailable`,
+      correlationId: `${asset}-503-upload`, timestamp: '2026-11-11T16:29:44Z',
+    }, { code: '503', messageType: 'Error', text: `${asset} additional detail` }]
+    const fetch = vi.fn(async (url: string) => url.endsWith(`/${asset}`)
+      ? Response.json(format === 'go' ? { messages } : messages, { status: 503 })
+      : new Response(null, { status: 201 }))
+    vi.stubGlobal('fetch', fetch)
+    const wrapper = await uploadFiles([await aasxFileWithBinaryAssets()])
+    expect(state.dispatchSnackbar).toHaveBeenCalledOnce()
+    expect(state.dispatchSnackbar).toHaveBeenLastCalledWith(expect.objectContaining({ color: 'warning' }))
+    const report = wrapper.get('[role="dialog"]').text()
+    expect(report).toContain('binary-assets.aasx')
+    expect(report).toContain(`Failed to upload ${asset}`)
+    expect(report).toContain('HTTP 503')
+    expect(report).toContain(`Text: ${asset} storage is unavailable`)
+    expect(report).toContain(`Text: ${asset} additional detail`)
+    expect(report).toContain(`Correlation ID: ${asset}-503-upload`)
+    expect(report).toContain('Timestamp:')
+    expect(fetch.mock.calls.filter(([url]) => /\/(?:attachment|thumbnail)$/.test(url))).toHaveLength(2)
+  })
+
+  it('keeps distinct attachment and thumbnail failures together', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (url.endsWith('/attachment')) {
+        return Response.json({ message: 'Attachment server offline' }, { status: 503 })
+      }
+      if (url.endsWith('/thumbnail')) {
+        return Response.json({ message: 'Thumbnail rejected' }, { status: 400 })
+      }
+      return new Response(null, { status: 201 })
+    }))
+    const wrapper = await uploadFiles([await aasxFileWithBinaryAssets()])
+    const report = wrapper.get('[role="dialog"]').text()
+    expect(report).toContain('HTTP 503')
+    expect(report).toContain('Attachment server offline')
+    expect(report).toContain('HTTP 400')
+    expect(report).toContain('Thumbnail rejected')
+    expect(state.dispatchSnackbar).toHaveBeenCalledOnce()
+    expect(state.reload).toHaveBeenCalledOnce()
+  })
+
+  it.each(['attachment', 'thumbnail'])('retains a %s network failure without a made-up HTTP status', async asset => {
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (url.endsWith(`/${asset}`)) {
+        throw new TypeError(`${asset} network unreachable`)
+      }
+      return new Response(null, { status: 201 })
+    }))
+    const wrapper = await uploadFiles([await aasxFileWithBinaryAssets()])
+    const report = wrapper.get('[role="dialog"]').text()
+    expect(report).toContain(`${asset} network unreachable`)
+    expect(report).not.toContain('HTTP ')
+    expect(state.dispatchSnackbar).toHaveBeenCalledOnce()
+  })
+
+  it('records binary request exceptions without discarding the rest of the import report', async () => {
+    simulateRepository(201)
+    vi.stubGlobal('FormData', class extends FormData {
+      append (): void {
+        throw new Error('Could not prepare the binary upload')
+      }
+    })
+    const wrapper = await uploadFiles([await aasxFileWithBinaryAssets()])
+    const report = wrapper.get('[role="dialog"]').text()
+    expect(report).toContain('Failed to upload attachment')
+    expect(report).toContain('Failed to upload thumbnail')
+    expect(report).toContain('Could not prepare the binary upload')
+    expect(report).toContain('Objects: 3 created.')
+    expect(state.reload).toHaveBeenCalledOnce()
+  })
+
+  it('keeps successful binary uploads free of warnings', async () => {
+    const fetch = simulateRepository(201)
+    const wrapper = await uploadFiles([await aasxFileWithBinaryAssets()])
+    expect(state.dispatchSnackbar).toHaveBeenCalledOnce()
+    expect(state.dispatchSnackbar).toHaveBeenLastCalledWith(expect.objectContaining({ color: 'success' }))
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
+    expect(fetch.mock.calls.filter(([url]) => /\/(?:attachment|thumbnail)$/.test(url))).toHaveLength(2)
   })
 })

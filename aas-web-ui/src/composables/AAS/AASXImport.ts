@@ -600,6 +600,28 @@ export function useAASXImport (): {
     }
   }
 
+  async function uploadBinary (
+    failureMessage: string,
+    client: Pick<typeof aasClient, 'consumeLastRequestFailureStatus' | 'consumeLastRequestFailureDetails'>,
+    upload: () => Promise<boolean>,
+  ): Promise<string | undefined> {
+    client.consumeLastRequestFailureStatus()
+    client.consumeLastRequestFailureDetails()
+    let exceptionDetails: string | undefined
+    try {
+      if (await upload()) {
+        return undefined
+      }
+    } catch (error) {
+      exceptionDetails = stringifyUnknown(error)
+    }
+    const status = client.consumeLastRequestFailureStatus()
+    const details = client.consumeLastRequestFailureDetails()
+    return [appendHttpStatusFailureReason(failureMessage, status), details, exceptionDetails]
+      .filter(Boolean)
+      .join('\n')
+  }
+
   function aasReferencesSubmodel (aas: JsonRecord, submodelId: string): boolean {
     return asArray(aas.submodels).some(submodelRef => {
       const reference = asRecord(submodelRef)
@@ -702,17 +724,13 @@ export function useAASXImport (): {
         type: attachment.contentType,
       })
 
-      let success: boolean
-      try {
-        success = await putAttachmentFile(attachmentFile, smePath)
-      } catch {
-        success = false
-      }
-
-      if (!success) {
-        warnings.push(
-          `Failed to upload attachment for Submodel '${attachment.submodelId}' at '${attachment.idShortPath.join('/')}'.`,
-        )
+      const warning = await uploadBinary(
+        `Failed to upload attachment for Submodel '${attachment.submodelId}' at '${attachment.idShortPath.join('/')}'.`,
+        smClient,
+        () => putAttachmentFile(attachmentFile, smePath, true),
+      )
+      if (warning) {
+        warnings.push(warning)
       }
     }
 
@@ -736,9 +754,13 @@ export function useAASXImport (): {
           continue
         }
 
-        const success = await putThumbnail(thumbnailFile, aasId)
-        if (!success) {
-          warnings.push(`Failed to upload thumbnail for AAS '${aasId}'.`)
+        const warning = await uploadBinary(
+          `Failed to upload thumbnail for AAS '${aasId}'.`,
+          aasClient,
+          () => putThumbnail(thumbnailFile, aasId, true),
+        )
+        if (warning) {
+          warnings.push(warning)
         }
       }
     }
