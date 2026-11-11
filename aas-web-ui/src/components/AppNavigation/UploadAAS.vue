@@ -97,9 +97,24 @@
       </v-card-actions>
     </v-sheet>
   </v-dialog>
+
+  <v-dialog v-model="showUploadReport" :max-width="800" scrollable>
+    <v-card rounded="lg" title="Upload report">
+      <v-card-text>
+        <v-alert class="mb-4" :type="uploadReport.color">{{ uploadReport.summary }}</v-alert>
+        <pre class="text-body-small text-pre-wrap">{{ uploadReport.details }}</pre>
+      </v-card-text>
+
+      <v-card-actions>
+        <v-spacer />
+        <v-btn text="Close" @click="showUploadReport = false" />
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script lang="ts" setup>
+  import type { ClientImportOutcome } from '@/composables/AAS/AASXImport'
   import type { SubmodelDescriptor } from '@/types/Descriptors'
   import type { jsonization } from '@aas-core-works/aas-core3.1-typescript'
   import { detectImportFileKind } from '@/composables/AAS/SerializationFormats'
@@ -147,6 +162,10 @@
     (event: 'update:model-value', value: boolean): void
   }>()
 
+  const showUploadReport = ref(false)
+  const uploadReport = ref<{ color: 'success' | 'warning' | 'error', summary: string, details: string }>({
+    color: 'success', summary: '', details: '',
+  })
   const uploadAASDialog = ref(false)
   const aasFiles = ref<File[]>([])
   const loadingUpload = ref(false)
@@ -252,14 +271,17 @@
     loadingUpload.value = true
     uploadProgress.value = 0
 
+    let hasImportedAas = false
     const summary = {
+      outcomes: [] as ClientImportOutcome[],
+      details: [] as string[],
       total: aasFiles.value.length,
       succeeded: 0,
       warnings: [] as string[],
       failed: [] as string[],
     }
 
-    function buildUploadErrorDetails (summary: { failed: string[], warnings: string[] }): string {
+    function buildUploadReportDetails (summary: { failed: string[], warnings: string[], details: string[] }): string {
       const sections: string[] = []
 
       if (summary.failed.length > 0) {
@@ -270,6 +292,7 @@
         sections.push(['Warnings:', ...summary.warnings.map(entry => `- ${entry}`)].join('\n'))
       }
 
+      sections.push(...summary.details)
       return sections.join('\n\n')
     }
 
@@ -295,6 +318,7 @@
 
           if (response?.success) {
             summary.succeeded++
+            hasImportedAas = true
             if (shouldSyncAasDescriptor || shouldSyncSubmodelDescriptor || shouldSyncDiscovery) {
               const createdWarnings = await createAndPostDescriptorsFromAasIds(
                 Array.isArray(response?.data?.aasIds) ? response.data.aasIds : [],
@@ -325,7 +349,20 @@
                 ? await importAasxFileClient(aasFile)
                 : await importEnvironmentFileClient(aasFile)
 
-            if (result.importedAasIds.length === 0) {
+            hasImportedAas ||= result.importedAasIds.length > 0
+            const failures = result.outcomes.filter(outcome => outcome.action === 'failed')
+            summary.outcomes.push(...result.outcomes)
+            summary.details.push([
+              aasFile.name,
+              ...result.outcomes.map(outcome => {
+                const action = outcome.action === 'written' ? 'CREATED OR UPDATED' : outcome.action.toUpperCase()
+                const details = outcome.details ? ` ${outcome.details}` : ''
+                return `${action}: ${outcome.kind} '${outcome.id}'.${details}`
+              }),
+            ].join('\n'))
+            if (failures.length > 0) {
+              summary.failed.push(`${aasFile.name}: ${failures.length} object(s) failed to import.`)
+            } else if (result.importedAasIds.length === 0) {
               summary.failed.push(`${aasFile.name}: no AAS imported.`)
             } else {
               summary.succeeded++
@@ -357,43 +394,24 @@
         uploadProgress.value = ((index + 1) / aasFiles.value.length) * 100
       }
 
-      if (summary.succeeded > 0) {
+      if (hasImportedAas) {
         navigationStore.dispatchTriggerAASListReload()
       }
 
-      const warningPreview = summary.warnings.slice(0, 3).join(' | ')
-
-      if (summary.failed.length === 0) {
-        navigationStore.dispatchSnackbar({
-          status: true,
-          timeout: 8000,
-          color: summary.warnings.length > 0 ? 'warning' : 'success',
-          btnColor: 'buttonText',
-          text:
-            summary.warnings.length > 0
-              ? `Uploaded ${summary.succeeded}/${summary.total} file(s) with ${summary.warnings.length} warning(s): ${warningPreview}`
-              : `Uploaded ${summary.succeeded}/${summary.total} file(s) successfully.`,
-        })
-      } else {
-        navigationStore.dispatchSnackbar({
-          status: true,
-          timeout: 10_000,
-          color: 'error',
-          btnColor: 'buttonText',
-          baseError: `Uploaded ${summary.succeeded}/${summary.total} file(s). ${summary.failed.length} failed.`,
-          extendedError: buildUploadErrorDetails(summary),
-        })
-      }
+      const counts = (['created', 'updated', 'skipped', 'written', 'failed'] as const)
+        .map(action => ({ action, count: summary.outcomes.filter(outcome => outcome.action === action).length }))
+        .filter(entry => entry.count > 0)
+        .map(entry => `${entry.count} ${entry.action === 'written' ? 'created or updated' : entry.action}`)
+        .join(', ')
+      const hasDuplicates = summary.outcomes.some(outcome => outcome.action === 'updated' || outcome.action === 'skipped')
+      const color = summary.failed.length > 0 ? 'error' : (summary.warnings.length > 0 || hasDuplicates ? 'warning' : 'success')
+      const message = summary.failed.length > 0
+        ? `Uploaded ${summary.succeeded}/${summary.total} file(s). ${summary.failed.length} failed.`
+        : `Uploaded ${summary.succeeded}/${summary.total} file(s)${color === 'warning' ? ' with warnings' : ' successfully'}.`
+      displayUploadReport(color, `${message}${counts ? ` Objects: ${counts}.` : ''}`, buildUploadReportDetails(summary))
     } catch (error) {
       console.error('Error uploading AAS:', error)
-      navigationStore.dispatchSnackbar({
-        status: true,
-        timeout: 6000,
-        color: 'error',
-        btnColor: 'buttonText',
-        baseError: 'AAS upload failed.',
-        extendedError: stringifyUnknown(error),
-      })
+      displayUploadReport('error', 'AAS upload failed.', stringifyUnknown(error))
     } finally {
       resetUploadState()
     }
@@ -404,6 +422,22 @@
       resetUploadState()
     }
   })
+
+  function displayUploadReport (color: 'success' | 'warning' | 'error', summary: string, details: string): void {
+    uploadReport.value = { color, summary, details }
+    showUploadReport.value = color !== 'success'
+    navigationStore.dispatchSnackbar({
+      status: true,
+      timeout: color === 'success' ? 8000 : 10_000,
+      color,
+      btnColor: 'buttonText',
+      text: summary,
+      actionText: 'View report',
+      actionCallback: () => {
+        showUploadReport.value = true
+      },
+    })
+  }
 
   function resetUploadState (): void {
     aasFiles.value = []
