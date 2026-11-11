@@ -162,6 +162,36 @@ describe('client import outcomes through repository HTTP responses', () => {
     expect(state.dispatchSnackbar).not.toHaveBeenCalled()
   })
 
+  it.each([
+    ['full', 201, 'created'],
+    ['full', 409, 'updated'],
+    ['identifiable', 201, 'written'],
+    ['identifiable', 409, 'written'],
+  ] as const)('retains padded submodel IDs for descriptor sync with %s and POST %s', async (template, status, action) => {
+    state.template = template
+    const fetch = simulateRepository(status)
+    const id = '  urn:test:sm  '
+    const payload = {
+      ...environment,
+      assetAdministrationShells: [{
+        ...environment.assetAdministrationShells[0],
+        submodels: [{ type: 'ModelReference', keys: [{ type: 'Submodel', value: id.trim() }] }],
+      }, { ...environment.assetAdministrationShells[0], id: 'urn:test:unrelated' }],
+      submodels: [{ ...environment.submodels[0], id }],
+    }
+    const file = { name: 'padded.json', text: async () => JSON.stringify(payload) } as File
+    const result = await useAASXImport().importEnvironmentFileClient(file)
+    expect(result.importedSubmodels).toEqual([{ modelType: 'Submodel', id }])
+    expect(result.outcomes.find(outcome => outcome.kind === 'Submodel')).toMatchObject({ id, action })
+    const write = fetch.mock.calls.find(([url]) => template === 'identifiable'
+      ? url.includes('/submodels/')
+      : url.endsWith('/submodels'))
+    expect(JSON.parse(write![1]!.body as string)).toMatchObject({ id })
+    if (template === 'identifiable') {
+      expect(write![0]).toBe('https://import.test/shells/dXJuOnRlc3Q6YWFz/submodels/dXJuOnRlc3Q6c20')
+    }
+  })
+
   it.each(['xml', 'aasx'] as const)('reports duplicates consistently for %s imports', async format => {
     simulateRepository()
     const importer = useAASXImport()

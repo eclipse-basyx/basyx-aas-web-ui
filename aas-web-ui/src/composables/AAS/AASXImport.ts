@@ -666,8 +666,8 @@ export function useAASXImport (): {
     }
 
     for (const { core: submodel, json } of parsedPackage.submodelById.values()) {
-      const submodelId = asString(json.id).trim()
-      const aasId = useSuperpath ? findAasIdForSubmodel(parsedPackage, submodelId) : undefined
+      const submodelId = asString(json.id)
+      const aasId = useSuperpath ? findAasIdForSubmodel(parsedPackage, submodelId.trim()) : undefined
 
       if (useSuperpath && !aasId) {
         outcomes.push({ kind: 'Submodel', id: submodelId, action: 'failed', details: 'No referencing AAS found.' })
