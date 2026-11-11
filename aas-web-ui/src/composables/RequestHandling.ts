@@ -94,32 +94,26 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     return ''
   }
 
-  function buildArrayErrorDetails (errorData: any[]): string {
-    if (errorData.length === 0) {
-      return ''
-    }
+  function buildArrayErrorDetails (errorData: unknown[]): string {
+    return errorData.map(entry => {
+      if (!entry || typeof entry !== 'object') {
+        return ''
+      }
+      const error = entry as Record<string, unknown>
+      const lines: string[] = []
 
-    const error = errorData[0] as {
-      code?: unknown
-      messageType?: unknown
-      correlationId?: unknown
-      timestamp?: unknown
-      text?: unknown
-    }
+      appendErrorLine(lines, 'Status', error.code)
+      appendErrorLine(lines, 'Message Type', error.messageType)
+      appendErrorLine(lines, 'Correlation ID', error.correlationId)
 
-    const lines: string[] = []
+      if (error.timestamp) {
+        appendErrorLine(lines, 'Timestamp', new Date(String(error.timestamp)).toLocaleString())
+      }
 
-    appendErrorLine(lines, 'Status', error.code)
-    appendErrorLine(lines, 'Message Type', error.messageType)
-    appendErrorLine(lines, 'Correlation ID', error.correlationId)
+      appendErrorLine(lines, 'Text', error.text)
 
-    if (error.timestamp) {
-      appendErrorLine(lines, 'Timestamp', new Date(String(error.timestamp)).toLocaleString())
-    }
-
-    appendErrorLine(lines, 'Text', error.text)
-
-    return lines.join('\n')
+      return lines.join('\n')
+    }).filter(Boolean).join('\n\n')
   }
 
   function buildObjectErrorDetails (errorData: Record<string, unknown>): string {
@@ -136,6 +130,12 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     appendErrorLine(lines, 'Route', route)
     appendErrorLine(lines, 'Correlation ID', errorData.correlationId)
     appendErrorLine(lines, 'Timestamp', errorData.timestamp)
+    if (Array.isArray(errorData.messages)) {
+      const messages = buildArrayErrorDetails(errorData.messages)
+      if (messages !== '') {
+        lines.push(messages)
+      }
+    }
 
     return lines.join('\n')
   }

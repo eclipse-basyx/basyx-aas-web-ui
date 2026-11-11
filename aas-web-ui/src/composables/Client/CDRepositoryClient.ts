@@ -12,7 +12,7 @@ export function useCDRepositoryClient () {
   const infrastructureStore = useInfrastructureStore()
 
   // Composables
-  const { getRequest, postRequest, putRequest } = useRequestHandling()
+  const { getRequest, postRequest, putRequest, consumeLastRequestFailureStatus, consumeLastRequestFailureDetails } = useRequestHandling()
 
   // Computed Properties
   const conceptDescriptionRepoUrl = computed(() => infrastructureStore.getConceptDescriptionRepoURL)
@@ -244,7 +244,10 @@ export function useCDRepositoryClient () {
     return cdEndpoint || failResponse
   }
 
-  async function postConceptDescription (conceptDescription: aasTypes.ConceptDescription): Promise<boolean> {
+  async function postConceptDescription (
+    conceptDescription: aasTypes.ConceptDescription,
+    acceptExisting = true,
+  ): Promise<boolean> {
     const failResponse = false
 
     let cdRepoUrl = conceptDescriptionRepoUrl.value.trim()
@@ -273,7 +276,7 @@ export function useCDRepositoryClient () {
     }
 
     const conceptDescriptionId = conceptDescription.id?.trim()
-    if (conceptDescriptionId) {
+    if (acceptExisting && response.status === 409 && conceptDescriptionId) {
       const alreadyExists = await isAvailableByIdInRepo(conceptDescriptionId)
       if (alreadyExists) {
         return true
@@ -319,5 +322,7 @@ export function useCDRepositoryClient () {
     getCdEndpointById,
     postConceptDescription,
     putConceptDescription,
+    consumeLastRequestFailureStatus,
+    consumeLastRequestFailureDetails,
   }
 }

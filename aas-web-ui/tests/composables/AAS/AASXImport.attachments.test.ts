@@ -14,6 +14,8 @@ vi.mock('@/composables/AAS/SubmodelElements/File', () => ({
 
 vi.mock('@/composables/Client/AASRepositoryClient', () => ({
   useAASRepositoryClient: () => ({
+    consumeLastRequestFailureStatus: vi.fn(),
+    consumeLastRequestFailureDetails: vi.fn(),
     postAas: vi.fn().mockResolvedValue(true),
     putAas: vi.fn(),
     putThumbnail: vi.fn(),
@@ -23,6 +25,8 @@ vi.mock('@/composables/Client/AASRepositoryClient', () => ({
 
 vi.mock('@/composables/Client/SMRepositoryClient', () => ({
   useSMRepositoryClient: () => ({
+    consumeLastRequestFailureStatus: vi.fn(),
+    consumeLastRequestFailureDetails: vi.fn(),
     postSubmodel: vi.fn().mockResolvedValue(true),
     putSubmodel: vi.fn(),
     putAttachmentFile: mocks.putAttachmentFile,
@@ -32,6 +36,8 @@ vi.mock('@/composables/Client/SMRepositoryClient', () => ({
 
 vi.mock('@/composables/Client/CDRepositoryClient', () => ({
   useCDRepositoryClient: () => ({
+    consumeLastRequestFailureStatus: vi.fn(),
+    consumeLastRequestFailureDetails: vi.fn(),
     postConceptDescription: vi.fn(),
     putConceptDescription: vi.fn(),
   }),
