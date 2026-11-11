@@ -146,6 +146,7 @@
     uploadAas,
     getAasEndpointById,
     consumeLastRequestFailureStatus,
+    consumeLastRequestFailureDetails,
   } = useAASRepositoryClient()
   const { getSmEndpointById } = useSMRepositoryClient()
   const { fetchSm } = useSMHandling()
@@ -332,9 +333,11 @@
             }
           } else {
             const failureStatus = consumeLastRequestFailureStatus()
-            summary.failed.push(
+            const failureDetails = consumeLastRequestFailureDetails()
+            summary.failed.push([
               `${aasFile.name}: ${appendHttpStatusFailureReason('upload failed.', failureStatus)}`,
-            )
+              failureDetails,
+            ].filter(Boolean).join('\n'))
           }
         } else {
           try {

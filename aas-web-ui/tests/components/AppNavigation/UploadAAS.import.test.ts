@@ -313,6 +313,32 @@ describe('upload report visible to the user', () => {
     expect(state.reload).not.toHaveBeenCalled()
   })
 
+  it('includes all wrapped BaSyx Go REST messages in the client import report', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => Response.json({ messages: [{
+      code: '500', messageType: 'Error', text: 'SMREPO-NEWSM-CREATE-FAILED',
+      correlationId: 'SMREPO-500-PostSubmodel-InternalServerError', timestamp: '2026-11-11T16:29:44Z',
+    }, { code: '500', messageType: 'Error', text: 'Storage is unavailable' }] }, { status: 500 })))
+    const wrapper = await uploadFiles()
+    expect(wrapper.text()).toContain('SMREPO-NEWSM-CREATE-FAILED')
+    expect(wrapper.text()).toContain('Storage is unavailable')
+    expect(wrapper.text()).toContain('SMREPO-500-PostSubmodel-InternalServerError')
+    expect(wrapper.text()).toContain('HTTP 500')
+  })
+
+  it('includes the REST answer in server upload failures too', async () => {
+    state.template = 'mono-repo'
+    const fetch = vi.fn(async () => Response.json({ messages: [{
+      code: '409', messageType: 'Error', text: 'AASENV-UPLOAD-CONFLICT',
+      correlationId: 'AASENV-409-UploadEnvironment-Conflict',
+    }] }, { status: 409 }))
+    vi.stubGlobal('fetch', fetch)
+    const wrapper = await uploadFiles([new File(['test'], 'environment.aasx')])
+    expect(fetch).toHaveBeenCalledWith('https://import.test/upload?ignore-duplicates=true', expect.objectContaining({ method: 'POST' }))
+    expect(wrapper.text()).toContain('AASENV-UPLOAD-CONFLICT')
+    expect(wrapper.text()).toContain('AASENV-409-UploadEnvironment-Conflict')
+    expect(wrapper.text()).toContain('HTTP 409')
+  })
+
   it('reports a partial file as failed while reloading shells that were imported', async () => {
     const fetch = simulateRepository(201)
     fetch.mockResolvedValueOnce(errorResponse(500))

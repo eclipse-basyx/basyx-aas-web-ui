@@ -459,6 +459,43 @@ describe('RequestHandling.ts', () => {
     expect(consumeLastRequestFailureDetails()).toBeUndefined()
   })
 
+  it.each(['getRequest', 'postRequest', 'putRequest', 'patchRequest', 'deleteRequest'] as const)(
+    'preserves all BaSyx Go Result messages for %s', async method => {
+      const messages = [{
+        code: '500', messageType: 'Error', text: 'Repository write failed',
+        correlationId: 'SMREPO-500-PutSubmodel-InternalServerError-Write', timestamp: '2026-11-11T16:29:44Z',
+      }, { code: '500', messageType: 'Error', text: 'Storage is unavailable' }]
+      global.fetch = vi.fn().mockResolvedValue(Response.json({ messages }, { status: 500 }))
+      const { useRequestHandling } = await import('@/composables/RequestHandling')
+      const requests = useRequestHandling()
+      const response = method === 'getRequest'
+        ? await requests.getRequest('/api/submodels', 'reading', false)
+        : (method === 'deleteRequest'
+            ? await requests.deleteRequest('/api/submodels', new Headers(), 'deleting', false)
+            : await requests[method]('/api/submodels', '{}', new Headers(), 'writing', false))
+      expect(response).toMatchObject({ success: false, status: 500 })
+      expect(requests.consumeLastRequestFailureStatus()).toBe(500)
+      const details = requests.consumeLastRequestFailureDetails()
+      expect(details).toContain('Status: 500')
+      expect(details).toContain('Message Type: Error')
+      expect(details).toContain('Text: Repository write failed')
+      expect(details).toContain('Text: Storage is unavailable')
+      expect(details).toContain('Correlation ID: SMREPO-500-PutSubmodel-InternalServerError-Write')
+      expect(details).toContain('Timestamp:')
+      expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({ extendedError: details }))
+    },
+  )
+
+  it('preserves every message in a Java error array too', async () => {
+    global.fetch = vi.fn().mockResolvedValue(Response.json([
+      { code: 400, text: 'Invalid shell' }, { code: 400, text: 'Missing asset kind' },
+    ], { status: 400 }))
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const requests = useRequestHandling()
+    await requests.postRequest('/api/shells', '{}', new Headers(), 'creating', true)
+    expect(requests.consumeLastRequestFailureDetails()).toContain('Text: Missing asset kind')
+  })
+
   it('treats HTTP 409 JSON response without payload code as failure', async () => {
     global.fetch = vi.fn().mockResolvedValue(
       Response.json(
