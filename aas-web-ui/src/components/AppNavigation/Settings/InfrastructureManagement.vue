@@ -440,6 +440,7 @@
         }
       }
     },
+    { immediate: true },
   )
 
   watch(dialogOpen, val => {

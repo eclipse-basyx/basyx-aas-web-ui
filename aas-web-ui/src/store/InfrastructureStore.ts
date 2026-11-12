@@ -760,9 +760,8 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         if (!isCurrentComponentConnection(componentKey, connectionGeneration, infrastructureId, requestedUrl)) {
           return
         }
-        basyxComponent.loading = false
-
         if (response.success) {
+          basyxComponent.loading = false
           if (resourceAccessProfiles.value[componentKey]?.requestId === profile.requestId) {
             profile.enabled = hasResourceAccessProfile(response.data)
             resourceAccessProfiles.value[componentKey] = { ...profile }

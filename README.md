@@ -31,6 +31,10 @@ Comprehensive documentation is available in the **[BaSyx Wiki](https://wiki.basy
 
 ### For End Users (Deployment)
 
+> **Backend services are required to browse and manage AAS data.** The Docker image below runs the Web UI only; it does not start an AAS repository or other backend services. Start a [minimal BaSyx Go environment](https://github.com/eclipse-basyx/basyx-go-components/tree/main/examples/BaSyxMinimalExample) or [minimal BaSyx Java environment](https://github.com/eclipse-basyx/basyx-java-server-sdk/tree/main/examples/BaSyxMinimal), or use an existing environment. The services you need depend on your infrastructure template.
+>
+> After starting the UI, use **Settings → Infrastructures** to configure endpoints that your browser can reach. Allow the UI origin in the backend CORS configuration. See [Environment & Configuration](https://wiki.basyx.org/en/latest/content/user_documentation/basyx_components/web_ui/features/configuration.html) for administrator-managed deployments. Custom modules that do not access backend data can still run without these services.
+
 Pull and run the latest Docker image:
 
 ```bash

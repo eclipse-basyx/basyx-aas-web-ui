@@ -3,6 +3,8 @@
     <AppNavigation />
 
     <v-main style="padding-top: 33px">
+      <BackendSetupNotice />
+
       <!-- App Content (eg. AASViewer, AASEditor, etc.) -->
       <router-view v-slot="{ Component }">
         <component :is="Component" />

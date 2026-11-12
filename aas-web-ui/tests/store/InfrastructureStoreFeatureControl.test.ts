@@ -349,6 +349,36 @@ describe('InfrastructureStore', () => {
     expect(component.description).toBeNull()
   })
 
+  it('keeps a component loading until its fallback connection check finishes', async () => {
+    const store = useInfrastructureStore()
+    await store.waitForInitialization()
+    const component = store.getBasyxComponents.AASRepo
+    component.url = 'https://example.com/shells'
+    let resolveFallback!: (response: { success: boolean }) => void
+    mocks.getRequest
+      .mockResolvedValueOnce({ success: false })
+      .mockReturnValueOnce(new Promise(resolve => {
+        resolveFallback = resolve
+      }))
+
+    const connection = store.connectComponent('AASRepo')
+    await vi.waitFor(() => expect(mocks.getRequest).toHaveBeenCalledWith(
+      'https://example.com/shells?limit=1',
+      'Connecting to AAS Repository URL',
+      false,
+      expect.any(Headers),
+      {},
+      'auto',
+      undefined,
+    ))
+    expect(component.loading).toBe(true)
+
+    resolveFallback({ success: false })
+    await connection
+    expect(component.loading).toBe(false)
+    expect(component.connected).toBe(false)
+  })
+
   it('forwards an explicit infrastructure context when testing a component connection', async () => {
     const store = useInfrastructureStore()
     await store.waitForInitialization()
