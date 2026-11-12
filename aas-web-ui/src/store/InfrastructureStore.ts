@@ -1,4 +1,4 @@
-import type { BaSyxComponent, BaSyxComponentKey, ServiceDescription } from '@/types/BaSyx'
+import type { BaSyxComponent, BaSyxComponentKey, ComponentConnectionResult, ComponentConnectionState, ServiceDescription } from '@/types/BaSyx'
 import type { InfrastructureConfig } from '@/types/Infrastructure'
 import { defineStore } from 'pinia'
 import { ASS_DISCOVERY_ENDPOINT_PATH } from '@/composables/Client/AASDiscoveryClient'
@@ -14,6 +14,7 @@ import { useInfrastructureStorage } from '@/composables/Infrastructure/useInfras
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useNavigationStore } from '@/store/NavigationStore'
+import { getFallbackConnectionFailure, isValidConnectionResponse, isValidServiceDescription } from '@/utils/ComponentConnectionUtils'
 import { isValidCustomHeader } from '@/utils/CustomHeaderUtils'
 import { getActiveComponentKeys, isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
 import { hasResourceAccessProfile } from '@/utils/ResourceAccessProfile'
@@ -144,6 +145,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     },
   })
   const componentConnectionGenerations = new Map<BaSyxComponentKey, number>()
+  const componentConnectionResults = reactive<Partial<Record<BaSyxComponentKey, ComponentConnectionResult>>>({})
 
   // Getters
   const getInfrastructures = computed(() => infrastructures.value)
@@ -191,6 +193,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     getActiveComponentUrl('CompanyLookup', CompanyLookupURL.value),
   )
   const getBasyxComponents = computed(() => basyxComponents)
+  const getComponentConnectionResults = computed(() => componentConnectionResults)
   const getIsAuthenticating = computed(() => isAuthenticating.value)
   const getIsTestingConnections = computed(() => isTestingConnections.value)
 
@@ -654,6 +657,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     for (const repoKey of keys) {
       if (!activeKeys.includes(repoKey)) {
         invalidateComponentConnection(repoKey)
+        delete componentConnectionResults[repoKey]
         basyxComponents[repoKey].connected = null
         basyxComponents[repoKey].loading = false
         basyxComponents[repoKey].description = null
@@ -667,7 +671,11 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         invalidateComponentConnection(repoKey)
         // If infrastructure has no URL for this component, mark as not connected
         basyxComponents[repoKey].connected = false
+        basyxComponents[repoKey].loading = false
         basyxComponents[repoKey].description = null
+        componentConnectionResults[repoKey] = {
+          state: 'not-configured', infrastructureId: selectedInfra.id, url: '',
+        }
       } else {
         // Normalize URLs for comparison (trim and remove trailing slash)
         const currentUrl = basyxComponents[repoKey].url.trim().replace(/\/$/, '')
@@ -720,9 +728,21 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     const connectionGeneration = invalidateComponentConnection(componentKey)
     const infrastructureId = selectedInfrastructureId.value
     const requestedUrl = normalizeComponentUrl(basyxComponent.url)
+    const saveConnectionResult = !requestInfrastructure && !isTestingConnections.value
+    function completeConnection (state: ComponentConnectionState): void {
+      basyxComponent.loading = false
+      basyxComponent.connected = state === 'connected'
+      if (saveConnectionResult) {
+        componentConnectionResults[componentKey] = { state, infrastructureId, url: requestedUrl }
+      }
+    }
+
     basyxComponent.description = null
     if (basyxComponent.url && basyxComponent.url.trim() !== '') {
       basyxComponent.loading = true
+      if (saveConnectionResult) {
+        componentConnectionResults[componentKey] = { state: 'checking', infrastructureId, url: requestedUrl }
+      }
       let basyxComponentURL = basyxComponent.url
       if (basyxComponentURL.endsWith('/')) {
         basyxComponentURL = stripLastCharacter(basyxComponentURL)
@@ -760,14 +780,13 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         if (!isCurrentComponentConnection(componentKey, connectionGeneration, infrastructureId, requestedUrl)) {
           return
         }
-        if (response.success) {
-          basyxComponent.loading = false
+        if (response.success && isValidServiceDescription(response.data)) {
           if (resourceAccessProfiles.value[componentKey]?.requestId === profile.requestId) {
             profile.enabled = hasResourceAccessProfile(response.data)
             resourceAccessProfiles.value[componentKey] = { ...profile }
           }
           // Update the connected status
-          basyxComponent.connected = true
+          completeConnection('connected')
           basyxComponent.description = normalizeServiceDescription(response.data)
         } else {
           // If connect to components via `/description`fails, second attempt to connect via main endpoints
@@ -792,7 +811,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
           }
 
           disableMessage = false
-          const response = await getRequest(
+          const fallbackResponse = await getRequest(
             path,
             context,
             disableMessage,
@@ -804,11 +823,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
           if (!isCurrentComponentConnection(componentKey, connectionGeneration, infrastructureId, requestedUrl)) {
             return
           }
-          basyxComponent.loading = false
-
-          if (response.success) {
+          if (fallbackResponse.success && isValidConnectionResponse(componentKey, fallbackResponse.data)) {
             // Update the connected status
-            basyxComponent.connected = true
+            completeConnection('connected')
           } else {
             console.warn(context + ' (' + path + ') failed!')
 
@@ -818,21 +835,31 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
             }
 
             // Update the connected status
-            basyxComponent.connected = false
+            completeConnection(getFallbackConnectionFailure(response, fallbackResponse))
+            if (fallbackResponse.success) {
+              navigationStore.dispatchSnackbar({
+                status: true,
+                timeout: 8000,
+                color: 'error',
+                btnColor: 'buttonText',
+                baseError: 'Unexpected AAS server response',
+                extendedError: `${basyxComponent.label} did not return the expected AAS API response. Check the configured endpoint.`,
+                infrastructureId: infrastructureId ?? undefined,
+              })
+            }
           }
         }
       } catch (error) {
         if (!isCurrentComponentConnection(componentKey, connectionGeneration, infrastructureId, requestedUrl)) {
           return
         }
-        basyxComponent.loading = false
         console.error(`Error connecting to ${basyxComponent.label}:`, error)
 
         // Update the connected status
-        basyxComponent.connected = false
+        completeConnection('configuration-error')
       }
     } else {
-      basyxComponent.connected = false
+      completeConnection('not-configured')
       basyxComponent.description = null
       console.warn(`Repository URL for ${componentKey} is not defined or empty.`)
     }
@@ -868,6 +895,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     getConceptDescriptionRepoURL,
     getCompanyLookupURL,
     getBasyxComponents,
+    getComponentConnectionResults,
     getDefaultInfrastructureId,
     getIsAuthenticating,
     getIsTestingConnections,

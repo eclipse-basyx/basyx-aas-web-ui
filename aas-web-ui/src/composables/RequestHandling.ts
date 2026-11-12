@@ -8,6 +8,13 @@ import { parseTrustedOrigin } from '@/utils/TrustedOriginUtils'
 
 class NetworkRequestError extends TypeError {}
 
+class RequestConfigurationError extends Error {
+  constructor (error: unknown) {
+    super(error instanceof Error ? error.message : String(error), { cause: error })
+    this.name = error instanceof Error ? error.name : 'Error'
+  }
+}
+
 class UntrustedEndpointError extends Error {
   constructor (message = 'Untrusted endpoint blocked. Add its origin to the selected infrastructure to allow requests.') {
     super(message)
@@ -50,6 +57,17 @@ export interface RequestResult<T = unknown> {
   status?: number
   raw?: Response
   aborted?: true
+  failureKind?: 'network' | 'configuration' | 'invalid-response'
+}
+
+function classifyRequestFailure (error: unknown): RequestResult['failureKind'] {
+  if (error instanceof NetworkRequestError) {
+    return 'network'
+  }
+  if (error instanceof RequestConfigurationError) {
+    return 'configuration'
+  }
+  return 'invalid-response'
 }
 
 export interface RequestSecurityContext {
@@ -224,7 +242,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     requestInfrastructure: InfrastructureConfig | null | undefined = infrastructureStore.getSelectedInfrastructure,
     isolateAuthenticationFailures = false,
     context?: string,
-  ): { success: false, status?: number, aborted?: true, blocked?: true, redirected?: true } {
+  ): { success: false, status?: number, aborted?: true, blocked?: true, redirected?: true, failureKind?: RequestResult['failureKind'] } {
     if (error instanceof BlockedRedirectError && errorHandlingOptions.acceptRedirect) {
       setLastRequestFailureStatus(undefined)
       setLastRequestFailureDetails(undefined)
@@ -302,7 +320,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     if (!disableMessage && !shouldSuppressStatus(statusCode, errorHandlingOptions)) {
       showRequestError(error, errorMessage, statusCode, context)
     }
-    return { success: false, status: statusCode }
+    return { success: false, status: statusCode, failureKind: classifyRequestFailure(error) }
   }
 
   function shouldSuppressStatus (
@@ -781,6 +799,10 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
       if (!isTrustedRequestTarget(path, requestInfrastructure)) {
         throw new UntrustedEndpointError()
       }
+      const target = new URL(path, window.location.origin)
+      if (target.username || target.password) {
+        throw new Error('Credentials in endpoint URLs are not supported. Use the infrastructure authentication settings.')
+      }
       const headers = includeAuth
         ? addAuthorizationHeader(options.headers, requestInfrastructure)
         : options.headers
@@ -798,7 +820,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
         throw error
       })
     } catch (error) {
-      return Promise.reject(error)
+      return Promise.reject(error instanceof UntrustedEndpointError ? error : new RequestConfigurationError(error))
     }
   }
 

@@ -8,6 +8,7 @@ import { base64Encode } from '@/utils/EncodeDecodeUtils'
 const mocks = vi.hoisted(() => ({
   appliedOverrides: [] as unknown[],
   getRequest: vi.fn(),
+  dispatchSnackbar: vi.fn(),
   loadInfrastructuresFromStorage: vi.fn(),
   saveInfrastructuresToStorage: vi.fn(),
   refreshInfrastructureTokens: vi.fn().mockResolvedValue([]),
@@ -45,6 +46,7 @@ vi.mock('@/store/EnvironmentStore', () => ({
 
 vi.mock('@/store/NavigationStore', () => ({
   useNavigationStore: () => ({
+    dispatchSnackbar: mocks.dispatchSnackbar,
     dispatchDismissInfrastructureSnackbar: vi.fn(),
     dispatchClearAASList: vi.fn(),
     dispatchClearTreeview: vi.fn(),
@@ -111,12 +113,20 @@ function infrastructure (id: string, features: string[]): InfrastructureConfig {
   }
 }
 
+async function configuredAASRepository (url = 'https://aas.example/shells') {
+  const store = useInfrastructureStore()
+  await store.waitForInitialization()
+  store.dispatchComponentURL('AASRepo', url)
+  mocks.getRequest.mockClear()
+  return { store, component: store.getBasyxComponents.AASRepo }
+}
+
 describe('InfrastructureStore', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.appliedOverrides.length = 0
     mocks.getRequest.mockReset()
-    mocks.getRequest.mockResolvedValue({ success: true })
+    mocks.getRequest.mockResolvedValue({ success: true, data: { profiles: ['test-profile'] } })
     setActivePinia(createPinia())
     mocks.loadInfrastructuresFromStorage.mockResolvedValue({
       selectedInfrastructureId: 'viewer',
@@ -138,7 +148,7 @@ describe('InfrastructureStore', () => {
     store.getBasyxComponents.SubmodelRepo.url = 'https://sm.example'
     mocks.getRequest.mockImplementation(async path => ({ success: true, data: { profiles: path === 'https://aas.example/description'
       ? ['https://basyx.org/aas/API/3/2/RelationshipBasedAccessControl/1.0']
-      : [] } }))
+      : ['other-profile'] } }))
     await store.connectComponent('AASRepo')
     await store.connectComponent('SubmodelRepo')
     expect(store.supportsResourceAccess('AASRepo')).toBe(true)
@@ -344,7 +354,7 @@ describe('InfrastructureStore', () => {
 
     mocks.getRequest
       .mockResolvedValueOnce({ success: false })
-      .mockResolvedValueOnce({ success: true })
+      .mockResolvedValueOnce({ success: true, data: { result: [] } })
     await store.connectComponent('AASRepo')
     expect(component.description).toBeNull()
   })
@@ -409,6 +419,40 @@ describe('InfrastructureStore', () => {
     )
   })
 
+  it.each([true, false])('keeps saved connection results while testing an unsaved infrastructure (explicit context: %s)', async explicitContext => {
+    const savedUrl = 'https://aas.example/shells'
+    const { store, component } = await configuredAASRepository(savedUrl)
+    await store.connectComponent('AASRepo')
+    const savedResult = { ...store.getComponentConnectionResults.AASRepo }
+    expect(savedResult).toEqual({ state: 'connected', infrastructureId: 'viewer', url: savedUrl })
+
+    const draftInfrastructure = infrastructure('draft', [])
+    draftInfrastructure.components.AASRepo.url = 'https://draft.example/shells'
+    component.url = draftInfrastructure.components.AASRepo.url
+    let resolveDescription!: (response: unknown) => void
+    mocks.getRequest
+      .mockResolvedValue({ success: false, failureKind: 'network' })
+      .mockReturnValueOnce(new Promise(resolve => {
+        resolveDescription = resolve
+      }))
+
+    store.dispatchIsTestingConnections(!explicitContext)
+    const draftCheck = store.connectComponent('AASRepo', explicitContext ? draftInfrastructure : undefined)
+    expect(component.loading).toBe(true)
+    expect(store.getComponentConnectionResults.AASRepo).toEqual(savedResult)
+
+    resolveDescription({ success: false, failureKind: 'network' })
+    await draftCheck
+    store.dispatchIsTestingConnections(false)
+    expect(component.loading).toBe(false)
+    expect(component.connected).toBe(false)
+    expect(store.getComponentConnectionResults.AASRepo).toEqual(savedResult)
+
+    component.url = savedUrl
+    expect(store.getSelectedInfrastructure!.components.AASRepo.url).toBe(savedUrl)
+    expect(store.getComponentConnectionResults.AASRepo).toEqual(savedResult)
+  })
+
   it('discards a description response from a superseded component URL', async () => {
     const store = useInfrastructureStore()
     await store.waitForInitialization()
@@ -436,5 +480,204 @@ describe('InfrastructureStore', () => {
 
     expect(component.description).toEqual(currentDescription)
     expect(component.connected).toBe(true)
+  })
+
+  it('records a valid service description without requesting the fallback endpoint', async () => {
+    const { store, component } = await configuredAASRepository('https://aas.example/shells///')
+    mocks.getRequest.mockResolvedValueOnce({ success: true, data: { profiles: ['test-profile'] } })
+
+    await store.connectComponent('AASRepo')
+
+    expect(mocks.getRequest).toHaveBeenCalledOnce()
+    expect(component.connected).toBe(true)
+    expect(store.getComponentConnectionResults.AASRepo).toEqual({
+      state: 'connected', infrastructureId: 'viewer', url: 'https://aas.example/shells',
+    })
+  })
+
+  it.each([
+    ['unreachable', { success: false, failureKind: 'network' }],
+    ['authentication-required', { success: false, status: 401 }],
+    ['access-denied', { success: false, status: 403 }],
+    ['server-error', { success: false, status: 500 }],
+    ['server-error', { success: false, status: 400 }],
+    ['invalid-response', { success: false, failureKind: 'invalid-response' }],
+    ['configuration-error', { success: false, failureKind: 'configuration' }],
+    ['configuration-error', { success: false, blocked: true }],
+  ])('records %s for a failed fallback check', async (state, fallback) => {
+    const { store, component } = await configuredAASRepository()
+    mocks.getRequest
+      .mockResolvedValueOnce({ success: false, status: 404 })
+      .mockResolvedValueOnce(fallback)
+
+    await store.connectComponent('AASRepo')
+
+    expect(component.connected).toBe(false)
+    expect(component.loading).toBe(false)
+    expect(store.getComponentConnectionResults.AASRepo).toEqual({
+      state, infrastructureId: 'viewer', url: 'https://aas.example/shells',
+    })
+  })
+
+  it.each([
+    ['authentication-required', { success: false, status: 401 }],
+    ['access-denied', { success: false, status: 403 }],
+    ['server-error', { success: false, status: 500 }],
+    ['server-error', { success: false, status: 400 }],
+    ['configuration-error', { success: false, failureKind: 'configuration' }],
+    ['invalid-response', { success: true, data: '<html>Sign in</html>' }],
+  ])('preserves a description %s when the fallback has a network failure', async (state, description) => {
+    const { store, component } = await configuredAASRepository()
+    mocks.getRequest
+      .mockResolvedValueOnce(description)
+      .mockResolvedValueOnce({ success: false, failureKind: 'network' })
+
+    await store.connectComponent('AASRepo')
+
+    expect(component.connected).toBe(false)
+    expect(store.getComponentConnectionResults.AASRepo?.state).toBe(state)
+  })
+
+  it.each([404, 405])('allows a missing description (%s) to fall back to an unreachable endpoint', async status => {
+    const { store } = await configuredAASRepository()
+    mocks.getRequest
+      .mockResolvedValueOnce({ success: false, status })
+      .mockResolvedValueOnce({ success: false, failureKind: 'network' })
+
+    await store.connectComponent('AASRepo')
+
+    expect(store.getComponentConnectionResults.AASRepo?.state).toBe('unreachable')
+  })
+
+  it.each([
+    '<html>Reverse proxy sign-in page</html>',
+    new Blob(['<html>Reverse proxy sign-in page</html>'], { type: 'text/html' }),
+    { message: 'This is another service' },
+    { result: [{}] },
+  ])('rejects successful HTTP responses without an AAS payload: %s', async data => {
+    const { store, component } = await configuredAASRepository()
+    mocks.getRequest.mockResolvedValue({ success: true, data })
+
+    await store.connectComponent('AASRepo')
+
+    expect(component.connected).toBe(false)
+    expect(component.description).toBeNull()
+    expect(store.getComponentConnectionResults.AASRepo?.state).toBe('invalid-response')
+    expect(mocks.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({
+      baseError: 'Unexpected AAS server response',
+      extendedError: expect.stringContaining('AAS Repository URL'),
+    }))
+  })
+
+  it.each([
+    { success: false, status: 404 },
+    { success: false, status: 401 },
+    { success: false, failureKind: 'network' },
+    { success: true, data: { profiles: [] } },
+  ])('connects through a valid empty fallback list after a failed description: %s', async description => {
+    const { store, component } = await configuredAASRepository()
+    mocks.getRequest
+      .mockResolvedValueOnce(description)
+      .mockResolvedValueOnce({ success: true, data: { result: [] } })
+
+    await store.connectComponent('AASRepo')
+
+    expect(component.connected).toBe(true)
+    expect(component.description).toBeNull()
+    expect(store.getComponentConnectionResults.AASRepo?.state).toBe('connected')
+  })
+
+  it('keeps a pending fallback in the checking state', async () => {
+    const { store, component } = await configuredAASRepository()
+    let resolveFallback!: (response: unknown) => void
+    mocks.getRequest
+      .mockResolvedValueOnce({ success: false, status: 404 })
+      .mockReturnValueOnce(new Promise(resolve => {
+        resolveFallback = resolve
+      }))
+
+    const connection = store.connectComponent('AASRepo')
+    await vi.waitFor(() => expect(mocks.getRequest).toHaveBeenCalledTimes(2))
+    expect(component.loading).toBe(true)
+    expect(store.getComponentConnectionResults.AASRepo?.state).toBe('checking')
+
+    resolveFallback({ success: true, data: { result: [] } })
+    await connection
+    expect(store.getComponentConnectionResults.AASRepo?.state).toBe('connected')
+  })
+
+  it('does not turn an aborted connection check into an unreachable service', async () => {
+    const { store, component } = await configuredAASRepository()
+    mocks.getRequest.mockResolvedValue({ success: false, aborted: true })
+
+    await store.connectComponent('AASRepo')
+
+    expect(component.connected).toBe(false)
+    expect(store.getComponentConnectionResults.AASRepo?.state).toBe('configuration-error')
+  })
+
+  it('does not overwrite the current result with a late failed response from an old URL', async () => {
+    const { store, component } = await configuredAASRepository('https://old.example/shells')
+    let resolveOldRequest!: (response: unknown) => void
+    mocks.getRequest.mockReturnValueOnce(new Promise(resolve => {
+      resolveOldRequest = resolve
+    }))
+    const oldConnection = store.connectComponent('AASRepo')
+
+    store.dispatchComponentURL('AASRepo', 'https://new.example/shells')
+    mocks.getRequest.mockResolvedValueOnce({ success: true, data: { profiles: ['test-profile'] } })
+    await store.connectComponent('AASRepo')
+    const currentResult = { ...store.getComponentConnectionResults.AASRepo }
+
+    resolveOldRequest({ success: false, failureKind: 'network' })
+    await oldConnection
+
+    expect(component.connected).toBe(true)
+    expect(store.getComponentConnectionResults.AASRepo).toEqual(currentResult)
+    expect(currentResult).toEqual({
+      state: 'connected', infrastructureId: 'viewer', url: 'https://new.example/shells',
+    })
+  })
+
+  it('ignores a late check from a previously selected infrastructure', async () => {
+    const { store } = await configuredAASRepository()
+    let resolveOldRequest!: (response: unknown) => void
+    mocks.getRequest.mockReturnValueOnce(new Promise(resolve => {
+      resolveOldRequest = resolve
+    }))
+    const oldConnection = store.connectComponent('AASRepo')
+
+    store.getInfrastructures.find(infra => infra.id === 'editor')!.components.AASRepo.url = 'https://editor.example/shells'
+    await store.dispatchSelectInfrastructure('editor', false)
+    await nextTick()
+    mocks.getRequest.mockResolvedValueOnce({ success: true, data: { profiles: ['test-profile'] } })
+    await store.connectComponent('AASRepo')
+    const currentResult = { ...store.getComponentConnectionResults.AASRepo }
+
+    resolveOldRequest({ success: false, failureKind: 'network' })
+    await oldConnection
+
+    expect(store.getComponentConnectionResults.AASRepo).toEqual(currentResult)
+    expect(currentResult).toEqual({
+      state: 'connected', infrastructureId: 'editor', url: 'https://editor.example/shells',
+    })
+  })
+
+  it('resets an old failure to not-configured when the URL is cleared', async () => {
+    const { store, component } = await configuredAASRepository()
+    mocks.getRequest.mockResolvedValue({ success: false, failureKind: 'network' })
+    await store.connectComponent('AASRepo')
+    expect(store.getComponentConnectionResults.AASRepo?.state).toBe('unreachable')
+
+    store.dispatchComponentURL('AASRepo', ' '.repeat(3))
+    mocks.getRequest.mockClear()
+    await store.connectComponent('AASRepo')
+
+    expect(mocks.getRequest).not.toHaveBeenCalled()
+    expect(component.connected).toBe(false)
+    expect(component.loading).toBe(false)
+    expect(store.getComponentConnectionResults.AASRepo).toEqual({
+      state: 'not-configured', infrastructureId: 'viewer', url: '',
+    })
   })
 })

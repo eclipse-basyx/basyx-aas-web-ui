@@ -1,5 +1,22 @@
 import type { Ref } from 'vue'
 
+export type ComponentConnectionState
+  = | 'checking'
+    | 'connected'
+    | 'not-configured'
+    | 'unreachable'
+    | 'authentication-required'
+    | 'access-denied'
+    | 'server-error'
+    | 'invalid-response'
+    | 'configuration-error'
+
+export interface ComponentConnectionResult {
+  state: ComponentConnectionState
+  infrastructureId: string | null
+  url: string
+}
+
 export interface BaSyxComponent {
   url: Ref<string>
   loading: Ref<boolean>
