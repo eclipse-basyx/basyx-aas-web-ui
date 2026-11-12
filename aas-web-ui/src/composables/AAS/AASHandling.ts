@@ -60,7 +60,8 @@ export function useAASHandling () {
   function enrichDescriptorListItems (items: Array<any>): Array<any> {
     return items.map((aasDescriptor: any) => {
       aasDescriptor.timestamp = formatDate(new Date())
-      aasDescriptor.path = extractEndpointHref(aasDescriptor, 'AAS-3.0')
+      const configuredEndpoint = getAasEndpointByIdFromRepo(aasDescriptor.id)
+      aasDescriptor.path = extractEndpointHref(aasDescriptor, 'AAS-3.0', configuredEndpoint)
       return aasDescriptor
     })
   }
@@ -298,7 +299,8 @@ export function useAASHandling () {
     }
 
     aasDescriptor.timestamp = formatDate(new Date())
-    aasDescriptor.path = extractEndpointHref(aasDescriptor, 'AAS-3.0')
+    const configuredEndpoint = getAasEndpointByIdFromRepo(aasDescriptor.id)
+    aasDescriptor.path = extractEndpointHref(aasDescriptor, 'AAS-3.0', configuredEndpoint)
 
     return aasDescriptor || failResponse
   }
@@ -389,15 +391,17 @@ export function useAASHandling () {
       return failResponse
     }
 
+    const configuredEndpoint = getAasEndpointByIdFromRepo(aasId)
+
     // First try to determine AAS endpoint with the help of the registry
-    const aasEndpoint = await getAasEndpointByIdFromRegistry(aasId)
+    const aasEndpoint = await getAasEndpointByIdFromRegistry(aasId, undefined, configuredEndpoint)
 
     if (aasEndpoint && aasEndpoint.trim() !== '') {
       return aasEndpoint.trim()
     }
 
     // Second try to determine AAS endpoint with the help of the repo
-    return getAasEndpointByIdFromRepo(aasId) || failResponse
+    return configuredEndpoint || failResponse
   }
 
   /**

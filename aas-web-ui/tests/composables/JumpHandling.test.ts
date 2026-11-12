@@ -135,4 +135,22 @@ describe('JumpHandling.ts', () => {
       },
     })
   })
+
+  it('resolves an unenriched descriptor through the central endpoint selection', async () => {
+    mockDeps.getAasEndpointById.mockResolvedValue('https://public.example/shells/aas-1')
+
+    const { jumpToAasByAasDescriptor } = useJumpHandling()
+    await jumpToAasByAasDescriptor({
+      id: 'aas-1',
+      endpoints: [{
+        interface: 'AAS-3.0',
+        protocolInformation: { href: 'https://internal.example/shells/aas-1' },
+      }],
+    })
+
+    expect(mockDeps.getAasEndpointById).toHaveBeenCalledWith('aas-1')
+    expect(mockDeps.routerPush).toHaveBeenCalledWith({
+      query: { aas: 'https://public.example/shells/aas-1' },
+    })
+  })
 })
