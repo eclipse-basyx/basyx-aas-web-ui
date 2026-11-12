@@ -6,6 +6,8 @@ import { useNavigationStore } from '@/store/NavigationStore'
 import { isValidCustomHeader } from '@/utils/CustomHeaderUtils'
 import { parseTrustedOrigin } from '@/utils/TrustedOriginUtils'
 
+class NetworkRequestError extends TypeError {}
+
 class UntrustedEndpointError extends Error {
   constructor (message = 'Untrusted endpoint blocked. Add its origin to the selected infrastructure to allow requests.') {
     super(message)
@@ -180,6 +182,29 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     return requestOwnerId === getRequestOwnerId()
   }
 
+  function showRequestError (error: unknown, errorMessage: string, statusCode?: number, context?: string): void {
+    if (error instanceof NetworkRequestError && statusCode === undefined && context?.startsWith('Connecting to ')) {
+      const componentLabel = context.slice('Connecting to '.length)
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 60_000,
+        color: 'error',
+        btnColor: 'buttonText',
+        baseError: 'Unable to connect to the configured BaSyx environment.',
+        extendedError: `${componentLabel} could not be reached. Make sure the corresponding BaSyx component is running and verify its endpoint and CORS settings.\n\nTechnical details: ${errorMessage}`,
+      })
+      return
+    }
+
+    navigationStore.dispatchSnackbar({
+      status: true,
+      timeout: 60_000,
+      color: 'error',
+      btnColor: 'buttonText',
+      text: 'Error! Server responded with: ' + error,
+    })
+  }
+
   /**
    * Centralized error handler for catch blocks
    * Handles authentication errors and general errors
@@ -191,6 +216,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     requestOwnerId: string | undefined = getRequestOwnerId(),
     requestInfrastructure: InfrastructureConfig | null | undefined = infrastructureStore.getSelectedInfrastructure,
     isolateAuthenticationFailures = false,
+    context?: string,
   ): { success: false, status?: number, aborted?: true, blocked?: true, redirected?: true } {
     if (error instanceof BlockedRedirectError && errorHandlingOptions.acceptRedirect) {
       setLastRequestFailureStatus(undefined)
@@ -267,13 +293,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
 
     // Handle other errors
     if (!disableMessage && !shouldSuppressStatus(statusCode, errorHandlingOptions)) {
-      navigationStore.dispatchSnackbar({
-        status: true,
-        timeout: 60_000,
-        color: 'error',
-        btnColor: 'buttonText',
-        text: 'Error! Server responded with: ' + error,
-      })
+      showRequestError(error, errorMessage, statusCode, context)
     }
     return { success: false, status: statusCode }
   }
@@ -494,6 +514,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
         requestOwnerId,
         requestInfrastructure,
         securityContext?.isolateAuthenticationFailures,
+        context,
       ))
   }
 
@@ -763,6 +784,11 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
           throw new BlockedRedirectError()
         }
         return response
+      }, error => {
+        if (error instanceof TypeError) {
+          throw new NetworkRequestError(error.message, { cause: error })
+        }
+        throw error
       })
     } catch (error) {
       return Promise.reject(error)

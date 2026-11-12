@@ -1,11 +1,11 @@
 <template>
   <v-snackbar v-model="snackbar.status" :color="snackbar.color" location="top" :timeout="snackbar.timeout">
     <v-card v-if="snackbar.status === true && snackbar.baseError">
-      <v-card-title class="text-title-small">{{ snackbar.baseError }}</v-card-title>
+      <v-card-title class="text-title-small text-wrap text-break">{{ snackbar.baseError }}</v-card-title>
       <v-divider v-if="snackbar.extendedError" />
 
       <v-card-text v-if="snackbar.extendedError" style="max-height: 200px; overflow-y: auto; max-width: 590px">
-        <pre class="text-subtitleText text-body-small">{{ snackbar.extendedError }}</pre>
+        <pre class="text-subtitleText text-body-small text-pre-wrap text-break">{{ snackbar.extendedError }}</pre>
       </v-card-text>
 
       <v-divider />
