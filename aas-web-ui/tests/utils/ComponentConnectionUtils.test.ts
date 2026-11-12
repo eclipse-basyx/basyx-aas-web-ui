@@ -1,6 +1,6 @@
 import type { BaSyxComponentKey } from '@/types/BaSyx'
 import { describe, expect, it } from 'vitest'
-import { isValidConnectionResponse, isValidServiceDescription } from '@/utils/ComponentConnectionUtils'
+import { getConnectionFailureState, isValidConnectionResponse, isValidServiceDescription } from '@/utils/ComponentConnectionUtils'
 
 const pagedObjectComponents: BaSyxComponentKey[] = [
   'AASRepo',
@@ -90,5 +90,19 @@ describe('isValidConnectionResponse', () => {
 
   it('preserves successful Company Lookup responses without applying an AAS schema', () => {
     expect(isValidConnectionResponse('CompanyLookup', { companies: [] })).toBe(true)
+  })
+})
+
+describe('getConnectionFailureState', () => {
+  it.each([
+    ['authentication-required', { success: false, status: 401 }],
+    ['access-denied', { success: false, status: 403 }],
+    ['server-error', { success: false, status: 500 }],
+    ['server-error', { success: false, failureKind: 'http' }],
+    ['unreachable', { success: false, failureKind: 'network' }],
+    ['invalid-response', { success: false, failureKind: 'invalid-response' }],
+    ['configuration-error', { success: false, failureKind: 'configuration' }],
+  ] as const)('maps the failure to %s', (state, response) => {
+    expect(getConnectionFailureState(response)).toBe(state)
   })
 })

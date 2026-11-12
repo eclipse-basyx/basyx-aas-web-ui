@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   infrastructure: null as unknown as ReturnType<typeof createInfrastructureState>,
   environment: null as unknown as ReturnType<typeof createEnvironmentState>,
   aas: null as unknown as ReturnType<typeof createAasState>,
-  route: null as unknown as { name: string },
+  route: null as unknown as ReturnType<typeof createRoute>,
   reloadAasList: vi.fn(),
   reloadTreeview: vi.fn(),
 }))
@@ -27,11 +27,34 @@ vi.mock('@/store/NavigationStore', () => ({ useNavigationStore: () => ({
 }) }))
 vi.mock('@/components/AppNavigation/Settings/InfrastructureManagement.vue', () => ({
   default: {
-    props: ['open'],
+    props: { open: Boolean, editSelected: Boolean },
     emits: ['update:open'],
-    template: '<div v-if="open" role="dialog"><button @click="$emit(\'update:open\', false)">Close infrastructures</button></div>',
+    template: '<div v-if="open" role="dialog" :data-edit-selected="String(editSelected)"><button @click="$emit(\'update:open\', false)">Close infrastructures</button></div>',
   },
 }))
+
+// Mirrors the backendDataSource meta of the application routes.
+const ROUTE_DATA_SOURCES: Record<string, 'aas' | 'submodel'> = {
+  AASViewer: 'aas',
+  AASEditor: 'aas',
+  AASSubmodelViewer: 'aas',
+  AASList: 'aas',
+  SubmodelList: 'aas',
+  ComponentVisualization: 'aas',
+  Visualization: 'aas',
+  SMViewer: 'submodel',
+  SMEditor: 'submodel',
+}
+
+function createRoute (name: string) {
+  const route = reactive({
+    name,
+    get meta () {
+      return { backendDataSource: ROUTE_DATA_SOURCES[route.name] }
+    },
+  })
+  return route
+}
 
 function createInfrastructureState () {
   return reactive({
@@ -79,12 +102,24 @@ function createAasState () {
 
 const wrappers: ReturnType<typeof mount>[] = []
 
+async function clickRetry (wrapper: ReturnType<typeof mount>) {
+  vi.useFakeTimers({ toFake: ['setTimeout'] })
+  await wrapper.findAll('button').find(button => button.text() === 'Retry')!.trigger('click')
+  await vi.advanceTimersByTimeAsync(500)
+  await flushPromises()
+}
+
 function mountNotice () {
   const wrapper = mount(BackendSetupNotice, {
     global: {
       stubs: {
         VBanner: { template: '<section><slot name="text" /><slot name="actions" /></section>' },
-        VBtn: { props: ['href'], template: '<component :is="href ? \'a\' : \'button\'" :href="href"><slot /></component>' },
+        VDefaultsProvider: { template: '<div><slot /></div>' },
+        VBtn: {
+          name: 'VBtn',
+          props: ['href', 'text', 'loading'],
+          template: '<component :is="href ? \'a\' : \'button\'" :data-loading="String(!!loading)" :href="href">{{ text }}<slot /></component>',
+        },
       },
     },
   })
@@ -98,34 +133,35 @@ describe('Backend setup notice', () => {
     mocks.infrastructure = createInfrastructureState()
     mocks.environment = createEnvironmentState()
     mocks.aas = createAasState()
-    mocks.route = reactive({ name: 'AASViewer' })
+    mocks.route = createRoute('AASViewer')
   })
 
   afterEach(() => {
     for (const wrapper of wrappers.splice(0)) {
       wrapper.unmount()
     }
+    vi.useRealTimers()
   })
 
   it('explains the missing backend after startup connection checks complete', async () => {
     mocks.infrastructure.isInitialized = false
     const wrapper = mountNotice()
-    expect(wrapper.find('[role="status"]').exists()).toBe(false)
+    expect(wrapper.find('section').exists()).toBe(false)
 
     configureSource('AASRepo', 'checking')
     mocks.infrastructure.isInitialized = true
     await nextTick()
-    expect(wrapper.find('[role="status"]').exists()).toBe(false)
+    expect(wrapper.find('section').exists()).toBe(false)
 
     mocks.infrastructure.getComponentConnectionResults.AASRepo!.state = 'unreachable'
     await nextTick()
-    expect(wrapper.get('[role="status"]').text()).toContain('Cannot reach Example server')
+    expect(wrapper.get('section').text()).toContain('Cannot reach Example server')
   })
 
   it('also offers setup when no environment has been selected', () => {
     mocks.infrastructure.getSelectedInfrastructure = null
     const wrapper = mountNotice()
-    expect(wrapper.get('[role="status"]').text()).toContain('No data source configured')
+    expect(wrapper.get('section').text()).toContain('No data source configured')
     expect(wrapper.text()).toContain('Connect a server that provides data for this view.')
     expect(wrapper.text()).toContain('Connect server')
   })
@@ -133,19 +169,19 @@ describe('Backend setup notice', () => {
   it('hides during a reconnect and remains hidden when a component connects', async () => {
     configureSource('AASRepo')
     const wrapper = mountNotice()
-    expect(wrapper.find('[role="status"]').exists()).toBe(true)
+    expect(wrapper.find('section').exists()).toBe(true)
     mocks.infrastructure.getComponentConnectionResults.AASRepo!.state = 'checking'
     await nextTick()
-    expect(wrapper.find('[role="status"]').exists()).toBe(false)
+    expect(wrapper.find('section').exists()).toBe(false)
     mocks.infrastructure.getComponentConnectionResults.AASRepo!.state = 'connected'
     await nextTick()
-    expect(wrapper.find('[role="status"]').exists()).toBe(false)
+    expect(wrapper.find('section').exists()).toBe(false)
   })
 
   it('waits for unknown component results rather than reporting an unavailable environment', () => {
     configureSource('AASRepo')
     delete mocks.infrastructure.getComponentConnectionResults.AASRepo
-    expect(mountNotice().find('[role="status"]').exists()).toBe(false)
+    expect(mountNotice().find('section').exists()).toBe(false)
   })
 
   it('uses only the services active in the selected template', async () => {
@@ -154,10 +190,10 @@ describe('Backend setup notice', () => {
     configureSource('SubmodelRepo', 'connected')
     configureSource('AASRegistry', 'checking')
     const wrapper = mountNotice()
-    expect(wrapper.find('[role="status"]').exists()).toBe(true)
+    expect(wrapper.find('section').exists()).toBe(true)
     mocks.infrastructure.getComponentConnectionResults.AASRepo!.state = 'connected'
     await nextTick()
-    expect(wrapper.find('[role="status"]').exists()).toBe(false)
+    expect(wrapper.find('section').exists()).toBe(false)
   })
 
   it('distinguishes missing configuration from unreachable configured services', () => {
@@ -347,28 +383,28 @@ describe('Backend setup notice', () => {
 
   it.each(['getIsAuthenticating', 'getIsTestingConnections'] as const)('waits while %s is active', key => {
     mocks.infrastructure[key] = true
-    expect(mountNotice().find('[role="status"]').exists()).toBe(false)
+    expect(mountNotice().find('section').exists()).toBe(false)
   })
 
   it.each(['getSingleAas', 'getSingleSm'] as const)('does not interrupt %s deployments', key => {
     mocks.environment[key] = true
-    expect(mountNotice().find('[role="status"]').exists()).toBe(false)
+    expect(mountNotice().find('section').exists()).toBe(false)
   })
 
   it.each(['About', 'ShareAccess', 'Page404', 'CustomDashboard'])('does not show backend setup on the independent %s page', name => {
     mocks.route.name = name
-    expect(mountNotice().find('[role="status"]').exists()).toBe(false)
+    expect(mountNotice().find('section').exists()).toBe(false)
   })
 
   it('preserves independently loaded AAS and Submodel views', async () => {
     mocks.aas.getSelectedAAS = { id: 'https://example.com/shells/one' }
     const wrapper = mountNotice()
-    expect(wrapper.find('[role="status"]').exists()).toBe(false)
+    expect(wrapper.find('section').exists()).toBe(false)
     mocks.aas.getSelectedAAS = null
     mocks.aas.getSelectedNode = { modelType: 'Submodel' }
     mocks.route.name = 'SMViewer'
     await nextTick()
-    expect(wrapper.find('[role="status"]').exists()).toBe(false)
+    expect(wrapper.find('section').exists()).toBe(false)
   })
 
   it('links to the quick start setup guide in a separate tab', () => {
@@ -388,32 +424,60 @@ describe('Backend setup notice', () => {
     expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
     await wrapper.findAll('button').find(button => button.text() === 'Connect server')!.trigger('click')
     expect(wrapper.get('[role="dialog"]').text()).toContain('Close infrastructures')
-    expect(wrapper.find('[role="status"]').exists()).toBe(false)
+    expect(wrapper.find('section').exists()).toBe(false)
     await wrapper.get('[role="dialog"] button').trigger('click')
     expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
-    expect(wrapper.find('[role="status"]').exists()).toBe(true)
+    expect(wrapper.find('section').exists()).toBe(true)
   })
 
-  it('directs users to their administrator when endpoint editing is disabled', () => {
+  it('keeps a persistent live region so screen readers announce the banner', async () => {
+    mocks.infrastructure.isInitialized = false
+    const wrapper = mountNotice()
+    expect(wrapper.get('[role="status"]').attributes('aria-live')).toBe('polite')
+    expect(wrapper.find('section').exists()).toBe(false)
+    configureSource('AASRepo')
+    mocks.infrastructure.isInitialized = true
+    await nextTick()
+    expect(wrapper.get('[role="status"] section').text()).toContain('Cannot reach Example server')
+  })
+
+  it('directs users to their administrator when no endpoint is configured and editing is disabled', () => {
     mocks.environment.getEndpointConfigAvailable = false
     const wrapper = mountNotice()
-    expect(wrapper.text()).toContain('Contact your administrator to check the connection.')
+    expect(wrapper.text()).toContain('No server is configured for this view. Contact your administrator.')
     expect(wrapper.text()).not.toContain('Connect server')
-    expect(wrapper.findAll('a')).toHaveLength(1)
+    expect(wrapper.findAll('a')).toHaveLength(0)
+    expect(wrapper.findAll('button')).toHaveLength(0)
+  })
+
+  it('offers only Retry to users who cannot edit an unreachable endpoint', () => {
+    mocks.environment.getEndpointConfigAvailable = false
+    configureSource('AASRepo')
+    const wrapper = mountNotice()
+    expect(wrapper.text()).toContain('The server is not responding. Retry later or contact your administrator.')
+    expect(wrapper.text()).not.toContain('CORS')
+    expect(wrapper.findAll('a')).toHaveLength(0)
+    expect(wrapper.findAll('button').map(button => button.text())).toEqual(['Retry'])
+  })
+
+  it('separates the unreachable message from its setup guide link', () => {
+    configureSource('AASRepo')
+    expect(mountNotice().get('section p').text())
+      .toBe('Check that the server is running and that its URL and CORS settings are correct. Setup guide')
   })
 
   it('opens connection settings for an unreachable configured server', async () => {
     configureSource('AASRepo')
     const wrapper = mountNotice()
-    expect(wrapper.get('[role="status"]').text()).toContain('Cannot reach Example server')
+    expect(wrapper.get('section').text()).toContain('Cannot reach Example server')
     expect(wrapper.text()).not.toContain('Connect server')
     expect(wrapper.get('a').text()).toBe('Setup guide')
     await wrapper.findAll('button').find(button => button.text() === 'Connection settings')!.trigger('click')
-    expect(wrapper.find('[role="status"]').exists()).toBe(false)
-    expect(wrapper.find('[role="dialog"]').exists()).toBe(true)
+    expect(wrapper.find('section').exists()).toBe(false)
+    expect(wrapper.get('[role="dialog"]').attributes('data-edit-selected')).toBe('true')
     await wrapper.get('[role="dialog"] button').trigger('click')
     expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
-    expect(wrapper.get('[role="status"]').text()).toContain('Cannot reach Example server')
+    expect(wrapper.get('section').text()).toContain('Cannot reach Example server')
   })
 
   it('retries configured connections and reloads lists only after a usable connection returns', async () => {
@@ -422,12 +486,11 @@ describe('Backend setup notice', () => {
       mocks.infrastructure.getComponentConnectionResults.AASRepo!.state = 'connected'
     })
     const wrapper = mountNotice()
-    await wrapper.findAll('button').find(button => button.text() === 'Retry')!.trigger('click')
-    await flushPromises()
+    await clickRetry(wrapper)
     expect(mocks.infrastructure.connectComponents).toHaveBeenCalledOnce()
     expect(mocks.reloadAasList).toHaveBeenCalledOnce()
     expect(mocks.reloadTreeview).toHaveBeenCalledOnce()
-    expect(wrapper.find('[role="status"]').exists()).toBe(false)
+    expect(wrapper.find('section').exists()).toBe(false)
   })
 
   it.each(['server-error', 'authentication-required', 'access-denied', 'configuration-error', 'invalid-response'] satisfies ComponentConnectionState[])(
@@ -437,13 +500,34 @@ describe('Backend setup notice', () => {
         mocks.infrastructure.getComponentConnectionResults.AASRepo!.state = state
       })
       const wrapper = mountNotice()
-      await wrapper.findAll('button').find(button => button.text() === 'Retry')!.trigger('click')
-      await flushPromises()
+      await clickRetry(wrapper)
       expect(mocks.infrastructure.connectComponents).toHaveBeenCalledOnce()
       expect(mocks.reloadAasList).not.toHaveBeenCalled()
       expect(mocks.reloadTreeview).not.toHaveBeenCalled()
     },
   )
+
+  it('keeps the banner and a busy Retry button visible while connections are rechecked', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] })
+    configureSource('AASRepo')
+    mocks.infrastructure.connectComponents.mockImplementation(async () => {
+      mocks.infrastructure.getComponentConnectionResults.AASRepo!.state = 'checking'
+      await Promise.resolve()
+      mocks.infrastructure.getComponentConnectionResults.AASRepo!.state = 'unreachable'
+    })
+    const wrapper = mountNotice()
+    const retry = wrapper.findAll('button').find(button => button.text() === 'Retry')!
+    await retry.trigger('click')
+    await flushPromises()
+    expect(wrapper.get('section').text()).toContain('Cannot reach Example server')
+    expect(wrapper.findAll('button').find(button => button.text() === 'Retry')!.attributes('data-loading')).toBe('true')
+
+    await vi.advanceTimersByTimeAsync(500)
+    await flushPromises()
+    expect(wrapper.get('section').text()).toContain('Cannot reach Example server')
+    expect(wrapper.findAll('button').find(button => button.text() === 'Retry')!.attributes('data-loading')).toBe('false')
+    expect(mocks.reloadAasList).not.toHaveBeenCalled()
+  })
 
   it('does not reload the newly selected infrastructure when an earlier retry finishes', async () => {
     configureSource('AASRepo')
@@ -451,11 +535,13 @@ describe('Backend setup notice', () => {
     mocks.infrastructure.connectComponents.mockReturnValue(new Promise<void>(resolve => {
       finishRetry = resolve
     }))
+    vi.useFakeTimers({ toFake: ['setTimeout'] })
     const wrapper = mountNotice()
     await wrapper.findAll('button').find(button => button.text() === 'Retry')!.trigger('click')
     mocks.infrastructure.getSelectedInfrastructure!.id = 'new-selection'
     configureSource('AASRepo', 'connected')
     finishRetry()
+    await vi.advanceTimersByTimeAsync(500)
     await flushPromises()
     expect(mocks.reloadAasList).not.toHaveBeenCalled()
     expect(mocks.reloadTreeview).not.toHaveBeenCalled()

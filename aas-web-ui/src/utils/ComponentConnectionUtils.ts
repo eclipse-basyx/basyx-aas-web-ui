@@ -36,7 +36,7 @@ export function getConnectionFailureState (response: RequestResult): ComponentCo
   if (response.status === 403) {
     return 'access-denied'
   }
-  if (response.status !== undefined && response.status >= 400) {
+  if (response.failureKind === 'http' || (response.status !== undefined && response.status >= 400)) {
     return 'server-error'
   }
   if (response.failureKind === 'network') {

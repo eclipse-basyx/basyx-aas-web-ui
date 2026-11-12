@@ -72,7 +72,7 @@ export function useAuth (router?: Router) {
               expiresAt: result.expiresAt,
             },
           }
-          infrastructureStore.dispatchUpdateInfrastructure(updatedInfra)
+          await infrastructureStore.dispatchUpdateInfrastructure(updatedInfra)
           infrastructureStore.setAuthenticationStatusForInfrastructure(infra.id, true)
           navStore.dispatchTriggerAASListReload()
           navStore.dispatchTriggerTreeviewReload()
@@ -170,7 +170,7 @@ export function useAuth (router?: Router) {
     if (infra) {
       infrastructureStore.setAuthenticationStatusForInfrastructure(infra.id, false)
       const updatedInfra = { ...infra, token: undefined }
-      infrastructureStore.dispatchUpdateInfrastructure(updatedInfra)
+      void infrastructureStore.dispatchUpdateInfrastructure(updatedInfra)
       if (reloadData) {
         navStore.dispatchClearAASList()
         navStore.dispatchClearTreeview()

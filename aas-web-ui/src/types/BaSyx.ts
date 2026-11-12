@@ -1,5 +1,10 @@
 import type { Ref } from 'vue'
 
+/**
+ * Outcome of a saved component connection check. Setup guidance appears only when every
+ * relevant source is `unreachable` or has no URL. The other failure states keep their regular
+ * error feedback and are recorded so that guidance never hides a server that responded.
+ */
 export type ComponentConnectionState
   = | 'checking'
     | 'connected'

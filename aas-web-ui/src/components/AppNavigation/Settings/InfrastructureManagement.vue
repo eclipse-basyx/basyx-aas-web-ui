@@ -331,6 +331,8 @@
   // Props
   const props = defineProps<{
     open: boolean
+    /** Opens the editor for the selected infrastructure and closes everything when it is dismissed. */
+    editSelected?: boolean
   }>()
 
   // Emit
@@ -433,7 +435,7 @@
     async val => {
       dialogOpen.value = val
       // If opening and edit mode is requested, automatically open edit for current infrastructure
-      if (val && infrastructureStore.getOpenInfrastructureEditMode) {
+      if (val && props.editSelected) {
         const currentInfra = infrastructureStore.getSelectedInfrastructure
         if (currentInfra) {
           editInfrastructure(currentInfra)
@@ -442,6 +444,12 @@
     },
     { immediate: true },
   )
+
+  watch(editDialogOpen, val => {
+    if (!val && props.editSelected) {
+      dialogOpen.value = false
+    }
+  })
 
   watch(dialogOpen, val => {
     if (!val) {
@@ -523,7 +531,8 @@
     if (editMode.value === 'add') {
       infrastructureStore.dispatchAddInfrastructure(editingInfrastructure.value)
     } else {
-      infrastructureStore.dispatchUpdateInfrastructure(editingInfrastructure.value)
+      // Connection checks report through the store; slow endpoints must not keep the dialog open.
+      void infrastructureStore.dispatchUpdateInfrastructure(editingInfrastructure.value)
     }
 
     editDialogOpen.value = false
@@ -618,7 +627,7 @@
     if (oauth2Token.value) {
       await saveAuthDataToInfrastructure(editingInfrastructure.value)
       // Update the store to make token available immediately for API requests
-      infrastructureStore.dispatchUpdateInfrastructure(editingInfrastructure.value)
+      await infrastructureStore.dispatchUpdateInfrastructure(editingInfrastructure.value)
       // Also update the selected infrastructure if we're editing the currently selected one
       if (editingInfrastructure.value.id === selectedInfrastructureId.value) {
         await infrastructureStore.dispatchSelectInfrastructure(editingInfrastructure.value.id, false)

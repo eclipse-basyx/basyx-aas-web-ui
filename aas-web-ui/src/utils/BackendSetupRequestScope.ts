@@ -1,5 +1,6 @@
 import type { SnackbarType } from '@/types/Application'
 import type { BaSyxComponentKey } from '@/types/BaSyx'
+import { normalizeEndpointUrl } from '@/utils/url'
 
 const collectionPaths: Partial<Record<BaSyxComponentKey, string>> = {
   AASRepo: '/shells',
@@ -27,9 +28,9 @@ export function isCoveredBackendRequest (
       return false
     }
 
-    const sourcePath = normalizePath(sourceUrl.pathname)
+    const sourcePath = normalizeEndpointUrl(sourceUrl.pathname)
     const collection = sourcePath.endsWith(collectionPath) ? sourcePath : `${sourcePath}${collectionPath}`
-    const requestPath = normalizePath(requestUrl.pathname)
+    const requestPath = normalizeEndpointUrl(requestUrl.pathname)
     if (request.operation === 'read') {
       return requestPath === collection
     }
@@ -51,8 +52,4 @@ function parseHttpUrl (url: string): URL | undefined {
   } catch {
     return undefined
   }
-}
-
-function normalizePath (path: string): string {
-  return path.replace(/\/+$/, '')
 }

@@ -18,6 +18,7 @@ import { getFallbackConnectionFailure, isValidConnectionResponse, isValidService
 import { isValidCustomHeader } from '@/utils/CustomHeaderUtils'
 import { getActiveComponentKeys, isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
 import { hasResourceAccessProfile } from '@/utils/ResourceAccessProfile'
+import { normalizeEndpointUrl } from '@/utils/url'
 
 export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   // Stores
@@ -56,7 +57,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   // Infrastructure States
   const infrastructures = ref<InfrastructureConfig[]>([])
   const selectedInfrastructureId = ref<string | null>(null)
-  const openInfrastructureEditMode = ref(false)
   const isAuthenticating = ref(false)
   const isTestingConnections = ref(false)
 
@@ -169,7 +169,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     () => envStore.getFeatureControlClaimMappings,
     overrides => envStore.setFeatureControlOverrides(overrides),
   )
-  const getOpenInfrastructureEditMode = computed(() => openInfrastructureEditMode.value)
   function getActiveComponentUrl (componentKey: BaSyxComponentKey, url: string): string {
     const selectedInfra = getSelectedInfrastructure.value
     if (!selectedInfra) {
@@ -214,8 +213,8 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
   function supportsResourceAccess (key: BaSyxComponentKey, endpoint?: string): boolean {
     const profile = resourceAccessProfiles.value[key]
-    const url = basyxComponentUrlGetters[key]?.value.trim().replace(/\/+$/, '')
-    const configuredUrl = getSelectedInfrastructure.value?.components[key]?.url.trim().replace(/\/+$/, '')
+    const url = normalizeEndpointUrl(basyxComponentUrlGetters[key]?.value)
+    const configuredUrl = normalizeEndpointUrl(getSelectedInfrastructure.value?.components[key]?.url)
     return Boolean(profile?.enabled && url && profile.url === url && profile.url === configuredUrl
       && profile.infrastructureId === getSelectedInfrastructure.value?.id
       && (!endpoint || resourceAccessComponent(endpoint) === key))
@@ -224,7 +223,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   function resourceAccessComponent (endpoint: string): BaSyxComponentKey | undefined {
     for (const key of Object.keys(basyxComponentUrlGetters) as BaSyxComponentKey[]) {
       const path = basyxComponents[key].pathCheck
-      const url = basyxComponentUrlGetters[key].value.trim().replace(/\/+$/, '')
+      const url = normalizeEndpointUrl(basyxComponentUrlGetters[key].value)
       if (!url || !path || key === 'CompanyLookup') {
         continue
       }
@@ -471,8 +470,8 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         || getActiveComponentKeys(infrastructures.value[index]).join(',') !== getActiveComponentKeys(infrastructure).join(',')
         || Object.keys(basyxComponents).some(key => {
           const componentKey = key as BaSyxComponentKey
-          return normalizeComponentUrl(basyxComponents[componentKey].url)
-            !== normalizeComponentUrl(infrastructure.components[componentKey].url)
+          return normalizeEndpointUrl(basyxComponents[componentKey].url)
+            !== normalizeEndpointUrl(infrastructure.components[componentKey].url)
         })
       // If this infrastructure is marked as default, unmark all others
       if (infrastructure.isDefault) {
@@ -686,12 +685,8 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
           state: 'not-configured', infrastructureId: selectedInfra.id, url: '',
         }
       } else {
-        // Normalize URLs for comparison (trim and remove trailing slash)
-        const currentUrl = basyxComponents[repoKey].url.trim().replace(/\/$/, '')
-        const newUrl = infraUrl.trim().replace(/\/$/, '')
-
         // Only set URL if it has actually changed to avoid triggering watchers unnecessarily
-        if (currentUrl !== newUrl) {
+        if (normalizeEndpointUrl(basyxComponents[repoKey].url) !== normalizeEndpointUrl(infraUrl)) {
           basyxComponents[repoKey].url = infraUrl
         }
         connectionPromises.push(connectComponent(repoKey))
@@ -715,11 +710,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   ): boolean {
     return componentConnectionGenerations.get(componentKey) === generation
       && selectedInfrastructureId.value === infrastructureId
-      && normalizeComponentUrl(basyxComponents[componentKey].url) === requestedUrl
-  }
-
-  function normalizeComponentUrl (url: string): string {
-    return url.trim().replace(/\/+$/, '')
+      && normalizeEndpointUrl(basyxComponents[componentKey].url) === requestedUrl
   }
 
   async function checkComponentConnection (
@@ -729,7 +720,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     isCurrent: () => boolean = () => true,
   ): Promise<{ state: ComponentConnectionState, description?: ServiceDescription, invalidResponse?: true } | undefined> {
     const component = basyxComponents[componentKey]
-    const base = normalizeComponentUrl(url)
+    const base = normalizeEndpointUrl(url)
     if (!base) {
       return { state: 'not-configured' }
     }
@@ -810,7 +801,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
 
   async function connectComponent (componentKey: BaSyxComponentKey): Promise<void> {
     const component = basyxComponents[componentKey]
-    const url = normalizeComponentUrl(component.url)
+    const url = normalizeEndpointUrl(component.url)
     const infrastructureId = selectedInfrastructureId.value
     const generation = invalidateComponentConnection(componentKey)
     const isCurrent = () => isCurrentComponentConnection(componentKey, generation, infrastructureId, url)
@@ -853,7 +844,6 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     getInfrastructures,
     getSelectedInfrastructureId,
     getSelectedInfrastructure,
-    getOpenInfrastructureEditMode,
     isInitialized,
     getAASDiscoveryURL,
     getAASRegistryURL,

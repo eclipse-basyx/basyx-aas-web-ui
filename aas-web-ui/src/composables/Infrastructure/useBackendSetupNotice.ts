@@ -1,50 +1,58 @@
 import type { BaSyxComponentKey } from '@/types/BaSyx'
 import { useRoute } from 'vue-router'
+import { createSharedComposable } from '@/composables/SharedComposable'
 import { useAASStore } from '@/store/AASDataStore'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { getActiveComponentKeys } from '@/utils/InfrastructureUtils'
+import { normalizeEndpointUrl } from '@/utils/url'
 
-export function useBackendSetupNotice () {
+export type BackendSetupNoticeKind = 'setup' | 'unreachable'
+
+interface NoticeState {
+  kind: BackendSetupNoticeKind | null
+  pending: boolean
+  connected?: boolean
+}
+
+const SOURCE_KEYS: Record<'aas' | 'submodel', BaSyxComponentKey[]> = {
+  aas: ['AASRepo', 'AASRegistry'],
+  // Embedded AAS Submodel paths cannot enumerate Submodels globally.
+  submodel: ['SubmodelRepo'],
+}
+
+function createBackendSetupNotice () {
   const route = useRoute()
   const aasStore = useAASStore()
   const envStore = useEnvStore()
   const infrastructureStore = useInfrastructureStore()
 
-  const isGlobalSubmodelView = computed(() => ['SMViewer', 'SMEditor'].includes(String(route.name)))
-  const isDataView = computed(() => [
-    'AASViewer', 'AASEditor', 'AASSubmodelViewer', 'AASList', 'SubmodelList',
-    'SMViewer', 'SMEditor', 'ComponentVisualization', 'Visualization',
-  ].includes(String(route.name)))
+  const dataSource = computed(() => route.meta?.backendDataSource)
   const activeComponentKeys = computed(() => {
     const infrastructure = infrastructureStore.getSelectedInfrastructure
     return infrastructure ? getActiveComponentKeys(infrastructure) : []
   })
-  const relevantSourceKeys = computed(() => {
-    if (!isDataView.value) {
+  const coveredDataSources = computed<Array<{ component: BaSyxComponentKey, url: string }>>(() => {
+    if (!dataSource.value) {
       return []
     }
-    const sourceKeys: BaSyxComponentKey[] = isGlobalSubmodelView.value
-      ? ['SubmodelRepo']
-      : ['AASRepo', 'AASRegistry']
-    return activeComponentKeys.value.filter(key => sourceKeys.includes(key))
-  })
-  const coveredDataSources = computed<Array<{ component: BaSyxComponentKey, url: string }>>(() => {
     const infrastructure = infrastructureStore.getSelectedInfrastructure
-    return relevantSourceKeys.value.flatMap(component => {
-      const url = normalizeUrl(infrastructure?.components[component]?.url)
-      return url ? [{ component, url }] : []
-    })
+    return activeComponentKeys.value
+      .filter(component => SOURCE_KEYS[dataSource.value!].includes(component))
+      .flatMap(component => {
+        const url = normalizeEndpointUrl(infrastructure?.components[component]?.url)
+        return url ? [{ component, url }] : []
+      })
   })
 
-  const canShowNotice = computed(() => isDataView.value
+  const canShowNotice = computed(() => !!dataSource.value
     && !envStore.getSingleAas
     && !envStore.getSingleSm
-    && (isGlobalSubmodelView.value || !aasStore.getSelectedAAS?.id)
+    && (dataSource.value === 'submodel' || !aasStore.getSelectedAAS?.id)
     && !aasStore.getSelectedNode?.modelType)
 
-  const noticeState = computed<{ kind: 'setup' | 'unreachable' | null, pending: boolean, connected?: boolean }>(() => {
-    const hidden = { kind: null, pending: false }
+  const noticeState = computed<NoticeState>(() => {
+    const hidden: NoticeState = { kind: null, pending: false }
     if (!canShowNotice.value) {
       return hidden
     }
@@ -96,6 +104,5 @@ export function useBackendSetupNotice () {
   return { showNotice, isSetupPending, noticeKind, infrastructureName, hasUsableConnection, coveredDataSources }
 }
 
-function normalizeUrl (url: string | undefined): string {
-  return url?.trim().replace(/\/+$/, '') ?? ''
-}
+/** Shared by the setup banner and the snackbar, which suppresses errors the banner already explains. */
+export const useBackendSetupNotice = createSharedComposable(createBackendSetupNotice)

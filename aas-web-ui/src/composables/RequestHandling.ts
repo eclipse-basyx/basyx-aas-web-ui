@@ -62,17 +62,18 @@ export interface RequestResult<T = unknown> {
   status?: number
   raw?: Response
   aborted?: true
-  failureKind?: 'network' | 'configuration' | 'invalid-response'
+  /** Why a request failed: no response, invalid local request setup, an HTTP error status, or an unusable response body. */
+  failureKind?: 'network' | 'configuration' | 'http' | 'invalid-response'
 }
 
-function classifyRequestFailure (error: unknown): RequestResult['failureKind'] {
+function classifyRequestFailure (error: unknown, statusCode?: number): RequestResult['failureKind'] {
   if (error instanceof NetworkRequestError) {
     return 'network'
   }
   if (error instanceof RequestConfigurationError) {
     return 'configuration'
   }
-  return 'invalid-response'
+  return statusCode === undefined ? 'invalid-response' : 'http'
 }
 
 export interface RequestSecurityContext {
@@ -330,7 +331,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     if (!disableMessage && !shouldSuppressStatus(statusCode, errorHandlingOptions)) {
       showRequestError(error, errorMessage, statusCode, networkRequest)
     }
-    return { success: false, status: statusCode, failureKind: classifyRequestFailure(error) }
+    return { success: false, status: statusCode, failureKind: classifyRequestFailure(error, statusCode) }
   }
 
   function shouldSuppressStatus (
