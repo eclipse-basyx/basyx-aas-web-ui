@@ -4,6 +4,20 @@
       <v-form @submit.prevent="saveAndNext">
         <div v-for="(form, index) in forms" :key="index" class="mb-3">
           <v-sheet border class="pa-4 mb-4" elevation="2" rounded="lg">
+            <div class="d-flex justify-end">
+              <v-btn
+                :aria-label="`Delete bank account ${index + 1}`"
+                color="error"
+                prepend-icon="mdi-delete"
+                size="small"
+                type="button"
+                variant="text"
+                @click="removeForm(index)"
+              >
+                Delete
+              </v-btn>
+            </div>
+
             <BankAccountForm v-model="forms[index]" :errors="formErrors[index]" :index="index" />
           </v-sheet>
         </div>
@@ -82,6 +96,11 @@
     })
   }
 
+  function removeForm (index: number): void {
+    forms.splice(index, 1)
+    formErrors.splice(index, 1)
+  }
+
   function validateForm (): boolean {
     let valid = true
     for (const [index, form] of forms.entries()) {
@@ -137,6 +156,9 @@
       const smc = createBankAccountsSMC(filteredForm)
       store.saveBankAccountSMC(smc)
       store.saveMainAccountIdShort(filteredForm[0].idShort || 'BankAccount__00__')
+    } else {
+      store.saveBankAccountSMC(null)
+      store.saveMainAccountIdShort('')
     }
     props.next()
   }
