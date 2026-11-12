@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-    // Props
+  // Props
   defineProps({
     semanticIdObject: {
       type: Object as any,

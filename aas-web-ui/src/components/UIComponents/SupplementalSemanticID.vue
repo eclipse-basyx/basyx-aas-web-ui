@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-    // Props
+  // Props
   defineProps({
     supplementalSemanticIdsArray: {
       type: Array<any>,
