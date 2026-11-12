@@ -6,6 +6,8 @@ import { useNavigationStore } from '@/store/NavigationStore'
 import { isValidCustomHeader } from '@/utils/CustomHeaderUtils'
 import { parseTrustedOrigin } from '@/utils/TrustedOriginUtils'
 
+class NetworkRequestError extends TypeError {}
+
 class UntrustedEndpointError extends Error {
   constructor (message = 'Untrusted endpoint blocked. Add its origin to the selected infrastructure to allow requests.') {
     super(message)
@@ -181,7 +183,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
   }
 
   function showRequestError (error: unknown, errorMessage: string, statusCode?: number, context?: string): void {
-    if (error instanceof TypeError && statusCode === undefined && context?.startsWith('Connecting to ')) {
+    if (error instanceof NetworkRequestError && statusCode === undefined && context?.startsWith('Connecting to ')) {
       const componentLabel = context.slice('Connecting to '.length)
       navigationStore.dispatchSnackbar({
         status: true,
@@ -782,6 +784,11 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
           throw new BlockedRedirectError()
         }
         return response
+      }, error => {
+        if (error instanceof TypeError) {
+          throw new NetworkRequestError(error.message, { cause: error })
+        }
+        throw error
       })
     } catch (error) {
       return Promise.reject(error)
