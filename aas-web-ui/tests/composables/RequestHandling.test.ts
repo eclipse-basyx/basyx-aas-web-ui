@@ -105,11 +105,16 @@ describe('RequestHandling.ts', () => {
     global.fetch = vi.fn().mockRejectedValue(new TypeError('Load failed')) as unknown as typeof fetch
     const { useRequestHandling } = await import('@/composables/RequestHandling')
 
-    await useRequestHandling().getRequest('/shells', 'Connecting to AAS Repository URL', false)
+    const response = await useRequestHandling().getRequest('/shells', 'Checking repository availability', false, new Headers(), { connectionCheck: 'AASRepo' })
+
+    expect(response).toMatchObject({ success: false, failureKind: 'network' })
 
     expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({
       baseError: 'Unable to connect to the configured BaSyx environment.',
       extendedError: expect.stringContaining('Make sure the corresponding BaSyx component is running'),
+      kind: 'network-error',
+      infrastructureId: 'infra-1',
+      networkRequest: { url: '/shells', operation: 'connection-check', component: 'AASRepo' },
     }))
     expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({
       extendedError: expect.stringContaining('AAS Repository URL could not be reached.'),
@@ -122,17 +127,74 @@ describe('RequestHandling.ts', () => {
     }))
   })
 
+  it('identifies ordinary GET network failures with their owning infrastructure', async () => {
+    global.fetch = vi.fn().mockRejectedValue(new TypeError('Load failed')) as unknown as typeof fetch
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+
+    const response = await useRequestHandling().getRequest('/shells', 'loading AAS list', false)
+
+    expect(response).toMatchObject({ success: false, failureKind: 'network' })
+
+    expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('TypeError: Load failed'),
+      kind: 'network-error',
+      infrastructureId: 'infra-1',
+      networkRequest: { url: '/shells', operation: 'read' },
+    }))
+  })
+
+  it('does not classify a GET as a connection check based on its display context', async () => {
+    global.fetch = vi.fn().mockRejectedValue(new TypeError('Load failed')) as unknown as typeof fetch
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    await useRequestHandling().getRequest('/companies', 'Connecting to Company Lookup URL', false)
+    expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({
+      networkRequest: { url: '/companies', operation: 'read' },
+      text: expect.stringContaining('TypeError: Load failed'),
+    }))
+  })
+
+  it('keeps isolated draft checks outside setup coverage even for the saved infrastructure and endpoint', async () => {
+    global.fetch = vi.fn().mockRejectedValue(new TypeError('Load failed')) as unknown as typeof fetch
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    await useRequestHandling().getRequest('/shells', 'Connecting to AAS Repository URL', false, new Headers(), {
+      connectionCheck: 'AASRepo',
+    }, 'auto', {
+      infrastructure: mockState.selectedInfrastructure,
+      isolateAuthenticationFailures: true,
+    })
+    expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({
+      kind: 'network-error', infrastructureId: 'infra-1', text: expect.stringContaining('TypeError: Load failed'),
+    }))
+    expect(mockDeps.dispatchSnackbar.mock.calls[0][0]).not.toHaveProperty('networkRequest')
+  })
+
+  it.each(['postRequest', 'putRequest', 'patchRequest', 'deleteRequest'] as const)(
+    'keeps %s network failures outside setup-banner GET coverage', async method => {
+      global.fetch = vi.fn().mockRejectedValue(new TypeError('Load failed')) as unknown as typeof fetch
+      const { useRequestHandling } = await import('@/composables/RequestHandling')
+      const requests = useRequestHandling()
+      await (method === 'deleteRequest'
+        ? requests.deleteRequest('/shells', new Headers(), 'deleting shell', false)
+        : requests[method]('/shells', '{}', new Headers(), 'updating shell', false))
+      expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({ kind: 'network-error' }))
+      expect(mockDeps.dispatchSnackbar.mock.calls[0][0]).not.toHaveProperty('networkRequest')
+    },
+  )
+
   it('keeps malformed connection responses as response errors', async () => {
     global.fetch = vi.fn().mockResolvedValue(new Response('{ malformed JSON', {
       headers: { 'Content-Type': 'application/json' },
     })) as unknown as typeof fetch
     const { useRequestHandling } = await import('@/composables/RequestHandling')
 
-    await useRequestHandling().getRequest('/shells', 'Connecting to AAS Repository URL', false)
+    const response = await useRequestHandling().getRequest('/shells', 'Connecting to AAS Repository URL', false)
+
+    expect(response).toMatchObject({ success: false, failureKind: 'invalid-response' })
 
     expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({
       text: expect.stringContaining('SyntaxError'),
     }))
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalledWith(expect.objectContaining({ kind: 'network-error' }))
     expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalledWith(expect.objectContaining({
       baseError: 'Unable to connect to the configured BaSyx environment.',
     }))
@@ -143,11 +205,15 @@ describe('RequestHandling.ts', () => {
     mockState.selectedInfrastructure = { id: 'infra-1', auth: { securityType: 'Custom Header' } }
     const { useRequestHandling } = await import('@/composables/RequestHandling')
 
-    await useRequestHandling().getRequest('/shells', 'Connecting to AAS Repository URL', false)
+    const response = await useRequestHandling().getRequest('/shells', 'Connecting to AAS Repository URL', false)
+
+    expect(response).toMatchObject({ success: false, failureKind: 'configuration' })
+    expect(global.fetch).not.toHaveBeenCalled()
 
     expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({
       text: expect.stringContaining('Invalid custom header configuration'),
     }))
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalledWith(expect.objectContaining({ kind: 'network-error' }))
     expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalledWith(expect.objectContaining({
       baseError: 'Unable to connect to the configured BaSyx environment.',
     }))
@@ -160,15 +226,41 @@ describe('RequestHandling.ts', () => {
 
     const response = await useRequestHandling().getRequest('/shells', 'Connecting to AAS Repository URL', false)
 
-    expect(response.success).toBe(false)
+    expect(response).toMatchObject({ success: false, failureKind: 'configuration' })
     expect(global.fetch).not.toHaveBeenCalled()
     expect(mockDeps.dispatchSnackbar).toHaveBeenCalledOnce()
     expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({
       text: expect.stringContaining('TypeError'),
     }))
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalledWith(expect.objectContaining({ kind: 'network-error' }))
     expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalledWith(expect.objectContaining({
       baseError: 'Unable to connect to the configured BaSyx environment.',
     }))
+  })
+
+  it('rejects credentials embedded in a trusted endpoint as configuration errors without exposing them', async () => {
+    global.fetch = vi.fn()
+    mockState.selectedInfrastructure.components = { AASRepo: { url: 'https://aas.example' } }
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const requests = useRequestHandling()
+    const target = 'https://user:password@aas.example/shells'
+
+    const response = await requests.getRequest(target, 'Connecting to AAS Repository URL', false)
+
+    expect(response).toMatchObject({ success: false, failureKind: 'configuration' })
+    expect(global.fetch).not.toHaveBeenCalled()
+    expect(mockDeps.dispatchSnackbar).toHaveBeenCalledOnce()
+    expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('Credentials in endpoint URLs are not supported. Use the infrastructure authentication settings.'),
+    }))
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalledWith(expect.objectContaining({ kind: 'network-error' }))
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalledWith(expect.objectContaining({
+      baseError: 'Unable to connect to the configured BaSyx environment.',
+    }))
+    const reportedError = JSON.stringify(mockDeps.dispatchSnackbar.mock.calls) + requests.consumeLastRequestFailureDetails()
+    expect(reportedError).not.toContain(target)
+    expect(reportedError).not.toContain('user:password')
+    expect(reportedError).not.toContain('password')
   })
 
   it('keeps response body TypeErrors as response errors', async () => {
@@ -181,10 +273,25 @@ describe('RequestHandling.ts', () => {
 
     const result = await useRequestHandling().getRequest('/shells', 'Connecting to AAS Repository URL', false)
 
-    expect(result.success).toBe(false)
+    expect(result).toMatchObject({ success: false, failureKind: 'invalid-response' })
     expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({
       text: expect.stringContaining('Failed to decode response body'),
     }))
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalledWith(expect.objectContaining({ kind: 'network-error' }))
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalledWith(expect.objectContaining({
+      baseError: 'Unable to connect to the configured BaSyx environment.',
+    }))
+  })
+
+  it.each([401, 403, 500])('preserves HTTP %s connection failures without classifying them as network failures', async status => {
+    global.fetch = vi.fn().mockResolvedValue(Response.json({ message: 'Service request failed' }, { status })) as unknown as typeof fetch
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+
+    const response = await useRequestHandling().getRequest('/shells', 'Connecting to AAS Repository URL', false)
+
+    expect(response).toMatchObject({ success: false, status, raw: expect.any(Response) })
+    expect(response).not.toHaveProperty('failureKind')
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalledWith(expect.objectContaining({ kind: 'network-error' }))
     expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalledWith(expect.objectContaining({
       baseError: 'Unable to connect to the configured BaSyx environment.',
     }))
@@ -1005,7 +1112,7 @@ describe('RequestHandling.ts', () => {
       requests.deleteRequest('/api', new Headers(), 'deleting', false),
     ])
 
-    expect(results).toEqual(Array.from({ length: 5 }, () => ({ success: false, status: undefined })))
+    expect(results).toEqual(Array.from({ length: 5 }, () => ({ success: false, status: undefined, failureKind: 'configuration' })))
     expect(global.fetch).not.toHaveBeenCalled()
     expect(mockDeps.dispatchSnackbar).toHaveBeenCalledTimes(5)
     expect(mockDeps.dispatchSnackbar).toHaveBeenLastCalledWith(expect.objectContaining({

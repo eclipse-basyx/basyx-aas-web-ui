@@ -1,5 +1,5 @@
 <template>
-  <v-snackbar v-model="snackbar.status" :color="snackbar.color" location="top" :timeout="snackbar.timeout">
+  <v-snackbar v-model="snackbarVisible" :color="snackbar.color" location="top" :timeout="snackbar.timeout">
     <v-card v-if="snackbar.status === true && snackbar.baseError">
       <v-card-title class="text-title-small text-wrap text-break">{{ snackbar.baseError }}</v-card-title>
       <v-divider v-if="snackbar.extendedError" />
@@ -41,11 +41,33 @@
 </template>
 
 <script lang="ts" setup>
+  import { useBackendSetupNotice } from '@/composables/Infrastructure/useBackendSetupNotice'
+  import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
+  import { isCoveredBackendRequest } from '@/utils/BackendSetupRequestScope'
 
   const navigationStore = useNavigationStore()
+  const infrastructureStore = useInfrastructureStore()
+  const { showNotice, isSetupPending, coveredDataSources } = useBackendSetupNotice()
 
   const snackbar = computed(() => navigationStore.getSnackbar)
+  const isSetupNetworkError = computed(() => snackbar.value.kind === 'network-error'
+    && snackbar.value.infrastructureId === infrastructureStore.getSelectedInfrastructureId
+    && isCoveredBackendRequest(snackbar.value.networkRequest, coveredDataSources.value))
+  const snackbarVisible = computed({
+    get: () => snackbar.value.status
+      && !(isSetupNetworkError.value && (showNotice.value || isSetupPending.value)),
+    set: status => {
+      if (!status) closeSnackbar()
+    },
+  })
+
+  // Consume covered errors so reconnecting cannot reveal an old startup failure.
+  watchEffect(() => {
+    if (showNotice.value && isSetupNetworkError.value && snackbar.value.status) {
+      closeSnackbar()
+    }
+  })
 
   function closeSnackbar (): void {
     navigationStore.dispatchSnackbar({

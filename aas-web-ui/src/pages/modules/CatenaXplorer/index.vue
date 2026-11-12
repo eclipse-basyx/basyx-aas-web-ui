@@ -1138,7 +1138,7 @@
     }
     synchronizeLegacyDefaultPartner(updatedEdc)
     selectedEdcPartnerId.value = savedPartner.id
-    infrastructureStore.dispatchUpdateInfrastructure(updatedInfrastructure)
+    void infrastructureStore.dispatchUpdateInfrastructure(updatedInfrastructure)
     navigationStore.dispatchSnackbar({
       status: true,
       timeout: 5000,

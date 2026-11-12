@@ -106,7 +106,7 @@ test('infrastructure YAML endpoints are loaded into the production UI', async ({
     companyLookup: 'http://localhost:5080',
   })
 
-  await page.getByRole('button', { name: 'Settings' }).click()
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
   await expect(page.getByRole('combobox', { name: 'Select Infrastructure' }))
     .toHaveValue('Local BaSyx (Default)')
   await page.getByRole('button', { name: 'Manage Infrastructures' }).click()

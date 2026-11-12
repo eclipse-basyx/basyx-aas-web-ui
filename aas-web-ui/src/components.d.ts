@@ -29,6 +29,7 @@ declare module 'vue' {
     AssetInformation: typeof import('./components/UIComponents/AssetInformation.vue')['default']
     AutoRefreshSelector: typeof import('./components/Plugins/Submodels/TimeSeries/AutoRefreshSelector.vue')['default']
     AutoSync: typeof import('./components/AppNavigation/AutoSync.vue')['default']
+    BackendSetupNotice: typeof import('./components/AppNavigation/BackendSetupNotice.vue')['default']
     Blob: typeof import('./components/SubmodelElements/Blob.vue')['default']
     BlobForm: typeof import('./components/EditorComponents/SubmodelElements/BlobForm.vue')['default']
     BlobInput: typeof import('./components/EditorComponents/InputTypes/BlobInput.vue')['default']

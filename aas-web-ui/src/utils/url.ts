@@ -23,3 +23,13 @@ export function stripLastSegmentOf (url: string, suffix?: string): string {
   const trimmed = url.endsWith('/') ? url.slice(0, -1) : url
   return trimmed.endsWith(suffix) ? trimmed.slice(0, -suffix.length) : trimmed
 }
+
+/**
+ * Normalizes a configured endpoint URL or path for comparison by trimming
+ * whitespace and removing trailing slashes.
+ * @param url endpoint URL or path
+ * @returns normalized value, or an empty string when no value is given
+ */
+export function normalizeEndpointUrl (url: string | undefined): string {
+  return url?.trim().replace(/\/+$/, '') ?? ''
+}
