@@ -2009,7 +2009,7 @@
     })
   }
 
-  function deepFilter (array: Array<any>, predicate: { (item: any): any, (arg0: any): any }): Array<any> {
+  function deepFilter (array: Array<any>, predicate: (item: any) => any): Array<any> {
     return array
       .map((item: any) => {
         let childrenKey = ''

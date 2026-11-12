@@ -44,8 +44,9 @@ ARG HTTP_PROXY
 ARG HTTPS_PROXY
 # Set working directory
 WORKDIR /usr/src/app
-# Install jq, gettext for envsubst, and nodejs for the optional integrated Catena-X EDC BFF
-RUN apk add --no-cache jq gettext 'nodejs~24'
+# Apply pending Alpine security patches to base packages (e.g. brotli-libs), then install jq, gettext for envsubst, and nodejs for the optional integrated Catena-X EDC BFF
+RUN apk upgrade --no-cache && \
+  apk add --no-cache jq gettext 'nodejs~24'
 # Create a non-root user and group
 RUN addgroup -g 1000 -S mygroup && \
   adduser -u 1000 -D -S -G mygroup myuser
