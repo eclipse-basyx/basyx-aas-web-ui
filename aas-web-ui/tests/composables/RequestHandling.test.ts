@@ -101,6 +101,52 @@ describe('RequestHandling.ts', () => {
     expect(mockDeps.dispatchSnackbar).toHaveBeenCalledOnce()
   })
 
+  it('shows setup guidance when a configured BaSyx component cannot be reached', async () => {
+    global.fetch = vi.fn().mockRejectedValue(new TypeError('Load failed')) as unknown as typeof fetch
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+
+    await useRequestHandling().getRequest('/shells', 'Connecting to AAS Repository URL', false)
+
+    expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({
+      baseError: 'Unable to connect to the configured BaSyx environment.',
+      extendedError: expect.stringContaining('Make sure the corresponding BaSyx component is running'),
+    }))
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('TypeError: Load failed'),
+    }))
+  })
+
+  it('keeps malformed connection responses as response errors', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response('{ malformed JSON', {
+      headers: { 'Content-Type': 'application/json' },
+    })) as unknown as typeof fetch
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+
+    await useRequestHandling().getRequest('/shells', 'Connecting to AAS Repository URL', false)
+
+    expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('SyntaxError'),
+    }))
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalledWith(expect.objectContaining({
+      baseError: 'Unable to connect to the configured BaSyx environment.',
+    }))
+  })
+
+  it('keeps local connection configuration failures as configuration errors', async () => {
+    global.fetch = vi.fn()
+    mockState.selectedInfrastructure = { id: 'infra-1', auth: { securityType: 'Custom Header' } }
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+
+    await useRequestHandling().getRequest('/shells', 'Connecting to AAS Repository URL', false)
+
+    expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('Invalid custom header configuration'),
+    }))
+    expect(mockDeps.dispatchSnackbar).not.toHaveBeenCalledWith(expect.objectContaining({
+      baseError: 'Unable to connect to the configured BaSyx environment.',
+    }))
+  })
+
   it.each(['{ "value": 1 }\n', '{ malformed JSON', '', 'false'])('preserves attachment bytes in blob mode: %s', async source => {
     global.fetch = vi.fn().mockResolvedValue(new Response(source, {
       status: 200,
