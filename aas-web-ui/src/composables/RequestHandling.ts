@@ -1,9 +1,12 @@
+import type { SnackbarType } from '@/types/Application'
+import type { BaSyxComponentKey } from '@/types/BaSyx'
 import type { InfrastructureConfig } from '@/types/Infrastructure'
 import { useAuth } from '@/composables/Auth/useAuth'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { useNavigationStore } from '@/store/NavigationStore'
 import { isValidCustomHeader } from '@/utils/CustomHeaderUtils'
+import { getComponentLabel } from '@/utils/InfrastructureUtils'
 import { parseTrustedOrigin } from '@/utils/TrustedOriginUtils'
 
 class NetworkRequestError extends TypeError {}
@@ -49,6 +52,8 @@ export interface RequestErrorHandlingOptions {
    * Its target stays hidden and is never requested.
    */
   acceptRedirect?: boolean
+  /** Identifies a configured component probe independently of its display text. */
+  connectionCheck?: BaSyxComponentKey
 }
 
 export interface RequestResult<T = unknown> {
@@ -200,14 +205,19 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     return requestOwnerId === getRequestOwnerId()
   }
 
-  function showRequestError (error: unknown, errorMessage: string, statusCode?: number, context?: string): void {
+  function showRequestError (
+    error: unknown,
+    errorMessage: string,
+    statusCode?: number,
+    networkRequest?: SnackbarType['networkRequest'],
+  ): void {
     const isNetworkError = error instanceof NetworkRequestError && statusCode === undefined
     const networkContext = isNetworkError
-      ? { kind: 'network-error' as const, infrastructureId: getRequestOwnerId() }
+      ? { kind: 'network-error' as const, infrastructureId: getRequestOwnerId(), ...(networkRequest ? { networkRequest } : {}) }
       : {}
 
-    if (isNetworkError && context?.startsWith('Connecting to ')) {
-      const componentLabel = context.slice('Connecting to '.length)
+    if (isNetworkError && networkRequest?.operation === 'connection-check' && networkRequest.component) {
+      const componentLabel = `${getComponentLabel(networkRequest.component)} URL`
       navigationStore.dispatchSnackbar({
         status: true,
         timeout: 60_000,
@@ -241,7 +251,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     requestOwnerId: string | undefined = getRequestOwnerId(),
     requestInfrastructure: InfrastructureConfig | null | undefined = infrastructureStore.getSelectedInfrastructure,
     isolateAuthenticationFailures = false,
-    context?: string,
+    networkRequest?: SnackbarType['networkRequest'],
   ): { success: false, status?: number, aborted?: true, blocked?: true, redirected?: true, failureKind?: RequestResult['failureKind'] } {
     if (error instanceof BlockedRedirectError && errorHandlingOptions.acceptRedirect) {
       setLastRequestFailureStatus(undefined)
@@ -318,7 +328,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
 
     // Handle other errors
     if (!disableMessage && !shouldSuppressStatus(statusCode, errorHandlingOptions)) {
-      showRequestError(error, errorMessage, statusCode, context)
+      showRequestError(error, errorMessage, statusCode, networkRequest)
     }
     return { success: false, status: statusCode, failureKind: classifyRequestFailure(error) }
   }
@@ -539,7 +549,13 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
         requestOwnerId,
         requestInfrastructure,
         securityContext?.isolateAuthenticationFailures,
-        context,
+        securityContext?.isolateAuthenticationFailures
+          ? undefined
+          : {
+              url: path,
+              operation: errorHandlingOptions.connectionCheck ? 'connection-check' : 'read',
+              ...(errorHandlingOptions.connectionCheck ? { component: errorHandlingOptions.connectionCheck } : {}),
+            },
       ))
   }
 

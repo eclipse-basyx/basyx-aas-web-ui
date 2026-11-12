@@ -1,8 +1,9 @@
+import type { BaSyxComponentKey } from '@/types/BaSyx'
 import { useRoute } from 'vue-router'
 import { useAASStore } from '@/store/AASDataStore'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
-import { getActiveComponentKeys, usesSubmodelSuperpath } from '@/utils/InfrastructureUtils'
+import { getActiveComponentKeys } from '@/utils/InfrastructureUtils'
 
 export function useBackendSetupNotice () {
   const route = useRoute()
@@ -10,17 +11,37 @@ export function useBackendSetupNotice () {
   const envStore = useEnvStore()
   const infrastructureStore = useInfrastructureStore()
 
-  const canShowNotice = computed(() => {
-    const dataRoutes = [
-      'AASViewer', 'AASEditor', 'AASSubmodelViewer', 'AASList', 'SubmodelList',
-      'SMViewer', 'SMEditor', 'ComponentVisualization', 'Visualization',
-    ]
-    return dataRoutes.includes(String(route.name))
-      && !envStore.getSingleAas
-      && !envStore.getSingleSm
-      && !aasStore.getSelectedAAS?.id
-      && !aasStore.getSelectedNode?.modelType
+  const isGlobalSubmodelView = computed(() => ['SMViewer', 'SMEditor'].includes(String(route.name)))
+  const isDataView = computed(() => [
+    'AASViewer', 'AASEditor', 'AASSubmodelViewer', 'AASList', 'SubmodelList',
+    'SMViewer', 'SMEditor', 'ComponentVisualization', 'Visualization',
+  ].includes(String(route.name)))
+  const activeComponentKeys = computed(() => {
+    const infrastructure = infrastructureStore.getSelectedInfrastructure
+    return infrastructure ? getActiveComponentKeys(infrastructure) : []
   })
+  const relevantSourceKeys = computed(() => {
+    if (!isDataView.value) {
+      return []
+    }
+    const sourceKeys: BaSyxComponentKey[] = isGlobalSubmodelView.value
+      ? ['SubmodelRepo']
+      : ['AASRepo', 'AASRegistry']
+    return activeComponentKeys.value.filter(key => sourceKeys.includes(key))
+  })
+  const coveredDataSources = computed<Array<{ component: BaSyxComponentKey, url: string }>>(() => {
+    const infrastructure = infrastructureStore.getSelectedInfrastructure
+    return relevantSourceKeys.value.flatMap(component => {
+      const url = normalizeUrl(infrastructure?.components[component]?.url)
+      return url ? [{ component, url }] : []
+    })
+  })
+
+  const canShowNotice = computed(() => isDataView.value
+    && !envStore.getSingleAas
+    && !envStore.getSingleSm
+    && (isGlobalSubmodelView.value || !aasStore.getSelectedAAS?.id)
+    && !aasStore.getSelectedNode?.modelType)
 
   const noticeState = computed<{ kind: 'setup' | 'unreachable' | null, pending: boolean, connected?: boolean }>(() => {
     const hidden = { kind: null, pending: false }
@@ -39,25 +60,18 @@ export function useBackendSetupNotice () {
       return { kind: 'setup', pending: false }
     }
 
-    const submodelView = ['SMViewer', 'SMEditor'].includes(String(route.name))
-    const sourceKeys = usesSubmodelSuperpath(infrastructure)
-      ? ['AASRepo']
-      : (submodelView ? ['SubmodelRepo'] : ['AASRepo', 'AASRegistry'])
-    const activeKeys = getActiveComponentKeys(infrastructure).filter(key => sourceKeys.includes(key))
     // EDC infrastructures establish their connections inside the Catena-X module.
-    if (activeKeys.length === 0) {
+    if (activeComponentKeys.value.length === 0) {
       return hidden
     }
 
-    const configuredKeys = activeKeys.filter(key => normalizeUrl(infrastructure.components[key]?.url))
-    if (configuredKeys.length === 0) {
+    if (coveredDataSources.value.length === 0) {
       return { kind: 'setup', pending: false }
     }
 
-    const states = configuredKeys.map(key => {
-      const result = infrastructureStore.getComponentConnectionResults[key]
-      return result?.infrastructureId === infrastructure.id
-        && result.url === normalizeUrl(infrastructure.components[key]?.url)
+    const states = coveredDataSources.value.map(({ component, url }) => {
+      const result = infrastructureStore.getComponentConnectionResults[component]
+      return result?.infrastructureId === infrastructure.id && result.url === url
         ? result.state
         : undefined
     })
@@ -79,7 +93,7 @@ export function useBackendSetupNotice () {
   const infrastructureName = computed(() => infrastructureStore.getSelectedInfrastructure?.name?.trim() || 'selected infrastructure')
   const hasUsableConnection = computed(() => noticeState.value.connected === true)
 
-  return { showNotice, isSetupPending, noticeKind, infrastructureName, hasUsableConnection }
+  return { showNotice, isSetupPending, noticeKind, infrastructureName, hasUsableConnection, coveredDataSources }
 }
 
 function normalizeUrl (url: string | undefined): string {

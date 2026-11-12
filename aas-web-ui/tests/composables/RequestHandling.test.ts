@@ -105,7 +105,7 @@ describe('RequestHandling.ts', () => {
     global.fetch = vi.fn().mockRejectedValue(new TypeError('Load failed')) as unknown as typeof fetch
     const { useRequestHandling } = await import('@/composables/RequestHandling')
 
-    const response = await useRequestHandling().getRequest('/shells', 'Connecting to AAS Repository URL', false)
+    const response = await useRequestHandling().getRequest('/shells', 'Checking repository availability', false, new Headers(), { connectionCheck: 'AASRepo' })
 
     expect(response).toMatchObject({ success: false, failureKind: 'network' })
 
@@ -114,6 +114,7 @@ describe('RequestHandling.ts', () => {
       extendedError: expect.stringContaining('Make sure the corresponding BaSyx component is running'),
       kind: 'network-error',
       infrastructureId: 'infra-1',
+      networkRequest: { url: '/shells', operation: 'connection-check', component: 'AASRepo' },
     }))
     expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({
       extendedError: expect.stringContaining('AAS Repository URL could not be reached.'),
@@ -138,8 +139,47 @@ describe('RequestHandling.ts', () => {
       text: expect.stringContaining('TypeError: Load failed'),
       kind: 'network-error',
       infrastructureId: 'infra-1',
+      networkRequest: { url: '/shells', operation: 'read' },
     }))
   })
+
+  it('does not classify a GET as a connection check based on its display context', async () => {
+    global.fetch = vi.fn().mockRejectedValue(new TypeError('Load failed')) as unknown as typeof fetch
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    await useRequestHandling().getRequest('/companies', 'Connecting to Company Lookup URL', false)
+    expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({
+      networkRequest: { url: '/companies', operation: 'read' },
+      text: expect.stringContaining('TypeError: Load failed'),
+    }))
+  })
+
+  it('keeps isolated draft checks outside setup coverage even for the saved infrastructure and endpoint', async () => {
+    global.fetch = vi.fn().mockRejectedValue(new TypeError('Load failed')) as unknown as typeof fetch
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    await useRequestHandling().getRequest('/shells', 'Connecting to AAS Repository URL', false, new Headers(), {
+      connectionCheck: 'AASRepo',
+    }, 'auto', {
+      infrastructure: mockState.selectedInfrastructure,
+      isolateAuthenticationFailures: true,
+    })
+    expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({
+      kind: 'network-error', infrastructureId: 'infra-1', text: expect.stringContaining('TypeError: Load failed'),
+    }))
+    expect(mockDeps.dispatchSnackbar.mock.calls[0][0]).not.toHaveProperty('networkRequest')
+  })
+
+  it.each(['postRequest', 'putRequest', 'patchRequest', 'deleteRequest'] as const)(
+    'keeps %s network failures outside setup-banner GET coverage', async method => {
+      global.fetch = vi.fn().mockRejectedValue(new TypeError('Load failed')) as unknown as typeof fetch
+      const { useRequestHandling } = await import('@/composables/RequestHandling')
+      const requests = useRequestHandling()
+      await (method === 'deleteRequest'
+        ? requests.deleteRequest('/shells', new Headers(), 'deleting shell', false)
+        : requests[method]('/shells', '{}', new Headers(), 'updating shell', false))
+      expect(mockDeps.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({ kind: 'network-error' }))
+      expect(mockDeps.dispatchSnackbar.mock.calls[0][0]).not.toHaveProperty('networkRequest')
+    },
+  )
 
   it('keeps malformed connection responses as response errors', async () => {
     global.fetch = vi.fn().mockResolvedValue(new Response('{ malformed JSON', {

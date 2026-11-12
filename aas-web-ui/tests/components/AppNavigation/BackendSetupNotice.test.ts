@@ -218,15 +218,63 @@ describe('Backend setup notice', () => {
     expect(useBackendSetupNotice().noticeKind.value).toBe('setup')
   })
 
-  it('uses the shell repository for identifiable-template Submodel views', () => {
-    mocks.route.name = 'SMViewer'
+  it.each(['SMViewer', 'SMEditor'])('requires a global Submodel source on identifiable-template %s', name => {
+    mocks.route.name = name
     mocks.infrastructure.getSelectedInfrastructure!.template = 'identifiable'
-    configureSource('AASRepo', 'unreachable')
+    configureSource('AASRepo', 'connected')
     configureSource('SubmodelRepo', 'connected')
     const notice = useBackendSetupNotice()
-    expect(notice.noticeKind.value).toBe('unreachable')
-    mocks.infrastructure.getComponentConnectionResults.AASRepo!.state = 'connected'
+    expect(notice.noticeKind.value).toBe('setup')
+    expect(notice.hasUsableConnection.value).toBe(false)
+    expect(notice.coveredDataSources.value).toEqual([])
+  })
+
+  it.each(['AASViewer', 'SubmodelList', 'Visualization'])('uses the identifiable shell repository for %s', name => {
+    mocks.route.name = name
+    mocks.infrastructure.getSelectedInfrastructure!.template = 'identifiable'
+    configureSource('AASRepo', 'connected')
+    configureSource('SubmodelRepo', 'unreachable')
+    const notice = useBackendSetupNotice()
     expect(notice.noticeKind.value).toBeNull()
+    expect(notice.hasUsableConnection.value).toBe(true)
+    expect(notice.coveredDataSources.value).toEqual([{ component: 'AASRepo', url: 'https://example.com/AASRepo' }])
+  })
+
+  it.each(['SMViewer', 'SMEditor'])('does not hide missing global %s data behind an unrelated selected shell', name => {
+    mocks.route.name = name
+    mocks.aas.getSelectedAAS = { id: 'https://example.com/shells/one' }
+    configureSource('AASRepo', 'connected')
+    const notice = useBackendSetupNotice()
+    expect(notice.noticeKind.value).toBe('setup')
+    expect(notice.hasUsableConnection.value).toBe(false)
+  })
+
+  it('exposes only configured sources relevant to the current view and active template', () => {
+    configureSource('AASRepo')
+    configureSource('AASRegistry')
+    configureSource('SubmodelRepo')
+    configureSource('CompanyLookup')
+    mocks.infrastructure.getSelectedInfrastructure!.components.AASRepo.url = '  https://example.com/AASRepo///  '
+    const notice = useBackendSetupNotice()
+    expect(notice.coveredDataSources.value).toHaveLength(2)
+    expect(notice.coveredDataSources.value).toEqual(expect.arrayContaining([
+      { component: 'AASRepo', url: 'https://example.com/AASRepo' },
+      { component: 'AASRegistry', url: 'https://example.com/AASRegistry' },
+    ]))
+
+    mocks.route.name = 'SMViewer'
+    expect(notice.coveredDataSources.value).toEqual([{ component: 'SubmodelRepo', url: 'https://example.com/SubmodelRepo' }])
+    mocks.infrastructure.getSelectedInfrastructure!.template = 'identifiable'
+    expect(notice.coveredDataSources.value).toEqual([])
+    mocks.infrastructure.getSelectedInfrastructure!.template = 'full'
+    mocks.route.name = 'About'
+    expect(notice.coveredDataSources.value).toEqual([])
+  })
+
+  it('covers no requests when no source URL is configured', () => {
+    expect(useBackendSetupNotice().coveredDataSources.value).toEqual([])
+    mocks.infrastructure.getSelectedInfrastructure = null
+    expect(useBackendSetupNotice().coveredDataSources.value).toEqual([])
   })
 
   it.each(['SubmodelList', 'Visualization', 'ComponentVisualization'])('keeps %s dependent on its shell data source', name => {
@@ -287,7 +335,14 @@ describe('Backend setup notice', () => {
   it('leaves Catena-X EDC connection guidance to its own module', () => {
     mocks.infrastructure.getSelectedInfrastructure!.template = 'catena-x'
     mocks.infrastructure.getSelectedInfrastructure!.catenaX = { accessMode: 'edc' }
-    expect(mountNotice().find('[role="status"]').exists()).toBe(false)
+    const notice = useBackendSetupNotice()
+    expect(notice.showNotice.value).toBe(false)
+    expect(notice.hasUsableConnection.value).toBe(false)
+    expect(notice.coveredDataSources.value).toEqual([])
+    mocks.route.name = 'SMViewer'
+    expect(notice.showNotice.value).toBe(false)
+    expect(notice.noticeKind.value).toBeNull()
+    expect(notice.coveredDataSources.value).toEqual([])
   })
 
   it.each(['getIsAuthenticating', 'getIsTestingConnections'] as const)('waits while %s is active', key => {

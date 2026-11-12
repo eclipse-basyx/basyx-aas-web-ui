@@ -11,14 +11,13 @@ import { SUBMODEL_REPOSITORY_ENDPOINT_PATH } from '@/composables/Client/SMReposi
 import { watchFeatureControlClaims } from '@/composables/FeatureControl'
 import { useInfrastructureAuth } from '@/composables/Infrastructure/useInfrastructureAuth'
 import { useInfrastructureStorage } from '@/composables/Infrastructure/useInfrastructureStorage'
-import { useRequestHandling } from '@/composables/RequestHandling'
+import { type RequestSecurityContext, useRequestHandling } from '@/composables/RequestHandling'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useNavigationStore } from '@/store/NavigationStore'
 import { getFallbackConnectionFailure, isValidConnectionResponse, isValidServiceDescription } from '@/utils/ComponentConnectionUtils'
 import { isValidCustomHeader } from '@/utils/CustomHeaderUtils'
 import { getActiveComponentKeys, isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
 import { hasResourceAccessProfile } from '@/utils/ResourceAccessProfile'
-import { stripLastCharacter } from '@/utils/StringUtils'
 
 export const useInfrastructureStore = defineStore('infrastructureStore', () => {
   // Stores
@@ -465,9 +464,16 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     saveInfrastructuresToStorage()
   }
 
-  function dispatchUpdateInfrastructure (infrastructure: InfrastructureConfig): void {
+  async function dispatchUpdateInfrastructure (infrastructure: InfrastructureConfig): Promise<void> {
     const index = infrastructures.value.findIndex(i => i.id === infrastructure.id)
     if (index !== -1) {
+      const connectionConfigurationChanged = infrastructures.value[index].template !== infrastructure.template
+        || getActiveComponentKeys(infrastructures.value[index]).join(',') !== getActiveComponentKeys(infrastructure).join(',')
+        || Object.keys(basyxComponents).some(key => {
+          const componentKey = key as BaSyxComponentKey
+          return normalizeComponentUrl(basyxComponents[componentKey].url)
+            !== normalizeComponentUrl(infrastructure.components[componentKey].url)
+        })
       // If this infrastructure is marked as default, unmark all others
       if (infrastructure.isDefault) {
         for (const infra of infrastructures.value) {
@@ -497,6 +503,9 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
         SubmodelRepoURL.value = infrastructure.components.SubmodelRepo.url
         ConceptDescriptionRepoURL.value = infrastructure.components.ConceptDescriptionRepo.url
         CompanyLookupURL.value = infrastructure.components.CompanyLookup.url
+        if (connectionConfigurationChanged) {
+          await connectComponents()
+        }
       }
     }
   }
@@ -713,170 +722,129 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     return url.trim().replace(/\/+$/, '')
   }
 
-  async function connectComponent (
-    componentKey: keyof typeof basyxComponents,
-    requestInfrastructure?: InfrastructureConfig,
-  ): Promise<void> {
-    const basyxComponent = basyxComponents[componentKey]
-    const profileUrl = basyxComponent.url.trim().replace(/\/+$/, '')
-    const profileInfrastructureId = getSelectedInfrastructure.value?.id ?? ''
-    const profile = { url: profileUrl, infrastructureId: profileInfrastructureId, enabled: false, requestId: ++nextProfileRequest }
-    resourceAccessProfiles.value[componentKey] = profile
-    const requestSecurityContext = requestInfrastructure
-      ? { infrastructure: requestInfrastructure, isolateAuthenticationFailures: true }
-      : undefined
-    const connectionGeneration = invalidateComponentConnection(componentKey)
-    const infrastructureId = selectedInfrastructureId.value
-    const requestedUrl = normalizeComponentUrl(basyxComponent.url)
-    const saveConnectionResult = !requestInfrastructure && !isTestingConnections.value
-    function completeConnection (state: ComponentConnectionState): void {
-      basyxComponent.loading = false
-      basyxComponent.connected = state === 'connected'
-      if (saveConnectionResult) {
-        componentConnectionResults[componentKey] = { state, infrastructureId, url: requestedUrl }
-      }
+  async function checkComponentConnection (
+    componentKey: BaSyxComponentKey,
+    url: string,
+    securityContext?: RequestSecurityContext,
+    isCurrent: () => boolean = () => true,
+  ): Promise<{ state: ComponentConnectionState, description?: ServiceDescription, invalidResponse?: true } | undefined> {
+    const component = basyxComponents[componentKey]
+    const base = normalizeComponentUrl(url)
+    if (!base) {
+      return { state: 'not-configured' }
     }
 
-    basyxComponent.description = null
-    if (basyxComponent.url && basyxComponent.url.trim() !== '') {
-      basyxComponent.loading = true
-      if (saveConnectionResult) {
-        componentConnectionResults[componentKey] = { state: 'checking', infrastructureId, url: requestedUrl }
-      }
-      let basyxComponentURL = basyxComponent.url
-      if (basyxComponentURL.endsWith('/')) {
-        basyxComponentURL = stripLastCharacter(basyxComponentURL)
-      }
+    const suffix = component.pathCheck ?? ''
+    const root = suffix && base.endsWith(suffix) ? base.slice(0, -suffix.length) : base
+    const context = `Connecting to ${component.label}`
+    const options = securityContext ? {} : { connectionCheck: componentKey }
+    const description = await getRequest(
+      `${root}/description`, context, true, new Headers(), options, 'auto', securityContext,
+    )
+    if (!isCurrent()) {
+      return
+    }
+    if (description.success && isValidServiceDescription(description.data)) {
+      return { state: 'connected', description: { profiles: [...description.data.profiles] } }
+    }
 
-      const context = `Connecting to ${basyxComponent.label}`
-      let disableMessage = true
-
-      try {
-        // First attemp to connect to components via `/description` endpoint
-        let path = basyxComponentURL
-        if (path.endsWith('/')) {
-          path = stripLastCharacter(path)
-        } // Strip ending slash
-
-        if (basyxComponent.pathCheck) {
-          path = path.replace(basyxComponent.pathCheck, '')
-        } // Remove path check term if it exists in the URL
-
-        if (path.endsWith('/')) {
-          path = stripLastCharacter(path)
-        } // Strip ending slash
-
-        path += '/description'
-
-        const response = await getRequest(
-          path,
-          context,
-          disableMessage,
-          new Headers(),
-          {},
-          'auto',
-          requestSecurityContext,
-        )
-        if (!isCurrentComponentConnection(componentKey, connectionGeneration, infrastructureId, requestedUrl)) {
-          return
-        }
-        if (response.success && isValidServiceDescription(response.data)) {
-          if (resourceAccessProfiles.value[componentKey]?.requestId === profile.requestId) {
-            profile.enabled = hasResourceAccessProfile(response.data)
-            resourceAccessProfiles.value[componentKey] = { ...profile }
-          }
-          // Update the connected status
-          completeConnection('connected')
-          basyxComponent.description = normalizeServiceDescription(response.data)
-        } else {
-          // If connect to components via `/description`fails, second attempt to connect via main endpoints
-          const lastPath = path
-          path = basyxComponentURL
-          console.warn(
-            context + ' (' + lastPath + ') failed!',
-            'Try to connect to main endpoint (' + path + ')',
-          )
-          if (path.endsWith('/')) {
-            path = stripLastCharacter(path)
-          } // Strip ending slash
-
-          // Append path check term if it exists and not already appended
-          if (basyxComponent.pathCheck && !path.endsWith(basyxComponent.pathCheck)) {
-            path += basyxComponent.pathCheck
-          }
-
-          // Append additional parameters if any
-          if (basyxComponent.additionalParams) {
-            path += basyxComponent.additionalParams
-          }
-
-          disableMessage = false
-          const fallbackResponse = await getRequest(
-            path,
-            context,
-            disableMessage,
-            new Headers(),
-            {},
-            'auto',
-            requestSecurityContext,
-          )
-          if (!isCurrentComponentConnection(componentKey, connectionGeneration, infrastructureId, requestedUrl)) {
-            return
-          }
-          if (fallbackResponse.success && isValidConnectionResponse(componentKey, fallbackResponse.data)) {
-            // Update the connected status
-            completeConnection('connected')
-          } else {
-            console.warn(context + ' (' + path + ') failed!')
-
-            // Remove from localStorage if endpoint config is available
-            if (deploymentEndpointConfigAvailable.value) {
-              window.localStorage.removeItem(componentKey + 'URL')
-            }
-
-            // Update the connected status
-            completeConnection(getFallbackConnectionFailure(response, fallbackResponse))
-            if (fallbackResponse.success) {
-              navigationStore.dispatchSnackbar({
-                status: true,
-                timeout: 8000,
-                color: 'error',
-                btnColor: 'buttonText',
-                baseError: 'Unexpected AAS server response',
-                extendedError: `${basyxComponent.label} did not return the expected AAS API response. Check the configured endpoint.`,
-                infrastructureId: infrastructureId ?? undefined,
-              })
-            }
-          }
-        }
-      } catch (error) {
-        if (!isCurrentComponentConnection(componentKey, connectionGeneration, infrastructureId, requestedUrl)) {
-          return
-        }
-        console.error(`Error connecting to ${basyxComponent.label}:`, error)
-
-        // Update the connected status
-        completeConnection('configuration-error')
-      }
-    } else {
-      completeConnection('not-configured')
-      basyxComponent.description = null
-      console.warn(`Repository URL for ${componentKey} is not defined or empty.`)
+    const fallback = await getRequest(
+      `${root}${suffix}${component.additionalParams ?? ''}`, context, false, new Headers(), options, 'auto', securityContext,
+    )
+    if (!isCurrent()) {
+      return
+    }
+    if (fallback.success && isValidConnectionResponse(componentKey, fallback.data)) {
+      return { state: 'connected' }
+    }
+    return {
+      state: getFallbackConnectionFailure(description, fallback),
+      ...(fallback.success ? { invalidResponse: true as const } : {}),
     }
   }
 
-  function normalizeServiceDescription (value: unknown): ServiceDescription | null {
-    if (!value || typeof value !== 'object') {
-      return null
+  function showInvalidConnectionResponse (componentKey: BaSyxComponentKey, infrastructureId: string | null): void {
+    if (infrastructureId !== selectedInfrastructureId.value) {
+      return
     }
+    navigationStore.dispatchSnackbar({
+      status: true,
+      timeout: 8000,
+      color: 'error',
+      btnColor: 'buttonText',
+      baseError: 'Unexpected AAS server response',
+      extendedError: `${basyxComponents[componentKey].label} did not return the expected AAS API response. Check the configured endpoint.`,
+      infrastructureId: infrastructureId ?? undefined,
+    })
+  }
 
-    const profiles = (value as { profiles?: unknown }).profiles
-    if (!Array.isArray(profiles)) {
-      return null
+  // Draft probes return their local result without changing saved URLs, generations,
+  // descriptions, access profiles, loading flags, or connection outcomes.
+  async function probeComponentConnection (
+    componentKey: BaSyxComponentKey,
+    url: string,
+    infrastructure: InfrastructureConfig | null = getSelectedInfrastructure.value,
+  ): Promise<boolean> {
+    const securityContext = infrastructure
+      ? {
+          infrastructure: {
+            ...infrastructure,
+            components: {
+              ...infrastructure.components,
+              [componentKey]: { ...infrastructure.components[componentKey], url },
+            },
+          },
+          isolateAuthenticationFailures: true,
+        }
+      : undefined
+    try {
+      const result = await checkComponentConnection(componentKey, url, securityContext)
+      if (result?.invalidResponse) {
+        showInvalidConnectionResponse(componentKey, infrastructure?.id ?? null)
+      }
+      return result?.state === 'connected'
+    } catch {
+      return false
     }
+  }
 
-    return {
-      profiles: profiles.filter((profile): profile is string => typeof profile === 'string'),
+  async function connectComponent (componentKey: BaSyxComponentKey): Promise<void> {
+    const component = basyxComponents[componentKey]
+    const url = normalizeComponentUrl(component.url)
+    const infrastructureId = selectedInfrastructureId.value
+    const generation = invalidateComponentConnection(componentKey)
+    const isCurrent = () => isCurrentComponentConnection(componentKey, generation, infrastructureId, url)
+    const profile = { url, infrastructureId: infrastructureId ?? '', enabled: false, requestId: ++nextProfileRequest }
+    resourceAccessProfiles.value[componentKey] = profile
+    component.description = null
+    component.loading = true
+    componentConnectionResults[componentKey] = { state: 'checking', infrastructureId, url }
+
+    try {
+      const result = await checkComponentConnection(componentKey, url, undefined, isCurrent)
+      if (!result || !isCurrent()) {
+        return
+      }
+      component.loading = false
+      component.connected = result.state === 'connected'
+      component.description = result.description ?? null
+      componentConnectionResults[componentKey] = { state: result.state, infrastructureId, url }
+      if (url && !component.connected && deploymentEndpointConfigAvailable.value) {
+        localStorage.removeItem(componentKey + 'URL')
+      }
+      profile.enabled = hasResourceAccessProfile(result.description)
+      resourceAccessProfiles.value[componentKey] = { ...profile }
+      if (result.invalidResponse) {
+        showInvalidConnectionResponse(componentKey, infrastructureId)
+      }
+    } catch (error) {
+      if (!isCurrent()) {
+        return
+      }
+      component.loading = false
+      component.connected = false
+      componentConnectionResults[componentKey] = { state: 'configuration-error', infrastructureId, url }
+      console.error(`Error connecting to ${component.label}:`, error)
     }
   }
 
@@ -918,6 +886,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
     waitForInitialization,
     connectComponents,
     connectComponent,
+    probeComponentConnection,
     supportsResourceAccess,
     resourceAccessComponent,
     supportsResourceAccessEndpoint,

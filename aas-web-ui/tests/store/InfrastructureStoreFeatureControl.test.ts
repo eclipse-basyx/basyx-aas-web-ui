@@ -377,7 +377,7 @@ describe('InfrastructureStore', () => {
       'Connecting to AAS Repository URL',
       false,
       expect.any(Headers),
-      {},
+      { connectionCheck: 'AASRepo' },
       'auto',
       undefined,
     ))
@@ -393,7 +393,7 @@ describe('InfrastructureStore', () => {
     const store = useInfrastructureStore()
     await store.waitForInitialization()
     const component = store.getBasyxComponents.AASRepo
-    component.url = 'https://draft.example/shells'
+    const savedUrl = component.url
     const draftInfrastructure = {
       ...infrastructure('draft', []),
       auth: {
@@ -406,7 +406,8 @@ describe('InfrastructureStore', () => {
       },
     }
 
-    await store.connectComponent('AASRepo', draftInfrastructure)
+    expect(await store.probeComponentConnection('AASRepo', 'https://draft.example/shells', draftInfrastructure)).toBe(true)
+    expect(component.url).toBe(savedUrl)
 
     expect(mocks.getRequest).toHaveBeenCalledWith(
       'https://draft.example/description',
@@ -419,16 +420,19 @@ describe('InfrastructureStore', () => {
     )
   })
 
-  it.each([true, false])('keeps saved connection results while testing an unsaved infrastructure (explicit context: %s)', async explicitContext => {
+  it.each([true, false])('keeps saved component state intact during a draft probe (explicit context: %s)', async explicitContext => {
     const savedUrl = 'https://aas.example/shells'
     const { store, component } = await configuredAASRepository(savedUrl)
+    const savedDescription = { profiles: ['https://basyx.org/aas/API/3/2/RelationshipBasedAccessControl/1.0'] }
+    mocks.getRequest.mockResolvedValueOnce({ success: true, data: savedDescription })
     await store.connectComponent('AASRepo')
     const savedResult = { ...store.getComponentConnectionResults.AASRepo }
-    expect(savedResult).toEqual({ state: 'connected', infrastructureId: 'viewer', url: savedUrl })
+    const savedComponent = { ...component }
+    expect(store.supportsResourceAccess('AASRepo')).toBe(true)
 
+    const draftUrl = 'https://draft.example/shells'
     const draftInfrastructure = infrastructure('draft', [])
-    draftInfrastructure.components.AASRepo.url = 'https://draft.example/shells'
-    component.url = draftInfrastructure.components.AASRepo.url
+    draftInfrastructure.components.AASRepo.url = draftUrl
     let resolveDescription!: (response: unknown) => void
     mocks.getRequest
       .mockResolvedValue({ success: false, failureKind: 'network' })
@@ -437,19 +441,192 @@ describe('InfrastructureStore', () => {
       }))
 
     store.dispatchIsTestingConnections(!explicitContext)
-    const draftCheck = store.connectComponent('AASRepo', explicitContext ? draftInfrastructure : undefined)
-    expect(component.loading).toBe(true)
+    const draftCheck = store.probeComponentConnection('AASRepo', draftUrl, explicitContext ? draftInfrastructure : undefined)
+    expect(component).toEqual(savedComponent)
     expect(store.getComponentConnectionResults.AASRepo).toEqual(savedResult)
+    expect(store.supportsResourceAccess('AASRepo')).toBe(true)
 
     resolveDescription({ success: false, failureKind: 'network' })
-    await draftCheck
+    expect(await draftCheck).toBe(false)
+    store.dispatchIsTestingConnections(false)
+    expect(component).toEqual(savedComponent)
+    expect(component.description).toEqual(savedDescription)
+    expect(store.supportsResourceAccess('AASRepo')).toBe(true)
+    expect(store.getSelectedInfrastructure!.components.AASRepo.url).toBe(savedUrl)
+    expect(store.getComponentConnectionResults.AASRepo).toEqual(savedResult)
+  })
+
+  it.each([false, true])('checks and publishes a newly saved selected endpoint (draft testing active: %s)', async draftTesting => {
+    const { store, component } = await configuredAASRepository()
+    await store.connectComponent('AASRepo')
+    let resolveDescription!: (response: unknown) => void
+    mocks.getRequest.mockClear()
+    mocks.getRequest.mockReturnValueOnce(new Promise(resolve => {
+      resolveDescription = resolve
+    }))
+    store.dispatchIsTestingConnections(draftTesting)
+    const selected = store.getSelectedInfrastructure!
+    const newUrl = 'https://saved.example/shells'
+    const saving = store.dispatchUpdateInfrastructure({
+      ...selected,
+      components: { ...selected.components, AASRepo: { url: newUrl } },
+    })
+
+    expect(component.url).toBe(newUrl)
+    expect(component.loading).toBe(true)
+    expect(store.getComponentConnectionResults.AASRepo).toEqual({
+      state: 'checking', infrastructureId: 'viewer', url: newUrl,
+    })
+    expect(mocks.getRequest).toHaveBeenCalledWith(
+      'https://saved.example/description',
+      'Connecting to AAS Repository URL',
+      true,
+      expect.any(Headers),
+      { connectionCheck: 'AASRepo' },
+      'auto',
+      undefined,
+    )
+
+    resolveDescription({ success: true, data: { profiles: ['saved-profile'] } })
+    await saving
     store.dispatchIsTestingConnections(false)
     expect(component.loading).toBe(false)
-    expect(component.connected).toBe(false)
-    expect(store.getComponentConnectionResults.AASRepo).toEqual(savedResult)
+    expect(component.connected).toBe(true)
+    expect(store.getComponentConnectionResults.AASRepo).toEqual({
+      state: 'connected', infrastructureId: 'viewer', url: newUrl,
+    })
+  })
 
-    component.url = savedUrl
-    expect(store.getSelectedInfrastructure!.components.AASRepo.url).toBe(savedUrl)
+  it('checks connections when the selected infrastructure template changes without a URL edit', async () => {
+    const { store } = await configuredAASRepository()
+    await store.connectComponent('AASRepo')
+    mocks.getRequest.mockClear()
+
+    await store.dispatchUpdateInfrastructure({ ...store.getSelectedInfrastructure!, template: 'identifiable' })
+
+    expect(mocks.getRequest).toHaveBeenCalledOnce()
+    expect(store.getSelectedInfrastructure!.template).toBe('identifiable')
+    expect(store.getComponentConnectionResults.AASRepo?.state).toBe('connected')
+  })
+
+  it('checks newly activated Catena-X direct services when URLs and template stay the same', async () => {
+    const selected = infrastructure('viewer', [])
+    selected.template = 'catena-x'
+    selected.catenaX = { accessMode: 'edc' }
+    selected.components.AASRegistry.url = 'https://registry.example/shell-descriptors'
+    selected.components.SubmodelRepo.url = 'https://sm.example/submodels'
+    mocks.loadInfrastructuresFromStorage.mockResolvedValue({
+      selectedInfrastructureId: selected.id,
+      infrastructures: [selected],
+    })
+    const store = useInfrastructureStore()
+    await store.waitForInitialization()
+    expect(mocks.getRequest).not.toHaveBeenCalled()
+    expect(store.getComponentConnectionResults.AASRegistry).toBeUndefined()
+    expect(store.getComponentConnectionResults.SubmodelRepo).toBeUndefined()
+    mocks.getRequest.mockImplementation(async (path: string) => path.startsWith('https://registry.example/')
+      ? { success: true, data: { profiles: ['registry-profile'] } }
+      : { success: false, failureKind: 'network' })
+
+    await store.dispatchUpdateInfrastructure({ ...store.getSelectedInfrastructure!, catenaX: { accessMode: 'direct' } })
+
+    expect(mocks.getRequest).toHaveBeenCalledTimes(3)
+    expect(store.getComponentConnectionResults.AASRegistry).toEqual({
+      state: 'connected', infrastructureId: selected.id, url: selected.components.AASRegistry.url,
+    })
+    expect(store.getComponentConnectionResults.SubmodelRepo).toEqual({
+      state: 'unreachable', infrastructureId: selected.id, url: selected.components.SubmodelRepo.url,
+    })
+    expect(store.getBasyxComponents.AASRegistry.connected).toBe(true)
+    expect(store.getBasyxComponents.SubmodelRepo.connected).toBe(false)
+  })
+
+  it('does not probe or change selected endpoints when an unselected infrastructure is edited', async () => {
+    const { store, component } = await configuredAASRepository()
+    await store.connectComponent('AASRepo')
+    const savedResult = { ...store.getComponentConnectionResults.AASRepo }
+    const other = store.getInfrastructures.find(infra => infra.id === 'editor')!
+    mocks.getRequest.mockClear()
+
+    await store.dispatchUpdateInfrastructure({
+      ...other,
+      components: { ...other.components, AASRepo: { url: 'https://editor.example/shells' } },
+    })
+
+    expect(mocks.getRequest).not.toHaveBeenCalled()
+    expect(component.url).toBe('https://aas.example/shells')
+    expect(store.getComponentConnectionResults.AASRepo).toEqual(savedResult)
+    expect(store.getInfrastructures.find(infra => infra.id === 'editor')!.components.AASRepo.url).toBe('https://editor.example/shells')
+  })
+
+  it('does not recheck selected connections after a name-only edit', async () => {
+    const { store } = await configuredAASRepository()
+    await store.connectComponent('AASRepo')
+    const savedResult = { ...store.getComponentConnectionResults.AASRepo }
+    mocks.getRequest.mockClear()
+
+    await store.dispatchUpdateInfrastructure({ ...store.getSelectedInfrastructure!, name: 'Renamed server' })
+
+    expect(mocks.getRequest).not.toHaveBeenCalled()
+    expect(store.getSelectedInfrastructure!.name).toBe('Renamed server')
+    expect(store.getComponentConnectionResults.AASRepo).toEqual(savedResult)
+  })
+
+  it('allows a pending saved check to finish after a concurrent draft probe', async () => {
+    const { store, component } = await configuredAASRepository()
+    let resolveSaved!: (response: unknown) => void
+    mocks.getRequest.mockReturnValueOnce(new Promise(resolve => {
+      resolveSaved = resolve
+    }))
+    const savedCheck = store.connectComponent('AASRepo')
+    const checkingResult = { ...store.getComponentConnectionResults.AASRepo }
+    mocks.getRequest.mockResolvedValueOnce({ success: true, data: { profiles: ['draft-profile'] } })
+
+    expect(await store.probeComponentConnection('AASRepo', 'https://draft.example/shells')).toBe(true)
+    expect(component.url).toBe('https://aas.example/shells')
+    expect(component.loading).toBe(true)
+    expect(component.description).toBeNull()
+    expect(store.getComponentConnectionResults.AASRepo).toEqual(checkingResult)
+
+    const savedDescription = { profiles: ['https://basyx.org/aas/API/3/2/RelationshipBasedAccessControl/1.0'] }
+    resolveSaved({ success: true, data: savedDescription })
+    await savedCheck
+    expect(component.loading).toBe(false)
+    expect(component.connected).toBe(true)
+    expect(component.description).toEqual(savedDescription)
+    expect(store.supportsResourceAccess('AASRepo')).toBe(true)
+    expect(store.getComponentConnectionResults.AASRepo).toEqual({
+      state: 'connected', infrastructureId: 'viewer', url: 'https://aas.example/shells',
+    })
+  })
+
+  it('keeps a newly saved endpoint and access profile after an older draft probe finishes', async () => {
+    const { store, component } = await configuredAASRepository()
+    await store.connectComponent('AASRepo')
+    let resolveDraft!: (response: unknown) => void
+    mocks.getRequest.mockReturnValueOnce(new Promise(resolve => {
+      resolveDraft = resolve
+    }))
+    const draftCheck = store.probeComponentConnection('AASRepo', 'https://draft.example/shells')
+    const savedDescription = { profiles: ['https://basyx.org/aas/API/3/2/RelationshipBasedAccessControl/1.0'] }
+    mocks.getRequest.mockResolvedValueOnce({ success: true, data: savedDescription })
+    const selected = store.getSelectedInfrastructure!
+    const newUrl = 'https://saved.example/shells'
+
+    await store.dispatchUpdateInfrastructure({
+      ...selected,
+      components: { ...selected.components, AASRepo: { url: newUrl } },
+    })
+    const savedResult = { ...store.getComponentConnectionResults.AASRepo }
+    expect(savedResult).toEqual({ state: 'connected', infrastructureId: 'viewer', url: newUrl })
+
+    resolveDraft({ success: true, data: { profiles: ['draft-profile'] } })
+    expect(await draftCheck).toBe(true)
+    expect(component.url).toBe(newUrl)
+    expect(component.loading).toBe(false)
+    expect(component.connected).toBe(true)
+    expect(component.description).toEqual(savedDescription)
+    expect(store.supportsResourceAccess('AASRepo')).toBe(true)
     expect(store.getComponentConnectionResults.AASRepo).toEqual(savedResult)
   })
 

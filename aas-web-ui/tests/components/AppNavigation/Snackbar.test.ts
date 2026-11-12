@@ -1,4 +1,5 @@
 import type { SnackbarType } from '@/types/Application'
+import type { BaSyxComponentKey } from '@/types/BaSyx'
 import { mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed, nextTick, reactive } from 'vue'
@@ -13,6 +14,7 @@ vi.mock('@/composables/Infrastructure/useBackendSetupNotice', () => ({
   useBackendSetupNotice: () => ({
     showNotice: computed(() => mocks.state.showNotice),
     isSetupPending: computed(() => mocks.state.isSetupPending),
+    coveredDataSources: computed(() => mocks.state.coveredDataSources),
   }),
 }))
 vi.mock('@/store/InfrastructureStore', () => ({
@@ -39,6 +41,7 @@ function createState () {
     showNotice: false,
     isSetupPending: false,
     selectedInfrastructureId: 'infra-1',
+    coveredDataSources: [{ component: 'AASRepo' as BaSyxComponentKey, url: 'https://aas.example/api' }],
     snackbar: { status: false } as SnackbarType,
   })
 }
@@ -48,6 +51,9 @@ function networkSnackbar (structured = false): SnackbarType {
     status: true,
     kind: 'network-error',
     infrastructureId: 'infra-1',
+    networkRequest: structured
+      ? { url: 'https://aas.example/api/description', operation: 'connection-check', component: 'AASRepo' }
+      : { url: 'https://aas.example/api/shells?limit=100', operation: 'read' },
     ...(structured
       ? { baseError: 'Unable to connect to the configured BaSyx environment.', extendedError: 'AAS Repository URL could not be reached.' }
       : { text: 'Error! Server responded with: TypeError: Load failed' }),
@@ -161,6 +167,59 @@ describe('Snackbar backend setup coverage', () => {
     mocks.state.showNotice = true
     mocks.state.isSetupPending = true
     mocks.state.snackbar = { ...networkSnackbar(), infrastructureId: 'infra-2' }
+    const wrapper = mountSnackbar()
+    expect(wrapper.get('[role="alert"]').text()).toContain('Load failed')
+    expect(mocks.dispatchSnackbar).not.toHaveBeenCalled()
+  })
+
+  it('preserves an unrelated Company Lookup failure in the selected infrastructure', () => {
+    mocks.state.showNotice = true
+    mocks.state.snackbar = {
+      ...networkSnackbar(), text: 'Company Lookup request failed',
+      networkRequest: { operation: 'read', url: 'https://aas.example/api/companies' },
+    }
+    const wrapper = mountSnackbar()
+    expect(wrapper.get('[role="alert"]').text()).toContain('Company Lookup request failed')
+    expect(mocks.dispatchSnackbar).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    { operation: 'read', url: 'https://aas.example/api/shells/one' },
+    { operation: 'read', url: 'https://aas.example/api/shells/one/asset-information/thumbnail' },
+    { operation: 'read', url: 'https://aas.example/api/description' },
+    { operation: 'read', url: 'https://other.example/api/shells' },
+    { operation: 'connection-check', component: 'CompanyLookup', url: 'https://aas.example/api/description' },
+    { operation: 'connection-check', component: 'AASRegistry', url: 'https://aas.example/api/description' },
+  ] satisfies NonNullable<SnackbarType['networkRequest']>[])('retains requests outside the covered source scope: %j', networkRequest => {
+    mocks.state.showNotice = true
+    mocks.state.isSetupPending = true
+    mocks.state.snackbar = { ...networkSnackbar(), networkRequest }
+    const wrapper = mountSnackbar()
+    expect(wrapper.get('[role="alert"]').text()).toContain('Load failed')
+    expect(mocks.dispatchSnackbar).not.toHaveBeenCalled()
+  })
+
+  it('retains mutation and unscoped network errors even for the selected infrastructure', () => {
+    mocks.state.showNotice = true
+    mocks.state.isSetupPending = true
+    mocks.state.snackbar = { ...networkSnackbar(), networkRequest: undefined }
+    const wrapper = mountSnackbar()
+    expect(wrapper.get('[role="alert"]').text()).toContain('Load failed')
+    expect(mocks.dispatchSnackbar).not.toHaveBeenCalled()
+  })
+
+  it('retains isolated draft-check feedback while saved endpoint checks are pending', () => {
+    mocks.state.isSetupPending = true
+    mocks.state.snackbar = { ...networkSnackbar(), text: 'Draft connection failed', networkRequest: undefined }
+    const wrapper = mountSnackbar()
+    expect(wrapper.get('[role="alert"]').text()).toContain('Draft connection failed')
+    expect(mocks.dispatchSnackbar).not.toHaveBeenCalled()
+  })
+
+  it('does not apply old source coverage after the selected endpoint changes', () => {
+    mocks.state.showNotice = true
+    mocks.state.coveredDataSources[0].url = 'https://new.example/api'
+    mocks.state.snackbar = networkSnackbar()
     const wrapper = mountSnackbar()
     expect(wrapper.get('[role="alert"]').text()).toContain('Load failed')
     expect(mocks.dispatchSnackbar).not.toHaveBeenCalled()

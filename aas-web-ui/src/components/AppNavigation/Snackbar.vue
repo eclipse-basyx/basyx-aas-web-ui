@@ -44,14 +44,16 @@
   import { useBackendSetupNotice } from '@/composables/Infrastructure/useBackendSetupNotice'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
+  import { isCoveredBackendRequest } from '@/utils/BackendSetupRequestScope'
 
   const navigationStore = useNavigationStore()
   const infrastructureStore = useInfrastructureStore()
-  const { showNotice, isSetupPending } = useBackendSetupNotice()
+  const { showNotice, isSetupPending, coveredDataSources } = useBackendSetupNotice()
 
   const snackbar = computed(() => navigationStore.getSnackbar)
   const isSetupNetworkError = computed(() => snackbar.value.kind === 'network-error'
-    && snackbar.value.infrastructureId === infrastructureStore.getSelectedInfrastructureId)
+    && snackbar.value.infrastructureId === infrastructureStore.getSelectedInfrastructureId
+    && isCoveredBackendRequest(snackbar.value.networkRequest, coveredDataSources.value))
   const snackbarVisible = computed({
     get: () => snackbar.value.status
       && !(isSetupNetworkError.value && (showNotice.value || isSetupPending.value)),

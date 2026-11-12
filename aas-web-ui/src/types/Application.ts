@@ -15,6 +15,12 @@ export interface SnackbarType {
   infrastructureId?: string
   /** Category used to prevent duplicate infrastructure-specific notifications. */
   kind?: 'authentication-required' | 'access-denied' | 'network-error'
+  /** GET request covered by backend connection guidance, when applicable. */
+  networkRequest?: {
+    url: string
+    operation: 'connection-check' | 'read'
+    component?: BaSyxComponentKey
+  }
 }
 
 export interface AutoSyncType {
