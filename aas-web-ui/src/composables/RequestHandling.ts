@@ -183,7 +183,12 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
   }
 
   function showRequestError (error: unknown, errorMessage: string, statusCode?: number, context?: string): void {
-    if (error instanceof NetworkRequestError && statusCode === undefined && context?.startsWith('Connecting to ')) {
+    const isNetworkError = error instanceof NetworkRequestError && statusCode === undefined
+    const networkContext = isNetworkError
+      ? { kind: 'network-error' as const, infrastructureId: getRequestOwnerId() }
+      : {}
+
+    if (isNetworkError && context?.startsWith('Connecting to ')) {
       const componentLabel = context.slice('Connecting to '.length)
       navigationStore.dispatchSnackbar({
         status: true,
@@ -192,6 +197,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
         btnColor: 'buttonText',
         baseError: 'Unable to connect to the configured BaSyx environment.',
         extendedError: `${componentLabel} could not be reached. Make sure the corresponding BaSyx component is running and verify its endpoint and CORS settings.\n\nTechnical details: ${errorMessage}`,
+        ...networkContext,
       })
       return
     }
@@ -202,6 +208,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
       color: 'error',
       btnColor: 'buttonText',
       text: 'Error! Server responded with: ' + error,
+      ...networkContext,
     })
   }
 

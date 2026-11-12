@@ -1,107 +1,76 @@
 <template>
-  <v-alert
-    v-if="showNotice"
+  <v-banner
+    v-if="showNotice && !managementOpen"
+    bg-color="cardHeader"
+    border
     class="ma-4"
+    density="compact"
+    elevation="4"
+    location="bottom end"
+    max-height="calc(100dvh - 112px)"
+    max-width="calc(100vw - 32px)"
+    position="fixed"
     role="status"
-    title="Connect a BaSyx environment"
-    type="info"
-    variant="tonal"
+    rounded="lg"
+    stacked
+    :style="{ zIndex: 2000, bottom: navigationStore.getIsMobile ? '104px' : '48px' }"
+    width="360"
   >
-    <p>
-      The Web UI container does not include the backend services that provide AAS and Submodel data.
-      Start a BaSyx backend using a minimal setup below, or connect to an existing environment.
-    </p>
+    <template #prepend>
+      <v-icon color="primary" icon="mdi-server-network-off" size="small" />
+    </template>
 
-    <p v-if="infrastructureStore.getSelectedInfrastructure" class="mt-2">
-      No connection to the selected environment is available. If your services are already running,
-      check their endpoints, CORS settings, and sign-in requirements.
-    </p>
+    <template #text>
+      <strong>No AAS server connection</strong>
 
-    <p v-if="!envStore.getEndpointConfigAvailable" class="mt-2">
-      Contact your deployment administrator to check the configured backend endpoints.
-    </p>
+      <div class="mt-1">
+        The Web UI needs a separate AAS server to browse data.
+        <span v-if="!envStore.getEndpointConfigAvailable">Contact your administrator to connect one.</span>
+      </div>
+    </template>
 
-    <div class="d-flex flex-wrap ga-2 mt-3">
-      <v-btn
-        v-if="envStore.getEndpointConfigAvailable"
-        size="small"
-        variant="outlined"
-        @click="managementOpen = true"
-      >
-        Manage infrastructures
-      </v-btn>
+    <template #actions>
+      <div class="d-flex flex-wrap ga-2">
+        <v-btn
+          class="text-none"
+          density="default"
+          href="https://wiki.basyx.org/en/latest/content/user_documentation/basyx_components/web_ui/index.html#quick-start"
+          rel="noopener noreferrer"
+          rounded="lg"
+          size="small"
+          target="_blank"
+          variant="outlined"
+        >
+          Setup guide
+        </v-btn>
 
-      <v-btn
-        href="https://github.com/eclipse-basyx/basyx-go-components/tree/main/examples/BaSyxMinimalExample"
-        rel="noopener noreferrer"
-        size="small"
-        target="_blank"
-        variant="text"
-      >
-        Go minimal setup
-      </v-btn>
-
-      <v-btn
-        href="https://github.com/eclipse-basyx/basyx-java-server-sdk/tree/main/examples/BaSyxMinimal"
-        rel="noopener noreferrer"
-        size="small"
-        target="_blank"
-        variant="text"
-      >
-        Java minimal setup
-      </v-btn>
-    </div>
-  </v-alert>
+        <v-btn
+          v-if="envStore.getEndpointConfigAvailable"
+          class="text-none text-buttonText"
+          color="primary"
+          density="default"
+          rounded="lg"
+          size="small"
+          variant="flat"
+          @click="managementOpen = true"
+        >
+          Connect server
+        </v-btn>
+      </div>
+    </template>
+  </v-banner>
 
   <InfrastructureManagement v-if="managementOpen" v-model:open="managementOpen" />
 </template>
 
 <script lang="ts" setup>
-  import { useRoute } from 'vue-router'
-  import { useAASStore } from '@/store/AASDataStore'
+  import { useBackendSetupNotice } from '@/composables/Infrastructure/useBackendSetupNotice'
   import { useEnvStore } from '@/store/EnvironmentStore'
-  import { useInfrastructureStore } from '@/store/InfrastructureStore'
-  import { getActiveComponentKeys } from '@/utils/InfrastructureUtils'
+  import { useNavigationStore } from '@/store/NavigationStore'
 
-  const route = useRoute()
-  const aasStore = useAASStore()
   const envStore = useEnvStore()
-  const infrastructureStore = useInfrastructureStore()
+  const navigationStore = useNavigationStore()
+  const { showNotice } = useBackendSetupNotice()
 
   const managementOpen = ref(false)
-
-  const showNotice = computed(() => {
-    const dataRoutes = [
-      'AASViewer', 'AASEditor', 'AASSubmodelViewer', 'AASList', 'SubmodelList',
-      'SMViewer', 'SMEditor', 'ComponentVisualization', 'Visualization',
-    ]
-    if (
-      !dataRoutes.includes(String(route.name))
-      || !infrastructureStore.isInitialized
-      || infrastructureStore.getIsAuthenticating
-      || infrastructureStore.getIsTestingConnections
-      || envStore.getSingleAas
-      || envStore.getSingleSm
-      || aasStore.getSelectedAAS?.id
-      || aasStore.getSelectedNode?.modelType
-    ) {
-      return false
-    }
-
-    const infrastructure = infrastructureStore.getSelectedInfrastructure
-    if (!infrastructure) {
-      return true
-    }
-
-    const activeKeys = getActiveComponentKeys(infrastructure)
-    // EDC infrastructures establish their connections inside the Catena-X module.
-    if (activeKeys.length === 0) {
-      return false
-    }
-
-    return activeKeys.every(key => {
-      const component = infrastructureStore.getBasyxComponents[key]
-      return !component.loading && component.connected === false
-    })
-  })
 </script>

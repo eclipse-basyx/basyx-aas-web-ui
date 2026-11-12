@@ -14,7 +14,7 @@ export interface SnackbarType {
   /** Infrastructure that owns this notification, if it is infrastructure-specific. */
   infrastructureId?: string
   /** Category used to prevent duplicate infrastructure-specific notifications. */
-  kind?: 'authentication-required' | 'access-denied'
+  kind?: 'authentication-required' | 'access-denied' | 'network-error'
 }
 
 export interface AutoSyncType {

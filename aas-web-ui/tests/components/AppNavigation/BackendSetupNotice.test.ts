@@ -16,6 +16,7 @@ vi.mock('vue-router', () => ({ useRoute: () => mocks.route }))
 vi.mock('@/store/InfrastructureStore', () => ({ useInfrastructureStore: () => mocks.infrastructure }))
 vi.mock('@/store/EnvironmentStore', () => ({ useEnvStore: () => mocks.environment }))
 vi.mock('@/store/AASDataStore', () => ({ useAASStore: () => mocks.aas }))
+vi.mock('@/store/NavigationStore', () => ({ useNavigationStore: () => ({ getIsMobile: false }) }))
 vi.mock('@/components/AppNavigation/Settings/InfrastructureManagement.vue', () => ({
   default: {
     props: ['open'],
@@ -58,7 +59,7 @@ function mountNotice () {
   const wrapper = mount(BackendSetupNotice, {
     global: {
       stubs: {
-        VAlert: { props: ['title'], template: '<section><h2>{{ title }}</h2><slot /></section>' },
+        VBanner: { template: '<section><slot name="text" /><slot name="actions" /></section>' },
         VBtn: { props: ['href'], template: '<component :is="href ? \'a\' : \'button\'" :href="href"><slot /></component>' },
       },
     },
@@ -93,15 +94,15 @@ describe('Backend setup notice', () => {
 
     mocks.infrastructure.getBasyxComponents.AASRepo.loading = false
     await nextTick()
-    expect(wrapper.get('[role="status"]').text()).toContain('The Web UI container does not include the backend services')
-    expect(wrapper.text()).toContain('check their endpoints, CORS settings, and sign-in requirements')
+    expect(wrapper.get('[role="status"]').text()).toContain('No AAS server connection')
+    expect(wrapper.text()).toContain('The Web UI needs a separate AAS server to browse data.')
   })
 
   it('also offers setup when no environment has been selected', () => {
     mocks.infrastructure.getSelectedInfrastructure = null
     const wrapper = mountNotice()
-    expect(wrapper.get('[role="status"]').text()).toContain('connect to an existing environment')
-    expect(wrapper.text()).not.toContain('No connection to the selected environment')
+    expect(wrapper.get('[role="status"]').text()).toContain('No AAS server connection')
+    expect(wrapper.text()).toContain('Connect server')
   })
 
   it('hides during a reconnect and remains hidden when a component connects', async () => {
@@ -164,12 +165,11 @@ describe('Backend setup notice', () => {
     expect(wrapper.find('[role="status"]').exists()).toBe(false)
   })
 
-  it('provides both minimal backend setups as safe external links', () => {
+  it('links to the quick start setup guide in a separate tab', () => {
     const wrapper = mountNotice()
     const links = wrapper.findAll('a')
     expect(links.map(link => [link.text(), link.attributes('href')])).toEqual([
-      ['Go minimal setup', 'https://github.com/eclipse-basyx/basyx-go-components/tree/main/examples/BaSyxMinimalExample'],
-      ['Java minimal setup', 'https://github.com/eclipse-basyx/basyx-java-server-sdk/tree/main/examples/BaSyxMinimal'],
+      ['Setup guide', 'https://wiki.basyx.org/en/latest/content/user_documentation/basyx_components/web_ui/index.html#quick-start'],
     ])
     for (const link of links) {
       expect(link.attributes('target')).toBe('_blank')
@@ -180,18 +180,19 @@ describe('Backend setup notice', () => {
   it('opens infrastructure management only when requested and closes it again', async () => {
     const wrapper = mountNotice()
     expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
-    await wrapper.get('button').trigger('click')
+    await wrapper.findAll('button').find(button => button.text() === 'Connect server')!.trigger('click')
     expect(wrapper.get('[role="dialog"]').text()).toContain('Close infrastructures')
+    expect(wrapper.find('[role="status"]').exists()).toBe(false)
     await wrapper.get('[role="dialog"] button').trigger('click')
     expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
+    expect(wrapper.find('[role="status"]').exists()).toBe(true)
   })
 
   it('directs users to their administrator when endpoint editing is disabled', () => {
     mocks.environment.getEndpointConfigAvailable = false
     const wrapper = mountNotice()
-    expect(wrapper.text()).toContain('Contact your deployment administrator')
-    expect(wrapper.text()).not.toContain('Manage infrastructures')
-    expect(wrapper.find('button').exists()).toBe(false)
-    expect(wrapper.findAll('a')).toHaveLength(2)
+    expect(wrapper.text()).toContain('Contact your administrator to connect one.')
+    expect(wrapper.text()).not.toContain('Connect server')
+    expect(wrapper.findAll('a')).toHaveLength(1)
   })
 })
