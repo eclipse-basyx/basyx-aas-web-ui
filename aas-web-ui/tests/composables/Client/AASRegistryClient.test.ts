@@ -153,4 +153,28 @@ describe('AASRegistryClient.ts pagination contract', () => {
       false,
     )
   })
+
+  it('prefers a configured repository endpoint from a multi-endpoint descriptor', async () => {
+    mockDeps.getRequest.mockResolvedValueOnce({
+      success: true,
+      data: {
+        id: 'aas-1',
+        endpoints: [
+          { interface: 'AAS-3.0', protocolInformation: { href: 'https://internal.example/shells/aas-1' } },
+          { interface: 'AAS-3.0', protocolInformation: { href: 'https://public.example/shells/aas-1' } },
+        ],
+      },
+    })
+
+    const { useAASRegistryClient } = await import('@/composables/Client/AASRegistryClient')
+    const { getAasEndpointById } = useAASRegistryClient()
+
+    const result = await getAasEndpointById(
+      'aas-1',
+      'https://registry.example',
+      'https://public.example/shells/aas-1',
+    )
+
+    expect(result).toBe('https://public.example/shells/aas-1')
+  })
 })
