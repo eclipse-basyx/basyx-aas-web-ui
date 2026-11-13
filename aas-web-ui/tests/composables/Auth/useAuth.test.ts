@@ -31,6 +31,11 @@ const mocks = vi.hoisted(() => ({
     redirectUri: 'http://localhost:3000/',
   })),
   routerReplace: vi.fn(),
+  authenticateOAuth2ClientCredentials: vi.fn(),
+}))
+
+vi.mock('@/composables/Auth/OAuth2Auth', () => ({
+  authenticateOAuth2ClientCredentials: mocks.authenticateOAuth2ClientCredentials,
 }))
 
 vi.mock('@/composables/Auth/OpenIdConnect', () => ({
@@ -107,6 +112,53 @@ describe('useAuth', () => {
     await state.snackbar.actionCallback()
 
     expect(mocks.dispatchSnackbar).toHaveBeenCalledTimes(1)
+  })
+
+  it('logs in to an infrastructure other than the selected one', async () => {
+    const otherInfrastructure = {
+      id: 'other-infrastructure',
+      auth: {
+        securityType: 'OAuth2',
+        oauth2: {
+          host: 'https://idp.example',
+          clientId: 'service',
+          clientSecret: 'secret',
+          authFlow: 'client-credentials',
+        },
+      },
+    } as any
+    mocks.authenticateOAuth2ClientCredentials.mockResolvedValue({ accessToken: 'other-token', expiresAt: 1 })
+    const { useAuth } = await import('@/composables/Auth/useAuth')
+    const { loginToInfrastructure } = useAuth()
+
+    await loginToInfrastructure(otherInfrastructure)
+
+    expect(mocks.authenticateOAuth2ClientCredentials).toHaveBeenCalledWith(otherInfrastructure.auth.oauth2)
+    expect(mocks.dispatchUpdateInfrastructure).toHaveBeenCalledWith(expect.objectContaining({
+      id: 'other-infrastructure',
+      token: expect.objectContaining({ accessToken: 'other-token' }),
+    }))
+    expect(mocks.setAuthenticationStatusForInfrastructure).toHaveBeenCalledWith('other-infrastructure', true)
+  })
+
+  it('clears the token of an infrastructure other than the selected one without leaving the page', async () => {
+    const otherInfrastructure = {
+      id: 'other-infrastructure',
+      auth: { securityType: 'OAuth2', oauth2: { host: 'https://idp.example', clientId: 'web-ui' } },
+      token: { accessToken: 'other-token' },
+    } as any
+    const { useAuth } = await import('@/composables/Auth/useAuth')
+    const { clearInfrastructureToken } = useAuth()
+
+    clearInfrastructureToken(otherInfrastructure)
+
+    expect(mocks.setAuthenticationStatusForInfrastructure).toHaveBeenCalledWith('other-infrastructure', false)
+    expect(mocks.dispatchUpdateInfrastructure).toHaveBeenCalledWith(expect.objectContaining({
+      id: 'other-infrastructure',
+      token: undefined,
+    }))
+    expect(mocks.discoverOpenIdConfiguration).not.toHaveBeenCalled()
+    expect(mocks.startLogoutTransaction).not.toHaveBeenCalled()
   })
 
   it('re-enters the router after a local OAuth logout without an end-session endpoint', async () => {

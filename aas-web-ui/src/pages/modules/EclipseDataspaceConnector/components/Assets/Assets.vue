@@ -1,0 +1,96 @@
+<template>
+  <EdcResourceTab
+    ref="resourceTab"
+    :create-actions="createActions"
+    icon="mdi-code-json"
+    label="Asset"
+    label-plural="Assets"
+    :query="proxyId => queryAssetsOfType(proxyId, selectedAssetTypeFilter)"
+    :update="updateAsset"
+  >
+    <template #filter>
+      <v-select
+        v-model="selectedAssetTypeFilter"
+        density="compact"
+        hide-details
+        :items="assetTypeFilterItems"
+        label="Filter by Asset Type"
+        variant="outlined"
+      />
+    </template>
+
+    <template #item-title="{ item }">
+      {{ item?.properties?.displayName || item?.properties?.name || item?.properties?.description }}
+    </template>
+
+    <template #item-subtitle="{ item }">
+      {{ item['@id'] }}
+    </template>
+
+    <template #dialogs="{ proxyId, onCreated }">
+      <CreateAssetDialog
+        v-model="createAssetDialog"
+        :proxy-id="proxyId"
+        @assets-created="assetId => onCreated(assetId, false)"
+      />
+
+      <CreateAssetFromTemplateDialog
+        v-model="createAssetFromTemplateDialog"
+        :proxy-id="proxyId"
+        @assets-created="assetId => onCreated(assetId, false)"
+      />
+
+      <CreateAssetFromInfrastructureDialog
+        v-model="createAssetFromInfrastructureDialog"
+        :proxy-id="proxyId"
+        @assets-created="onCreated"
+      />
+    </template>
+
+    <!-- Deletes the contracts referencing the asset as well -->
+    <template #delete-dialog="{ dialog, proxyId, onDeleted }">
+      <DeleteAssetDialog
+        v-model="dialog.open"
+        :asset="dialog.resource"
+        :proxy-id="proxyId"
+        @deleted="onDeleted"
+      />
+    </template>
+  </EdcResourceTab>
+</template>
+
+<script lang="ts" setup>
+  import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
+  import CreateAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetDialog.vue'
+  import CreateAssetFromInfrastructureDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetFromInfrastructureDialog.vue'
+  import CreateAssetFromTemplateDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetFromTemplateDialog.vue'
+  import DeleteAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/DeleteAssetDialog.vue'
+  import EdcResourceTab from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceTab.vue'
+  import { useEdcAssetTypeQuery } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetTypeQuery'
+  import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
+  import { assetTypeFilterItems } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
+
+  // Composables
+  const { updateAsset } = useCatenaXEdcClient()
+  const { queryAssetsOfType } = useEdcAssetTypeQuery()
+  const { dialogOpen } = useEdcDialogRoute()
+
+  // Data
+  const resourceTab = useTemplateRef<InstanceType<typeof EdcResourceTab>>('resourceTab')
+  const selectedAssetTypeFilter = ref('all')
+  // The open dialog is kept in the URL, e.g. to return to it after a login
+  const createAssetDialog = dialogOpen('create-asset')
+  const createAssetFromTemplateDialog = dialogOpen('create-asset-from-template')
+  const createAssetFromInfrastructureDialog = dialogOpen('create-asset-from-infrastructure')
+
+  const createActions = [
+    { title: 'Create Asset', tooltip: 'Create a new asset', onClick: () => (createAssetDialog.value = true) },
+    { title: 'Create Asset from Template', tooltip: 'Create a new asset from Template', onClick: () => (createAssetFromTemplateDialog.value = true) },
+    { title: 'Create Asset from AAS Infrastructure', tooltip: 'Create a new asset from an AAS of a preconfigured infrastructure', onClick: () => (createAssetFromInfrastructureDialog.value = true) },
+  ]
+
+  // Watchers
+  watch(selectedAssetTypeFilter, () => {
+    resourceTab.value?.loadResources()
+  })
+</script>

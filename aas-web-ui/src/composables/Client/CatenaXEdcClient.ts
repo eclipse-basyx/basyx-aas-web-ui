@@ -1,5 +1,13 @@
-import { useRequestHandling } from '@/composables/RequestHandling'
+import { type RequestResult, useRequestHandling } from '@/composables/RequestHandling'
 import { useEnvStore } from '@/store/EnvironmentStore'
+
+const edcResourceLabels = {
+  assets: { singular: 'Asset', plural: 'Assets' },
+  contractdefinitions: { singular: 'Contract', plural: 'Contracts' },
+  policydefinitions: { singular: 'Policy', plural: 'Policies' },
+} as const
+
+type EdcResource = keyof typeof edcResourceLabels
 
 export interface CatenaXEdcStatus {
   id: string
@@ -23,7 +31,69 @@ export interface CatenaXEdcCatalogRequest {
   counterPartyId: string
   counterPartyAddress: string
   protocol?: string
-  querySpec?: Record<string, unknown>
+  querySpec?: CatenaXEdcQuerySpec
+}
+
+export interface CatenaXEdcCatalog extends Record<string, unknown> {
+  'dcat:dataset'?: unknown | unknown[]
+  'dataset'?: unknown | unknown[]
+}
+
+export interface CatenaXEdcQuerySpec extends Record<string, unknown> {
+  '@context'?: string | Record<string, unknown> | Array<string | Record<string, unknown>>
+  '@type'?: string
+  'offset'?: number
+  'limit'?: number
+  'sortField'?: string
+  'sortOrder'?: 'ASC' | 'DESC'
+  'filterExpression'?: Record<string, unknown> | Array<Record<string, unknown>>
+}
+
+export interface CatenaXEdcQuerySpecRequest {
+  querySpec?: CatenaXEdcQuerySpec
+}
+
+export interface CatenaXEdcAsset extends Record<string, unknown> {
+  '@id'?: string
+  'properties': Record<string, unknown>
+  'dataAddress': Record<string, unknown>
+}
+
+export interface CatenaXEdcIdResponse {
+  '@id': string
+  'createdAt': number
+}
+
+/**
+ * Failed request to the EDC, with the HTTP status and the error details of the EDC,
+ * e.g. status 409 if a resource with the same ID already exists.
+ */
+export interface CatenaXEdcFailure {
+  success: false
+  status?: number
+  details?: string
+}
+
+/**
+ * Result of creating an EDC resource.
+ */
+export type CatenaXEdcCreateResult = { success: true, data: CatenaXEdcIdResponse } | CatenaXEdcFailure
+
+/**
+ * Result of updating or deleting an EDC resource.
+ */
+export type CatenaXEdcResult = { success: true } | CatenaXEdcFailure
+
+export interface CatenaXEdcContractDefinition extends Record<string, unknown> {
+  '@id'?: string
+  'accessPolicyId': string
+  'contractPolicyId': string
+  'assetsSelector': Array<Record<string, unknown>>
+}
+
+export interface CatenaXEdcPolicyDefinition extends Record<string, unknown> {
+  '@id'?: string
+  'policy'?: Record<string, any>
 }
 
 export interface CatenaXEdcDtrRequest {
@@ -49,6 +119,17 @@ export interface CatenaXEdcSubmodelRequest extends CatenaXEdcDtrRequest {
   subprotocolBody?: string
 }
 
+export interface CatenaXEdcDataFetchRequest {
+  counterPartyId: string
+  counterPartyAddress: string
+  protocol?: string
+  assetId: string // ID of the asset in the catalog of the counterparty
+}
+
+export interface CatenaXEdcDataPushRequest extends CatenaXEdcDataFetchRequest {
+  data: unknown // JSON posted to the data plane of the push asset, e.g. an AAS or Submodel
+}
+
 export interface CatenaXEdcDtrMetadata {
   assetId?: string
   providerId?: string
@@ -62,10 +143,37 @@ export interface CatenaXEdcDtrResponse<T = unknown> {
   edc: CatenaXEdcDtrMetadata
 }
 
+/**
+ * Result of querying EDC resources, e.g. assets.
+ */
+export type CatenaXEdcQueryResult<T> = { success: true, data: T[] } | CatenaXEdcFailure
+
+/**
+ * Result of requesting the catalog of a counterparty.
+ */
+export type CatenaXEdcCatalogResult = { success: true, data: CatenaXEdcCatalog } | CatenaXEdcFailure
+
+/**
+ * Result of fetching or pushing data, with the response of the data plane.
+ */
+export type CatenaXEdcDataTransferResult = { success: true, data: CatenaXEdcDtrResponse } | CatenaXEdcFailure
+
 export function useCatenaXEdcClient (): {
   fetchStatus: (proxyId: string) => Promise<CatenaXEdcStatus | null>
   discoverConnector: (proxyId: string, request: CatenaXEdcDiscoveryRequest) => Promise<unknown | null>
-  requestCatalog: (proxyId: string, request: CatenaXEdcCatalogRequest) => Promise<unknown | null>
+  requestCatalog: (proxyId: string, request: CatenaXEdcCatalogRequest) => Promise<CatenaXEdcCatalogResult>
+  queryAssets: (proxyId: string, request?: CatenaXEdcQuerySpecRequest) => Promise<CatenaXEdcQueryResult<CatenaXEdcAsset>>
+  createAsset: (proxyId: string, asset: CatenaXEdcAsset) => Promise<CatenaXEdcCreateResult>
+  updateAsset: (proxyId: string, assetId: string, asset: CatenaXEdcAsset) => Promise<CatenaXEdcResult>
+  deleteAsset: (proxyId: string, assetId: string) => Promise<CatenaXEdcResult>
+  queryContractDefinitions: (proxyId: string, request?: CatenaXEdcQuerySpecRequest) => Promise<CatenaXEdcQueryResult<CatenaXEdcContractDefinition>>
+  createContractDefinition: (proxyId: string, contractDefinition: CatenaXEdcContractDefinition) => Promise<CatenaXEdcCreateResult>
+  updateContractDefinition: (proxyId: string, contractDefinitionId: string, contractDefinition: CatenaXEdcContractDefinition) => Promise<CatenaXEdcResult>
+  deleteContractDefinition: (proxyId: string, contractDefinitionId: string) => Promise<CatenaXEdcResult>
+  queryPolicyDefinitions: (proxyId: string, request?: CatenaXEdcQuerySpecRequest) => Promise<CatenaXEdcQueryResult<CatenaXEdcPolicyDefinition>>
+  createPolicyDefinition: (proxyId: string, policyDefinition: CatenaXEdcPolicyDefinition) => Promise<CatenaXEdcCreateResult>
+  updatePolicyDefinition: (proxyId: string, policyDefinitionId: string, policyDefinition: CatenaXEdcPolicyDefinition) => Promise<CatenaXEdcResult>
+  deletePolicyDefinition: (proxyId: string, policyDefinitionId: string) => Promise<CatenaXEdcResult>
   fetchDtrShellDescriptors: (
     proxyId: string,
     request: CatenaXEdcDtrDescriptorPageRequest,
@@ -78,12 +186,16 @@ export function useCatenaXEdcClient (): {
     proxyId: string,
     request: CatenaXEdcSubmodelRequest,
   ) => Promise<CatenaXEdcDtrResponse | null>
+  fetchData: (proxyId: string, request: CatenaXEdcDataFetchRequest) => Promise<CatenaXEdcDataTransferResult>
+  pushData: (proxyId: string, request: CatenaXEdcDataPushRequest) => Promise<CatenaXEdcDataTransferResult>
   consumeLastRequestFailureDetails: () => string | undefined
 } {
   const {
     consumeLastRequestFailureDetails,
+    deleteRequest,
     getRequest,
     postRequest,
+    putRequest,
   } = useRequestHandling()
   const envStore = useEnvStore()
 
@@ -125,21 +237,211 @@ export function useCatenaXEdcClient (): {
   async function requestCatalog (
     proxyId: string,
     request: CatenaXEdcCatalogRequest,
-  ): Promise<unknown | null> {
+  ): Promise<CatenaXEdcCatalogResult> {
     const url = buildEdcProxyUrl(proxyId, 'catalog/request')
     if (!url) {
-      return null
+      return { success: false }
     }
 
     const result = await postRequest(
       url,
       JSON.stringify(request),
       createJsonHeaders(),
-      'requesting EDC catalog',
+      'requesting catalog',
       true,
     )
 
-    return result.success ? result.data ?? {} : null
+    return result.success
+      ? { success: true, data: result.data as CatenaXEdcCatalog ?? {} }
+      : toEdcFailure(result)
+  }
+
+  async function queryAssets (
+    proxyId: string,
+    request: CatenaXEdcQuerySpecRequest = {},
+  ): Promise<CatenaXEdcQueryResult<CatenaXEdcAsset>> {
+    return queryEdcResources<CatenaXEdcAsset>(proxyId, 'assets', request)
+  }
+
+  async function createAsset (
+    proxyId: string,
+    asset: CatenaXEdcAsset,
+  ): Promise<CatenaXEdcCreateResult> {
+    return createEdcResource(proxyId, 'assets', asset)
+  }
+
+  async function updateAsset (
+    proxyId: string,
+    assetId: string,
+    asset: CatenaXEdcAsset,
+  ): Promise<CatenaXEdcResult> {
+    return updateEdcResource(proxyId, 'assets', assetId, asset)
+  }
+
+  async function deleteAsset (proxyId: string, assetId: string): Promise<CatenaXEdcResult> {
+    return deleteEdcResource(proxyId, 'assets', assetId)
+  }
+
+  async function queryContractDefinitions (
+    proxyId: string,
+    request: CatenaXEdcQuerySpecRequest = {},
+  ): Promise<CatenaXEdcQueryResult<CatenaXEdcContractDefinition>> {
+    return queryEdcResources<CatenaXEdcContractDefinition>(proxyId, 'contractdefinitions', request)
+  }
+
+  async function createContractDefinition (
+    proxyId: string,
+    contractDefinition: CatenaXEdcContractDefinition,
+  ): Promise<CatenaXEdcCreateResult> {
+    return createEdcResource(proxyId, 'contractdefinitions', contractDefinition)
+  }
+
+  async function updateContractDefinition (
+    proxyId: string,
+    contractDefinitionId: string,
+    contractDefinition: CatenaXEdcContractDefinition,
+  ): Promise<CatenaXEdcResult> {
+    return updateEdcResource(proxyId, 'contractdefinitions', contractDefinitionId, contractDefinition)
+  }
+
+  async function deleteContractDefinition (
+    proxyId: string,
+    contractDefinitionId: string,
+  ): Promise<CatenaXEdcResult> {
+    return deleteEdcResource(proxyId, 'contractdefinitions', contractDefinitionId)
+  }
+
+  async function queryPolicyDefinitions (
+    proxyId: string,
+    request: CatenaXEdcQuerySpecRequest = {},
+  ): Promise<CatenaXEdcQueryResult<CatenaXEdcPolicyDefinition>> {
+    return queryEdcResources<CatenaXEdcPolicyDefinition>(proxyId, 'policydefinitions', request)
+  }
+
+  async function queryEdcResources<T> (
+    proxyId: string,
+    resource: EdcResource,
+    request: CatenaXEdcQuerySpecRequest,
+  ): Promise<CatenaXEdcQueryResult<T>> {
+    const url = buildEdcProxyUrl(proxyId, `${resource}/request`)
+    if (!url) {
+      return { success: false }
+    }
+
+    const result = await postRequest(
+      url,
+      JSON.stringify(request),
+      createJsonHeaders(),
+      `querying ${edcResourceLabels[resource].plural}`,
+      true,
+    )
+
+    if (!result.success) {
+      return toEdcFailure(result)
+    }
+    return Array.isArray(result.data)
+      ? { success: true, data: result.data as T[] }
+      : { success: false, status: result.status, details: 'The EDC did not return a list.' }
+  }
+
+  async function createPolicyDefinition (
+    proxyId: string,
+    policyDefinition: CatenaXEdcPolicyDefinition,
+  ): Promise<CatenaXEdcCreateResult> {
+    return createEdcResource(proxyId, 'policydefinitions', policyDefinition)
+  }
+
+  async function createEdcResource (
+    proxyId: string,
+    resource: EdcResource,
+    payload: Record<string, unknown>,
+  ): Promise<CatenaXEdcCreateResult> {
+    const url = buildEdcProxyUrl(proxyId, resource)
+    if (!url) {
+      return { success: false }
+    }
+
+    const result = await postRequest(
+      url,
+      JSON.stringify(payload),
+      createJsonHeaders(),
+      `creating ${edcResourceLabels[resource].singular}`,
+      true,
+    )
+
+    return result.success && result.data
+      ? { success: true, data: result.data as CatenaXEdcIdResponse }
+      : toEdcFailure(result)
+  }
+
+  async function updatePolicyDefinition (
+    proxyId: string,
+    policyDefinitionId: string,
+    policyDefinition: CatenaXEdcPolicyDefinition,
+  ): Promise<CatenaXEdcResult> {
+    return updateEdcResource(proxyId, 'policydefinitions', policyDefinitionId, policyDefinition)
+  }
+
+  async function updateEdcResource (
+    proxyId: string,
+    resource: EdcResource,
+    resourceId: string,
+    payload: Record<string, unknown>,
+  ): Promise<CatenaXEdcResult> {
+    const normalizedId = resourceId.trim()
+    const url = buildEdcProxyUrl(proxyId, `${resource}/${encodeURIComponent(normalizedId)}`)
+    if (!url || normalizedId === '') {
+      return { success: false }
+    }
+
+    const result = await putRequest(
+      url,
+      JSON.stringify(payload),
+      createJsonHeaders(),
+      `updating ${edcResourceLabels[resource].singular}`,
+      true,
+    )
+
+    return toEdcResult(result)
+  }
+
+  async function deletePolicyDefinition (
+    proxyId: string,
+    policyDefinitionId: string,
+  ): Promise<CatenaXEdcResult> {
+    return deleteEdcResource(proxyId, 'policydefinitions', policyDefinitionId)
+  }
+
+  async function deleteEdcResource (
+    proxyId: string,
+    resource: EdcResource,
+    resourceId: string,
+  ): Promise<CatenaXEdcResult> {
+    const normalizedResourceId = resourceId.trim()
+    const url = buildEdcProxyUrl(
+      proxyId,
+      `${resource}/${encodeURIComponent(normalizedResourceId)}`,
+    )
+    if (!url || normalizedResourceId === '') {
+      return { success: false }
+    }
+
+    const result = await deleteRequest(
+      url,
+      createJsonHeaders(),
+      `deleting ${edcResourceLabels[resource].singular}`,
+      true,
+    )
+
+    return toEdcResult(result)
+  }
+
+  function toEdcResult (result: RequestResult): CatenaXEdcResult {
+    return result.success ? { success: true } : toEdcFailure(result)
+  }
+
+  function toEdcFailure (result: RequestResult): CatenaXEdcFailure {
+    return { success: false, status: result.status, details: result.details }
   }
 
   async function fetchDtrShellDescriptors (
@@ -202,6 +504,44 @@ export function useCatenaXEdcClient (): {
     return result.success ? result.data as CatenaXEdcDtrResponse : null
   }
 
+  async function fetchData (
+    proxyId: string,
+    request: CatenaXEdcDataFetchRequest,
+  ): Promise<CatenaXEdcDataTransferResult> {
+    return transferData(proxyId, 'data/fetch', request, 'fetching data through EDC')
+  }
+
+  async function pushData (
+    proxyId: string,
+    request: CatenaXEdcDataPushRequest,
+  ): Promise<CatenaXEdcDataTransferResult> {
+    return transferData(proxyId, 'data/push', request, 'pushing data through EDC')
+  }
+
+  async function transferData (
+    proxyId: string,
+    path: string,
+    request: CatenaXEdcDataFetchRequest,
+    context: string,
+  ): Promise<CatenaXEdcDataTransferResult> {
+    const url = buildEdcProxyUrl(proxyId, path)
+    if (!url) {
+      return { success: false }
+    }
+
+    const result = await postRequest(
+      url,
+      JSON.stringify(request),
+      createJsonHeaders(),
+      context,
+      true,
+    )
+
+    return result.success
+      ? { success: true, data: result.data as CatenaXEdcDtrResponse }
+      : toEdcFailure(result)
+  }
+
   function buildEdcProxyUrl (proxyId: string, path: string): string | null {
     const normalizedProxyId = proxyId.trim()
     if (normalizedProxyId === '') {
@@ -216,9 +556,23 @@ export function useCatenaXEdcClient (): {
     fetchStatus,
     discoverConnector,
     requestCatalog,
+    queryAssets,
+    createAsset,
+    updateAsset,
+    deleteAsset,
+    queryContractDefinitions,
+    createContractDefinition,
+    updateContractDefinition,
+    deleteContractDefinition,
+    queryPolicyDefinitions,
+    createPolicyDefinition,
+    updatePolicyDefinition,
+    deletePolicyDefinition,
     fetchDtrShellDescriptors,
     fetchDtrShellDescriptorById,
     fetchSubmodel,
+    fetchData,
+    pushData,
     consumeLastRequestFailureDetails,
   }
 }

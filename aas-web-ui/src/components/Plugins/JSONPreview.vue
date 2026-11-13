@@ -4,7 +4,8 @@
     :error="error"
     :export-text="text"
     :file-name="`${downloadFileName || submodelElementData?.idShort || 'download'}.json`"
-    icon="mdi-code-json"
+    :height="height"
+    :icon="icon"
     :loading="loading"
     :text="displayText"
     :title="title"
@@ -18,18 +19,24 @@
   const props = withDefaults(defineProps<{
     downloadFileName?: string
     jsonContent?: unknown
+    height?: string
+    icon?: string
     submodelElementData?: any
     title?: string
   }>(), {
     downloadFileName: '',
+    height: '600px',
+    icon: 'mdi-code-json',
     jsonContent: undefined,
-    submodelElementData: () => ({}),
+    submodelElementData: undefined,
     title: 'JSON Preview',
   })
 
-  const { text, loading, error } = useCodePreviewSource(() => ({
-    path: props.submodelElementData?.path,
-    content: props.jsonContent,
-  }), 'JSON')
+  // Inline JSON content takes precedence, otherwise the attachment file of the SubmodelElement (if given) is previewed
+  const { text, loading, error } = useCodePreviewSource(() => (
+    (props.jsonContent === undefined || props.jsonContent === null) && props.submodelElementData
+      ? { path: props.submodelElementData.path }
+      : { content: props.jsonContent }
+  ), 'JSON')
   const displayText = computed(() => formatJsonPreview(text.value))
 </script>

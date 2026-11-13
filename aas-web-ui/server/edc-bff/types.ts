@@ -51,7 +51,21 @@ export interface EdcCatalogRequest {
   counterPartyId?: string
   counterPartyAddress?: string
   protocol?: string
-  querySpec?: Record<string, unknown>
+  querySpec?: EdcQuerySpec
+}
+
+export interface EdcQuerySpec extends Record<string, unknown> {
+  '@context'?: string | Record<string, unknown> | Array<string | Record<string, unknown>>
+  '@type'?: string
+  'offset'?: number
+  'limit'?: number
+  'sortField'?: string
+  'sortOrder'?: 'ASC' | 'DESC'
+  'filterExpression'?: Record<string, unknown> | Array<Record<string, unknown>>
+}
+
+export interface EdcQuerySpecRequest {
+  querySpec?: EdcQuerySpec
 }
 
 export interface EdcDtrDescriptorRequest {
@@ -70,6 +84,17 @@ export interface EdcDtrDescriptorByIdRequest {
   protocol?: string
   transferProcessId?: string
   descriptorId?: string
+}
+
+export interface EdcDataFetchRequest {
+  counterPartyId?: string
+  counterPartyAddress?: string
+  protocol?: string
+  assetId?: string
+}
+
+export interface EdcDataPushRequest extends EdcDataFetchRequest {
+  data?: unknown
 }
 
 export interface EdcSubmodelFetchRequest {
