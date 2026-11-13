@@ -151,7 +151,7 @@
 </template>
 
 <script setup lang="ts">
-    /*
+  /*
     NOTE: This component uses Keyboard events (keyUp,keyDown) in the root element v-dialog.
     It saves the changes after pressing the 'Enter' Key. When creating additional Form Inputs that require or support the
     usage of the 'Enter' key, make sure to edit the keyDown/keyUp method to not execute when in such form fields.

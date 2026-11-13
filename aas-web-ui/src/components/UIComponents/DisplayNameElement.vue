@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-    // Props
+  // Props
   defineProps({
     displayNameArray: {
       type: Object as any,

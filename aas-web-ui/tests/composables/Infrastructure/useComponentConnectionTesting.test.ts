@@ -22,11 +22,10 @@ const mocks = vi.hoisted(() => {
     components,
     connectResolvers: {} as Record<string, () => void>,
     dispatchIsTestingConnections: vi.fn(),
-    connectComponent: vi.fn((componentKey: BaSyxComponentKey) =>
-      new Promise<void>(resolve => {
+    probeComponentConnection: vi.fn((componentKey: BaSyxComponentKey) =>
+      new Promise<boolean>(resolve => {
         const resolver = (): void => {
-          components[componentKey].connected = true
-          resolve()
+          resolve(true)
         }
         mocks.connectResolvers[componentKey] = resolver
       })),
@@ -36,7 +35,7 @@ const mocks = vi.hoisted(() => {
 vi.mock('@/store/InfrastructureStore', () => ({
   useInfrastructureStore: () => ({
     getBasyxComponents: mocks.components,
-    connectComponent: mocks.connectComponent,
+    probeComponentConnection: mocks.probeComponentConnection,
     dispatchIsTestingConnections: mocks.dispatchIsTestingConnections,
   }),
 }))
@@ -74,7 +73,7 @@ async function flushPromises (): Promise<void> {
 describe('useComponentConnectionTesting', () => {
   beforeEach(() => {
     mocks.dispatchIsTestingConnections.mockClear()
-    mocks.connectComponent.mockClear()
+    mocks.probeComponentConnection.mockClear()
     mocks.connectResolvers = {}
 
     for (const [componentKey, component] of Object.entries(mocks.components)) {
@@ -92,7 +91,7 @@ describe('useComponentConnectionTesting', () => {
       createComponents(),
     )
 
-    expect(mocks.connectComponent).toHaveBeenCalledTimes(3)
+    expect(mocks.probeComponentConnection).toHaveBeenCalledTimes(3)
     expect(mocks.dispatchIsTestingConnections).toHaveBeenLastCalledWith(true)
 
     mocks.connectResolvers.AASRepo()
@@ -120,11 +119,27 @@ describe('useComponentConnectionTesting', () => {
       draftInfrastructure.components,
     )
 
-    expect(mocks.connectComponent).toHaveBeenCalledTimes(3)
+    expect(mocks.probeComponentConnection).toHaveBeenCalledTimes(3)
     for (const key of ['AASRepo', 'SubmodelRepo', 'ConceptDescriptionRepo'] as const) {
-      expect(mocks.connectComponent).toHaveBeenCalledWith(key, draftInfrastructure)
+      expect(mocks.probeComponentConnection).toHaveBeenCalledWith(key, 'https://aas-env.example', draftInfrastructure)
       mocks.connectResolvers[key]()
     }
     await testPromise
+  })
+
+  it('never replaces a saved endpoint while testing and cannot restore an old URL after Save', async () => {
+    const testing = useComponentConnectionTesting()
+    const saved = mocks.components.AASRepo
+    const original = { ...saved }
+    const request = testing.testComponentConnection('AASRepo', 'https://draft.example', createInfrastructure())
+
+    expect(saved).toEqual(original)
+    saved.url = 'https://new-saved.example'
+    mocks.connectResolvers.AASRepo()
+    await request
+
+    expect(saved.url).toBe('https://new-saved.example')
+    expect(saved.connected).toBeNull()
+    expect(testing.componentConnectionStatus.value.AASRepo).toBe(true)
   })
 })

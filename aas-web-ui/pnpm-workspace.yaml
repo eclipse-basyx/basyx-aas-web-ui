@@ -8,3 +8,5 @@ packages:
 
 overrides:
   "nanoid@": 3.3.18
+  dompurify: ^3.4.17
+  fast-xml-parser: ^5.12.0

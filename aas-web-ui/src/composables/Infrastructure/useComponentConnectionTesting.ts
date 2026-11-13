@@ -69,24 +69,13 @@ export function useComponentConnectionTesting (): {
     }
 
     componentConnectionStatus.value[componentKey] = null
-    const originalUrl = infrastructureStore.getBasyxComponents[componentKey].url
     setComponentTestingLoading(componentKey, true)
 
     try {
-      // Temporarily set the component URL in the store to test it
-      infrastructureStore.getBasyxComponents[componentKey].url = url
-
-      // Test the connection
-      await infrastructureStore.connectComponent(componentKey, infrastructure)
-
-      // Get the connection result
-      const connected = infrastructureStore.getBasyxComponents[componentKey].connected
-      componentConnectionStatus.value[componentKey] = connected
+      componentConnectionStatus.value[componentKey] = await infrastructureStore.probeComponentConnection(componentKey, url, infrastructure)
     } catch {
       componentConnectionStatus.value[componentKey] = false
     } finally {
-      // Restore original URL
-      infrastructureStore.getBasyxComponents[componentKey].url = originalUrl
       setComponentTestingLoading(componentKey, false)
     }
   }

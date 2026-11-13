@@ -1,6 +1,7 @@
 <template>
   <v-app>
     <AppNavigation />
+    <BackendSetupNotice />
 
     <v-main style="padding-top: 33px">
       <!-- App Content (eg. AASViewer, AASEditor, etc.) -->

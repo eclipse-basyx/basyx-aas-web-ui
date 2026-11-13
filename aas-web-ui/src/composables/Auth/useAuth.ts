@@ -79,7 +79,7 @@ export function useAuth (router?: Router) {
               expiresAt: result.expiresAt,
             },
           }
-          infrastructureStore.dispatchUpdateInfrastructure(updatedInfra)
+          await infrastructureStore.dispatchUpdateInfrastructure(updatedInfra)
           infrastructureStore.setAuthenticationStatusForInfrastructure(infra.id, true)
           navStore.dispatchTriggerAASListReload()
           navStore.dispatchTriggerTreeviewReload()
@@ -201,7 +201,7 @@ export function useAuth (router?: Router) {
    */
   function clearInfrastructureToken (infra: InfrastructureConfig): void {
     infrastructureStore.setAuthenticationStatusForInfrastructure(infra.id, false)
-    infrastructureStore.dispatchUpdateInfrastructure({ ...infra, token: undefined })
+    void infrastructureStore.dispatchUpdateInfrastructure({ ...infra, token: undefined })
   }
 
   async function completeLocalLogout (logoutError?: unknown): Promise<void> {

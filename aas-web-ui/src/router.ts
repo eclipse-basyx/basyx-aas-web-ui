@@ -134,7 +134,7 @@ const staticRoutes: Array<RouteRecordRaw> = [
     path: '/aasviewer',
     name: 'AASViewer',
     component: AASViewer,
-    meta: { name: 'AAS Viewer', subtitle: 'Visualize Asset Administration Shells' },
+    meta: { name: 'AAS Viewer', subtitle: 'Visualize Asset Administration Shells', backendDataSource: 'aas' },
   },
   {
     path: '/',
@@ -146,29 +146,34 @@ const staticRoutes: Array<RouteRecordRaw> = [
     path: '/aaseditor',
     name: 'AASEditor',
     component: AASEditor,
-    meta: { name: 'AAS Editor', subtitle: 'Edit Asset Administration Shells' },
+    meta: { name: 'AAS Editor', subtitle: 'Edit Asset Administration Shells', backendDataSource: 'aas' },
   },
-  { path: '/aaslist', name: 'AASList', component: AASList },
-  { path: '/submodellist', name: 'SubmodelList', component: SubmodelList },
-  { path: '/componentvisualization', name: 'ComponentVisualization', component: ComponentVisualization },
-  { path: '/visu', name: 'Visualization', component: ComponentVisualization, meta: { name: 'Visualization' } },
+  { path: '/aaslist', name: 'AASList', component: AASList, meta: { backendDataSource: 'aas' } },
+  { path: '/submodellist', name: 'SubmodelList', component: SubmodelList, meta: { backendDataSource: 'aas' } },
+  {
+    path: '/componentvisualization',
+    name: 'ComponentVisualization',
+    component: ComponentVisualization,
+    meta: { backendDataSource: 'aas' },
+  },
+  { path: '/visu', name: 'Visualization', component: ComponentVisualization, meta: { name: 'Visualization', backendDataSource: 'aas' } },
   {
     path: '/aassmviewer',
     name: 'AASSubmodelViewer',
     component: AASSubmodelViewer,
-    meta: { name: 'AAS Submodel Viewer', subtitle: 'Visualize Submodels of AAS' },
+    meta: { name: 'AAS Submodel Viewer', subtitle: 'Visualize Submodels of AAS', backendDataSource: 'aas' },
   },
   {
     path: '/smviewer',
     name: 'SMViewer',
     component: SMViewer,
-    meta: { name: 'Submodel Viewer', subtitle: 'Visualize Submodels' },
+    meta: { name: 'Submodel Viewer', subtitle: 'Visualize Submodels', backendDataSource: 'submodel' },
   },
   {
     path: '/smeditor',
     name: 'SMEditor',
     component: SMEditor,
-    meta: { name: 'SM Editor', subtitle: 'Edit Submodels' },
+    meta: { name: 'SM Editor', subtitle: 'Edit Submodels', backendDataSource: 'submodel' },
   },
   {
     path: '/about',
@@ -876,7 +881,7 @@ export async function createAppRouter (): Promise<Router> {
         idToken: tokenData.idToken,
       }
 
-      infraStore.dispatchUpdateInfrastructure(infrastructure)
+      await infraStore.dispatchUpdateInfrastructure(infrastructure)
       infraStore.setAuthenticationStatusForInfrastructure(infrastructure.id, true)
 
       navigationStore.dispatchSnackbar({

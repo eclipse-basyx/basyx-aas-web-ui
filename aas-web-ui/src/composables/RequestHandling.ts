@@ -1,10 +1,22 @@
+import type { SnackbarType } from '@/types/Application'
+import type { BaSyxComponentKey } from '@/types/BaSyx'
 import type { InfrastructureConfig } from '@/types/Infrastructure'
 import { useAuth } from '@/composables/Auth/useAuth'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { useNavigationStore } from '@/store/NavigationStore'
 import { isValidCustomHeader } from '@/utils/CustomHeaderUtils'
+import { getComponentLabel } from '@/utils/InfrastructureUtils'
 import { parseTrustedOrigin } from '@/utils/TrustedOriginUtils'
+
+class NetworkRequestError extends TypeError {}
+
+class RequestConfigurationError extends Error {
+  constructor (error: unknown) {
+    super(error instanceof Error ? error.message : String(error), { cause: error })
+    this.name = error instanceof Error ? error.name : 'Error'
+  }
+}
 
 class UntrustedEndpointError extends Error {
   constructor (message = 'Untrusted endpoint blocked. Add its origin to the selected infrastructure to allow requests.') {
@@ -40,6 +52,8 @@ export interface RequestErrorHandlingOptions {
    * Its target stays hidden and is never requested.
    */
   acceptRedirect?: boolean
+  /** Identifies a configured component probe independently of its display text. */
+  connectionCheck?: BaSyxComponentKey
 }
 
 export interface RequestResult<T = unknown> {
@@ -49,6 +63,18 @@ export interface RequestResult<T = unknown> {
   details?: string // Error details of a failed request, the same as consumeLastRequestFailureDetails returns for it
   raw?: Response
   aborted?: true
+  /** Why a request failed: no response, invalid local request setup, an HTTP error status, or an unusable response body. */
+  failureKind?: 'network' | 'configuration' | 'http' | 'invalid-response'
+}
+
+function classifyRequestFailure (error: unknown, statusCode?: number): RequestResult['failureKind'] {
+  if (error instanceof NetworkRequestError) {
+    return 'network'
+  }
+  if (error instanceof RequestConfigurationError) {
+    return 'configuration'
+  }
+  return statusCode === undefined ? 'invalid-response' : 'http'
 }
 
 export interface RequestSecurityContext {
@@ -96,36 +122,30 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     return ''
   }
 
-  function buildArrayErrorDetails (errorData: any[]): string {
-    if (errorData.length === 0) {
-      return ''
-    }
-
-    if (errorData.some(error => typeof error?.message === 'string')) {
+  function buildArrayErrorDetails (errorData: unknown[]): string {
+    if (errorData.some(error => typeof (error as { message?: unknown } | null)?.message === 'string')) {
       return buildApiErrorDetails(errorData)
     }
 
-    const error = errorData[0] as {
-      code?: unknown
-      messageType?: unknown
-      correlationId?: unknown
-      timestamp?: unknown
-      text?: unknown
-    }
+    return errorData.map(entry => {
+      if (!entry || typeof entry !== 'object') {
+        return ''
+      }
+      const error = entry as Record<string, unknown>
+      const lines: string[] = []
 
-    const lines: string[] = []
+      appendErrorLine(lines, 'Status', error.code)
+      appendErrorLine(lines, 'Message Type', error.messageType)
+      appendErrorLine(lines, 'Correlation ID', error.correlationId)
 
-    appendErrorLine(lines, 'Status', error.code)
-    appendErrorLine(lines, 'Message Type', error.messageType)
-    appendErrorLine(lines, 'Correlation ID', error.correlationId)
+      if (error.timestamp) {
+        appendErrorLine(lines, 'Timestamp', new Date(String(error.timestamp)).toLocaleString())
+      }
 
-    if (error.timestamp) {
-      appendErrorLine(lines, 'Timestamp', new Date(String(error.timestamp)).toLocaleString())
-    }
+      appendErrorLine(lines, 'Text', error.text)
 
-    appendErrorLine(lines, 'Text', error.text)
-
-    return lines.join('\n')
+      return lines.join('\n')
+    }).filter(Boolean).join('\n\n')
   }
 
   /**
@@ -161,6 +181,12 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     appendErrorLine(lines, 'Route', route)
     appendErrorLine(lines, 'Correlation ID', errorData.correlationId)
     appendErrorLine(lines, 'Timestamp', errorData.timestamp)
+    if (Array.isArray(errorData.messages)) {
+      const messages = buildArrayErrorDetails(errorData.messages)
+      if (messages !== '') {
+        lines.push(messages)
+      }
+    }
 
     return lines.join('\n')
   }
@@ -205,6 +231,41 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     return requestOwnerId === getRequestOwnerId()
   }
 
+  function showRequestError (
+    error: unknown,
+    errorMessage: string,
+    statusCode?: number,
+    networkRequest?: SnackbarType['networkRequest'],
+  ): void {
+    const isNetworkError = error instanceof NetworkRequestError && statusCode === undefined
+    const networkContext = isNetworkError
+      ? { kind: 'network-error' as const, infrastructureId: getRequestOwnerId(), ...(networkRequest ? { networkRequest } : {}) }
+      : {}
+
+    if (isNetworkError && networkRequest?.operation === 'connection-check' && networkRequest.component) {
+      const componentLabel = `${getComponentLabel(networkRequest.component)} URL`
+      navigationStore.dispatchSnackbar({
+        status: true,
+        timeout: 60_000,
+        color: 'error',
+        btnColor: 'buttonText',
+        baseError: 'Unable to connect to the configured BaSyx environment.',
+        extendedError: `${componentLabel} could not be reached. Make sure the corresponding BaSyx component is running and verify its endpoint and CORS settings.\n\nTechnical details: ${errorMessage}`,
+        ...networkContext,
+      })
+      return
+    }
+
+    navigationStore.dispatchSnackbar({
+      status: true,
+      timeout: 60_000,
+      color: 'error',
+      btnColor: 'buttonText',
+      text: 'Error! Server responded with: ' + error,
+      ...networkContext,
+    })
+  }
+
   /**
    * Centralized error handler for catch blocks
    * Handles authentication errors and general errors
@@ -216,7 +277,8 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     requestOwnerId: string | undefined = getRequestOwnerId(),
     requestInfrastructure: InfrastructureConfig | null | undefined = infrastructureStore.getSelectedInfrastructure,
     isolateAuthenticationFailures = false,
-  ): { success: false, status?: number, details?: string, aborted?: true, blocked?: true, redirected?: true } {
+    networkRequest?: SnackbarType['networkRequest'],
+  ): { success: false, status?: number, details?: string, aborted?: true, blocked?: true, redirected?: true, failureKind?: RequestResult['failureKind'] } {
     if (error instanceof BlockedRedirectError && errorHandlingOptions.acceptRedirect) {
       setLastRequestFailureStatus(undefined)
       setLastRequestFailureDetails(undefined)
@@ -292,15 +354,9 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
 
     // Handle other errors
     if (!disableMessage && !shouldSuppressStatus(statusCode, errorHandlingOptions)) {
-      navigationStore.dispatchSnackbar({
-        status: true,
-        timeout: 60_000,
-        color: 'error',
-        btnColor: 'buttonText',
-        text: 'Error! Server responded with: ' + error,
-      })
+      showRequestError(error, errorMessage, statusCode, networkRequest)
     }
-    return { success: false, status: statusCode, details: errorMessage }
+    return { success: false, status: statusCode, details: errorMessage, failureKind: classifyRequestFailure(error, statusCode) }
   }
 
   function shouldSuppressStatus (
@@ -519,6 +575,13 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
         requestOwnerId,
         requestInfrastructure,
         securityContext?.isolateAuthenticationFailures,
+        securityContext?.isolateAuthenticationFailures
+          ? undefined
+          : {
+              url: path,
+              operation: errorHandlingOptions.connectionCheck ? 'connection-check' : 'read',
+              ...(errorHandlingOptions.connectionCheck ? { component: errorHandlingOptions.connectionCheck } : {}),
+            },
       ))
   }
 
@@ -792,6 +855,10 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
       if (!isTrustedRequestTarget(path, requestInfrastructure)) {
         throw new UntrustedEndpointError()
       }
+      const target = new URL(path, window.location.origin)
+      if (target.username || target.password) {
+        throw new Error('Credentials in endpoint URLs are not supported. Use the infrastructure authentication settings.')
+      }
       const headers = includeAuth
         ? addAuthorizationHeader(options.headers, requestInfrastructure)
         : options.headers
@@ -802,9 +869,14 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
           throw new BlockedRedirectError()
         }
         return response
+      }, error => {
+        if (error instanceof TypeError) {
+          throw new NetworkRequestError(error.message, { cause: error })
+        }
+        throw error
       })
     } catch (error) {
-      return Promise.reject(error)
+      return Promise.reject(error instanceof UntrustedEndpointError ? error : new RequestConfigurationError(error))
     }
   }
 

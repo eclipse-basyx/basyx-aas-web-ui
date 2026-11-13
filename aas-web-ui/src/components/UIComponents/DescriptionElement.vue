@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-    // Props
+  // Props
   defineProps({
     descriptionArray: {
       type: Array<any>,

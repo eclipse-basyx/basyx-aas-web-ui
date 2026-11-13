@@ -6,6 +6,7 @@ import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'
 import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
 import { useCDRepositoryClient } from '@/composables/Client/CDRepositoryClient'
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
+import { appendHttpStatusFailureReason } from '@/composables/HttpStatusMessages'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { isComponentActiveForTemplate, usesSubmodelSuperpath } from '@/utils/InfrastructureUtils'
 import { safeSegment } from '@/utils/StringUtils'
@@ -34,7 +35,15 @@ type ParsedAASX = {
   thumbnail: ThumbnailUpload | null
 }
 
+export type ClientImportOutcome = {
+  kind: 'AAS' | 'Submodel' | 'Concept Description'
+  id: string
+  action: 'created' | 'updated' | 'skipped' | 'written' | 'failed'
+  details?: string
+}
+
 export type ClientAASXImportResult = {
+  outcomes: ClientImportOutcome[]
   importedAas: JsonRecord[]
   importedSubmodels: JsonRecord[]
   importedConceptDescriptions: JsonRecord[]
@@ -400,9 +409,11 @@ export function useAASXImport (): {
   importAasxFileClient: (file: File) => Promise<ClientAASXImportResult>
   importEnvironmentFileClient: (file: File) => Promise<ClientAASXImportResult>
 } {
-  const { postAas, putAas, putThumbnail, getAasEndpointById } = useAASRepositoryClient()
-  const { postSubmodel, putSubmodel, putAttachmentFile, getSmEndpointById } = useSMRepositoryClient()
-  const { postConceptDescription, putConceptDescription } = useCDRepositoryClient()
+  const aasClient = useAASRepositoryClient()
+  const smClient = useSMRepositoryClient()
+  const cdClient = useCDRepositoryClient()
+  const { putThumbnail, getAasEndpointById } = aasClient
+  const { putAttachmentFile, getSmEndpointById } = smClient
   const { determineContentType } = useSMEFile()
   const infrastructureStore = useInfrastructureStore()
 
@@ -553,28 +564,62 @@ export function useAASXImport (): {
     }
   }
 
-  async function upsertConceptDescription (conceptDescription: aasCore.types.ConceptDescription): Promise<boolean> {
-    const created = await postConceptDescription(conceptDescription)
-    if (created) {
-      return true
+  async function importIdentifiable (
+    kind: ClientImportOutcome['kind'],
+    id: string,
+    client: Pick<typeof aasClient, 'consumeLastRequestFailureStatus' | 'consumeLastRequestFailureDetails'>,
+    create: () => Promise<boolean>,
+    update?: () => Promise<boolean>,
+    successAction: 'created' | 'written' = 'created',
+  ): Promise<ClientImportOutcome> {
+    // Discard a previous failure before a write that may fail locally (e.g. a missing endpoint).
+    client.consumeLastRequestFailureStatus()
+    client.consumeLastRequestFailureDetails()
+    try {
+      if (await create()) {
+        return { kind, id, action: successAction }
+      }
+      let status = client.consumeLastRequestFailureStatus()
+      let details = client.consumeLastRequestFailureDetails()
+      if (status === 409 && kind === 'Concept Description') {
+        return { kind, id, action: 'skipped', details: 'Already exists; the existing object was kept.' }
+      }
+      if (status === 409 && update) {
+        if (await update()) {
+          return { kind, id, action: 'updated', details: 'Already existed and was updated.' }
+        }
+        status = client.consumeLastRequestFailureStatus()
+        details = client.consumeLastRequestFailureDetails()
+      }
+      return {
+        kind, id, action: 'failed',
+        details: [appendHttpStatusFailureReason('Import failed.', status), details].filter(Boolean).join('\n'),
+      }
+    } catch (error) {
+      return { kind, id, action: 'failed', details: stringifyUnknown(error) }
     }
-    return await putConceptDescription(conceptDescription)
   }
 
-  async function upsertSubmodel (submodel: aasCore.types.Submodel, aasId?: string): Promise<boolean> {
-    const created = await postSubmodel(submodel, false, aasId)
-    if (created) {
-      return true
+  async function uploadBinary (
+    failureMessage: string,
+    client: Pick<typeof aasClient, 'consumeLastRequestFailureStatus' | 'consumeLastRequestFailureDetails'>,
+    upload: () => Promise<boolean>,
+  ): Promise<string | undefined> {
+    client.consumeLastRequestFailureStatus()
+    client.consumeLastRequestFailureDetails()
+    let exceptionDetails: string | undefined
+    try {
+      if (await upload()) {
+        return undefined
+      }
+    } catch (error) {
+      exceptionDetails = stringifyUnknown(error)
     }
-    return await putSubmodel(submodel, false, aasId)
-  }
-
-  async function upsertAas (aas: aasCore.types.AssetAdministrationShell): Promise<boolean> {
-    const created = await postAas(aas)
-    if (created) {
-      return true
-    }
-    return await putAas(aas)
+    const status = client.consumeLastRequestFailureStatus()
+    const details = client.consumeLastRequestFailureDetails()
+    return [appendHttpStatusFailureReason(failureMessage, status), details, exceptionDetails]
+      .filter(Boolean)
+      .join('\n')
   }
 
   function aasReferencesSubmodel (aas: JsonRecord, submodelId: string): boolean {
@@ -613,24 +658,28 @@ export function useAASXImport (): {
       'ConceptDescriptionRepo',
     )
     const importedAasIds: string[] = []
+    const outcomes: ClientImportOutcome[] = []
 
     async function upsertParsedAasEntries (): Promise<void> {
       for (const { core: aas, json } of parsedPackage.aasById.values()) {
-        const success = await upsertAas(aas)
-        if (success) {
+        const outcome = await importIdentifiable(
+          'AAS', asString(json.id), aasClient,
+          () => aasClient.postAas(aas, true),
+          () => aasClient.putAas(aas, true),
+        )
+        outcomes.push(outcome)
+        if (outcome.action !== 'failed') {
           importedAasIds.push(asString(json.id))
-        } else {
-          warnings.push(`Failed to create or update AAS '${asString(json.id)}'.`)
         }
       }
     }
 
     if (conceptDescriptionRepoActive) {
       for (const { core: conceptDescription, json } of parsedPackage.cdById.values()) {
-        const success = await upsertConceptDescription(conceptDescription)
-        if (!success) {
-          warnings.push(`Failed to create or update Concept Description '${asString(json.id)}'.`)
-        }
+        outcomes.push(await importIdentifiable(
+          'Concept Description', asString(json.id), cdClient,
+          () => cdClient.postConceptDescription(conceptDescription, false),
+        ))
       }
     }
 
@@ -639,18 +688,21 @@ export function useAASXImport (): {
     }
 
     for (const { core: submodel, json } of parsedPackage.submodelById.values()) {
-      const submodelId = asString(json.id).trim()
-      const aasId = useSuperpath ? findAasIdForSubmodel(parsedPackage, submodelId) : undefined
+      const submodelId = asString(json.id)
+      const aasId = useSuperpath ? findAasIdForSubmodel(parsedPackage, submodelId.trim()) : undefined
 
       if (useSuperpath && !aasId) {
-        warnings.push(`Failed to create or update Submodel '${submodelId}': no referencing AAS found.`)
+        outcomes.push({ kind: 'Submodel', id: submodelId, action: 'failed', details: 'No referencing AAS found.' })
         continue
       }
 
-      const success = await upsertSubmodel(submodel, aasId)
-      if (!success) {
-        warnings.push(`Failed to create or update Submodel '${submodelId}'.`)
-      }
+      // The AAS superpath uses PUT for both creation and updates; it cannot distinguish the two.
+      outcomes.push(await importIdentifiable(
+        'Submodel', submodelId, smClient,
+        () => smClient.postSubmodel(submodel, true, aasId),
+        useSuperpath ? undefined : () => smClient.putSubmodel(submodel, true, aasId),
+        useSuperpath ? 'written' : 'created',
+      ))
     }
 
     if (!useSuperpath) {
@@ -672,17 +724,13 @@ export function useAASXImport (): {
         type: attachment.contentType,
       })
 
-      let success: boolean
-      try {
-        success = await putAttachmentFile(attachmentFile, smePath)
-      } catch {
-        success = false
-      }
-
-      if (!success) {
-        warnings.push(
-          `Failed to upload attachment for Submodel '${attachment.submodelId}' at '${attachment.idShortPath.join('/')}'.`,
-        )
+      const warning = await uploadBinary(
+        `Failed to upload attachment for Submodel '${attachment.submodelId}' at '${attachment.idShortPath.join('/')}'.`,
+        smClient,
+        () => putAttachmentFile(attachmentFile, smePath, true),
+      )
+      if (warning) {
+        warnings.push(warning)
       }
     }
 
@@ -706,24 +754,36 @@ export function useAASXImport (): {
           continue
         }
 
-        const success = await putThumbnail(thumbnailFile, aasId)
-        if (!success) {
-          warnings.push(`Failed to upload thumbnail for AAS '${aasId}'.`)
+        const warning = await uploadBinary(
+          `Failed to upload thumbnail for AAS '${aasId}'.`,
+          aasClient,
+          () => putThumbnail(thumbnailFile, aasId, true),
+        )
+        if (warning) {
+          warnings.push(warning)
         }
       }
     }
 
+    const importedObjects = new Set(outcomes
+      .filter(outcome => outcome.action !== 'failed')
+      .map(outcome => `${outcome.kind}:${outcome.id}`))
+    function wasImported (kind: ClientImportOutcome['kind'], id: unknown): boolean {
+      return importedObjects.has(`${kind}:${id}`)
+    }
+
     const importedAas = Array.from(parsedPackage.aasById.values())
       .map(entry => entry.json)
-      .filter(entry => hasKeys(entry))
+      .filter(entry => hasKeys(entry) && wasImported('AAS', entry.id))
     const importedSubmodels = Array.from(parsedPackage.submodelById.values())
       .map(entry => entry.json)
-      .filter(entry => hasKeys(entry))
+      .filter(entry => hasKeys(entry) && wasImported('Submodel', entry.id))
     const importedConceptDescriptions = Array.from(parsedPackage.cdById.values())
       .map(entry => entry.json)
-      .filter(entry => hasKeys(entry))
+      .filter(entry => hasKeys(entry) && wasImported('Concept Description', entry.id))
 
     return {
+      outcomes,
       importedAas,
       importedSubmodels,
       importedConceptDescriptions,

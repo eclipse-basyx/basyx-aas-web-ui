@@ -1,7 +1,7 @@
 <template>
-  <v-snackbar v-model="snackbar.status" :color="snackbar.color" location="top" :timeout="snackbar.timeout">
+  <v-snackbar v-model="snackbarVisible" :color="snackbar.color" location="top" :timeout="snackbar.timeout">
     <v-card v-if="snackbar.status === true && snackbar.baseError">
-      <v-card-title class="text-title-small">{{ snackbar.baseError }}</v-card-title>
+      <v-card-title class="text-title-small text-wrap text-break">{{ snackbar.baseError }}</v-card-title>
       <v-divider v-if="snackbar.extendedError" />
 
       <v-card-text v-if="snackbar.extendedError" style="max-height: 200px; overflow-y: auto; max-width: 590px">
@@ -12,7 +12,7 @@
             class="embedded-html text-subtitleText text-pre-wrap bg-surface-light border rounded pa-2 my-2"
           >{{ part.text }}</pre>
 
-          <pre v-else class="text-subtitleText text-body-small text-pre-wrap">{{ part.text }}</pre>
+          <pre v-else class="text-subtitleText text-body-small text-pre-wrap text-break">{{ part.text }}</pre>
         </template>
       </v-card-text>
 
@@ -49,13 +49,35 @@
 </template>
 
 <script lang="ts" setup>
+  import { useBackendSetupNotice } from '@/composables/Infrastructure/useBackendSetupNotice'
+  import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
+  import { isCoveredBackendRequest } from '@/utils/BackendSetupRequestScope'
   import { splitEmbeddedHtml } from '@/utils/StringUtils'
 
   const navigationStore = useNavigationStore()
+  const infrastructureStore = useInfrastructureStore()
+  const { showNotice, isSetupPending, coveredDataSources } = useBackendSetupNotice()
 
   const snackbar = computed(() => navigationStore.getSnackbar)
   const extendedErrorParts = computed(() => splitEmbeddedHtml(snackbar.value.extendedError ?? ''))
+  const isSetupNetworkError = computed(() => snackbar.value.kind === 'network-error'
+    && snackbar.value.infrastructureId === infrastructureStore.getSelectedInfrastructureId
+    && isCoveredBackendRequest(snackbar.value.networkRequest, coveredDataSources.value))
+  const snackbarVisible = computed({
+    get: () => snackbar.value.status
+      && !(isSetupNetworkError.value && (showNotice.value || isSetupPending.value)),
+    set: status => {
+      if (!status) closeSnackbar()
+    },
+  })
+
+  // Consume covered errors so reconnecting cannot reveal an old startup failure.
+  watchEffect(() => {
+    if (showNotice.value && isSetupNetworkError.value && snackbar.value.status) {
+      closeSnackbar()
+    }
+  })
 
   function closeSnackbar (): void {
     navigationStore.dispatchSnackbar({
