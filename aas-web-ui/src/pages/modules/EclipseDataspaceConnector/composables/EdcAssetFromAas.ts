@@ -152,6 +152,7 @@ export function useEdcAssetFromAas () {
    * (`proxyPath`), but neither body, method nor query parameters of consumer requests.
    * The `@context` declares the EDC and Catena-X prefixes, the AAS attributes of the Identifiable are added as properties,
    * in the `aas-*` namespace version matching the interface version of the endpoint.
+   * The Asset ID is the base64-encoded id of the Identifiable alone, so a Submodel shared by several AAS gets one Asset.
    */
   function createEdcAsset (
     identifiable: any,
