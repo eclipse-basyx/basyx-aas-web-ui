@@ -168,7 +168,7 @@ export function buildCatalogRequestBody (
 ): Record<string, unknown> {
   const counterPartyId = trimString(request.counterPartyId)
   const counterPartyAddress = trimString(request.counterPartyAddress)
-  const protocol = trimString(request.protocol) || defaultDspProtocol
+  const protocol = resolveDspProtocol(counterPartyAddress, request.protocol)
 
   if (!counterPartyId) {
     throw createHttpError('counterPartyId is required for catalog requests', 400)
@@ -336,7 +336,7 @@ export function buildEdrContractRequestBody (
     throw createHttpError('counterPartyAddress is required for EDR negotiation', 400)
   }
 
-  const protocol = trimString(request.protocol) || defaultDspProtocol
+  const protocol = resolveDspProtocol(counterPartyAddress, request.protocol)
   const policy = cloneRecord(offer.policy)
   // Full IRIs, because the policy may carry the catalog's @context, which needn't define the odrl: prefix.
   policy[odrlContextUrl + 'assigner'] = { '@id': offer.participantId }
@@ -349,6 +349,18 @@ export function buildEdrContractRequestBody (
     protocol,
     policy,
   }
+}
+
+/**
+ * An address under the DSP 2025-1 version path, e.g. a DTR descriptor's `dspEndpoint`, only accepts 2025-1 messages,
+ * so it overrides the requested protocol. Other addresses use the requested protocol or default to 2025-1.
+ */
+function resolveDspProtocol (counterPartyAddress: string, requestedProtocol: unknown): string {
+  if (counterPartyAddress.replace(/\/+$/, '').endsWith(dsp2025PathSuffix)) {
+    return defaultDspProtocol
+  }
+
+  return trimString(requestedProtocol) || defaultDspProtocol
 }
 
 /**

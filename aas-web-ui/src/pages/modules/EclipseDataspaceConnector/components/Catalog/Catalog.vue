@@ -629,9 +629,8 @@
 
       const catalogRequest: CatenaXEdcCatalogRequest = {
         counterPartyId: selectedBusinessPartner.value.counterPartyId,
-        // The BFF adds the DSP 2025-1 version path to the address
+        // The BFF defaults to DSP 2025-1 and adds its version path to the address
         counterPartyAddress: selectedBusinessPartner.value.counterPartyAddress,
-        protocol: 'dataspace-protocol-http:2025-1',
         querySpec: catalogFilter?.querySpec,
       }
       const result = await requestCatalog(edcProxyId.value, catalogRequest)

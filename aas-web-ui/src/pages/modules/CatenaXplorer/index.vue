@@ -290,7 +290,6 @@
   const selectedEdcPartnerId = ref('')
   const edcCounterPartyId = ref('')
   const edcCounterPartyAddress = ref('')
-  const edcProtocol = ref('dataspace-protocol-http')
   const runtimePartnerLoaded = ref(false)
   const edcPartnerReady = ref(false)
   const savePartnerDialog = ref(false)
@@ -360,7 +359,6 @@
       getEdcDtrDescriptorsEndpointUrl(),
       edcCounterPartyId.value,
       edcCounterPartyAddress.value,
-      edcProtocol.value,
       assetIdName.value,
       assetIdValue.value,
       getEdcTransferProcessId(edcDtrAssetKey, edcCounterPartyAddress.value),
@@ -419,7 +417,6 @@
   watch(
     () => [
       edcProxyId.value,
-      edcProtocol.value,
       isEdcAccessMode.value,
     ],
     () => {
@@ -913,7 +910,6 @@
   function buildEdcDescriptorRequest (): {
     counterPartyId: string
     counterPartyAddress: string
-    protocol: string
   } | null {
     if (!isDescriptorSourceConfigured()) {
       return null
@@ -922,7 +918,6 @@
     return {
       counterPartyId: edcCounterPartyId.value.trim(),
       counterPartyAddress: edcCounterPartyAddress.value.trim(),
-      protocol: edcProtocol.value.trim(),
     }
   }
 
@@ -951,7 +946,6 @@
       edcProxyId.value,
       edcCounterPartyId.value.trim(),
       counterPartyAddress.trim(),
-      edcProtocol.value.trim(),
       assetId.trim(),
     ])
   }

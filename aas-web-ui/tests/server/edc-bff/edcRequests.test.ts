@@ -87,6 +87,27 @@ describe('EDC BFF request helpers', () => {
       .toBe('https://counterparty-dsp.test/api/v1/dsp')
   })
 
+  it('sends DSP 2025-1 to a versioned address even when DSP 0.8 is requested', () => {
+    const proxy = createProxyConfig()
+    const offer = { assetId: 'asset-1', participantId: 'TEST_PARTICIPANT_ID', policy: { '@id': 'offer-1' } }
+
+    for (const counterPartyAddress of [
+      'https://counterparty-dsp.test/api/v1/dsp/2025-1',
+      'https://counterparty-dsp.test/api/v1/dsp/2025-1/',
+    ]) {
+      const request = { counterPartyId: 'TEST_COUNTERPARTY_ID', counterPartyAddress, protocol: 'dataspace-protocol-http' }
+
+      expect(buildCatalogRequestBody(proxy, request)).toMatchObject({
+        counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp/2025-1',
+        protocol: 'dataspace-protocol-http:2025-1',
+      })
+      expect(buildEdrContractRequestBody(request, offer)).toMatchObject({
+        counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp/2025-1',
+        protocol: 'dataspace-protocol-http:2025-1',
+      })
+    }
+  })
+
   it('forwards JSON to the configured management URL with the server-side API key', async () => {
     const fetchMock = vi.fn().mockResolvedValue(Response.json({ ok: true }, {
       headers: { 'content-type': 'application/json' },
