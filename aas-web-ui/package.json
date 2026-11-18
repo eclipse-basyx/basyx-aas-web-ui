@@ -39,7 +39,7 @@
     "@aas-core-works/aas-core3.1-typescript": "^1.0.1",
     "@fontsource/roboto": "^5.3.0",
     "@mdi/font": "^7.4.47",
-    "@plantuml/core": "1.2026.8",
+    "@plantuml/core": "1.2026.10",
     "@tanstack/vue-query": "^5.107.1",
     "@thatopen/components": "^3.6.0",
     "@thatopen/components-front": "^3.6.1",

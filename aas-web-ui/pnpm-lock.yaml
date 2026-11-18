@@ -190,8 +190,8 @@ importers:
         specifier: ^7.4.47
         version: 7.4.47
       '@plantuml/core':
-        specifier: 1.2026.8
-        version: 1.2026.8
+        specifier: 1.2026.10
+        version: 1.2026.10
       '@tanstack/vue-query':
         specifier: ^5.107.1
         version: 5.107.1(vue@3.5.45(typescript@6.0.3))
@@ -810,8 +810,8 @@ packages:
     resolution: {integrity: sha512-SEeaJLb3qBNF/OaXnaR1NmmBbFYk1zC0ZH/52fATcRPLFg/p791YrcyFFy44Bo9sLaGuSuLp5Q6axbb/O+v/RA==}
     engines: {node: ^14.18.0 || >=16.0.0}
 
-  '@plantuml/core@1.2026.8':
-    resolution: {integrity: sha512-md2wGuaIJnAq1yKkedSpQE68cLsvZvctwzWHkDAnC3DTVLe/MSd/2vr4ETwr6jtc1av8cdxCohFuW4VGejMHyw==}
+  '@plantuml/core@1.2026.10':
+    resolution: {integrity: sha512-m67zsiUiJGAUfrk7xM2i3b9Y8HPefXder+v7STblGZgW96GUOnJTCBfJAX1d9ElDzV9d7zrEJO9S7/FHfkaGMg==}
 
   '@playwright/test@1.65.0':
     resolution: {integrity: sha512-iGURLGuKDLakSEl7Pgfv8h7f+XLT+V861Wfhz0zlEl5nyFuKUopdkFBPKqTllTUp06aOwPuH8iuUEb3yp3MpbQ==}
@@ -3910,7 +3910,7 @@ snapshots:
 
   '@pkgr/core@0.3.6': {}
 
-  '@plantuml/core@1.2026.8': {}
+  '@plantuml/core@1.2026.10': {}
 
   '@playwright/test@1.65.0':
     dependencies:
