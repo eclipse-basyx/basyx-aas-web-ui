@@ -99,7 +99,7 @@
     "jsdom": "^30.1.3",
     "json-schema-to-typescript": "16.0.0",
     "npm-run-all2": "^9.0.4",
-    "pnpm": "12.19.0",
+    "pnpm": "12.21.0",
     "sass-embedded": "^1.108.2",
     "typescript": "^6.0.3",
     "unplugin-auto-import": "^21.1.0",
@@ -110,7 +110,7 @@
     "vitest": "^5.1.0",
     "vue-tsc": "3.3.11"
   },
-  "packageManager": "pnpm@12.19.0+sha512.87327b6619853205834e4be59ba3a231e303d9f5e435912ede3312b7539b79af890942f6513b05a4690745666888045c09b33fc420c2cd2d3bd95c01ba21dbeb",
+  "packageManager": "pnpm@12.21.0+sha512.66fd8278ee28935ce951792d34367ff3af5c432a2756445823029533835b8da529bbe0be5130afd56ed0713fb8789e47bad82d93bd5ae2fe54b15562d6276ef0",
   "engines": {
     "node": ">=24.5.0 <25"
   }
