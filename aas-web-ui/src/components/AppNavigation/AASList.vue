@@ -204,7 +204,7 @@
                     {{ item.idShort }}
                   </div>
 
-                  <v-divider v-if="item.administration?.version" class="my-1" />
+                  <v-divider v-if="item.administration?.version || item.administration?.createdAt || item.administration?.updatedAt" class="my-1" />
                   <!-- AAS administrative information -->
                   <div v-if="item.administration?.version" class="text-body-small">
                     <span class="font-weight-bold">{{ 'Version: ' }}</span>
@@ -212,6 +212,18 @@
                       item.administration.version +
                         (item.administration.revision ? '.' + item.administration.revision : '')
                     }}
+                  </div>
+
+                  <!-- AAS createdAt -->
+                  <div v-if="item.administration?.createdAt" class="text-body-small">
+                    <span class="font-weight-bold">{{ 'Created at: ' }}</span>
+                    {{ formatDate(item.administration.createdAt) }}
+                  </div>
+
+                  <!-- AAS updatedAt -->
+                  <div v-if="item.administration?.updatedAt" class="text-body-small">
+                    <span class="font-weight-bold">{{ 'Updated at: ' }}</span>
+                    {{ formatDate(item.administration.updatedAt) }}
                   </div>
                 </v-tooltip>
 
@@ -1347,6 +1359,12 @@
     const routeValue = Array.isArray(value) ? value[0] : value
     return routeValue === 'repository' || routeValue === 'environment' ? 'repository' : 'registry'
   }
+    // Format date string
+    const formatDate = (dateString: string): string => {
+        if (!dateString) return '-';
+        const date = new Date(dateString);
+        return date.toLocaleString();
+    };
 </script>
 
 <style>
