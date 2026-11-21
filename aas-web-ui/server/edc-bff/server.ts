@@ -16,6 +16,7 @@ import {
   buildConnectorDiscoveryRequestBody,
   buildDspVersionParamsRequestBody,
   createHttpError,
+  defaultDtrProtocol,
   fetchDtrShellDescriptorById,
   fetchDtrShellDescriptors,
   fetchSubmodel,
@@ -139,6 +140,11 @@ async function handleRequest (
     return
   }
 
+  if (route.action === 'asset/sm-service' && request.method === 'GET') {
+    await handleSmServiceAssetRequest(request, response, proxy)
+    return
+  }
+
   if (route.action === 'connectors/discover' && request.method === 'POST') {
     await handleDiscoveryRequest(request, response, proxy)
     return
@@ -165,6 +171,63 @@ async function handleRequest (
   }
 
   throw createHttpError('Route not found', 404)
+}
+
+async function handleSmServiceAssetRequest (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+): Promise<void> {
+  const { status, data } = await fetchCatalogAssetByTaxonomyType(
+    proxy,
+    'https://w3id.org/catenax/taxonomy#Submodel',
+    'Submodel Service asset not found',
+  )
+  writeJsonResponse(response, status, data)
+}
+
+async function fetchCatalogAssetByTaxonomyType (
+  proxy: EdcProxyConfig,
+  taxonomyTypeId: string,
+  notFoundMessage: string,
+): Promise<{ status: number, data: Record<string, unknown> }> {
+  const body = {
+    counterPartyId: proxy.participantId,
+    counterPartyAddress: proxy.dspEndpoint,
+    protocol: defaultDtrProtocol,
+    querySpec: {
+      '@type': 'QuerySpec',
+      'offset': 0,
+      'limit': 50,
+      'filterExpression': [
+        {
+          '@type': 'Criterion',
+          'operandLeft': '\'http' + '://purl.org/dc/terms/type\'.\'@id\'',
+          'operator': '=',
+          'operandRight': taxonomyTypeId,
+        },
+      ],
+    },
+  } as EdcCatalogRequest
+  const edcResponse = await forwardJsonToEdc(
+    proxy,
+    '/v3/catalog/request',
+    buildCatalogRequestBody(proxy, body),
+  )
+
+  const catalogData = edcResponse.data as Record<string, unknown> | undefined
+  const asset = catalogData?.['dcat:dataset']
+
+  if (typeof asset !== 'object' || asset === null) {
+    throw createHttpError(notFoundMessage, 502)
+  }
+
+  const assetId = (asset as Record<string, unknown>)['@id']
+  if (typeof assetId !== 'string' || assetId.trim() === '') {
+    throw createHttpError(notFoundMessage, 502)
+  }
+
+  return { status: edcResponse.status, data: asset as Record<string, unknown> }
 }
 
 async function handleDiscoveryRequest (
