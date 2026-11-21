@@ -184,7 +184,7 @@ describe('resolveReportLink', () => {
   })
 
   it('resolves a reference to the file of a report to that report', () => {
-    // As in the aas4j-submodels example: …/Reports/<index>/File:ReportFile
+    // A reference to the file inside a report: …/Reports/<index>/File:ReportFile
     const reference = modelReference(
       ['Submodel', SUBMODEL_ID],
       ['SubmodelElementCollection', 'FireProtectionCertificates'],

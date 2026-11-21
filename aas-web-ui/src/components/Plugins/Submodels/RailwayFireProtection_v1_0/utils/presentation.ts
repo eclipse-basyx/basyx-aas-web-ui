@@ -11,15 +11,20 @@ export function sortRequirementsSets (sets: RequirementsSet[]): RequirementsSet[
   return sets.toSorted((a, b) => collator.compare(a.name, b.name) || a.index - b.index)
 }
 
-/** Tests of the reports a requirement set links to, in link order; a report linked twice is counted once */
-export function requirementsSetTests (set: RequirementsSet, reports: FireReport[]): FireTest[] {
+/** Reports a requirement set links to, in link order; a report linked twice is listed once */
+export function requirementsSetReports (set: RequirementsSet, reports: FireReport[]): FireReport[] {
   const reportIndexes = new Set<number>()
   for (const link of set.reportLinks) {
     if (link.reportIndex !== null && reports[link.reportIndex]) {
       reportIndexes.add(link.reportIndex)
     }
   }
-  return [...reportIndexes].flatMap(index => reports[index].tests)
+  return [...reportIndexes].map(index => reports[index])
+}
+
+/** Tests of the reports a requirement set links to, in link order; a report linked twice is counted once */
+export function requirementsSetTests (set: RequirementsSet, reports: FireReport[]): FireTest[] {
+  return requirementsSetReports(set, reports).flatMap(report => report.tests)
 }
 
 /** Keeps the sets whose hazard level is selected; an empty selection keeps all */
@@ -75,7 +80,6 @@ export function characteristicsLabel (material: Material | null): string {
   return `${range.min} – ${range.max}`
 }
 
-/** e.g. "0.35 kg/m²" */
 /**
  * Share of the combustible mass in the total mass, between 0 and 1.
  * `null` if a mass is missing or not a number, or the total is 0; `invalid` if the combustible mass exceeds the total.
@@ -95,6 +99,7 @@ export function parseDecimal (value: string): number | null {
   return /^\d+(?:\.\d+)?$/.test(normalized) ? Number(normalized) : null
 }
 
+/** e.g. "0.35 kg/m²" */
 export function withUnit (value: string, unit: string): string {
   return value ? [value, unit].filter(Boolean).join(' ') : ''
 }

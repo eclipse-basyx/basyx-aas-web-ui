@@ -144,6 +144,8 @@ declare module 'vue' {
     QuerySearchField: typeof import('./components/QueryLanguage/QuerySearchField.vue')['default']
     RailwayFireProtection_v1_0: typeof import('./components/Plugins/Submodels/RailwayFireProtection_v1_0.vue')['default']
     RailwayFireProtectionDetails: typeof import('./components/Plugins/Submodels/RailwayFireProtection_v1_0/components/RailwayFireProtectionDetails.vue')['default']
+    RailwayFireProtectionFcilDownload: typeof import('./components/Plugins/Submodels/RailwayFireProtection_v1_0/components/RailwayFireProtectionFcilDownload.vue')['default']
+    RailwayFireProtectionFcilTemplateDialog: typeof import('./components/Plugins/Submodels/RailwayFireProtection_v1_0/components/RailwayFireProtectionFcilTemplateDialog.vue')['default']
     RailwayFireProtectionFlipTransition: typeof import('./components/Plugins/Submodels/RailwayFireProtection_v1_0/components/RailwayFireProtectionFlipTransition.vue')['default']
     RailwayFireProtectionMassChart: typeof import('./components/Plugins/Submodels/RailwayFireProtection_v1_0/components/RailwayFireProtectionMassChart.vue')['default']
     RailwayFireProtectionReport: typeof import('./components/Plugins/Submodels/RailwayFireProtection_v1_0/components/RailwayFireProtectionReport.vue')['default']

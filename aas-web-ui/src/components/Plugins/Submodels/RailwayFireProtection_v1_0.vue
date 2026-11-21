@@ -26,8 +26,10 @@
 
       <!-- Requirement sets: hazard level filter and tiles -->
       <v-card class="flex-grow-1">
-        <v-card-title>
+        <v-card-title class="d-flex flex-wrap align-center ga-2">
           <div class="text-body-large">Requirement sets</div>
+          <v-spacer />
+          <RailwayFireProtectionFcilDownload :data="data" />
         </v-card-title>
 
         <v-card-text class="d-flex flex-column ga-4">
