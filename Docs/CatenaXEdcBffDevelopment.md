@@ -248,3 +248,29 @@ For multiple proxy IDs, use `CX_EDC_PROXY_CONFIG_JSON` or `CX_EDC_PROXY_CONFIG_F
 ```
 
 The infrastructure `catenaX.edc.proxyId` selects one of these server-side proxy entries.
+
+## 6. Supported Tractus-X EDC Versions
+
+The BFF works with Tractus-X EDC **0.12.x and 0.13.x**. This was checked against the OpenAPI specs and the release
+branches of [tractusx-edc](https://github.com/eclipse-tractusx/tractusx-edc).
+
+| Endpoint used by the BFF | Available in |
+| --- | --- |
+| `/v3/assets`, `/v3/policydefinitions`, `/v3/contractdefinitions` | 0.8.0–0.13.0, deprecated in 0.13.0 |
+| `/v3/catalog/request` | 0.8.0–0.13.0, deprecated in 0.13.0 |
+| `/v3/edrs`, `/v3/edrs/request`, `/v3/edrs/{id}/dataaddress` | 0.8.0–0.13.0 |
+| `/v4alpha/connectordiscovery/dspversionparams` | from 0.11.0, deprecated in 0.13.0 |
+| `/v4alpha/connectordiscovery/connectors` | from 0.12.0, deprecated in 0.13.0 |
+
+Older versions miss parts of the connector discovery, and versions before 0.11 do not support DSP 2025-1 or the
+Catena-X 2025/9 policy context the policy templates use. Between 0.12.x and 0.13.0 the request bodies of all endpoints
+above are the same, and the policy validation for `/v3/policydefinitions` is unchanged.
+
+0.13.0 also serves the connector discovery under `/v3/connectordiscovery` and marks `/v4alpha` as deprecated, to be
+removed in a future release. `/v4alpha` still works on 0.13.0 and on the tractusx-edc `main` branch (0.14.0-SNAPSHOT),
+so the BFF keeps using it.
+
+The BFF therefore has no setting for the EDC version. A per-proxy version setting was tried and dropped, because it had
+no effect yet. Add one when a supported version needs different paths or request bodies (for example once `/v4alpha`
+is removed), or when the UI needs the version (for example for version-specific policy templates). Accept unknown
+versions with a warning then, instead of refusing to start, so that an EDC upgrade does not stop the BFF.

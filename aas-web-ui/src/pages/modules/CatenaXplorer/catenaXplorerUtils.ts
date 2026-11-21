@@ -113,7 +113,6 @@ export function buildEdcShellDescriptorsCurlCommand (
   endpointUrl: string,
   counterPartyId: string,
   counterPartyAddress: string,
-  protocol: string,
   assetIdName: string,
   assetIdValue: string,
   transferProcessId?: string,
@@ -122,7 +121,6 @@ export function buildEdcShellDescriptorsCurlCommand (
   const requestBody: Record<string, unknown> = {
     counterPartyId: toTrimmedString(counterPartyId),
     counterPartyAddress: toTrimmedString(counterPartyAddress),
-    protocol: toTrimmedString(protocol),
     limit: 100,
   }
   const name = toTrimmedString(assetIdName)

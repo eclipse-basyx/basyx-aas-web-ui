@@ -1,0 +1,26 @@
+{
+  "@context": {
+    "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+    "edc": "https://w3id.org/edc/v0.0.1/ns/",
+    "tx": "https://w3id.org/tractusx/v0.0.1/ns/",
+    "tx-auth": "https://w3id.org/tractusx/auth/",
+    "cx-policy": "https://w3id.org/catenax/policy/",
+    "odrl": "http://www.w3.org/ns/odrl/2/"
+  },
+  "@id": "{{Asset ID|Enter a unique asset identifier, e.g. a UUID|This will be the @id of your asset}}",
+  "@type": "Asset",
+  "properties": {
+    "id": "{{Asset ID|Enter a unique asset identifier, e.g. a UUID|This will be the @id of your asset}}",
+    "displayName": "{{Asset Display Name|Enter the display name of the asset|}}",
+    "description": "{{Asset Description|Enter the description of the asset|}}"
+  },
+  "privateProperties": {},
+  "dataAddress": {
+    "type": "HttpData",
+    "baseUrl": "{{Asset Endpoint|Enter the endpoint of the asset|}}",
+    "oauth2:clientId": "{{Endpoint client ID||}}",
+    "oauth2:clientSecretKey": "{{Endpoint client secret key||}}",
+    "oauth2:tokenUrl": "{{Token endpoint||}}",
+    "oauth2:scope": "{{Token scope||}}"
+  }
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { capitalizeFirstLetter, firstLetterToLowerCase, hasContent, safeSegment, stripLastCharacter } from '@/utils/StringUtils'
+import { capitalizeFirstLetter, firstLetterToLowerCase, hasContent, safeSegment, splitEmbeddedHtml, stripLastCharacter } from '@/utils/StringUtils'
 
 describe('StringUtils.ts; Tests for \'capitalizeFirstLetter()\'', () => {
   // Define test data for capitalizeFirstLetter()
@@ -208,5 +208,31 @@ describe('StringUtils.ts; Tests for \'hasContent()\'', () => {
         expect(value.toUpperCase()).toBe('VALID STRING')
       }
     })
+  })
+})
+
+describe('StringUtils.ts; Tests for \'splitEmbeddedHtml()\'', () => {
+  it('separates a quoted HTML error page from the message around it', () => {
+    const text = 'Status: 502\nDetails: Unable to obtain credentials: was 503: <html>\r\n<head><title>503</title></head>\r\n</html>\nRoute: POST /catalog'
+
+    expect(splitEmbeddedHtml(text)).toEqual([
+      { html: false, text: 'Status: 502\nDetails: Unable to obtain credentials: was 503:' },
+      { html: true, text: '<html>\r\n<head><title>503</title></head>\r\n</html>' },
+      { html: false, text: 'Route: POST /catalog' },
+    ])
+  })
+
+  it('keeps the doctype with the HTML and takes an unclosed document up to the end', () => {
+    expect(splitEmbeddedHtml('Failed: <!DOCTYPE html>\n<html lang="en"><body>Bad Gateway')).toEqual([
+      { html: false, text: 'Failed:' },
+      { html: true, text: '<!DOCTYPE html>\n<html lang="en"><body>Bad Gateway' },
+    ])
+  })
+
+  it('returns a text without HTML document as single part', () => {
+    expect(splitEmbeddedHtml('Value <b>bold</b> is not a document')).toEqual([
+      { html: false, text: 'Value <b>bold</b> is not a document' },
+    ])
+    expect(splitEmbeddedHtml('  ')).toEqual([])
   })
 })

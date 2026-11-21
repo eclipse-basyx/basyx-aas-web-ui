@@ -3,16 +3,20 @@ import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
 
 const mocks = vi.hoisted(() => ({
   consumeLastRequestFailureDetails: vi.fn(),
+  deleteRequest: vi.fn(),
   getRequest: vi.fn(),
   postRequest: vi.fn(),
+  putRequest: vi.fn(),
   basePath: '/ui/',
 }))
 
 vi.mock('@/composables/RequestHandling', () => ({
   useRequestHandling: () => ({
     consumeLastRequestFailureDetails: mocks.consumeLastRequestFailureDetails,
+    deleteRequest: mocks.deleteRequest,
     getRequest: mocks.getRequest,
     postRequest: mocks.postRequest,
+    putRequest: mocks.putRequest,
   }),
 }))
 
@@ -111,10 +115,286 @@ describe('CatenaXEdcClient', () => {
         counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
       }),
       expect.any(Headers),
-      'requesting EDC catalog',
+      'requesting catalog',
       true,
     )
-    expect(result).toEqual({ dataset: [] })
+    expect(result).toEqual({ success: true, data: { dataset: [] } })
+  })
+
+  it('returns the status and EDC error details of a failed catalog request', async () => {
+    mocks.postRequest.mockResolvedValue({
+      success: false,
+      status: 502,
+      details: 'Unable to obtain credentials: Server response was 503',
+    })
+
+    const result = await useCatenaXEdcClient().requestCatalog('default', {
+      counterPartyId: 'TEST_COUNTERPARTY_ID',
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+    })
+
+    expect(result).toEqual({
+      success: false,
+      status: 502,
+      details: 'Unable to obtain credentials: Server response was 503',
+    })
+  })
+
+  it.each([
+    {
+      context: 'querying Assets',
+      data: [{ '@id': 'asset-1', 'properties': {}, 'dataAddress': {} }],
+      query: () => useCatenaXEdcClient().queryAssets('default'),
+      resource: 'assets',
+    },
+    {
+      context: 'querying Contracts',
+      data: [{ '@id': 'contract-1' }],
+      query: () => useCatenaXEdcClient().queryContractDefinitions('default'),
+      resource: 'contractdefinitions',
+    },
+    {
+      context: 'querying Policies',
+      data: [{ '@id': 'policy-1' }],
+      query: () => useCatenaXEdcClient().queryPolicyDefinitions('default'),
+      resource: 'policydefinitions',
+    },
+  ])('queries $resource through the EDC proxy', async ({ context, data, query, resource }) => {
+    mocks.postRequest.mockResolvedValue({
+      success: true,
+      data,
+    })
+
+    const result = await query()
+
+    expect(mocks.postRequest).toHaveBeenCalledWith(
+      `/ui/api/catena-x/edc/default/${resource}/request`,
+      '{}',
+      expect.any(Headers),
+      context,
+      true,
+    )
+    expect(result).toEqual({ success: true, data })
+  })
+
+  it('returns the status and EDC error details of a failed resource query', async () => {
+    mocks.postRequest.mockResolvedValue({ success: false, status: 502, details: 'Unable to obtain credentials' })
+
+    const result = await useCatenaXEdcClient().queryAssets('default')
+
+    expect(result).toEqual({ success: false, status: 502, details: 'Unable to obtain credentials' })
+  })
+
+  it.each([
+    {
+      context: 'creating Asset',
+      create: () => useCatenaXEdcClient().createAsset('default', {
+        '@id': 'asset-1',
+        'properties': {},
+        'dataAddress': {},
+      }),
+      id: 'asset-1',
+      payload: { '@id': 'asset-1', 'properties': {}, 'dataAddress': {} },
+      resource: 'assets',
+    },
+    {
+      context: 'creating Contract',
+      create: () => useCatenaXEdcClient().createContractDefinition('default', {
+        '@id': 'contract-1',
+        'accessPolicyId': 'access-1',
+        'contractPolicyId': 'usage-1',
+        'assetsSelector': [],
+      }),
+      id: 'contract-1',
+      payload: {
+        '@id': 'contract-1',
+        'accessPolicyId': 'access-1',
+        'contractPolicyId': 'usage-1',
+        'assetsSelector': [],
+      },
+      resource: 'contractdefinitions',
+    },
+    {
+      context: 'creating Policy',
+      create: () => useCatenaXEdcClient().createPolicyDefinition('default', {
+        '@id': 'policy-1',
+        'policy': {},
+      }),
+      id: 'policy-1',
+      payload: { '@id': 'policy-1', 'policy': {} },
+      resource: 'policydefinitions',
+    },
+  ])('creates $resource through the EDC proxy', async ({ context, create, id, payload, resource }) => {
+    mocks.postRequest.mockResolvedValue({
+      success: true,
+      data: { '@id': id, 'createdAt': 1 },
+    })
+
+    const result = await create()
+
+    expect(mocks.postRequest).toHaveBeenCalledWith(
+      `/ui/api/catena-x/edc/default/${resource}`,
+      JSON.stringify(payload),
+      expect.any(Headers),
+      context,
+      true,
+    )
+    expect(result).toEqual({ success: true, data: { '@id': id, 'createdAt': 1 } })
+  })
+
+  it('returns the status and error details of a failed creation', async () => {
+    mocks.postRequest.mockResolvedValue({
+      success: false,
+      status: 409,
+      details: 'Asset with ID asset-1 already exists',
+    })
+
+    const result = await useCatenaXEdcClient().createAsset('default', {
+      '@id': 'asset-1',
+      'properties': {},
+      'dataAddress': {},
+    })
+
+    expect(result).toEqual({ success: false, status: 409, details: 'Asset with ID asset-1 already exists' })
+  })
+
+  it('returns a failure without request when no proxy is given', async () => {
+    const result = await useCatenaXEdcClient().createAsset(' ', { properties: {}, dataAddress: {} })
+
+    expect(mocks.postRequest).not.toHaveBeenCalled()
+    expect(result).toEqual({ success: false })
+  })
+
+  it.each([
+    {
+      context: 'updating Asset',
+      id: 'asset/1',
+      payload: { '@id': 'asset/1', 'properties': {}, 'dataAddress': {} },
+      resource: 'assets',
+      update: () => useCatenaXEdcClient().updateAsset('default', 'asset/1', {
+        '@id': 'asset/1',
+        'properties': {},
+        'dataAddress': {},
+      }),
+    },
+    {
+      context: 'updating Contract',
+      id: 'contract/1',
+      payload: {
+        '@id': 'contract/1',
+        'accessPolicyId': 'access-1',
+        'contractPolicyId': 'usage-1',
+        'assetsSelector': [],
+      },
+      resource: 'contractdefinitions',
+      update: () => useCatenaXEdcClient().updateContractDefinition('default', 'contract/1', {
+        '@id': 'contract/1',
+        'accessPolicyId': 'access-1',
+        'contractPolicyId': 'usage-1',
+        'assetsSelector': [],
+      }),
+    },
+    {
+      context: 'updating Policy',
+      id: 'policy/1',
+      payload: { '@id': 'policy/1', 'policy': {} },
+      resource: 'policydefinitions',
+      update: () => useCatenaXEdcClient().updatePolicyDefinition('default', 'policy/1', {
+        '@id': 'policy/1',
+        'policy': {},
+      }),
+    },
+  ])('updates $resource through the EDC proxy', async ({ context, id, payload, resource, update }) => {
+    mocks.putRequest.mockResolvedValue({ success: true })
+
+    const result = await update()
+
+    expect(mocks.putRequest).toHaveBeenCalledWith(
+      `/ui/api/catena-x/edc/default/${resource}/${encodeURIComponent(id)}`,
+      JSON.stringify(payload),
+      expect.any(Headers),
+      context,
+      true,
+    )
+    expect(result).toEqual({ success: true })
+  })
+
+  it.each([
+    {
+      context: 'deleting Asset',
+      deleteResource: () => useCatenaXEdcClient().deleteAsset('default', 'asset/1'),
+      id: 'asset/1',
+      resource: 'assets',
+    },
+    {
+      context: 'deleting Contract',
+      deleteResource: () => useCatenaXEdcClient().deleteContractDefinition('default', 'contract/1'),
+      id: 'contract/1',
+      resource: 'contractdefinitions',
+    },
+    {
+      context: 'deleting Policy',
+      deleteResource: () => useCatenaXEdcClient().deletePolicyDefinition('default', 'policy/1'),
+      id: 'policy/1',
+      resource: 'policydefinitions',
+    },
+  ])('deletes $resource through the EDC proxy', async ({ context, deleteResource, id, resource }) => {
+    mocks.deleteRequest.mockResolvedValue({ success: true })
+
+    const result = await deleteResource()
+
+    expect(mocks.deleteRequest).toHaveBeenCalledWith(
+      `/ui/api/catena-x/edc/default/${resource}/${encodeURIComponent(id)}`,
+      expect.any(Headers),
+      context,
+      true,
+    )
+    expect(result).toEqual({ success: true })
+  })
+
+  it('returns the status and error details of a failed update', async () => {
+    mocks.putRequest.mockResolvedValue({
+      success: false,
+      status: 400,
+      details: 'mandatory object \'https://w3id.org/edc/v0.0.1/ns/dataAddress\' is missing',
+    })
+
+    const result = await useCatenaXEdcClient().updateAsset('default', 'asset-1', {
+      '@id': 'asset-1',
+      'properties': {},
+      'dataAddress': {},
+    })
+
+    expect(result).toEqual({
+      success: false,
+      status: 400,
+      details: 'mandatory object \'https://w3id.org/edc/v0.0.1/ns/dataAddress\' is missing',
+    })
+  })
+
+  it('returns the status and error details of a failed deletion', async () => {
+    mocks.deleteRequest.mockResolvedValue({
+      success: false,
+      status: 409,
+      details: 'PolicyDefinition policy-1 cannot be deleted as it is referenced by at least one contract',
+    })
+
+    const result = await useCatenaXEdcClient().deletePolicyDefinition('default', 'policy-1')
+
+    expect(result).toEqual({
+      success: false,
+      status: 409,
+      details: 'PolicyDefinition policy-1 cannot be deleted as it is referenced by at least one contract',
+    })
+  })
+
+  it('returns a failure without request when updating or deleting without an ID', async () => {
+    await expect(useCatenaXEdcClient().updateAsset('default', ' ', { properties: {}, dataAddress: {} }))
+      .resolves
+      .toEqual({ success: false })
+    await expect(useCatenaXEdcClient().deleteAsset('default', '')).resolves.toEqual({ success: false })
+    expect(mocks.putRequest).not.toHaveBeenCalled()
+    expect(mocks.deleteRequest).not.toHaveBeenCalled()
   })
 
   it('posts DTR descriptor page requests through the EDC proxy', async () => {
@@ -211,6 +491,38 @@ describe('CatenaXEdcClient', () => {
       true,
     )
     expect(result?.data).toEqual({ id: 'submodel-1', submodelElements: [] })
+  })
+
+  it('posts data fetch requests through the EDC proxy and returns their failures', async () => {
+    const request = {
+      counterPartyId: 'TEST_PARTICIPANT_ID',
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+      assetId: 'asset-1',
+    }
+    mocks.postRequest.mockResolvedValueOnce({
+      success: true,
+      data: { data: { temperature: 42 }, edc: { transferProcessId: 'transfer-1' } },
+    })
+    mocks.postRequest.mockResolvedValueOnce({ success: false, status: 502, details: 'Contract negotiation failed (400)' })
+
+    const { fetchData } = useCatenaXEdcClient()
+
+    expect(await fetchData('default', request)).toEqual({
+      success: true,
+      data: { data: { temperature: 42 }, edc: { transferProcessId: 'transfer-1' } },
+    })
+    expect(mocks.postRequest).toHaveBeenCalledWith(
+      '/ui/api/catena-x/edc/default/data/fetch',
+      JSON.stringify(request),
+      expect.any(Headers),
+      'fetching data through EDC',
+      true,
+    )
+    expect(await fetchData('default', request)).toEqual({
+      success: false,
+      status: 502,
+      details: 'Contract negotiation failed (400)',
+    })
   })
 
   it('exposes the last EDC request failure details', () => {

@@ -110,3 +110,30 @@ export function safeSegment (value: string, fallback: string): string {
 export function hasContent (val?: string | null): val is string {
   return typeof val === 'string' && val.trim().length > 0
 }
+
+/**
+ * Splits a text into its plain text and the HTML documents quoted in it, e.g. the error page of a server
+ * in an error message. Parts are trimmed, empty parts are left out.
+ *
+ * @example
+ * splitEmbeddedHtml('Request failed: <html><body>503</body></html>')
+ * // [{ html: false, text: 'Request failed:' }, { html: true, text: '<html><body>503</body></html>' }]
+ */
+export function splitEmbeddedHtml (text: string): Array<{ html: boolean, text: string }> {
+  const parts: Array<{ html: boolean, text: string }> = []
+  const addPart = (part: string, html: boolean): void => {
+    if (part.trim() !== '') {
+      parts.push({ html, text: part.trim() })
+    }
+  }
+
+  let index = 0
+  for (const match of text.matchAll(/(?:<!doctype\s+html[^>]*>\s*)?<html[\s>][\s\S]*?(?:<\/html>|$)/gi)) {
+    addPart(text.slice(index, match.index), false)
+    addPart(match[0], true)
+    index = match.index + match[0].length
+  }
+  addPart(text.slice(index), false)
+
+  return parts
+}
