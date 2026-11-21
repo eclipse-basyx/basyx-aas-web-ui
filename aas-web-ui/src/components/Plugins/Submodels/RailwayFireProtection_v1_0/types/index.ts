@@ -1,0 +1,120 @@
+export type LangString = {
+  language?: string
+  text?: string
+}
+
+/** A Submodel or SubmodelElement as returned by `setData`, i.e. including its `path` */
+export type SubmodelElementLike = {
+  [key: string]: any
+  idShort?: string
+  path?: string
+  modelType?: string
+  contentType?: string
+  value?: any
+}
+
+/**
+ * Hazard level values defined in IDTA 02102 (Table 6):
+ * HL1–HL3 = "Compliant: Hazard Level 1–3", AFNR = "Approved Functional Necessity Report",
+ * MTR = "Missing Test Results", NC = "Not Compliant"
+ */
+export type HazardLevelCode = 'HL1' | 'HL2' | 'HL3' | 'AFNR' | 'MTR' | 'NC' | 'unknown'
+
+export type HazardLevel = {
+  code: HazardLevelCode
+  /** Value as stored in the submodel (surrounding quotes removed) */
+  raw: string
+}
+
+export type ManufacturerInformation = {
+  name: string
+  productDesignation: string
+  orderCode: string
+  articleNumber: string
+}
+
+export type Material = {
+  name: string
+  manufacturer: string
+  /** MaterialCharacteristics: normalized index (0–100) according to EN 45545-2 */
+  characteristics: { min: string, max: string } | null
+  totalMassPerUnit: string
+  combustibleMassPerUnit: string
+  massUnit: string
+  testedCombination: string
+}
+
+export type FireTest = {
+  key: string
+  idShort: string
+  procedure: string
+  result: string
+  date: string
+  comment: string
+  reportNumber: string
+}
+
+export type LabInformation = {
+  name: string
+  accreditation: string
+  author: string
+  /** The LabAddress SMC (drop-in of Contact Information 1.0), used to format the address */
+  address: SubmodelElementLike | null
+  email: string
+  phone: string
+  website: string
+}
+
+export type FireReport = {
+  key: string
+  /** Position in the `Reports` list */
+  index: number
+  idShort: string
+  /** Report numbers of the contained tests, without duplicates */
+  reportNumbers: string[]
+  file: SubmodelElementLike | null
+  comment: string
+  tests: FireTest[]
+  lab: LabInformation | null
+}
+
+/**
+ * Result of resolving one `ReportReference`:
+ * - `resolved`: the reference points exactly to a report of this submodel
+ * - `repaired`: the key path is broken, but the report could be determined from its keys
+ * - `external`: a GlobalReference (e.g. a URL to a report document)
+ * - `unresolved`: the target could not be determined
+ */
+export type ReportLinkStatus = 'resolved' | 'repaired' | 'external' | 'unresolved'
+
+export type ReportLink = {
+  key: string
+  status: ReportLinkStatus
+  /** Index into `RailwayFireProtectionData.reports` for `resolved` and `repaired` links */
+  reportIndex: number | null
+  /** Target of an `external` link */
+  url: string
+  /** Human-readable key chain of the reference, e.g. "Submodel: … › FCIL › Reports › 0" */
+  keys: string
+  /** Why a link was repaired or could not be resolved */
+  note: string
+}
+
+export type RequirementsSet = {
+  key: string
+  /** Position in the `RequirementsSets` list */
+  index: number
+  idShort: string
+  /** Shown name: the requirement set code from the `Requirement` value (e.g. "R22"), otherwise the idShort or "Set N" */
+  name: string
+  requirement: string
+  hazardLevel: HazardLevel
+  reportLinks: ReportLink[]
+}
+
+export type RailwayFireProtectionData = {
+  manufacturer: ManufacturerInformation | null
+  material: Material | null
+  requirementsSets: RequirementsSet[]
+  reports: FireReport[]
+}
