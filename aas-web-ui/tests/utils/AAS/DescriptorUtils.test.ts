@@ -237,6 +237,33 @@ describe.each(['AAS', 'SUBMODEL'])('%s 3.x endpoint resolution', interfaceName =
       .toBe(`https://example.com/${interfaceName}-3.0`)
   })
 
+  it('prefers the endpoint matching the configured repository', () => {
+    const advertised = descriptor(`${interfaceName}-3.0`, `${interfaceName}-3.0`)
+    advertised.endpoints[0].protocolInformation.href = 'https://internal.example/shell'
+    advertised.endpoints[1].protocolInformation.href = 'https://public.example/shell'
+
+    expect(extractEndpointHref(advertised, `${interfaceName}-3.0`, 'https://public.example/shell'))
+      .toBe('https://public.example/shell')
+  })
+
+  it('matches configured endpoints after URL canonicalization', () => {
+    const advertised = descriptor(`${interfaceName}-3.0`, `${interfaceName}-3.0`)
+    advertised.endpoints[0].protocolInformation.href = 'https://internal.example/shell'
+    advertised.endpoints[1].protocolInformation.href = 'https://example.com/shell/'
+
+    expect(extractEndpointHref(advertised, `${interfaceName}-3.0`, 'https://EXAMPLE.com:443/shell'))
+      .toBe('https://example.com/shell/')
+  })
+
+  it('keeps the existing endpoint priority when the configured repository does not match', () => {
+    const advertised = descriptor(`${interfaceName}-3.0`, `${interfaceName}-3.0`)
+    advertised.endpoints[0].protocolInformation.href = 'https://first.example/shell'
+    advertised.endpoints[1].protocolInformation.href = 'https://second.example/shell'
+
+    expect(extractEndpointHref(advertised, `${interfaceName}-3.0`, 'https://other.example/shell'))
+      .toBe('https://first.example/shell')
+  })
+
   it.each(['3.0', '3.2', '3.10', '3.2.1'])('falls back to a repository endpoint with version %s', version => {
     const advertisedInterface = `${interfaceName}-REPOSITORY-${version}`
     expect(extractEndpointHref(descriptor(advertisedInterface), `${interfaceName}-3.0`))

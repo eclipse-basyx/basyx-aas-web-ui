@@ -498,6 +498,7 @@
         aasEndpoint = await getAasEndpointById(
           aasId,
           sourceAasRegistryUrl,
+          aasEndpoint,
         )
       }
 
@@ -582,6 +583,7 @@
         destinationAasEndpoint = await getAasEndpointById(
           aasId,
           destinationAasRegistryUrl,
+          destinationAasEndpoint,
         )
       }
 
