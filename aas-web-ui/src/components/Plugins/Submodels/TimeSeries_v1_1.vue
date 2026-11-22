@@ -229,6 +229,7 @@
     DEFAULT_AUTO_REFRESH,
     validateAutoRefreshSelection,
   } from '@/components/Plugins/Submodels/TimeSeries/autoRefresh'
+  import { findExternalSegmentData } from '@/components/Plugins/Submodels/TimeSeries/externalSegment'
   import {
     cloneTimeRangeSelection,
     DEFAULT_TIME_RANGE,
@@ -536,9 +537,7 @@
     timeVariableId: string,
     selectedYVariables: any[],
   ): Promise<void> {
-    // console.log('Selected Segment: ', selectedSegment.value);
-    // get the Data File/Blob submodel element
-    const dataFile = selectedSegment.value.value.find((smc: any) => checkIdShort(smc, 'Data'))
+    const dataFile = findExternalSegmentData(selectedSegment.value)
     // determine the path to the file
     let path = ''
     if (dataFile?.modelType === 'File') {
@@ -552,7 +551,9 @@
           = props.submodelElementData.path
             + '/submodel-elements/Segments.'
             + selectedSegment.value.idShort
-            + '.Data/attachment'
+            + '.'
+            + dataFile.idShort
+            + '/attachment'
       }
     }
 
@@ -562,7 +563,7 @@
         timeout: 6000,
         color: 'warning',
         btnColor: 'buttonText',
-        text: 'No valid file path available for ExternalSegment Data.',
+        text: 'No File or Blob with a valid path available in the ExternalSegment.',
       })
       finishAsyncRequest(requestId)
       return
