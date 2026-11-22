@@ -2,11 +2,12 @@ import { checkSemanticId } from '@/utils/AAS/SemanticIdUtils'
 
 // IDTA 02008-1-1 names the data of an ExternalSegment File and Blob.
 // Data is the idShort used by earlier BaSyx examples and stays supported.
+// As with checkIdShort, idShorts are compared ignoring case.
 const DATA_SEMANTIC_IDS = [
   'https://admin-shell.io/idta/TimeSeries/File/1/1',
   'https://admin-shell.io/idta/TimeSeries/Blob/1/1',
 ]
-const DATA_ID_SHORTS = new Set(['File', 'Blob', 'Data'])
+const DATA_ID_SHORTS = new Set(['file', 'blob', 'data'])
 
 /**
  * Finds the File or Blob that holds the data of an ExternalSegment.
@@ -17,6 +18,6 @@ export function findExternalSegmentData (segment: any): any | undefined {
   const candidates = elements.filter(element =>
     (element?.modelType === 'File' || element?.modelType === 'Blob')
     && (DATA_SEMANTIC_IDS.some(semanticId => checkSemanticId(element, semanticId))
-      || DATA_ID_SHORTS.has(element.idShort)))
+      || (typeof element.idShort === 'string' && DATA_ID_SHORTS.has(element.idShort.toLowerCase()))))
   return candidates.find(element => typeof element.value === 'string' && element.value.trim() !== '') ?? candidates[0]
 }

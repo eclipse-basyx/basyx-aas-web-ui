@@ -25,6 +25,14 @@ describe('findExternalSegmentData', () => {
     expect(findExternalSegmentData({ value: [data] })).toBe(data)
   })
 
+  it('matches the idShorts ignoring case, as checkIdShort does', () => {
+    const data = { idShort: 'data', modelType: 'File', value: 'https://example.com/data.csv' }
+    const file = { idShort: 'FILE', modelType: 'File', value: '/profile.csv' }
+
+    expect(findExternalSegmentData({ value: [data] })).toBe(data)
+    expect(findExternalSegmentData({ value: [file] })).toBe(file)
+  })
+
   it('prefers the element that has a value when File and Blob are both present', () => {
     const file = { idShort: 'File', modelType: 'File', value: '' }
     const blob = { idShort: 'Blob', modelType: 'Blob', value: '/profile.csv' }
