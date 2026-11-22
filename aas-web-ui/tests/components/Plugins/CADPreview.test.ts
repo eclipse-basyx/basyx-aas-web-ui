@@ -103,6 +103,7 @@ const formats = [
 
 function mountPreview (contentType: string, extra: Record<string, unknown> = {}) {
   return mount(CADPreview, {
+    attachTo: document.body,
     props: { submodelElementData: { modelType: 'File', contentType, ...extra } },
     global: {
       stubs: {
