@@ -26,7 +26,9 @@ describe('EDC BFF config', () => {
       apiKeyConfigured: true,
       participantId: 'TEST_PARTICIPANT_ID',
       allowedCounterPartyAddressCount: 1,
+      managementWritesAllowed: false,
     })
+    expect(proxy?.allowManagementWrites).toBe(false)
     expect(JSON.stringify(redacted)).not.toContain('TEST_API_KEY')
     expect(JSON.stringify(redacted)).not.toContain('consumer-edc.test')
   })
@@ -82,6 +84,34 @@ describe('EDC BFF config', () => {
 
     expect(proxies.get('partnerA')?.managementUrl).toBe('https://consumer-a.test/management')
     expect(proxies.get('partnerB')?.apiKeyHeader).toBe('X-Api-Key')
+  })
+
+  it('allows management writes only when enabled per proxy', () => {
+    const shorthandProxies = loadProxyConfigMap({
+      CX_EDC_DEFAULT_MANAGEMENT_URL: 'https://consumer-edc.test/management',
+      CX_EDC_DEFAULT_API_KEY: 'TEST_API_KEY',
+      CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES: 'true',
+    })
+    const jsonProxies = loadProxyConfigMap({
+      CX_EDC_PROXY_CONFIG_JSON: JSON.stringify({
+        proxies: {
+          writable: {
+            managementUrl: 'https://consumer-a.test/management',
+            apiKey: 'TEST_API_KEY_A',
+            allowManagementWrites: true,
+          },
+          readOnly: {
+            managementUrl: 'https://consumer-b.test/management',
+            apiKey: 'TEST_API_KEY_B',
+          },
+        },
+      }),
+    })
+
+    expect(shorthandProxies.get('default')?.allowManagementWrites).toBe(true)
+    expect(redactProxyConfig(shorthandProxies.get('default'), 'default').managementWritesAllowed).toBe(true)
+    expect(jsonProxies.get('writable')?.allowManagementWrites).toBe(true)
+    expect(jsonProxies.get('readOnly')?.allowManagementWrites).toBe(false)
   })
 
   it('requires JWKS configuration for JWT auth mode', () => {

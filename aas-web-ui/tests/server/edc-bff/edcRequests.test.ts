@@ -26,6 +26,7 @@ function createProxyConfig (): EdcProxyConfig {
     apiKeyHeader: 'X-Api-Key',
     allowedCounterPartyAddresses: ['https://counterparty-dsp.test/api/v1/dsp'],
     allowInsecureCounterPartyAddresses: false,
+    allowManagementWrites: false,
     requestTimeoutMs: 30_000,
     edrPollingAttempts: 30,
     edrPollingIntervalMs: 2000,

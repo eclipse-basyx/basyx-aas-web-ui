@@ -19,6 +19,7 @@ export interface CatenaXEdcStatus {
   dataPlaneProxyUrlConfigured: boolean
   allowedCounterPartyAddressCount: number
   allowInsecureCounterPartyAddresses: boolean
+  managementWritesAllowed: boolean
 }
 
 export interface CatenaXEdcDiscoveryRequest {

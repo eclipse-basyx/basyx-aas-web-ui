@@ -20,6 +20,7 @@ interface RawProxyConfig {
   dataPlaneProxyUrl?: unknown
   allowedCounterPartyAddresses?: unknown
   allowInsecureCounterPartyAddresses?: unknown
+  allowManagementWrites?: unknown
   requestTimeoutMs?: unknown
   edrPollingAttempts?: unknown
   edrPollingIntervalMs?: unknown
@@ -110,6 +111,7 @@ export function redactProxyConfig (proxy: EdcProxyConfig | undefined, id: string
     dataPlaneProxyUrlConfigured: Boolean(proxy?.dataPlaneProxyUrl),
     allowedCounterPartyAddressCount: proxy?.allowedCounterPartyAddresses.length ?? 0,
     allowInsecureCounterPartyAddresses: proxy?.allowInsecureCounterPartyAddresses ?? false,
+    managementWritesAllowed: proxy?.allowManagementWrites ?? false,
   }
 }
 
@@ -193,6 +195,7 @@ function readShorthandProxyConfig (env: Env): RawProxyConfig | undefined {
     participantId: env.CX_EDC_DEFAULT_PARTICIPANT_ID,
     dspEndpoint: env.CX_EDC_DEFAULT_DSP_ENDPOINT,
     dataPlaneProxyUrl: env.CX_EDC_DEFAULT_DATA_PLANE_PROXY_URL,
+    allowManagementWrites: env.CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES,
   }
 }
 
@@ -221,6 +224,8 @@ function normalizeProxyConfig (
     allowInsecureCounterPartyAddresses:
       parseBoolean(rawProxy.allowInsecureCounterPartyAddresses)
       || parseBoolean(env.CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES),
+    // Creating, updating and deleting assets, policies and contracts is opt-in per proxy, in every auth mode
+    allowManagementWrites: parseBoolean(rawProxy.allowManagementWrites),
     requestTimeoutMs: parseInteger(
       rawProxy.requestTimeoutMs ?? env.CX_EDC_REQUEST_TIMEOUT_MS,
       defaultRequestTimeoutMs,

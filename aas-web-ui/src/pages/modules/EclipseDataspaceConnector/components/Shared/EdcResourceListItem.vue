@@ -68,25 +68,27 @@
         <v-sheet border>
           <v-list class="py-0" dense density="compact" slim>
 
-            <!-- Update -->
-            <v-list-item @click="emit('edit')">
-              <template #prepend>
-                <v-icon size="x-small">mdi-pencil</v-icon>
-              </template>
+            <template v-if="editable">
+              <!-- Update -->
+              <v-list-item @click="emit('edit')">
+                <template #prepend>
+                  <v-icon size="x-small">mdi-pencil</v-icon>
+                </template>
 
-              <v-list-item-subtitle>Edit {{ label }}</v-list-item-subtitle>
-            </v-list-item>
+                <v-list-item-subtitle>Edit {{ label }}</v-list-item-subtitle>
+              </v-list-item>
 
-            <!-- Delete -->
-            <v-list-item @click="emit('delete')">
-              <template #prepend>
-                <v-icon size="x-small">mdi-delete</v-icon>
-              </template>
+              <!-- Delete -->
+              <v-list-item @click="emit('delete')">
+                <template #prepend>
+                  <v-icon size="x-small">mdi-delete</v-icon>
+                </template>
 
-              <v-list-item-subtitle>Delete {{ label }}</v-list-item-subtitle>
-            </v-list-item>
+                <v-list-item-subtitle>Delete {{ label }}</v-list-item-subtitle>
+              </v-list-item>
 
-            <v-divider />
+              <v-divider />
+            </template>
             <!-- Copy ID to clipboard -->
             <v-list-item @click.stop="copyId()">
               <template #prepend>
@@ -111,6 +113,7 @@
     label: string // e.g. `Asset`, used in the menu texts
     icon: string
     selected: boolean
+    editable?: boolean // Offers Edit and Delete, only when the EDC BFF allows writes
   }>()
 
   const emit = defineEmits<{

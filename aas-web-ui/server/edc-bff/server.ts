@@ -206,6 +206,7 @@ async function handleManagementResourceRoute (
       return true
     }
     if (action === resource) {
+      assertManagementWritesAllowed(proxy)
       await handleJsonRequest(request, response, proxy, `/v3/${resource}`, 'POST')
       return true
     }
@@ -216,15 +217,29 @@ async function handleManagementResourceRoute (
   }
 
   if (request.method === 'PUT') {
+    assertManagementWritesAllowed(proxy)
     await handleUpdateRequest(request, response, proxy, action, resource)
     return true
   }
   if (request.method === 'DELETE') {
+    assertManagementWritesAllowed(proxy)
     await handleDeleteRequest(response, proxy, action, resource)
     return true
   }
 
   return false
+}
+
+/** Writes use the server's Management API key, so they need an explicit opt-in per proxy, also in auth mode `none`. */
+function assertManagementWritesAllowed (proxy: EdcProxyConfig): void {
+  if (!proxy.allowManagementWrites) {
+    const error = createHttpError(
+      'EDC management writes are disabled for this proxy',
+      403,
+      `Set allowManagementWrites to true for the EDC proxy "${proxy.id}" to create, update or delete assets, policies and contracts.`,
+    )
+    throw Object.assign(error, { code: 'EDC_MANAGEMENT_WRITES_DISABLED' })
+  }
 }
 
 async function handleDiscoveryRequest (

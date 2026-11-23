@@ -49,8 +49,11 @@ CX_EDC_DEFAULT_MANAGEMENT_URL=http://localhost:8182/management \
 CX_EDC_DEFAULT_API_KEY=<EDC_MANAGEMENT_API_KEY> \
 CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES='*' \
 CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES=true \
+CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES=true \
 pnpm bff:start
 ```
+
+`CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES=true` lets the Eclipse Dataspace Connector module create, update and delete assets, policies and contracts. Leave it out for a read-only BFF, e.g. for the CatenaXplorer alone.
 
 For watch mode, build and run the BFF together with:
 
@@ -223,6 +226,7 @@ CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES=true
 | `CX_EDC_DEFAULT_DATA_PLANE_PROXY_URL` | Optional data plane proxy metadata for later phases. |
 | `CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES` | Comma-separated provider DSP endpoint prefixes or `*`. |
 | `CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES` | Allows `http://` counterparty addresses for local testing. |
+| `CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES` | Set to `true` to allow creating, updating and deleting assets, policies and contracts through the default proxy. Default `false`, in every auth mode. |
 | `CX_EDC_REQUEST_TIMEOUT_MS` | Upstream EDC request timeout, default `30000`. |
 | `CX_EDC_EDR_POLLING_ATTEMPTS` | EDR polling attempts, default `30`. |
 | `CX_EDC_EDR_POLLING_INTERVAL_MS` | Delay between EDR polling attempts in milliseconds, default `2000`. |
@@ -236,7 +240,8 @@ For multiple proxy IDs, use `CX_EDC_PROXY_CONFIG_JSON` or `CX_EDC_PROXY_CONFIG_F
     "default": {
       "managementUrl": "http://localhost:8182/management",
       "apiKey": "<EDC_MANAGEMENT_API_KEY>",
-      "allowedCounterPartyAddresses": ["https://counterparty-dsp.test/api/v1/dsp"]
+      "allowedCounterPartyAddresses": ["https://counterparty-dsp.test/api/v1/dsp"],
+      "allowManagementWrites": true
     },
     "partner-test": {
       "managementUrl": "https://consumer-test.example/management",
@@ -248,6 +253,10 @@ For multiple proxy IDs, use `CX_EDC_PROXY_CONFIG_JSON` or `CX_EDC_PROXY_CONFIG_F
 ```
 
 The infrastructure `catenaX.edc.proxyId` selects one of these server-side proxy entries.
+
+### Management writes
+
+Reading the catalog, the DTR and Submodels works with every configured proxy. Creating, updating and deleting assets, policies and contracts is disabled by default, in every auth mode, because the BFF sends these requests with its own Management API key. Requests are refused with `403 EDC_MANAGEMENT_WRITES_DISABLED` until `allowManagementWrites` is `true` for the proxy (`CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES` for the default proxy). With `CX_EDC_BFF_AUTH_MODE=jwt`, every user with a valid token (and one of `CX_EDC_BFF_REQUIRED_ROLES`, if set) can then write. To keep browsing users read-only, give them a separate proxy without the flag. The Eclipse Dataspace Connector module reads `managementWritesAllowed` from the proxy status and offers create, edit and delete only when writes are allowed.
 
 ## 6. Supported Tractus-X EDC Versions
 

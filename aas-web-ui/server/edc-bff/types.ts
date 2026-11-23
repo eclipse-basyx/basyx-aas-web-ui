@@ -10,6 +10,7 @@ export interface EdcProxyConfig {
   dataPlaneProxyUrl?: string
   allowedCounterPartyAddresses: string[]
   allowInsecureCounterPartyAddresses: boolean
+  allowManagementWrites: boolean
   requestTimeoutMs: number
   edrPollingAttempts: number
   edrPollingIntervalMs: number
@@ -25,6 +26,7 @@ export interface RedactedEdcProxyConfig {
   dataPlaneProxyUrlConfigured: boolean
   allowedCounterPartyAddressCount: number
   allowInsecureCounterPartyAddresses: boolean
+  managementWritesAllowed: boolean
 }
 
 export interface EdcBffAuthConfig {

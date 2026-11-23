@@ -54,10 +54,17 @@ async function startUpstreamServer (
   }
 }
 
-async function startBffServer (upstreamPort: number, allowedCounterPartyAddresses: string[] = []): Promise<string> {
+async function startBffServer (
+  upstreamPort: number,
+  allowedCounterPartyAddresses: string[] = [],
+  { allowManagementWrites = false, auth = { mode: 'none', requiredRoles: [] } }: {
+    allowManagementWrites?: boolean
+    auth?: EdcBffRuntimeConfig['auth']
+  } = {},
+): Promise<string> {
   const config: EdcBffRuntimeConfig = {
     port: 0,
-    auth: { mode: 'none', requiredRoles: [] },
+    auth,
     proxies: new Map([
       ['default', {
         id: 'default',
@@ -66,6 +73,7 @@ async function startBffServer (upstreamPort: number, allowedCounterPartyAddresse
         apiKeyHeader: 'X-Api-Key',
         allowedCounterPartyAddresses,
         allowInsecureCounterPartyAddresses: false,
+        allowManagementWrites,
         requestTimeoutMs: 30_000,
         edrPollingAttempts: 30,
         edrPollingIntervalMs: 2000,
@@ -142,6 +150,7 @@ describe('EDC BFF server', () => {
           apiKeyHeader: 'X-Api-Key',
           allowedCounterPartyAddresses: [],
           allowInsecureCounterPartyAddresses: false,
+          allowManagementWrites: false,
           requestTimeoutMs: 30_000,
           edrPollingAttempts: 30,
           edrPollingIntervalMs: 2000,
@@ -184,6 +193,7 @@ describe('EDC BFF server', () => {
           apiKeyHeader: 'X-Api-Key',
           allowedCounterPartyAddresses: [],
           allowInsecureCounterPartyAddresses: false,
+          allowManagementWrites: false,
           requestTimeoutMs: 30_000,
           edrPollingAttempts: 30,
           edrPollingIntervalMs: 2000,
@@ -253,6 +263,7 @@ describe('EDC BFF server', () => {
           apiKeyHeader: 'X-Api-Key',
           allowedCounterPartyAddresses: [],
           allowInsecureCounterPartyAddresses: false,
+          allowManagementWrites: false,
           requestTimeoutMs: 30_000,
           edrPollingAttempts: 30,
           edrPollingIntervalMs: 2000,
@@ -298,7 +309,7 @@ describe('EDC BFF server', () => {
         }
         return undefined
       })
-      const baseUrl = await startBffServer(upstream.port)
+      const baseUrl = await startBffServer(upstream.port, [], { allowManagementWrites: true })
 
       const queryResponse = await fetch(`${baseUrl}/${resource}/request`, {
         method: 'POST',
@@ -355,6 +366,59 @@ describe('EDC BFF server', () => {
       ])
     },
   )
+
+  it.each(crudResources)(
+    'rejects creating, updating and deleting $resource unless management writes are allowed',
+    async ({ resource, id, entity }) => {
+      const encodedId = encodeURIComponent(id)
+      const upstream = await startUpstreamServer(() => [{ '@id': id }])
+      const baseUrl = await startBffServer(upstream.port)
+
+      const queryResponse = await fetch(`${baseUrl}/${resource}/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      })
+      const writeResponses = await Promise.all([
+        fetch(`${baseUrl}/${resource}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(entity),
+        }),
+        fetch(`${baseUrl}/${resource}/${encodedId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(entity),
+        }),
+        fetch(`${baseUrl}/${resource}/${encodedId}`, { method: 'DELETE' }),
+      ])
+
+      expect(queryResponse.status).toBe(200)
+      for (const writeResponse of writeResponses) {
+        expect(writeResponse.status).toBe(403)
+        await expect(writeResponse.json()).resolves.toMatchObject({
+          code: 'EDC_MANAGEMENT_WRITES_DISABLED',
+          status: 403,
+        })
+      }
+      expect(upstream.requests).toMatchObject([
+        { method: 'POST', url: `/management/v3/${resource}/request` },
+      ])
+    },
+  )
+
+  it('rejects management writes without a bearer token in JWT auth mode', async () => {
+    const upstream = await startUpstreamServer(() => undefined)
+    const baseUrl = await startBffServer(upstream.port, [], {
+      allowManagementWrites: true,
+      auth: { mode: 'jwt', jwksUrl: 'https://identity.test/certs', requiredRoles: ['edc-admin'] },
+    })
+
+    const deleteResponse = await fetch(`${baseUrl}/assets/asset-1`, { method: 'DELETE' })
+
+    expect(deleteResponse.status).toBe(401)
+    expect(upstream.requests).toHaveLength(0)
+  })
 
   it('serves DTR descriptor pages through the EDC flow without exposing secrets', async () => {
     upstreamServer = createHttpServer((request, response) => {
@@ -425,6 +489,7 @@ describe('EDC BFF server', () => {
           apiKeyHeader: 'X-Api-Key',
           allowedCounterPartyAddresses: ['https://counterparty-dsp.test/api/v1/dsp'],
           allowInsecureCounterPartyAddresses: false,
+          allowManagementWrites: false,
           requestTimeoutMs: 30_000,
           edrPollingAttempts: 30,
           edrPollingIntervalMs: 2000,
@@ -535,6 +600,7 @@ describe('EDC BFF server', () => {
           apiKeyHeader: 'X-Api-Key',
           allowedCounterPartyAddresses: ['https://counterparty-dsp.test/api/v1/dsp'],
           allowInsecureCounterPartyAddresses: false,
+          allowManagementWrites: false,
           requestTimeoutMs: 30_000,
           edrPollingAttempts: 30,
           edrPollingIntervalMs: 2000,

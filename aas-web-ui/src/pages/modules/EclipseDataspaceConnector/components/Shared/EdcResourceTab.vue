@@ -37,8 +37,8 @@
               @update:model-value="scrollToSelectedResource()"
             />
 
-            <!-- Menu -->
-            <v-menu>
+            <!-- Menu, only when the EDC BFF allows writes -->
+            <v-menu v-if="managementWritesAllowed">
               <template #activator="{ props: menuProps }">
                 <v-btn
                   v-bind="menuProps"
@@ -108,6 +108,7 @@
                   <template #default="{ item }">
                     <EdcResourceListItem
                       :key="item['@id']"
+                      :editable="managementWritesAllowed"
                       :icon="icon"
                       :label="label"
                       :resource="item"
@@ -205,10 +206,17 @@
     </v-layout>
   </v-container>
 
+  <!-- Create, update and delete dialogs only when the EDC BFF allows writes, also when opened by the route -->
   <!-- Create Dialogs, `onCreated` reloads the list and selects the created resource -->
-  <slot name="dialogs" :on-created="onCreated" :proxy-id="edcProxyId" />
+  <slot
+    v-if="managementWritesAllowed"
+    name="dialogs"
+    :on-created="onCreated"
+    :proxy-id="edcProxyId"
+  />
 
   <UpdateEdcResourceDialog
+    v-if="managementWritesAllowed"
     v-model="updateDialog.open"
     :label="label"
     :proxy-id="edcProxyId"
@@ -218,6 +226,7 @@
   />
 
   <slot
+    v-if="managementWritesAllowed"
     :dialog="deleteDialog"
     name="delete-dialog"
     :on-deleted="loadResources"
@@ -240,6 +249,7 @@
   import DeleteEdcResourceDialog from '@/pages/modules/EclipseDataspaceConnector/components/Shared/DeleteEdcResourceDialog.vue'
   import EdcResourceListItem from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceListItem.vue'
   import UpdateEdcResourceDialog from '@/pages/modules/EclipseDataspaceConnector/components/Shared/UpdateEdcResourceDialog.vue'
+  import { useEdcManagementWrites } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcManagementWrites'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
 
@@ -293,6 +303,7 @@
   // Computed properties
   const selectedEdcConfig = computed(() => infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null)
   const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? 'default')
+  const { managementWritesAllowed } = useEdcManagementWrites(edcProxyId)
   // Full height - header - tabs - footer - search (and filter) - borders
   const listHeight = computed(() => `calc(100svh - 64px - 48px - 40px - ${slots.filter ? 112 : 64}px - 3px)`)
   // The list starts below the search (and filter), so its empty state moves up to the title height of the one on the right
