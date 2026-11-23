@@ -9,7 +9,7 @@
         <template v-for="(part, index) in extendedErrorParts" :key="index">
           <pre
             v-if="part.html"
-            class="embedded-html text-subtitleText text-pre-wrap bg-surface-light border rounded pa-2 my-2"
+            class="text-body-small text-mono text-subtitleText text-pre-wrap bg-surface-light border rounded pa-2 my-2"
           >{{ part.text }}</pre>
 
           <pre v-else class="text-subtitleText text-body-small text-pre-wrap text-break">{{ part.text }}</pre>
@@ -113,11 +113,3 @@
     }
   }
 </script>
-
-<style scoped>
-  .embedded-html {
-    font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
-    font-size: 0.6875rem;
-    line-height: 1.4;
-  }
-</style>
