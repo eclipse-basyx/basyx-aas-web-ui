@@ -76,9 +76,13 @@ export default defineConfig(({ mode }) => {
       // https://github.com/vuetifyjs/vuetify-loader/tree/master/packages/vite-plugin#readme
       Vuetify({
         autoImport: true,
-        styles: {
-          configFile: 'src/styles/settings.scss',
-        },
+        // Vitest does not process CSS, so skip Vuetify styles in tests. The `configFile` variant keeps
+        // its virtual SASS modules in memory only, which breaks Vitest's fsModuleCache on reruns.
+        styles: process.env.VITEST
+          ? 'none'
+          : {
+              configFile: 'src/styles/settings.scss',
+            },
       }),
       Fonts({
         fontsource: {
