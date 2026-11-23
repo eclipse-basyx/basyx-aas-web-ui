@@ -181,6 +181,9 @@
                     </v-list-item>
                   </template>
                 </v-virtual-scroll>
+
+                <!-- Next page, loaded when scrolling near the end of the list -->
+                <v-progress-linear v-if="pageLoading" color="primary" indeterminate />
               </v-list>
 
               <!-- The list starts below the selections, so the empty states move up to the height of the ones on the right -->
@@ -466,7 +469,6 @@
 </template>
 
 <script lang="ts" setup>
-  import type { CatenaXEdcCatalogRequest } from '@/composables/Client/CatenaXEdcClient'
   import type { CatenaXPartner } from '@/types/Infrastructure'
   import type { ComponentPublicInstance, Ref } from 'vue'
   import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
@@ -475,11 +477,12 @@
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import ImportSubmodelDialog from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/Dialogs/ImportSubmodelDialog.vue'
   import SendDataDialog from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/Dialogs/SendDataDialog.vue'
+  import { useEdcCatalogQuery } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcCatalogQuery'
   import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
+  import { useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import {
     assetTypeFilterItems,
-    assetTypeFilterPreset,
     isFetchAsset,
     isPushAsset,
   } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
@@ -496,7 +499,8 @@
   const infrastructureStore = useInfrastructureStore()
 
   // Composables
-  const { fetchData, requestCatalog } = useCatenaXEdcClient()
+  const { fetchData } = useCatenaXEdcClient()
+  const { queryCatalogPage, findCatalogDataset } = useEdcCatalogQuery()
   const { showFailureMessage } = useEdcRequestFailureMessage()
   const { dialogOpen, dialogState } = useEdcDialogRoute()
 
@@ -513,11 +517,6 @@
   const fullHeightMainJsonPreviewWithActionsHalf = ref('calc((100vh - 64px - 48px - 40px - 32px - 2px - 2 * (64px + 32px) - 44px - 8px) / 2)') // Two JSON previews (with margin) below each other, the actions in between
   const fullHeightMainJsonPreviewWithTwoActionsHalf = ref('calc((100vh - 64px - 48px - 40px - 32px - 2px - 2 * (64px + 32px) - 2 * 44px - 8px) / 2)') // As above, with actions below the second JSON preview too
 
-  const catalogList = ref([] as Array<any>) as Ref<Array<any>>
-  const catalogListUnfiltered = ref([] as Array<any>) as Ref<Array<any>>
-
-  const listLoading = ref(false)
-  const catalogRequestFailed = ref(false)
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null)
   // const dataTranserInProgress = ref(false)
   // const discoverIdRef = ref<InstanceType<typeof CatalogDiscoverId> | null>(null)
@@ -583,6 +582,20 @@
   //   })
   // })
 
+  // Loaded pages of the catalog, in the order of the provider
+  const {
+    items: catalogList,
+    listLoading,
+    pageLoading,
+    requestFailed: catalogRequestFailed,
+    reload: reloadCatalog,
+    clear: clearCatalog,
+  } = useEdcPagedList<any>({
+    virtualScrollRef,
+    queryPage: page => queryCatalogPage(edcProxyId.value, selectedBusinessPartner.value!, selectedCatalogFilter.value, page),
+    onFailure: failure => showFailureMessage('Failed to request the catalog.', edcBffFailureText(failure)),
+  })
+
   // Watchers
   watch(
     businessPartners,
@@ -618,62 +631,33 @@
   })
 
   async function initialize (): Promise<void> {
-    listLoading.value = true
-
     selectedCatalogDataset.value = {}
-    catalogRequestFailed.value = false
-    // edcStatus.value = ''
 
-    if (selectedBusinessPartner.value?.counterPartyAddress) {
-      const catalogFilter = assetTypeFilterPreset(selectedCatalogFilter.value)
-
-      const catalogRequest: CatenaXEdcCatalogRequest = {
-        counterPartyId: selectedBusinessPartner.value.counterPartyId,
-        // The BFF defaults to DSP 2025-1 and adds its version path to the address
-        counterPartyAddress: selectedBusinessPartner.value.counterPartyAddress,
-        querySpec: catalogFilter?.querySpec,
-      }
-      const result = await requestCatalog(edcProxyId.value, catalogRequest)
-      catalogRequestFailed.value = !result.success
-      if (!result.success) {
-        showFailureMessage('Failed to request the catalog.', edcBffFailureText(result))
-      }
-
-      const catalog = result.success ? result.data : undefined
-      const catalogDataset = catalog?.['dcat:dataset'] ?? catalog?.dataset
-
-      if (catalog && catalogDataset) {
-        const datasets = Array.isArray(catalogDataset)
-          ? catalogDataset
-          : [catalogDataset]
-
-        const datasetsSorted = datasets.toSorted(
-          (datasetA: any, datasetB: any) =>
-            (datasetA['@id'] || '') > (datasetB['@id'] || '') ? 1 : -1,
-        )
-
-        catalogList.value = datasetsSorted.filter(dataset => catalogFilter?.matches?.(dataset) ?? true)
-        catalogListUnfiltered.value = [...datasetsSorted]
-      } else {
-        catalogList.value = []
-        catalogListUnfiltered.value = []
-      }
-
-      scrollToSelectedCatalogDataset()
+    // Without an address, no list of a previous partner stays visible
+    if (!selectedBusinessPartner.value?.counterPartyAddress) {
+      clearCatalog()
+      await restoreSendDataDialog()
+      return
     }
 
-    restoreSendDataDialog()
-    listLoading.value = false
+    if (!(await reloadCatalog())) return // A newer request replaces this one
+    scrollToSelectedCatalogDataset()
+    await restoreSendDataDialog()
   }
 
   // Selects the Catalog Dataset of a Send Data dialog restored from the URL, the dialog then opens.
   // Without it, e.g. if the Catalog could not be requested, the dialog is closed.
-  function restoreSendDataDialog (): void {
+  // The dataset may be beyond the loaded pages, then it is requested by its ID.
+  async function restoreSendDataDialog (): Promise<void> {
     if (!sendDataDialog.value) return
 
-    const catalogDataset = selectedBusinessPartner.value?.id === sendDataPartnerId.value
-      ? catalogList.value.find(dataset => dataset['@id'] === sendDataDatasetId.value)
-      : undefined
+    const partner = selectedBusinessPartner.value
+    const datasetId = sendDataDatasetId.value
+    let catalogDataset = null
+    if (partner?.counterPartyAddress && datasetId && partner.id === sendDataPartnerId.value) {
+      catalogDataset = catalogList.value.find(dataset => dataset['@id'] === datasetId)
+        ?? await findCatalogDataset(edcProxyId.value, partner, datasetId)
+    }
     if (catalogDataset && isPushAsset(catalogDataset)) {
       selectedCatalogDataset.value = catalogDataset
       scrollToSelectedCatalogDataset()

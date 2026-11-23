@@ -99,6 +99,7 @@
 
 <script lang="ts" setup>
   import { type CatenaXEdcContractDefinition, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
+  import { EDC_ASSET_ID_OPERAND, queryAllEdcPages } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPaging'
   import {
     edcRequestFailureText,
     useEdcRequestFailureMessage,
@@ -203,7 +204,7 @@
   async function loadAssets (): Promise<void> {
     assetsLoading.value = true
     try {
-      const result = await queryAssets(props.proxyId)
+      const result = await queryAllEdcPages(querySpec => queryAssets(props.proxyId, { querySpec }), { idOperand: EDC_ASSET_ID_OPERAND })
       availableAssets.value = (result.success ? result.data : []).toSorted((a, b) => getEdcAssetDisplayName(a).localeCompare(getEdcAssetDisplayName(b)))
     } catch (error) {
       console.error('Error loading assets:', error)
@@ -215,7 +216,7 @@
   async function loadPolicies (): Promise<void> {
     policiesLoading.value = true
     try {
-      const result = await queryPolicyDefinitions(props.proxyId)
+      const result = await queryAllEdcPages(querySpec => queryPolicyDefinitions(props.proxyId, { querySpec }))
       availablePolicies.value = (result.success ? result.data : []).toSorted((a, b) => getEdcPolicyDisplayName(a).localeCompare(getEdcPolicyDisplayName(b)))
     } catch (error) {
       console.error('Error loading policies:', error)

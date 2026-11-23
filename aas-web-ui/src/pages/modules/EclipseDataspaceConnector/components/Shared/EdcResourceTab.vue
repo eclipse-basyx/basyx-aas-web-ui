@@ -34,7 +34,7 @@
               hide-details
               :label="`Search for ${label} ...`"
               variant="outlined"
-              @update:model-value="scrollToSelectedResource()"
+              @update:model-value="reloadForSearch()"
             />
 
             <!-- Menu, only when the EDC BFF allows writes -->
@@ -93,7 +93,7 @@
 
               <!-- List of Resources -->
               <v-list
-                v-if="filteredResources.length > 0"
+                v-if="resources.length > 0"
                 class="pa-0"
                 density="compact"
                 nav
@@ -101,8 +101,8 @@
                 <v-virtual-scroll
                   ref="virtualScrollRef"
                   class="bg-card mb-2"
-                  :item-height="56"
-                  :items="filteredResources"
+                  :item-height="itemHeight"
+                  :items="resources"
                 >
 
                   <template #default="{ item }">
@@ -132,6 +132,9 @@
                   </template>
 
                 </v-virtual-scroll>
+
+                <!-- Next page, loaded when scrolling near the end of the list -->
+                <v-progress-linear v-if="pageLoading" color="primary" indeterminate />
               </v-list>
 
               <v-empty-state
@@ -245,13 +248,16 @@
 </template>
 
 <script lang="ts" setup>
-  import type { CatenaXEdcQueryResult, CatenaXEdcResult } from '@/composables/Client/CatenaXEdcClient'
+  import type { CatenaXEdcResult } from '@/composables/Client/CatenaXEdcClient'
+  import type { EdcListPage, EdcPageResult } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPaging'
   import DeleteEdcResourceDialog from '@/pages/modules/EclipseDataspaceConnector/components/Shared/DeleteEdcResourceDialog.vue'
   import EdcResourceListItem from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceListItem.vue'
   import UpdateEdcResourceDialog from '@/pages/modules/EclipseDataspaceConnector/components/Shared/UpdateEdcResourceDialog.vue'
   import { useEdcManagementWrites } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcManagementWrites'
+  import { EDC_LIST_ITEM_HEIGHT, useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
+  import { debounce } from '@/utils/generalUtils'
 
   // Extend the ComponentPublicInstance type to include scrollToIndex
   interface VirtualScrollInstance extends ComponentPublicInstance {
@@ -268,10 +274,10 @@
     labelPlural: string
     icon: string
     createActions: Array<{ title: string, tooltip: string, onClick: () => void }>
-    query: (proxyId: string) => Promise<CatenaXEdcQueryResult<any>>
+    // A page of the list, e.g. filtered by the value of the `filter` slot. `search` matches a part of the ID
+    queryPage: (proxyId: string, page: EdcListPage) => Promise<EdcPageResult<any>>
     update: (proxyId: string, resourceId: string, resource: any) => Promise<CatenaXEdcResult>
     delete?: (proxyId: string, resourceId: string) => Promise<CatenaXEdcResult> // Not needed with the `delete-dialog` slot
-    matches?: (resource: any) => boolean // Client-side filter of the loaded resources, e.g. by the value of the `filter` slot
   }>()
 
   defineExpose({ loadResources })
@@ -291,9 +297,8 @@
 
   const searchQuery = ref<string | null>('')
 
-  const resources = ref<Array<any>>([]) // Sorted by ID, before filtering
-  const listLoading = ref(false)
-  const listRequestFailed = ref(false)
+  const itemHeight = EDC_LIST_ITEM_HEIGHT
+  let loadCount = 0
   const virtualScrollRef = ref<VirtualScrollInstance | null>(null)
   const selectedResource = ref<any>(null)
 
@@ -309,11 +314,17 @@
   // The list starts below the search (and filter), so its empty state moves up to the title height of the one on the right
   const emptyStateOffsetClass = computed(() => slots.filter ? 'mt-n9' : 'mt-n3')
   const failedEmptyStateOffsetClass = computed(() => slots.filter ? 'mt-n12' : 'mt-n6') // With icon and text, like the one on the right
-  const filteredResources = computed(() => {
-    const query = searchQuery.value?.trim().toLowerCase()
-    return resources.value.filter(resource =>
-      (!query || resource['@id'].toLowerCase().includes(query)) && (props.matches?.(resource) ?? true))
+
+  // Loaded pages, sorted by ID by the EDC
+  const { items: resources, listLoading, pageLoading, requestFailed: listRequestFailed, reload } = useEdcPagedList<any>({
+    virtualScrollRef,
+    queryPage: page => props.queryPage(edcProxyId.value, { ...page, search: searchText() }),
+    onFailure: failure => showFailureMessage(`Failed to load the ${props.labelPlural}.`, edcBffFailureText(failure)),
   })
+
+  const reloadForSearch = debounce(() => {
+    void loadResources()
+  }, 300)
 
   onMounted(() => {
     loadResources()
@@ -323,26 +334,23 @@
     scrollToSelectedResource()
   })
 
+  /**
+   * Loads the first page again. The selection points to the reloaded resource, so the JSON view shows updates,
+   * also for a resource beyond the first page, and drops deleted resources.
+   */
   async function loadResources (): Promise<void> {
-    listLoading.value = true
+    const load = ++loadCount
+    const selectedId = selectedResource.value?.['@id']
+    if (!(await reload())) return
 
-    const result = await props.query(edcProxyId.value)
-    listRequestFailed.value = !result.success
-
-    if (result.success) {
-      resources.value = result.data.toSorted((resourceA: any, resourceB: any) => resourceA['@id'] > resourceB['@id'] ? 1 : -1)
-
-      // Point the selection to the reloaded resource, so the JSON view shows updates and drops deleted resources
-      const selectedId = selectedResource.value?.['@id']
-      selectedResource.value = resources.value.find(resource => resource['@id'] === selectedId) ?? null
-    } else {
-      // A failed reload drops the previous list, like a failed first load
-      resources.value = []
-      selectedResource.value = null
-      showFailureMessage(`Failed to load the ${props.labelPlural}.`, edcBffFailureText(result))
+    if (listRequestFailed.value) {
+      selectedResource.value = null // A failed reload drops the previous list, like a failed first load
+      return
     }
 
-    listLoading.value = false
+    const reloadedSelection = selectedId ? await findResource(selectedId) : null
+    if (load !== loadCount) return // A newer load sets the selection
+    selectedResource.value = reloadedSelection
     scrollToSelectedResource()
   }
 
@@ -353,11 +361,24 @@
 
     if (!resourceId || (hadSelection && !replaceSelection)) return
 
-    const createdResource = resources.value.find(resource => resource['@id'] === resourceId)
+    const createdResource = await findResource(resourceId)
     if (createdResource) {
       selectedResource.value = createdResource
       scrollToSelectedResource()
     }
+  }
+
+  // Finds a resource in the loaded pages, otherwise asks the EDC, e.g. for a resource beyond the first page
+  async function findResource (resourceId: string): Promise<any> {
+    const loadedResource = resources.value.find(resource => resource['@id'] === resourceId)
+    if (loadedResource) return loadedResource
+
+    const result = await props.queryPage(edcProxyId.value, { offset: 0, limit: 50, search: resourceId })
+    return result.success ? (result.data.find(resource => resource['@id'] === resourceId) ?? null) : null
+  }
+
+  function searchText (): string | undefined {
+    return searchQuery.value?.trim() || undefined
   }
 
   function openDialog (dialog: ResourceDialog, resource: any): void {
@@ -375,7 +396,7 @@
 
   function scrollToSelectedResource (): void {
     // Find the index of the selected item
-    const index = filteredResources.value.findIndex(resource => isSelected(resource))
+    const index = resources.value.findIndex(resource => isSelected(resource))
 
     if (index !== -1) {
       const intervalId = setInterval(() => {

@@ -5,7 +5,7 @@
     icon="mdi-code-json"
     label="Asset"
     label-plural="Assets"
-    :query="proxyId => queryAssetsOfType(proxyId, selectedAssetTypeFilter)"
+    :query-page="(proxyId, page) => queryAssetsOfTypePage(proxyId, selectedAssetTypeFilter, page)"
     :update="updateAsset"
   >
     <template #filter>
@@ -72,7 +72,7 @@
 
   // Composables
   const { updateAsset } = useCatenaXEdcClient()
-  const { queryAssetsOfType } = useEdcAssetTypeQuery()
+  const { queryAssetsOfTypePage } = useEdcAssetTypeQuery()
   const { dialogOpen } = useEdcDialogRoute()
 
   // Data

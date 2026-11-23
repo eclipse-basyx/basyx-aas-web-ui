@@ -6,7 +6,7 @@
     icon="mdi-file-sign"
     label="Contract"
     label-plural="Contracts"
-    :query="queryFilteredContracts"
+    :query-page="queryFilteredContracts"
     :update="updateContractDefinition"
   >
     <template #filter>
@@ -16,7 +16,9 @@
         hide-details
         :items="contractFilterItems"
         label="Filter by Asset or Policy Type"
+        :loading="policyFilterItemsLoading"
         variant="outlined"
+        @update:menu="open => open && loadPolicyFilterItems()"
       />
     </template>
 
@@ -27,15 +29,21 @@
 </template>
 
 <script lang="ts" setup>
-  import type { CatenaXEdcContractDefinition, CatenaXEdcQueryResult } from '@/composables/Client/CatenaXEdcClient'
+  import type { CatenaXEdcContractDefinition, CatenaXEdcQuerySpec } from '@/composables/Client/CatenaXEdcClient'
   import type { AssetTypeFilterPreset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import CreateContractDialog from '@/pages/modules/EclipseDataspaceConnector/components/Contracts/Dialogs/CreateContractDialog.vue'
   import EdcResourceTab from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceTab.vue'
+  import { selectsAnyAsset } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetsSelector'
   import { useEdcAssetTypeQuery } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetTypeQuery'
   import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
+  import {
+    type EdcListPage,
+    type EdcPageResult,
+    queryAllEdcPages,
+    queryEdcPage,
+  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPaging'
   import { assetTypeFilterItems } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
-  import { EDC_NAMESPACE } from '@/pages/modules/EclipseDataspaceConnector/data/namespaces'
 
   // Filters by an asset type preset or by the ID of the access or usage policy of the contracts
   interface ContractFilter {
@@ -59,7 +67,9 @@
 
   // Data
   const resourceTab = useTemplateRef<InstanceType<typeof EdcResourceTab>>('resourceTab')
-  const contracts = ref<CatenaXEdcContractDefinition[]>([]) // All contracts, before filtering
+  const contracts = ref<CatenaXEdcContractDefinition[]>([]) // All contracts, for the policy filter items
+  const policyFilterItemsLoading = ref(false)
+  let listProxyId = 'default' // Proxy of the list, for the policy filter items
   const selectedContractFilter = ref<ContractFilter>(allContractsFilter)
   const createContractDialog = dialogOpen('create-contract') // The open dialog is kept in the URL, e.g. to return to it after a login
 
@@ -85,37 +95,48 @@
     resourceTab.value?.loadResources()
   })
 
-  async function queryFilteredContracts (proxyId: string): Promise<CatenaXEdcQueryResult<CatenaXEdcContractDefinition>> {
-    const contractsResult = await queryContractDefinitions(proxyId)
-    if (!contractsResult.success) {
-      contracts.value = [] // No policy filter items of a previous list
-      return contractsResult
+  /**
+   * Queries a page of the contracts. A filter is evaluated in the browser, so it returns all matching contracts at once.
+   */
+  async function queryFilteredContracts (proxyId: string, page: EdcListPage): Promise<EdcPageResult<CatenaXEdcContractDefinition>> {
+    listProxyId = proxyId
+    const query = (querySpec: CatenaXEdcQuerySpec) => queryContractDefinitions(proxyId, { querySpec })
+    const { type, value } = selectedContractFilter.value
+    if (type === 'all') {
+      return queryEdcPage(query, page)
     }
+
+    const contractsResult = await queryAllEdcPages(query, { search: page.search })
+    if (!contractsResult.success) return contractsResult
     const loadedContracts = contractsResult.data
 
-    // The policy filter items are taken from all contracts
-    contracts.value = loadedContracts
-
-    const { type, value } = selectedContractFilter.value
     switch (type) {
       case 'assetType': {
         const assetsResult = await queryAssetsOfType(proxyId, value)
         if (!assetsResult.success) return assetsResult
         const assetIds = new Set(assetsResult.data.map(asset => asset['@id']))
-        return { success: true, data: loadedContracts.filter(contract => selectsAnyAsset(contract, assetIds)) }
+        return { success: true, data: loadedContracts.filter(contract => selectsAnyAsset(contract, assetIds)), hasMore: false }
       }
       case 'accessPolicy':
       case 'usagePolicy': {
         const policyContracts = loadedContracts.filter(contract => policyIdOf[type](contract) === value)
-        // Show all contracts again once no contract uses the policy anymore, e.g. after deleting the last one
-        if (policyContracts.length === 0) {
+        // Show all contracts again once no contract uses the policy anymore, e.g. after deleting the last one;
+        // the changed filter reloads the list
+        if (policyContracts.length === 0 && !page.search) {
           selectedContractFilter.value = allContractsFilter
-          return contractsResult
         }
-        return { success: true, data: policyContracts }
+        return { success: true, data: policyContracts, hasMore: false }
       }
     }
     return contractsResult
+  }
+
+  // The policy filter items are taken from all contracts, loaded when the filter menu opens
+  async function loadPolicyFilterItems (): Promise<void> {
+    policyFilterItemsLoading.value = true
+    const result = await queryAllEdcPages(querySpec => queryContractDefinitions(listProxyId, { querySpec }))
+    contracts.value = result.success ? result.data : []
+    policyFilterItemsLoading.value = false
   }
 
   /**
@@ -124,21 +145,5 @@
   function policyFilterItems (type: PolicyFilterType) {
     const policyIds = [...new Set(contracts.value.map(contract => policyIdOf[type](contract)).filter(Boolean))].toSorted()
     return policyIds.map(id => ({ title: id, value: { type, value: id } }))
-  }
-
-  /**
-   * Returns whether the assets selector of the contract selects one of the given assets.
-   * Only ID criteria (`=` and `in`) are resolved; an empty selector selects all assets.
-   */
-  function selectsAnyAsset (contract: CatenaXEdcContractDefinition, assetIds: Set<string | undefined>): boolean {
-    // The EDC returns a single criterion as object, several as array
-    const criteria = [contract.assetsSelector ?? []].flat()
-    if (criteria.length === 0) return assetIds.size > 0
-
-    return criteria
-      .filter(criterion => [`${EDC_NAMESPACE}id`, 'edc:id', 'id'].includes(String(criterion.operandLeft)))
-      .filter(criterion => ['=', 'in'].includes(String(criterion.operator)))
-      .flatMap(criterion => [criterion.operandRight].flat())
-      .some(assetId => assetIds.has(String(assetId)))
   }
 </script>

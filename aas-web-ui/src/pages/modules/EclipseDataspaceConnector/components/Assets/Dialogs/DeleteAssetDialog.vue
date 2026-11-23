@@ -3,12 +3,23 @@
     v-model="deleteDialog"
     :delete="deleteAssetAndContracts"
     label="Asset"
+    :loading="referencingContractsLoading"
     :proxy-id="proxyId"
     :resource="asset"
     @deleted="emit('deleted')"
   >
     <v-alert
-      v-if="referencingContracts.length > 0"
+      v-if="referencingContractsFailed"
+      border="start"
+      class="mt-3"
+      color="warning"
+      variant="tonal"
+    >
+      The contracts referencing this asset could not be checked. They are not deleted and would reference a missing asset.
+    </v-alert>
+
+    <v-alert
+      v-else-if="referencingContracts.length > 0"
       border="start"
       class="mt-3"
       color="warning"
@@ -37,6 +48,8 @@
 <script lang="ts" setup>
   import { type CatenaXEdcFailure, type CatenaXEdcResult, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import DeleteEdcResourceDialog from '@/pages/modules/EclipseDataspaceConnector/components/Shared/DeleteEdcResourceDialog.vue'
+  import { namesAnyAsset } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetsSelector'
+  import { queryAllEdcPages } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPaging'
   import { edcRequestFailureText } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
 
   const props = withDefaults(defineProps<{
@@ -56,6 +69,8 @@
   // Data
   const deleteDialog = defineModel<boolean>({ required: true })
   const referencingContracts = ref<any[]>([])
+  const referencingContractsLoading = ref(false)
+  const referencingContractsFailed = ref(false)
 
   // Watchers
   watch(
@@ -69,31 +84,25 @@
     },
   )
 
+  /**
+   * Looks up the contracts naming the asset in their assets selector, among all contracts.
+   * A contract with an empty selector selects all assets and is kept.
+   */
   async function loadReferencingContracts (): Promise<void> {
-    if (!props.asset?.['@id']) {
-      referencingContracts.value = []
-      return
-    }
+    referencingContracts.value = []
+    referencingContractsFailed.value = false
+    if (!props.asset?.['@id']) return
 
-    const result = await queryContractDefinitions(props.proxyId)
+    referencingContractsLoading.value = true
+    const result = await queryAllEdcPages(querySpec => queryContractDefinitions(props.proxyId, { querySpec }))
+    referencingContractsLoading.value = false
+
     if (!result.success) {
-      referencingContracts.value = []
+      referencingContractsFailed.value = true
       return
     }
-
-    const assetId = props.asset['@id']
-    const EDC_ID_OPERAND = 'https://w3id.org/edc/v0.0.1/ns/id'
-
-    referencingContracts.value = result.data.filter((contract: any) => {
-      const selector: any = contract['assetsSelector'] ?? contract['edc:assetsSelector'] ?? null
-      if (selector) {
-        const left = selector['operandLeft'] ?? selector['edc:operandLeft'] ?? ''
-        const op = selector['operator'] ?? selector['edc:operator'] ?? ''
-        const right = selector['operandRight'] ?? selector['edc:operandRight'] ?? ''
-        return (left === EDC_ID_OPERAND || left === 'id') && op === '=' && right === assetId
-      }
-      return false
-    })
+    const assetIds = new Set<string | undefined>([props.asset['@id']])
+    referencingContracts.value = result.data.filter(contract => namesAnyAsset(contract, assetIds))
   }
 
   async function deleteAssetAndContracts (proxyId: string, assetId: string): Promise<CatenaXEdcResult> {

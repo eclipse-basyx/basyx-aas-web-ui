@@ -35,7 +35,7 @@ function contractOf (id: string, assetId = asset['@id']): Record<string, unknown
   }
 }
 
-async function openDialog () {
+async function openDialog ({ settle = true } = {}) {
   const wrapper = mount(DeleteAssetDialog, {
     props: { modelValue: false, asset },
     global: {
@@ -50,13 +50,15 @@ async function openDialog () {
         'v-list-item': slotStub,
         'v-divider': true,
         'v-spacer': true,
-        'v-btn': { props: ['text'], template: '<button>{{ text }}</button>' },
+        'v-btn': { props: ['text', 'disabled'], template: '<button :disabled="disabled">{{ text }}</button>' },
       },
     },
   })
   // The referencing contracts are loaded when the dialog opens
   await wrapper.setProps({ modelValue: true })
-  await flushPromises()
+  if (settle) {
+    await flushPromises()
+  }
   return wrapper
 }
 
@@ -83,6 +85,59 @@ describe('DeleteAssetDialog', () => {
     expect(mocks.deleteAsset).toHaveBeenCalledWith('default', 'asset-1')
     expect(wrapper.emitted('deleted')).toHaveLength(1)
     expect(mocks.dispatchSnackbar).not.toHaveBeenCalled()
+  })
+
+  it('finds the referencing contracts on all pages, also in "in" and combined criteria', async () => {
+    const otherContracts = Array.from({ length: 500 }, (_, index) => contractOf(`other-${index}`, 'other-asset'))
+    mocks.queryContractDefinitions
+      .mockResolvedValueOnce({ success: true, data: otherContracts })
+      .mockResolvedValueOnce({
+        success: true,
+        data: [
+          { '@id': 'contract-in', 'assetsSelector': { operandLeft: 'id', operator: 'in', operandRight: ['asset-0', 'asset-1'] } },
+          { '@id': 'contract-combined', 'assetsSelector': [
+            { operandLeft: 'https://w3id.org/edc/v0.0.1/ns/id', operator: '=', operandRight: 'asset-1' },
+            { operandLeft: 'type', operator: '=', operandRight: 'data' },
+          ] },
+          { '@id': 'contract-all-assets', 'assetsSelector': [] },
+        ],
+      })
+    const wrapper = await openDialog()
+
+    await clickDelete(wrapper)
+
+    expect(mocks.queryContractDefinitions).toHaveBeenNthCalledWith(2, 'default', {
+      querySpec: expect.objectContaining({ offset: 500, limit: 500 }),
+    })
+    // A contract with an empty selector selects all assets and is kept
+    expect(mocks.deleteContractDefinition.mock.calls.map(([, contractId]) => contractId)).toEqual(['contract-in', 'contract-combined'])
+    expect(mocks.deleteAsset).toHaveBeenCalledWith('default', 'asset-1')
+  })
+
+  it('waits for the referencing contracts before deleting', async () => {
+    let resolveContracts: (result: unknown) => void = () => {}
+    mocks.queryContractDefinitions.mockReturnValueOnce(new Promise(resolve => (resolveContracts = resolve)))
+    const wrapper = await openDialog({ settle: false })
+
+    expect(wrapper.findAll('button').find(button => button.text() === 'Delete')!.attributes('disabled')).toBeDefined()
+
+    resolveContracts({ success: true, data: [contractOf('contract-1')] })
+    await flushPromises()
+    await clickDelete(wrapper)
+
+    expect(mocks.deleteContractDefinition).toHaveBeenCalledWith('default', 'contract-1')
+  })
+
+  it('warns if the referencing contracts cannot be checked', async () => {
+    mocks.queryContractDefinitions.mockResolvedValueOnce({ success: false, status: 502 })
+    const wrapper = await openDialog()
+
+    expect(wrapper.text()).toContain('The contracts referencing this asset could not be checked')
+
+    await clickDelete(wrapper)
+
+    expect(mocks.deleteContractDefinition).not.toHaveBeenCalled()
+    expect(mocks.deleteAsset).toHaveBeenCalledWith('default', 'asset-1')
   })
 
   it('names the already deleted contracts if an agreement keeps the asset', async () => {

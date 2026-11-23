@@ -1,12 +1,12 @@
 <template>
   <EdcResourceTab
+    ref="resourceTab"
     :create-actions="createActions"
     :delete="deletePolicyDefinition"
     icon="mdi-shield-check-outline"
     label="Policy"
     label-plural="Policies"
-    :matches="matchesPolicyType"
-    :query="queryPolicyDefinitions"
+    :query-page="queryPolicyPage"
     :update="updatePolicyDefinition"
   >
     <template #filter>
@@ -45,12 +45,19 @@
   import CreatePolicyFromTemplateDialog from '@/pages/modules/EclipseDataspaceConnector/components/Policies/Dialogs/CreatePolicyFromTemplateDialog.vue'
   import EdcResourceTab from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceTab.vue'
   import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
+  import {
+    type EdcListPage,
+    type EdcPageResult,
+    queryAllEdcPages,
+    queryEdcPage,
+  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPaging'
 
   // Composables
   const { deletePolicyDefinition, queryPolicyDefinitions, updatePolicyDefinition } = useCatenaXEdcClient()
   const { dialogOpen } = useEdcDialogRoute()
 
   // Data
+  const resourceTab = useTemplateRef<InstanceType<typeof EdcResourceTab>>('resourceTab')
   const policyTypeFilterItems = ['All', 'Access', 'Usage']
   const selectedPolicyType = ref('All')
   // The open dialog is kept in the URL, e.g. to return to it after a login
@@ -62,8 +69,25 @@
     { title: 'Create Policy from Template', tooltip: 'Create a new Policy from Template', onClick: () => (createPolicyFromTemplateDialog.value = true) },
   ]
 
-  function matchesPolicyType (policyDefinition: CatenaXEdcPolicyDefinition): boolean {
-    return selectedPolicyType.value === 'All' || getPolicyType(policyDefinition) === selectedPolicyType.value
+  // Watchers
+  watch(selectedPolicyType, () => {
+    resourceTab.value?.loadResources()
+  })
+
+  /**
+   * Queries a page of the policies. The type is derived from the permission in the browser,
+   * so a type filter returns all policies of the type at once.
+   */
+  async function queryPolicyPage (proxyId: string, page: EdcListPage): Promise<EdcPageResult<CatenaXEdcPolicyDefinition>> {
+    const query = (querySpec: Record<string, unknown>) => queryPolicyDefinitions(proxyId, { querySpec })
+    if (selectedPolicyType.value === 'All') {
+      return queryEdcPage(query, page)
+    }
+
+    const result = await queryAllEdcPages(query, { search: page.search })
+    return result.success
+      ? { success: true, data: result.data.filter(policy => getPolicyType(policy) === selectedPolicyType.value), hasMore: false }
+      : result
   }
 
   function getPolicyType (policyDefinition: CatenaXEdcPolicyDefinition): string {

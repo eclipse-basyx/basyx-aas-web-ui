@@ -32,6 +32,8 @@
         <v-btn
           class="text-buttonText"
           color="primary"
+          :disabled="loading"
+          :loading="loading"
           rounded="lg"
           text="Delete"
           variant="flat"
@@ -54,8 +56,10 @@
     label: string // e.g. `Asset`, used in the title and the error messages
     delete: (proxyId: string, resourceId: string) => Promise<CatenaXEdcResult>
     proxyId?: string
+    loading?: boolean // e.g. while the resources deleted along with this one are looked up
   }>(), {
     proxyId: 'default',
+    loading: false,
   })
 
   const emit = defineEmits<{
