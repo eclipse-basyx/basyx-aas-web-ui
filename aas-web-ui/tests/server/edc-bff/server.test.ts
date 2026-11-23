@@ -407,6 +407,54 @@ describe('EDC BFF server', () => {
     },
   )
 
+  it('redacts asset secrets in query results and restores them on update', async () => {
+    const storedAsset = {
+      '@id': 'asset-1',
+      'dataAddress': { type: 'HttpData', baseUrl: 'https://dtr.internal/api/v3', authKey: 'x-api-key', authCode: 'STORED_API_KEY' },
+    }
+    const upstream = await startUpstreamServer(record => {
+      if (record.url === '/management/v3/assets/request' || record.method === 'GET') {
+        return record.method === 'GET' ? storedAsset : [storedAsset]
+      }
+      return undefined
+    })
+    const baseUrl = await startBffServer(upstream.port, [], { allowManagementWrites: true })
+
+    const queryResponse = await fetch(`${baseUrl}/assets/request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    })
+    const [queriedAsset] = await queryResponse.json()
+    const updateResponse = await fetch(`${baseUrl}/assets/asset-1`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(queriedAsset),
+    })
+    const redirectResponse = await fetch(`${baseUrl}/assets/asset-1`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...queriedAsset, dataAddress: { ...queriedAsset.dataAddress, baseUrl: 'https://attacker.test' } }),
+    })
+    const createResponse = await fetch(`${baseUrl}/assets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...queriedAsset, '@id': 'asset-2' }),
+    })
+
+    expect(queriedAsset.dataAddress).toEqual({ ...storedAsset.dataAddress, authCode: '<redacted>' })
+    expect(updateResponse.status).toBe(204)
+    expect(redirectResponse.status).toBe(400)
+    await expect(redirectResponse.json()).resolves.toMatchObject({ code: 'EDC_REDACTED_SECRET' })
+    expect(createResponse.status).toBe(400)
+    expect(upstream.requests).toMatchObject([
+      { method: 'POST', url: '/management/v3/assets/request' },
+      { method: 'GET', url: '/management/v3/assets/asset-1' },
+      { method: 'PUT', url: '/management/v3/assets', body: storedAsset },
+      { method: 'GET', url: '/management/v3/assets/asset-1' },
+    ])
+  })
+
   it('rejects management writes without a bearer token in JWT auth mode', async () => {
     const upstream = await startUpstreamServer(() => undefined)
     const baseUrl = await startBffServer(upstream.port, [], {

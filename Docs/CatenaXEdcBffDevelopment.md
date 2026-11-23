@@ -258,6 +258,12 @@ The infrastructure `catenaX.edc.proxyId` selects one of these server-side proxy 
 
 Reading the catalog, the DTR and Submodels works with every configured proxy. Creating, updating and deleting assets, policies and contracts is disabled by default, in every auth mode, because the BFF sends these requests with its own Management API key. Requests are refused with `403 EDC_MANAGEMENT_WRITES_DISABLED` until `allowManagementWrites` is `true` for the proxy (`CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES` for the default proxy). With `CX_EDC_BFF_AUTH_MODE=jwt`, every user with a valid token (and one of `CX_EDC_BFF_REQUIRED_ROLES`, if set) can then write. To keep browsing users read-only, give them a separate proxy without the flag. The Eclipse Dataspace Connector module reads `managementWritesAllowed` from the proxy status and offers create, edit and delete only when writes are allowed.
 
+### Secrets in data addresses
+
+Asset queries never return the secrets of a data address, e.g. `authCode`, `oauth2:clientSecret` or the values of `header:*` properties. The BFF replaces them with `<redacted>`. Names of secrets in the EDC vault, such as `secretName` or `oauth2:clientSecretKey`, stay visible.
+
+When an asset is updated with `<redacted>` still in place, the BFF takes the stored secret from the EDC. It does so only while the rest of the data address is unchanged: a new `baseUrl` or any other changed property needs the secret to be entered again, so a stored secret never goes to a new target. A placeholder the BFF can't resolve, also in a new asset, is refused with `400 EDC_REDACTED_SECRET`.
+
 ## 6. Supported Tractus-X EDC Versions
 
 The BFF works with Tractus-X EDC **0.12.x and 0.13.x**. This was checked against the OpenAPI specs and the release

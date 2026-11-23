@@ -15,6 +15,12 @@ import { pathToFileURL } from 'node:url'
 import { authorizeRequest, createAuthError } from './auth.js'
 import { loadRuntimeConfig, redactProxyConfig } from './config.js'
 import {
+  assertNoSecretPlaceholders,
+  hasSecretPlaceholders,
+  redactAssetSecrets,
+  restoreAssetSecrets,
+} from './dataAddressSecrets.js'
+import {
   buildCatalogRequestBody,
   buildConnectorDiscoveryRequestBody,
   buildDspVersionParamsRequestBody,
@@ -202,12 +208,18 @@ async function handleManagementResourceRoute (
 ): Promise<boolean> {
   if (request.method === 'POST') {
     if (action === `${resource}/request`) {
-      await handleQuerySpecRequest(request, response, proxy, `/v3/${resource}/request`)
+      await handleQuerySpecRequest(request, response, proxy, `/v3/${resource}/request`, resource === 'assets')
       return true
     }
     if (action === resource) {
       assertManagementWritesAllowed(proxy)
-      await handleJsonRequest(request, response, proxy, `/v3/${resource}`, 'POST')
+      const prepareBody = resource === 'assets'
+        ? async (asset: Record<string, unknown>) => {
+          assertNoSecretPlaceholders(asset)
+          return asset
+        }
+        : undefined
+      await handleJsonRequest(request, response, proxy, `/v3/${resource}`, 'POST', prepareBody)
       return true
     }
   }
@@ -297,11 +309,12 @@ async function handleQuerySpecRequest (
   response: ServerResponse,
   proxy: EdcProxyConfig,
   path: string,
+  redactSecrets = false, // Secrets in the data addresses of assets, see `dataAddressSecrets.ts`
 ): Promise<void> {
   assertProxyConfigured(proxy)
   const body = await readJsonBody<EdcQuerySpecRequest>(request)
   const edcResponse = await forwardToEdc(proxy, 'POST', path, buildQuerySpecRequestBody(body))
-  writeJsonResponse(response, edcResponse.status, edcResponse.data)
+  writeJsonResponse(response, edcResponse.status, redactSecrets ? redactAssetSecrets(edcResponse.data) : edcResponse.data)
 }
 
 async function handleJsonRequest (
@@ -310,11 +323,28 @@ async function handleJsonRequest (
   proxy: EdcProxyConfig,
   path: string,
   method: 'POST' | 'PUT',
+  prepareBody?: (body: Record<string, unknown>) => Promise<Record<string, unknown>>,
 ): Promise<void> {
   assertProxyConfigured(proxy)
   const body = await readJsonBody<Record<string, unknown>>(request)
-  const edcResponse = await forwardToEdc(proxy, method, path, body)
+  const edcResponse = await forwardToEdc(proxy, method, path, prepareBody ? await prepareBody(body) : body)
   writeJsonResponse(response, edcResponse.status, edcResponse.data)
+}
+
+/** Puts the stored secrets of the asset back in place of the placeholders of the query response. */
+async function restoreStoredAssetSecrets (
+  proxy: EdcProxyConfig,
+  asset: Record<string, unknown>,
+  pathAssetId: string,
+): Promise<Record<string, unknown>> {
+  if (!hasSecretPlaceholders(asset)) {
+    return asset
+  }
+
+  // The EDC updates the asset with the ID in the body
+  const assetId = typeof asset['@id'] === 'string' ? asset['@id'] : pathAssetId
+  const storedAsset = await forwardToEdc(proxy, 'GET', `/v3/assets/${encodeURIComponent(assetId)}`)
+  return restoreAssetSecrets(asset, storedAsset.status === 200 ? storedAsset.data : undefined)
 }
 
 async function handleUpdateRequest (
@@ -333,7 +363,10 @@ async function handleUpdateRequest (
   const path = resource === 'policydefinitions'
     ? `/v3/${resource}/${encodeURIComponent(resourceId)}`
     : `/v3/${resource}`
-  await handleJsonRequest(request, response, proxy, path, 'PUT')
+  const prepareBody = resource === 'assets'
+    ? (asset: Record<string, unknown>) => restoreStoredAssetSecrets(proxy, asset, resourceId)
+    : undefined
+  await handleJsonRequest(request, response, proxy, path, 'PUT', prepareBody)
 }
 
 async function handleDeleteRequest (
