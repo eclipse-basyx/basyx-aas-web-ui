@@ -96,9 +96,9 @@ const crudResources = [
   {
     resource: 'assets',
     updateUrl: '/management/v3/assets',
-    id: 'asset/1',
+    id: 'urn:asset:1',
     entity: {
-      '@id': 'asset/1',
+      '@id': 'urn:asset:1',
       'properties': { key: 'value' },
       'dataAddress': { type: 'HttpData', baseUrl: 'https://provider.test/data' },
     },
@@ -106,9 +106,9 @@ const crudResources = [
   {
     resource: 'contractdefinitions',
     updateUrl: '/management/v3/contractdefinitions',
-    id: 'contract/1',
+    id: 'urn:contract:1',
     entity: {
-      '@id': 'contract/1',
+      '@id': 'urn:contract:1',
       'accessPolicyId': 'access-1',
       'contractPolicyId': 'usage-1',
       'assetsSelector': [],
@@ -116,10 +116,10 @@ const crudResources = [
   },
   {
     resource: 'policydefinitions',
-    updateUrl: '/management/v3/policydefinitions/policy%2F1',
-    id: 'policy/1',
+    updateUrl: '/management/v3/policydefinitions/urn%3Apolicy%3A1',
+    id: 'urn:policy:1',
     entity: {
-      '@id': 'policy/1',
+      '@id': 'urn:policy:1',
       'policy': { '@type': 'Set', 'permission': [] },
     },
   },
@@ -483,6 +483,67 @@ describe('EDC BFF server', () => {
       expect(upstream.requests).toHaveLength(0)
     },
   )
+
+  it.each(crudResources)(
+    'refuses IDs with "/" of $resource, which the EDC cannot address in the path',
+    async ({ resource, entity }) => {
+      const upstream = await startUpstreamServer(() => undefined)
+      const baseUrl = await startBffServer(upstream.port, [], { allowManagementWrites: true })
+      const slashId = 'urn/with/slash'
+      const send = (method: string, path: string, body?: unknown) => fetch(`${baseUrl}/${path}`, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      })
+
+      const responses = await Promise.all([
+        send('POST', resource, { ...entity, '@id': slashId }),
+        send('DELETE', `${resource}/${encodeURIComponent(slashId)}`),
+      ])
+
+      for (const response of responses) {
+        expect(response.status).toBe(400)
+        await expect(response.json()).resolves.toMatchObject({
+          code: 'EDC_ID_NOT_ADDRESSABLE',
+          details: expect.stringContaining(slashId),
+        })
+      }
+      expect(upstream.requests).toHaveLength(0)
+    },
+  )
+
+  it('refuses a policy update by an ID with "/", but updates assets with it by the body', async () => {
+    const upstream = await startUpstreamServer(() => undefined)
+    const baseUrl = await startBffServer(upstream.port, [], { allowManagementWrites: true })
+    const slashId = 'urn/with/slash'
+    const update = (resource: string, body: unknown) => fetch(`${baseUrl}/${resource}/${encodeURIComponent(slashId)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+
+    const policyResponse = await update('policydefinitions', { '@id': slashId, 'policy': {} })
+    const assetResponse = await update('assets', { '@id': slashId, 'dataAddress': { type: 'HttpData', baseUrl: 'https://provider.test' } })
+
+    expect(policyResponse.status).toBe(400)
+    await expect(policyResponse.json()).resolves.toMatchObject({ code: 'EDC_ID_NOT_ADDRESSABLE' })
+    expect(assetResponse.status).toBe(204)
+    expect(upstream.requests).toMatchObject([{ method: 'PUT', url: '/management/v3/assets', body: { '@id': slashId } }])
+  })
+
+  it('refuses an invalid percent-encoding in the path with 400', async () => {
+    const upstream = await startUpstreamServer(() => undefined)
+    const baseUrl = await startBffServer(upstream.port, [], { allowManagementWrites: true })
+
+    const deleteResponse = await fetch(`${baseUrl}/assets/abc%E0`, { method: 'DELETE' })
+    const proxyResponse = await fetch(`${baseUrl.replace(/\/default$/, '/%E0')}/status`)
+
+    for (const response of [deleteResponse, proxyResponse]) {
+      expect(response.status).toBe(400)
+      await expect(response.json()).resolves.toMatchObject({ code: 'INVALID_PATH_ENCODING' })
+    }
+    expect(upstream.requests).toHaveLength(0)
+  })
 
   it('rejects management writes without a bearer token in JWT auth mode', async () => {
     const upstream = await startUpstreamServer(() => undefined)

@@ -213,12 +213,15 @@ async function handleManagementResourceRoute (
     }
     if (action === resource) {
       assertManagementWritesAllowed(proxy)
-      const prepareBody = resource === 'assets'
-        ? async (asset: Record<string, unknown>) => {
-          assertNoSecretPlaceholders(asset)
-          return asset
+      const prepareBody = async (body: Record<string, unknown>) => {
+        if (typeof body['@id'] === 'string') {
+          assertIdAddressable(body['@id'], 'It could not be updated or deleted later.')
         }
-        : undefined
+        if (resource === 'assets') {
+          assertNoSecretPlaceholders(body)
+        }
+        return body
+      }
       await handleJsonRequest(request, response, proxy, `/v3/${resource}`, 'POST', prepareBody)
       return true
     }
@@ -341,6 +344,7 @@ async function restoreStoredAssetSecrets (
     return asset
   }
 
+  assertIdAddressable(assetId, 'The stored secrets cannot be loaded, so enter them again instead of "<redacted>".')
   const storedAsset = await forwardToEdc(proxy, 'GET', `/v3/assets/${encodeURIComponent(assetId)}`)
   return restoreAssetSecrets(asset, storedAsset.status === 200 ? storedAsset.data : undefined)
 }
@@ -352,12 +356,15 @@ async function handleUpdateRequest (
   action: string,
   resource: EdcManagementResource,
 ): Promise<void> {
-  const resourceId = decodeURIComponent(action.slice(resource.length + 1)).trim()
+  const resourceId = decodePathSegment(action.slice(resource.length + 1)).trim()
   if (!resourceId) {
     throw createHttpError(`Missing EDC ${resource} ID`, 400)
   }
 
   // Policies are updated by their ID in the path, assets and contracts by the ID in the body
+  if (resource === 'policydefinitions') {
+    assertIdAddressable(resourceId)
+  }
   const path = resource === 'policydefinitions'
     ? `/v3/${resource}/${encodeURIComponent(resourceId)}`
     : `/v3/${resource}`
@@ -372,6 +379,33 @@ async function handleUpdateRequest (
  * The EDC updates assets and contract definitions by the `@id` in the body, not by the ID in the path,
  * so both have to name the same resource.
  */
+/**
+ * Decodes a part of the request path, refusing an invalid percent-encoding such as `abc%E0` with 400.
+ */
+function decodePathSegment (segment: string): string {
+  try {
+    return decodeURIComponent(segment)
+  } catch {
+    throw Object.assign(
+      createHttpError('Invalid percent-encoding in the request path', 400),
+      { code: 'INVALID_PATH_ENCODING' },
+    )
+  }
+}
+
+/**
+ * Jetty in the EDC refuses an encoded "/" (`%2F`) in the path ("Ambiguous URI path separator"),
+ * so a resource whose ID contains "/" cannot be read, updated by path or deleted through the Management API.
+ */
+function assertIdAddressable (resourceId: string, consequence = 'The EDC does not accept it in the request path.'): void {
+  if (resourceId.includes('/')) {
+    throw Object.assign(
+      createHttpError('EDC resource ID contains "/"', 400, `The ID "${resourceId}" contains "/". ${consequence}`),
+      { code: 'EDC_ID_NOT_ADDRESSABLE' },
+    )
+  }
+}
+
 function assertBodyIdMatchesPath (body: Record<string, unknown>, pathId: string): void {
   const bodyId = body['@id']
   if (typeof bodyId !== 'string' || bodyId === '') {
@@ -395,10 +429,11 @@ async function handleDeleteRequest (
   resource: EdcManagementResource,
 ): Promise<void> {
   assertProxyConfigured(proxy)
-  const resourceId = decodeURIComponent(action.slice(resource.length + 1)).trim()
+  const resourceId = decodePathSegment(action.slice(resource.length + 1)).trim()
   if (!resourceId) {
     throw createHttpError(`Missing EDC ${resource} ID`, 400)
   }
+  assertIdAddressable(resourceId)
 
   const edcResponse = await forwardToEdc(
     proxy,
@@ -485,7 +520,7 @@ function parseRoute (request: IncomingMessage): { proxyId: string, action: strin
   }
 
   const routeParts = url.pathname.slice(apiBasePath.length + 1).split('/').filter(Boolean)
-  const proxyId = decodeURIComponent(routeParts[0] ?? '')
+  const proxyId = decodePathSegment(routeParts[0] ?? '')
   if (!proxyId) {
     throw createHttpError('Missing EDC proxy ID', 400)
   }

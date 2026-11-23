@@ -267,6 +267,8 @@ The infrastructure `catenaX.edc.proxyId` selects one of these server-side proxy 
 
 Reading the catalog, the DTR and Submodels works with every configured proxy. Creating, updating and deleting assets, policies and contracts is disabled by default, in every auth mode, because the BFF sends these requests with its own Management API key. Requests are refused with `403 EDC_MANAGEMENT_WRITES_DISABLED` until `allowManagementWrites` is `true` for the proxy (`CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES` for the default proxy). With `CX_EDC_BFF_AUTH_MODE=jwt`, every user with a valid token (and one of `CX_EDC_BFF_REQUIRED_ROLES`, if set) can then write. To keep browsing users read-only, give them a separate proxy without the flag. The Eclipse Dataspace Connector module reads `managementWritesAllowed` from the proxy status and offers create, edit and delete only when writes are allowed.
 
+Resource IDs containing `/` are refused with `400 EDC_ID_NOT_ADDRESSABLE`, also when creating a resource: Jetty in the EDC refuses an encoded `/` (`%2F`) in the request path, so such a resource could not be deleted (or, for a policy, updated) through the Management API.
+
 ### Secrets in data addresses
 
 Asset queries never return the secrets of a data address, e.g. `authCode`, `oauth2:clientSecret` or the values of `header:*` properties. The BFF replaces them with `<redacted>`. Names of secrets in the EDC vault, such as `secretName` or `oauth2:clientSecretKey`, stay visible.
