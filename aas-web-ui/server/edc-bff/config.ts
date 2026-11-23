@@ -19,6 +19,7 @@ interface RawProxyConfig {
   dspEndpoint?: unknown
   dataPlaneProxyUrl?: unknown
   allowedCounterPartyAddresses?: unknown
+  allowedDataPlaneAddresses?: unknown
   allowInsecureCounterPartyAddresses?: unknown
   allowManagementWrites?: unknown
   requestTimeoutMs?: unknown
@@ -110,26 +111,39 @@ export function redactProxyConfig (proxy: EdcProxyConfig | undefined, id: string
     dspEndpointConfigured: Boolean(proxy?.dspEndpoint),
     dataPlaneProxyUrlConfigured: Boolean(proxy?.dataPlaneProxyUrl),
     allowedCounterPartyAddressCount: proxy?.allowedCounterPartyAddresses.length ?? 0,
+    allowedDataPlaneAddressCount: proxy?.allowedDataPlaneAddresses.length ?? 0,
     allowInsecureCounterPartyAddresses: proxy?.allowInsecureCounterPartyAddresses ?? false,
     managementWritesAllowed: proxy?.allowManagementWrites ?? false,
   }
 }
 
 export function isCounterPartyAddressAllowed (proxy: EdcProxyConfig, address: string): boolean {
+  return isAddressAllowed(address, proxy.allowedCounterPartyAddresses, proxy.allowInsecureCounterPartyAddresses)
+}
+
+/**
+ * Whether the BFF may call the data plane endpoint of an EDR. The provider chooses this endpoint,
+ * so it needs an allowlist of its own: the DSP allowlist doesn't cover it.
+ */
+export function isDataPlaneAddressAllowed (proxy: EdcProxyConfig, address: string): boolean {
+  return isAddressAllowed(address, proxy.allowedDataPlaneAddresses, proxy.allowInsecureCounterPartyAddresses)
+}
+
+function isAddressAllowed (address: string, allowedAddresses: string[], allowInsecure: boolean): boolean {
   const normalizedAddress = normalizeUrl(address)
   if (!normalizedAddress) {
     return false
   }
 
-  if (normalizedAddress.protocol !== 'https:' && !proxy.allowInsecureCounterPartyAddresses) {
+  if (normalizedAddress.protocol !== 'https:' && !(allowInsecure && normalizedAddress.protocol === 'http:')) {
     return false
   }
 
-  if (proxy.allowedCounterPartyAddresses.includes('*')) {
+  if (allowedAddresses.includes('*')) {
     return true
   }
 
-  return proxy.allowedCounterPartyAddresses.some(allowedAddress => {
+  return allowedAddresses.some(allowedAddress => {
     const normalizedAllowedAddress = normalizeUrl(allowedAddress)
     if (!normalizedAllowedAddress) {
       return false
@@ -220,6 +234,11 @@ function normalizeProxyConfig (
     allowedCounterPartyAddresses: uniqueValues([
       ...splitCsv(env.CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES),
       ...normalizeStringList(rawProxy.allowedCounterPartyAddresses),
+    ]),
+    // No fallback to the DSP allowlist: data planes usually run on other hosts or paths than the DSP endpoint
+    allowedDataPlaneAddresses: uniqueValues([
+      ...splitCsv(env.CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES),
+      ...normalizeStringList(rawProxy.allowedDataPlaneAddresses),
     ]),
     allowInsecureCounterPartyAddresses:
       parseBoolean(rawProxy.allowInsecureCounterPartyAddresses)

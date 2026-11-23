@@ -25,6 +25,7 @@ function createProxyConfig (): EdcProxyConfig {
     apiKey: 'TEST_API_KEY',
     apiKeyHeader: 'X-Api-Key',
     allowedCounterPartyAddresses: ['https://counterparty-dsp.test/api/v1/dsp'],
+    allowedDataPlaneAddresses: ['https://counterparty-data.test', 'https://fresh-data-plane.test', 'https://data-plane.test'],
     allowInsecureCounterPartyAddresses: false,
     allowManagementWrites: false,
     requestTimeoutMs: 30_000,
@@ -787,5 +788,80 @@ describe('EDC BFF request helpers', () => {
       transferProcessId: 'data-transfer-1',
     })
     await expect(fetchData(proxy, { ...request, assetId: ' ' })).rejects.toThrow('assetId is required for EDC data fetch')
+  })
+
+  /** Answers the negotiation of `data-asset` with an EDR for the given data plane endpoint. */
+  function createDataPlaneFetchMock (endpoint: string, dataPlane: (init?: RequestInit) => Promise<Response>) {
+    return vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const urlString = String(url)
+      if (urlString.endsWith('/management/v3/catalog/request')) {
+        return Response.json({
+          'dspace:participantId': 'TEST_PARTICIPANT_ID',
+          'dcat:dataset': { '@id': 'data-asset', 'odrl:hasPolicy': { '@id': 'offer-data' } },
+        })
+      }
+      if (urlString.endsWith('/management/v3/edrs')) {
+        return Response.json({ '@id': 'data-negotiation-1' })
+      }
+      if (urlString.endsWith('/management/v3/edrs/request')) {
+        return Response.json([{ transferProcessId: 'data-transfer-1' }])
+      }
+      if (urlString.endsWith('/management/v3/edrs/data-transfer-1/dataaddress?auto_refresh=true')) {
+        return Response.json({ endpoint, authorization: 'TEST_DATA_AUTHORIZATION' })
+      }
+      if (urlString.startsWith(endpoint)) {
+        return dataPlane(init)
+      }
+      return Response.json({ error: 'unexpected request' }, { status: 500 })
+    })
+  }
+
+  const dataRequest = {
+    counterPartyId: 'TEST_PARTICIPANT_ID',
+    counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+    assetId: 'data-asset',
+  }
+
+  it('refuses data plane endpoints of an EDR outside the data plane allowlist', async () => {
+    const metadataServiceAddress = 'http' + '://169.254.169.254/latest/meta-data'
+    const dataPlane = vi.fn(async () => Response.json({ secret: 'INTERNAL' }))
+    const fetchMock = createDataPlaneFetchMock(metadataServiceAddress, dataPlane)
+
+    await expect(fetchData(createProxyConfig(), dataRequest, { fetchFn: fetchMock as typeof fetch, pollingIntervalMs: 0 }))
+      .rejects
+      .toMatchObject({
+        status: 403,
+        code: 'DATA_PLANE_ADDRESS_NOT_ALLOWED',
+        details: expect.stringContaining('169.254.169.254'),
+      })
+    await expect(pushData(
+      createProxyConfig(),
+      { ...dataRequest, data: { id: 'submodel' } },
+      { fetchFn: fetchMock as typeof fetch, pollingIntervalMs: 0 },
+    )).rejects.toMatchObject({ status: 403 })
+    expect(dataPlane).not.toHaveBeenCalled()
+  })
+
+  it('does not follow redirects of the data plane', async () => {
+    const dataPlane = vi.fn(async () => new Response(null, { status: 302, headers: { Location: 'https://internal.test' } }))
+    const fetchMock = createDataPlaneFetchMock('https://data-plane.test/api/public', dataPlane)
+
+    await expect(fetchData(createProxyConfig(), dataRequest, { fetchFn: fetchMock as typeof fetch, pollingIntervalMs: 0 }))
+      .rejects
+      .toThrow('Data plane fetch failed (302)')
+    expect(dataPlane).toHaveBeenCalledWith(expect.objectContaining({ redirect: 'manual' }))
+  })
+
+  it('ends data plane requests after the request timeout', async () => {
+    const dataPlane = vi.fn((init?: RequestInit) => new Promise<Response>((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })))
+    }))
+    const fetchMock = createDataPlaneFetchMock('https://data-plane.test/api/public', dataPlane)
+
+    await expect(fetchData(
+      { ...createProxyConfig(), requestTimeoutMs: 10 },
+      dataRequest,
+      { fetchFn: fetchMock as typeof fetch, pollingIntervalMs: 0 },
+    )).rejects.toMatchObject({ name: 'AbortError' })
   })
 })

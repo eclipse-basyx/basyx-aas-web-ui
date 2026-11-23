@@ -9,6 +9,7 @@ export interface EdcProxyConfig {
   dspEndpoint?: string
   dataPlaneProxyUrl?: string
   allowedCounterPartyAddresses: string[]
+  allowedDataPlaneAddresses: string[]
   allowInsecureCounterPartyAddresses: boolean
   allowManagementWrites: boolean
   requestTimeoutMs: number
@@ -25,6 +26,7 @@ export interface RedactedEdcProxyConfig {
   dspEndpointConfigured: boolean
   dataPlaneProxyUrlConfigured: boolean
   allowedCounterPartyAddressCount: number
+  allowedDataPlaneAddressCount: number
   allowInsecureCounterPartyAddresses: boolean
   managementWritesAllowed: boolean
 }

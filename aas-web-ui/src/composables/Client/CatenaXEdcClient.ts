@@ -18,6 +18,7 @@ export interface CatenaXEdcStatus {
   dspEndpointConfigured: boolean
   dataPlaneProxyUrlConfigured: boolean
   allowedCounterPartyAddressCount: number
+  allowedDataPlaneAddressCount: number
   allowInsecureCounterPartyAddresses: boolean
   managementWritesAllowed: boolean
 }

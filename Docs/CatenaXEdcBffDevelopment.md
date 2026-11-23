@@ -48,6 +48,7 @@ CX_EDC_BFF_AUTH_MODE=none \
 CX_EDC_DEFAULT_MANAGEMENT_URL=http://localhost:8182/management \
 CX_EDC_DEFAULT_API_KEY=<EDC_MANAGEMENT_API_KEY> \
 CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES='*' \
+CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES='*' \
 CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES=true \
 CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES=true \
 pnpm bff:start
@@ -90,14 +91,18 @@ For a real connector, replace:
 - `CX_EDC_DEFAULT_MANAGEMENT_URL` with your own consumer EDC Management API URL.
 - `CX_EDC_DEFAULT_API_KEY` with the local Management API key.
 - `CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES` with explicit provider DSP endpoint prefixes.
+- `CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES` with explicit provider data plane endpoint prefixes.
 
-Example allowlist:
+Example allowlists:
 
 ```bash
 CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES='https://counterparty-dsp.test/api/v1/dsp,https://other-counterparty-dsp.test/api/v1/dsp'
+CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES='https://counterparty-dataplane.test/api/public,https://other-counterparty-dataplane.test/api/public'
 ```
 
-The wildcard is convenient for local testing, but avoid it for shared or production-like environments.
+The data plane allowlist is separate because the provider names its data plane in the EDR, usually on another host or path than its DSP endpoint. Without it, the BFF reaches no data plane: loading DTR descriptors, Submodels and data, and sending data, fail with `403 DATA_PLANE_ADDRESS_NOT_ALLOWED`. The error names the refused origin. Redirects of a data plane are not followed.
+
+The wildcards are convenient for local testing, but avoid them for shared or production-like environments.
 
 If port `3001` is already in use, either stop the existing process or choose another BFF port.
 
@@ -121,6 +126,7 @@ CX_EDC_BFF_AUTH_MODE=none \
 CX_EDC_DEFAULT_MANAGEMENT_URL=http://localhost:8182/management \
 CX_EDC_DEFAULT_API_KEY=<EDC_MANAGEMENT_API_KEY> \
 CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES='*' \
+CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES='*' \
 CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES=true \
 pnpm bff:start
 ```
@@ -205,6 +211,7 @@ Then use the BFF command from step 2 with:
 ```bash
 CX_EDC_DEFAULT_MANAGEMENT_URL=http://localhost:8182/management
 CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES='*'
+CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES='*'
 CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES=true
 ```
 
@@ -225,7 +232,8 @@ CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES=true
 | `CX_EDC_DEFAULT_DSP_ENDPOINT` | Optional own DSP endpoint metadata. |
 | `CX_EDC_DEFAULT_DATA_PLANE_PROXY_URL` | Optional data plane proxy metadata for later phases. |
 | `CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES` | Comma-separated provider DSP endpoint prefixes or `*`. |
-| `CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES` | Allows `http://` counterparty addresses for local testing. |
+| `CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES` | Comma-separated provider data plane endpoint prefixes or `*`. No default: without it, no data plane is reached. |
+| `CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES` | Allows `http://` counterparty and data plane addresses for local testing. |
 | `CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES` | Set to `true` to allow creating, updating and deleting assets, policies and contracts through the default proxy. Default `false`, in every auth mode. |
 | `CX_EDC_REQUEST_TIMEOUT_MS` | Upstream EDC request timeout, default `30000`. |
 | `CX_EDC_EDR_POLLING_ATTEMPTS` | EDR polling attempts, default `30`. |
@@ -241,6 +249,7 @@ For multiple proxy IDs, use `CX_EDC_PROXY_CONFIG_JSON` or `CX_EDC_PROXY_CONFIG_F
       "managementUrl": "http://localhost:8182/management",
       "apiKey": "<EDC_MANAGEMENT_API_KEY>",
       "allowedCounterPartyAddresses": ["https://counterparty-dsp.test/api/v1/dsp"],
+      "allowedDataPlaneAddresses": ["https://counterparty-dataplane.test/api/public"],
       "allowManagementWrites": true
     },
     "partner-test": {

@@ -22,6 +22,7 @@
         "CX_EDC_DEFAULT_API_KEY": "${input:catenaXEdcApiKey}",
         "CX_EDC_DEFAULT_API_KEY_HEADER": "X-Api-Key",
         "CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES": "${input:catenaXEdcAllowedCounterPartyAddresses}",
+        "CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES": "${input:catenaXEdcAllowedDataPlaneAddresses}",
         "CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES": "false",
         "CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES": "true",
         "CX_EDC_REQUEST_TIMEOUT_MS": "30000",
@@ -95,6 +96,12 @@
       "id": "catenaXEdcAllowedCounterPartyAddresses",
       "type": "promptString",
       "description": "Allowed provider DSP endpoint prefixes, comma-separated or *",
+      "default": "*"
+    },
+    {
+      "id": "catenaXEdcAllowedDataPlaneAddresses",
+      "type": "promptString",
+      "description": "Allowed provider data plane endpoint prefixes, comma-separated or *",
       "default": "*"
     }
   ]

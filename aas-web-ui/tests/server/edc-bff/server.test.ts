@@ -57,9 +57,10 @@ async function startUpstreamServer (
 async function startBffServer (
   upstreamPort: number,
   allowedCounterPartyAddresses: string[] = [],
-  { allowManagementWrites = false, auth = { mode: 'none', requiredRoles: [] } }: {
+  { allowManagementWrites = false, auth = { mode: 'none', requiredRoles: [] }, allowedDataPlaneAddresses = [] }: {
     allowManagementWrites?: boolean
     auth?: EdcBffRuntimeConfig['auth']
+    allowedDataPlaneAddresses?: string[]
   } = {},
 ): Promise<string> {
   const config: EdcBffRuntimeConfig = {
@@ -72,7 +73,9 @@ async function startBffServer (
         apiKey: 'TEST_API_KEY',
         apiKeyHeader: 'X-Api-Key',
         allowedCounterPartyAddresses,
-        allowInsecureCounterPartyAddresses: false,
+        allowedDataPlaneAddresses,
+        // The mock data plane listens on http://127.0.0.1
+        allowInsecureCounterPartyAddresses: allowedDataPlaneAddresses.length > 0,
         allowManagementWrites,
         requestTimeoutMs: 30_000,
         edrPollingAttempts: 30,
@@ -149,6 +152,7 @@ describe('EDC BFF server', () => {
           apiKey: 'TEST_API_KEY',
           apiKeyHeader: 'X-Api-Key',
           allowedCounterPartyAddresses: [],
+          allowedDataPlaneAddresses: [],
           allowInsecureCounterPartyAddresses: false,
           allowManagementWrites: false,
           requestTimeoutMs: 30_000,
@@ -192,6 +196,7 @@ describe('EDC BFF server', () => {
           apiKey: 'TEST_API_KEY',
           apiKeyHeader: 'X-Api-Key',
           allowedCounterPartyAddresses: [],
+          allowedDataPlaneAddresses: [],
           allowInsecureCounterPartyAddresses: false,
           allowManagementWrites: false,
           requestTimeoutMs: 30_000,
@@ -262,6 +267,7 @@ describe('EDC BFF server', () => {
           apiKey: 'TEST_API_KEY',
           apiKeyHeader: 'X-Api-Key',
           allowedCounterPartyAddresses: [],
+          allowedDataPlaneAddresses: [],
           allowInsecureCounterPartyAddresses: false,
           allowManagementWrites: false,
           requestTimeoutMs: 30_000,
@@ -536,7 +542,8 @@ describe('EDC BFF server', () => {
           apiKey: 'TEST_API_KEY',
           apiKeyHeader: 'X-Api-Key',
           allowedCounterPartyAddresses: ['https://counterparty-dsp.test/api/v1/dsp'],
-          allowInsecureCounterPartyAddresses: false,
+          allowedDataPlaneAddresses: [`http://127.0.0.1:${upstreamPort}`],
+          allowInsecureCounterPartyAddresses: true, // The mock data plane listens on http://127.0.0.1
           allowManagementWrites: false,
           requestTimeoutMs: 30_000,
           edrPollingAttempts: 30,
@@ -647,7 +654,8 @@ describe('EDC BFF server', () => {
           apiKey: 'TEST_API_KEY',
           apiKeyHeader: 'X-Api-Key',
           allowedCounterPartyAddresses: ['https://counterparty-dsp.test/api/v1/dsp'],
-          allowInsecureCounterPartyAddresses: false,
+          allowedDataPlaneAddresses: [`http://127.0.0.1:${upstreamPort}`],
+          allowInsecureCounterPartyAddresses: true, // The mock data plane listens on http://127.0.0.1
           allowManagementWrites: false,
           requestTimeoutMs: 30_000,
           edrPollingAttempts: 30,
@@ -761,7 +769,9 @@ describe('EDC BFF server', () => {
       }
     })
     upstreamPort = upstream.port
-    const baseUrl = await startBffServer(upstream.port, ['https://counterparty-dsp.test/api/v1/dsp'])
+    const baseUrl = await startBffServer(upstream.port, ['https://counterparty-dsp.test/api/v1/dsp'], {
+      allowedDataPlaneAddresses: [`http://127.0.0.1:${upstreamPort}`],
+    })
     const data = { id: 'urn:example:submodel:1', description: 'x'.repeat(100 * 1024) }
 
     const response = await fetch(`${baseUrl}/data/push`, {

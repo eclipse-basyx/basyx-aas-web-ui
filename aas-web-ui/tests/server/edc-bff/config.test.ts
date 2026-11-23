@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   isCounterPartyAddressAllowed,
+  isDataPlaneAddressAllowed,
   loadAuthConfig,
   loadProxyConfigMap,
   redactProxyConfig,
@@ -148,5 +149,48 @@ describe('EDC BFF config', () => {
 
     expect(isCounterPartyAddressAllowed(proxy, 'https://counterparty-dsp.test/api/v1/dsp')).toBe(true)
     expect(isCounterPartyAddressAllowed(proxy, insecureProviderAddress)).toBe(false)
+  })
+
+  it('allows no data plane without its own allowlist, also with a DSP wildcard', () => {
+    const proxy = loadProxyConfigMap({
+      CX_EDC_DEFAULT_MANAGEMENT_URL: 'https://consumer-edc.test/management',
+      CX_EDC_DEFAULT_API_KEY: 'TEST_API_KEY',
+      CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES: '*',
+    }).get('default')!
+
+    expect(proxy.allowedDataPlaneAddresses).toEqual([])
+    expect(redactProxyConfig(proxy, 'default').allowedDataPlaneAddressCount).toBe(0)
+    expect(isDataPlaneAddressAllowed(proxy, 'https://counterparty-data.test/api/public')).toBe(false)
+  })
+
+  it('allows only configured data plane addresses', () => {
+    const metadataServiceAddress = 'http' + '://169.254.169.254/latest/meta-data'
+    const proxies = loadProxyConfigMap({
+      CX_EDC_PROXY_CONFIG_JSON: JSON.stringify({
+        proxies: {
+          default: {
+            managementUrl: 'https://consumer-edc.test/management',
+            apiKey: 'TEST_API_KEY',
+            allowedDataPlaneAddresses: ['https://counterparty-data.test/api/public'],
+          },
+        },
+      }),
+      CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES: 'https://other-data.test',
+    })
+    const proxy = proxies.get('default')!
+
+    expect(isDataPlaneAddressAllowed(proxy, 'https://counterparty-data.test/api/public/shell-descriptors')).toBe(true)
+    expect(isDataPlaneAddressAllowed(proxy, 'https://other-data.test/any/path')).toBe(true)
+    expect(isDataPlaneAddressAllowed(proxy, 'https://counterparty-data.test/management')).toBe(false)
+    expect(isDataPlaneAddressAllowed(proxy, metadataServiceAddress)).toBe(false)
+    expect(isDataPlaneAddressAllowed({ ...proxy, allowedDataPlaneAddresses: ['*'] }, metadataServiceAddress)).toBe(false)
+    expect(isDataPlaneAddressAllowed(
+      { ...proxy, allowedDataPlaneAddresses: ['*'], allowInsecureCounterPartyAddresses: true },
+      metadataServiceAddress,
+    )).toBe(true)
+    expect(isDataPlaneAddressAllowed(
+      { ...proxy, allowedDataPlaneAddresses: ['*'], allowInsecureCounterPartyAddresses: true },
+      'file:///etc/passwd',
+    )).toBe(false)
   })
 })
