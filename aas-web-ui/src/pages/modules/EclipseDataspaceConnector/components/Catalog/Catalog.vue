@@ -160,7 +160,7 @@
                           </template>
 
                           <v-sheet border>
-                            <v-list class="py-0" dense density="compact" slim>
+                            <v-list class="py-0" density="compact" slim>
                               <v-divider />
 
                               <v-list-item

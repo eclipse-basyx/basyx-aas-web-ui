@@ -42,12 +42,11 @@
       <v-divider />
 
       <v-card-text class="flex-grow-1 overflow-y-auto">
-        <v-form ref="form" class="d-flex flex-column gap-4">
+        <v-form ref="form" class="d-flex flex-column">
 
           <!-- Policy Type Selection -->
           <v-select
             v-model="selectedType"
-            dense
             :disabled="manuallyEdited"
             :hint="selectedPolicyTypeDescription"
             item-title="name"
@@ -76,13 +75,12 @@
           </v-select>
 
           <!-- Dynamic Placeholder Fields -->
-          <div class="d-flex flex-column gap-3 pt-2">
+          <div class="d-flex flex-column pt-2">
             <v-text-field
               v-for="(placeholder, index) in placeholders"
               :key="placeholder.label"
               v-model="placeholderValues[placeholder.label]"
               :class="index > 0 ? 'mt-2': ''"
-              dense
               :disabled="manuallyEdited"
               :hide-details="placeholder.hint == ''"
               :hint="placeholder.hint"

@@ -24,15 +24,14 @@
           </EdcAssetOAuth2Drawer>
 
           <v-main class="d-flex flex-column">
-            <v-form ref="form" class="d-flex flex-column gap-4 pa-4 overflow-y-auto">
+            <v-form ref="form" class="d-flex flex-column pa-4 overflow-y-auto">
               <!-- Dynamic Placeholder Fields, the OAuth2 ones are filled in the OAuth2 drawer -->
-              <div class="d-flex flex-column gap-3">
+              <div class="d-flex flex-column">
                 <v-text-field
                   v-for="(placeholder, index) in fieldPlaceholders"
                   :key="placeholder.label"
                   v-model="placeholderValues[placeholder.label]"
                   :class="index > 0 ? 'mt-2': ''"
-                  dense
                   :hide-details="placeholder.hint == ''"
                   :hint="placeholder.hint"
                   :label="placeholder.mandatory ? `${placeholder.label} *` : placeholder.label"

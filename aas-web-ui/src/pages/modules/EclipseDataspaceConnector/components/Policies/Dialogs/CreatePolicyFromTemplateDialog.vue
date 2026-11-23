@@ -8,12 +8,11 @@
       <v-divider />
 
       <v-card-text class="flex-grow-1 overflow-y-auto">
-        <v-form ref="form" class="d-flex flex-column gap-4">
+        <v-form ref="form" class="d-flex flex-column">
 
           <!-- Template Selection -->
           <v-select
             v-model="selectedTemplate"
-            dense
             hide-details
             item-title="name"
             item-value="value"
@@ -40,13 +39,12 @@
           </v-select>
 
           <!-- Dynamic Placeholder Fields -->
-          <div v-if="selectedTemplate" class="d-flex flex-column gap-3 mt-4">
+          <div v-if="selectedTemplate" class="d-flex flex-column mt-4">
             <v-text-field
               v-for="(placeholder, index) in placeholders"
               :key="placeholder.label"
               v-model="placeholderValues[placeholder.label]"
               :class="index > 0 ? 'mt-2': ''"
-              dense
               :hide-details="placeholder.hint == ''"
               :hint="placeholder.hint"
               :label="placeholder.label"

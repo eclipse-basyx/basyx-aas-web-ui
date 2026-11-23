@@ -8,16 +8,15 @@
       <v-divider />
 
       <v-card-text class="flex-grow-1 overflow-y-auto">
-        <v-form ref="form" class="d-flex flex-column gap-4">
+        <v-form ref="form" class="d-flex flex-column">
 
           <!-- Dynamic Placeholder Fields -->
-          <div class="d-flex flex-column gap-3">
+          <div class="d-flex flex-column">
             <template v-for="(placeholder, index) in placeholders" :key="placeholder.label">
               <v-select
                 v-if="placeholder.label === 'Asset ID'"
                 v-model="placeholderValues[placeholder.label]"
                 :class="index > 0 ? 'mt-2': ''"
-                dense
                 :hide-details="placeholder.hint == ''"
                 :hint="placeholder.hint"
                 :item-title="getEdcAssetDisplayName"
@@ -34,7 +33,6 @@
                 v-else-if="placeholder.label === 'Access Policy ID' || placeholder.label === 'Usage Policy ID'"
                 v-model="placeholderValues[placeholder.label]"
                 :class="index > 0 ? 'mt-2': ''"
-                dense
                 :hide-details="placeholder.hint == ''"
                 :hint="placeholder.hint"
                 :item-title="getEdcPolicyDisplayName"
@@ -51,7 +49,6 @@
                 v-else
                 v-model="placeholderValues[placeholder.label]"
                 :class="index > 0 ? 'mt-2': ''"
-                dense
                 :hide-details="placeholder.hint == ''"
                 :hint="placeholder.hint"
                 :label="placeholder.label"
