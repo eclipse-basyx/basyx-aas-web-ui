@@ -779,7 +779,8 @@ describe('RequestHandling.ts', () => {
     )) as unknown as typeof fetch
 
     const { useRequestHandling } = await import('@/composables/RequestHandling')
-    const { postRequest, consumeLastRequestFailureDetails } = useRequestHandling()
+    const { formatEdcErrorDetails } = await import('@/composables/Client/CatenaXEdcClient')
+    const { postRequest, consumeLastRequestFailureDetails } = useRequestHandling({ formatErrorDetails: formatEdcErrorDetails })
 
     const response = await postRequest('/api/catena-x/edc/default/assets', '{}', new Headers(), 'creating Asset', true)
 
@@ -804,7 +805,8 @@ describe('RequestHandling.ts', () => {
     )) as unknown as typeof fetch
 
     const { useRequestHandling } = await import('@/composables/RequestHandling')
-    const { postRequest } = useRequestHandling()
+    const { formatEdcErrorDetails } = await import('@/composables/Client/CatenaXEdcClient')
+    const { postRequest } = useRequestHandling({ formatErrorDetails: formatEdcErrorDetails })
 
     const response = await postRequest('/api/catena-x/edc/default/policydefinitions', '{}', new Headers(), 'creating Policy', true)
 
@@ -813,7 +815,7 @@ describe('RequestHandling.ts', () => {
     )
   })
 
-  it('leaves out an HTML error page from the failure details', async () => {
+  it('leaves out an HTML error page from the failure details of the EDC client', async () => {
     const htmlPage = '<html>\n<head><title>Error 500 Internal Server Error</title></head>\n<body></body>\n</html>\n'
     global.fetch = vi.fn().mockResolvedValue(Response.json(
       htmlPage,
@@ -821,13 +823,53 @@ describe('RequestHandling.ts', () => {
     )) as unknown as typeof fetch
 
     const { useRequestHandling } = await import('@/composables/RequestHandling')
-    const { postRequest, consumeLastRequestFailureDetails } = useRequestHandling()
+    const { formatEdcErrorDetails } = await import('@/composables/Client/CatenaXEdcClient')
+    const { postRequest, consumeLastRequestFailureDetails } = useRequestHandling({ formatErrorDetails: formatEdcErrorDetails })
 
     const response = await postRequest('/api/catena-x/edc/default/assets', '{}', new Headers(), 'creating Asset', true)
 
     expect(response).toEqual(expect.objectContaining({ success: false, status: 500 }))
     expect(response.details).toBeUndefined()
     expect(consumeLastRequestFailureDetails()).toBeUndefined()
+  })
+
+  it('keeps all fields of array errors and HTML error pages without an error details formatter', async () => {
+    const htmlPage = '<html><head><title>Error 502 Bad Gateway</title></head></html>'
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce(Response.json(
+        [{ message: 'Shell not found', code: '404', correlationId: 'corr-1' }, { code: '500', text: 'Second error' }],
+        { status: 404, headers: { 'Content-Type': 'application/json' } },
+      ))
+      .mockResolvedValueOnce(Response.json(htmlPage, { status: 502, headers: { 'Content-Type': 'application/json' } })) as unknown as typeof fetch
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { postRequest } = useRequestHandling()
+
+    const arrayResponse = await postRequest('/shells', '{}', new Headers(), 'creating Shell', true)
+    const htmlResponse = await postRequest('/shells', '{}', new Headers(), 'creating Shell', true)
+
+    expect(arrayResponse.details).toContain('Status: 404')
+    expect(arrayResponse.details).toContain('Correlation ID: corr-1')
+    expect(arrayResponse.details).toContain('Text: Second error')
+    expect(htmlResponse.details).toBe(htmlPage)
+  })
+
+  it('uses the error details formatter of a single request over the default one', async () => {
+    global.fetch = vi.fn(async () => Response.json(
+      [{ message: 'Asset with ID asset-1 already exists' }],
+      { status: 409, headers: { 'Content-Type': 'application/json' } },
+    )) as unknown as typeof fetch
+
+    const { useRequestHandling } = await import('@/composables/RequestHandling')
+    const { postRequest } = useRequestHandling({ formatErrorDetails: () => 'default formatter' })
+
+    const defaultResponse = await postRequest('/assets', '{}', new Headers(), 'creating Asset', true)
+    const overriddenResponse = await postRequest('/assets', '{}', new Headers(), 'creating Asset', true, false, {
+      formatErrorDetails: () => 'request formatter',
+    })
+
+    expect(defaultResponse.details).toBe('default formatter')
+    expect(overriddenResponse.details).toBe('request formatter')
   })
 
   it('returns the details of a payload failure with the result of PUT requests', async () => {

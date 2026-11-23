@@ -39,6 +39,11 @@ function isInteractiveOAuth2WithoutToken (statusCode: number | undefined, infra:
 
 export interface RequestErrorHandlingOptions {
   /**
+   * Builds the error details of a failed request from its payload, e.g. for the error format of a specific server.
+   * `undefined` falls back to the default details, an empty string means no details.
+   */
+  formatErrorDetails?: (errorData: unknown) => string | undefined
+  /**
    * Status codes which are an expected outcome for this request or handler instance.
    * Authentication and authorization failures are never suppressed.
    */
@@ -105,7 +110,13 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     lastRequestFailureDetails = details
   }
 
-  function buildErrorDetailsFromPayload (errorData: any): string {
+  function buildErrorDetailsFromPayload (errorData: any, errorHandlingOptions: RequestErrorHandlingOptions = {}): string {
+    const formatErrorDetails = errorHandlingOptions.formatErrorDetails ?? defaultErrorOptions.formatErrorDetails
+    const formattedDetails = formatErrorDetails?.(errorData)
+    if (formattedDetails !== undefined) {
+      return formattedDetails
+    }
+
     if (Array.isArray(errorData)) {
       return buildArrayErrorDetails(errorData)
     }
@@ -114,8 +125,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
       return buildObjectErrorDetails(errorData as Record<string, unknown>)
     }
 
-    // Leave out HTML error pages, e.g. of a server or proxy behind the EDC BFF
-    if (typeof errorData === 'string' && !/^\s*<(?:!doctype\s+html|html)[\s>]/i.test(errorData)) {
+    if (typeof errorData === 'string') {
       return errorData
     }
 
@@ -123,10 +133,6 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
   }
 
   function buildArrayErrorDetails (errorData: unknown[]): string {
-    if (errorData.some(error => typeof (error as { message?: unknown } | null)?.message === 'string')) {
-      return buildApiErrorDetails(errorData)
-    }
-
     return errorData.map(entry => {
       if (!entry || typeof entry !== 'object') {
         return ''
@@ -146,24 +152,6 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
 
       return lines.join('\n')
     }).filter(Boolean).join('\n\n')
-  }
-
-  /**
-   * Builds the details of an EDC Management API error (`ApiErrorDetail[]`), one line per distinct message.
-   * The path of an entry is left out, as its message already contains it.
-   */
-  function buildApiErrorDetails (errorData: any[]): string {
-    const lines = errorData
-      .filter(error => typeof error?.message === 'string' && error.message.trim() !== '')
-      .map(error => {
-        const message = error.message.trim()
-        const invalidValue = error.invalidValue
-        return [undefined, null, ''].includes(invalidValue)
-          ? message
-          : `${message} (invalid value: ${String(invalidValue)})`
-      })
-
-    return [...new Set(lines)].join('\n')
   }
 
   function buildObjectErrorDetails (errorData: Record<string, unknown>): string {
@@ -441,7 +429,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
     requestInfrastructure: InfrastructureConfig | null | undefined = infrastructureStore.getSelectedInfrastructure,
     isolateAuthenticationFailures = false,
   ): { success: false, status: number, details?: string, data?: any } {
-    const details = buildErrorDetailsFromPayload(data) || undefined
+    const details = buildErrorDetailsFromPayload(data, errorHandlingOptions) || undefined
     setLastRequestFailureStatus(status)
     setLastRequestFailureDetails(details)
 
@@ -640,7 +628,7 @@ export function useRequestHandling (defaultErrorOptions: RequestErrorHandlingOpt
             raw: response,
           }
         } else if (!response.ok) {
-          const details = buildErrorDetailsFromPayload(data) || undefined
+          const details = buildErrorDetailsFromPayload(data, errorHandlingOptions) || undefined
           setLastRequestFailureStatus(response.status)
           setLastRequestFailureDetails(details)
           if (

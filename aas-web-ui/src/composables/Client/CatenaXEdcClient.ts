@@ -151,6 +151,30 @@ export interface CatenaXEdcDtrResponse<T = unknown> {
 export type CatenaXEdcQueryResult<T> = { success: true, data: T[] } | CatenaXEdcFailure
 
 /**
+ * Error details of the EDC BFF and the EDC behind it, for `formatErrorDetails` of the request handling:
+ * an EDC Management API error (`ApiErrorDetail[]`) gives one line per distinct message, its path is part of the message;
+ * an HTML error page, e.g. of Jetty in the EDC, gives no details. Other payloads get the default details.
+ */
+export function formatEdcErrorDetails (errorData: unknown): string | undefined {
+  if (typeof errorData === 'string') {
+    return /^\s*<(?:!doctype\s+html|html)[\s>]/i.test(errorData) ? '' : undefined
+  }
+  if (!Array.isArray(errorData) || !errorData.some(error => typeof error?.message === 'string')) {
+    return undefined
+  }
+
+  const lines = errorData
+    .filter(error => typeof error?.message === 'string' && error.message.trim() !== '')
+    .map(error => {
+      const message = error.message.trim()
+      return [undefined, null, ''].includes(error.invalidValue)
+        ? message
+        : `${message} (invalid value: ${String(error.invalidValue)})`
+    })
+  return [...new Set(lines)].join('\n')
+}
+
+/**
  * Result of requesting the catalog of a counterparty.
  */
 export type CatenaXEdcCatalogResult = { success: true, data: CatenaXEdcCatalog } | CatenaXEdcFailure
@@ -198,7 +222,7 @@ export function useCatenaXEdcClient (): {
     getRequest,
     postRequest,
     putRequest,
-  } = useRequestHandling()
+  } = useRequestHandling({ formatErrorDetails: formatEdcErrorDetails })
   const envStore = useEnvStore()
 
   async function fetchStatus (proxyId: string): Promise<CatenaXEdcStatus | null> {
