@@ -55,7 +55,7 @@
                     v-model="entry.text"
                     density="comfortable"
                     hide-details
-                    placeholder="https://example.com"
+                    :placeholder="placeholderUrls.website"
                     type="url"
                     variant="outlined"
                   />
@@ -98,6 +98,7 @@
 <script lang="ts" setup>
   import { useEnvStore } from '@/store/EnvironmentStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
+  import { placeholderUrls } from '../utils/placeholderUrls'
   import FormField from './FormField.vue'
 
   const dialog = ref(false)

@@ -11,7 +11,7 @@
               v-model="form.codeOfConduct"
               density="comfortable"
               hide-details
-              placeholder="https://example.com/code-of-conduct"
+              :placeholder="placeholderUrls.codeOfConduct"
               type="url"
               variant="outlined"
             />
@@ -25,7 +25,7 @@
               v-model="form.generalTermsAndConditions"
               density="comfortable"
               hide-details
-              placeholder="https://example.com/terms"
+              :placeholder="placeholderUrls.terms"
               type="url"
               variant="outlined"
             />
@@ -39,7 +39,7 @@
               v-model="form.qualityAssurance"
               density="comfortable"
               hide-details
-              placeholder="https://example.com/quality-agreement"
+              :placeholder="placeholderUrls.qualityAgreement"
               type="url"
               variant="outlined"
             />
@@ -626,6 +626,7 @@
   import { createAll, uploadConsolidatedDataFileByIndex } from './utils/aasAPI'
   import { createCompanyGovernanceSMC } from './utils/companyGovernanceSmcBuilder'
   import { jsonOfSubmodel } from './utils/mainSubmodel'
+  import { placeholderUrls } from './utils/placeholderUrls'
 
   const showDialog = ref(false)
 
