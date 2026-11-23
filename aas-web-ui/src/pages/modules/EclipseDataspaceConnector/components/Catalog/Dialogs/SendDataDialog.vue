@@ -129,6 +129,7 @@
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import { useNavigationStore } from '@/store/NavigationStore'
   import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil'
+  import { withoutRuntimeFields } from '@/utils/AAS/RuntimeFields'
 
   const props = withDefaults(defineProps<{
     modelValue: boolean
@@ -163,6 +164,7 @@
   const sendingData = ref<'environment' | 'submodel' | null>(null) // Data currently being sent
 
   // Computed Properties
+  // The previews show what is sent: without the fields the UI adds at runtime, e.g. `endpoints` with internal repository URLs
   // AAS Environment of the selected AAS with only the selected Submodels (all of them initially)
   const environmentTab = computed<JsonPreviewTab>(() => ({
     value: 'environment',
@@ -177,7 +179,7 @@
     title: 'Submodel',
     previewTitle: 'Submodel',
     previewIcon: 'mdi-folder',
-    json: selectedSubmodels.value[0],
+    json: withoutRuntimeFields(selectedSubmodels.value[0]),
   }))
 
   // Watchers
@@ -205,12 +207,13 @@
     // The AAS only keeps the references to the selected Submodels
     const selectedIds = new Set(selectedSubmodels.value.map(sm => sm.id))
     const submodelRefs: Array<any> = Array.isArray(aas.submodels) ? aas.submodels : []
+    // Each AAS and Submodel on its own, the environment keeps its `conceptDescriptions`
     return {
       assetAdministrationShells: [{
-        ...aas,
+        ...withoutRuntimeFields(aas),
         submodels: submodelRefs.filter(submodelRef => selectedIds.has(extractIdFromReference(submodelRef, 'Submodel'))),
       }],
-      submodels: selectedSubmodels.value,
+      submodels: selectedSubmodels.value.map(submodel => withoutRuntimeFields(submodel)),
       conceptDescriptions: [],
     }
   }

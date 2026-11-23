@@ -11,6 +11,7 @@ import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient
 import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil'
+import { withoutRuntimeFields } from '@/utils/AAS/RuntimeFields'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { safeSegment } from '@/utils/StringUtils'
 
@@ -38,9 +39,6 @@ type CreateClientAASXResult = {
   blob: Blob
   warnings: string[]
 }
-
-const runtimeKeys = new Set(['path', 'timestamp', 'id', 'conceptDescriptions', 'endpoints', 'isExternal'])
-const identifiableModelTypes = new Set(['AssetAdministrationShell', 'Submodel', 'ConceptDescription'])
 
 class InMemoryReadWriteSeeker implements ReadWriteSeeker {
   private bytes: Uint8Array = new Uint8Array()
@@ -72,26 +70,6 @@ function asString (value: unknown): string {
 function hasKeys (value: unknown): value is JsonRecord {
   const record = asRecord(value)
   return record !== null && Object.keys(record).length > 0
-}
-
-function shouldPreservePath (record: JsonRecord, key: string): boolean {
-  if (key !== 'path') {
-    return false
-  }
-
-  const hasContentType = typeof record.contentType === 'string' && record.contentType.trim() !== ''
-  const hasModelType = typeof record.modelType === 'string' && record.modelType.trim() !== ''
-
-  return hasContentType && !hasModelType
-}
-
-function shouldPreserveId (record: JsonRecord, key: string): boolean {
-  if (key !== 'id') {
-    return false
-  }
-
-  const modelType = asString(record.modelType).trim()
-  return identifiableModelTypes.has(modelType)
 }
 
 function stringifyUnknown (value: unknown): string {
@@ -143,26 +121,6 @@ async function toBytes (payload: unknown): Promise<Uint8Array> {
   }
 
   return new TextEncoder().encode(JSON.stringify(payload))
-}
-
-function cloneWithoutRuntimeFields (value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map(item => cloneWithoutRuntimeFields(item))
-  }
-
-  const record = asRecord(value)
-  if (record) {
-    const result: JsonRecord = {}
-    for (const [key, item] of Object.entries(record)) {
-      if (runtimeKeys.has(key) && !shouldPreservePath(record, key) && !shouldPreserveId(record, key)) {
-        continue
-      }
-      result[key] = cloneWithoutRuntimeFields(item)
-    }
-    return result
-  }
-
-  return value
 }
 
 function normalizeId (id: string): string {
@@ -421,7 +379,7 @@ export function useAASXPackaging (): {
       if (!hasKeys(cd)) {
         continue
       }
-      const cleanCd = cloneWithoutRuntimeFields(cd)
+      const cleanCd = withoutRuntimeFields(cd)
       if (!hasKeys(cleanCd)) {
         continue
       }
@@ -591,7 +549,7 @@ export function useAASXPackaging (): {
         semanticIds.add(semanticId)
       }
 
-      const cleanSubmodel = cloneWithoutRuntimeFields(rawSubmodel)
+      const cleanSubmodel = withoutRuntimeFields(rawSubmodel)
       if (!hasKeys(cleanSubmodel)) {
         continue
       }
@@ -600,7 +558,7 @@ export function useAASXPackaging (): {
       cleanSubmodels.push(cleanSubmodel as JsonRecord)
     }
 
-    const cleanAas = cloneWithoutRuntimeFields(aas)
+    const cleanAas = withoutRuntimeFields(aas)
     if (!hasKeys(cleanAas)) {
       throw new Error('Failed to build clean AAS payload.')
     }
