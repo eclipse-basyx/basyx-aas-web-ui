@@ -8,17 +8,19 @@
     label-plural="Contracts"
     :query-page="queryFilteredContracts"
     :update="updateContractDefinition"
+    @proxy-change="onProxyChange"
   >
     <template #filter>
       <v-select
-        v-model="selectedContractFilter"
         density="compact"
         hide-details
         :items="contractFilterItems"
         label="Filter by Asset or Policy Type"
         :loading="policyFilterItemsLoading"
+        :model-value="selectedContractFilter"
         variant="outlined"
         @update:menu="open => open && loadPolicyFilterItems()"
+        @update:model-value="selectContractFilter"
       />
     </template>
 
@@ -90,10 +92,19 @@
     ...policyFilterItems('usagePolicy'),
   ])
 
-  // Watchers
-  watch(selectedContractFilter, () => {
+  // Methods
+  // Only a filter chosen by the user reloads the list; a reset by `onProxyChange` loads with the reload of the tab
+  function selectContractFilter (filter: ContractFilter): void {
+    selectedContractFilter.value = filter
     resourceTab.value?.loadResources()
-  })
+  }
+
+  // The policy filter items and a selected policy belong to the previous EDC
+  function onProxyChange (proxyId: string): void {
+    listProxyId = proxyId
+    contracts.value = []
+    selectedContractFilter.value = allContractsFilter
+  }
 
   /**
    * Queries a page of the contracts. A filter is evaluated in the browser, so it returns all matching contracts at once.
@@ -119,13 +130,7 @@
       }
       case 'accessPolicy':
       case 'usagePolicy': {
-        const policyContracts = loadedContracts.filter(contract => policyIdOf[type](contract) === value)
-        // Show all contracts again once no contract uses the policy anymore, e.g. after deleting the last one;
-        // the changed filter reloads the list
-        if (policyContracts.length === 0 && !page.search) {
-          selectedContractFilter.value = allContractsFilter
-        }
-        return { success: true, data: policyContracts, hasMore: false }
+        return { success: true, data: loadedContracts.filter(contract => policyIdOf[type](contract) === value), hasMore: false }
       }
     }
     return contractsResult
@@ -133,17 +138,22 @@
 
   // The policy filter items are taken from all contracts, loaded when the filter menu opens
   async function loadPolicyFilterItems (): Promise<void> {
+    const proxyId = listProxyId
     policyFilterItemsLoading.value = true
-    const result = await queryAllEdcPages(querySpec => queryContractDefinitions(listProxyId, { querySpec }))
-    contracts.value = result.success ? result.data : []
+    const result = await queryAllEdcPages(querySpec => queryContractDefinitions(proxyId, { querySpec }))
+    if (proxyId === listProxyId) { // Not when another EDC was selected meanwhile
+      contracts.value = result.success ? result.data : []
+    }
     policyFilterItemsLoading.value = false
   }
 
   /**
    * Returns the filter items for the distinct policy IDs of the loaded contracts, sorted by ID.
+   * The selected policy stays an item when no contract uses it anymore, e.g. after deleting the last one.
    */
   function policyFilterItems (type: PolicyFilterType) {
-    const policyIds = [...new Set(contracts.value.map(contract => policyIdOf[type](contract)).filter(Boolean))].toSorted()
+    const selectedPolicyIds = selectedContractFilter.value.type === type ? [selectedContractFilter.value.value] : []
+    const policyIds = [...new Set([...contracts.value.map(contract => policyIdOf[type](contract)), ...selectedPolicyIds].filter(Boolean))].toSorted()
     return policyIds.map(id => ({ title: id, value: { type, value: id } }))
   }
 </script>

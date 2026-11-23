@@ -1,11 +1,13 @@
 import type { EdcListPage, EdcPageResult } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPaging'
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest'
+import { reactive } from 'vue'
 import EdcResourceTab from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceTab.vue'
 
 const mocks = vi.hoisted(() => ({
   dispatchSnackbar: vi.fn(),
   fetchStatus: vi.fn(),
+  infrastructureStore: null as unknown as { getSelectedInfrastructure: { catenaX: { edc: { proxyId: string } } } },
 }))
 
 vi.mock('@/composables/Client/CatenaXEdcClient', () => ({
@@ -13,7 +15,7 @@ vi.mock('@/composables/Client/CatenaXEdcClient', () => ({
 }))
 
 vi.mock('@/store/InfrastructureStore', () => ({
-  useInfrastructureStore: () => ({ getSelectedInfrastructure: { catenaX: { edc: { proxyId: 'proxy-a' } } } }),
+  useInfrastructureStore: () => mocks.infrastructureStore,
 }))
 
 vi.mock('@/store/NavigationStore', () => ({
@@ -40,10 +42,14 @@ function mountTab (queryPage: Mock<QueryPage>) {
         'v-list': slotStub,
         'v-virtual-scroll': { props: ['items'], template: '<div><div v-for="item in items" :key="item[\'@id\']"><slot :item="item" /></div></div>' },
         'v-text-field': { props: ['modelValue'], emits: ['update:modelValue'], template: '<input class="search" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)">' },
-        'EdcResourceListItem': { props: ['resource'], template: '<div class="item">{{ resource[\'@id\'] }}</div>' },
-        'UpdateEdcResourceDialog': true,
+        'EdcResourceListItem': {
+          props: ['resource'],
+          emits: ['select', 'edit'],
+          template: '<div class="item" @click="$emit(\'select\')">{{ resource[\'@id\'] }}<button class="edit" @click.stop="$emit(\'edit\')" /></div>',
+        },
+        'UpdateEdcResourceDialog': { props: ['modelValue', 'resource'], template: '<div v-if="modelValue" class="update-dialog">{{ resource[\'@id\'] }}</div>' },
         'DeleteEdcResourceDialog': true,
-        'JSONPreview': true,
+        'JSONPreview': { props: ['jsonContent'], template: '<div class="preview">{{ jsonContent[\'@id\'] }}</div>' },
         'v-tooltip': true,
         'v-menu': true,
         'v-btn': true,
@@ -61,6 +67,7 @@ describe('EdcResourceTab', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.fetchStatus.mockResolvedValue({ managementWritesAllowed: false })
+    mocks.infrastructureStore = reactive({ getSelectedInfrastructure: { catenaX: { edc: { proxyId: 'proxy-a' } } } })
   })
 
   afterEach(() => {
@@ -100,5 +107,28 @@ describe('EdcResourceTab', () => {
     expect(wrapper.find('.item').exists()).toBe(false)
     expect(wrapper.text()).toContain('Assets Not Available')
     expect(mocks.dispatchSnackbar).toHaveBeenCalledWith(expect.objectContaining({ baseError: 'Failed to load the Assets.' }))
+  })
+
+  it('loads the list from the new proxy after switching the infrastructure, without the selection and dialogs of the previous one', async () => {
+    mocks.fetchStatus.mockResolvedValue({ managementWritesAllowed: true })
+    const queryPage = vi.fn<QueryPage>(async proxyId => ({
+      success: true,
+      data: resourcesOf(proxyId === 'proxy-a' ? ['asset-a'] : ['asset-b']),
+    }))
+    const wrapper = mountTab(queryPage)
+    await flushPromises()
+    await wrapper.find('.item').trigger('click')
+    await wrapper.find('.item .edit').trigger('click')
+    expect(wrapper.find('.preview').text()).toBe('asset-a')
+    expect(wrapper.find('.update-dialog').text()).toBe('asset-a')
+
+    mocks.infrastructureStore.getSelectedInfrastructure = { catenaX: { edc: { proxyId: 'proxy-b' } } }
+    await flushPromises()
+
+    expect(queryPage).toHaveBeenLastCalledWith('proxy-b', { offset: 0, limit: 50, search: undefined })
+    expect(wrapper.findAll('.item').map(item => item.text())).toEqual(['asset-b'])
+    expect(wrapper.find('.preview').exists()).toBe(false)
+    expect(wrapper.find('.update-dialog').exists()).toBe(false)
+    expect(wrapper.emitted('proxy-change')).toEqual([['proxy-b']])
   })
 })

@@ -280,6 +280,11 @@
     delete?: (proxyId: string, resourceId: string) => Promise<CatenaXEdcResult> // Not needed with the `delete-dialog` slot
   }>()
 
+  const emit = defineEmits<{
+    // Another EDC is selected, e.g. by switching the infrastructure; emitted before the list loads from it
+    (event: 'proxy-change', proxyId: string): void
+  }>()
+
   defineExpose({ loadResources })
 
   const slots = useSlots()
@@ -320,6 +325,16 @@
     virtualScrollRef,
     queryPage: page => props.queryPage(edcProxyId.value, { ...page, search: searchText() }),
     onFailure: failure => showFailureMessage(`Failed to load the ${props.labelPlural}.`, edcBffFailureText(failure)),
+  })
+
+  // Watchers
+  // List, selection and open dialogs belong to the previous EDC, its IDs must not reach the new one
+  watch(edcProxyId, proxyId => {
+    updateDialog.open = false
+    deleteDialog.open = false
+    selectedResource.value = null
+    emit('proxy-change', proxyId)
+    void loadResources()
   })
 
   const reloadForSearch = debounce(() => {
