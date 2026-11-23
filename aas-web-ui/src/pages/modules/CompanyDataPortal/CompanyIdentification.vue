@@ -123,7 +123,7 @@
                         v-model="entry.text"
                         density="comfortable"
                         hide-details
-                        placeholder="https://example.com"
+                        :placeholder="placeholderUrls.website"
                         type="url"
                         variant="outlined"
                       />
@@ -397,6 +397,7 @@
   import FormField from './components/FormField.vue'
   import { useFormStore } from './stores/formData'
   import { createCompanyIdentificationSMC } from './utils/companySmcBuilder'
+  import { placeholderUrls } from './utils/placeholderUrls'
   // prop with save function
   const props = defineProps<{
     next: () => void

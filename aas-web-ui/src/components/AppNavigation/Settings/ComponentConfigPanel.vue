@@ -7,7 +7,7 @@
         :label="endpointField.label + ' Endpoint URL'"
         :model-value="getEndpointFieldValue(components, endpointField)"
         :name="`basyx-${endpointField.key}-endpoint`"
-        placeholder="https://example.com/api"
+        :placeholder="endpointPlaceholder"
         variant="outlined"
         @keyup.enter="$emit('test-connection', endpointField.key)"
         @update:model-value="handleUrlUpdate(endpointField, $event)"
@@ -109,6 +109,9 @@
     'update:registry-integration': [componentKey: BaSyxComponentKey, enabled: boolean]
     'update:discovery-integration': [componentKey: BaSyxComponentKey, enabled: boolean]
   }>()
+
+  // Kept out of the template: vue-tsc 3.3.14 generates broken code for `//` in template attributes (vuejs/language-tools#6322)
+  const endpointPlaceholder = 'https://example.com/api'
 
   const endpointFields = computed(() => getEndpointFieldsForTemplate(props.template))
 
