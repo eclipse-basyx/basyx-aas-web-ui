@@ -356,98 +356,6 @@
               </div>
             </template>
 
-            <!-- <v-card-actions v-if="showDatasetActions" class="mt-2 pa-0">
-              <v-chip
-                v-if="edcStatus"
-                class="mr-2"
-                :color="
-                  edcStatus.startsWith('Error')
-                    ? 'error'
-                    : edcStatus.includes('successfully')
-                      ? 'success'
-                      : 'primary'
-                "
-                density="compact"
-                label
-                variant="tonal"
-              >
-                <v-progress-circular
-                  v-if="dataTranserInProgress"
-                  class="mr-2"
-                  indeterminate
-                  size="16"
-                  width="2"
-                />
-                {{ edcStatus }}
-              </v-chip>
-
-              <v-spacer />
-
-              Use case 2: Discovery
-              <template v-if="isDigitalTwinRegistryAsset">
-                <div>
-                  <v-text-field
-                    v-model="discoveryId"
-                    clearable
-                    density="compact"
-                    hide-details
-                    label="Identifier to discover"
-                    variant="outlined"
-                    width="350"
-                  />
-                </div>
-
-                <v-btn
-                  class="text-buttonText"
-                  :color="dataTranserInProgress ? 'error' : 'primary'"
-                  :disabled="!dataTranserInProgress && discoveryId == ''"
-                  :prepend-icon="dataTranserInProgress ? 'mdi-close' : 'mdi-magnify'"
-                  rounded="lg"
-                  :text="dataTranserInProgress ? 'Cancel Discovery' : 'Discover ID'"
-                  variant="flat"
-                  @click="dataTranserInProgress ? discoverIdRef?.cancel() : discoverIdRef?.discoverId()"
-                />
-              </template>
-
-              Use case 3: Fetch Asset
-              <v-btn
-                v-else
-                class="text-buttonText"
-                :color="dataTranserInProgress ? 'error' : 'primary'"
-                :disabled="!dataTranserInProgress && !isHttpDataPull"
-                :prepend-icon="dataTranserInProgress ? 'mdi-close' : 'mdi-download'"
-                rounded="lg"
-                :text="dataTranserInProgress ? 'Cancel Fetch' : 'Fetch Asset'"
-                variant="flat"
-                @click="dataTranserInProgress ? fetchAssetRef?.cancel() : fetchAssetRef?.fetchAsset()"
-              />
-            </v-card-actions> -->
-
-            <!--Use case 2: Discovery -->
-            <!-- <CatalogDiscoverId
-              v-if="isDigitalTwinRegistryAsset"
-              ref="discoverIdRef"
-              :discovering-id="dataTranserInProgress"
-              :discovery-id="discoveryId"
-              :full-height="fullHeightAsset"
-              :selected-business-partner="selectedBusinessPartner"
-              :selected-catalog-dataset="selectedCatalogDataset"
-              @update:discovering-id="dataTranserInProgress = $event"
-              @update:edc-status="edcStatus = $event"
-            /> -->
-
-            <!--Use case 3: Fetch Asset -->
-            <!-- <CatalogFetchAsset
-              v-else
-              ref="fetchAssetRef"
-              :fetching-asset="dataTranserInProgress"
-              :full-height="fullHeightAsset"
-              :selected-business-partner="selectedBusinessPartner"
-              :selected-catalog-dataset="selectedCatalogDataset"
-              @update:edc-status="edcStatus = $event"
-              @update:fetching-asset="dataTranserInProgress = $event"
-            /> -->
-
           </template>
 
           <!-- Opens once the Catalog Dataset is selected, which a dialog restored from the URL has to wait for -->
@@ -518,11 +426,6 @@
   const fullHeightMainJsonPreviewWithTwoActionsHalf = ref('calc((100vh - 64px - 48px - 40px - 32px - 2px - 2 * (64px + 32px) - 2 * 44px - 8px) / 2)') // As above, with actions below the second JSON preview too
 
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null)
-  // const dataTranserInProgress = ref(false)
-  // const discoverIdRef = ref<InstanceType<typeof CatalogDiscoverId> | null>(null)
-  // const discoveryId = ref<string>('')
-  // const edcStatus = ref('')
-  // const fetchAssetRef = ref<InstanceType<typeof CatalogFetchAsset> | null>(null)
 
   const selectedBusinessPartner = ref<CatenaXPartner | null>(null)
   const selectedCatalogDataset = ref({} as any)
@@ -565,22 +468,6 @@
       ? fullHeightMainJsonPreviewWithActions.value
       : fullHeightMainJsonPreview.value
   })
-  // const isDigitalTwinRegistryAsset = computed(() => {
-  //   const id: string = selectedCatalogDataset.value?.['@id'] ?? ''
-  //   return id.includes('dt-registry') || id.includes('digitaltwin-registry') || id.includes('digital-twin-registry')
-  // })
-  // const isHttpDataPull = computed(() => {
-  //   const distributions = selectedCatalogDataset.value?.['dcat:distribution'] ?? selectedCatalogDataset.value?.distribution
-  //   if (!distributions) return false
-  //   const distArray = Array.isArray(distributions)
-  //     ? distributions
-  //     : [distributions]
-  //   return distArray.some((dist: any) => {
-  //     const type = String(dist['@type'] ?? '').toLowerCase()
-  //     const format = dist['dct:format']?.['@id'] ?? dist.format
-  //     return ['dcat:distribution', 'distribution'].includes(type) && format === 'HttpData-PULL'
-  //   })
-  // })
 
   // Loaded pages of the catalog, in the order of the provider
   const {
