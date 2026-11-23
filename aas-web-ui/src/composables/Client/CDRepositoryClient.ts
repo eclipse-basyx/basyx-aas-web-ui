@@ -2,10 +2,7 @@ import type { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
 import { jsonization } from '@aas-core-works/aas-core3.1-typescript'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
-import { base64Encode } from '@/utils/EncodeDecodeUtils'
-import { stripLastCharacter } from '@/utils/StringUtils'
-
-export const CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH = '/concept-descriptions'
+import { CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH, endpointUrl, resourceUrl } from '@/utils/EndpointUrls'
 
 export function useCDRepositoryClient () {
   // Stores
@@ -27,22 +24,11 @@ export function useCDRepositoryClient () {
   async function fetchCdList (): Promise<Array<any>> {
     const failResponse = [] as Array<any>
 
-    if (conceptDescriptionRepoUrl.value.trim() === '') {
+    const cdRepoPath = endpointUrl(conceptDescriptionRepoUrl.value, CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH)
+    if (cdRepoPath === '') {
       return failResponse
     }
 
-    let cdRepoUrl = conceptDescriptionRepoUrl.value
-    if (cdRepoUrl.trim() === '') {
-      return failResponse
-    }
-    if (cdRepoUrl.endsWith('/')) {
-      cdRepoUrl = stripLastCharacter(cdRepoUrl)
-    }
-    if (!cdRepoUrl.endsWith(CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH)) {
-      cdRepoUrl += CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH
-    }
-
-    const cdRepoPath = cdRepoUrl
     const cdRepoContext = 'retrieving all CDs'
     const disableMessage = false
     try {
@@ -78,22 +64,11 @@ export function useCDRepositoryClient () {
       return failResponse
     }
 
-    if (conceptDescriptionRepoUrl.value.trim() === '' && !endpoint) {
+    const cdEndpoint = resourceUrl(endpoint || conceptDescriptionRepoUrl.value, CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH, cdId)
+    if (cdEndpoint === '') {
       return failResponse
     }
 
-    let cdRepoUrl = endpoint || conceptDescriptionRepoUrl.value
-    if (cdRepoUrl.trim() === '') {
-      return failResponse
-    }
-    if (cdRepoUrl.endsWith('/')) {
-      cdRepoUrl = stripLastCharacter(cdRepoUrl)
-    }
-    if (!cdRepoUrl.endsWith(CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH)) {
-      cdRepoUrl += CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH
-    }
-
-    const cdEndpoint = cdRepoUrl + '/' + base64Encode(cdId)
     return fetchCd(cdEndpoint)
   }
 
@@ -224,24 +199,7 @@ export function useCDRepositoryClient () {
       return failResponse
     }
 
-    if (conceptDescriptionRepoUrl.value.trim() === '') {
-      return failResponse
-    }
-
-    let cdRepoUrl = conceptDescriptionRepoUrl.value
-    if (cdRepoUrl.trim() === '') {
-      return failResponse
-    }
-    if (cdRepoUrl.endsWith('/')) {
-      cdRepoUrl = stripLastCharacter(cdRepoUrl)
-    }
-    if (!cdRepoUrl.endsWith(CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH)) {
-      cdRepoUrl += CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH
-    }
-
-    const cdEndpoint = cdRepoUrl + '/' + base64Encode(cdId)
-
-    return cdEndpoint || failResponse
+    return resourceUrl(conceptDescriptionRepoUrl.value, CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH, cdId)
   }
 
   async function postConceptDescription (
@@ -250,22 +208,15 @@ export function useCDRepositoryClient () {
   ): Promise<boolean> {
     const failResponse = false
 
-    let cdRepoUrl = conceptDescriptionRepoUrl.value.trim()
-    if (cdRepoUrl === '') {
+    const path = endpointUrl(conceptDescriptionRepoUrl.value, CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH)
+    if (path === '') {
       return failResponse
-    }
-    if (cdRepoUrl.endsWith('/')) {
-      cdRepoUrl = stripLastCharacter(cdRepoUrl)
-    }
-    if (!cdRepoUrl.endsWith(CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH)) {
-      cdRepoUrl += CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH
     }
 
     const jsonConceptDescription = jsonization.toJsonable(conceptDescription)
 
     const context = 'creating Concept Description'
     const disableMessage = true
-    const path = cdRepoUrl
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
     const body = JSON.stringify(jsonConceptDescription)
@@ -289,22 +240,15 @@ export function useCDRepositoryClient () {
   async function putConceptDescription (conceptDescription: aasTypes.ConceptDescription): Promise<boolean> {
     const failResponse = false
 
-    let cdRepoUrl = conceptDescriptionRepoUrl.value.trim()
-    if (cdRepoUrl === '') {
+    const path = resourceUrl(conceptDescriptionRepoUrl.value, CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH, conceptDescription.id)
+    if (path === '') {
       return failResponse
-    }
-    if (cdRepoUrl.endsWith('/')) {
-      cdRepoUrl = stripLastCharacter(cdRepoUrl)
-    }
-    if (!cdRepoUrl.endsWith(CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH)) {
-      cdRepoUrl += CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH
     }
 
     const jsonConceptDescription = jsonization.toJsonable(conceptDescription)
 
     const context = 'updating Concept Description'
     const disableMessage = false
-    const path = cdRepoUrl + '/' + base64Encode(conceptDescription.id)
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
     const body = JSON.stringify(jsonConceptDescription)
