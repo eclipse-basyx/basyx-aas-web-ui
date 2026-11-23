@@ -25,7 +25,6 @@ import {
   buildConnectorDiscoveryRequestBody,
   buildDspVersionParamsRequestBody,
   buildQuerySpecRequestBody,
-  createHttpError,
   fetchData,
   fetchDtrShellDescriptorById,
   fetchDtrShellDescriptors,
@@ -33,6 +32,7 @@ import {
   forwardToEdc,
   pushData,
 } from './edcRequests.js'
+import { createHttpError } from './httpErrors.js'
 
 const proxyUrls = getProxyUrls()
 if (proxyUrls.length > 0) {

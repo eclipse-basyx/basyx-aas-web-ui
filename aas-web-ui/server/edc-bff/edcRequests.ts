@@ -10,6 +10,7 @@ import type {
   EdcSubmodelFetchRequest,
 } from './types.js'
 import { isCounterPartyAddressAllowed, isDataPlaneAddressAllowed, joinManagementUrl } from './config.js'
+import { createHttpError } from './httpErrors.js'
 
 export interface EdcForwardResult {
   status: number
@@ -639,15 +640,6 @@ function describeFetchError (error: unknown): string {
     return error.name === 'AbortError' ? 'Request to EDC timed out' : error.message
   }
   return 'Unknown error while forwarding request to EDC'
-}
-
-export function createHttpError (message: string, status: number, details?: string): Error & { status: number, details?: string } {
-  const error = new Error(message) as Error & { status: number, details?: string }
-  error.status = status
-  if (details) {
-    error.details = details
-  }
-  return error
 }
 
 function assertCounterPartyAddressAllowed (proxy: EdcProxyConfig, counterPartyAddress: string): void {

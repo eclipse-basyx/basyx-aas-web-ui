@@ -1,4 +1,4 @@
-import { createHttpError } from './edcRequests.js'
+import { createHttpError } from './httpErrors.js'
 
 /**
  * Secrets in the data address of an asset, e.g. `authCode` or `header:x-api-key`, and in its private properties,
