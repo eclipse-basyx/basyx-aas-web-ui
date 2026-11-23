@@ -3,6 +3,7 @@ import type { Server } from 'node:http'
 import { createServer as createHttpServer } from 'node:http'
 import { afterEach, describe, expect, it } from 'vitest'
 import { createEdcBffServer } from '../../../server/edc-bff/server'
+import { createJwt, createTestKeyPair } from '../../helpers/jwt'
 
 let server: Server | null = null
 let upstreamServer: Server | null = null
@@ -558,6 +559,29 @@ describe('EDC BFF server', () => {
 
     expect(deleteResponse.status).toBe(401)
     expect(upstream.requests).toHaveLength(0)
+  })
+
+  it('rejects management writes with a token without the required role in JWT auth mode', async () => {
+    const signingKey = await createTestKeyPair('kid-1')
+    const upstream = await startUpstreamServer(record => record.url === '/certs' ? { keys: [signingKey.jwk] } : undefined)
+    const baseUrl = await startBffServer(upstream.port, [], {
+      allowManagementWrites: true,
+      auth: { mode: 'jwt', jwksUrl: `http://127.0.0.1:${upstream.port}/certs`, requiredRoles: ['edc-admin'] },
+    })
+    const deleteAsset = async (claims: Record<string, unknown>) => fetch(`${baseUrl}/assets/asset-1`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${await createJwt(signingKey, claims)}` },
+    })
+
+    const withoutRoleResponse = await deleteAsset({ realm_access: { roles: ['edc-viewer'] } })
+    const withRoleResponse = await deleteAsset({ realm_access: { roles: ['edc-admin'] } })
+
+    expect(withoutRoleResponse.status).toBe(403)
+    await expect(withoutRoleResponse.json()).resolves.toMatchObject({ error: 'JWT role missing' })
+    expect(withRoleResponse.status).toBe(204)
+    expect(upstream.requests.filter(request => request.url !== '/certs')).toMatchObject([
+      { method: 'DELETE', url: '/management/v3/assets/asset-1' },
+    ])
   })
 
   it('serves DTR descriptor pages through the EDC flow without exposing secrets', async () => {
