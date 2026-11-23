@@ -81,8 +81,11 @@ export function useAuth (router?: Router) {
           }
           await infrastructureStore.dispatchUpdateInfrastructure(updatedInfra)
           infrastructureStore.setAuthenticationStatusForInfrastructure(infra.id, true)
-          navStore.dispatchTriggerAASListReload()
-          navStore.dispatchTriggerTreeviewReload()
+          // AAS list and tree show the selected infrastructure, a login to another one doesn't change them
+          if (infra.id === infrastructureStore.getSelectedInfrastructure?.id) {
+            navStore.dispatchTriggerAASListReload()
+            navStore.dispatchTriggerTreeviewReload()
+          }
 
           navStore.dispatchSnackbar({
             status: true,

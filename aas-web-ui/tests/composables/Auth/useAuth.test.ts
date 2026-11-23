@@ -139,6 +139,28 @@ describe('useAuth', () => {
       token: expect.objectContaining({ accessToken: 'other-token' }),
     }))
     expect(mocks.setAuthenticationStatusForInfrastructure).toHaveBeenCalledWith('other-infrastructure', true)
+    // AAS list and tree belong to the selected infrastructure
+    expect(mocks.dispatchTriggerAASListReload).not.toHaveBeenCalled()
+    expect(mocks.dispatchTriggerTreeviewReload).not.toHaveBeenCalled()
+  })
+
+  it('reloads the AAS list and tree after a client-credentials login to the selected infrastructure', async () => {
+    state.selectedInfrastructure = {
+      id: 'secured-infrastructure',
+      auth: {
+        securityType: 'OAuth2',
+        oauth2: { host: 'https://idp.example', clientId: 'service', clientSecret: 'secret', authFlow: 'client-credentials' },
+      },
+    }
+    mocks.authenticateOAuth2ClientCredentials.mockResolvedValue({ accessToken: 'token', expiresAt: 1 })
+    const { useAuth } = await import('@/composables/Auth/useAuth')
+    const { login } = useAuth()
+
+    await login()
+
+    expect(mocks.setAuthenticationStatusForInfrastructure).toHaveBeenCalledWith('secured-infrastructure', true)
+    expect(mocks.dispatchTriggerAASListReload).toHaveBeenCalledTimes(1)
+    expect(mocks.dispatchTriggerTreeviewReload).toHaveBeenCalledTimes(1)
   })
 
   it('clears the token of an infrastructure other than the selected one without leaving the page', async () => {
