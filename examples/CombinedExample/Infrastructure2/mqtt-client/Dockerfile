@@ -1,4 +1,4 @@
-FROM python:3.14.10-slim
+FROM python:3.15.2-slim
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 RUN pip install paho-mqtt
