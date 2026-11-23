@@ -3,7 +3,6 @@ import type { InfrastructureConfig } from '@/types/Infrastructure'
 import { defineStore } from 'pinia'
 import { ASS_DISCOVERY_ENDPOINT_PATH } from '@/composables/Client/AASDiscoveryClient'
 import { ASS_REGISTRY_ENDPOINT_PATH } from '@/composables/Client/AASRegistryClient'
-import { ASS_REPOSITORY_ENDPOINT_PATH } from '@/composables/Client/AASRepositoryClient'
 import { CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH } from '@/composables/Client/CDRepositoryClient'
 import { COMPANY_LOOKUP_ENDPOINT_PATHS } from '@/composables/Client/CompanyLookup/constants/api'
 import { SUBMODEL_REGISTRY_ENDPOINT_PATH } from '@/composables/Client/SMRegistryClient'
@@ -14,6 +13,7 @@ import { useInfrastructureStorage } from '@/composables/Infrastructure/useInfras
 import { type RequestSecurityContext, useRequestHandling } from '@/composables/RequestHandling'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useNavigationStore } from '@/store/NavigationStore'
+import { AAS_REPOSITORY_ENDPOINT_PATH } from '@/utils/AAS/AasRepositoryUrls'
 import { getFallbackConnectionFailure, isValidConnectionResponse, isValidServiceDescription } from '@/utils/ComponentConnectionUtils'
 import { isValidCustomHeader } from '@/utils/CustomHeaderUtils'
 import { getActiveComponentKeys, isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
@@ -109,7 +109,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       description: ref(null),
       connect: () => connectComponent('AASRepo'),
       label: 'AAS Repository URL',
-      pathCheck: ASS_REPOSITORY_ENDPOINT_PATH,
+      pathCheck: AAS_REPOSITORY_ENDPOINT_PATH,
       additionalParams: '?limit=1',
     },
     SubmodelRepo: {

@@ -5,10 +5,10 @@ import { useIDUtils } from '@/composables/IDUtils'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useAASStore } from '@/store/AASDataStore'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
+import { aasEndpointUrl } from '@/utils/AAS/AasRepositoryUrls'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { getActiveComponentUrlForTemplate, usesSubmodelSuperpath } from '@/utils/InfrastructureUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
-import { useAASRepositoryClient } from './AASRepositoryClient'
 
 export const SUBMODEL_REPOSITORY_ENDPOINT_PATH = '/submodels'
 
@@ -27,7 +27,6 @@ export function useSMRepositoryClient () {
     consumeLastRequestFailureDetails,
   } = useRequestHandling()
   const { generateUUIDFromString } = useIDUtils()
-  const { getAasEndpointById } = useAASRepositoryClient()
 
   function ensureWriteSuccess (response: any): boolean {
     return response?.success === true
@@ -35,7 +34,14 @@ export function useSMRepositoryClient () {
 
   // Computed Properties
   const submodelRepoUrl = computed(() => infrastructureStore.getSubmodelRepoURL)
+  const aasRepositoryUrl = computed(() => infrastructureStore.getAASRepoURL)
   const selectedInfrastructure = computed(() => infrastructureStore.getSelectedInfrastructure)
+
+  // Endpoint of an AAS in the AAS Repository of the given or the selected infrastructure, for the Submodel superpath
+  function getAasEndpointById (aasId: string, infrastructure?: InfrastructureConfig): string {
+    const aasRepoUrl = infrastructure ? getActiveComponentUrlForTemplate(infrastructure, 'AASRepo') : aasRepositoryUrl.value
+    return aasEndpointUrl(aasRepoUrl, aasId)
+  }
 
   function shouldUseAasSuperpath (infrastructure?: InfrastructureConfig): boolean {
     return usesSubmodelSuperpath(infrastructure ?? selectedInfrastructure.value)

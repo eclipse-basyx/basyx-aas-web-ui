@@ -6,12 +6,11 @@ import { appendQueryParams, normalizeLimit, type PaginationPageOptions, type Pag
 import { useIDUtils } from '@/composables/IDUtils'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
+import { AAS_REPOSITORY_ENDPOINT_PATH, aasEndpointUrl, shellsUrl } from '@/utils/AAS/AasRepositoryUrls'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
 import { downloadFile } from '@/utils/generalUtils'
 import { getActiveComponentUrlForTemplate } from '@/utils/InfrastructureUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
-
-export const ASS_REPOSITORY_ENDPOINT_PATH = '/shells'
 
 export type AasListPageOptions = PaginationPageOptions & {
   /**
@@ -65,7 +64,7 @@ export function useAASRepositoryClient () {
 
     // remove '/shells' AAS Repository URL and add '/upload' to construct the upload URL
     // TODO: This is a workaround, as the AAS Repository does not provide an upload endpoint but rather the AAS Environment. This should be changed in the future.
-    return aasRepoUrl.replace(ASS_REPOSITORY_ENDPOINT_PATH, '') + '/upload'
+    return aasRepoUrl.replace(AAS_REPOSITORY_ENDPOINT_PATH, '') + '/upload'
   })
 
   /**
@@ -75,19 +74,12 @@ export function useAASRepositoryClient () {
    * @returns {string} The '/shells' endpoint, or an empty string if no AAS Repository is configured.
    */
   function getShellsUrl (infrastructure?: InfrastructureConfig): string {
-    let aasRepoUrl = infrastructure
-      ? getActiveComponentUrlForTemplate(infrastructure, 'AASRepo')
-      : aasRepositoryUrl.value.trim()
-    if (aasRepoUrl === '') {
-      return ''
-    }
-    if (aasRepoUrl.endsWith('/')) {
-      aasRepoUrl = stripLastCharacter(aasRepoUrl)
-    }
-    if (!aasRepoUrl.endsWith(ASS_REPOSITORY_ENDPOINT_PATH)) {
-      aasRepoUrl += ASS_REPOSITORY_ENDPOINT_PATH
-    }
-    return aasRepoUrl
+    return shellsUrl(aasRepositoryUrlOf(infrastructure))
+  }
+
+  // URL of the AAS Repository of the given infrastructure, or the one of the selected infrastructure from the store
+  function aasRepositoryUrlOf (infrastructure?: InfrastructureConfig): string {
+    return infrastructure ? getActiveComponentUrlForTemplate(infrastructure, 'AASRepo') : aasRepositoryUrl.value
   }
 
   /**
@@ -139,7 +131,7 @@ export function useAASRepositoryClient () {
       return null
     }
 
-    const descriptionPath = aasRepoUrl.slice(0, -ASS_REPOSITORY_ENDPOINT_PATH.length) + '/description'
+    const descriptionPath = aasRepoUrl.slice(0, -AAS_REPOSITORY_ENDPOINT_PATH.length) + '/description'
     const securityContext = infrastructure ? { infrastructure, isolateAuthenticationFailures: true } : undefined
     const response = await getRequest(
       descriptionPath,
@@ -435,26 +427,7 @@ export function useAASRepositoryClient () {
    * @returns {string} The AAS endpoint.
    */
   function getAasEndpointById (aasId: string, infrastructure?: InfrastructureConfig): string {
-    const failResponse = ''
-
-    if (!aasId) {
-      return failResponse
-    }
-
-    aasId = aasId.trim()
-
-    if (aasId === '') {
-      return failResponse
-    }
-
-    const aasRepoUrl = getShellsUrl(infrastructure)
-    if (aasRepoUrl === '') {
-      return failResponse
-    }
-
-    const aasEndpoint = aasRepoUrl + '/' + base64Encode(aasId)
-
-    return aasEndpoint || failResponse
+    return aasEndpointUrl(aasRepositoryUrlOf(infrastructure), aasId)
   }
 
   /**
@@ -557,15 +530,9 @@ export function useAASRepositoryClient () {
   async function postAas (aas: aasTypes.AssetAdministrationShell, suppressRequestErrorMessage = false): Promise<boolean> {
     const failResponse = false
 
-    let aasRepoUrl = aasRepositoryUrl.value.trim()
+    const aasRepoUrl = getShellsUrl()
     if (aasRepoUrl === '') {
       return failResponse
-    }
-    if (aasRepoUrl.endsWith('/')) {
-      aasRepoUrl = stripLastCharacter(aasRepoUrl)
-    }
-    if (!aasRepoUrl.endsWith(ASS_REPOSITORY_ENDPOINT_PATH)) {
-      aasRepoUrl += ASS_REPOSITORY_ENDPOINT_PATH
     }
 
     // Convert AAS to JSON
@@ -586,15 +553,9 @@ export function useAASRepositoryClient () {
   async function putAas (aas: aasTypes.AssetAdministrationShell, suppressRequestErrorMessage = false): Promise<boolean> {
     const failResponse = false
 
-    let aasRepoUrl = aasRepositoryUrl.value.trim()
+    const aasRepoUrl = getShellsUrl()
     if (aasRepoUrl === '') {
       return failResponse
-    }
-    if (aasRepoUrl.endsWith('/')) {
-      aasRepoUrl = stripLastCharacter(aasRepoUrl)
-    }
-    if (!aasRepoUrl.endsWith(ASS_REPOSITORY_ENDPOINT_PATH)) {
-      aasRepoUrl += ASS_REPOSITORY_ENDPOINT_PATH
     }
 
     // Convert AAS to JSON
@@ -624,15 +585,9 @@ export function useAASRepositoryClient () {
       return failResponse
     }
 
-    let aasRepoUrl = aasRepositoryUrl.value.trim()
+    const aasRepoUrl = getShellsUrl()
     if (aasRepoUrl === '') {
       return failResponse
-    }
-    if (aasRepoUrl.endsWith('/')) {
-      aasRepoUrl = stripLastCharacter(aasRepoUrl)
-    }
-    if (!aasRepoUrl.endsWith(ASS_REPOSITORY_ENDPOINT_PATH)) {
-      aasRepoUrl += ASS_REPOSITORY_ENDPOINT_PATH
     }
 
     // Create formData
