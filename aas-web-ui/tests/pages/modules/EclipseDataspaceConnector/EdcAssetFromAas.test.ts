@@ -1,10 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import {
-  aasSpecVersion,
-  createEmptyEdcAssetOAuth2,
-  hasEdcAssetOAuth2,
-  useEdcAssetFromAas,
-} from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetFromAas'
+import { aasSpecVersion, useEdcAssetFromAas } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetFromAas'
+import { createEmptyEdcAssetOAuth2 } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetOAuth2'
 import { fillTemplatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
 
 vi.mock('@/composables/AAS/ReferableUtils', () => ({
@@ -215,11 +211,5 @@ describe('EdcAssetFromAas.ts', () => {
       ...dataAddressSettings,
     })
     expect(createSmEdcAsset(aas, sm, smOAuth2).dataAddress).toEqual({ 'type': 'HttpData', 'oauth2:clientId': 'sm-client', ...dataAddressSettings })
-  })
-
-  it('reports whether any OAuth2 value is set', () => {
-    expect(hasEdcAssetOAuth2(createEmptyEdcAssetOAuth2())).toBe(false)
-    expect(hasEdcAssetOAuth2({ ...createEmptyEdcAssetOAuth2(), scope: ' ' })).toBe(false)
-    expect(hasEdcAssetOAuth2({ ...createEmptyEdcAssetOAuth2(), scope: 'read' })).toBe(true)
   })
 })

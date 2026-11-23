@@ -1,6 +1,7 @@
 import type { CatenaXEdcAsset } from '@/composables/Client/CatenaXEdcClient'
 import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
 import { useSubmodelDisplay } from '@/composables/AAS/SubmodelDisplay'
+import { createEmptyEdcAssetOAuth2, type EdcAssetOAuth2 } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetOAuth2'
 import { fillTemplatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
 import {
   CX_COMMON_NAMESPACE,
@@ -10,24 +11,6 @@ import {
 } from '@/pages/modules/EclipseDataspaceConnector/data/namespaces'
 import AssetTemplateDefault from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset.json'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
-
-/**
- * OAuth2 values of the data address of an Asset, empty values are left out of the asset.
- */
-export interface EdcAssetOAuth2 {
-  clientId: string
-  clientSecretKey: string // Key of the client secret in the EDC vault, not the secret itself
-  tokenUrl: string
-  scope: string
-}
-
-export function createEmptyEdcAssetOAuth2 (): EdcAssetOAuth2 {
-  return { clientId: '', clientSecretKey: '', tokenUrl: '', scope: '' }
-}
-
-export function hasEdcAssetOAuth2 (oauth2: EdcAssetOAuth2): boolean {
-  return Object.values(oauth2).some(value => value.trim() !== '')
-}
 
 /**
  * Returns the IRI of an AAS class (e.g. `HasSemantics`) in the given AAS specification version (e.g. `3.0`).

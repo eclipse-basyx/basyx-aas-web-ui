@@ -25,7 +25,7 @@
 </template>
 
 <script lang="ts" setup>
-  import type { EdcAssetOAuth2 } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetFromAas'
+  import type { EdcAssetOAuth2 } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetOAuth2'
 
   defineProps<{
     title: string

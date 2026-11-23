@@ -94,8 +94,8 @@
   import type { InfrastructureConfig } from '@/types/Infrastructure'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useAuth } from '@/composables/Auth/useAuth'
-  import InfrastructureAasList from '@/pages/modules/EclipseDataspaceConnector/components/Assets/InfrastructureAasList.vue'
-  import InfrastructureSubmodelList from '@/pages/modules/EclipseDataspaceConnector/components/Assets/InfrastructureSubmodelList.vue'
+  import InfrastructureAasList from '@/pages/modules/EclipseDataspaceConnector/components/Shared/InfrastructureAasList.vue'
+  import InfrastructureSubmodelList from '@/pages/modules/EclipseDataspaceConnector/components/Shared/InfrastructureSubmodelList.vue'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { getInfrastructureTemplateDefinition, isAasSourceInfrastructure } from '@/utils/InfrastructureUtils'
 

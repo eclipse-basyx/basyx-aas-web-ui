@@ -104,22 +104,22 @@
 </template>
 
 <script lang="ts" setup>
-  import type { JsonPreviewTab } from '@/pages/modules/EclipseDataspaceConnector/components/Assets/JsonPreviewTabs.vue'
+  import type { JsonPreviewTab } from '@/pages/modules/EclipseDataspaceConnector/components/Shared/JsonPreviewTabs.vue'
   import type { AasUnavailableReason } from '@/pages/modules/EclipseDataspaceConnector/components/Shared/SelectAasEmptyState.vue'
   import { useSubmodelDisplay } from '@/composables/AAS/SubmodelDisplay'
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import EdcAssetOAuth2Button from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Button.vue'
   import EdcAssetOAuth2Drawer from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Drawer.vue'
   import EdcAssetOAuth2Fields from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Fields.vue'
-  import JsonPreviewTabs from '@/pages/modules/EclipseDataspaceConnector/components/Assets/JsonPreviewTabs.vue'
   import InfrastructureSelectionDrawers from '@/pages/modules/EclipseDataspaceConnector/components/Shared/InfrastructureSelectionDrawers.vue'
+  import JsonPreviewTabs from '@/pages/modules/EclipseDataspaceConnector/components/Shared/JsonPreviewTabs.vue'
   import SelectAasEmptyState from '@/pages/modules/EclipseDataspaceConnector/components/Shared/SelectAasEmptyState.vue'
+  import { useEdcAssetFromAas } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetFromAas'
   import {
     createEmptyEdcAssetOAuth2,
     type EdcAssetOAuth2,
     hasEdcAssetOAuth2,
-    useEdcAssetFromAas,
-  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetFromAas'
+  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetOAuth2'
   import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
   import {
     edcRequestFailureText,

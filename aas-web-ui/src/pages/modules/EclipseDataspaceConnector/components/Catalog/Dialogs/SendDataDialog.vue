@@ -118,12 +118,12 @@
 </template>
 
 <script lang="ts" setup>
-  import type { JsonPreviewTab } from '@/pages/modules/EclipseDataspaceConnector/components/Assets/JsonPreviewTabs.vue'
+  import type { JsonPreviewTab } from '@/pages/modules/EclipseDataspaceConnector/components/Shared/JsonPreviewTabs.vue'
   import type { AasUnavailableReason } from '@/pages/modules/EclipseDataspaceConnector/components/Shared/SelectAasEmptyState.vue'
   import type { CatenaXPartner } from '@/types/Infrastructure'
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
-  import JsonPreviewTabs from '@/pages/modules/EclipseDataspaceConnector/components/Assets/JsonPreviewTabs.vue'
   import InfrastructureSelectionDrawers from '@/pages/modules/EclipseDataspaceConnector/components/Shared/InfrastructureSelectionDrawers.vue'
+  import JsonPreviewTabs from '@/pages/modules/EclipseDataspaceConnector/components/Shared/JsonPreviewTabs.vue'
   import SelectAasEmptyState from '@/pages/modules/EclipseDataspaceConnector/components/Shared/SelectAasEmptyState.vue'
   import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'

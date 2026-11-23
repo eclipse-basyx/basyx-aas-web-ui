@@ -94,7 +94,7 @@
     createEmptyEdcAssetOAuth2,
     type EdcAssetOAuth2,
     hasEdcAssetOAuth2,
-  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetFromAas'
+  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetOAuth2'
   import {
     edcRequestFailureText,
     useEdcRequestFailureMessage,
