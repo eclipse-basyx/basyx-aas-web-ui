@@ -89,6 +89,21 @@ describe('EDC BFF request helpers', () => {
       .toBe('https://counterparty-dsp.test/api/v1/dsp')
   })
 
+  it('adds the DSP 2025-1 version path before the query and fragment of the counterparty address', () => {
+    const proxy = createProxyConfig()
+    const requestFor = (counterPartyAddress: string, protocol?: string) =>
+      buildCatalogRequestBody(proxy, { counterPartyId: 'TEST_COUNTERPARTY_ID', counterPartyAddress, protocol })
+
+    expect(requestFor('https://counterparty-dsp.test/api/v1/dsp?tenant=a').counterPartyAddress)
+      .toBe('https://counterparty-dsp.test/api/v1/dsp/2025-1?tenant=a')
+    expect(requestFor('https://counterparty-dsp.test/api/v1/dsp/?tenant=a#part').counterPartyAddress)
+      .toBe('https://counterparty-dsp.test/api/v1/dsp/2025-1?tenant=a#part')
+    expect(requestFor('https://counterparty-dsp.test/api/v1/dsp/2025-1?tenant=a', 'dataspace-protocol-http')).toMatchObject({
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp/2025-1?tenant=a',
+      protocol: 'dataspace-protocol-http:2025-1',
+    })
+  })
+
   it('sends DSP 2025-1 to a versioned address even when DSP 0.8 is requested', () => {
     const proxy = createProxyConfig()
     const offer = { assetId: 'asset-1', participantId: 'TEST_PARTICIPANT_ID', policy: { '@id': 'offer-1' } }

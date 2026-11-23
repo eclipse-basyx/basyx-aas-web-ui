@@ -287,7 +287,13 @@ branches of [tractusx-edc](https://github.com/eclipse-tractusx/tractusx-edc).
 | `/v4alpha/connectordiscovery/connectors` | from 0.12.0, deprecated in 0.13.0 |
 
 Older versions miss parts of the connector discovery, and versions before 0.11 do not support DSP 2025-1 or the
-Catena-X 2025/9 policy context the policy templates use. Between 0.12.x and 0.13.0 the request bodies of all endpoints
+Catena-X 2025/9 policy context the policy templates use.
+
+**Partner connectors** have to support DSP 2025-1 as well, i.e. tractusx-edc 0.11 or later (0.12.3 or later is
+recommended, as it fixes a security issue). The BFF sends all catalog and contract requests with
+`dataspace-protocol-http:2025-1` and adds the version path `/2025-1` to the path of a partner's DSP address, e.g.
+`https://partner.test/api/v1/dsp?tenant=a` becomes `https://partner.test/api/v1/dsp/2025-1?tenant=a`. Partners that
+only speak DSP 0.8 can't be reached. Between 0.12.x and 0.13.0 the request bodies of all endpoints
 above are the same, and the policy validation for `/v3/policydefinitions` is unchanged.
 
 0.13.0 also serves the connector discovery under `/v3/connectordiscovery` and marks `/v4alpha` as deprecated, to be

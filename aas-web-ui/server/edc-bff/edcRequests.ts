@@ -356,7 +356,7 @@ export function buildEdrContractRequestBody (
  * so it overrides the requested protocol. Other addresses use the requested protocol or default to 2025-1.
  */
 function resolveDspProtocol (counterPartyAddress: string, requestedProtocol: unknown): string {
-  if (counterPartyAddress.replace(/\/+$/, '').endsWith(dsp2025PathSuffix)) {
+  if (dspAddressPath(counterPartyAddress).endsWith(dsp2025PathSuffix)) {
     return defaultDspProtocol
   }
 
@@ -365,15 +365,32 @@ function resolveDspProtocol (counterPartyAddress: string, requestedProtocol: unk
 
 /**
  * DSP 2025-1 is served below the version path of the connector's DSP address, e.g. `…/api/v1/dsp/2025-1`.
- * Partner configs and DTR descriptors usually name the unversioned address, so the path is added here.
+ * Partner configs and DTR descriptors usually name the unversioned address, so the path is added here,
+ * to the path only: a query or fragment of the address stays at the end.
  */
 function versionedCounterPartyAddress (counterPartyAddress: string, protocol: string): string {
   if (protocol !== defaultDspProtocol) {
     return counterPartyAddress
   }
 
-  const address = counterPartyAddress.replace(/\/+$/, '')
-  return address.endsWith(dsp2025PathSuffix) ? address : address + dsp2025PathSuffix
+  const path = dspAddressPath(counterPartyAddress)
+  const versionedPath = path.endsWith(dsp2025PathSuffix) ? path : path + dsp2025PathSuffix
+  try {
+    const url = new URL(counterPartyAddress)
+    url.pathname = versionedPath
+    return url.toString()
+  } catch {
+    return versionedPath // No URL: the whole address is taken as path
+  }
+}
+
+// The path of a DSP address without query, fragment and trailing slashes, e.g. `/api/v1/dsp/2025-1`
+function dspAddressPath (counterPartyAddress: string): string {
+  try {
+    return new URL(counterPartyAddress).pathname.replace(/\/+$/, '')
+  } catch {
+    return counterPartyAddress.replace(/[?#].*$/, '').replace(/\/+$/, '')
+  }
 }
 
 export function buildEdrRequestQueryBody (contractNegotiationId: string): Record<string, unknown> {
