@@ -48,6 +48,7 @@
           <v-select
             v-model="selectedType"
             dense
+            :disabled="manuallyEdited"
             :hint="selectedPolicyTypeDescription"
             item-title="name"
             item-value="value"
@@ -82,6 +83,7 @@
               v-model="placeholderValues[placeholder.label]"
               :class="index > 0 ? 'mt-2': ''"
               dense
+              :disabled="manuallyEdited"
               :hide-details="placeholder.hint == ''"
               :hint="placeholder.hint"
               :label="placeholder.label"
@@ -97,6 +99,21 @@
             <p class="text-caption text-medium-emphasis font-weight-bold mb-2">
               Policy Preview:
             </p>
+
+            <!-- After editing the policy by hand, the fields above no longer change it -->
+            <v-alert
+              v-if="manuallyEdited"
+              class="mb-2"
+              density="compact"
+              type="info"
+              variant="tonal"
+            >
+              The policy was edited by hand, so the fields above no longer change it.
+
+              <template #append>
+                <v-btn size="small" text="Reset to Template" variant="text" @click="resetToTemplate" />
+              </template>
+            </v-alert>
 
             <!-- Error banner -->
             <v-alert
@@ -155,7 +172,7 @@
         <v-btn
           class="text-buttonText"
           color="primary"
-          :disabled="!allPlaceholdersFilled() || !!jsonError || !jsonText.trim()"
+          :disabled="hasUnfilledPlaceholders || !!jsonError || !jsonText.trim()"
           rounded="lg"
           text="Create"
           variant="flat"
@@ -200,6 +217,7 @@
   const wordWrap = ref(false)
   const jsonText = ref('')
   const jsonError = ref<string | null>(null)
+  const manuallyEdited = ref(false) // The policy was edited in the editor, the fields no longer rebuild it
   const editorRef = ref<HTMLElement | null>(null)
   const lineNumbersRef = ref<HTMLElement | null>(null)
   const measurerRef = ref<HTMLElement | null>(null)
@@ -224,6 +242,9 @@
   const selectedPolicyTypeDescription = computed(() => {
     return policyTypes.value.find(policyType => policyType.value === selectedType.value)?.description || ''
   })
+
+  // Unfilled placeholders stay in the editor as {{Label}}, also after editing by hand
+  const hasUnfilledPlaceholders = computed(() => /\{\{[^}]+\}\}/.test(jsonText.value))
 
   const placeholders = computed(() => templatePlaceholders(PolicyTemplate).map(placeholder => ({
     ...placeholder,
@@ -255,12 +276,12 @@
 
   watch(
     () => selectedType.value,
-    () => refreshPreview(),
+    () => refreshPreviewFromFields(),
   )
 
   watch(
     placeholderValues,
-    () => refreshPreview(),
+    () => refreshPreviewFromFields(),
     { deep: true },
   )
 
@@ -271,6 +292,7 @@
 
   // Methods
   function resetForm (): void {
+    manuallyEdited.value = false
     placeholderValues.value = {}
     jsonText.value = ''
     jsonError.value = null
@@ -279,8 +301,17 @@
     }
   }
 
-  function allPlaceholdersFilled (): boolean {
-    return placeholders.value.every(placeholder => placeholderValues.value[placeholder.label])
+  // Field changes rebuild the preview only until the policy is edited by hand, so manual changes are kept
+  function refreshPreviewFromFields (): void {
+    if (!manuallyEdited.value) {
+      refreshPreview()
+    }
+  }
+
+  // Discards the manual changes, the fields rebuild the policy again
+  function resetToTemplate (): void {
+    manuallyEdited.value = false
+    refreshPreview()
   }
 
   function buildPolicy (): CatenaXEdcPolicyDefinition {
@@ -345,6 +376,7 @@
   function onEditorInput (): void {
     const value = editorRef.value?.textContent ?? ''
     jsonText.value = value
+    manuallyEdited.value = true
 
     try {
       JSON.parse(value)

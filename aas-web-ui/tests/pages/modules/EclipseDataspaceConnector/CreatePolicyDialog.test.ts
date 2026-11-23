@@ -1,0 +1,134 @@
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createVuetify } from 'vuetify'
+import CreatePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Policies/Dialogs/CreatePolicyDialog.vue'
+
+const mocks = vi.hoisted(() => ({
+  createPolicyDefinition: vi.fn(),
+  dispatchSnackbar: vi.fn(),
+}))
+
+vi.mock('@/composables/Client/CatenaXEdcClient', () => ({
+  useCatenaXEdcClient: () => ({ createPolicyDefinition: mocks.createPolicyDefinition }),
+}))
+
+vi.mock('@/store/NavigationStore', () => ({
+  useNavigationStore: () => ({ getSnackbar: { status: false }, dispatchSnackbar: mocks.dispatchSnackbar }),
+}))
+
+const slotStub = { template: '<div><slot /><slot name="append" /></div>' }
+
+function mountDialog () {
+  return mount(CreatePolicyDialog, {
+    props: { modelValue: true, proxyId: 'proxy-a' },
+    attachTo: document.body,
+    global: {
+      // The v-tooltip directive of the title mounts a real Vuetify tooltip
+      plugins: [createVuetify()],
+      stubs: {
+        'v-dialog': slotStub,
+        'v-sheet': slotStub,
+        'v-card-title': slotStub,
+        'v-card-text': slotStub,
+        'v-card-actions': slotStub,
+        'v-form': slotStub,
+        'v-alert': { props: ['text'], template: '<div class="alert">{{ text }}<slot /><slot name="append" /></div>' },
+        'v-divider': true,
+        'v-spacer': true,
+        'v-tooltip': true,
+        'v-icon': true,
+        'v-select': { props: ['disabled'], template: '<select class="type" :disabled="disabled" />' },
+        'v-text-field': {
+          props: ['modelValue', 'label', 'disabled'],
+          emits: ['update:modelValue'],
+          template: '<input :data-label="label" :disabled="disabled" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)">',
+        },
+        'v-btn': { props: ['text', 'disabled'], emits: ['click'], template: '<button :disabled="disabled" @click="$emit(\'click\')">{{ text }}</button>' },
+      },
+    },
+  })
+}
+
+function editorText (wrapper: ReturnType<typeof mountDialog>): string {
+  return wrapper.find('pre.editor-content').element.textContent ?? ''
+}
+
+async function editByHand (wrapper: ReturnType<typeof mountDialog>, change: (policy: any) => void): Promise<void> {
+  const editor = wrapper.find('pre.editor-content')
+  const policy = JSON.parse(editor.element.textContent ?? '')
+  change(policy)
+  editor.element.textContent = JSON.stringify(policy, null, 2)
+  await editor.trigger('input')
+  await flushPromises()
+}
+
+describe('CreatePolicyDialog', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.createPolicyDefinition.mockResolvedValue({ success: true, data: { '@id': 'policy-1', 'createdAt': 1 } })
+  })
+
+  it('keeps manual edits when a field changes, until the policy is reset to the template', async () => {
+    const wrapper = mountDialog()
+    await flushPromises()
+    await wrapper.find('input[data-label="Policy ID"]').setValue('policy-1')
+    await flushPromises()
+    expect(JSON.parse(editorText(wrapper))['@id']).toBe('policy-1')
+
+    await editByHand(wrapper, policy => {
+      policy.policy.permission[0].constraint = { leftOperand: 'BusinessPartnerNumber', operator: 'eq', rightOperand: 'BPNL000000000001' }
+    })
+
+    // The fields are locked and no longer rebuild the policy
+    expect(wrapper.find('input[data-label="Policy ID"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.find('select.type').attributes('disabled')).toBeDefined()
+    expect(wrapper.text()).toContain('The policy was edited by hand')
+    // A field change, e.g. sent before the field was locked, doesn't rebuild it either
+    const policyIdField = wrapper.findComponent('input[data-label="Policy ID"]') as VueWrapper
+    policyIdField.vm.$emit('update:modelValue', 'policy-2')
+    await flushPromises()
+    expect(JSON.parse(editorText(wrapper)).policy.permission[0].constraint.rightOperand).toBe('BPNL000000000001')
+
+    await wrapper.findAll('button').find(button => button.text() === 'Create')!.trigger('click')
+    await flushPromises()
+    expect(mocks.createPolicyDefinition.mock.calls[0]![1].policy.permission[0].constraint.rightOperand).toBe('BPNL000000000001')
+    wrapper.unmount()
+  })
+
+  it('rebuilds the policy from the fields after a reset to the template', async () => {
+    const wrapper = mountDialog()
+    await flushPromises()
+    await wrapper.find('input[data-label="Policy ID"]').setValue('policy-1')
+    await flushPromises()
+    await editByHand(wrapper, policy => {
+      policy['@id'] = 'edited-by-hand'
+    })
+
+    await wrapper.findAll('button').find(button => button.text() === 'Reset to Template')!.trigger('click')
+    await flushPromises()
+
+    expect(JSON.parse(editorText(wrapper))['@id']).toBe('policy-1')
+    expect(wrapper.find('input[data-label="Policy ID"]').attributes('disabled')).toBeUndefined()
+    wrapper.unmount()
+  })
+
+  it('cannot create a policy with unfilled placeholders, also after editing it by hand', async () => {
+    const wrapper = mountDialog()
+    await flushPromises()
+    const createButton = () => wrapper.findAll('button').find(button => button.text() === 'Create')!
+
+    expect(editorText(wrapper)).toContain('{{Policy ID}}')
+    expect(createButton().attributes('disabled')).toBeDefined()
+
+    await editByHand(wrapper, policy => {
+      policy.policy.extra = 'x'
+    })
+    expect(createButton().attributes('disabled')).toBeDefined()
+
+    await editByHand(wrapper, policy => {
+      policy['@id'] = 'policy-by-hand'
+    })
+    expect(createButton().attributes('disabled')).toBeUndefined()
+    wrapper.unmount()
+  })
+})
