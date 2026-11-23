@@ -12,14 +12,14 @@ import type {
 } from './types.js'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import { pathToFileURL } from 'node:url'
-import { authorizeRequest, createAuthError } from './auth.js'
-import { loadRuntimeConfig, redactProxyConfig } from './config.js'
 import {
   assertNoSecretPlaceholders,
   hasSecretPlaceholders,
   redactAssetSecrets,
   restoreAssetSecrets,
-} from './dataAddressSecrets.js'
+} from './assetSecrets.js'
+import { authorizeRequest, createAuthError } from './auth.js'
+import { loadRuntimeConfig, redactProxyConfig } from './config.js'
 import {
   buildCatalogRequestBody,
   buildConnectorDiscoveryRequestBody,
@@ -312,7 +312,7 @@ async function handleQuerySpecRequest (
   response: ServerResponse,
   proxy: EdcProxyConfig,
   path: string,
-  redactSecrets = false, // Secrets in the data addresses of assets, see `dataAddressSecrets.ts`
+  redactSecrets = false, // Secrets in the data addresses and private properties of assets, see `assetSecrets.ts`
 ): Promise<void> {
   assertProxyConfigured(proxy)
   const body = await readJsonBody<EdcQuerySpecRequest>(request)

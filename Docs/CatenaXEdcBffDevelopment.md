@@ -269,11 +269,11 @@ Reading the catalog, the DTR and Submodels works with every configured proxy. Cr
 
 Resource IDs containing `/` are refused with `400 EDC_ID_NOT_ADDRESSABLE`, also when creating a resource: Jetty in the EDC refuses an encoded `/` (`%2F`) in the request path, so such a resource could not be deleted (or, for a policy, updated) through the Management API.
 
-### Secrets in data addresses
+### Secrets in assets
 
-Asset queries never return the secrets of a data address, e.g. `authCode`, `oauth2:clientSecret` or the values of `header:*` properties. The BFF replaces them with `<redacted>`. Names of secrets in the EDC vault, such as `secretName` or `oauth2:clientSecretKey`, stay visible.
+Asset queries never return the secrets of a data address, e.g. `authCode`, `oauth2:clientSecret` or the values of `header:*` properties, nor secret-like values in the private properties of an asset, also nested ones (e.g. `apiKey`, `password`, `token`). The BFF replaces them with `<redacted>`. Names of secrets in the EDC vault, such as `secretName` or `oauth2:clientSecretKey`, and URLs stay visible.
 
-When an asset is updated with `<redacted>` still in place, the BFF takes the stored secret from the EDC. It does so only while the rest of the data address is unchanged: a new `baseUrl` or any other changed property needs the secret to be entered again, so a stored secret never goes to a new target. A placeholder the BFF can't resolve, also in a new asset, is refused with `400 EDC_REDACTED_SECRET`.
+When an asset is updated with `<redacted>` still in place, the BFF takes the stored secret from the EDC. In the data address it does so only while the rest of the data address is unchanged: a new `baseUrl` or any other changed property needs the secret to be entered again, so a stored secret never goes to a new target. In the private properties, which the EDC sends nowhere, it takes the stored secret at the same path. A placeholder the BFF can't resolve, also in a new asset, is refused with `400 EDC_REDACTED_SECRET`.
 
 ## 6. Supported Tractus-X EDC Versions
 

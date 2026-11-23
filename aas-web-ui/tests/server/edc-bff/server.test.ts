@@ -417,6 +417,7 @@ describe('EDC BFF server', () => {
     const storedAsset = {
       '@id': 'asset-1',
       'dataAddress': { type: 'HttpData', baseUrl: 'https://dtr.internal/api/v3', authKey: 'x-api-key', authCode: 'STORED_API_KEY' },
+      'privateProperties': { backend: { apiKey: 'STORED_PRIVATE_KEY' } },
     }
     const upstream = await startUpstreamServer(record => {
       if (record.url === '/management/v3/assets/request' || record.method === 'GET') {
@@ -449,6 +450,7 @@ describe('EDC BFF server', () => {
     })
 
     expect(queriedAsset.dataAddress).toEqual({ ...storedAsset.dataAddress, authCode: '<redacted>' })
+    expect(queriedAsset.privateProperties).toEqual({ backend: { apiKey: '<redacted>' } })
     expect(updateResponse.status).toBe(204)
     expect(redirectResponse.status).toBe(400)
     await expect(redirectResponse.json()).resolves.toMatchObject({ code: 'EDC_REDACTED_SECRET' })

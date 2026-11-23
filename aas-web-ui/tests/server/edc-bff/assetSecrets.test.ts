@@ -5,7 +5,7 @@ import {
   redactAssetSecrets,
   redactedSecretValue,
   restoreAssetSecrets,
-} from '../../../server/edc-bff/dataAddressSecrets'
+} from '../../../server/edc-bff/assetSecrets'
 
 const storedAsset = {
   '@id': 'asset-1',
@@ -20,7 +20,17 @@ const storedAsset = {
   },
 }
 
-describe('EDC BFF data address secrets', () => {
+const storedAssetWithPrivateProperties = {
+  '@id': 'asset-1',
+  'privateProperties': {
+    'owner': 'team-a',
+    'edc:apiKey': 'STORED_PRIVATE_KEY',
+    'backend': { url: 'https://backend.internal', clientSecret: 'STORED_CLIENT_SECRET' },
+    'mirrors': [{ url: 'https://mirror.internal', token: 'STORED_MIRROR_TOKEN' }],
+  },
+}
+
+describe('EDC BFF asset secrets', () => {
   it.each([
     'authCode',
     'edc:authCode',
@@ -124,5 +134,47 @@ describe('EDC BFF data address secrets', () => {
       details: expect.stringContaining('dataAddress.authCode, dataAddress.header:Authorization'),
     }))
     expect(() => assertNoSecretPlaceholders(storedAsset)).not.toThrow()
+  })
+
+  it('redacts the secrets in the private properties, also nested ones', () => {
+    const redacted = redactAssetSecrets({ '@id': 'asset-1', 'edc:privateProperties': storedAssetWithPrivateProperties.privateProperties })
+
+    expect(redacted).toMatchObject({
+      'edc:privateProperties': {
+        'owner': 'team-a',
+        'edc:apiKey': redactedSecretValue,
+        'backend': { url: 'https://backend.internal', clientSecret: redactedSecretValue },
+        'mirrors': [{ url: 'https://mirror.internal', token: redactedSecretValue }],
+      },
+    })
+    expect(JSON.stringify(redacted)).not.toContain('STORED_')
+  })
+
+  it('puts the stored secrets of the private properties back at the same path', () => {
+    const updatedAsset = redactAssetSecrets(storedAssetWithPrivateProperties) as typeof storedAssetWithPrivateProperties
+    updatedAsset.privateProperties.owner = 'team-b'
+    updatedAsset.privateProperties.mirrors[0]!.token = 'NEW_MIRROR_TOKEN'
+
+    expect(restoreAssetSecrets(updatedAsset, storedAssetWithPrivateProperties)).toEqual({
+      ...storedAssetWithPrivateProperties,
+      privateProperties: {
+        ...storedAssetWithPrivateProperties.privateProperties,
+        owner: 'team-b',
+        mirrors: [{ url: 'https://mirror.internal', token: 'NEW_MIRROR_TOKEN' }],
+      },
+    })
+  })
+
+  it('refuses a placeholder in the private properties without a stored secret at its path', () => {
+    const updatedAsset = redactAssetSecrets(storedAssetWithPrivateProperties) as typeof storedAssetWithPrivateProperties
+    const movedSecret = { ...updatedAsset, privateProperties: { ...updatedAsset.privateProperties, other: { clientSecret: redactedSecretValue } } }
+
+    expect(() => restoreAssetSecrets(movedSecret, storedAssetWithPrivateProperties)).toThrow(expect.objectContaining({
+      code: 'EDC_REDACTED_SECRET',
+      details: expect.stringContaining('No stored secret for privateProperties.other.clientSecret'),
+    }))
+    expect(() => assertNoSecretPlaceholders(updatedAsset)).toThrow(expect.objectContaining({
+      details: expect.stringContaining('privateProperties.apiKey, privateProperties.backend.clientSecret, privateProperties.mirrors[0].token'),
+    }))
   })
 })
