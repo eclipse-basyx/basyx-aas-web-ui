@@ -104,6 +104,7 @@
     edcRequestFailureText,
     useEdcRequestFailureMessage,
   } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
+  import { fillTemplatePlaceholders, templatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
   import ContractTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_contract.json'
 
   const props = withDefaults(defineProps<{
@@ -134,32 +135,14 @@
   // Computed properties
   const activeContractTemplate = computed(() => ContractTemplate)
 
-  const placeholders = computed(() => {
-    const templateStr = JSON.stringify(activeContractTemplate.value)
-    const matches = templateStr.match(/\{\{([^}]+)\}\}/g) || []
+  const placeholders = computed(() => templatePlaceholders(activeContractTemplate.value).map(placeholder => ({
+    ...placeholder,
+    placeholder: placeholder.placeholder || `Enter ${placeholder.label}`,
+  })))
 
-    const placeholderList = matches.map(match => {
-      const content = match.slice(2, -2) // Remove {{ and }}
-      const parts = content.split('|')
-
-      return {
-        label: parts[0].trim(),
-        placeholder: parts[1]?.trim() || `Enter ${parts[0].trim()}`,
-        hint: parts[2]?.trim() || '',
-      }
-    })
-
-    // Return unique placeholders by name
-    const seen = new Set<string>()
-    return placeholderList.filter(p => {
-      if (seen.has(p.label)) return false
-      seen.add(p.label)
-      return true
-    })
-  })
-
+  // Unfilled placeholders stay visible in the preview as {{Label}}
   const jsonContent = computed(() =>
-    replacePlaceholders(JSON.stringify(activeContractTemplate.value)),
+    JSON.stringify(fillTemplatePlaceholders(activeContractTemplate.value, placeholderValues.value, { keepUnfilled: true })),
   )
 
   // Watchers
@@ -247,17 +230,6 @@
     return placeholders.value.every(placeholder => placeholderValues.value[placeholder.label] && placeholderValues.value[placeholder.label].trim() !== '')
   }
 
-  function replacePlaceholders (jsonStr: string): string {
-    let result = jsonStr
-    for (const placeholder of placeholders.value) {
-      const value = placeholderValues.value[placeholder.label] || `{{${placeholder.label}}}`
-      // Regex matches {{Label|...}} or {{Label}}
-      const regex = new RegExp(String.raw`\{\{${placeholder.label}(?:\|[^}]*)?\}\}`, 'g')
-      result = result.replace(regex, value)
-    }
-    return result
-  }
-
   async function createContract (): Promise<void> {
     if (!allPlaceholdersFilled()) {
       console.warn('Placeholders not filled')
@@ -265,10 +237,7 @@
     }
 
     try {
-      let contractJson = JSON.stringify(activeContractTemplate.value)
-      contractJson = replacePlaceholders(contractJson)
-
-      const finalContract = JSON.parse(contractJson) as CatenaXEdcContractDefinition
+      const finalContract = fillTemplatePlaceholders(activeContractTemplate.value, placeholderValues.value) as CatenaXEdcContractDefinition
 
       // Create the contract via EDC API
       const result = await createContractInEdc(props.proxyId, finalContract)
@@ -281,6 +250,7 @@
       }
     } catch (error_) {
       console.error('Error creating contract:', error_)
+      showFailureMessage('Failed to create Contract.', error_ instanceof Error ? error_.message : String(error_))
     }
   }
 

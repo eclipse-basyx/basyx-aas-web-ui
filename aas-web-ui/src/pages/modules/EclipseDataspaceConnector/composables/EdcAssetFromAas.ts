@@ -1,6 +1,7 @@
 import type { CatenaXEdcAsset } from '@/composables/Client/CatenaXEdcClient'
 import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
 import { useSubmodelDisplay } from '@/composables/AAS/SubmodelDisplay'
+import { fillTemplatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
 import {
   CX_COMMON_NAMESPACE,
   CX_TAXO_NAMESPACE,
@@ -26,36 +27,6 @@ export function createEmptyEdcAssetOAuth2 (): EdcAssetOAuth2 {
 
 export function hasEdcAssetOAuth2 (oauth2: EdcAssetOAuth2): boolean {
   return Object.values(oauth2).some(value => value.trim() !== '')
-}
-
-/**
- * Replaces the placeholders ("{{Label|Placeholder|Hint}}") of a template with the values given for their labels.
- * Properties whose placeholder gets no value are removed.
- */
-export function fillTemplatePlaceholders (template: unknown, values: Record<string, string>): unknown {
-  if (typeof template === 'string') {
-    const match = template.match(/^\{\{([^|}]*)(?:\|[^}]*)?\}\}$/)
-    if (!match) {
-      return template
-    }
-    return values[match[1].trim()] || undefined
-  }
-  if (Array.isArray(template)) {
-    return template
-      .map(item => fillTemplatePlaceholders(item, values))
-      .filter(item => item !== undefined)
-  }
-  if (template !== null && typeof template === 'object') {
-    const result: Record<string, unknown> = {}
-    for (const [key, value] of Object.entries(template)) {
-      const filledValue = fillTemplatePlaceholders(value, values)
-      if (filledValue !== undefined) {
-        result[key] = filledValue
-      }
-    }
-    return result
-  }
-  return template
 }
 
 /**

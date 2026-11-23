@@ -133,6 +133,7 @@
     edcRequestFailureText,
     useEdcRequestFailureMessage,
   } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
+  import { fillTemplatePlaceholders, templatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
   import AssetTemplateDefault from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset.json'
   import AssetTemplateDTRegistry from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_digitaltwin_registry.json'
   import AssetTemplateSmService from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_submodel_service.json'
@@ -186,34 +187,7 @@
 
   const activeAssetTemplate = computed(() => assetTemplates.value.find(t => t.value === selectedTemplate.value))
 
-  const placeholders = computed(() => {
-    const template = activeAssetTemplate.value
-    if (!template) return []
-
-    const templateStr = JSON.stringify(template.asset)
-    const matches = [...templateStr.matchAll(/"([^"]+)":\s*"(\{\{[^}]+\}\})"/g)]
-
-    const placeholderList = matches.map(match => {
-      const attributeName = match[1]
-      const content = match[2].slice(2, -2) // Remove {{ and }}
-      const parts = content.split('|')
-
-      return {
-        attribute: attributeName,
-        label: parts[0].trim(),
-        placeholder: parts[1]?.trim() || '',
-        hint: parts[2]?.trim() || '',
-      }
-    })
-
-    // Return unique placeholders by name
-    const seen = new Set<string>()
-    return placeholderList.filter(p => {
-      if (seen.has(p.label)) return false
-      seen.add(p.label)
-      return true
-    })
-  })
+  const placeholders = computed(() => activeAssetTemplate.value ? templatePlaceholders(activeAssetTemplate.value.asset) : [])
 
   const oauth2Placeholders = computed(() => placeholders.value.filter(p => p.attribute.startsWith('oauth2:')))
   const fieldPlaceholders = computed(() => placeholders.value.filter(p => !p.attribute.startsWith('oauth2:')))
@@ -224,12 +198,8 @@
     ...Object.fromEntries(Object.entries(oauth2.value).map(([key, value]) => ['oauth2:' + key, value.trim()])),
   }))
 
-  const jsonContent = computed(() => {
-    const template = activeAssetTemplate.value
-    if (!template) return ''
-
-    return replacePlaceholders(JSON.stringify(template.asset))
-  })
+  // The preview shows the asset as it is created, without the unfilled placeholders
+  const jsonContent = computed(() => activeAssetTemplate.value ? JSON.stringify(buildAsset(activeAssetTemplate.value.asset)) : '')
 
   // Watchers
   // Immediate, so a dialog restored from the URL opens
@@ -279,56 +249,6 @@
       .every(attr => !!placeholderValues.value[attr])
   }
 
-  function replacePlaceholders (assetJson: string): string {
-    let result = assetJson
-    for (const placeholder of placeholders.value) {
-      const value = filledPlaceholderValues.value[placeholder.attribute] ?? ''
-      result = result.replace(
-        /\{\{[^}]*\}\}/g,
-        match => {
-          const matchContent = match.slice(2, -2)
-          const matchParts = matchContent.split('|')
-          if (matchParts[0].trim() === placeholder.label) {
-            return value
-          }
-          return match
-        },
-      )
-    }
-    return result
-  }
-
-  function isEmptyValue (value: unknown): boolean {
-    return value === null
-      || value === undefined
-      || (typeof value === 'string' && value.trim() === '')
-      || (typeof value === 'string' && value === 'unknown')
-      || (typeof value === 'string' && /\{\{[^}]+\}\}/.test(value))
-  }
-
-  function removeUnfilledPlaceholders (obj: any): any {
-    if (typeof obj === 'string') {
-      return obj
-    }
-    if (Array.isArray(obj)) {
-      return obj
-        .map(item => removeUnfilledPlaceholders(item))
-        .filter(item => !isEmptyValue(item))
-    }
-    if (obj !== null && typeof obj === 'object') {
-      const result: Record<string, any> = {}
-      for (const [key, value] of Object.entries(obj as Record<string, any>)) {
-        if (isEmptyValue(value)) {
-          // Skip this key — value is empty, null, unknown or unfilled placeholder
-          continue
-        }
-        result[key] = removeUnfilledPlaceholders(value)
-      }
-      return result
-    }
-    return obj
-  }
-
   async function createAsset (): Promise<void> {
     if (!selectedTemplate.value || !mandatoryPlaceholdersFilled()) {
       console.warn('Template not selected or placeholders not filled')
@@ -342,13 +262,8 @@
     }
 
     try {
-      let assetJson = JSON.stringify(template.asset)
-      assetJson = replacePlaceholders(assetJson)
-
-      const finalAsset = removeUnfilledPlaceholders(JSON.parse(assetJson)) as CatenaXEdcAsset
-
       // Create the asset via EDC API
-      const result = await createAssetInEdc(props.proxyId, finalAsset)
+      const result = await createAssetInEdc(props.proxyId, buildAsset(template.asset))
       if (result.success) {
         emit('assets-created', result.data['@id'])
         createAssetDialog.value = false
@@ -358,7 +273,14 @@
       }
     } catch (error_) {
       console.error('Error creating asset:', error_)
+      showFailureMessage('Failed to create Asset.', error_ instanceof Error ? error_.message : String(error_))
     }
+  }
+
+  // The values are kept by attribute, the template is filled by label
+  function buildAsset (template: unknown): CatenaXEdcAsset {
+    const values = Object.fromEntries(placeholders.value.map(placeholder => [placeholder.label, filledPlaceholderValues.value[placeholder.attribute]]))
+    return fillTemplatePlaceholders(template, values) as CatenaXEdcAsset
   }
 
 </script>

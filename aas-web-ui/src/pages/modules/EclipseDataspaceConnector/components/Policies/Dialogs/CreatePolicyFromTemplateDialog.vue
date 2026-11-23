@@ -99,6 +99,7 @@
     edcRequestFailureText,
     useEdcRequestFailureMessage,
   } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
+  import { fillTemplatePlaceholders, templatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
   import AccessPolicy from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_access.json'
   import AccessPolicyBpn from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_access_bpn.json'
   import UsagePolicy from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage.json'
@@ -176,43 +177,20 @@
     },
   ].filter(template => template.policy !== null))
 
-  const placeholders = computed(() => {
-    if (!selectedTemplate.value) return []
+  const selectedPolicyTemplate = computed(() => policyTemplates.value.find(t => t.value === selectedTemplate.value))
 
-    const template = policyTemplates.value.find(t => t.value === selectedTemplate.value)
-    if (!template) return []
+  const placeholders = computed(() => selectedPolicyTemplate.value
+    ? templatePlaceholders(selectedPolicyTemplate.value.policy).map(placeholder => ({
+      ...placeholder,
+      placeholder: placeholder.placeholder || placeholder.label,
+      hint: placeholder.hint || `Enter ${placeholder.label}`,
+    }))
+    : [])
 
-    const policyStr = JSON.stringify(template.policy)
-    const matches = policyStr.match(/\{\{([^}]+)\}\}/g) || []
-
-    const placeholderList = matches.map(match => {
-      const content = match.slice(2, -2) // Remove {{ and }}
-      const parts = content.split('|')
-
-      return {
-        label: parts[0].trim(),
-        placeholder: parts[1]?.trim() || parts[0].trim(),
-        hint: parts[2]?.trim() || `Enter ${parts[0].trim()}`,
-      }
-    })
-
-    // Return unique placeholders by name
-    const seen = new Set<string>()
-    return placeholderList.filter(p => {
-      if (seen.has(p.label)) return false
-      seen.add(p.label)
-      return true
-    })
-  })
-
-  const jsonContent = computed(() => {
-    if (!selectedTemplate.value) return ''
-
-    const template = policyTemplates.value.find(t => t.value === selectedTemplate.value)
-    if (!template) return ''
-
-    return replacePlaceholders(JSON.stringify(template.policy))
-  })
+  // Unfilled placeholders stay visible in the preview as {{Label}}
+  const jsonContent = computed(() => selectedPolicyTemplate.value
+    ? JSON.stringify(fillTemplatePlaceholders(selectedPolicyTemplate.value.policy, placeholderValues.value, { keepUnfilled: true }))
+    : '')
 
   // Watchers
   // Immediate, so a dialog restored from the URL opens
@@ -256,25 +234,6 @@
     return placeholders.value.every(placeholder => placeholderValues.value[placeholder.label])
   }
 
-  function replacePlaceholders (policyJson: string): string {
-    let result = policyJson
-    for (const placeholder of placeholders.value) {
-      const value = placeholderValues.value[placeholder.label] || `{{${placeholder.label}}}`
-      result = result.replace(
-        /\{\{[^}]*\}\}/g,
-        match => {
-          const matchContent = match.slice(2, -2)
-          const matchParts = matchContent.split('|')
-          if (matchParts[0].trim() === placeholder.label) {
-            return value
-          }
-          return match
-        },
-      )
-    }
-    return result
-  }
-
   async function createPolicy (): Promise<void> {
     if (!selectedTemplate.value || !allPlaceholdersFilled()) {
       console.warn('Template not selected or placeholders not filled')
@@ -288,10 +247,7 @@
     }
 
     try {
-      let policyJson = JSON.stringify(template.policy)
-      policyJson = replacePlaceholders(policyJson)
-
-      const finalPolicy = JSON.parse(policyJson) as CatenaXEdcPolicyDefinition
+      const finalPolicy = fillTemplatePlaceholders(template.policy, placeholderValues.value) as CatenaXEdcPolicyDefinition
 
       // Create the policy via EDC API
       const result = await createPolicyDefinitionInEdc(props.proxyId, finalPolicy)
@@ -304,6 +260,7 @@
       }
     } catch (error_) {
       console.error('Error creating policy:', error_)
+      showFailureMessage('Failed to create Policy.', error_ instanceof Error ? error_.message : String(error_))
     }
   }
 

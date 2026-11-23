@@ -172,6 +172,7 @@
     edcRequestFailureText,
     useEdcRequestFailureMessage,
   } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
+  import { fillTemplatePlaceholders, templatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
   import PolicyTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy.json'
   import UsagePolicyTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage.json'
 
@@ -224,29 +225,11 @@
     return policyTypes.value.find(policyType => policyType.value === selectedType.value)?.description || ''
   })
 
-  const placeholders = computed(() => {
-    const policyStr = JSON.stringify(PolicyTemplate)
-    const matches = policyStr.match(/\{\{([^}]+)\}\}/g) || []
-
-    const placeholderList = matches.map(match => {
-      const content = match.slice(2, -2) // Remove {{ and }}
-      const parts = content.split('|')
-
-      return {
-        label: parts[0].trim(),
-        placeholder: parts[1]?.trim() || parts[0].trim(),
-        hint: parts[2]?.trim() || `Enter ${parts[0].trim()}`,
-      }
-    })
-
-    // Return unique placeholders by name
-    const seen = new Set<string>()
-    return placeholderList.filter(p => {
-      if (seen.has(p.label)) return false
-      seen.add(p.label)
-      return true
-    })
-  })
+  const placeholders = computed(() => templatePlaceholders(PolicyTemplate).map(placeholder => ({
+    ...placeholder,
+    placeholder: placeholder.placeholder || placeholder.label,
+    hint: placeholder.hint || `Enter ${placeholder.label}`,
+  })))
 
   // Watchers
   // Immediate, so a dialog restored from the URL opens
@@ -300,30 +283,9 @@
     return placeholders.value.every(placeholder => placeholderValues.value[placeholder.label])
   }
 
-  function replacePlaceholders (policyJson: string): string {
-    let result = policyJson
-    for (const placeholder of placeholders.value) {
-      const value = placeholderValues.value[placeholder.label] || `{{${placeholder.label}}}`
-      result = result.replace(
-        /\{\{[^}]*\}\}/g,
-        match => {
-          const matchContent = match.slice(2, -2)
-          const matchParts = matchContent.split('|')
-          if (matchParts[0].trim() === placeholder.label) {
-            return value
-          }
-          return match
-        },
-      )
-    }
-    return result
-  }
-
   function buildPolicy (): CatenaXEdcPolicyDefinition {
-    let policyJson = JSON.stringify(PolicyTemplate)
-    policyJson = replacePlaceholders(policyJson)
-
-    const policy = JSON.parse(policyJson) as CatenaXEdcPolicyDefinition
+    // Unfilled placeholders stay visible in the editor as {{Label}}
+    const policy = fillTemplatePlaceholders(PolicyTemplate, placeholderValues.value, { keepUnfilled: true }) as CatenaXEdcPolicyDefinition
 
     if (policy.policy) {
       if (selectedType.value === 'access') {

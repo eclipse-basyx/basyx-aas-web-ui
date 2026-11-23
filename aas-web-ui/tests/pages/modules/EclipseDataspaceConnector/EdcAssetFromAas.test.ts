@@ -2,10 +2,10 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   aasSpecVersion,
   createEmptyEdcAssetOAuth2,
-  fillTemplatePlaceholders,
   hasEdcAssetOAuth2,
   useEdcAssetFromAas,
 } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetFromAas'
+import { fillTemplatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
 
 vi.mock('@/composables/AAS/ReferableUtils', () => ({
   useReferableUtils: () => ({
