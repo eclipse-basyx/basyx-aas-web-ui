@@ -5,10 +5,9 @@ import { useIDUtils } from '@/composables/IDUtils'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
+import { AAS_REPOSITORY_ENDPOINT_PATH, endpointUrl, resourceUrl } from '@/utils/EndpointUrls'
 import { downloadFile } from '@/utils/generalUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
-
-export const ASS_REPOSITORY_ENDPOINT_PATH = '/shells'
 
 export type AasListPageOptions = PaginationPageOptions
 
@@ -57,7 +56,7 @@ export function useAASRepositoryClient () {
 
     // remove '/shells' AAS Repository URL and add '/upload' to construct the upload URL
     // TODO: This is a workaround, as the AAS Repository does not provide an upload endpoint but rather the AAS Environment. This should be changed in the future.
-    return aasRepoUrl.replace(ASS_REPOSITORY_ENDPOINT_PATH, '') + '/upload'
+    return aasRepoUrl.replace(AAS_REPOSITORY_ENDPOINT_PATH, '') + '/upload'
   })
 
   /**
@@ -109,15 +108,9 @@ export function useAASRepositoryClient () {
       hasMore: false,
     }
 
-    let aasRepoUrl = aasRepositoryUrl.value.trim()
+    const aasRepoUrl = endpointUrl(aasRepositoryUrl.value, AAS_REPOSITORY_ENDPOINT_PATH)
     if (aasRepoUrl === '') {
       return failResponse
-    }
-    if (aasRepoUrl.endsWith('/')) {
-      aasRepoUrl = stripLastCharacter(aasRepoUrl)
-    }
-    if (!aasRepoUrl.endsWith(ASS_REPOSITORY_ENDPOINT_PATH)) {
-      aasRepoUrl += ASS_REPOSITORY_ENDPOINT_PATH
     }
 
     const queryParams = new URLSearchParams()
@@ -388,20 +381,7 @@ export function useAASRepositoryClient () {
       return failResponse
     }
 
-    let aasRepoUrl = aasRepositoryUrl.value.trim()
-    if (aasRepoUrl === '') {
-      return failResponse
-    }
-    if (aasRepoUrl.endsWith('/')) {
-      aasRepoUrl = stripLastCharacter(aasRepoUrl)
-    }
-    if (!aasRepoUrl.endsWith(ASS_REPOSITORY_ENDPOINT_PATH)) {
-      aasRepoUrl += ASS_REPOSITORY_ENDPOINT_PATH
-    }
-
-    const aasEndpoint = aasRepoUrl + '/' + base64Encode(aasId)
-
-    return aasEndpoint || failResponse
+    return resourceUrl(aasRepositoryUrl.value, AAS_REPOSITORY_ENDPOINT_PATH, aasId)
   }
 
   /**
@@ -504,15 +484,9 @@ export function useAASRepositoryClient () {
   async function postAas (aas: aasTypes.AssetAdministrationShell, suppressRequestErrorMessage = false): Promise<boolean> {
     const failResponse = false
 
-    let aasRepoUrl = aasRepositoryUrl.value.trim()
-    if (aasRepoUrl === '') {
+    const path = endpointUrl(aasRepositoryUrl.value, AAS_REPOSITORY_ENDPOINT_PATH)
+    if (path === '') {
       return failResponse
-    }
-    if (aasRepoUrl.endsWith('/')) {
-      aasRepoUrl = stripLastCharacter(aasRepoUrl)
-    }
-    if (!aasRepoUrl.endsWith(ASS_REPOSITORY_ENDPOINT_PATH)) {
-      aasRepoUrl += ASS_REPOSITORY_ENDPOINT_PATH
     }
 
     // Convert AAS to JSON
@@ -521,7 +495,6 @@ export function useAASRepositoryClient () {
 
     const context = 'creating AAS'
     const disableMessage = suppressRequestErrorMessage
-    const path = aasRepoUrl
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
     const body = JSON.stringify(jsonAas)
@@ -533,15 +506,9 @@ export function useAASRepositoryClient () {
   async function putAas (aas: aasTypes.AssetAdministrationShell, suppressRequestErrorMessage = false): Promise<boolean> {
     const failResponse = false
 
-    let aasRepoUrl = aasRepositoryUrl.value.trim()
-    if (aasRepoUrl === '') {
+    const path = resourceUrl(aasRepositoryUrl.value, AAS_REPOSITORY_ENDPOINT_PATH, aas.id)
+    if (path === '') {
       return failResponse
-    }
-    if (aasRepoUrl.endsWith('/')) {
-      aasRepoUrl = stripLastCharacter(aasRepoUrl)
-    }
-    if (!aasRepoUrl.endsWith(ASS_REPOSITORY_ENDPOINT_PATH)) {
-      aasRepoUrl += ASS_REPOSITORY_ENDPOINT_PATH
     }
 
     // Convert AAS to JSON
@@ -549,7 +516,6 @@ export function useAASRepositoryClient () {
 
     const context = 'updating AAS'
     const disableMessage = suppressRequestErrorMessage
-    const path = aasRepoUrl + '/' + base64Encode(aas.id)
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
     const body = JSON.stringify(jsonAas)
@@ -571,15 +537,9 @@ export function useAASRepositoryClient () {
       return failResponse
     }
 
-    let aasRepoUrl = aasRepositoryUrl.value.trim()
-    if (aasRepoUrl === '') {
+    const aasEndpoint = resourceUrl(aasRepositoryUrl.value, AAS_REPOSITORY_ENDPOINT_PATH, aasId)
+    if (aasEndpoint === '') {
       return failResponse
-    }
-    if (aasRepoUrl.endsWith('/')) {
-      aasRepoUrl = stripLastCharacter(aasRepoUrl)
-    }
-    if (!aasRepoUrl.endsWith(ASS_REPOSITORY_ENDPOINT_PATH)) {
-      aasRepoUrl += ASS_REPOSITORY_ENDPOINT_PATH
     }
 
     // Create formData
@@ -589,7 +549,7 @@ export function useAASRepositoryClient () {
 
     const context = 'uploading thumbnail'
     const disableMessage = suppressRequestErrorMessage
-    const path = aasRepoUrl + '/' + base64Encode(aasId) + '/asset-information/thumbnail'
+    const path = aasEndpoint + '/asset-information/thumbnail'
     const headers = new Headers()
     const body = formData
 

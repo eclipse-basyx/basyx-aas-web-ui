@@ -3,11 +3,8 @@ import { type RequestErrorHandlingOptions, useRequestHandling } from '@/composab
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import * as descriptorTypes from '@/types/Descriptors'
 import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils'
-import { base64Encode } from '@/utils/EncodeDecodeUtils'
+import { endpointUrl, resourceUrl, SUBMODEL_REGISTRY_ENDPOINT_PATH } from '@/utils/EndpointUrls'
 import { removeNullValues } from '@/utils/generalUtils'
-import { stripLastCharacter } from '@/utils/StringUtils'
-
-export const SUBMODEL_REGISTRY_ENDPOINT_PATH = '/submodel-descriptors'
 
 export function useSMRegistryClient () {
   // Stores
@@ -44,15 +41,9 @@ export function useSMRegistryClient () {
   async function fetchSmDescriptorList (): Promise<Array<any>> {
     const failResponse = [] as Array<any>
 
-    let smRegistryUrl = getEffectiveSubmodelRegistryUrl()
+    const smRegistryUrl = endpointUrl(getEffectiveSubmodelRegistryUrl(), SUBMODEL_REGISTRY_ENDPOINT_PATH)
     if (smRegistryUrl === '') {
       return failResponse
-    }
-    if (smRegistryUrl.endsWith('/')) {
-      smRegistryUrl = stripLastCharacter(smRegistryUrl)
-    }
-    if (!smRegistryUrl.endsWith(SUBMODEL_REGISTRY_ENDPOINT_PATH)) {
-      smRegistryUrl += SUBMODEL_REGISTRY_ENDPOINT_PATH
     }
 
     const smRegistryPath = smRegistryUrl
@@ -98,18 +89,10 @@ export function useSMRegistryClient () {
       return failResponse
     }
 
-    let smRegistryUrl = getEffectiveSubmodelRegistryUrl(endpoint)
-    if (smRegistryUrl === '') {
+    const smRegistryPath = resourceUrl(getEffectiveSubmodelRegistryUrl(endpoint), SUBMODEL_REGISTRY_ENDPOINT_PATH, smId)
+    if (smRegistryPath === '') {
       return failResponse
     }
-    if (smRegistryUrl.endsWith('/')) {
-      smRegistryUrl = stripLastCharacter(smRegistryUrl)
-    }
-    if (!smRegistryUrl.endsWith(SUBMODEL_REGISTRY_ENDPOINT_PATH)) {
-      smRegistryUrl += SUBMODEL_REGISTRY_ENDPOINT_PATH
-    }
-
-    const smRegistryPath = smRegistryUrl + '/' + base64Encode(smId)
     const smRegistryContext = 'retrieving SM Descriptor'
     const disableMessage = false
     const errorHandlingOptions: RequestErrorHandlingOptions = suppressNotFound
@@ -199,15 +182,9 @@ export function useSMRegistryClient () {
   async function postSubmodelDescriptor (submodelDescriptor: descriptorTypes.SubmodelDescriptor): Promise<boolean> {
     const failResponse = false
 
-    let smRegistryUrl = getEffectiveSubmodelRegistryUrl()
+    const smRegistryUrl = endpointUrl(getEffectiveSubmodelRegistryUrl(), SUBMODEL_REGISTRY_ENDPOINT_PATH)
     if (smRegistryUrl === '') {
       return failResponse
-    }
-    if (smRegistryUrl.endsWith('/')) {
-      smRegistryUrl = stripLastCharacter(smRegistryUrl)
-    }
-    if (!smRegistryUrl.endsWith(SUBMODEL_REGISTRY_ENDPOINT_PATH)) {
-      smRegistryUrl += SUBMODEL_REGISTRY_ENDPOINT_PATH
     }
 
     const context = 'updating Submodel Descriptor'
@@ -225,20 +202,13 @@ export function useSMRegistryClient () {
   async function putSubmodelDescriptor (submodelDescriptor: descriptorTypes.SubmodelDescriptor): Promise<boolean> {
     const failResponse = false
 
-    let smRegistryUrl = getEffectiveSubmodelRegistryUrl()
-    if (smRegistryUrl === '') {
+    const path = resourceUrl(getEffectiveSubmodelRegistryUrl(), SUBMODEL_REGISTRY_ENDPOINT_PATH, submodelDescriptor.id)
+    if (path === '') {
       return failResponse
-    }
-    if (smRegistryUrl.endsWith('/')) {
-      smRegistryUrl = stripLastCharacter(smRegistryUrl)
-    }
-    if (!smRegistryUrl.endsWith(SUBMODEL_REGISTRY_ENDPOINT_PATH)) {
-      smRegistryUrl += SUBMODEL_REGISTRY_ENDPOINT_PATH
     }
 
     const context = 'updating Submodel Descriptor'
     const disableMessage = false
-    const path = smRegistryUrl + '/' + base64Encode(submodelDescriptor.id)
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
     const body = JSON.stringify(submodelDescriptor)
@@ -261,20 +231,13 @@ export function useSMRegistryClient () {
       return failResponse
     }
 
-    let smRegistryUrl = getEffectiveSubmodelRegistryUrl()
-    if (smRegistryUrl === '') {
+    const path = resourceUrl(getEffectiveSubmodelRegistryUrl(), SUBMODEL_REGISTRY_ENDPOINT_PATH, smId)
+    if (path === '') {
       return failResponse
-    }
-    if (smRegistryUrl.endsWith('/')) {
-      smRegistryUrl = stripLastCharacter(smRegistryUrl)
-    }
-    if (!smRegistryUrl.endsWith(SUBMODEL_REGISTRY_ENDPOINT_PATH)) {
-      smRegistryUrl += SUBMODEL_REGISTRY_ENDPOINT_PATH
     }
 
     const context = 'deleting Submodel Descriptor'
     const disableMessage = false
-    const path = smRegistryUrl + '/' + base64Encode(smId)
     const response = await deleteRequest(path, new Headers(), context, disableMessage)
 
     return response.success
