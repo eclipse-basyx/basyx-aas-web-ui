@@ -461,6 +461,29 @@ describe('EDC BFF server', () => {
     ])
   })
 
+  it.each(crudResources)(
+    'rejects updating $resource when the @id in the body is missing or differs from the path',
+    async ({ resource, id, entity }) => {
+      const upstream = await startUpstreamServer(() => undefined)
+      const baseUrl = await startBffServer(upstream.port, [], { allowManagementWrites: true })
+      const update = (body: unknown) => fetch(`${baseUrl}/${resource}/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const { '@id': _id, ...entityWithoutId } = entity
+
+      const mismatchResponse = await update({ ...entity, '@id': 'other-id' })
+      const missingResponse = await update(entityWithoutId)
+
+      expect(mismatchResponse.status).toBe(400)
+      await expect(mismatchResponse.json()).resolves.toMatchObject({ code: 'EDC_ID_MISMATCH' })
+      expect(missingResponse.status).toBe(400)
+      await expect(missingResponse.json()).resolves.toMatchObject({ code: 'EDC_ID_MISSING' })
+      expect(upstream.requests).toHaveLength(0)
+    },
+  )
+
   it('rejects management writes without a bearer token in JWT auth mode', async () => {
     const upstream = await startUpstreamServer(() => undefined)
     const baseUrl = await startBffServer(upstream.port, [], {

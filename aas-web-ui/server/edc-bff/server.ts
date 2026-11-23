@@ -335,14 +335,12 @@ async function handleJsonRequest (
 async function restoreStoredAssetSecrets (
   proxy: EdcProxyConfig,
   asset: Record<string, unknown>,
-  pathAssetId: string,
+  assetId: string,
 ): Promise<Record<string, unknown>> {
   if (!hasSecretPlaceholders(asset)) {
     return asset
   }
 
-  // The EDC updates the asset with the ID in the body
-  const assetId = typeof asset['@id'] === 'string' ? asset['@id'] : pathAssetId
   const storedAsset = await forwardToEdc(proxy, 'GET', `/v3/assets/${encodeURIComponent(assetId)}`)
   return restoreAssetSecrets(asset, storedAsset.status === 200 ? storedAsset.data : undefined)
 }
@@ -363,10 +361,31 @@ async function handleUpdateRequest (
   const path = resource === 'policydefinitions'
     ? `/v3/${resource}/${encodeURIComponent(resourceId)}`
     : `/v3/${resource}`
-  const prepareBody = resource === 'assets'
-    ? (asset: Record<string, unknown>) => restoreStoredAssetSecrets(proxy, asset, resourceId)
-    : undefined
+  const prepareBody = async (body: Record<string, unknown>) => {
+    assertBodyIdMatchesPath(body, resourceId)
+    return resource === 'assets' ? restoreStoredAssetSecrets(proxy, body, resourceId) : body
+  }
   await handleJsonRequest(request, response, proxy, path, 'PUT', prepareBody)
+}
+
+/**
+ * The EDC updates assets and contract definitions by the `@id` in the body, not by the ID in the path,
+ * so both have to name the same resource.
+ */
+function assertBodyIdMatchesPath (body: Record<string, unknown>, pathId: string): void {
+  const bodyId = body['@id']
+  if (typeof bodyId !== 'string' || bodyId === '') {
+    throw Object.assign(
+      createHttpError('Missing @id in the EDC resource', 400, `The body has to contain "@id": "${pathId}".`),
+      { code: 'EDC_ID_MISSING' },
+    )
+  }
+  if (bodyId !== pathId) {
+    throw Object.assign(
+      createHttpError('@id differs from the ID in the path', 400, `The body names "${bodyId}", the path "${pathId}". An update cannot change the ID.`),
+      { code: 'EDC_ID_MISMATCH' },
+    )
+  }
 }
 
 async function handleDeleteRequest (
