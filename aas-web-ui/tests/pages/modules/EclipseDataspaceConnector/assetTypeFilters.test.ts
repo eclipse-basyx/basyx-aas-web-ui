@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { assetTypeFilterItems, assetTypeFilterPreset, isFetchAsset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
+import DigitalTwinRegistryTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_digitaltwin_registry.json'
+import SubmodelServiceTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_submodel_service.json'
 
 function preset (value: string) {
   const assetTypeFilter = assetTypeFilterPreset(value)
@@ -40,6 +42,20 @@ describe('assetTypeFilters', () => {
     expect(preset('submodelService').querySpec?.filterExpression).toEqual([
       expect.objectContaining({ operandRight: 'https://w3id.org/catenax/taxonomy#Submodel' }),
     ])
+  })
+
+  it.each([
+    ['Digital Twin Registry', DigitalTwinRegistryTemplate, 'digitalTwinRegistry'],
+    ['Submodel Service', SubmodelServiceTemplate, 'submodelService'],
+  ])('finds assets created from the %s template by their taxonomy type', (_name, template, presetValue) => {
+    // Expands a compact IRI like `cx-taxo:Submodel` by the `@context` of the template, as the EDC does
+    const context: Record<string, string> = template['@context']
+    const expand = (compactIri: string) => compactIri.replace(/^([^:]+):/, (prefix, name: string) => context[name] ?? prefix)
+    const [criterion] = preset(presetValue).querySpec!.filterExpression as Array<{ operandLeft: string, operandRight: string }>
+    const typeProperty = Object.entries(template.properties).find(([key]) => `'${expand(key)}'.'@id'` === criterion!.operandLeft)
+
+    expect(typeProperty).toBeDefined()
+    expect(expand((typeProperty![1] as { '@id': string })['@id'])).toBe(criterion!.operandRight)
   })
 
   it('matches push assets by ID, display name or description', () => {
