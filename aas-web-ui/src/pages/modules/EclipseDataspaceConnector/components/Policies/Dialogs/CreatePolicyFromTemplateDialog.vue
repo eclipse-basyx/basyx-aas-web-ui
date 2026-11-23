@@ -2,7 +2,7 @@
   <v-dialog v-model="createPolicyDialog" max-height="90%" :width="800">
     <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">
       <v-card-title class="bg-cardHeader">
-        Create Policy
+        Create Policy from Template
       </v-card-title>
 
       <v-divider />
@@ -265,52 +265,3 @@
   }
 
 </script>
-
-<style scoped>
-    :deep(.token) {
-        line-height: 21px;
-    }
-
-    :deep(code) {
-        line-height: 21px;
-    }
-
-    .json-content {
-        margin: 0;
-        padding: 0 20px 0 20px;
-        word-wrap: normal;
-        font-size: 14px;
-        line-height: 21px;
-        flex-grow: 0;
-        overflow: auto;
-        background-color: #f5f5f5;
-    }
-
-    .json-content code {
-        display: block;
-    }
-
-    :deep(.token.punctuation) {
-        color: #999;
-    }
-
-    :deep(.token.property) {
-        color: #905;
-    }
-
-    :deep(.token.string) {
-        color: #690;
-    }
-
-    :deep(.token.number) {
-        color: #07a;
-    }
-
-    :deep(.token.boolean) {
-        color: #07a;
-    }
-
-    :deep(.token.null) {
-        color: #999;
-    }
-</style>
