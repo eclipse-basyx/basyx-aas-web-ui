@@ -21,14 +21,14 @@
     </template>
 
     <template #item-subtitle="{ item }">
-      <span class="font-italic">{{ getPolicyType(item) }}</span>
+      <span class="font-italic">{{ edcPolicyTypeLabel(item) }}</span>
     </template>
 
     <template #item-tooltip="{ item }">
       <!-- Type -->
-      <div v-if="getPolicyType(item)" class="text-body-small mt-1">
+      <div v-if="edcPolicyTypeLabel(item)" class="text-body-small mt-1">
         <span class="font-weight-bold">{{ 'Type: ' }}</span>
-        {{ getPolicyType(item) + ' Policy' }}
+        {{ edcPolicyTypeLabel(item) + ' Policy' }}
       </div>
     </template>
 
@@ -51,6 +51,11 @@
     queryAllEdcPages,
     queryEdcPage,
   } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPaging'
+  import {
+    type EdcPolicyType,
+    edcPolicyTypeLabel,
+    edcPolicyTypes,
+  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPolicyType'
 
   // Composables
   const { deletePolicyDefinition, queryPolicyDefinitions, updatePolicyDefinition } = useCatenaXEdcClient()
@@ -59,7 +64,7 @@
   // Data
   const resourceTab = useTemplateRef<InstanceType<typeof EdcResourceTab>>('resourceTab')
   const policyTypeFilterItems = ['All', 'Access', 'Usage']
-  const selectedPolicyType = ref('All')
+  const selectedPolicyType = ref<'All' | EdcPolicyType>('All')
   // The open dialog is kept in the URL, e.g. to return to it after a login
   const createPolicyDialog = dialogOpen('create-policy')
   const createPolicyFromTemplateDialog = dialogOpen('create-policy-from-template')
@@ -80,38 +85,14 @@
    */
   async function queryPolicyPage (proxyId: string, page: EdcListPage): Promise<EdcPageResult<CatenaXEdcPolicyDefinition>> {
     const query = (querySpec: Record<string, unknown>) => queryPolicyDefinitions(proxyId, { querySpec })
-    if (selectedPolicyType.value === 'All') {
+    const policyType = selectedPolicyType.value
+    if (policyType === 'All') {
       return queryEdcPage(query, page)
     }
 
     const result = await queryAllEdcPages(query, { search: page.search })
     return result.success
-      ? { success: true, data: result.data.filter(policy => getPolicyType(policy) === selectedPolicyType.value), hasMore: false }
+      ? { success: true, data: result.data.filter(policy => edcPolicyTypes(policy).includes(policyType)), hasMore: false }
       : result
-  }
-
-  function getPolicyType (policyDefinition: CatenaXEdcPolicyDefinition): string {
-    const permission = policyDefinition?.policy?.['odrl:permission'] ?? policyDefinition?.policy?.permission
-    const action = permission?.['odrl:action'] ?? permission?.action
-    const actionId = action?.['@id']
-
-    if (!actionId)
-      return ''
-
-    switch (actionId) {
-      case 'odrl:use':
-      case 'use':
-      {
-        return 'Usage'
-      }
-      case 'odrl:access':
-      case 'access':
-      case 'cx-policy:access':
-      {
-        return 'Access'
-      }
-    }
-
-    return ''
   }
 </script>
