@@ -5,3 +5,9 @@ export const hotkeyStub = defineComponent({
   props: ['keys', 'prefix'],
   template: '<span>{{ keys }}</span>',
 })
+
+// Components reset their form through a template ref, as with a real VForm.
+export const formStub = defineComponent({
+  methods: { reset () {} },
+  template: '<form><slot /></form>',
+})

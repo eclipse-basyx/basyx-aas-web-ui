@@ -1,6 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import CreateAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetDialog.vue'
+import { formStub } from '../../../helpers/vuetifyStubs'
 
 const mocks = vi.hoisted(() => ({
   createAsset: vi.fn(),
@@ -29,7 +30,7 @@ function mountDialog () {
         'v-card-actions': slotStub,
         'v-layout': slotStub,
         'v-main': slotStub,
-        'v-form': slotStub,
+        'v-form': formStub,
         'v-divider': true,
         'v-spacer': true,
         'v-text-field': {

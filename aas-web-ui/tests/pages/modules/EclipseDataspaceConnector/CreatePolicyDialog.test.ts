@@ -2,6 +2,7 @@ import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createVuetify } from 'vuetify'
 import CreatePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Policies/Dialogs/CreatePolicyDialog.vue'
+import { formStub } from '../../../helpers/vuetifyStubs'
 
 const mocks = vi.hoisted(() => ({
   createPolicyDefinition: vi.fn(),
@@ -37,7 +38,7 @@ function mountDialog () {
         'v-card-title': slotStub,
         'v-card-text': slotStub,
         'v-card-actions': slotStub,
-        'v-form': slotStub,
+        'v-form': formStub,
         'v-alert': { props: ['text'], template: '<div class="alert">{{ text }}<slot /><slot name="append" /></div>' },
         'v-divider': true,
         'v-spacer': true,
