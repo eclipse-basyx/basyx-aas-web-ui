@@ -81,7 +81,7 @@
 
   async function onTabChange (tab: string): Promise<void> {
     const query = { ...route.query } as LocationQueryRaw
-    const path = '/modules/eclipsedataspaceconnector/' + tab
+    const path = `/modules/eclipsedataspaceconnector/${tab}`
 
     await router.push({ path, query })
     return

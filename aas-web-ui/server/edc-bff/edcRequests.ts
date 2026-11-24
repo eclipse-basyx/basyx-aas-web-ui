@@ -338,8 +338,8 @@ export function buildEdrContractRequestBody (
 
   const policy = cloneRecord(offer.policy)
   // Full IRIs, because the policy may carry the catalog's @context, which needn't define the odrl: prefix.
-  policy[odrlContextUrl + 'assigner'] = { '@id': offer.participantId }
-  policy[odrlContextUrl + 'target'] = { '@id': offer.assetId }
+  policy[`${odrlContextUrl}assigner`] = { '@id': offer.participantId }
+  policy[`${odrlContextUrl}target`] = { '@id': offer.assetId }
 
   return {
     '@context': contractContext,

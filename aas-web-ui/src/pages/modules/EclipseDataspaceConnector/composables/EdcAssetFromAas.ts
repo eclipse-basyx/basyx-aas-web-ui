@@ -16,14 +16,14 @@ import { base64Encode } from '@/utils/EncodeDecodeUtils'
  * Returns the IRI of an AAS class (e.g. `HasSemantics`) in the given AAS specification version (e.g. `3.0`).
  */
 function aasClassIri (version: string, aasClass: string): string {
-  return 'https://admin-shell.io/aas/' + version.replace('.', '/') + '/' + aasClass
+  return `https://admin-shell.io/aas/${version.replace('.', '/')}/${aasClass}`
 }
 
 /**
  * Returns the namespace of the attributes of an AAS class (e.g. `HasSemantics`) in the given AAS specification version.
  */
 function aasNamespace (version: string, aasClass: string): string {
-  return aasClassIri(version, aasClass) + '/'
+  return `${aasClassIri(version, aasClass)}/`
 }
 
 /**
@@ -40,7 +40,7 @@ export function aasSpecVersion (endpointInterface?: string): string {
  */
 function addEdcAssetProperty (asset: CatenaXEdcAsset, prefix: string, namespace: string, name: string, value: unknown): void {
   asset['@context'] = { ...(asset['@context'] as Record<string, string>), [prefix]: namespace }
-  asset.properties[prefix + ':' + name] = value
+  asset.properties[`${prefix}:${name}`] = value
 }
 
 /**
@@ -161,8 +161,8 @@ export function useEdcAssetFromAas () {
    * `cx-taxo:Submodel` (`dct:type`) and carries the AAS specification version of the endpoint (`cx-common:version`).
    */
   function createSmEdcAsset (aas: any, sm: any, oauth2?: EdcAssetOAuth2): CatenaXEdcAsset {
-    const asset = createEdcAsset(sm, nameToDisplay(aas, 'en') + ' - SM ' + smTitleToDisplay(sm), oauth2)
-    addEdcAssetProperty(asset, 'dct', DCT_NAMESPACE, 'type', { '@id': CX_TAXO_NAMESPACE + 'Submodel' })
+    const asset = createEdcAsset(sm, `${nameToDisplay(aas, 'en')} - SM ${smTitleToDisplay(sm)}`, oauth2)
+    addEdcAssetProperty(asset, 'dct', DCT_NAMESPACE, 'type', { '@id': `${CX_TAXO_NAMESPACE}Submodel` })
     addEdcAssetProperty(asset, 'cx-common', CX_COMMON_NAMESPACE, 'version', aasSpecVersion(sm?.endpoints?.[0]?.interface))
     return asset
   }

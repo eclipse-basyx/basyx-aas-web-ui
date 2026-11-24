@@ -199,7 +199,7 @@
     const edcAssets = [
       { name: 'AAS', asset: createAasEdcAsset(selectedAas.value, aasOAuth2.value) },
       ...selectedSubmodels.value.map(submodel => ({
-        name: 'Submodel ' + smTitleToDisplay(submodel),
+        name: `Submodel ${smTitleToDisplay(submodel)}`,
         asset: createSmEdcAsset(selectedAas.value, submodel, smOAuth2.value),
       })),
     ].filter((edcAsset, index, all) =>
@@ -256,6 +256,6 @@
     if (createdCount > 0) parts.push(`Created ${assetsLabel(createdCount)}`)
     if (existingCount > 0) parts.push(parts.length > 0 ? `${existingCount} already existed` : `${assetsLabel(existingCount)} already existed`)
     if (failedCount > 0) parts.push(parts.length > 0 ? `${failedCount} failed` : `Failed to create ${assetsLabel(failedCount)}`)
-    return parts.join(', ') + '.'
+    return `${parts.join(', ')}.`
   }
 </script>

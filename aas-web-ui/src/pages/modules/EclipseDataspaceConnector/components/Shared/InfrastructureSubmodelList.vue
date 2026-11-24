@@ -27,7 +27,7 @@
           hide-details
           label="Search Submodel"
           persistent-placeholder
-          :placeholder="submodelList.length + ' Submodels'"
+          :placeholder="`${submodelList.length} Submodels`"
           variant="outlined"
         />
       </div>

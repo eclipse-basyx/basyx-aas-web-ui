@@ -28,7 +28,7 @@
       <!-- Type -->
       <div v-if="edcPolicyTypeLabel(item)" class="text-body-small mt-1">
         <span class="font-weight-bold">{{ 'Type: ' }}</span>
-        {{ edcPolicyTypeLabel(item) + ' Policy' }}
+        {{ `${edcPolicyTypeLabel(item)} Policy` }}
       </div>
     </template>
 

@@ -125,7 +125,7 @@
               style="border-top: solid; border-right: solid; border-bottom: solid; border-width: 1px"
               :style="{
                 'border-color': aasIsSelected(item)
-                  ? primaryColor + ' !important'
+                  ? `${primaryColor} !important`
                   : isDark
                     ? '#686868 !important'
                     : '#ABABAB !important',

@@ -131,7 +131,7 @@ export function useAASRepositoryClient () {
       return null
     }
 
-    const descriptionPath = aasRepoUrl.slice(0, -AAS_REPOSITORY_ENDPOINT_PATH.length) + '/description'
+    const descriptionPath = `${aasRepoUrl.slice(0, -AAS_REPOSITORY_ENDPOINT_PATH.length)}/description`
     const securityContext = infrastructure ? { infrastructure, isolateAuthenticationFailures: true } : undefined
     const response = await getRequest(
       descriptionPath,
