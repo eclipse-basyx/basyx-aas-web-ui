@@ -64,11 +64,11 @@ describe('EdcCatalogQuery', () => {
 
     await expect(findCatalogDataset('proxy-a', partner, 'push-asset')).resolves.toEqual({ '@id': 'push-asset' })
     await expect(findCatalogDataset('proxy-a', partner, 'push-asset')).resolves.toBeNull()
-    expect(mocks.requestCatalog.mock.calls[0]![1].querySpec).toEqual({
-      '@type': 'QuerySpec',
-      'offset': 0,
-      'limit': 1,
-      'filterExpression': [{ '@type': 'Criterion', 'operandLeft': 'https://w3id.org/edc/v0.0.1/ns/id', 'operator': '=', 'operandRight': 'push-asset' }],
+    // The EDC BFF builds the query spec of the asset ID
+    expect(mocks.requestCatalog.mock.calls[0]![1]).toEqual({
+      counterPartyId: partner.counterPartyId,
+      counterPartyAddress: partner.counterPartyAddress,
+      assetId: 'push-asset',
     })
   })
 })

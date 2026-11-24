@@ -2,39 +2,36 @@
   <v-container class="pa-0 ma-0" fluid :style="{ height: EDC_TAB_HEIGHT }">
     <v-layout :style="{ height: EDC_TAB_HEIGHT }">
 
-      <v-navigation-drawer class="leftMenu" color="appNavigation" :width="336">
-        <v-card color="rgba(0,0,0,0)" elevation="0">
-          <v-card-title class="pl-0 pr-4 pt-2 pb-1 d-flex align-center">
-            <v-tooltip location="bottom" open-delay="600">
-              <template #activator="{ props: tooltipProps }">
-                <v-btn
-                  class="ma-0"
-                  :disabled="!selectedBusinessPartner"
-                  icon="mdi-reload"
-                  v-bind="tooltipProps"
-                  :loading="listLoading"
-                  variant="plain"
-                  @click="initialize()"
-                />
-              </template>
+      <EdcResourceListDrawer
+        ref="listDrawer"
+        icon="mdi-code-json"
+        :is-selected="isSelected"
+        :items="catalogList"
+        label="Catalog Dataset"
+        :list-loading="listLoading"
+        :page-loading="pageLoading"
+        :reload-disabled="!selectedBusinessPartner"
+        reload-tooltip="Reload Catalog"
+        @reload="initialize()"
+        @select="selectCatalogDataset"
+      >
+        <template #title>
+          <v-select
+            v-model="selectedBusinessPartner"
+            class="mr-4"
+            density="compact"
+            hide-details
+            :item-props="partner => ({ subtitle: partner.counterPartyId })"
+            :item-title="partner => partner.name || partner.counterPartyId"
+            :items="businessPartners"
+            label="Select Business Partner"
+            return-object
+            variant="solo"
+          />
+        </template>
 
-              <span>Reload Catalog</span>
-            </v-tooltip>
-
-            <v-select
-              v-model="selectedBusinessPartner"
-              density="compact"
-              hide-details
-              :item-props="partner => ({ subtitle: partner.counterPartyId })"
-              :item-title="partner => partner.name || partner.counterPartyId"
-              :items="businessPartners"
-              label="Select Business Partner"
-              return-object
-              variant="solo"
-            />
-          </v-card-title>
-
-          <!-- Aligned with the Business Partner selection next to the reload button -->
+        <!-- Aligned with the Business Partner selection next to the reload button -->
+        <template #filter>
           <div class="pl-12 pr-4 pb-3">
             <v-select
               v-model="selectedCatalogFilter"
@@ -45,102 +42,63 @@
               variant="solo"
             />
           </div>
+        </template>
 
-          <v-divider />
+        <template #item-title="{ item }">{{ item.name || item.description }}</template>
 
-          <v-card-text
-            class="pt-0 pb-0 px-2 overflow-y-auto"
-            :style="{ height: EDC_FILTERED_LIST_HEIGHT }"
+        <template #item-subtitle="{ item }">{{ item['@id'] }}</template>
+
+        <template #item-tooltip="{ item }">
+          <div v-if="item.name" class="text-body-small mt-1">
+            <span class="font-weight-bold">{{ 'Name: ' }}</span>
+            {{ item.name }}
+          </div>
+
+          <div v-if="item.description" class="text-body-small mt-1">
+            <span class="font-weight-bold">{{ 'Description: ' }}</span>
+            {{ item.description }}
+          </div>
+        </template>
+
+        <!-- The list starts below the selections, so the empty states move up to the height of the ones on the right -->
+        <template #empty>
+          <v-empty-state
+            v-if="selectedBusinessPartner && catalogRequestFailed"
+            class="mt-n12"
+            icon="mdi-database-alert-outline"
+            text="The Catalog of the selected Business Partner could not be requested. Reload the Catalog to try again."
+            title="Catalog Not Available"
           >
-            <div v-if="listLoading">
-              <v-skeleton-loader type="list-item@6" />
-            </div>
-
-            <template v-else>
-              <v-list
-                v-if="catalogList.length > 0"
-                class="pa-0"
-                density="compact"
-                nav
-              >
-                <v-virtual-scroll
-                  ref="virtualScrollRef"
-                  class="bg-card mb-2"
-                  :item-height="EDC_LIST_ITEM_HEIGHT"
-                  :items="catalogList"
-                >
-                  <template #default="{ item }">
-                    <EdcResourceListItem
-                      :key="item['@id']"
-                      icon="mdi-code-json"
-                      label="Catalog Dataset"
-                      :resource="item"
-                      :selected="isSelected(item)"
-                      @select="selectCatalogDataset(item)"
-                    >
-                      <template #title>{{ item.name || item.description }}</template>
-
-                      <template #subtitle>{{ item['@id'] }}</template>
-
-                      <template #tooltip>
-                        <div v-if="item.name" class="text-body-small mt-1">
-                          <span class="font-weight-bold">{{ 'Name: ' }}</span>
-                          {{ item.name }}
-                        </div>
-
-                        <div v-if="item.description" class="text-body-small mt-1">
-                          <span class="font-weight-bold">{{ 'Description: ' }}</span>
-                          {{ item.description }}
-                        </div>
-                      </template>
-                    </EdcResourceListItem>
-                  </template>
-                </v-virtual-scroll>
-
-                <!-- Next page, loaded when scrolling near the end of the list -->
-                <v-progress-linear v-if="pageLoading" color="primary" indeterminate />
-              </v-list>
-
-              <!-- The list starts below the selections, so the empty states move up to the height of the ones on the right -->
-              <v-empty-state
-                v-else-if="selectedBusinessPartner && catalogRequestFailed"
-                class="mt-n12"
-                icon="mdi-database-alert-outline"
-                text="The Catalog of the selected Business Partner could not be requested. Reload the Catalog to try again."
-                title="Catalog Not Available"
-              >
-                <template #media>
-                  <v-icon size="64" />
-                </template>
-              </v-empty-state>
-
-              <v-empty-state
-                v-else-if="selectedBusinessPartner"
-                class="mt-n12"
-                icon="mdi-database-off-outline"
-                text="The Catalog of the selected Business Partner contains no Datasets of the selected Asset Type"
-                title="No Catalog Datasets"
-              >
-                <template #media>
-                  <v-icon size="64" />
-                </template>
-              </v-empty-state>
-
-              <v-empty-state
-                v-else
-                class="mt-n12"
-                icon="mdi-gesture-tap"
-                text="Please select a Business Partner to load its Catalog"
-                title="Select Business Partner"
-              >
-                <template #media>
-                  <v-icon size="64" />
-                </template>
-              </v-empty-state>
+            <template #media>
+              <v-icon size="64" />
             </template>
-          </v-card-text>
-        </v-card>
-      </v-navigation-drawer>
+          </v-empty-state>
+
+          <v-empty-state
+            v-else-if="selectedBusinessPartner"
+            class="mt-n12"
+            icon="mdi-database-off-outline"
+            text="The Catalog of the selected Business Partner contains no Datasets of the selected Asset Type"
+            title="No Catalog Datasets"
+          >
+            <template #media>
+              <v-icon size="64" />
+            </template>
+          </v-empty-state>
+
+          <v-empty-state
+            v-else
+            class="mt-n12"
+            icon="mdi-gesture-tap"
+            text="Please select a Business Partner to load its Catalog"
+            title="Select Business Partner"
+          >
+            <template #media>
+              <v-icon size="64" />
+            </template>
+          </v-empty-state>
+        </template>
+      </EdcResourceListDrawer>
 
       <v-main>
         <CatalogDatasetDetails
@@ -171,13 +129,13 @@
   import { useSelectedEdcConfig } from '@/composables/SelectedEdcConfig'
   import CatalogDatasetDetails from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/CatalogDatasetDetails.vue'
   import SendDataDialog from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/Dialogs/SendDataDialog.vue'
-  import EdcResourceListItem from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceListItem.vue'
+  import EdcResourceListDrawer from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceListDrawer.vue'
   import { useEdcCatalogQuery } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcCatalogQuery'
   import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
-  import { EDC_LIST_ITEM_HEIGHT, type EdcVirtualScroll, useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
+  import { type EdcVirtualScroll, useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import { assetTypeFilterItems, isPushAsset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
-  import { EDC_FILTERED_LIST_HEIGHT, EDC_TAB_HEIGHT } from '@/pages/modules/EclipseDataspaceConnector/data/heights'
+  import { EDC_TAB_HEIGHT } from '@/pages/modules/EclipseDataspaceConnector/data/heights'
   import { normalizeCatenaXPartners } from '@/utils/CatenaXPartnerUtils'
 
   // Composables
@@ -187,7 +145,7 @@
   const { dialogOpen, dialogState } = useEdcDialogRoute()
 
   // Data
-  const virtualScrollRef = ref<EdcVirtualScroll | null>(null)
+  const listDrawer = useTemplateRef<InstanceType<typeof EdcResourceListDrawer>>('listDrawer')
 
   const selectedBusinessPartner = ref<CatenaXPartner | null>(null)
   const selectedCatalogDataset = ref({} as any)
@@ -201,6 +159,7 @@
   const sendDataDatasetId = dialogState('dataset')
 
   // Computed properties
+  const virtualScrollRef = computed<EdcVirtualScroll | null>(() => listDrawer.value?.virtualScroll ?? null)
   const businessPartners = computed(() => normalizeCatenaXPartners(selectedEdcConfig.value?.partners ?? []))
 
   // Loaded pages of the catalog, in the order of the provider

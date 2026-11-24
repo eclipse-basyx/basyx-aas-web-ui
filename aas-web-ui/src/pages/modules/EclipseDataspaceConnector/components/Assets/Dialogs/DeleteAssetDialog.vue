@@ -47,6 +47,7 @@
 
 <script lang="ts" setup>
   import { type CatenaXEdcFailure, type CatenaXEdcResult, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
+  import { DEFAULT_EDC_PROXY_ID } from '@/composables/SelectedEdcConfig'
   import DeleteEdcResourceDialog from '@/pages/modules/EclipseDataspaceConnector/components/Shared/DeleteEdcResourceDialog.vue'
   import { namesAnyAsset } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetsSelector'
   import { queryAllEdcPages } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPaging'
@@ -56,7 +57,7 @@
     asset: any
     proxyId?: string
   }>(), {
-    proxyId: 'default',
+    proxyId: DEFAULT_EDC_PROXY_ID,
   })
 
   const emit = defineEmits<{

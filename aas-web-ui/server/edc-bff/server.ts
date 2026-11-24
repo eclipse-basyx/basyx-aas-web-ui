@@ -177,27 +177,27 @@ async function handleRequest (
   }
 
   if (route.action === 'dtr/shell-descriptors' && request.method === 'POST') {
-    await handleJsonPostRequest(request, response, proxy, fetchDtrShellDescriptors)
+    await handleTransferRequest(request, response, proxy, fetchDtrShellDescriptors)
     return
   }
 
   if (route.action === 'dtr/shell-descriptors/by-id' && request.method === 'POST') {
-    await handleJsonPostRequest(request, response, proxy, fetchDtrShellDescriptorById)
+    await handleTransferRequest(request, response, proxy, fetchDtrShellDescriptorById)
     return
   }
 
   if (route.action === 'submodels/fetch' && request.method === 'POST') {
-    await handleJsonPostRequest(request, response, proxy, fetchSubmodel)
+    await handleTransferRequest(request, response, proxy, fetchSubmodel)
     return
   }
 
   if (route.action === 'data/fetch' && request.method === 'POST') {
-    await handleJsonPostRequest(request, response, proxy, fetchData)
+    await handleTransferRequest(request, response, proxy, fetchData)
     return
   }
 
   if (route.action === 'data/push' && request.method === 'POST') {
-    await handleJsonPostRequest(request, response, proxy, pushData, maxPushBodyBytes)
+    await handleTransferRequest(request, response, proxy, pushData, maxPushBodyBytes)
     return
   }
 
@@ -228,7 +228,7 @@ async function handleManagementResourceRoute (
         }
         return body
       }
-      await handleJsonRequest(request, response, proxy, `/v3/${resource}`, 'POST', prepareBody)
+      await handleManagementWriteRequest(request, response, proxy, `/v3/${resource}`, 'POST', prepareBody)
       return true
     }
   }
@@ -326,7 +326,8 @@ async function handleQuerySpecRequest (
   writeJsonResponse(response, edcResponse.status, redactSecrets ? redactAssetSecrets(edcResponse.data) : edcResponse.data)
 }
 
-async function handleJsonRequest (
+/** Forwards the JSON body of a create (POST) or update (PUT) to the EDC Management API and answers with its response */
+async function handleManagementWriteRequest (
   request: IncomingMessage,
   response: ServerResponse,
   proxy: EdcProxyConfig,
@@ -374,7 +375,7 @@ async function handleUpdateRequest (
     assertBodyIdMatchesPath(body, resourceId)
     return hasSecrets ? restoreStoredAssetSecrets(proxy, body, resourceId) : body
   }
-  await handleJsonRequest(request, response, proxy, path, 'PUT', prepareBody)
+  await handleManagementWriteRequest(request, response, proxy, path, 'PUT', prepareBody)
 }
 
 /** Reads the resource ID of a route such as `assets/<id>`, refusing a missing one with 400. */
@@ -454,8 +455,8 @@ async function handleDeleteRequest (
   writeJsonResponse(response, edcResponse.status, edcResponse.data)
 }
 
-/** Reads the JSON body of a POST, runs the EDC request with it and answers with its data and EDC metadata */
-async function handleJsonPostRequest<TBody> (
+/** Runs a data transfer, e.g. fetching a Submodel, with the JSON body of a POST and answers with its data and EDC metadata */
+async function handleTransferRequest<TBody> (
   request: IncomingMessage,
   response: ServerResponse,
   proxy: EdcProxyConfig,

@@ -126,9 +126,7 @@
               :style="{
                 'border-color': aasIsSelected(item)
                   ? `${primaryColor} !important`
-                  : isDark
-                    ? '#686868 !important'
-                    : '#ABABAB !important',
+                  : `${listItemColor} !important`,
               }"
               variant="tonal"
               @click="selectAas(item)"
@@ -219,9 +217,10 @@
   import { useQueryLanguageClient } from '@/composables/Client/QueryLanguageClient'
   import { useQuerySearch } from '@/composables/QueryLanguage/QuerySearch'
   import { useQuerySearchScroll } from '@/composables/QueryLanguage/QuerySearchScroll'
+  import { infrastructureLoadFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/InfrastructureLoadFailure'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { versionRevisionToDisplay } from '@/utils/AAS/SemanticIdUtils'
-  import { getActiveComponentUrlForTemplate, isLoggedOutOfOAuth2 } from '@/utils/InfrastructureUtils'
+  import { getActiveComponentUrlForTemplate } from '@/utils/InfrastructureUtils'
   import {
     buildStructuredSearchQuery,
     createQueryExample,
@@ -338,8 +337,8 @@
   })
 
   // Computed Properties
-  const isDark = computed(() => theme.global.current.value.dark)
   const primaryColor = computed(() => theme.current.value.colors.primary)
+  const listItemColor = computed(() => theme.current.value.colors.listItem)
   const aasRepoUrl = computed(() => props.infrastructure ? getActiveComponentUrlForTemplate(props.infrastructure, 'AASRepo') : '')
   const infrastructureTemplate = computed(() => props.infrastructure?.template ?? 'full')
   const listLoading = computed(() => isLoadingInitialPage.value)
@@ -357,20 +356,15 @@
   )
   const loadFailureMessage = computed(() => {
     const auth = props.infrastructure?.auth
-    if (loadFailure.value?.status === 401 || isLoggedOutOfOAuth2(props.infrastructure)) {
-      return {
-        title: 'Authentication Required',
-        text: auth?.securityType === 'OAuth2'
-          ? `Log in to ${props.infrastructure?.name} to load its AAS.`
-          : (auth && auth.securityType !== 'No Authentication'
-            ? `The AAS Repository rejected the preconfigured ${auth.securityType}.`
-            : 'The AAS Repository requires authentication, but none is configured for this infrastructure.'),
-      }
-    }
-    if (loadFailure.value?.status === 403) {
-      return { title: 'Access Denied', text: 'You are not allowed to read the AAS of this infrastructure.' }
-    }
-    return { title: 'AAS Not Available', text: 'The AAS could not be loaded. Reload the AAS List to try again.' }
+    return infrastructureLoadFailureMessage(props.infrastructure, loadFailure.value?.status, 'AAS', {
+      authentication: auth?.securityType === 'OAuth2'
+        ? `Log in to ${props.infrastructure?.name} to load its AAS.`
+        : (auth && auth.securityType !== 'No Authentication'
+          ? `The AAS Repository rejected the preconfigured ${auth.securityType}.`
+          : 'The AAS Repository requires authentication, but none is configured for this infrastructure.'),
+      denied: 'You are not allowed to read the AAS of this infrastructure.',
+      unavailable: 'The AAS could not be loaded. Reload the AAS List to try again.',
+    })
   })
 
   // Watchers

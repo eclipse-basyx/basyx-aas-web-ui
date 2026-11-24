@@ -31,14 +31,14 @@
       <CreateAssetDialog
         v-model="createAssetDialog"
         :proxy-id="proxyId"
-        @assets-created="assetId => onCreated(assetId, false)"
+        @assets-created="assetId => onCreated(assetId, { keepSelection: true })"
       />
 
       <CreateAssetDialog
         v-model="createAssetFromTemplateDialog"
         from-template
         :proxy-id="proxyId"
-        @assets-created="assetId => onCreated(assetId, false)"
+        @assets-created="assetId => onCreated(assetId, { keepSelection: true })"
       />
 
       <CreateAssetFromInfrastructureDialog

@@ -76,6 +76,24 @@ describe('EDC BFF request helpers', () => {
     })
   })
 
+  it('builds a catalog request for the dataset of an asset ID', () => {
+    const proxy = createProxyConfig()
+
+    expect(buildCatalogRequestBody(proxy, {
+      counterPartyId: 'TEST_COUNTERPARTY_ID',
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp/2025-1',
+      assetId: ' asset-1 ',
+      querySpec: { '@type': 'QuerySpec', 'limit': 10 },
+    }).querySpec).toEqual({
+      '@type': 'QuerySpec',
+      'offset': 0,
+      'limit': 1,
+      'filterExpression': [
+        { '@type': 'Criterion', 'operandLeft': 'https://w3id.org/edc/v0.0.1/ns/id', 'operator': '=', 'operandRight': 'asset-1' },
+      ],
+    })
+  })
+
   it('adds the DSP 2025-1 version path to the counterparty address only once', () => {
     const proxy = createProxyConfig()
     const addressFor = (counterPartyAddress: string) =>

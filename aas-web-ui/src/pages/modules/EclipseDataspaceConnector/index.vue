@@ -56,8 +56,7 @@
   const router = useRouter()
 
   // Data
-  const initialTab = route.path.split('/').findLast(Boolean) || 'assets'
-  const tabs = ref(initialTab)
+  const tabs = ref(tabFromPath(route.path) || 'assets')
 
   const tabItems = computed(() => (routes.children ?? []).map(route => ({
     id: route.path,
@@ -69,15 +68,16 @@
   watch(
     () => route.path,
     path => {
-      const currentTab = path.split('/').findLast(Boolean)
+      const currentTab = tabFromPath(path)
       if (currentTab) tabs.value = currentTab
     },
   )
 
-  onMounted(async () => {
-    const currentTab = route.path.split('/').findLast(Boolean)
-    if (currentTab) tabs.value = currentTab
-  })
+  // Methods
+  // The last path segment names the tab, e.g. `assets` in `/modules/eclipsedataspaceconnector/assets`
+  function tabFromPath (path: string): string | undefined {
+    return path.split('/').findLast(Boolean)
+  }
 
   async function onTabChange (tab: string): Promise<void> {
     const query = { ...route.query } as LocationQueryRaw

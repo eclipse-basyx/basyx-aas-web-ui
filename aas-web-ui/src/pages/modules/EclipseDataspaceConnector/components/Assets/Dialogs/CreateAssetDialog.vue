@@ -94,6 +94,7 @@
 
 <script lang="ts" setup>
   import { type CatenaXEdcAsset, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
+  import { DEFAULT_EDC_PROXY_ID } from '@/composables/SelectedEdcConfig'
   import EdcAssetOAuth2Button from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Button.vue'
   import EdcAssetOAuth2Drawer from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Drawer.vue'
   import EdcAssetOAuth2Fields from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Fields.vue'
@@ -106,7 +107,7 @@
     hasEdcAssetOAuth2,
   } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetOAuth2'
   import { type EdcTemplate, useEdcTemplateForm } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplateForm'
-  import { fillTemplatePlaceholders, templatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
+  import { fillTemplatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
   import AssetTemplateDefault from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset.json'
   import AssetTemplateDTRegistry from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_digitaltwin_registry.json'
   import AssetTemplateSmService from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_submodel_service.json'
@@ -115,7 +116,7 @@
     proxyId?: string
     fromTemplate?: boolean // Lets the user choose the template, otherwise the default template is used
   }>(), {
-    proxyId: 'default',
+    proxyId: DEFAULT_EDC_PROXY_ID,
     fromTemplate: false,
   })
 
@@ -156,23 +157,20 @@
     placeholderValues,
     form,
     activeTemplate,
+    placeholders,
     resetForm,
     createFromTemplate,
-  } = useEdcTemplateForm('Asset', assetTemplates, props.fromTemplate ? '' : 'default')
+  } = useEdcTemplateForm('Asset', assetTemplates, props.fromTemplate ? '' : 'default', placeholder => ({
+    ...placeholder,
+    // A label used for several attributes is mandatory if one of them is
+    mandatory: placeholder.attributes.some(attribute => MANDATORY_ATTRIBUTES.has(attribute)),
+  }))
 
   // Data
   const oauth2Drawer = ref(false)
   const oauth2 = ref<EdcAssetOAuth2>(createEmptyEdcAssetOAuth2()) // Fills the "oauth2:*" placeholders of the template
 
   // Computed properties
-  // A label used for several attributes is mandatory if one of them is
-  const placeholders = computed(() => activeTemplate.value
-    ? templatePlaceholders(activeTemplate.value.template).map(placeholder => ({
-      ...placeholder,
-      mandatory: placeholder.attributes.some(attribute => MANDATORY_ATTRIBUTES.has(attribute)),
-    }))
-    : [])
-
   const oauth2Placeholders = computed(() => placeholders.value.filter(p => p.attribute.startsWith('oauth2:')))
   const fieldPlaceholders = computed(() => placeholders.value.filter(p => !p.attribute.startsWith('oauth2:')))
 

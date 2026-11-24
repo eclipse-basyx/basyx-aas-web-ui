@@ -2,7 +2,6 @@ import type { CatenaXEdcCatalog, CatenaXEdcQuerySpec } from '@/composables/Clien
 import type { CatenaXPartner } from '@/types/Infrastructure'
 import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
 import {
-  EDC_ASSET_ID_OPERAND,
   type EdcListPage,
   type EdcPageResult,
   type EdcQuery,
@@ -72,12 +71,12 @@ export function useEdcCatalogQuery () {
    * Requests the catalog dataset of the given asset, e.g. one beyond the loaded pages. Resolves to `null` if there is none.
    */
   async function findCatalogDataset (proxyId: string, partner: CatenaXPartner, assetId: string): Promise<any> {
-    const result = await catalogQuery(proxyId, partner)({
-      offset: 0,
-      limit: 1,
-      filterExpression: [{ '@type': 'Criterion', 'operandLeft': EDC_ASSET_ID_OPERAND, 'operator': '=', 'operandRight': assetId }],
+    const result = await requestCatalog(proxyId, {
+      counterPartyId: partner.counterPartyId,
+      counterPartyAddress: partner.counterPartyAddress,
+      assetId,
     })
-    return result.success ? (result.data.find(dataset => dataset['@id'] === assetId) ?? null) : null
+    return result.success ? (catalogDatasets(result.data).find(dataset => dataset['@id'] === assetId) ?? null) : null
   }
 
   return { queryCatalogPage, findCatalogDataset }

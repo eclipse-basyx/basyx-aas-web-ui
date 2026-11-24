@@ -58,6 +58,7 @@
 
 <script lang="ts" setup generic="T extends Record<string, unknown>">
   import type { CatenaXEdcResult } from '@/composables/Client/CatenaXEdcClient'
+  import { DEFAULT_EDC_PROXY_ID } from '@/composables/SelectedEdcConfig'
   import { edcRequestFailureText } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
 
   const props = withDefaults(defineProps<{
@@ -68,7 +69,7 @@
     proxyId?: string
   }>(), {
     icon: 'mdi-code-json',
-    proxyId: 'default',
+    proxyId: DEFAULT_EDC_PROXY_ID,
   })
 
   const emit = defineEmits<{

@@ -34,6 +34,7 @@
   import type { CatenaXEdcContractDefinition, CatenaXEdcQuerySpec } from '@/composables/Client/CatenaXEdcClient'
   import type { AssetTypeFilterPreset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
+  import { DEFAULT_EDC_PROXY_ID } from '@/composables/SelectedEdcConfig'
   import CreateContractDialog from '@/pages/modules/EclipseDataspaceConnector/components/Contracts/Dialogs/CreateContractDialog.vue'
   import EdcResourceTab from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceTab.vue'
   import { selectsAnyAsset } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetsSelector'
@@ -71,7 +72,7 @@
   const resourceTab = useTemplateRef<InstanceType<typeof EdcResourceTab>>('resourceTab')
   const contracts = ref<CatenaXEdcContractDefinition[]>([]) // All contracts, for the policy filter items
   const policyFilterItemsLoading = ref(false)
-  let listProxyId = 'default' // Proxy of the list, for the policy filter items
+  let listProxyId = DEFAULT_EDC_PROXY_ID // Proxy of the list, for the policy filter items
   const selectedContractFilter = ref<ContractFilter>(allContractsFilter)
   const createContractDialog = dialogOpen('create-contract') // The open dialog is kept in the URL, e.g. to return to it after a login
 

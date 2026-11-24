@@ -46,6 +46,7 @@
 
 <script lang="ts" setup>
   import type { CatenaXEdcResult } from '@/composables/Client/CatenaXEdcClient'
+  import { DEFAULT_EDC_PROXY_ID } from '@/composables/SelectedEdcConfig'
   import {
     edcRequestFailureText,
     useEdcRequestFailureMessage,
@@ -58,7 +59,7 @@
     proxyId?: string
     loading?: boolean // e.g. while the resources deleted along with this one are looked up
   }>(), {
-    proxyId: 'default',
+    proxyId: DEFAULT_EDC_PROXY_ID,
     loading: false,
   })
 

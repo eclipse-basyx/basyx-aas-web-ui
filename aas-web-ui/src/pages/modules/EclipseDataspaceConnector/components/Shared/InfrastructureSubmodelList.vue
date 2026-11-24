@@ -134,9 +134,9 @@
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { useLoadGeneration } from '@/composables/LoadGeneration'
   import SelectAasEmptyState from '@/pages/modules/EclipseDataspaceConnector/components/Shared/SelectAasEmptyState.vue'
+  import { infrastructureLoadFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/InfrastructureLoadFailure'
   import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil'
   import { isSubmodelPayload, isUnauthorizedSubmodelPlaceholder } from '@/utils/AAS/SubmodelUtils'
-  import { isLoggedOutOfOAuth2 } from '@/utils/InfrastructureUtils'
 
   const props = defineProps<{
     infrastructure: InfrastructureConfig | null
@@ -159,7 +159,7 @@
   const listLoad = useLoadGeneration()
   const listLoading = listLoad.loading
   const unloadedCount = ref(0) // Referenced Submodels that could not be loaded
-  const loadFailure = ref<{ unauthorized: boolean } | null>(null) // None of the referenced Submodels could be loaded
+  const loadFailure = ref<{ status?: number } | null>(null) // None of the referenced Submodels could be loaded
 
   // Computed Properties
   const submodelList = computed(() =>
@@ -170,12 +170,11 @@
   )
   const someListedSelected = computed(() => submodelList.value.some(sm => submodelIsSelected(sm)))
   const loadFailureMessage = computed(() => {
-    if (!loadFailure.value?.unauthorized) {
-      return { title: 'Submodels Not Available', text: 'The Submodels could not be loaded. Reload the Submodel List to try again.' }
-    }
-    return isLoggedOutOfOAuth2(props.infrastructure)
-      ? { title: 'Authentication Required', text: `Log in to ${props.infrastructure?.name} to load the Submodels.` }
-      : { title: 'Access Denied', text: 'You are not allowed to read the Submodels of this AAS.' }
+    return infrastructureLoadFailureMessage(props.infrastructure, loadFailure.value?.status, 'Submodels', {
+      authentication: `Log in to ${props.infrastructure?.name} to load the Submodels.`,
+      denied: 'You are not allowed to read the Submodels of this AAS.',
+      unavailable: 'The Submodels could not be loaded. Reload the Submodel List to try again.',
+    })
   })
 
   // Watchers
@@ -220,9 +219,10 @@
       // Failed requests return placeholders like "Submodel Not Authorized!" or an empty object
       allSubmodels.value = sortSmsForDisplay(submodels.filter(sm => isSubmodelPayload(sm)))
       const unloaded = submodels.filter(sm => !isSubmodelPayload(sm))
+      // A rejected Submodel counts as 403, as its placeholder doesn't tell 401 from 403; a missing OAuth2 login still asks for a login
       setLoadFailure(
         allSubmodels.value.length === 0 && unloaded.length > 0
-          ? { unauthorized: unloaded.every(sm => isUnauthorizedSubmodelPlaceholder(sm)) }
+          ? { status: unloaded.every(sm => isUnauthorizedSubmodelPlaceholder(sm)) ? 403 : undefined }
           : null,
         unloaded.length,
       )
@@ -235,7 +235,7 @@
     }
   }
 
-  function setLoadFailure (failure: { unauthorized: boolean } | null, unloaded: number): void {
+  function setLoadFailure (failure: { status?: number } | null, unloaded: number): void {
     loadFailure.value = failure
     unloadedCount.value = unloaded
     failed.value = !!failure

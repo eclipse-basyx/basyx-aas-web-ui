@@ -33,6 +33,7 @@ export interface CatenaXEdcCatalogRequest {
   counterPartyId: string
   counterPartyAddress: string
   querySpec?: CatenaXEdcQuerySpec
+  assetId?: string // Requests only the dataset of this asset, instead of the `querySpec`
 }
 
 export interface CatenaXEdcCatalog extends Record<string, unknown> {
@@ -279,68 +280,6 @@ export function useCatenaXEdcClient (): {
       : toEdcFailure(result)
   }
 
-  async function queryAssets (
-    proxyId: string,
-    request: CatenaXEdcQuerySpecRequest = {},
-  ): Promise<CatenaXEdcQueryResult<CatenaXEdcAsset>> {
-    return queryEdcResources<CatenaXEdcAsset>(proxyId, 'assets', request)
-  }
-
-  async function createAsset (
-    proxyId: string,
-    asset: CatenaXEdcAsset,
-  ): Promise<CatenaXEdcCreateResult> {
-    return createEdcResource(proxyId, 'assets', asset)
-  }
-
-  async function updateAsset (
-    proxyId: string,
-    assetId: string,
-    asset: CatenaXEdcAsset,
-  ): Promise<CatenaXEdcResult> {
-    return updateEdcResource(proxyId, 'assets', assetId, asset)
-  }
-
-  async function deleteAsset (proxyId: string, assetId: string): Promise<CatenaXEdcResult> {
-    return deleteEdcResource(proxyId, 'assets', assetId)
-  }
-
-  async function queryContractDefinitions (
-    proxyId: string,
-    request: CatenaXEdcQuerySpecRequest = {},
-  ): Promise<CatenaXEdcQueryResult<CatenaXEdcContractDefinition>> {
-    return queryEdcResources<CatenaXEdcContractDefinition>(proxyId, 'contractdefinitions', request)
-  }
-
-  async function createContractDefinition (
-    proxyId: string,
-    contractDefinition: CatenaXEdcContractDefinition,
-  ): Promise<CatenaXEdcCreateResult> {
-    return createEdcResource(proxyId, 'contractdefinitions', contractDefinition)
-  }
-
-  async function updateContractDefinition (
-    proxyId: string,
-    contractDefinitionId: string,
-    contractDefinition: CatenaXEdcContractDefinition,
-  ): Promise<CatenaXEdcResult> {
-    return updateEdcResource(proxyId, 'contractdefinitions', contractDefinitionId, contractDefinition)
-  }
-
-  async function deleteContractDefinition (
-    proxyId: string,
-    contractDefinitionId: string,
-  ): Promise<CatenaXEdcResult> {
-    return deleteEdcResource(proxyId, 'contractdefinitions', contractDefinitionId)
-  }
-
-  async function queryPolicyDefinitions (
-    proxyId: string,
-    request: CatenaXEdcQuerySpecRequest = {},
-  ): Promise<CatenaXEdcQueryResult<CatenaXEdcPolicyDefinition>> {
-    return queryEdcResources<CatenaXEdcPolicyDefinition>(proxyId, 'policydefinitions', request)
-  }
-
   async function queryEdcResources<T> (
     proxyId: string,
     resource: EdcResource,
@@ -367,13 +306,6 @@ export function useCatenaXEdcClient (): {
       : { success: false, status: result.status, details: 'The EDC did not return a list.' }
   }
 
-  async function createPolicyDefinition (
-    proxyId: string,
-    policyDefinition: CatenaXEdcPolicyDefinition,
-  ): Promise<CatenaXEdcCreateResult> {
-    return createEdcResource(proxyId, 'policydefinitions', policyDefinition)
-  }
-
   async function createEdcResource (
     proxyId: string,
     resource: EdcResource,
@@ -397,14 +329,6 @@ export function useCatenaXEdcClient (): {
       : toEdcFailure(result)
   }
 
-  async function updatePolicyDefinition (
-    proxyId: string,
-    policyDefinitionId: string,
-    policyDefinition: CatenaXEdcPolicyDefinition,
-  ): Promise<CatenaXEdcResult> {
-    return updateEdcResource(proxyId, 'policydefinitions', policyDefinitionId, policyDefinition)
-  }
-
   async function updateEdcResource (
     proxyId: string,
     resource: EdcResource,
@@ -426,13 +350,6 @@ export function useCatenaXEdcClient (): {
     )
 
     return toEdcResult(result)
-  }
-
-  async function deletePolicyDefinition (
-    proxyId: string,
-    policyDefinitionId: string,
-  ): Promise<CatenaXEdcResult> {
-    return deleteEdcResource(proxyId, 'policydefinitions', policyDefinitionId)
   }
 
   async function deleteEdcResource (
@@ -575,22 +492,38 @@ export function useCatenaXEdcClient (): {
     return `${basePath}api/catena-x/edc/${encodeURIComponent(normalizedProxyId)}/${path}`
   }
 
+  /**
+   * Queries, creates, updates and deletes the resources of one endpoint of the EDC Management API, e.g. `assets`.
+   */
+  function edcResourceClient<T extends Record<string, unknown>> (resource: EdcResource) {
+    return {
+      query: (proxyId: string, request: CatenaXEdcQuerySpecRequest = {}) => queryEdcResources<T>(proxyId, resource, request),
+      create: (proxyId: string, payload: T) => createEdcResource(proxyId, resource, payload),
+      update: (proxyId: string, resourceId: string, payload: T) => updateEdcResource(proxyId, resource, resourceId, payload),
+      delete: (proxyId: string, resourceId: string) => deleteEdcResource(proxyId, resource, resourceId),
+    }
+  }
+
+  const assets = edcResourceClient<CatenaXEdcAsset>('assets')
+  const contractDefinitions = edcResourceClient<CatenaXEdcContractDefinition>('contractdefinitions')
+  const policyDefinitions = edcResourceClient<CatenaXEdcPolicyDefinition>('policydefinitions')
+
   return {
     fetchStatus,
     discoverConnector,
     requestCatalog,
-    queryAssets,
-    createAsset,
-    updateAsset,
-    deleteAsset,
-    queryContractDefinitions,
-    createContractDefinition,
-    updateContractDefinition,
-    deleteContractDefinition,
-    queryPolicyDefinitions,
-    createPolicyDefinition,
-    updatePolicyDefinition,
-    deletePolicyDefinition,
+    queryAssets: assets.query,
+    createAsset: assets.create,
+    updateAsset: assets.update,
+    deleteAsset: assets.delete,
+    queryContractDefinitions: contractDefinitions.query,
+    createContractDefinition: contractDefinitions.create,
+    updateContractDefinition: contractDefinitions.update,
+    deleteContractDefinition: contractDefinitions.delete,
+    queryPolicyDefinitions: policyDefinitions.query,
+    createPolicyDefinition: policyDefinitions.create,
+    updatePolicyDefinition: policyDefinitions.update,
+    deletePolicyDefinition: policyDefinitions.delete,
     fetchDtrShellDescriptors,
     fetchDtrShellDescriptorById,
     fetchSubmodel,

@@ -131,8 +131,8 @@
 
   // Computed properties
   const borderColor = computed(() => {
-    if (props.selected) return `${theme.current.value.colors.primary} !important`
-    return theme.global.current.value.dark ? '#686868 !important' : '#ABABAB !important'
+    const colors = theme.current.value.colors
+    return `${props.selected ? colors.primary : colors.listItem} !important`
   })
 
   function copyId (): void {

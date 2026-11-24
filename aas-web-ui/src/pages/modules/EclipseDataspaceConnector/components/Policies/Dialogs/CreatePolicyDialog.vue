@@ -115,10 +115,11 @@
 
 <script lang="ts" setup>
   import { type CatenaXEdcPolicyDefinition, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
+  import { DEFAULT_EDC_PROXY_ID } from '@/composables/SelectedEdcConfig'
   import EdcTemplatePlaceholderFields from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcTemplatePlaceholderFields.vue'
   import EdcTemplateSelect from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcTemplateSelect.vue'
   import { type EdcTemplate, useEdcTemplateForm } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplateForm'
-  import { fillTemplatePlaceholders, templatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
+  import { fillTemplatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
   import AccessPolicy from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_access.json'
   import AccessPolicyBpn from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_access_bpn.json'
   import UsagePolicy from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage.json'
@@ -131,7 +132,7 @@
     proxyId?: string
     fromTemplate?: boolean // Lets the user choose from all templates, otherwise from the access and usage policy types
   }>(), {
-    proxyId: 'default',
+    proxyId: DEFAULT_EDC_PROXY_ID,
     fromTemplate: false,
   })
 
@@ -213,9 +214,14 @@
     placeholderValues,
     form,
     activeTemplate,
+    placeholders,
     resetForm: resetTemplateForm,
     createFromTemplate,
-  } = useEdcTemplateForm('Policy', templates, props.fromTemplate ? '' : 'usage')
+  } = useEdcTemplateForm('Policy', templates, props.fromTemplate ? '' : 'usage', placeholder => ({
+    ...placeholder,
+    placeholder: placeholder.placeholder || placeholder.label,
+    hint: placeholder.hint || `Enter ${placeholder.label}`,
+  }))
 
   // Data
   const jsonText = ref('')
@@ -223,14 +229,6 @@
   const manuallyEdited = ref(false) // The policy was edited in the editor, the fields no longer rebuild it
 
   // Computed properties
-  const placeholders = computed(() => activeTemplate.value
-    ? templatePlaceholders(activeTemplate.value.template).map(placeholder => ({
-      ...placeholder,
-      placeholder: placeholder.placeholder || placeholder.label,
-      hint: placeholder.hint || `Enter ${placeholder.label}`,
-    }))
-    : [])
-
   // Unfilled placeholders stay in the editor as {{Label}}, also after editing by hand
   const hasUnfilledPlaceholders = computed(() => /\{\{[^}]+\}\}/.test(jsonText.value))
 

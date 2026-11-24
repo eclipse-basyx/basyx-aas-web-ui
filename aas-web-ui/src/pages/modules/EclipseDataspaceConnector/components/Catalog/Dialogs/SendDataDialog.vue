@@ -89,6 +89,7 @@
   import type { AasUnavailableReason } from '@/pages/modules/EclipseDataspaceConnector/components/Shared/SelectAasEmptyState.vue'
   import type { CatenaXPartner } from '@/types/Infrastructure'
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
+  import { DEFAULT_EDC_PROXY_ID } from '@/composables/SelectedEdcConfig'
   import InfrastructureDialog from '@/pages/modules/EclipseDataspaceConnector/components/Shared/InfrastructureDialog.vue'
   import InfrastructureSelectionDrawers from '@/pages/modules/EclipseDataspaceConnector/components/Shared/InfrastructureSelectionDrawers.vue'
   import JsonPreviewTabs from '@/pages/modules/EclipseDataspaceConnector/components/Shared/JsonPreviewTabs.vue'
@@ -104,7 +105,7 @@
     businessPartner: CatenaXPartner | null
     catalogDataset: any // Catalog dataset of the push asset
   }>(), {
-    proxyId: 'default',
+    proxyId: DEFAULT_EDC_PROXY_ID,
   })
 
   const sendDataDialog = defineModel<boolean>({ required: true })

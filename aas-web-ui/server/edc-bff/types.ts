@@ -55,6 +55,7 @@ export interface EdcCatalogRequest {
   counterPartyId?: string
   counterPartyAddress?: string
   querySpec?: EdcQuerySpec
+  assetId?: string // Requests only the dataset of this asset, instead of the `querySpec`
 }
 
 export interface EdcQuerySpec extends Record<string, unknown> {

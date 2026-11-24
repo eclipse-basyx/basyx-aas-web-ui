@@ -1,9 +1,11 @@
 import type { CatenaXEdcCreateResult } from '@/composables/Client/CatenaXEdcClient'
+import type { TemplatePlaceholder } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
 import type { Ref } from 'vue'
 import {
   edcRequestFailureText,
   useEdcRequestFailureMessage,
 } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
+import { templatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
 
 /**
  * A template to choose from when creating an EDC resource, its placeholders are described in `EdcTemplatePlaceholders`.
@@ -19,11 +21,13 @@ export interface EdcTemplate<Value extends string = string> {
  * Form of a dialog creating an EDC resource, e.g. an `Asset`, from a chosen template.
  * The placeholder values are kept by label and reset when another template is chosen.
  * A `defaultTemplate` is selected initially and after a reset, e.g. for a dialog without template selection.
+ * `toField` turns each placeholder of the active template into the field of the dialog, e.g. marked as mandatory.
  */
-export function useEdcTemplateForm<Value extends string> (
+export function useEdcTemplateForm<Value extends string, Field extends TemplatePlaceholder> (
   resourceLabel: string,
   templates: EdcTemplate<Value>[],
-  defaultTemplate: Value | '' = '',
+  defaultTemplate: Value | '',
+  toField: (placeholder: TemplatePlaceholder) => Field,
 ) {
   // Composables
   const { showFailureMessage } = useEdcRequestFailureMessage()
@@ -35,6 +39,9 @@ export function useEdcTemplateForm<Value extends string> (
 
   // Computed properties
   const activeTemplate = computed(() => templates.find(template => template.value === selectedTemplate.value))
+  const placeholders = computed(() => activeTemplate.value
+    ? templatePlaceholders(activeTemplate.value.template).map(placeholder => toField(placeholder))
+    : [])
 
   // Watchers
   watch(selectedTemplate, () => {
@@ -78,6 +85,7 @@ export function useEdcTemplateForm<Value extends string> (
     placeholderValues,
     form,
     activeTemplate,
+    placeholders,
     resetForm,
     createFromTemplate,
   }

@@ -18,13 +18,16 @@ export interface EdcForwardResult {
   data: unknown
 }
 
+const edcNamespace = 'https://w3id.org/edc/v0.0.1/ns/'
+
 const jsonLdContext = {
   tx: 'https://w3id.org/tractusx/v0.0.1/ns/',
-  edc: 'https://w3id.org/edc/v0.0.1/ns/',
+  edc: edcNamespace,
 }
 
-const catalogContext = {
-  '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
+// Terms without prefix, e.g. of a catalog request or a query spec, are EDC terms
+const edcVocabContext = {
+  '@vocab': edcNamespace,
 }
 const odrlContextUrl = 'http' + '://www.w3.org/ns/odrl/2/'
 const dctContextUrl = 'http' + '://purl.org/dc/terms/'
@@ -34,7 +37,7 @@ const xsdContextUrl = 'http' + '://www.w3.org/2001/XMLSchema#'
 const contractContext = {
   'tx': 'https://w3id.org/tractusx/v0.0.1/ns/',
   'tx-auth': 'https://w3id.org/tractusx/auth/',
-  'edc': 'https://w3id.org/edc/v0.0.1/ns/',
+  'edc': edcNamespace,
   'dcat': 'https://www.w3.org/ns/dcat/',
   'odrl': odrlContextUrl,
   'dct': dctContextUrl,
@@ -44,7 +47,7 @@ const contractContext = {
   'cx-policy': 'https://w3id.org/catenax/policy/',
   'cx-taxo': 'https://w3id.org/catenax/taxonomy#',
   'xsd': xsdContextUrl,
-  '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
+  '@vocab': edcNamespace,
 }
 
 const dsp2025ContextUrl = 'https://w3id.org/dspace/2025/1/context.jsonld'
@@ -81,9 +84,7 @@ const datasetPolicyKeys = [
 
 export function buildQuerySpecRequestBody (request: EdcQuerySpecRequest): Record<string, unknown> {
   return request.querySpec ?? {
-    '@context': {
-      '@vocab': 'https://w3id.org/edc/v0.0.1/ns/',
-    },
+    '@context': edcVocabContext,
     '@type': 'QuerySpec',
     'offset': 0,
     'sortOrder': 'ASC',
@@ -183,15 +184,15 @@ export function buildCatalogRequestBody (
 
   assertCounterPartyAddressAllowed(proxy, counterPartyAddress)
 
+  const assetId = trimString(request.assetId)
+  const querySpec = assetId ? buildAssetIdQuerySpec(assetId) : request.querySpec
   return {
-    '@context': catalogContext,
+    '@context': edcVocabContext,
     '@type': 'CatalogRequest',
     counterPartyId,
     'counterPartyAddress': versionedCounterPartyAddress(counterPartyAddress),
     'protocol': dspProtocol,
-    ...(request.querySpec && typeof request.querySpec === 'object'
-      ? { querySpec: request.querySpec }
-      : {}),
+    ...(querySpec && typeof querySpec === 'object' ? { querySpec } : {}),
   }
 }
 
@@ -216,7 +217,7 @@ export function buildDigitalTwinRegistryQuerySpec (limit = 50): Record<string, u
 /**
  * Returns a query spec that only matches the catalog dataset of the given asset, so it is found in large catalogs, too.
  */
-export function buildAssetIdQuerySpec (assetId: string): Record<string, unknown> {
+function buildAssetIdQuerySpec (assetId: string): Record<string, unknown> {
   return {
     '@type': 'QuerySpec',
     'offset': 0,
@@ -224,7 +225,7 @@ export function buildAssetIdQuerySpec (assetId: string): Record<string, unknown>
     'filterExpression': [
       {
         '@type': 'Criterion',
-        'operandLeft': 'https://w3id.org/edc/v0.0.1/ns/id',
+        'operandLeft': `${edcNamespace}id`,
         'operator': '=',
         'operandRight': assetId,
       },
@@ -734,7 +735,7 @@ async function negotiateAsset (
     {
       counterPartyId: request.counterPartyId,
       counterPartyAddress: request.counterPartyAddress,
-      querySpec: buildAssetIdQuerySpec(assetId),
+      assetId,
     },
     catalog => extractCatalogDatasetOffer(catalog, {
       assetId,

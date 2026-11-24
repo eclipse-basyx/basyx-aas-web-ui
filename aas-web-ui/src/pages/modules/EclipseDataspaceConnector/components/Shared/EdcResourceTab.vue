@@ -2,163 +2,110 @@
   <v-container class="pa-0 ma-0" fluid :style="{ 'height': EDC_TAB_HEIGHT}">
 
     <v-layout :style="{ 'height': EDC_TAB_HEIGHT}">
-      <v-navigation-drawer
-        class="leftMenu"
-        color="appNavigation"
-        :width="336"
+      <EdcResourceListDrawer
+        ref="listDrawer"
+        :editable="managementWritesAllowed"
+        :icon="icon"
+        :is-selected="isSelected"
+        :items="resources"
+        :label="label"
+        :list-loading="listLoading"
+        :page-loading="pageLoading"
+        :reload-tooltip="`Reload ${label} List`"
+        @delete="(item: any) => openDialog(deleteDialog, item)"
+        @edit="(item: any) => openDialog(updateDialog, item)"
+        @reload="loadResources()"
+        @select="selectResource"
       >
-        <v-card color="rgba(0,0,0,0)" elevation="0">
-          <v-card-title
-            class="px-0 py-2 d-flex align-center"
-          >
+        <template #title>
+          <v-text-field
+            v-model="searchQuery"
+            clearable
+            density="compact"
+            hide-details
+            :label="`Search for ${label} ...`"
+            variant="outlined"
+            @update:model-value="reloadForSearch()"
+          />
 
-            <v-tooltip location="bottom" open-delay="600">
-              <template #activator="{ props: tooltipProps }">
-                <v-btn
-                  class="ma-0"
-                  icon="mdi-reload"
-                  v-bind="tooltipProps"
-                  :loading="listLoading"
-                  variant="plain"
-                  @click="loadResources()"
-                />
-              </template>
-
-              <span>Reload {{ label }} List</span>
-            </v-tooltip>
-
-            <v-text-field
-              v-model="searchQuery"
-              clearable
-              density="compact"
-              hide-details
-              :label="`Search for ${label} ...`"
-              variant="outlined"
-              @update:model-value="reloadForSearch()"
-            />
-
-            <!-- Menu, only when the EDC BFF allows writes -->
-            <v-menu v-if="managementWritesAllowed">
-              <template #activator="{ props: menuProps }">
-                <v-btn
-                  v-bind="menuProps"
-                  class="mx-0"
-                  icon="mdi-dots-vertical"
-                  variant="plain"
-                />
-              </template>
-
-              <v-sheet border>
-                <v-list class="py-0" density="compact">
-
-                  <!-- Create Dialogs -->
-                  <v-tooltip
-                    v-for="createAction in createActions"
-                    :key="createAction.title"
-                    location="bottom"
-                    open-delay="600"
-                  >
-                    <template #activator="{ props: tooltipProps }">
-                      <v-list-item slim v-bind="tooltipProps" @click="createAction.onClick()">
-                        <template #prepend>
-                          <v-icon size="small">mdi-plus</v-icon>
-                        </template>
-                        {{ createAction.title }}
-                      </v-list-item>
-                    </template>
-
-                    <span>{{ createAction.tooltip }}</span>
-                  </v-tooltip>
-
-                </v-list>
-              </v-sheet>
-            </v-menu>
-
-          </v-card-title>
-
-          <!-- Optional filter below the search field, e.g. by asset type -->
-          <div v-if="$slots.filter" class="px-12 pb-2">
-            <slot name="filter" />
-          </div>
-
-          <v-divider />
-
-          <v-card-text class="pt-0 pb-0 px-2 overflow-y-auto" :style="{ height: slots.filter ? EDC_FILTERED_LIST_HEIGHT : EDC_LIST_HEIGHT }">
-
-            <div v-if="listLoading">
-              <v-skeleton-loader type="list-item@6" />
-            </div>
-
-            <template v-else>
-
-              <!-- List of Resources -->
-              <v-list
-                v-if="resources.length > 0"
-                class="pa-0"
-                density="compact"
-                nav
-              >
-                <v-virtual-scroll
-                  ref="virtualScrollRef"
-                  class="bg-card mb-2"
-                  :item-height="itemHeight"
-                  :items="resources"
-                >
-
-                  <template #default="{ item }">
-                    <EdcResourceListItem
-                      :key="item['@id']"
-                      :editable="managementWritesAllowed"
-                      :icon="icon"
-                      :label="label"
-                      :resource="item"
-                      :selected="isSelected(item)"
-                      @delete="openDialog(deleteDialog, item)"
-                      @edit="openDialog(updateDialog, item)"
-                      @select="selectResource(item)"
-                    >
-                      <template #title>
-                        <slot :item="item" name="item-title">{{ item['@id'] }}</slot>
-                      </template>
-
-                      <template #subtitle>
-                        <slot :item="item" name="item-subtitle" />
-                      </template>
-
-                      <template #tooltip>
-                        <slot :item="item" name="item-tooltip" />
-                      </template>
-                    </EdcResourceListItem>
-                  </template>
-
-                </v-virtual-scroll>
-
-                <!-- Next page, loaded when scrolling near the end of the list -->
-                <v-progress-linear v-if="pageLoading" color="primary" indeterminate />
-              </v-list>
-
-              <v-empty-state
-                v-else-if="listRequestFailed"
-                :class="failedEmptyStateOffsetClass"
-                icon="mdi-database-alert-outline"
-                :text="`The ${labelPlural} could not be loaded. Reload the ${label} List to try again.`"
-                :title="`${labelPlural} Not Available`"
-              >
-                <template #media>
-                  <v-icon size="64" />
-                </template>
-              </v-empty-state>
-
-              <v-empty-state
-                v-else
-                class="text-divider"
-                :class="emptyStateOffsetClass"
-                :title="`No existing ${labelPlural}`"
+          <!-- Menu, only when the EDC BFF allows writes -->
+          <v-menu v-if="managementWritesAllowed">
+            <template #activator="{ props: menuProps }">
+              <v-btn
+                v-bind="menuProps"
+                class="mx-0"
+                icon="mdi-dots-vertical"
+                variant="plain"
               />
             </template>
-          </v-card-text>
-        </v-card>
-      </v-navigation-drawer>
+
+            <v-sheet border>
+              <v-list class="py-0" density="compact">
+
+                <!-- Create Dialogs -->
+                <v-tooltip
+                  v-for="createAction in createActions"
+                  :key="createAction.title"
+                  location="bottom"
+                  open-delay="600"
+                >
+                  <template #activator="{ props: tooltipProps }">
+                    <v-list-item slim v-bind="tooltipProps" @click="createAction.onClick()">
+                      <template #prepend>
+                        <v-icon size="small">mdi-plus</v-icon>
+                      </template>
+                      {{ createAction.title }}
+                    </v-list-item>
+                  </template>
+
+                  <span>{{ createAction.tooltip }}</span>
+                </v-tooltip>
+
+              </v-list>
+            </v-sheet>
+          </v-menu>
+        </template>
+
+        <!-- Optional filter below the search field, e.g. by asset type -->
+        <template v-if="$slots.filter" #filter>
+          <div class="px-12 pb-2">
+            <slot name="filter" />
+          </div>
+        </template>
+
+        <template #item-title="{ item }">
+          <slot :item="item" name="item-title">{{ item['@id'] }}</slot>
+        </template>
+
+        <template #item-subtitle="{ item }">
+          <slot :item="item" name="item-subtitle" />
+        </template>
+
+        <template #item-tooltip="{ item }">
+          <slot :item="item" name="item-tooltip" />
+        </template>
+
+        <template #empty>
+          <v-empty-state
+            v-if="listRequestFailed"
+            :class="failedEmptyStateOffsetClass"
+            icon="mdi-database-alert-outline"
+            :text="`The ${labelPlural} could not be loaded. Reload the ${label} List to try again.`"
+            :title="`${labelPlural} Not Available`"
+          >
+            <template #media>
+              <v-icon size="64" />
+            </template>
+          </v-empty-state>
+
+          <v-empty-state
+            v-else
+            class="text-divider"
+            :class="emptyStateOffsetClass"
+            :title="`No existing ${labelPlural}`"
+          />
+        </template>
+      </EdcResourceListDrawer>
 
       <v-main>
         <v-container fluid>
@@ -255,12 +202,12 @@
   import { useLoadGeneration } from '@/composables/LoadGeneration'
   import { useSelectedEdcConfig } from '@/composables/SelectedEdcConfig'
   import DeleteEdcResourceDialog from '@/pages/modules/EclipseDataspaceConnector/components/Shared/DeleteEdcResourceDialog.vue'
-  import EdcResourceListItem from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceListItem.vue'
+  import EdcResourceListDrawer from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceListDrawer.vue'
   import UpdateEdcResourceDialog from '@/pages/modules/EclipseDataspaceConnector/components/Shared/UpdateEdcResourceDialog.vue'
   import { useEdcManagementWrites } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcManagementWrites'
-  import { EDC_LIST_ITEM_HEIGHT, type EdcVirtualScroll, useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
+  import { type EdcVirtualScroll, useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
-  import { EDC_FILTERED_LIST_HEIGHT, EDC_JSON_PREVIEW_HEIGHT, EDC_LIST_HEIGHT, EDC_MAIN_HEIGHT, EDC_TAB_HEIGHT } from '@/pages/modules/EclipseDataspaceConnector/data/heights'
+  import { EDC_JSON_PREVIEW_HEIGHT, EDC_MAIN_HEIGHT, EDC_TAB_HEIGHT } from '@/pages/modules/EclipseDataspaceConnector/data/heights'
   import { debounce } from '@/utils/generalUtils'
   import { withIndefiniteArticle } from '@/utils/StringUtils'
 
@@ -297,14 +244,14 @@
   // Data
   const searchQuery = ref<string | null>('')
 
-  const itemHeight = EDC_LIST_ITEM_HEIGHT
-  const virtualScrollRef = ref<EdcVirtualScroll | null>(null)
+  const listDrawer = useTemplateRef<InstanceType<typeof EdcResourceListDrawer>>('listDrawer')
   const selectedResource = ref<any>(null)
 
   const updateDialog = reactive<ResourceDialog>({ open: false, resource: {} })
   const deleteDialog = reactive<ResourceDialog>({ open: false, resource: {} })
 
   // Computed properties
+  const virtualScrollRef = computed<EdcVirtualScroll | null>(() => listDrawer.value?.virtualScroll ?? null)
   // The list starts below the search (and filter), so its empty state moves up to the title height of the one on the right
   const emptyStateOffsetClass = computed(() => slots.filter ? 'mt-n9' : 'mt-n3')
   const failedEmptyStateOffsetClass = computed(() => slots.filter ? 'mt-n12' : 'mt-n6') // With icon and text, like the one on the right
@@ -368,12 +315,13 @@
     }
   }
 
-  async function onCreated (resourceId?: string, replaceSelection = true): Promise<void> {
+  // `keepSelection` keeps a selected resource instead of selecting the created one
+  async function onCreated (resourceId?: string, { keepSelection = false }: { keepSelection?: boolean } = {}): Promise<void> {
     const hadSelection = !!selectedResource.value
 
     await loadResources()
 
-    if (!resourceId || (hadSelection && !replaceSelection)) return
+    if (!resourceId || (hadSelection && keepSelection)) return
 
     const createdResource = await findResource(resourceId)
     if (createdResource) {

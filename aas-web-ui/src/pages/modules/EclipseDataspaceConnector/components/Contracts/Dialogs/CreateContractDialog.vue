@@ -99,16 +99,18 @@
 
 <script lang="ts" setup>
   import { type CatenaXEdcContractDefinition, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
+  import { DEFAULT_EDC_PROXY_ID } from '@/composables/SelectedEdcConfig'
   import { edcAssetName } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetName'
-  import { EDC_ASSET_ID_OPERAND, queryAllEdcPages } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPaging'
+  import { EDC_ASSET_ID_OPERAND } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPaging'
+  import { useEdcResourceOptions } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcResourceOptions'
   import { type EdcTemplate, useEdcTemplateForm } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplateForm'
-  import { fillTemplatePlaceholders, templatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
+  import { fillTemplatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
   import ContractTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_contract.json'
 
   const props = withDefaults(defineProps<{
     proxyId?: string
   }>(), {
-    proxyId: 'default',
+    proxyId: DEFAULT_EDC_PROXY_ID,
   })
 
   const emit = defineEmits<{
@@ -133,24 +135,27 @@
     placeholderValues,
     form,
     activeTemplate,
+    placeholders,
     resetForm,
     createFromTemplate,
-  } = useEdcTemplateForm('Contract', contractTemplates, 'contract')
+  } = useEdcTemplateForm('Contract', contractTemplates, 'contract', placeholder => ({
+    ...placeholder,
+    placeholder: placeholder.placeholder || `Enter ${placeholder.label}`,
+  }))
 
-  // Data
-  const availableAssets = ref<any[]>([])
-  const assetsLoading = ref(false)
-  const availablePolicies = ref<any[]>([])
-  const policiesLoading = ref(false)
+  const { options: availableAssets, loading: assetsLoading, load: loadAssets } = useEdcResourceOptions(
+    'assets',
+    querySpec => queryAssets(props.proxyId, { querySpec }),
+    getEdcAssetDisplayName,
+    { idOperand: EDC_ASSET_ID_OPERAND },
+  )
+  const { options: availablePolicies, loading: policiesLoading, load: loadPolicies } = useEdcResourceOptions(
+    'policies',
+    querySpec => queryPolicyDefinitions(props.proxyId, { querySpec }),
+    getEdcPolicyDisplayName,
+  )
 
   // Computed properties
-  const placeholders = computed(() => activeTemplate.value
-    ? templatePlaceholders(activeTemplate.value.template).map(placeholder => ({
-      ...placeholder,
-      placeholder: placeholder.placeholder || `Enter ${placeholder.label}`,
-    }))
-    : [])
-
   // Unfilled placeholders stay visible in the preview as {{Label}}
   const jsonContent = computed(() => activeTemplate.value
     ? JSON.stringify(fillTemplatePlaceholders(activeTemplate.value.template, placeholderValues.value, { keepUnfilled: true }))
@@ -187,30 +192,6 @@
   )
 
   // Methods
-  async function loadAssets (): Promise<void> {
-    assetsLoading.value = true
-    try {
-      const result = await queryAllEdcPages(querySpec => queryAssets(props.proxyId, { querySpec }), { idOperand: EDC_ASSET_ID_OPERAND })
-      availableAssets.value = (result.success ? result.data : []).toSorted((a, b) => getEdcAssetDisplayName(a).localeCompare(getEdcAssetDisplayName(b)))
-    } catch (error) {
-      console.error('Error loading assets:', error)
-    } finally {
-      assetsLoading.value = false
-    }
-  }
-
-  async function loadPolicies (): Promise<void> {
-    policiesLoading.value = true
-    try {
-      const result = await queryAllEdcPages(querySpec => queryPolicyDefinitions(props.proxyId, { querySpec }))
-      availablePolicies.value = (result.success ? result.data : []).toSorted((a, b) => getEdcPolicyDisplayName(a).localeCompare(getEdcPolicyDisplayName(b)))
-    } catch (error) {
-      console.error('Error loading policies:', error)
-    } finally {
-      policiesLoading.value = false
-    }
-  }
-
   function getEdcAssetDisplayName (asset: any): string {
     return edcAssetName(asset) || asset?.['@id'] || ''
   }
