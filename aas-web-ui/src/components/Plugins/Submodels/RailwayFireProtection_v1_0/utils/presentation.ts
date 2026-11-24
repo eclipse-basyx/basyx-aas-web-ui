@@ -59,10 +59,15 @@ export function reportTitle (report: FireReport): string {
   return fileName(report.file?.value) || `Report ${report.index + 1}`
 }
 
+/** True for absolute `http://` and `https://` addresses */
+export function isWebLink (url: string): boolean {
+  return /^https?:\/\//i.test(url)
+}
+
 /** Adds `https://` to bare host names such as `www.example.com`; returns '' for values that are not web addresses */
 export function websiteUrl (value: string): string {
   const trimmed = value.trim()
-  if (/^https?:\/\//i.test(trimmed)) {
+  if (isWebLink(trimmed)) {
     return trimmed
   }
   return /^[\w-]+(?:\.[\w-]+)+(?:\/\S*)?$/.test(trimmed) ? `https://${trimmed}` : ''

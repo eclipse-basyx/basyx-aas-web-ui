@@ -25,38 +25,22 @@
 
                       <td class="text-body-small text-break py-3">
                         <!-- Index 0–100 as a read-only slider (one value or a range), values on the thumbs -->
-                        <div v-if="row.range" class="rfp-summary__slider-row">
-                          <v-range-slider
-                            v-if="row.range[0] !== row.range[1]"
+                        <div v-if="row.slider !== undefined" class="rfp-summary__slider-row">
+                          <component
+                            :is="sliderComponent(row.slider)"
                             :aria-label="row.label"
                             color="primary"
                             density="compact"
                             hide-details
                             :max="100"
                             :min="0"
-                            :model-value="row.range"
+                            :model-value="row.slider"
                             readonly
                             thumb-label="always"
                           >
                             <template #prepend><span class="text-body-small text-medium-emphasis">0</span></template>
                             <template #append><span class="text-body-small text-medium-emphasis">100</span></template>
-                          </v-range-slider>
-
-                          <v-slider
-                            v-else
-                            :aria-label="row.label"
-                            color="primary"
-                            density="compact"
-                            hide-details
-                            :max="100"
-                            :min="0"
-                            :model-value="row.range[0]"
-                            readonly
-                            thumb-label="always"
-                          >
-                            <template #prepend><span class="text-body-small text-medium-emphasis">0</span></template>
-                            <template #append><span class="text-body-small text-medium-emphasis">100</span></template>
-                          </v-slider>
+                          </component>
                         </div>
 
                         <template v-else>{{ row.value }}</template>
@@ -77,10 +61,13 @@
 
 <script lang="ts" setup>
   import type { ManufacturerInformation, Material } from '../types'
+  import type { Component } from 'vue'
+  import { VRangeSlider } from 'vuetify/components/VRangeSlider'
+  import { VSlider } from 'vuetify/components/VSlider'
   import { characteristicsLabel, parseDecimal, withUnit } from '../utils/presentation'
 
-  /** `range`: numeric index 0–100, shown as a read-only slider instead of `value` */
-  type Row = { label: string, value: string, range?: [number, number] }
+  /** `slider`: numeric index 0–100 (one value or a range), shown as a read-only slider instead of `value` */
+  type Row = { label: string, value: string, slider?: number | [number, number] }
   /** `chart`: show the combustible share of the masses next to the table */
   type Group = { title: string, rows: Row[], chart?: boolean }
   type Card = { title: string, groups: Group[] }
@@ -98,7 +85,7 @@
     const manufacturer = props.manufacturer
     const material = props.material
     const characteristics = characteristicsLabel(material)
-    const characteristicsRange = indexRange(material)
+    const characteristicsIndex = indexRange(material)
     const unit = material?.massUnit ?? ''
 
     return [
@@ -122,7 +109,7 @@
             {
               label: 'Characteristics',
               value: characteristics,
-              ...(characteristicsRange ? { range: characteristicsRange } : {}),
+              ...(characteristicsIndex === null ? {} : { slider: characteristicsIndex }),
             },
             { label: 'Tested combination', value: material?.testedCombination ?? '' },
           ]),
@@ -139,6 +126,11 @@
     ]
   })
 
+  /** Typed as `Component`: the template cannot narrow the model value to the chosen slider's type */
+  function sliderComponent (value: number | [number, number]): Component {
+    return Array.isArray(value) ? VRangeSlider : VSlider
+  }
+
   function rows (entries: Row[]): Row[] {
     return entries.filter(entry => entry.value.trim() !== '')
   }
@@ -148,8 +140,11 @@
     return filled.length > 0 ? [{ title, groups: filled }] : []
   }
 
-  /** The MaterialCharacteristics range as numbers within 0–100; null if a bound is missing or not a number */
-  function indexRange (material: Material | null): [number, number] | null {
+  /**
+   * The MaterialCharacteristics range as numbers within 0–100, collapsed to one value if both bounds are equal;
+   * null if a bound is missing or not a number
+   */
+  function indexRange (material: Material | null): number | [number, number] | null {
     const min = parseDecimal(material?.characteristics?.min ?? '')
     const max = parseDecimal(material?.characteristics?.max ?? '')
     const low = min ?? max
@@ -158,7 +153,9 @@
       return null
     }
     const clamp = (value: number) => Math.min(100, Math.max(0, value))
-    return [clamp(Math.min(low, high)), clamp(Math.max(low, high))]
+    const from = clamp(Math.min(low, high))
+    const to = clamp(Math.max(low, high))
+    return from === to ? from : [from, to]
   }
 </script>
 

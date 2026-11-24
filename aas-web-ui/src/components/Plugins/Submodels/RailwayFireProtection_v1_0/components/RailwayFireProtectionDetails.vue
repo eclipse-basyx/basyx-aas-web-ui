@@ -128,6 +128,7 @@
 <script lang="ts" setup>
   import type { FireReport, RequirementsSet } from '../types'
   import { hazardLevelMeta, hazardLevelText } from '../utils/hazardLevel'
+  import { isWebLink } from '../utils/presentation'
 
   defineOptions({
     name: 'RailwayFireProtectionDetails',
@@ -143,8 +144,4 @@
   }>()
 
   const meta = computed(() => hazardLevelMeta(props.requirementsSet.hazardLevel.code))
-
-  function isWebLink (url: string): boolean {
-    return /^https?:\/\//i.test(url)
-  }
 </script>

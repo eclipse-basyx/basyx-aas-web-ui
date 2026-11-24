@@ -3,6 +3,8 @@
  * The examples are not copied into this repository; without network access the dependent tests are skipped.
  */
 
+import { download } from './download'
+
 const SUBMODEL_TEMPLATES_RAW = 'https://raw.githubusercontent.com/admin-shell-io/submodel-templates/main/published'
 
 export const RAILWAY_FIRE_PROTECTION_EXAMPLE_URL = `${SUBMODEL_TEMPLATES_RAW}/${encodeURI(
@@ -11,24 +13,10 @@ export const RAILWAY_FIRE_PROTECTION_EXAMPLE_URL = `${SUBMODEL_TEMPLATES_RAW}/${
 
 const cache = new Map<string, Promise<any | null>>()
 
-async function download (url: string, timeoutMs: number): Promise<any | null> {
-  try {
-    const response = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) })
-    if (!response.ok) {
-      console.warn(`IDTA example not available (HTTP ${response.status}): ${url}`)
-      return null
-    }
-    return await response.json()
-  } catch (error) {
-    console.warn(`IDTA example not available (${(error as Error).message}): ${url}`)
-    return null
-  }
-}
-
 /** The environment (AAS, submodels, concept descriptions) of an IDTA example, or null if it cannot be loaded */
 export function loadIdtaExample (url: string, timeoutMs = 15_000): Promise<any | null> {
   if (!cache.has(url)) {
-    cache.set(url, download(url, timeoutMs))
+    cache.set(url, download(url, 'IDTA example', response => response.json(), timeoutMs))
   }
   return cache.get(url)!
 }
