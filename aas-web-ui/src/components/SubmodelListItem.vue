@@ -57,10 +57,7 @@
       <!-- Submodel administrative information -->
       <div v-if="submodel.administration?.version" class="text-body-small">
         <span class="font-weight-bold">{{ 'Version: ' }}</span>
-        {{
-          submodel.administration.version +
-            (submodel.administration.revision ? '.' + submodel.administration.revision : '')
-        }}
+        {{ versionRevisionToDisplay(submodel.administration.version, submodel.administration.revision) }}
       </div>
 
       <v-divider v-if="smt || semanticIdVersion" class="my-1" />
@@ -99,7 +96,7 @@
 <script lang="ts" setup>
   import { useTheme } from 'vuetify'
   import { useSubmodelDisplay } from '@/composables/AAS/SubmodelDisplay'
-  import { extractVersionRevision } from '@/utils/AAS/SemanticIdUtils'
+  import { extractVersionRevision, versionRevisionToDisplay } from '@/utils/AAS/SemanticIdUtils'
 
   const props = withDefaults(defineProps<{
     submodel: any
@@ -130,6 +127,6 @@
   const semanticIdVersion = computed(() => {
     if (!semanticId.value) return ''
     const { version, revision } = extractVersionRevision(semanticId.value)
-    return version ? version + (revision ? '.' + revision : '') : ''
+    return versionRevisionToDisplay(version, revision)
   })
 </script>

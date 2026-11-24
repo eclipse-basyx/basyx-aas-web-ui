@@ -150,10 +150,7 @@
                 <!-- AAS administrative information -->
                 <div v-if="item.administration?.version" class="text-body-small">
                   <span class="font-weight-bold">{{ 'Version: ' }}</span>
-                  {{
-                    item.administration.version +
-                      (item.administration.revision ? '.' + item.administration.revision : '')
-                  }}
+                  {{ versionRevisionToDisplay(item.administration.version, item.administration.revision) }}
                 </div>
               </v-tooltip>
 
@@ -223,6 +220,7 @@
   import { useQuerySearch } from '@/composables/QueryLanguage/QuerySearch'
   import { useQuerySearchScroll } from '@/composables/QueryLanguage/QuerySearchScroll'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
+  import { versionRevisionToDisplay } from '@/utils/AAS/SemanticIdUtils'
   import { getActiveComponentUrlForTemplate, isLoggedOutOfOAuth2 } from '@/utils/InfrastructureUtils'
   import {
     buildStructuredSearchQuery,

@@ -1,5 +1,5 @@
 import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
-import { extractVersionRevision } from '@/utils/AAS/SemanticIdUtils'
+import { extractVersionRevision, versionRevisionToDisplay } from '@/utils/AAS/SemanticIdUtils'
 import { smts } from '@/utils/AAS/SubmodelTemplateUtils'
 
 export function useSubmodelDisplay () {
@@ -32,7 +32,7 @@ export function useSubmodelDisplay () {
   function smVersionToDisplay (sm: any): string {
     // If there are administrative information use it
     if (sm?.administration?.version) {
-      return sm.administration.version + (sm.administration.revision ? '.' + sm.administration.revision : '')
+      return versionRevisionToDisplay(sm.administration.version, sm.administration.revision)
     }
 
     // Use version of SMT specification
@@ -46,7 +46,7 @@ export function useSubmodelDisplay () {
     if (semanticId && semanticId.startsWith('http')) {
       const { version, revision } = extractVersionRevision(semanticId)
       if (version) {
-        return version + (revision ? '.' + revision : '')
+        return versionRevisionToDisplay(version, revision)
       }
     }
 
