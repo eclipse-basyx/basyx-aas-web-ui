@@ -51,7 +51,8 @@ const dsp2025ContextUrl = 'https://w3id.org/dspace/2025/1/context.jsonld'
 const dsp2025OdrlProfileUrl = 'https://w3id.org/dspace/2025/1/odrl-profile.jsonld'
 const dsp2025PathSuffix = '/2025-1'
 
-const defaultDspProtocol = 'dataspace-protocol-http:2025-1'
+// Partner connectors have to speak DSP 2025-1, DSP 0.8 isn't supported
+const dspProtocol = 'dataspace-protocol-http:2025-1'
 const dtrTaxonomyId = 'https://w3id.org/catenax/taxonomy#DigitalTwinRegistry'
 const catalogDatasetKeys = [
   'dcat:dataset',
@@ -169,8 +170,6 @@ export function buildCatalogRequestBody (
 ): Record<string, unknown> {
   const counterPartyId = trimString(request.counterPartyId)
   const counterPartyAddress = trimString(request.counterPartyAddress)
-  const protocol = resolveDspProtocol(counterPartyAddress, request.protocol)
-
   if (!counterPartyId) {
     throw createHttpError('counterPartyId is required for catalog requests', 400)
   }
@@ -185,8 +184,8 @@ export function buildCatalogRequestBody (
     '@context': catalogContext,
     '@type': 'CatalogRequest',
     counterPartyId,
-    'counterPartyAddress': versionedCounterPartyAddress(counterPartyAddress, protocol),
-    protocol,
+    'counterPartyAddress': versionedCounterPartyAddress(counterPartyAddress),
+    'protocol': dspProtocol,
     ...(request.querySpec && typeof request.querySpec === 'object'
       ? { querySpec: request.querySpec }
       : {}),
@@ -329,7 +328,7 @@ function withCatalogContext (policy: Record<string, unknown>, context: unknown):
 }
 
 export function buildEdrContractRequestBody (
-  request: Pick<EdcCatalogRequest, 'counterPartyAddress' | 'protocol'>,
+  request: Pick<EdcCatalogRequest, 'counterPartyAddress'>,
   offer: EdcAssetOffer,
 ): Record<string, unknown> {
   const counterPartyAddress = trimString(request.counterPartyAddress)
@@ -337,7 +336,6 @@ export function buildEdrContractRequestBody (
     throw createHttpError('counterPartyAddress is required for EDR negotiation', 400)
   }
 
-  const protocol = resolveDspProtocol(counterPartyAddress, request.protocol)
   const policy = cloneRecord(offer.policy)
   // Full IRIs, because the policy may carry the catalog's @context, which needn't define the odrl: prefix.
   policy[odrlContextUrl + 'assigner'] = { '@id': offer.participantId }
@@ -346,22 +344,10 @@ export function buildEdrContractRequestBody (
   return {
     '@context': contractContext,
     '@type': 'ContractRequest',
-    'counterPartyAddress': versionedCounterPartyAddress(counterPartyAddress, protocol),
-    protocol,
+    'counterPartyAddress': versionedCounterPartyAddress(counterPartyAddress),
+    'protocol': dspProtocol,
     policy,
   }
-}
-
-/**
- * An address under the DSP 2025-1 version path, e.g. a DTR descriptor's `dspEndpoint`, only accepts 2025-1 messages,
- * so it overrides the requested protocol. Other addresses use the requested protocol or default to 2025-1.
- */
-function resolveDspProtocol (counterPartyAddress: string, requestedProtocol: unknown): string {
-  if (dspAddressPath(counterPartyAddress).endsWith(dsp2025PathSuffix)) {
-    return defaultDspProtocol
-  }
-
-  return trimString(requestedProtocol) || defaultDspProtocol
 }
 
 /**
@@ -369,11 +355,7 @@ function resolveDspProtocol (counterPartyAddress: string, requestedProtocol: unk
  * Partner configs and DTR descriptors usually name the unversioned address, so the path is added here,
  * to the path only: a query or fragment of the address stays at the end.
  */
-function versionedCounterPartyAddress (counterPartyAddress: string, protocol: string): string {
-  if (protocol !== defaultDspProtocol) {
-    return counterPartyAddress
-  }
-
+function versionedCounterPartyAddress (counterPartyAddress: string): string {
   const path = dspAddressPath(counterPartyAddress)
   const versionedPath = path.endsWith(dsp2025PathSuffix) ? path : path + dsp2025PathSuffix
   try {
@@ -678,7 +660,6 @@ async function ensureDtrAccess (
     {
       counterPartyId,
       counterPartyAddress,
-      protocol: request.protocol,
       querySpec: buildDigitalTwinRegistryQuerySpec(),
     },
     extractDigitalTwinRegistryOffer,
@@ -716,7 +697,6 @@ async function ensureSubmodelAccess (
     {
       counterPartyId,
       counterPartyAddress: endpoint.dspEndpoint,
-      protocol: request.protocol,
     },
     catalog => extractSubmodelOffer(catalog, endpoint.assetId),
     options,
@@ -773,7 +753,6 @@ async function negotiateAsset (
     {
       counterPartyId: request.counterPartyId,
       counterPartyAddress: request.counterPartyAddress,
-      protocol: request.protocol,
       querySpec: buildAssetIdQuerySpec(assetId),
     },
     catalog => extractCatalogDatasetOffer(catalog, {

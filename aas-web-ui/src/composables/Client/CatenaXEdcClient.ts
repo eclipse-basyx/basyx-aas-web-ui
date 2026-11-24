@@ -32,7 +32,6 @@ export interface CatenaXEdcDiscoveryRequest {
 export interface CatenaXEdcCatalogRequest {
   counterPartyId: string
   counterPartyAddress: string
-  protocol?: string
   querySpec?: CatenaXEdcQuerySpec
 }
 
@@ -101,7 +100,6 @@ export interface CatenaXEdcPolicyDefinition extends Record<string, unknown> {
 export interface CatenaXEdcDtrRequest {
   counterPartyId: string
   counterPartyAddress: string
-  protocol?: string
   transferProcessId?: string
 }
 
@@ -124,7 +122,6 @@ export interface CatenaXEdcSubmodelRequest extends CatenaXEdcDtrRequest {
 export interface CatenaXEdcDataFetchRequest {
   counterPartyId: string
   counterPartyAddress: string
-  protocol?: string
   assetId: string // ID of the asset in the catalog of the counterparty
 }
 

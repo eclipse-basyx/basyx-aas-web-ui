@@ -410,7 +410,6 @@ describe('CatenaXEdcClient', () => {
     const result = await fetchDtrShellDescriptors('default', {
       counterPartyId: 'TEST_PARTICIPANT_ID',
       counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
-      protocol: 'dataspace-protocol-http',
       limit: 100,
     })
 
@@ -419,7 +418,6 @@ describe('CatenaXEdcClient', () => {
       JSON.stringify({
         counterPartyId: 'TEST_PARTICIPANT_ID',
         counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
-        protocol: 'dataspace-protocol-http',
         limit: 100,
       }),
       expect.any(Headers),

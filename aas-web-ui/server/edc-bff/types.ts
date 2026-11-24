@@ -54,7 +54,6 @@ export interface EdcDiscoveryRequest {
 export interface EdcCatalogRequest {
   counterPartyId?: string
   counterPartyAddress?: string
-  protocol?: string
   querySpec?: EdcQuerySpec
 }
 
@@ -75,7 +74,6 @@ export interface EdcQuerySpecRequest {
 export interface EdcDtrDescriptorRequest {
   counterPartyId?: string
   counterPartyAddress?: string
-  protocol?: string
   transferProcessId?: string
   assetIds?: Array<{ name?: string, value?: string }>
   cursor?: string
@@ -85,7 +83,6 @@ export interface EdcDtrDescriptorRequest {
 export interface EdcDtrDescriptorByIdRequest {
   counterPartyId?: string
   counterPartyAddress?: string
-  protocol?: string
   transferProcessId?: string
   descriptorId?: string
 }
@@ -93,7 +90,6 @@ export interface EdcDtrDescriptorByIdRequest {
 export interface EdcDataFetchRequest {
   counterPartyId?: string
   counterPartyAddress?: string
-  protocol?: string
   assetId?: string
 }
 
@@ -104,7 +100,6 @@ export interface EdcDataPushRequest extends EdcDataFetchRequest {
 export interface EdcSubmodelFetchRequest {
   counterPartyId?: string
   counterPartyAddress?: string
-  protocol?: string
   transferProcessId?: string
   submodelDescriptor?: unknown
   href?: string

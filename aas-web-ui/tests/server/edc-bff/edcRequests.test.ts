@@ -1,4 +1,4 @@
-import type { EdcProxyConfig } from '../../../server/edc-bff/types'
+import type { EdcCatalogRequest, EdcProxyConfig } from '../../../server/edc-bff/types'
 import { describe, expect, it, vi } from 'vitest'
 import {
   buildCatalogRequestBody,
@@ -78,27 +78,25 @@ describe('EDC BFF request helpers', () => {
 
   it('adds the DSP 2025-1 version path to the counterparty address only once', () => {
     const proxy = createProxyConfig()
-    const addressFor = (counterPartyAddress: string, protocol?: string) =>
-      buildCatalogRequestBody(proxy, { counterPartyId: 'TEST_COUNTERPARTY_ID', counterPartyAddress, protocol })
+    const addressFor = (counterPartyAddress: string) =>
+      buildCatalogRequestBody(proxy, { counterPartyId: 'TEST_COUNTERPARTY_ID', counterPartyAddress })
         .counterPartyAddress
 
     expect(addressFor('https://counterparty-dsp.test/api/v1/dsp')).toBe('https://counterparty-dsp.test/api/v1/dsp/2025-1')
     expect(addressFor('https://counterparty-dsp.test/api/v1/dsp/')).toBe('https://counterparty-dsp.test/api/v1/dsp/2025-1')
     expect(addressFor('https://counterparty-dsp.test/api/v1/dsp/2025-1')).toBe('https://counterparty-dsp.test/api/v1/dsp/2025-1')
-    expect(addressFor('https://counterparty-dsp.test/api/v1/dsp', 'dataspace-protocol-http'))
-      .toBe('https://counterparty-dsp.test/api/v1/dsp')
   })
 
   it('adds the DSP 2025-1 version path before the query and fragment of the counterparty address', () => {
     const proxy = createProxyConfig()
-    const requestFor = (counterPartyAddress: string, protocol?: string) =>
-      buildCatalogRequestBody(proxy, { counterPartyId: 'TEST_COUNTERPARTY_ID', counterPartyAddress, protocol })
+    const requestFor = (counterPartyAddress: string) =>
+      buildCatalogRequestBody(proxy, { counterPartyId: 'TEST_COUNTERPARTY_ID', counterPartyAddress })
 
     expect(requestFor('https://counterparty-dsp.test/api/v1/dsp?tenant=a').counterPartyAddress)
       .toBe('https://counterparty-dsp.test/api/v1/dsp/2025-1?tenant=a')
     expect(requestFor('https://counterparty-dsp.test/api/v1/dsp/?tenant=a#part').counterPartyAddress)
       .toBe('https://counterparty-dsp.test/api/v1/dsp/2025-1?tenant=a#part')
-    expect(requestFor('https://counterparty-dsp.test/api/v1/dsp/2025-1?tenant=a', 'dataspace-protocol-http')).toMatchObject({
+    expect(requestFor('https://counterparty-dsp.test/api/v1/dsp/2025-1?tenant=a')).toMatchObject({
       counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp/2025-1?tenant=a',
       protocol: 'dataspace-protocol-http:2025-1',
     })
@@ -109,10 +107,11 @@ describe('EDC BFF request helpers', () => {
     const offer = { assetId: 'asset-1', participantId: 'TEST_PARTICIPANT_ID', policy: { '@id': 'offer-1' } }
 
     for (const counterPartyAddress of [
-      'https://counterparty-dsp.test/api/v1/dsp/2025-1',
+      'https://counterparty-dsp.test/api/v1/dsp',
       'https://counterparty-dsp.test/api/v1/dsp/2025-1/',
     ]) {
-      const request = { counterPartyId: 'TEST_COUNTERPARTY_ID', counterPartyAddress, protocol: 'dataspace-protocol-http' }
+      // An API client may still send the protocol field, which the BFF doesn't read
+      const request = { counterPartyId: 'TEST_COUNTERPARTY_ID', counterPartyAddress, protocol: 'dataspace-protocol-http' } as EdcCatalogRequest
 
       expect(buildCatalogRequestBody(proxy, request)).toMatchObject({
         counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp/2025-1',
@@ -173,7 +172,6 @@ describe('EDC BFF request helpers', () => {
     const offer = extractDigitalTwinRegistryOffer(catalog)
     const body = buildEdrContractRequestBody({
       counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
-      protocol: 'dataspace-protocol-http:2025-1',
     }, offer)
 
     expect(buildDigitalTwinRegistryQuerySpec().filterExpression).toHaveLength(1)
@@ -309,7 +307,6 @@ describe('EDC BFF request helpers', () => {
     const result = await fetchDtrShellDescriptors(proxy, {
       counterPartyId: 'TEST_PARTICIPANT_ID',
       counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
-      protocol: 'dataspace-protocol-http:2025-1',
       limit: 50,
     }, {
       fetchFn: fetchMock as typeof fetch,
@@ -436,7 +433,6 @@ describe('EDC BFF request helpers', () => {
     const result = await fetchSubmodel(proxy, {
       counterPartyId: 'TEST_PARTICIPANT_ID',
       counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
-      protocol: 'dataspace-protocol-http:2025-1',
       submodelDescriptor: {
         endpoints: [{
           protocolInformation: {

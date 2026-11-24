@@ -673,7 +673,6 @@ describe('EDC BFF server', () => {
       body: JSON.stringify({
         counterPartyId: 'TEST_PARTICIPANT_ID',
         counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
-        protocol: 'dataspace-protocol-http',
         limit: 10,
       }),
     })
@@ -784,7 +783,6 @@ describe('EDC BFF server', () => {
       body: JSON.stringify({
         counterPartyId: 'TEST_PARTICIPANT_ID',
         counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
-        protocol: 'dataspace-protocol-http',
         submodelDescriptor: {
           endpoints: [{
             protocolInformation: {
