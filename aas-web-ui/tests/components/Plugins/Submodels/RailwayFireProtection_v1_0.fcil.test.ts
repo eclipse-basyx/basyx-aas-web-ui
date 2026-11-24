@@ -240,6 +240,11 @@ describe.skipIf(!catalogue)('fcilRows', () => {
     expect(rows[5]!.AP).toBeUndefined()
   })
 
+  it('says why the product category is missing if no test procedure names a known test method', () => {
+    expect(rows[1]!.AK).toBeUndefined()
+    expect(rows[1]!.CA).toContain('Product category (column AK): none of the test procedures names a known EN 45545-2 test method')
+  })
+
   it('fills in the product category only if the tests leave exactly one', () => {
     expect(rows[4]).toMatchObject({ AK: 'EL9 - Printed circuit boards (R25)', CA: 'Requirement set R25\nTest method 1: EN 60695-2-11' })
     expect(rows.filter(row => 'AK' in row)).toHaveLength(1)

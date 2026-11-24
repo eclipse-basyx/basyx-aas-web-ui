@@ -124,7 +124,7 @@ The sheet *FCIL* gets one row per requirement set, in the order of the tiles, st
 | AK (Product category) | Only if the tests leave exactly one, see below |
 | AP–AS per test method (result, laboratory, report number, date) | `TestResult`, `LabName` of the report, `TestReportNumber` (otherwise the report's numbers), `TestDate` as dd/mm/yyyy |
 | BY (Hazard Level Met) | `HazardLevel`, as the IDTA 02102 label; these are also the entries of the template's list |
-| CA (Comments / Remarks) | The requirement set, the test procedures by test method, the product category candidates, `ReportComment` and links to external reports |
+| CA (Comments / Remarks) | The requirement set, the test procedures by test method, the product category candidates or why there are none, `ReportComment` and links to external reports |
 
 Also cleared: the sample product categories the template ships in AK, and the vehicle's hazard level in O6, which the customer chooses.
 
@@ -138,7 +138,7 @@ The template looks up the requirement set (AM) and the test methods from the pro
 2. **Test methods → requirement sets.** A requirement set fits if, at the row's hazard level, every method it requires has a test and every test belongs to it. Methods in parentheses or without a limit (`CITG: -`) are optional; `T02/T04` accepts either. These rules come from the template's *Requirements* sheet. If the template knows the requirement set named in `Requirement` (e.g. `R10`), only that one is kept.
 3. **Requirement sets → product categories**, from the template's *EN45545 classifications* sheet. The names are written exactly as in the template's list.
 
-If exactly one product category is left, it goes into AK and the template fills the grey columns. Otherwise the candidates are listed in CA. In the official example none of the requirement sets has a single candidate: R10 leaves IN1C and IN15, R24 leaves EL9 (R24) and *Grouping Rule 2*, R26 leaves EL9 (R26) and EL10.
+If exactly one product category is left, it goes into AK and the template fills the grey columns. Otherwise the candidates are listed in CA; if none of the test procedures names a known test method, CA says so. In the official example none of the requirement sets has a single candidate: R10 leaves IN1C and IN15, R24 leaves EL9 (R24) and *Grouping Rule 2*, R26 leaves EL9 (R26) and EL10.
 
 Limitations:
 

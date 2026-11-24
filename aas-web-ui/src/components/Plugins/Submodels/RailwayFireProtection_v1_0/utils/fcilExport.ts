@@ -28,7 +28,7 @@ import {
  * set and the test reference numbers, are looked up by the template from the product category; until
  * they are filled, the requirement set and the test procedures are listed under "Comments / Remarks".
  * The product category (AK) is filled in if the tests leave exactly one, see fcilClassification;
- * otherwise the candidates are listed under "Comments / Remarks".
+ * otherwise "Comments / Remarks" lists the candidates, or says why there are none.
  */
 
 /** Cells to fill in, by column name (e.g. "AP") */
@@ -104,7 +104,7 @@ export function fcilRows (data: RailwayFireProtectionData, catalogue: FcilCatalo
           ? `Requirement set ${set.name}`
           : `Requirement set ${set.name}, tests ${first}–${first + chunk.length - 1}, continued from the row above`,
         ...chunk.map(({ test }, position) => `Test method ${position + 1}: ${test.procedure}`),
-        ...(index === 0 ? [...categoryRemarks(categories), ...reportRemarks] : []),
+        ...(index === 0 ? [...categoryRemarks(categories, tests.length > 0), ...reportRemarks] : []),
       ]
       return {
         ...product,
@@ -175,9 +175,12 @@ function openFcilTemplate (template: Uint8Array): XlsxPackage {
   throw wrongFile
 }
 
-/** Candidates for the product category if the tests do not leave exactly one */
-function categoryRemarks (categories: string[] | null): string[] {
-  if (categories === null || categories.length === 1) {
+/** Candidates for the product category if the tests do not leave exactly one, or why there are none */
+function categoryRemarks (categories: string[] | null, tested: boolean): string[] {
+  if (categories === null) {
+    return tested ? ['Product category (column AK): none of the test procedures names a known EN 45545-2 test method'] : []
+  }
+  if (categories.length === 1) {
     return []
   }
   if (categories.length === 0) {
