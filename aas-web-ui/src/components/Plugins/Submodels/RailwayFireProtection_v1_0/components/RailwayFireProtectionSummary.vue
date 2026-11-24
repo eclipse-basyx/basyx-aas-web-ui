@@ -1,7 +1,7 @@
 <template>
   <!-- Product and material, in the style of the Digital Nameplate visualization -->
   <!-- flex-grow-0: the page is a flex column, and only the requirement sets card should take the free height -->
-  <v-row v-if="cards.length > 0" class="flex-grow-0 mb-4" dense>
+  <v-row v-if="cards.length > 0" class="flex-grow-0 mb-4" density="compact">
     <v-col v-for="card in cards" :key="card.title" cols="12" :md="cards.length > 1 ? 6 : 12">
       <v-card class="h-100">
         <v-card-title>

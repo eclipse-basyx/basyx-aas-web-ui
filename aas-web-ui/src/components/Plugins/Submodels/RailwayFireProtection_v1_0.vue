@@ -5,7 +5,7 @@
 
     <!-- Loading -->
     <template v-if="isLoading">
-      <v-row class="mb-4" dense>
+      <v-row class="mb-4" density="compact">
         <v-col v-for="n in 2" :key="n" cols="12" md="6">
           <v-card>
             <v-skeleton-loader type="heading, table-heading@4" />
