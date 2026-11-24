@@ -11,7 +11,7 @@
         <v-spacer />
 
         <v-btn
-          v-tooltip="'Open Catena-X Policy Builder'"
+          v-tooltip="{ text: 'Open Catena-X Policy Builder', openDelay: 600 }"
           color="text-medium-emphasis"
           href="https://eclipse-tractusx.github.io/tractusx-edc-dashboard/policy-builder/"
           icon
