@@ -49,11 +49,8 @@
           <v-divider />
 
           <v-card-text
-            class="pt-0 pb-0 px-2"
-            style="
-              overflow-y: auto;
-              height: calc(100svh - 64px - 48px - 40px - 112px - 3px);
-            "
+            class="pt-0 pb-0 px-2 overflow-y-auto"
+            style="height: calc(100svh - 64px - 48px - 40px - 112px - 3px)"
           >
             <div v-if="listLoading">
               <v-skeleton-loader type="list-item@6" />
@@ -69,7 +66,7 @@
                 <v-virtual-scroll
                   ref="virtualScrollRef"
                   class="bg-card mb-2"
-                  :item-height="56"
+                  :item-height="EDC_LIST_ITEM_HEIGHT"
                   :items="catalogList"
                 >
                   <template #default="{ item }">
@@ -177,7 +174,7 @@
   import EdcResourceListItem from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceListItem.vue'
   import { useEdcCatalogQuery } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcCatalogQuery'
   import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
-  import { useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
+  import { EDC_LIST_ITEM_HEIGHT, useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import { assetTypeFilterItems, isPushAsset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'

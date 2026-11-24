@@ -7,9 +7,9 @@
     :width="336"
   >
     <!-- Same height as the tab bar of JsonPreviewTabs, so both dividers align -->
-    <div class="d-flex align-center px-4 text-title-medium" style="height: 47px">
+    <v-sheet class="d-flex align-center px-4 text-title-medium" color="transparent" height="47">
       Add OAuth2 for Assets
-    </div>
+    </v-sheet>
 
     <v-divider />
 

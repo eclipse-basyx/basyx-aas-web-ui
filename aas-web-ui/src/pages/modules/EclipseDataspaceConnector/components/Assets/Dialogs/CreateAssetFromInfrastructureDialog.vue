@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="createAssetDialog" height="90%" style="max-width: 1920px" width="90%">
+  <v-dialog v-model="createAssetDialog" height="90%" max-width="1920" width="90%">
     <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">
       <v-card-title class="bg-cardHeader">
         Create Asset from AAS Infrastructure

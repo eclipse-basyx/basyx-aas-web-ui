@@ -315,12 +315,14 @@
   // Computed properties
   const selectedEdcConfig = computed(() => infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null)
   const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? 'default')
-  const { managementWritesAllowed } = useEdcManagementWrites(edcProxyId)
   // Full height - header - tabs - footer - search (and filter) - borders
   const listHeight = computed(() => `calc(100svh - 64px - 48px - 40px - ${slots.filter ? 112 : 64}px - 3px)`)
   // The list starts below the search (and filter), so its empty state moves up to the title height of the one on the right
   const emptyStateOffsetClass = computed(() => slots.filter ? 'mt-n9' : 'mt-n3')
   const failedEmptyStateOffsetClass = computed(() => slots.filter ? 'mt-n12' : 'mt-n6') // With icon and text, like the one on the right
+
+  // Composables that depend on the EDC proxy ID
+  const { managementWritesAllowed } = useEdcManagementWrites(edcProxyId)
 
   // Loaded pages, sorted by ID by the EDC
   const { items: resources, listLoading, pageLoading, requestFailed: listRequestFailed, reload } = useEdcPagedList<any>({
