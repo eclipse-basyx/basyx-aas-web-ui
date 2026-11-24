@@ -67,10 +67,10 @@
   import { characteristicsLabel, parseDecimal, withUnit } from '../utils/presentation'
 
   /** `slider`: numeric index 0–100 (one value or a range), shown as a read-only slider instead of `value` */
-  type Row = { label: string, value: string, slider?: number | [number, number] }
+  interface Row { label: string, value: string, slider?: number | [number, number] }
   /** `chart`: show the combustible share of the masses next to the table */
-  type Group = { title: string, rows: Row[], chart?: boolean }
-  type Card = { title: string, groups: Group[] }
+  interface Group { title: string, rows: Row[], chart?: boolean }
+  interface Card { title: string, groups: Group[] }
 
   defineOptions({
     name: 'RailwayFireProtectionSummary',

@@ -34,7 +34,7 @@ import {
 /** Cells to fill in, by column name (e.g. "AP") */
 export type FcilRow = Record<string, CellValue>
 
-type TestOfReport = { test: FireTest, report: FireReport }
+interface TestOfReport { test: FireTest, report: FireReport }
 
 const FCIL_SHEET = 'FCIL'
 const COVER_SHEET = 'Cover Sheet'

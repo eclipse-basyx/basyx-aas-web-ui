@@ -1,7 +1,7 @@
 import type { HazardLevel, HazardLevelCode } from '../types'
 import { stripQuotes } from './text'
 
-export type HazardLevelMeta = {
+export interface HazardLevelMeta {
   code: HazardLevelCode
   /** Value as defined in IDTA 02102 Table 6 */
   label: string

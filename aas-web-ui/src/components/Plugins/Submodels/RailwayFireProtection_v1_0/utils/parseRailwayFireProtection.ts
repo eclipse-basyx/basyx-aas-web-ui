@@ -13,7 +13,7 @@ import { children, nonEmptyFile, pickLangString } from '../../shared/submodelEle
 import { parseHazardLevel } from './hazardLevel'
 import { stripQuotes } from './text'
 
-type Key = { type?: string, value?: string }
+interface Key { type?: string, value?: string }
 
 function semanticIdValues (element: SubmodelElementLike): string[] {
   const keys: Key[] = element?.semanticId?.keys ?? []

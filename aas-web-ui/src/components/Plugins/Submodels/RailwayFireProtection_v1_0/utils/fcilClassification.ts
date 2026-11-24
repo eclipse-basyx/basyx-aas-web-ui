@@ -10,14 +10,14 @@ import { columnName, columnNumber, sheetTexts, worksheet, type XlsxPackage } fro
  */
 
 /** Test methods of a requirement set at one hazard level */
-export type MethodRequirements = {
+export interface MethodRequirements {
   /** Each entry is met by a test of one of its methods, e.g. ["T02", "T04"] for "T02/T04" */
   required: string[][]
   /** Methods that apply only under a condition, or without a limit at this hazard level */
   optional: string[]
 }
 
-export type FcilCatalogue = {
+export interface FcilCatalogue {
   /** Requirement set → hazard level (1–3) → test methods */
   requirementSets: Map<string, Map<number, MethodRequirements>>
   /** Entries of the product category list (column AK), with their requirement set */

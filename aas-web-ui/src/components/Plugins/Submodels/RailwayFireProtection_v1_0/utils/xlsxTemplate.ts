@@ -15,13 +15,13 @@ const XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 
 export type CellValue = string | number | null
 
-export type XlsxPackage = {
+export interface XlsxPackage {
   files: Unzipped
   /** Parsed XML parts by path; written back by `xlsxBytes` */
   documents: Map<string, Document>
 }
 
-type CellAddress = { column: number, row: number }
+interface CellAddress { column: number, row: number }
 
 export function openXlsx (bytes: Uint8Array): XlsxPackage {
   return { files: unzipSync(bytes), documents: new Map() }

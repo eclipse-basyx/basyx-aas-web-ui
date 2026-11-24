@@ -29,7 +29,7 @@
   }>()
 
   // State
-  type Closing = { tile: Element | null, cleanup: () => void }
+  interface Closing { tile: Element | null, cleanup: () => void }
   const closing = new WeakMap<Element, Closing>()
 
   // Methods

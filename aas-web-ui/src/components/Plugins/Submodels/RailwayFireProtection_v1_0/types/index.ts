@@ -7,20 +7,20 @@ import type { SubmodelElementLike } from '../../shared/types'
  */
 export type HazardLevelCode = 'HL1' | 'HL2' | 'HL3' | 'AFNR' | 'MTR' | 'NC' | 'unknown'
 
-export type HazardLevel = {
+export interface HazardLevel {
   code: HazardLevelCode
   /** Value as stored in the submodel (surrounding quotes removed) */
   raw: string
 }
 
-export type ManufacturerInformation = {
+export interface ManufacturerInformation {
   name: string
   productDesignation: string
   orderCode: string
   articleNumber: string
 }
 
-export type Material = {
+export interface Material {
   name: string
   manufacturer: string
   /** MaterialCharacteristics: normalized index (0–100) according to EN 45545-2 */
@@ -31,7 +31,7 @@ export type Material = {
   testedCombination: string
 }
 
-export type FireTest = {
+export interface FireTest {
   key: string
   idShort: string
   procedure: string
@@ -41,7 +41,7 @@ export type FireTest = {
   reportNumber: string
 }
 
-export type LabInformation = {
+export interface LabInformation {
   name: string
   accreditation: string
   author: string
@@ -52,7 +52,7 @@ export type LabInformation = {
   website: string
 }
 
-export type FireReport = {
+export interface FireReport {
   key: string
   /** Position in the `Reports` list */
   index: number
@@ -74,7 +74,7 @@ export type FireReport = {
  */
 export type ReportLinkStatus = 'resolved' | 'repaired' | 'external' | 'unresolved'
 
-export type ReportLink = {
+export interface ReportLink {
   key: string
   status: ReportLinkStatus
   /** Index into `RailwayFireProtectionData.reports` for `resolved` and `repaired` links */
@@ -87,7 +87,7 @@ export type ReportLink = {
   note: string
 }
 
-export type RequirementsSet = {
+export interface RequirementsSet {
   key: string
   /** Position in the `RequirementsSets` list */
   index: number
@@ -99,7 +99,7 @@ export type RequirementsSet = {
   reportLinks: ReportLink[]
 }
 
-export type RailwayFireProtectionData = {
+export interface RailwayFireProtectionData {
   manufacturer: ManufacturerInformation | null
   material: Material | null
   requirementsSets: RequirementsSet[]

@@ -26,7 +26,7 @@ function canAnimate (element: Element | null | undefined): element is HTMLElemen
   return !!element && typeof (element as HTMLElement).animate === 'function'
 }
 
-type BoxMapping = { x: number, y: number, sx: number, sy: number }
+interface BoxMapping { x: number, y: number, sx: number, sy: number }
 
 const IDENTITY: BoxMapping = { x: 0, y: 0, sx: 1, sy: 1 }
 
@@ -80,7 +80,7 @@ function fade (dialog: HTMLElement, show: boolean): Animation {
   )
 }
 
-type FlipRun = {
+interface FlipRun {
   /** Resolves when the motion has finished */
   finished: Promise<void>
   /** Removes the ghost and the dialog's end state; call once the dialog is shown or gone */

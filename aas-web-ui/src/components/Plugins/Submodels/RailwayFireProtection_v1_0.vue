@@ -155,7 +155,7 @@
     submodelElementData?: SubmodelElementLike
   }>()
 
-  type TileHandle = {
+  interface TileHandle {
     focus: () => void
     originElement: () => HTMLElement | null
   }
