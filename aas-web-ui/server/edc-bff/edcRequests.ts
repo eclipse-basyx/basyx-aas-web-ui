@@ -109,7 +109,10 @@ export interface EdcTransferMetadata {
 }
 
 /** Data address of a negotiated EDR, i.e. the data plane endpoint and its authorization, with the EDC metadata */
-type EdcTransferAccess = { dataAddress: Record<string, unknown>, metadata: EdcTransferMetadata }
+interface EdcTransferAccess {
+  dataAddress: Record<string, unknown>
+  metadata: EdcTransferMetadata
+}
 
 export interface EdcTransferResult {
   status: number
