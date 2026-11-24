@@ -261,7 +261,7 @@ For multiple proxy IDs, use `CX_EDC_PROXY_CONFIG_JSON` or `CX_EDC_PROXY_CONFIG_F
 }
 ```
 
-The infrastructure `catenaX.edc.proxyId` selects one of these server-side proxy entries.
+The infrastructure `catenaX.edc.proxyId` selects one of these server-side proxy entries. The `CX_EDC_DEFAULT_*` variables that are set override the matching fields of the `default` entry, e.g. `CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES`; without a `default` entry they create one only together with `CX_EDC_DEFAULT_MANAGEMENT_URL` or `CX_EDC_DEFAULT_API_KEY`.
 
 ### Management writes
 

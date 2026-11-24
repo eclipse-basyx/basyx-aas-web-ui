@@ -82,10 +82,12 @@ export function loadProxyConfigMap (
     rawProxies.set(id, rawProxy)
   }
 
+  // The CX_EDC_DEFAULT_* variables override the default proxy of the JSON config, or create it with a Management URL or API key
   const shorthandProxy = readShorthandProxyConfig(env)
-  if (shorthandProxy) {
+  const configuredDefaultProxy = rawProxies.get(defaultProxyId)
+  if (configuredDefaultProxy || shorthandProxy.managementUrl || shorthandProxy.apiKey) {
     rawProxies.set(defaultProxyId, {
-      ...rawProxies.get(defaultProxyId),
+      ...configuredDefaultProxy,
       ...shorthandProxy,
     })
   }
@@ -194,15 +196,9 @@ function normalizeProxyDocument (document: unknown): Array<[string, RawProxyConf
   return Object.entries(proxies as Record<string, RawProxyConfig>)
 }
 
-function readShorthandProxyConfig (env: Env): RawProxyConfig | undefined {
-  if (
-    !trimToUndefined(env.CX_EDC_DEFAULT_MANAGEMENT_URL)
-    && !trimToUndefined(env.CX_EDC_DEFAULT_API_KEY)
-  ) {
-    return undefined
-  }
-
-  return {
+// Only the variables that are set: an unset or blank one, e.g. from `${VAR:-}` in Docker Compose, keeps the value of the JSON config
+function readShorthandProxyConfig (env: Env): RawProxyConfig {
+  const shorthandProxy: RawProxyConfig = {
     managementUrl: env.CX_EDC_DEFAULT_MANAGEMENT_URL,
     apiKey: env.CX_EDC_DEFAULT_API_KEY,
     apiKeyHeader: env.CX_EDC_DEFAULT_API_KEY_HEADER,
@@ -211,6 +207,8 @@ function readShorthandProxyConfig (env: Env): RawProxyConfig | undefined {
     dataPlaneProxyUrl: env.CX_EDC_DEFAULT_DATA_PLANE_PROXY_URL,
     allowManagementWrites: env.CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES,
   }
+
+  return Object.fromEntries(Object.entries(shorthandProxy).filter(([, value]) => trimToUndefined(value) !== undefined))
 }
 
 function normalizeProxyConfig (

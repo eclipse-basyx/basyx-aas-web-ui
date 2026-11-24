@@ -115,6 +115,46 @@ describe('EDC BFF config', () => {
     expect(jsonProxies.get('readOnly')?.allowManagementWrites).toBe(false)
   })
 
+  it('applies the default proxy variables to a default proxy from the JSON config', () => {
+    const jsonConfig = JSON.stringify({
+      proxies: {
+        default: {
+          managementUrl: 'https://consumer-edc.test/management',
+          apiKey: 'TEST_API_KEY',
+          participantId: 'TEST_PARTICIPANT_ID',
+          allowManagementWrites: true,
+        },
+      },
+    })
+
+    const writesFromVariable = loadProxyConfigMap({
+      CX_EDC_PROXY_CONFIG_JSON: jsonConfig.replace('"allowManagementWrites":true', '"allowManagementWrites":false'),
+      CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES: 'true',
+    })
+    // Variables that are unset or blank, e.g. from `${VAR:-}` in Docker Compose, keep the values of the JSON config
+    const otherVariables = loadProxyConfigMap({
+      CX_EDC_PROXY_CONFIG_JSON: jsonConfig,
+      CX_EDC_DEFAULT_API_KEY: 'OTHER_API_KEY',
+      CX_EDC_DEFAULT_PARTICIPANT_ID: '',
+    })
+
+    expect(writesFromVariable.get('default')?.allowManagementWrites).toBe(true)
+    expect(otherVariables.get('default')).toMatchObject({
+      apiKey: 'OTHER_API_KEY',
+      participantId: 'TEST_PARTICIPANT_ID',
+      allowManagementWrites: true,
+    })
+  })
+
+  it('creates no default proxy from variables without Management URL or API key', () => {
+    const proxies = loadProxyConfigMap({
+      CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES: 'true',
+      CX_EDC_DEFAULT_PARTICIPANT_ID: 'TEST_PARTICIPANT_ID',
+    })
+
+    expect(proxies.has('default')).toBe(false)
+  })
+
   it('requires JWKS configuration for JWT auth mode', () => {
     expect(() => loadAuthConfig({ CX_EDC_BFF_AUTH_MODE: 'jwt' })).toThrow(
       'CX_EDC_BFF_AUTH_JWKS_URL is required',
