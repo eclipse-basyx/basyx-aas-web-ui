@@ -5,6 +5,7 @@ import { useIDUtils } from '@/composables/IDUtils'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useAASStore } from '@/store/AASDataStore'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
+import { SUBMODEL_NOT_AUTHORIZED_ID_SHORT } from '@/utils/AAS/SubmodelUtils'
 import { AAS_REPOSITORY_ENDPOINT_PATH, endpointUrl, resourceUrl, SUBMODEL_REPOSITORY_ENDPOINT_PATH } from '@/utils/EndpointUrls'
 import { getActiveComponentUrlForTemplate, usesSubmodelSuperpath } from '@/utils/InfrastructureUtils'
 
@@ -214,7 +215,7 @@ export function useSMRepositoryClient () {
       if (smRepoAuthorizationError || [401, 403].includes(responseStatus)) {
         return {
           id: generateUUIDFromString(smEndpoint),
-          idShort: 'Submodel Not Authorized!',
+          idShort: SUBMODEL_NOT_AUTHORIZED_ID_SHORT,
           modelType: 'Submodel',
           semanticId: null,
           description: [],
@@ -301,7 +302,7 @@ export function useSMRepositoryClient () {
       if (smRepoAuthorizationError) {
         return {
           id: generateUUIDFromString(smePath),
-          idShort: 'Submodel Not Authorized!',
+          idShort: SUBMODEL_NOT_AUTHORIZED_ID_SHORT,
           modelType: 'Submodel',
           semanticId: null,
           description: [],

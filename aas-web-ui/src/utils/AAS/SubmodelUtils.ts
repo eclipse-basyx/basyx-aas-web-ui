@@ -1,7 +1,17 @@
+/** idShort of the placeholder the Submodel Repository client returns for a request refused with 401 or 403 */
+export const SUBMODEL_NOT_AUTHORIZED_ID_SHORT = 'Submodel Not Authorized!'
+
 const unavailableSubmodelIdShorts = new Set([
   'Submodel not found',
-  'Submodel Not Authorized!',
+  SUBMODEL_NOT_AUTHORIZED_ID_SHORT,
 ])
+
+/**
+ * Checks whether a repository response is the placeholder for a Submodel the user isn't allowed to read.
+ */
+export function isUnauthorizedSubmodelPlaceholder (value: unknown): boolean {
+  return (value as { idShort?: unknown } | null | undefined)?.idShort === SUBMODEL_NOT_AUTHORIZED_ID_SHORT
+}
 
 export interface SubmodelPayload {
   id: string

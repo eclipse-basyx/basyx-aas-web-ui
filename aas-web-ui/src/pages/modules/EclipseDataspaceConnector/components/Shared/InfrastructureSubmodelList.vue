@@ -135,7 +135,8 @@
   import { useLoadGeneration } from '@/composables/LoadGeneration'
   import SelectAasEmptyState from '@/pages/modules/EclipseDataspaceConnector/components/Shared/SelectAasEmptyState.vue'
   import { extractId as extractIdFromReference } from '@/utils/AAS/ReferenceUtil'
-  import { isSubmodelPayload } from '@/utils/AAS/SubmodelUtils'
+  import { isSubmodelPayload, isUnauthorizedSubmodelPlaceholder } from '@/utils/AAS/SubmodelUtils'
+  import { isLoggedOutOfOAuth2 } from '@/utils/InfrastructureUtils'
 
   const props = defineProps<{
     infrastructure: InfrastructureConfig | null
@@ -181,9 +182,8 @@
     if (!loadFailure.value?.unauthorized) {
       return { title: 'Submodels Not Available', text: 'The Submodels could not be loaded. Reload the Submodel List to try again.' }
     }
-    const infrastructure = props.infrastructure
-    return infrastructure?.auth?.securityType === 'OAuth2' && !infrastructure.token?.accessToken
-      ? { title: 'Authentication Required', text: `Log in to ${infrastructure.name} to load the Submodels.` }
+    return isLoggedOutOfOAuth2(props.infrastructure)
+      ? { title: 'Authentication Required', text: `Log in to ${props.infrastructure?.name} to load the Submodels.` }
       : { title: 'Access Denied', text: 'You are not allowed to read the Submodels of this AAS.' }
   })
 
@@ -231,7 +231,7 @@
       const unloaded = submodels.filter(sm => !isSubmodelPayload(sm))
       setLoadFailure(
         allSubmodels.value.length === 0 && unloaded.length > 0
-          ? { unauthorized: unloaded.every(sm => sm?.idShort === 'Submodel Not Authorized!') }
+          ? { unauthorized: unloaded.every(sm => isUnauthorizedSubmodelPlaceholder(sm)) }
           : null,
         unloaded.length,
       )

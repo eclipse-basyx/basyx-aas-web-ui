@@ -1,14 +1,10 @@
+import type { EdcDtrFetchResult } from './edcRequests.js'
 import type {
   EdcBffRuntimeConfig,
   EdcCatalogRequest,
-  EdcDataFetchRequest,
-  EdcDataPushRequest,
   EdcDiscoveryRequest,
-  EdcDtrDescriptorByIdRequest,
-  EdcDtrDescriptorRequest,
   EdcProxyConfig,
   EdcQuerySpecRequest,
-  EdcSubmodelFetchRequest,
 } from './types.js'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import { pathToFileURL } from 'node:url'
@@ -172,27 +168,27 @@ async function handleRequest (
   }
 
   if (route.action === 'dtr/shell-descriptors' && request.method === 'POST') {
-    await handleDtrShellDescriptorsRequest(request, response, proxy)
+    await handleJsonPostRequest(request, response, proxy, fetchDtrShellDescriptors)
     return
   }
 
   if (route.action === 'dtr/shell-descriptors/by-id' && request.method === 'POST') {
-    await handleDtrShellDescriptorByIdRequest(request, response, proxy)
+    await handleJsonPostRequest(request, response, proxy, fetchDtrShellDescriptorById)
     return
   }
 
   if (route.action === 'submodels/fetch' && request.method === 'POST') {
-    await handleSubmodelFetchRequest(request, response, proxy)
+    await handleJsonPostRequest(request, response, proxy, fetchSubmodel)
     return
   }
 
   if (route.action === 'data/fetch' && request.method === 'POST') {
-    await handleDataFetchRequest(request, response, proxy)
+    await handleJsonPostRequest(request, response, proxy, fetchData)
     return
   }
 
   if (route.action === 'data/push' && request.method === 'POST') {
-    await handleDataPushRequest(request, response, proxy)
+    await handleJsonPostRequest(request, response, proxy, pushData, maxPushBodyBytes)
     return
   }
 
@@ -443,70 +439,17 @@ async function handleDeleteRequest (
   writeJsonResponse(response, edcResponse.status, edcResponse.data)
 }
 
-async function handleDtrShellDescriptorsRequest (
+/** Reads the JSON body of a POST, runs the EDC request with it and answers with its data and EDC metadata */
+async function handleJsonPostRequest<TBody> (
   request: IncomingMessage,
   response: ServerResponse,
   proxy: EdcProxyConfig,
+  runEdcRequest: (proxy: EdcProxyConfig, body: TBody) => Promise<EdcDtrFetchResult>,
+  maxBytes = maxBodyBytes,
 ): Promise<void> {
   assertProxyConfigured(proxy)
-  const body = await readJsonBody<EdcDtrDescriptorRequest>(request)
-  const result = await fetchDtrShellDescriptors(proxy, body)
-  writeJsonResponse(response, 200, {
-    data: result.data,
-    edc: result.metadata,
-  })
-}
-
-async function handleDtrShellDescriptorByIdRequest (
-  request: IncomingMessage,
-  response: ServerResponse,
-  proxy: EdcProxyConfig,
-): Promise<void> {
-  assertProxyConfigured(proxy)
-  const body = await readJsonBody<EdcDtrDescriptorByIdRequest>(request)
-  const result = await fetchDtrShellDescriptorById(proxy, body)
-  writeJsonResponse(response, 200, {
-    data: result.data,
-    edc: result.metadata,
-  })
-}
-
-async function handleSubmodelFetchRequest (
-  request: IncomingMessage,
-  response: ServerResponse,
-  proxy: EdcProxyConfig,
-): Promise<void> {
-  assertProxyConfigured(proxy)
-  const body = await readJsonBody<EdcSubmodelFetchRequest>(request)
-  const result = await fetchSubmodel(proxy, body)
-  writeJsonResponse(response, 200, {
-    data: result.data,
-    edc: result.metadata,
-  })
-}
-
-async function handleDataFetchRequest (
-  request: IncomingMessage,
-  response: ServerResponse,
-  proxy: EdcProxyConfig,
-): Promise<void> {
-  assertProxyConfigured(proxy)
-  const body = await readJsonBody<EdcDataFetchRequest>(request)
-  const result = await fetchData(proxy, body)
-  writeJsonResponse(response, 200, {
-    data: result.data,
-    edc: result.metadata,
-  })
-}
-
-async function handleDataPushRequest (
-  request: IncomingMessage,
-  response: ServerResponse,
-  proxy: EdcProxyConfig,
-): Promise<void> {
-  assertProxyConfigured(proxy)
-  const body = await readJsonBody<EdcDataPushRequest>(request, maxPushBodyBytes)
-  const result = await pushData(proxy, body)
+  const body = await readJsonBody<TBody>(request, maxBytes)
+  const result = await runEdcRequest(proxy, body)
   writeJsonResponse(response, 200, {
     data: result.data,
     edc: result.metadata,

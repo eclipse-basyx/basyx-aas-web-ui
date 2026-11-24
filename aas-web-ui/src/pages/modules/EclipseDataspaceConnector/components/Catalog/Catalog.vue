@@ -294,11 +294,11 @@
     }
   }
 
-  function selectCatalogDataset (policy: any): void {
-    if (isSelected(policy)) {
+  function selectCatalogDataset (dataset: any): void {
+    if (isSelected(dataset)) {
       selectedCatalogDataset.value = {}
     } else {
-      selectedCatalogDataset.value = policy
+      selectedCatalogDataset.value = dataset
 
       if (Object.keys(selectedCatalogDataset.value).length === 0) {
         scrollToSelectedCatalogDataset()
@@ -306,18 +306,18 @@
     }
   }
 
-  function isSelected (policy: any): boolean {
+  function isSelected (dataset: any): boolean {
     if (
       !selectedCatalogDataset.value
       || Object.keys(selectedCatalogDataset.value).length === 0
       || !selectedCatalogDataset.value['@id']
-      || !policy
-      || Object.keys(policy).length === 0
-      || !policy['@id']
+      || !dataset
+      || Object.keys(dataset).length === 0
+      || !dataset['@id']
     ) {
       return false
     }
-    return selectedCatalogDataset.value['@id'] === policy['@id']
+    return selectedCatalogDataset.value['@id'] === dataset['@id']
   }
 
   function scrollToSelectedCatalogDataset (): void {

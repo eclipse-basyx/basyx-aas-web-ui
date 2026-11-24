@@ -385,6 +385,13 @@ export function getInfrastructureSummary (infra: InfrastructureConfig): string {
 }
 
 /**
+ * Checks whether an infrastructure is secured by OAuth2 and has no access token, e.g. before the user logged in
+ */
+export function isLoggedOutOfOAuth2 (infra: InfrastructureConfig | null | undefined): boolean {
+  return infra?.auth?.securityType === 'OAuth2' && !infra.token?.accessToken
+}
+
+/**
  * Form validation rule for required fields
  */
 export function requiredRule (value: string): string | boolean {

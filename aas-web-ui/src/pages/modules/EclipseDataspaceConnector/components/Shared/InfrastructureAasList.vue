@@ -223,7 +223,7 @@
   import { useQuerySearch } from '@/composables/QueryLanguage/QuerySearch'
   import { useQuerySearchScroll } from '@/composables/QueryLanguage/QuerySearchScroll'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
-  import { getActiveComponentUrlForTemplate } from '@/utils/InfrastructureUtils'
+  import { getActiveComponentUrlForTemplate, isLoggedOutOfOAuth2 } from '@/utils/InfrastructureUtils'
   import {
     buildStructuredSearchQuery,
     createQueryExample,
@@ -359,8 +359,7 @@
   )
   const loadFailureMessage = computed(() => {
     const auth = props.infrastructure?.auth
-    const loggedOutOfOAuth2 = auth?.securityType === 'OAuth2' && !props.infrastructure?.token?.accessToken
-    if (loadFailure.value?.status === 401 || loggedOutOfOAuth2) {
+    if (loadFailure.value?.status === 401 || isLoggedOutOfOAuth2(props.infrastructure)) {
       return {
         title: 'Authentication Required',
         text: auth?.securityType === 'OAuth2'
