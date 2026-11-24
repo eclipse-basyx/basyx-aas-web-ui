@@ -135,6 +135,7 @@
   )
 
   // Methods
+  /** The card is the front face of the flip into the details dialog */
   function cardElement (): HTMLElement | null {
     return (card.value?.$el as HTMLElement | undefined) ?? null
   }
@@ -143,13 +144,8 @@
     cardElement()?.focus()
   }
 
-  /** The card is the front face of the flip into the details dialog */
-  function originElement (): HTMLElement | null {
-    return cardElement()
-  }
-
   // Exposed
-  defineExpose({ focus, originElement })
+  defineExpose({ focus, cardElement })
 </script>
 
 <style scoped>

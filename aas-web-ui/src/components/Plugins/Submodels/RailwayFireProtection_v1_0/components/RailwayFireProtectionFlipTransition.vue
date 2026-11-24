@@ -33,10 +33,6 @@
   const closing = new WeakMap<Element, Closing>()
 
   // Methods
-  function originElement (): Element | null {
-    return props.origin ?? null
-  }
-
   function nextFrame (): Promise<void> {
     return new Promise(resolve => requestAnimationFrame(() => resolve()))
   }
@@ -51,7 +47,7 @@
     await nextFrame()
     await nextFrame()
     ;(el as HTMLElement).style.visibility = ''
-    await flipOpen(el, originElement())
+    await flipOpen(el, props.origin)
     done()
   }
 
@@ -64,7 +60,7 @@
   }
 
   async function onLeave (el: Element, done: () => void): Promise<void> {
-    const tile = originElement()
+    const tile = props.origin ?? null
     const cleanup = await flipClose(el, tile)
     closing.set(el, { tile, cleanup })
     done()
@@ -73,7 +69,7 @@
   function onAfterLeave (el: Element): void {
     // Show the tile before its moving copy is removed, so there is no frame without either
     const state = closing.get(el)
-    showTile(state?.tile ?? originElement())
+    showTile(state?.tile ?? props.origin)
     state?.cleanup()
     closing.delete(el)
     ;(el as HTMLElement).style.removeProperty('pointer-events')

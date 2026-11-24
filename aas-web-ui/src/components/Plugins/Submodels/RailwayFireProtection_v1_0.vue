@@ -160,7 +160,7 @@
 
   interface TileHandle {
     focus: () => void
-    originElement: () => HTMLElement | null
+    cardElement: () => HTMLElement | null
   }
 
   // Composables
@@ -237,7 +237,7 @@
     // The dialog transition turns the tile into the dialog, see RailwayFireProtectionFlipTransition
     activeKey = set.key
     activeSet.value = set
-    activeOrigin.value = tiles.get(set.key)?.originElement() ?? null
+    activeOrigin.value = tiles.get(set.key)?.cardElement() ?? null
     dialogOpen.value = true
   }
 
