@@ -94,28 +94,6 @@
     material: Material | null
   }>()
 
-  function rows (entries: Row[]): Row[] {
-    return entries.filter(entry => entry.value.trim() !== '')
-  }
-
-  function cardOf (title: string, groups: Group[]): Card[] {
-    const filled = groups.filter(group => group.rows.length > 0)
-    return filled.length > 0 ? [{ title, groups: filled }] : []
-  }
-
-  /** The MaterialCharacteristics range as numbers within 0–100; null if a bound is missing or not a number */
-  function indexRange (material: Material | null): [number, number] | null {
-    const min = parseDecimal(material?.characteristics?.min ?? '')
-    const max = parseDecimal(material?.characteristics?.max ?? '')
-    const low = min ?? max
-    const high = max ?? min
-    if (low === null || high === null) {
-      return null
-    }
-    const clamp = (value: number) => Math.min(100, Math.max(0, value))
-    return [clamp(Math.min(low, high)), clamp(Math.max(low, high))]
-  }
-
   const cards = computed<Card[]>(() => {
     const manufacturer = props.manufacturer
     const material = props.material
@@ -160,6 +138,28 @@
       ]),
     ]
   })
+
+  function rows (entries: Row[]): Row[] {
+    return entries.filter(entry => entry.value.trim() !== '')
+  }
+
+  function cardOf (title: string, groups: Group[]): Card[] {
+    const filled = groups.filter(group => group.rows.length > 0)
+    return filled.length > 0 ? [{ title, groups: filled }] : []
+  }
+
+  /** The MaterialCharacteristics range as numbers within 0–100; null if a bound is missing or not a number */
+  function indexRange (material: Material | null): [number, number] | null {
+    const min = parseDecimal(material?.characteristics?.min ?? '')
+    const max = parseDecimal(material?.characteristics?.max ?? '')
+    const low = min ?? max
+    const high = max ?? min
+    if (low === null || high === null) {
+      return null
+    }
+    const clamp = (value: number) => Math.min(100, Math.max(0, value))
+    return [clamp(Math.min(low, high)), clamp(Math.max(low, high))]
+  }
 </script>
 
 <style scoped>

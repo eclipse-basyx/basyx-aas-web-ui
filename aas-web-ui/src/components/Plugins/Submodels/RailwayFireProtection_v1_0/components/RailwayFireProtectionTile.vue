@@ -89,9 +89,6 @@
   import { hazardLevelMeta } from '../utils/hazardLevel'
   import { requirementsSetTests } from '../utils/presentation'
 
-  /** More tests than this are summarised as "+ N more tests" so that the tile stays square */
-  const MAX_SHOWN_TESTS = 3
-
   defineOptions({
     name: 'RailwayFireProtectionTile',
   })
@@ -104,6 +101,9 @@
   const emit = defineEmits<{
     open: []
   }>()
+
+  /** More tests than this are summarised as "+ N more tests" so that the tile stays square */
+  const MAX_SHOWN_TESTS = 3
 
   const card = ref<ComponentPublicInstance | null>(null)
 

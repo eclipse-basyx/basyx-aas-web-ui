@@ -124,6 +124,8 @@
   import { useContactInformation_v1_0Utils } from '@/composables/AAS/SubmodelTemplates/ContactInformation_v1_0Utils'
   import { fileName, reportTitle, websiteUrl } from '../utils/presentation'
 
+  type LabRow = { label: string, value: string, icon: string, href?: string }
+
   defineOptions({
     name: 'RailwayFireProtectionReport',
   })
@@ -143,8 +145,6 @@
   const isPdf = computed(() => contentType.value.includes('pdf') || /\.pdf$/i.test(props.report.file?.value ?? ''))
   const isImage = computed(() => contentType.value.startsWith('image/'))
   const canPreview = computed(() => isPdf.value || isImage.value)
-
-  type LabRow = { label: string, value: string, icon: string, href?: string }
 
   const labRows = computed<LabRow[]>(() => {
     const lab = props.report.lab
