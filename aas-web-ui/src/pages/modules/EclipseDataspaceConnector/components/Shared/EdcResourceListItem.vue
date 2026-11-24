@@ -2,10 +2,9 @@
   <v-list-item
     :active="selected"
     base-color="listItem"
-    :border="selected ? 'primary' : 'listItem thin'"
+    :border="selected ? 'primary sm' : 'listItem sm'"
     class="mt-2 mx-0"
     color="primarySurface"
-    style="border-top: solid; border-right: solid; border-bottom: solid; border-width: 1px"
     :style="{ 'border-color': borderColor }"
     variant="tonal"
     @click="emit('select')"

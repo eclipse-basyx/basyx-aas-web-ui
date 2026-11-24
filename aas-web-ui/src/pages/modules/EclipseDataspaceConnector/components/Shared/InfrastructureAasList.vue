@@ -119,10 +119,9 @@
               v-if="item && Object.keys(item).length > 0"
               :active="aasIsSelected(item)"
               base-color="listItem"
-              :border="aasIsSelected(item) ? 'primary' : 'listItem thin'"
+              :border="aasIsSelected(item) ? 'primary sm' : 'listItem sm'"
               class="mt-2 mx-2"
               color="primarySurface"
-              style="border-top: solid; border-right: solid; border-bottom: solid; border-width: 1px"
               :style="{
                 'border-color': aasIsSelected(item)
                   ? `${primaryColor} !important`
