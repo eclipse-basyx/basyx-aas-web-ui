@@ -1,43 +1,16 @@
 <template>
   <!-- Donut chart: combustible part of the total mass -->
   <figure v-if="typeof share === 'number'" class="rfp-mass-chart d-flex align-center ga-4 ma-0">
-    <svg
+    <v-progress-circular
       :aria-label="`${percentText} of the total mass is combustible`"
-      class="rfp-mass-chart__donut flex-shrink-0"
-      role="img"
-      viewBox="0 0 42 42"
+      class="flex-shrink-0"
+      color="primary"
+      :model-value="share * 100"
+      size="112"
+      width="16"
     >
-      <circle
-        class="rfp-mass-chart__rest"
-        cx="21"
-        cy="21"
-        fill="none"
-        r="15.9155"
-        stroke-width="6"
-      />
-      <!-- The circumference is 100, so the dash length is the percentage -->
-      <circle
-        v-if="share > 0"
-        class="rfp-mass-chart__combustible"
-        cx="21"
-        cy="21"
-        fill="none"
-        r="15.9155"
-        :stroke-dasharray="`${share * 100} ${100 - share * 100}`"
-        stroke-dashoffset="25"
-        stroke-width="6"
-      />
-
-      <text
-        class="rfp-mass-chart__value"
-        dominant-baseline="central"
-        text-anchor="middle"
-        x="21"
-        y="21"
-      >
-        {{ percentText }}
-      </text>
-    </svg>
+      <span class="text-title-medium font-weight-bold text-high-emphasis">{{ percentText }}</span>
+    </v-progress-circular>
 
     <figcaption class="d-flex flex-column ga-1 text-body-small">
       <div class="d-flex align-center ga-2">
@@ -82,25 +55,6 @@
 </script>
 
 <style scoped>
-  .rfp-mass-chart__donut {
-    width: 112px;
-    height: 112px;
-  }
-
-  .rfp-mass-chart__rest {
-    stroke: rgba(var(--v-theme-on-surface), 0.12);
-  }
-
-  .rfp-mass-chart__combustible {
-    stroke: rgb(var(--v-theme-primary));
-  }
-
-  .rfp-mass-chart__value {
-    fill: rgb(var(--v-theme-on-surface));
-    font-size: 7px;
-    font-weight: 600;
-  }
-
   .rfp-mass-chart__swatch {
     display: inline-block;
     width: 10px;
@@ -112,7 +66,8 @@
     background-color: rgb(var(--v-theme-primary));
   }
 
+  /* Same colour as the underlay of v-progress-circular */
   .rfp-mass-chart__swatch--rest {
-    background-color: rgba(var(--v-theme-on-surface), 0.12);
+    background-color: rgba(var(--v-border-color), var(--v-border-opacity));
   }
 </style>

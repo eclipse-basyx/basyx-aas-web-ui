@@ -30,18 +30,15 @@
             {{ meta.short }}
           </v-chip>
 
-          <div
-            v-if="meta.level > 0"
-            aria-hidden="true"
-            class="rfp-meter"
-            :title="`Hazard level ${meta.level} of 3`"
-          >
+          <div v-if="meta.level > 0" aria-hidden="true" class="rfp-meter">
             <span
               v-for="segment in 3"
               :key="segment"
               class="rfp-meter__segment"
               :class="segment <= meta.level ? `bg-${meta.color}` : 'rfp-meter__segment--empty'"
             />
+
+            <v-tooltip activator="parent" location="top" open-delay="600" :text="`Hazard level ${meta.level} of 3`" />
           </div>
 
           <span class="text-body-small text-medium-emphasis">{{ statusText }}</span>
@@ -50,8 +47,9 @@
         <!-- Test procedures and their values -->
         <dl v-if="tests.length > 0" class="rfp-tests">
           <div v-for="test in shownTests" :key="test.key" class="rfp-tests__row">
-            <dt class="rfp-tests__procedure text-body-small text-medium-emphasis" :title="test.procedure || test.idShort">
+            <dt class="rfp-tests__procedure text-body-small text-medium-emphasis">
               {{ test.procedure || test.idShort }}
+              <v-tooltip activator="parent" location="top" open-delay="600" :text="test.procedure || test.idShort" />
             </dt>
 
             <dd class="text-body-medium font-weight-medium text-no-wrap">{{ test.result || '–' }}</dd>
@@ -67,14 +65,17 @@
         <v-icon icon="mdi-file-document-outline" size="small" />
         <span>{{ reportCountText }}</span>
 
-        <v-icon
-          v-if="hasLinkIssue"
-          class="ml-1"
-          color="warning"
-          icon="mdi-link-variant-off"
-          size="small"
-          :title="linkIssueText"
-        />
+        <v-tooltip v-if="hasLinkIssue" location="top" open-delay="600" :text="linkIssueText">
+          <template #activator="{ props: tooltipProps }">
+            <v-icon
+              v-bind="tooltipProps"
+              class="ml-1"
+              color="warning"
+              icon="mdi-link-variant-off"
+              size="small"
+            />
+          </template>
+        </v-tooltip>
 
         <v-spacer />
         <v-icon icon="mdi-arrow-expand" size="small" />
