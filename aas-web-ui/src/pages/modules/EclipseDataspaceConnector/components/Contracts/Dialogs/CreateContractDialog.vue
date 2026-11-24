@@ -63,8 +63,11 @@
           <!-- Contract Preview -->
           <JSONPreview
             class="mt-4"
+            download-file-name="contract"
+            height="auto"
+            icon="mdi-file-sign"
             :json-content="jsonContent"
-            :title="`Contract`"
+            title="Contract"
           />
         </v-form>
       </v-card-text>

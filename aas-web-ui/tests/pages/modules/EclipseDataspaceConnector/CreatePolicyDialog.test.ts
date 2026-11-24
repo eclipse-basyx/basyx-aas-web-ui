@@ -17,6 +17,12 @@ vi.mock('@/store/NavigationStore', () => ({
 }))
 
 const slotStub = { template: '<div><slot /><slot name="append" /></div>' }
+// Monaco doesn't load in jsdom; like CodeViewer, the stub emits only edits by hand, not changes of text
+const codeViewerStub = {
+  props: ['text', 'invalid', 'readOnly'],
+  emits: ['update:text'],
+  template: '<textarea class="code-editor" :value="text" @input="$emit(\'update:text\', $event.target.value)" />',
+}
 
 function mountDialog () {
   return mount(CreatePolicyDialog, {
@@ -44,21 +50,21 @@ function mountDialog () {
           template: '<input :data-label="label" :disabled="disabled" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)">',
         },
         'v-btn': { props: ['text', 'disabled'], emits: ['click'], template: '<button :disabled="disabled" @click="$emit(\'click\')">{{ text }}</button>' },
+        'CodeViewer': codeViewerStub,
       },
     },
   })
 }
 
 function editorText (wrapper: ReturnType<typeof mountDialog>): string {
-  return wrapper.find('pre.editor-content').element.textContent ?? ''
+  return (wrapper.find('textarea.code-editor').element as HTMLTextAreaElement).value
 }
 
 async function editByHand (wrapper: ReturnType<typeof mountDialog>, change: (policy: any) => void): Promise<void> {
-  const editor = wrapper.find('pre.editor-content')
-  const policy = JSON.parse(editor.element.textContent ?? '')
+  expect(wrapper.findComponent(codeViewerStub).props('readOnly')).toBe(false)
+  const policy = JSON.parse(editorText(wrapper))
   change(policy)
-  editor.element.textContent = JSON.stringify(policy, null, 2)
-  await editor.trigger('input')
+  await wrapper.find('textarea.code-editor').setValue(JSON.stringify(policy, null, 2))
   await flushPromises()
 }
 

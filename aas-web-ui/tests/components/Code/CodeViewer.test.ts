@@ -5,7 +5,7 @@ import CodeViewer from '@/components/Code/CodeViewer.vue'
 import { hotkeyStub } from '../../helpers/vuetifyStubs'
 
 const editor = defineComponent({
-  props: { modelValue: String, readOnly: Boolean, options: Object },
+  props: { modelValue: String, readOnly: Boolean, error: Boolean, options: Object },
   setup (_props, { expose }) {
     expose({ find: vi.fn() })
   },
@@ -57,6 +57,18 @@ describe('CodeViewer controls', () => {
     await wrapper.get('button[aria-label="Disable word wrap"]').trigger('click')
     await wrapper.get('button[aria-label="Hide line numbers"]').trigger('click')
     expect(wrapper.getComponent(editor).props('options')).toEqual({ wordWrap: 'off', lineNumbers: 'off' })
+    wrapper.unmount()
+  })
+
+  it('lets an editable text be edited, also when it is empty', async () => {
+    const wrapper = mount(CodeViewer, { props: { text: '', readOnly: false, invalid: true }, global: { stubs } })
+    const code = wrapper.getComponent(editor)
+    expect(code.props('readOnly')).toBe(false)
+    expect(code.props('error')).toBe(true)
+    expect(wrapper.find('button[aria-label="Copy to clipboard"]').exists()).toBe(true)
+
+    code.vm.$emit('update:modelValue', '{"a":1}')
+    expect(wrapper.emitted('update:text')).toEqual([['{"a":1}']])
     wrapper.unmount()
   })
 

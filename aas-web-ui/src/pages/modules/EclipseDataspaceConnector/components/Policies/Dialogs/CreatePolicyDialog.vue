@@ -11,20 +11,6 @@
 
         <v-spacer />
 
-        <v-tooltip location="bottom" open-delay="600">
-          <template #activator="{ props: tooltipProps }">
-            <v-btn
-              v-bind="tooltipProps"
-              density="compact"
-              :icon="wordWrap ? 'mdi-wrap-disabled' : 'mdi-wrap'"
-              variant="plain"
-              @click="wordWrap = !wordWrap"
-            />
-          </template>
-
-          <span>{{ wordWrap ? 'Disable word wrap' : 'Enable word wrap' }}</span>
-        </v-tooltip>
-
         <v-btn
           v-tooltip="'Open Catena-X Policy Builder'"
           color="text-medium-emphasis"
@@ -92,67 +78,42 @@
             />
           </div>
 
-          <!-- Policy Preview -->
-          <div>
-            <p class="text-caption text-medium-emphasis font-weight-bold mb-2">
-              Policy Preview:
-            </p>
+          <!-- After editing the policy by hand, the fields above no longer change it -->
+          <v-alert
+            v-if="manuallyEdited"
+            class="mt-4"
+            density="compact"
+            type="info"
+            variant="tonal"
+          >
+            The policy was edited by hand, so the fields above no longer change it.
 
-            <!-- After editing the policy by hand, the fields above no longer change it -->
-            <v-alert
-              v-if="manuallyEdited"
-              class="mb-2"
-              density="compact"
-              type="info"
-              variant="tonal"
-            >
-              The policy was edited by hand, so the fields above no longer change it.
+            <template #append>
+              <v-btn size="small" text="Reset to Template" variant="text" @click="resetToTemplate" />
+            </template>
+          </v-alert>
 
-              <template #append>
-                <v-btn size="small" text="Reset to Template" variant="text" @click="resetToTemplate" />
-              </template>
-            </v-alert>
+          <v-alert
+            v-if="jsonError"
+            class="mt-4"
+            density="compact"
+            :text="jsonError"
+            type="error"
+            variant="tonal"
+          />
 
-            <!-- Error banner -->
-            <v-alert
-              v-if="jsonError"
-              class="mb-2"
-              density="compact"
-              :text="jsonError"
-              type="error"
-              variant="tonal"
-            />
-
-            <!-- Code editor -->
-            <div class="editor-container" :class="{ 'editor-error': !!jsonError }">
-              <!-- Line numbers -->
-              <div ref="lineNumbersRef" class="line-numbers" @scroll.passive="syncScroll">
-                <div
-                  v-for="(height, idx) in lineHeights"
-                  :key="idx"
-                  :style="{ height: height + 'px' }"
-                >
-                  {{ idx + 1 }}
-                </div>
-              </div>
-
-              <!-- Hidden single-line measurer (word-wrap mode only) -->
-              <div v-if="wordWrap" ref="measurerRef" aria-hidden="true" class="line-measurer" />
-
-              <!-- Editable content: do NOT bind content via template — Vue must never
-                   overwrite textContent of a contenteditable element or the caret resets. -->
-              <pre
-                ref="editorRef"
-                class="editor-content"
-                :class="{ 'word-wrap': wordWrap }"
-                contenteditable="true"
-                spellcheck="false"
-                @input="onEditorInput"
-                @keydown="onEditorKeydown"
-                @scroll.passive="syncLineNumbers"
-              />
-            </div>
-          </div>
+          <!-- Policy, editable; only an edit by hand emits update:text, a policy rebuilt from the fields doesn't -->
+          <CodeViewer
+            class="mt-4"
+            file-name="policy.json"
+            height="auto"
+            icon="mdi-shield-check-outline"
+            :invalid="!!jsonError"
+            :read-only="false"
+            :text="jsonText"
+            title="Policy"
+            @update:text="onEditorInput"
+          />
         </v-form>
       </v-card-text>
 
@@ -212,16 +173,9 @@
   const selectedType = ref<'access' | 'usage'>('usage')
   const form = ref<any>(null)
   const placeholderValues = ref<Record<string, string>>({})
-  const wordWrap = ref(false)
   const jsonText = ref('')
   const jsonError = ref<string | null>(null)
   const manuallyEdited = ref(false) // The policy was edited in the editor, the fields no longer rebuild it
-  const editorRef = ref<HTMLElement | null>(null)
-  const lineNumbersRef = ref<HTMLElement | null>(null)
-  const measurerRef = ref<HTMLElement | null>(null)
-  const lineHeights = ref<number[]>([])
-
-  const LINE_HEIGHT = 21
 
   // Computed properties
   const policyTypes = computed(() => [
@@ -283,11 +237,6 @@
     { deep: true },
   )
 
-  watch(
-    () => wordWrap.value,
-    () => nextTick(() => recalcLineHeights()),
-  )
-
   // Methods
   function resetForm (): void {
     manuallyEdited.value = false
@@ -342,37 +291,10 @@
       jsonText.value = JSON.stringify(PolicyTemplate, null, 2)
       jsonError.value = error_ instanceof Error ? error_.message : 'Invalid JSON'
     }
-    // Sync DOM content after Vue updates the template
-    nextTick(() => {
-      if (editorRef.value) {
-        editorRef.value.textContent = jsonText.value
-      }
-      recalcLineHeights()
-    })
   }
 
-  function recalcLineHeights (): void {
-    const lines = jsonText.value.split('\n')
-
-    if (!wordWrap.value || !measurerRef.value) {
-      // Simple case: every line is exactly one row
-      lineHeights.value = lines.map(() => LINE_HEIGHT)
-      return
-    }
-
-    const measurer = measurerRef.value
-    const heights: number[] = []
-
-    for (const line of lines) {
-      measurer.textContent = line || '\u00A0' // non-breaking space keeps empty lines measurable
-      heights.push(measurer.offsetHeight)
-    }
-
-    lineHeights.value = heights
-  }
-
-  function onEditorInput (): void {
-    const value = editorRef.value?.textContent ?? ''
+  // Called only for an edit by hand, so the fields no longer rebuild the policy
+  function onEditorInput (value: string): void {
     jsonText.value = value
     manuallyEdited.value = true
 
@@ -381,46 +303,6 @@
       jsonError.value = null
     } catch (error_) {
       jsonError.value = error_ instanceof Error ? error_.message : 'Invalid JSON'
-    }
-
-    // Recalc line heights only — the browser keeps the caret intact because
-    // we never touch editorRef.value.textContent here.
-    nextTick(() => recalcLineHeights())
-  }
-
-  function onEditorKeydown (event: KeyboardEvent): void {
-    if (event.key !== 'Tab') return
-
-    // Insert spaces instead of moving focus to the next element
-    event.preventDefault()
-
-    const selection = window.getSelection()
-    if (!selection || selection.rangeCount === 0) return
-
-    const tabSpaces = '  '
-    const range = selection.getRangeAt(0)
-    range.deleteContents()
-    const textNode = document.createTextNode(tabSpaces)
-    range.insertNode(textNode)
-
-    // Move caret to the end of the inserted spaces
-    range.setStartAfter(textNode)
-    range.setEndAfter(textNode)
-    selection.removeAllRanges()
-    selection.addRange(range)
-
-    onEditorInput()
-  }
-
-  function syncScroll (): void {
-    if (lineNumbersRef.value && editorRef.value) {
-      editorRef.value.scrollTop = lineNumbersRef.value.scrollTop
-    }
-  }
-
-  function syncLineNumbers (): void {
-    if (lineNumbersRef.value && editorRef.value) {
-      lineNumbersRef.value.scrollTop = editorRef.value.scrollTop
     }
   }
 
@@ -446,77 +328,3 @@
   }
 
 </script>
-
-<style scoped>
-    .editor-container {
-        position: relative;
-        display: flex;
-        min-height: 200px;
-        max-height: 400px;
-        overflow: hidden;
-        font-family: monospace;
-        font-size: 13px;
-        line-height: 21px;
-        border: 1px solid rgba(0, 0, 0, 0.38);
-        border-radius: 4px;
-    }
-
-    .editor-error {
-        border-color: rgb(var(--v-theme-error));
-    }
-
-    .line-numbers {
-        padding: 8px 8px;
-        text-align: right;
-        background-color: #e0e0e0;
-        border-right: 1px solid #ccc;
-        color: #666;
-        user-select: none;
-        min-width: 40px;
-        overflow: hidden;
-        flex-shrink: 0;
-    }
-
-    .line-numbers > div {
-        height: 21px;
-        line-height: 21px;
-        display: flex;
-        align-items: flex-start;
-        padding-top: 0;
-    }
-
-    .editor-content {
-        flex: 1 1 auto;
-        margin: 0;
-        padding: 8px 16px;
-        white-space: pre;
-        word-wrap: normal;
-        overflow: auto;
-        outline: none;
-        background: transparent;
-        color: inherit;
-        caret-color: currentColor;
-    }
-
-    .editor-content.word-wrap {
-        white-space: pre-wrap;
-        word-break: break-all;
-        overflow-x: hidden;
-    }
-
-    /* invisible single-line box used to measure wrapped line heights */
-    .line-measurer {
-        position: absolute;
-        visibility: hidden;
-        pointer-events: none;
-        white-space: pre-wrap;
-        word-break: break-all;
-        font-family: monospace;
-        font-size: 13px;
-        line-height: 21px;
-        padding: 0;
-        margin: 0;
-        left: 48px;
-        right: 0;
-    }
-</style>

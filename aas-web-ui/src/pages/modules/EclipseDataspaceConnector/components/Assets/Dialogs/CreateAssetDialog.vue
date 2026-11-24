@@ -50,6 +50,7 @@
               <!-- Asset Preview, fits its content, the form scrolls instead of shrinking it -->
               <JSONPreview
                 class="mt-4 flex-shrink-0"
+                download-file-name="asset"
                 height="auto"
                 :json-content="jsonContent"
                 title="Asset"

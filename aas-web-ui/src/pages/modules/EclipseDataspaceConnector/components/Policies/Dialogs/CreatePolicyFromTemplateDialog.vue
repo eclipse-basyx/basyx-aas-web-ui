@@ -59,9 +59,11 @@
           <JSONPreview
             v-if="selectedTemplate"
             class="mt-4"
+            download-file-name="policy"
+            height="auto"
             icon="mdi-shield-check-outline"
             :json-content="jsonContent"
-            :title="`Policy`"
+            title="Policy"
           />
         </v-form>
       </v-card-text>

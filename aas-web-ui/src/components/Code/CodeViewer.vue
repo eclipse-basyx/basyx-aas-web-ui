@@ -63,17 +63,19 @@
     <v-card-text>
       <v-progress-linear v-if="loading" aria-label="Loading preview" indeterminate />
       <v-alert v-else-if="error" role="alert" type="error" variant="tonal">{{ error }}</v-alert>
-      <v-empty-state v-else-if="!text" :title="emptyMessage" />
+      <v-empty-state v-else-if="!text && readOnly" :title="emptyMessage" />
 
       <CodeEditor
         v-else
         ref="codeEditor"
         :accessible-label="title"
+        :error="invalid"
         :height="height"
         :language="language"
         :model-value="text"
         :options="{ wordWrap: wordWrap ? 'on' : 'off', lineNumbers: lineNumbers ? 'on' : 'off' }"
-        read-only
+        :read-only="readOnly"
+        @update:model-value="emit('update:text', $event)"
       />
 
       <v-alert
@@ -104,6 +106,8 @@
     emptyMessage?: string
     copyLabel?: string
     downloadLabel?: string
+    readOnly?: boolean // false: the text can be edited, each edit by hand emits `update:text`
+    invalid?: boolean // Marks the editor as invalid, e.g. an edited text that is no valid JSON
   }>(), {
     language: 'json',
     title: 'JSON Preview',
@@ -112,7 +116,13 @@
     emptyMessage: 'No content available',
     copyLabel: 'Copy to clipboard',
     downloadLabel: 'Download',
+    readOnly: true,
+    invalid: false,
   })
+
+  const emit = defineEmits<{
+    'update:text': [value: string]
+  }>()
 
   const codeEditor = ref<{ find: () => void }>()
   const wordWrap = ref(true)
@@ -122,7 +132,7 @@
   let copyTimer: ReturnType<typeof setTimeout> | undefined
   let copyRevision = 0
 
-  const hasContent = computed(() => !props.loading && !props.error && !!props.text)
+  const hasContent = computed(() => !props.loading && !props.error && (!!props.text || !props.readOnly))
   const exportContent = computed(() => props.exportText ?? props.text)
 
   watch(exportContent, resetCopy)

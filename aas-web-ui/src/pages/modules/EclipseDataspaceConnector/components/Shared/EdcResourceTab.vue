@@ -197,6 +197,7 @@
 
           <template v-else>
             <JSONPreview
+              :download-file-name="selectedResource['@id']"
               :height="fullHeightMainJsonPreview"
               :icon="icon"
               :json-content="selectedResource"
@@ -221,6 +222,7 @@
   <UpdateEdcResourceDialog
     v-if="managementWritesAllowed"
     v-model="updateDialog.open"
+    :icon="icon"
     :label="label"
     :proxy-id="edcProxyId"
     :resource="updateDialog.resource"

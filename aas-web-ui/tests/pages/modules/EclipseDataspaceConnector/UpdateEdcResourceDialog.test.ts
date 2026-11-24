@@ -10,6 +10,12 @@ vi.mock('@/store/NavigationStore', () => ({
 }))
 
 const slotStub = { template: '<div><slot /></div>' }
+// Monaco doesn't load in jsdom; like CodeViewer, the stub emits only edits by hand, not changes of text
+const codeViewerStub = {
+  props: ['text', 'invalid', 'readOnly'],
+  emits: ['update:text'],
+  template: '<textarea class="code-editor" :value="text" @input="$emit(\'update:text\', $event.target.value)" />',
+}
 
 const asset = { '@id': 'asset-1', 'properties': { name: 'Asset 1' }, 'dataAddress': { type: 'HttpData' } }
 
@@ -28,6 +34,7 @@ async function openDialog (update = vi.fn()) {
         'v-divider': true,
         'v-spacer': true,
         'v-btn': { props: ['text', 'disabled'], template: '<button :disabled="disabled">{{ text }}</button>' },
+        'CodeViewer': codeViewerStub,
       },
     },
   })
@@ -35,13 +42,13 @@ async function openDialog (update = vi.fn()) {
   await wrapper.setProps({ modelValue: true })
   await flushPromises()
 
-  const editor = wrapper.find('pre.editor-content')
+  const editor = wrapper.find('textarea.code-editor')
+  expect(wrapper.findComponent(codeViewerStub).props('readOnly')).toBe(false)
   return {
     wrapper,
     updateButton: () => wrapper.findAll('button').find(button => button.text() === 'Update')!,
     editJson: async (text: string) => {
-      editor.element.textContent = text
-      await editor.trigger('input')
+      await editor.setValue(text)
     },
   }
 }

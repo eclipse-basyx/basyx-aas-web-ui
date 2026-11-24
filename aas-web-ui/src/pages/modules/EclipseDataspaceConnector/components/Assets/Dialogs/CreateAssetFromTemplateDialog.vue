@@ -83,9 +83,10 @@
               <JSONPreview
                 v-if="activeAssetTemplate"
                 class="mt-4 flex-shrink-0"
+                download-file-name="asset"
                 height="auto"
                 :json-content="jsonContent"
-                :title="`Asset`"
+                title="Asset"
               />
             </v-form>
           </v-main>
