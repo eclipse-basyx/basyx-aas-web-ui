@@ -137,3 +137,10 @@ export function splitEmbeddedHtml (text: string): Array<{ html: boolean, text: s
 
   return parts
 }
+
+/**
+ * Puts the indefinite article in front of a noun, chosen by its first letter, e.g. `an Asset` or `a Policy`.
+ */
+export function withIndefiniteArticle (noun: string): string {
+  return `${/^[aeiou]/i.test(noun) ? 'an' : 'a'} ${noun}`
+}

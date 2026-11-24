@@ -150,7 +150,7 @@
 
   // Composables
   const { fetchSmById } = useSMRepositoryClient()
-  const { nameToDisplay, descriptionToDisplay } = useReferableUtils()
+  const { referableMatchesSearch } = useReferableUtils()
   const { sortSmsForDisplay } = useSubmodelDisplay()
 
   // Data
@@ -162,18 +162,9 @@
   const loadFailure = ref<{ unauthorized: boolean } | null>(null) // None of the referenced Submodels could be loaded
 
   // Computed Properties
-  const submodelList = computed(() => {
-    const trimmedSearch = searchValue.value?.trim().toLowerCase() ?? ''
-    if (trimmedSearch === '') return allSubmodels.value
-
-    return allSubmodels.value.filter(
-      (sm: any) =>
-        sm.id?.toLowerCase().includes(trimmedSearch)
-        || sm.idShort?.toLowerCase().includes(trimmedSearch)
-        || nameToDisplay(sm).toLowerCase().includes(trimmedSearch)
-        || descriptionToDisplay(sm).toLowerCase().includes(trimmedSearch),
-    )
-  })
+  const submodelList = computed(() =>
+    allSubmodels.value.filter((sm: any) => referableMatchesSearch(sm, searchValue.value ?? '')),
+  )
   const allListedSelected = computed(() =>
     submodelList.value.length > 0 && submodelList.value.every(sm => submodelIsSelected(sm)),
   )

@@ -103,6 +103,21 @@ export function useReferableUtils () {
   }
 
   /**
+   * Checks if the ID, idShort, display name or description of a Referable object contains the search text, ignoring case,
+   * e.g. to filter a list by the search field above it. An empty search matches every Referable object.
+   *
+   * @param {any} referable - The Referable object to check.
+   * @param {string} search - The search text; leading and trailing whitespace is ignored.
+   * @returns {boolean} Returns true if the search text is empty or found in one of the fields, false otherwise.
+   */
+  function referableMatchesSearch (referable: any, search: string): boolean {
+    const searchLower = search.trim().toLowerCase()
+    return searchLower === ''
+      || [referable?.id, referable?.idShort, nameToDisplay(referable), descriptionToDisplay(referable)]
+        .some(text => typeof text === 'string' && text.toLowerCase().includes(searchLower))
+  }
+
+  /**
    * Checks if the `idShort` of a Referable object matches the given `idShort`.
    * The comparison can be performed in two modes:
    * - **startsWith**: checks if the `idShort` of the Referable object starts with the given `idShort`.
@@ -262,6 +277,7 @@ export function useReferableUtils () {
   return {
     nameToDisplay,
     descriptionToDisplay,
+    referableMatchesSearch,
     checkIdShort,
     getSubmodelElementByIdShort,
     getSubmodelElementsByIdShort,

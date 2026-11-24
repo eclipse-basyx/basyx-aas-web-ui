@@ -129,7 +129,7 @@ export interface CatenaXEdcDataPushRequest extends CatenaXEdcDataFetchRequest {
   data: unknown // JSON posted to the data plane of the push asset, e.g. an AAS or Submodel
 }
 
-export interface CatenaXEdcDtrMetadata {
+export interface CatenaXEdcTransferMetadata {
   assetId?: string
   providerId?: string
   agreementId?: string
@@ -137,9 +137,9 @@ export interface CatenaXEdcDtrMetadata {
   transferProcessId: string
 }
 
-export interface CatenaXEdcDtrResponse<T = unknown> {
+export interface CatenaXEdcTransferResponse<T = unknown> {
   data: T
-  edc: CatenaXEdcDtrMetadata
+  edc: CatenaXEdcTransferMetadata
 }
 
 /**
@@ -179,7 +179,7 @@ export type CatenaXEdcCatalogResult = { success: true, data: CatenaXEdcCatalog }
 /**
  * Result of fetching or pushing data, with the response of the data plane.
  */
-export type CatenaXEdcDataTransferResult = { success: true, data: CatenaXEdcDtrResponse } | CatenaXEdcFailure
+export type CatenaXEdcDataTransferResult = { success: true, data: CatenaXEdcTransferResponse } | CatenaXEdcFailure
 
 export function useCatenaXEdcClient (): {
   fetchStatus: (proxyId: string) => Promise<CatenaXEdcStatus | null>
@@ -200,15 +200,15 @@ export function useCatenaXEdcClient (): {
   fetchDtrShellDescriptors: (
     proxyId: string,
     request: CatenaXEdcDtrDescriptorPageRequest,
-  ) => Promise<CatenaXEdcDtrResponse | null>
+  ) => Promise<CatenaXEdcTransferResponse | null>
   fetchDtrShellDescriptorById: (
     proxyId: string,
     request: CatenaXEdcDtrDescriptorByIdRequest,
-  ) => Promise<CatenaXEdcDtrResponse | null>
+  ) => Promise<CatenaXEdcTransferResponse | null>
   fetchSubmodel: (
     proxyId: string,
     request: CatenaXEdcSubmodelRequest,
-  ) => Promise<CatenaXEdcDtrResponse | null>
+  ) => Promise<CatenaXEdcTransferResponse | null>
   fetchData: (proxyId: string, request: CatenaXEdcDataFetchRequest) => Promise<CatenaXEdcDataTransferResult>
   pushData: (proxyId: string, request: CatenaXEdcDataPushRequest) => Promise<CatenaXEdcDataTransferResult>
   consumeLastRequestFailureDetails: () => string | undefined
@@ -470,7 +470,7 @@ export function useCatenaXEdcClient (): {
   async function fetchDtrShellDescriptors (
     proxyId: string,
     request: CatenaXEdcDtrDescriptorPageRequest,
-  ): Promise<CatenaXEdcDtrResponse | null> {
+  ): Promise<CatenaXEdcTransferResponse | null> {
     const url = buildEdcProxyUrl(proxyId, 'dtr/shell-descriptors')
     if (!url) {
       return null
@@ -484,13 +484,13 @@ export function useCatenaXEdcClient (): {
       true,
     )
 
-    return result.success ? result.data as CatenaXEdcDtrResponse : null
+    return result.success ? result.data as CatenaXEdcTransferResponse : null
   }
 
   async function fetchDtrShellDescriptorById (
     proxyId: string,
     request: CatenaXEdcDtrDescriptorByIdRequest,
-  ): Promise<CatenaXEdcDtrResponse | null> {
+  ): Promise<CatenaXEdcTransferResponse | null> {
     const url = buildEdcProxyUrl(proxyId, 'dtr/shell-descriptors/by-id')
     if (!url) {
       return null
@@ -504,13 +504,13 @@ export function useCatenaXEdcClient (): {
       true,
     )
 
-    return result.success ? result.data as CatenaXEdcDtrResponse : null
+    return result.success ? result.data as CatenaXEdcTransferResponse : null
   }
 
   async function fetchSubmodel (
     proxyId: string,
     request: CatenaXEdcSubmodelRequest,
-  ): Promise<CatenaXEdcDtrResponse | null> {
+  ): Promise<CatenaXEdcTransferResponse | null> {
     const url = buildEdcProxyUrl(proxyId, 'submodels/fetch')
     if (!url) {
       return null
@@ -524,7 +524,7 @@ export function useCatenaXEdcClient (): {
       true,
     )
 
-    return result.success ? result.data as CatenaXEdcDtrResponse : null
+    return result.success ? result.data as CatenaXEdcTransferResponse : null
   }
 
   async function fetchData (
@@ -561,7 +561,7 @@ export function useCatenaXEdcClient (): {
     )
 
     return result.success
-      ? { success: true, data: result.data as CatenaXEdcDtrResponse }
+      ? { success: true, data: result.data as CatenaXEdcTransferResponse }
       : toEdcFailure(result)
   }
 

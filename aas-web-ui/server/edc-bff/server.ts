@@ -1,4 +1,4 @@
-import type { EdcDtrFetchResult } from './edcRequests.js'
+import type { EdcTransferResult } from './edcRequests.js'
 import type {
   EdcBffRuntimeConfig,
   EdcCatalogRequest,
@@ -93,9 +93,18 @@ function redactCredentials (url: string): string {
 const apiBasePath = '/api/catena-x/edc'
 const maxBodyBytes = 64 * 1024
 const maxPushBodyBytes = 16 * 1024 * 1024 // Pushed AAS or Submodels may be large
-const managementResources = ['assets', 'contractdefinitions', 'policydefinitions'] as const
+/**
+ * How the BFF handles each EDC management resource:
+ * - `hasSecrets`: the asset keeps secrets in its data address and private properties, see `assetSecrets.ts`
+ * - `updatesByPathId`: the EDC updates policies by the ID in the path, assets and contracts by the `@id` in the body
+ */
+const managementResources = {
+  assets: { hasSecrets: true, updatesByPathId: false },
+  contractdefinitions: { hasSecrets: false, updatesByPathId: false },
+  policydefinitions: { hasSecrets: false, updatesByPathId: true },
+} as const
 
-type EdcManagementResource = typeof managementResources[number]
+type EdcManagementResource = keyof typeof managementResources
 
 export function createEdcBffServer (config: EdcBffRuntimeConfig) {
   return createServer(async (request, response) => {
@@ -161,7 +170,7 @@ async function handleRequest (
     return
   }
 
-  for (const resource of managementResources) {
+  for (const resource of Object.keys(managementResources) as EdcManagementResource[]) {
     if (await handleManagementResourceRoute(request, response, proxy, route.action, resource)) {
       return
     }
@@ -202,9 +211,10 @@ async function handleManagementResourceRoute (
   action: string,
   resource: EdcManagementResource,
 ): Promise<boolean> {
+  const { hasSecrets } = managementResources[resource]
   if (request.method === 'POST') {
     if (action === `${resource}/request`) {
-      await handleQuerySpecRequest(request, response, proxy, `/v3/${resource}/request`, resource === 'assets')
+      await handleQuerySpecRequest(request, response, proxy, `/v3/${resource}/request`, hasSecrets)
       return true
     }
     if (action === resource) {
@@ -213,7 +223,7 @@ async function handleManagementResourceRoute (
         if (typeof body['@id'] === 'string') {
           assertIdAddressable(body['@id'], 'It could not be updated or deleted later.')
         }
-        if (resource === 'assets') {
+        if (hasSecrets) {
           assertNoSecretPlaceholders(body)
         }
         return body
@@ -244,12 +254,12 @@ async function handleManagementResourceRoute (
 /** Writes use the server's Management API key, so they need an explicit opt-in per proxy, also in auth mode `none`. */
 function assertManagementWritesAllowed (proxy: EdcProxyConfig): void {
   if (!proxy.allowManagementWrites) {
-    const error = createHttpError(
+    throw createHttpError(
       'EDC management writes are disabled for this proxy',
       403,
       `Set allowManagementWrites to true for the EDC proxy "${proxy.id}" to create, update or delete assets, policies and contracts.`,
+      'EDC_MANAGEMENT_WRITES_DISABLED',
     )
-    throw Object.assign(error, { code: 'EDC_MANAGEMENT_WRITES_DISABLED' })
   }
 }
 
@@ -352,29 +362,30 @@ async function handleUpdateRequest (
   action: string,
   resource: EdcManagementResource,
 ): Promise<void> {
-  const resourceId = decodePathSegment(action.slice(resource.length + 1)).trim()
-  if (!resourceId) {
-    throw createHttpError(`Missing EDC ${resource} ID`, 400)
-  }
-
-  // Policies are updated by their ID in the path, assets and contracts by the ID in the body
-  if (resource === 'policydefinitions') {
+  const resourceId = getResourceIdFromPath(action, resource)
+  const { hasSecrets, updatesByPathId } = managementResources[resource]
+  if (updatesByPathId) {
     assertIdAddressable(resourceId)
   }
-  const path = resource === 'policydefinitions'
+  const path = updatesByPathId
     ? `/v3/${resource}/${encodeURIComponent(resourceId)}`
     : `/v3/${resource}`
   const prepareBody = async (body: Record<string, unknown>) => {
     assertBodyIdMatchesPath(body, resourceId)
-    return resource === 'assets' ? restoreStoredAssetSecrets(proxy, body, resourceId) : body
+    return hasSecrets ? restoreStoredAssetSecrets(proxy, body, resourceId) : body
   }
   await handleJsonRequest(request, response, proxy, path, 'PUT', prepareBody)
 }
 
-/**
- * The EDC updates assets and contract definitions by the `@id` in the body, not by the ID in the path,
- * so both have to name the same resource.
- */
+/** Reads the resource ID of a route such as `assets/<id>`, refusing a missing one with 400. */
+function getResourceIdFromPath (action: string, resource: EdcManagementResource): string {
+  const resourceId = decodePathSegment(action.slice(resource.length + 1)).trim()
+  if (!resourceId) {
+    throw createHttpError(`Missing EDC ${resource} ID`, 400)
+  }
+  return resourceId
+}
+
 /**
  * Decodes a part of the request path, refusing an invalid percent-encoding such as `abc%E0` with 400.
  */
@@ -382,10 +393,7 @@ function decodePathSegment (segment: string): string {
   try {
     return decodeURIComponent(segment)
   } catch {
-    throw Object.assign(
-      createHttpError('Invalid percent-encoding in the request path', 400),
-      { code: 'INVALID_PATH_ENCODING' },
-    )
+    throw createHttpError('Invalid percent-encoding in the request path', 400, undefined, 'INVALID_PATH_ENCODING')
   }
 }
 
@@ -395,25 +403,35 @@ function decodePathSegment (segment: string): string {
  */
 function assertIdAddressable (resourceId: string, consequence = 'The EDC does not accept it in the request path.'): void {
   if (resourceId.includes('/')) {
-    throw Object.assign(
-      createHttpError('EDC resource ID contains "/"', 400, `The ID "${resourceId}" contains "/". ${consequence}`),
-      { code: 'EDC_ID_NOT_ADDRESSABLE' },
+    throw createHttpError(
+      'EDC resource ID contains "/"',
+      400,
+      `The ID "${resourceId}" contains "/". ${consequence}`,
+      'EDC_ID_NOT_ADDRESSABLE',
     )
   }
 }
 
+/**
+ * The EDC updates assets and contract definitions by the `@id` in the body, not by the ID in the path,
+ * so both have to name the same resource.
+ */
 function assertBodyIdMatchesPath (body: Record<string, unknown>, pathId: string): void {
   const bodyId = body['@id']
   if (typeof bodyId !== 'string' || bodyId === '') {
-    throw Object.assign(
-      createHttpError('Missing @id in the EDC resource', 400, `The body has to contain "@id": "${pathId}".`),
-      { code: 'EDC_ID_MISSING' },
+    throw createHttpError(
+      'Missing @id in the EDC resource',
+      400,
+      `The body has to contain "@id": "${pathId}".`,
+      'EDC_ID_MISSING',
     )
   }
   if (bodyId !== pathId) {
-    throw Object.assign(
-      createHttpError('@id differs from the ID in the path', 400, `The body names "${bodyId}", the path "${pathId}". An update cannot change the ID.`),
-      { code: 'EDC_ID_MISMATCH' },
+    throw createHttpError(
+      '@id differs from the ID in the path',
+      400,
+      `The body names "${bodyId}", the path "${pathId}". An update cannot change the ID.`,
+      'EDC_ID_MISMATCH',
     )
   }
 }
@@ -425,10 +443,7 @@ async function handleDeleteRequest (
   resource: EdcManagementResource,
 ): Promise<void> {
   assertProxyConfigured(proxy)
-  const resourceId = decodePathSegment(action.slice(resource.length + 1)).trim()
-  if (!resourceId) {
-    throw createHttpError(`Missing EDC ${resource} ID`, 400)
-  }
+  const resourceId = getResourceIdFromPath(action, resource)
   assertIdAddressable(resourceId)
 
   const edcResponse = await forwardToEdc(
@@ -444,7 +459,7 @@ async function handleJsonPostRequest<TBody> (
   request: IncomingMessage,
   response: ServerResponse,
   proxy: EdcProxyConfig,
-  runEdcRequest: (proxy: EdcProxyConfig, body: TBody) => Promise<EdcDtrFetchResult>,
+  runEdcRequest: (proxy: EdcProxyConfig, body: TBody) => Promise<EdcTransferResult>,
   maxBytes = maxBodyBytes,
 ): Promise<void> {
   assertProxyConfigured(proxy)

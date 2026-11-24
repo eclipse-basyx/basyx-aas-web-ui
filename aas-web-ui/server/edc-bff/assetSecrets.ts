@@ -242,8 +242,5 @@ function formatKeys (keys: string[]): string {
 }
 
 function createRedactedSecretError (details: string): Error {
-  return Object.assign(
-    createHttpError('Redacted EDC asset secret cannot be stored', 400, details),
-    { code: 'EDC_REDACTED_SECRET' },
-  )
+  return createHttpError('Redacted EDC asset secret cannot be stored', 400, details, 'EDC_REDACTED_SECRET')
 }

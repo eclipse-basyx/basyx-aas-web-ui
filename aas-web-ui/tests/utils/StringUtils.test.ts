@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { capitalizeFirstLetter, firstLetterToLowerCase, hasContent, safeSegment, splitEmbeddedHtml, stripLastCharacter } from '@/utils/StringUtils'
+import { capitalizeFirstLetter, firstLetterToLowerCase, hasContent, safeSegment, splitEmbeddedHtml, stripLastCharacter, withIndefiniteArticle } from '@/utils/StringUtils'
 
 describe('StringUtils.ts; Tests for \'capitalizeFirstLetter()\'', () => {
   // Define test data for capitalizeFirstLetter()
@@ -234,5 +234,14 @@ describe('StringUtils.ts; Tests for \'splitEmbeddedHtml()\'', () => {
       { html: false, text: 'Value <b>bold</b> is not a document' },
     ])
     expect(splitEmbeddedHtml('  ')).toEqual([])
+  })
+})
+
+describe('StringUtils.ts; Tests for \'withIndefiniteArticle()\'', () => {
+  it('chooses "an" before a vowel and "a" before a consonant, in any case', () => {
+    expect(withIndefiniteArticle('Asset')).toBe('an Asset')
+    expect(withIndefiniteArticle('asset')).toBe('an asset')
+    expect(withIndefiniteArticle('Policy')).toBe('a Policy')
+    expect(withIndefiniteArticle('contract')).toBe('a contract')
   })
 })

@@ -186,7 +186,7 @@
             <v-empty-state
               v-else
               icon="mdi-gesture-tap"
-              :text="`Please select ${/^[AEIOU]/.test(label) ? 'an' : 'a'} ${label} to view`"
+              :text="`Please select ${withIndefiniteArticle(label)} to view`"
               :title="`Select ${label}`"
             >
               <template #media>
@@ -262,6 +262,7 @@
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import { EDC_FILTERED_LIST_HEIGHT, EDC_JSON_PREVIEW_HEIGHT, EDC_LIST_HEIGHT, EDC_MAIN_HEIGHT, EDC_TAB_HEIGHT } from '@/pages/modules/EclipseDataspaceConnector/data/heights'
   import { debounce } from '@/utils/generalUtils'
+  import { withIndefiniteArticle } from '@/utils/StringUtils'
 
   interface ResourceDialog {
     open: boolean

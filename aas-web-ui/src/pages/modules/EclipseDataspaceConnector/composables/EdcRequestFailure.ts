@@ -1,5 +1,6 @@
 import type { CatenaXEdcFailure } from '@/composables/Client/CatenaXEdcClient'
 import { useNavigationStore } from '@/store/NavigationStore'
+import { capitalizeFirstLetter, withIndefiniteArticle } from '@/utils/StringUtils'
 
 export type EdcRequestAction = 'create' | 'update' | 'delete'
 
@@ -9,8 +10,7 @@ export type EdcRequestAction = 'create' | 'update' | 'delete'
  */
 export function edcRequestFailureText (failure: CatenaXEdcFailure, resourceLabel: string, action: EdcRequestAction): string {
   if (action === 'create' && failure.status === 409) {
-    const article = /^[aeiou]/i.test(resourceLabel) ? 'An' : 'A'
-    return `${article} ${resourceLabel} with this ID already exists.`
+    return `${capitalizeFirstLetter(withIndefiniteArticle(resourceLabel))} with this ID already exists.`
   }
   if (action !== 'create' && failure.status === 404) {
     return `The ${resourceLabel} does not exist (anymore).`

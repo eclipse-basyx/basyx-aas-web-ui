@@ -174,7 +174,7 @@
 
 <script lang="ts" setup>
   import type { AasListPageResult, AssetIdFilter } from '@/composables/Client/AASRegistryClient'
-  import type { CatenaXEdcDtrMetadata } from '@/composables/Client/CatenaXEdcClient'
+  import type { CatenaXEdcTransferMetadata } from '@/composables/Client/CatenaXEdcClient'
   import type { EdcSubmodelViewState } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
   import type { CatenaXPartner, InfrastructureConfig } from '@/types/Infrastructure'
   import { useRoute, useRouter } from 'vue-router'
@@ -920,7 +920,7 @@
 
   function rememberEdcTransferProcessId (
     assetId: string,
-    metadata: CatenaXEdcDtrMetadata,
+    metadata: CatenaXEdcTransferMetadata,
     counterPartyAddress: string,
   ): void {
     const transferProcessId = metadata.transferProcessId?.trim()

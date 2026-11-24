@@ -99,7 +99,7 @@ export interface EdcAssetOffer {
 
 export type DigitalTwinRegistryOffer = EdcAssetOffer
 
-export interface EdcDtrFetchMetadata {
+export interface EdcTransferMetadata {
   assetId?: string
   providerId?: string
   agreementId?: string
@@ -107,13 +107,16 @@ export interface EdcDtrFetchMetadata {
   transferProcessId: string
 }
 
-export interface EdcDtrFetchResult {
+/** Data address of a negotiated EDR, i.e. the data plane endpoint and its authorization, with the EDC metadata */
+type EdcTransferAccess = { dataAddress: Record<string, unknown>, metadata: EdcTransferMetadata }
+
+export interface EdcTransferResult {
   status: number
   data: unknown
-  metadata: EdcDtrFetchMetadata
+  metadata: EdcTransferMetadata
 }
 
-export interface EdcDtrFetchOptions {
+export interface EdcTransferOptions {
   fetchFn?: typeof fetch
   pollingAttempts?: number
   pollingIntervalMs?: number
@@ -400,8 +403,8 @@ export function buildEdrRequestQueryBody (contractNegotiationId: string): Record
 export async function fetchDtrShellDescriptors (
   proxy: EdcProxyConfig,
   request: EdcDtrDescriptorRequest,
-  options: EdcDtrFetchOptions = {},
-): Promise<EdcDtrFetchResult> {
+  options: EdcTransferOptions = {},
+): Promise<EdcTransferResult> {
   const access = await ensureDtrAccess(proxy, request, options)
   const queryParams = new URLSearchParams()
   const limit = normalizeLimit(request.limit)
@@ -425,8 +428,8 @@ export async function fetchDtrShellDescriptors (
 export async function fetchDtrShellDescriptorById (
   proxy: EdcProxyConfig,
   request: EdcDtrDescriptorByIdRequest,
-  options: EdcDtrFetchOptions = {},
-): Promise<EdcDtrFetchResult> {
+  options: EdcTransferOptions = {},
+): Promise<EdcTransferResult> {
   const descriptorId = trimString(request.descriptorId)
   if (!descriptorId) {
     throw createHttpError('descriptorId is required for DTR descriptor lookup', 400)
@@ -445,8 +448,8 @@ export async function fetchDtrShellDescriptorById (
 export async function fetchSubmodel (
   proxy: EdcProxyConfig,
   request: EdcSubmodelFetchRequest,
-  options: EdcDtrFetchOptions = {},
-): Promise<EdcDtrFetchResult> {
+  options: EdcTransferOptions = {},
+): Promise<EdcTransferResult> {
   const endpoint = extractSubmodelEndpointInfo(request)
   const access = await ensureSubmodelAccess(proxy, request, endpoint, options)
   return fetchSubmodelData(proxy, access, endpoint.href, options.fetchFn ?? fetch)
@@ -458,27 +461,17 @@ export async function fetchSubmodel (
 export async function fetchData (
   proxy: EdcProxyConfig,
   request: EdcDataFetchRequest,
-  options: EdcDtrFetchOptions = {},
-): Promise<EdcDtrFetchResult> {
+  options: EdcTransferOptions = {},
+): Promise<EdcTransferResult> {
   const access = await negotiateAsset(proxy, request, 'fetch', options)
-
-  const { response, data } = await requestDataPlane(proxy, trimString(access.dataAddress.endpoint), {
-    method: 'GET',
-    headers: {
-      Authorization: trimString(access.dataAddress.authorization),
-      Accept: 'application/json',
-    },
-  }, options.fetchFn ?? fetch)
-
-  if (!response.ok) {
-    throw createHttpError(`Data plane fetch failed (${response.status})`, 502)
-  }
-
-  return {
-    status: response.status,
-    data,
-    metadata: access.metadata,
-  }
+  return requestEdrData(
+    proxy,
+    access,
+    trimString(access.dataAddress.endpoint),
+    { method: 'GET' },
+    'Data plane fetch failed',
+    options.fetchFn ?? fetch,
+  )
 }
 
 /**
@@ -487,33 +480,21 @@ export async function fetchData (
 export async function pushData (
   proxy: EdcProxyConfig,
   request: EdcDataPushRequest,
-  options: EdcDtrFetchOptions = {},
-): Promise<EdcDtrFetchResult> {
+  options: EdcTransferOptions = {},
+): Promise<EdcTransferResult> {
   if (!request.data || typeof request.data !== 'object') {
     throw createHttpError('data is required for EDC data push', 400)
   }
 
   const access = await negotiateAsset(proxy, request, 'push', options)
-
-  const { response, data } = await requestDataPlane(proxy, trimString(access.dataAddress.endpoint), {
-    method: 'POST',
-    headers: {
-      'Authorization': trimString(access.dataAddress.authorization),
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-    body: JSON.stringify(request.data),
-  }, options.fetchFn ?? fetch)
-
-  if (!response.ok) {
-    throw createHttpError(`Data plane push failed (${response.status})`, 502)
-  }
-
-  return {
-    status: response.status,
-    data,
-    metadata: access.metadata,
-  }
+  return requestEdrData(
+    proxy,
+    access,
+    trimString(access.dataAddress.endpoint),
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(request.data) },
+    'Data plane push failed',
+    options.fetchFn ?? fetch,
+  )
 }
 
 export function extractSubmodelEndpointInfo (request: EdcSubmodelFetchRequest): SubmodelEndpointInfo {
@@ -633,8 +614,8 @@ function assertCounterPartyAddressAllowed (proxy: EdcProxyConfig, counterPartyAd
 async function ensureDtrAccess (
   proxy: EdcProxyConfig,
   request: EdcDtrDescriptorRequest | EdcDtrDescriptorByIdRequest,
-  options: EdcDtrFetchOptions,
-): Promise<{ dataAddress: Record<string, unknown>, metadata: EdcDtrFetchMetadata }> {
+  options: EdcTransferOptions,
+): Promise<EdcTransferAccess> {
   const transferProcessId = trimString(request.transferProcessId)
   const fetchFn = options.fetchFn ?? fetch
 
@@ -671,8 +652,8 @@ async function ensureSubmodelAccess (
   proxy: EdcProxyConfig,
   request: EdcSubmodelFetchRequest,
   endpoint: SubmodelEndpointInfo,
-  options: EdcDtrFetchOptions,
-): Promise<{ dataAddress: Record<string, unknown>, metadata: EdcDtrFetchMetadata }> {
+  options: EdcTransferOptions,
+): Promise<EdcTransferAccess> {
   const transferProcessId = trimString(request.transferProcessId)
   const fetchFn = options.fetchFn ?? fetch
 
@@ -710,8 +691,8 @@ async function negotiateCatalogOffer (
   proxy: EdcProxyConfig,
   catalogRequest: EdcCatalogRequest,
   extractOffer: (catalog: unknown) => EdcAssetOffer,
-  options: EdcDtrFetchOptions,
-): Promise<{ dataAddress: Record<string, unknown>, metadata: EdcDtrFetchMetadata }> {
+  options: EdcTransferOptions,
+): Promise<EdcTransferAccess> {
   const fetchFn = options.fetchFn ?? fetch
   const catalogResponse = await forwardToEdc(
     proxy,
@@ -740,8 +721,8 @@ async function negotiateAsset (
   proxy: EdcProxyConfig,
   request: EdcDataFetchRequest,
   transfer: 'fetch' | 'push',
-  options: EdcDtrFetchOptions,
-): Promise<{ dataAddress: Record<string, unknown>, metadata: EdcDtrFetchMetadata }> {
+  options: EdcTransferOptions,
+): Promise<EdcTransferAccess> {
   const assetId = trimString(request.assetId)
   if (!assetId) {
     throw createHttpError(`assetId is required for EDC data ${transfer}`, 400)
@@ -769,9 +750,9 @@ async function negotiateEdrAccess (
   proxy: EdcProxyConfig,
   offer: EdcAssetOffer,
   negotiationResponse: EdcForwardResult,
-  options: EdcDtrFetchOptions,
+  options: EdcTransferOptions,
   fetchFn: typeof fetch,
-): Promise<{ dataAddress: Record<string, unknown>, metadata: EdcDtrFetchMetadata }> {
+): Promise<EdcTransferAccess> {
   assertSuccessfulEdcResponse(negotiationResponse, 'Contract negotiation failed')
 
   const contractNegotiationId = trimString((negotiationResponse.data as Record<string, unknown>)?.['@id'])
@@ -888,48 +869,48 @@ async function getDataAddress (
 
 async function fetchDtrData (
   proxy: EdcProxyConfig,
-  access: { dataAddress: Record<string, unknown>, metadata: EdcDtrFetchMetadata },
+  access: EdcTransferAccess,
   path: string,
   queryParams: URLSearchParams,
   fetchFn: typeof fetch,
-): Promise<EdcDtrFetchResult> {
+): Promise<EdcTransferResult> {
   const url = buildDtrDataUrl(trimString(access.dataAddress.endpoint), path, queryParams)
-  const { response, data } = await requestDataPlane(proxy, url, {
-    method: 'GET',
-    headers: {
-      Authorization: trimString(access.dataAddress.authorization),
-      Accept: 'application/json',
-    },
-  }, fetchFn)
-
-  if (!response.ok) {
-    throw createHttpError(`DTR data plane request failed (${response.status})`, 502)
-  }
-
-  return {
-    status: response.status,
-    data,
-    metadata: access.metadata,
-  }
+  return requestEdrData(proxy, access, url, { method: 'GET' }, 'DTR data plane request failed', fetchFn)
 }
 
 async function fetchSubmodelData (
   proxy: EdcProxyConfig,
-  access: { dataAddress: Record<string, unknown>, metadata: EdcDtrFetchMetadata },
+  access: EdcTransferAccess,
   href: string,
   fetchFn: typeof fetch,
-): Promise<EdcDtrFetchResult> {
+): Promise<EdcTransferResult> {
   const url = buildSubmodelDataUrl(trimString(access.dataAddress.endpoint), href)
+  return requestEdrData(proxy, access, url, { method: 'GET' }, 'Submodel data plane request failed', fetchFn)
+}
+
+/**
+ * Sends a JSON request with the authorization of the EDR to its data plane and answers with the data and the EDC metadata.
+ * A failed response becomes a 502 error that starts with `failureMessage`.
+ */
+async function requestEdrData (
+  proxy: EdcProxyConfig,
+  access: EdcTransferAccess,
+  url: string,
+  init: { method: 'GET' | 'POST', headers?: Record<string, string>, body?: string },
+  failureMessage: string,
+  fetchFn: typeof fetch,
+): Promise<EdcTransferResult> {
   const { response, data } = await requestDataPlane(proxy, url, {
-    method: 'GET',
+    ...init,
     headers: {
       Authorization: trimString(access.dataAddress.authorization),
       Accept: 'application/json',
+      ...init.headers,
     },
   }, fetchFn)
 
   if (!response.ok) {
-    throw createHttpError(`Submodel data plane request failed (${response.status})`, 502)
+    throw createHttpError(`${failureMessage} (${response.status})`, 502)
   }
 
   return {
@@ -950,13 +931,11 @@ async function requestDataPlane (
   fetchFn: typeof fetch,
 ): Promise<{ response: Response, data: unknown }> {
   if (!isDataPlaneAddressAllowed(proxy, url)) {
-    throw Object.assign(
-      createHttpError(
-        'Data plane address is not allowed by the EDC proxy allowlist',
-        403,
-        `Add the data plane ${describeOrigin(url)} to CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES (or allowedDataPlaneAddresses of the EDC proxy "${proxy.id}").`,
-      ),
-      { code: 'DATA_PLANE_ADDRESS_NOT_ALLOWED' },
+    throw createHttpError(
+      'Data plane address is not allowed by the EDC proxy allowlist',
+      403,
+      `Add the data plane ${describeOrigin(url)} to CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES (or allowedDataPlaneAddresses of the EDC proxy "${proxy.id}").`,
+      'DATA_PLANE_ADDRESS_NOT_ALLOWED',
     )
   }
 
@@ -966,14 +945,12 @@ async function requestDataPlane (
   try {
     const response = await fetchFn(url, { ...init, redirect: 'manual', signal: controller.signal })
     if (response.status >= 300 && response.status < 400) {
-      throw Object.assign(
-        createHttpError(
-          `Data plane redirect was not followed (${response.status})`,
-          502,
-          `The data plane ${describeOrigin(url)} redirected to ${describeRedirectOrigin(url, response)}. `
-          + 'Redirects of a data plane are not followed, as they could lead past the data plane allowlist.',
-        ),
-        { code: 'DATA_PLANE_REDIRECT_REFUSED' },
+      throw createHttpError(
+        `Data plane redirect was not followed (${response.status})`,
+        502,
+        `The data plane ${describeOrigin(url)} redirected to ${describeRedirectOrigin(url, response)}. `
+        + 'Redirects of a data plane are not followed, as they could lead past the data plane allowlist.',
+        'DATA_PLANE_REDIRECT_REFUSED',
       )
     }
     return { response, data: await parseResponseBody(response) }

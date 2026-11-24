@@ -114,7 +114,7 @@
 
   // Composables
   const { fetchAasSmListById } = useAASHandling()
-  const { nameToDisplay, descriptionToDisplay } = useReferableUtils()
+  const { nameToDisplay, referableMatchesSearch } = useReferableUtils()
   const { sortSmsForDisplay } = useSubmodelDisplay()
 
   // Stores
@@ -212,19 +212,7 @@
   }
 
   function filterSubmodelList (value: string): void {
-    if (!value || value.trim() === '') {
-      submodelList.value = submodelListUnfiltered.value
-    } else {
-      // Filter list of SMs (cf. AASList.vue)
-      const submodelListFiltered = submodelListUnfiltered.value.filter(
-        (sm: any) =>
-          sm.id.toLowerCase().includes(value.toLowerCase())
-          || sm.idShort.toLowerCase().includes(value.toLowerCase())
-          || nameToDisplay(sm).toLowerCase().includes(value.toLowerCase())
-          || descriptionToDisplay(sm).toLowerCase().includes(value.toLowerCase()),
-      )
-      submodelList.value = submodelListFiltered
-    }
+    submodelList.value = submodelListUnfiltered.value.filter((sm: any) => referableMatchesSearch(sm, value ?? ''))
     scrollToSelectedSubmodel()
   }
 
