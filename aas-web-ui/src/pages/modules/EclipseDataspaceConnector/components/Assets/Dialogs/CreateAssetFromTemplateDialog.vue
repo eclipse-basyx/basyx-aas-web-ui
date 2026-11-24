@@ -155,7 +155,7 @@
 
   // Data
   const createAssetDialog = ref(false)
-  const selectedTemplate = ref<'default' | 'railwayXPush' | ''>('')
+  const selectedTemplate = ref<'default' | 'digitalTwinRegistry' | 'submodelService' | ''>('')
   const form = ref<any>(null)
   const placeholderValues = ref<Record<string, string>>({})
   const oauth2Drawer = ref(false)

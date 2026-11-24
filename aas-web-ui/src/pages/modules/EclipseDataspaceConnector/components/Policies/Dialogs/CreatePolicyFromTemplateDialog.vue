@@ -126,7 +126,7 @@
 
   // Data
   const createPolicyDialog = ref(false)
-  const selectedTemplate = ref<'access' | 'usage' | 'bpn' | ''>('')
+  const selectedTemplate = ref<'access' | 'usage' | 'usageCxPcf' | 'usageCxDppDbp' | 'usageCxDtr' | 'usageCxSmService' | 'bpn' | ''>('')
   const form = ref<any>(null)
   const placeholderValues = ref<Record<string, string>>({})
 
