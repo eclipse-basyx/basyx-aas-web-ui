@@ -215,12 +215,13 @@
   import type { QueryLanguageQuery, QueryTarget } from '@/types/QueryLanguage'
   import type { ComponentPublicInstance, Ref } from 'vue'
   import { useTheme } from 'vuetify'
-  import { appendOrMergeSortedAasById, compareAasById } from '@/composables/AAS/AASListAccumulation'
+  import { appendOrMergeSortedAasById, compareAasById, withPinnedItem } from '@/composables/AAS/AASListAccumulation'
   import { useAASListPagination } from '@/composables/AAS/AASListPagination'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useAASRepositoryClient } from '@/composables/Client/AASRepositoryClient'
   import { useQueryLanguageClient } from '@/composables/Client/QueryLanguageClient'
   import { useQuerySearch } from '@/composables/QueryLanguage/QuerySearch'
+  import { useQuerySearchScroll } from '@/composables/QueryLanguage/QuerySearchScroll'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { getActiveComponentUrlForTemplate } from '@/utils/InfrastructureUtils'
   import {
@@ -268,7 +269,6 @@
   const advancedQueryDraft = ref('')
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null)
   const loadFailure = ref<{ status?: number } | null>(null) // Failure of the first page, which leaves the list without AAS
-  let queryScrollContainer: HTMLElement | null = null
 
   const {
     hasMorePages,
@@ -326,6 +326,17 @@
     getKey: item => item?.id ?? JSON.stringify(item),
     fetchPage: (query, options) =>
       queryPage<any>(aasRepoUrl.value, queryTarget, query, { ...options, infrastructure: props.infrastructure ?? undefined }),
+  })
+
+  const { activateQueryResults, unbindQueryScrollListener, retryQueryPage } = useQuerySearchScroll({
+    querySearch,
+    getScrollContainer: getVirtualScrollContainer,
+    prefetchDistance: itemHeight * prefetchThresholdInRows,
+    stopPagination: () => {
+      invalidatePaginationGeneration()
+      unbindVirtualScrollListener()
+    },
+    syncItems: syncQueryItems,
   })
 
   // Computed Properties
@@ -451,7 +462,7 @@
 
   function applyCurrentFilter (): void {
     if (querySearch.activeMode.value) {
-      aasList.value = withPinnedSelectedItem(allLoadedAas.value)
+      aasList.value = withPinnedItem(allLoadedAas.value, selectedAas.value)
       return
     }
 
@@ -466,16 +477,7 @@
           || aas.descLower.includes(trimmedSearch),
       )
 
-    aasList.value = withPinnedSelectedItem(filteredItems)
-  }
-
-  function withPinnedSelectedItem (items: any[]): any[] {
-    if (!selectedAas.value?.id) return items
-
-    return [
-      selectedAas.value,
-      ...items.filter(item => item?.id !== selectedAas.value.id),
-    ]
+    aasList.value = withPinnedItem(filteredItems, selectedAas.value)
   }
 
   async function submitSearch (): Promise<void> {
@@ -549,51 +551,6 @@
       .map(item => preprocessListItem(item))
       .toSorted(compareAasById)
     applyCurrentFilter()
-  }
-
-  function activateQueryResults (): void {
-    invalidatePaginationGeneration()
-    unbindVirtualScrollListener()
-    unbindQueryScrollListener()
-    syncQueryItems()
-    void nextTick(bindQueryScrollListener)
-  }
-
-  function bindQueryScrollListener (): void {
-    if (!querySearch.activeMode.value) return
-    const container = getVirtualScrollContainer()
-    if (!container || container === queryScrollContainer) return
-
-    unbindQueryScrollListener()
-    queryScrollContainer = container
-    queryScrollContainer.addEventListener('scroll', onQueryScroll, { passive: true })
-  }
-
-  function unbindQueryScrollListener (): void {
-    queryScrollContainer?.removeEventListener('scroll', onQueryScroll)
-    queryScrollContainer = null
-  }
-
-  function onQueryScroll (): void {
-    if (
-      !queryScrollContainer
-      || !querySearch.hasMore.value
-      || querySearch.loadingMore.value
-      || querySearch.failed.value
-    ) return
-    const remaining = queryScrollContainer.scrollHeight - queryScrollContainer.scrollTop - queryScrollContainer.clientHeight
-    if (remaining > itemHeight * prefetchThresholdInRows) return
-
-    void querySearch.loadMore().then(success => {
-      if (success) syncQueryItems()
-    })
-  }
-
-  function retryQueryPage (): void {
-    querySearch.failed.value = false
-    void querySearch.loadMore().then(success => {
-      if (success) syncQueryItems()
-    })
   }
 
   function selectAas (aas: any): void {

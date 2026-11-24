@@ -84,3 +84,17 @@ export function appendOrMergeSortedAasById<T extends AasListItemLike> (existingI
   // Fallback for out-of-order or overlapping pages to preserve deterministic list ordering.
   return mergeSortedAasById(existingItems, incomingItems)
 }
+
+/**
+ * Puts the pinned item first, e.g. the selected AAS, and leaves out its copy among the items.
+ */
+export function withPinnedItem<T extends AasListItemLike> (items: Array<T>, pinnedItem: T | null | undefined): Array<T> {
+  if (!pinnedItem?.id) {
+    return items
+  }
+
+  return [
+    pinnedItem,
+    ...items.filter(item => item?.id !== pinnedItem.id),
+  ]
+}

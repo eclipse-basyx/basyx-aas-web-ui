@@ -437,7 +437,7 @@
   import { useRoute, useRouter } from 'vue-router'
   import { useTheme } from 'vuetify'
   import { useAASHandling } from '@/composables/AAS/AASHandling'
-  import { appendOrMergeSortedAasById, compareAasById } from '@/composables/AAS/AASListAccumulation'
+  import { appendOrMergeSortedAasById, compareAasById, withPinnedItem } from '@/composables/AAS/AASListAccumulation'
   import { useAASListPagination } from '@/composables/AAS/AASListPagination'
   import { useAASListStatusChecks } from '@/composables/AAS/AASListStatusChecks'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
@@ -445,6 +445,7 @@
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { useQuerySearch } from '@/composables/QueryLanguage/QuerySearch'
   import { useQuerySearchRoute } from '@/composables/QueryLanguage/QuerySearchRoute'
+  import { useQuerySearchScroll } from '@/composables/QueryLanguage/QuerySearchScroll'
   import { validateQueryLanguageSchema } from '@/pages/modules/queryLanguage/queryLanguageSchemaValidation'
   import { useAASStore } from '@/store/AASDataStore'
   import { useEnvStore } from '@/store/EnvironmentStore'
@@ -524,7 +525,6 @@
   const qrScannerDialog = ref(false)
   const accessDialog = ref(false)
   const accessTarget = ref<ResourceAccessTarget>()
-  let queryScrollContainer: HTMLElement | null = null
   let changingAasSearchScope = false
   let ignoreNextSearchRouteUpdate = false
   let routeSearchGeneration = 0
@@ -582,6 +582,17 @@
         items: page.success ? enrichAasShellListItems(page.items, source) : [],
       }
     },
+  })
+
+  const { activateQueryResults, unbindQueryScrollListener, retryQueryPage } = useQuerySearchScroll({
+    querySearch,
+    getScrollContainer: getVirtualScrollContainer,
+    prefetchDistance: itemHeight * prefetchThresholdInRows,
+    stopPagination: () => {
+      invalidatePaginationGeneration()
+      unbindVirtualScrollListener()
+    },
+    syncItems: syncQueryItems,
   })
 
   const { updateStatus } = useAASListStatusChecks({
@@ -850,13 +861,7 @@
   }
 
   function withPinnedSelectedItem (items: any[]): any[] {
-    const pinnedSelectedItem = createPinnedSelectedItem()
-    if (!pinnedSelectedItem) return items
-
-    return [
-      pinnedSelectedItem,
-      ...items.filter(item => item?.id !== pinnedSelectedItem.id),
-    ]
+    return withPinnedItem(items, createPinnedSelectedItem())
   }
 
   function createPinnedSelectedItem (): any | undefined {
@@ -1180,51 +1185,6 @@
       .map(item => preprocessListItem(item))
       .toSorted(compareAasById)
     applyCurrentFilter()
-  }
-
-  function activateQueryResults (): void {
-    invalidatePaginationGeneration()
-    unbindVirtualScrollListener()
-    unbindQueryScrollListener()
-    syncQueryItems()
-    void nextTick(bindQueryScrollListener)
-  }
-
-  function bindQueryScrollListener (): void {
-    if (!querySearch.activeMode.value) return
-    const container = getVirtualScrollContainer()
-    if (!container || container === queryScrollContainer) return
-
-    unbindQueryScrollListener()
-    queryScrollContainer = container
-    queryScrollContainer.addEventListener('scroll', onQueryScroll, { passive: true })
-  }
-
-  function unbindQueryScrollListener (): void {
-    queryScrollContainer?.removeEventListener('scroll', onQueryScroll)
-    queryScrollContainer = null
-  }
-
-  function onQueryScroll (): void {
-    if (
-      !queryScrollContainer
-      || !querySearch.hasMore.value
-      || querySearch.loadingMore.value
-      || querySearch.failed.value
-    ) return
-    const remaining = queryScrollContainer.scrollHeight - queryScrollContainer.scrollTop - queryScrollContainer.clientHeight
-    if (remaining > itemHeight * prefetchThresholdInRows) return
-
-    void querySearch.loadMore().then(success => {
-      if (success) syncQueryItems()
-    })
-  }
-
-  function retryQueryPage (): void {
-    querySearch.failed.value = false
-    void querySearch.loadMore().then(success => {
-      if (success) syncQueryItems()
-    })
   }
 
   // Function to select an AAS

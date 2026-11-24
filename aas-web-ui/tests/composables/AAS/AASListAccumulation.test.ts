@@ -4,6 +4,7 @@ import {
   appendOrMergeSortedAasById,
   compareAasById,
   mergeSortedAasById,
+  withPinnedItem,
 } from '@/composables/AAS/AASListAccumulation'
 
 describe('AASListAccumulation.ts', () => {
@@ -58,5 +59,14 @@ describe('AASListAccumulation.ts', () => {
       { id: 'aas-003' },
       { id: 'aas-004' },
     ])
+  })
+
+  it('puts the pinned item first without its copy among the items', () => {
+    const items = [{ id: 'a' }, { id: 'b' }, { id: 'c' }]
+
+    expect(withPinnedItem(items, { id: 'b' })).toEqual([{ id: 'b' }, { id: 'a' }, { id: 'c' }])
+    expect(withPinnedItem(items, { id: 'x' })).toEqual([{ id: 'x' }, ...items])
+    expect(withPinnedItem(items, null)).toBe(items)
+    expect(withPinnedItem(items, { id: '' })).toBe(items)
   })
 })
