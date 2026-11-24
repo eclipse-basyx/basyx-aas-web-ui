@@ -357,7 +357,7 @@ export function buildEdrContractRequestBody (
  */
 function versionedCounterPartyAddress (counterPartyAddress: string): string {
   const path = dspAddressPath(counterPartyAddress)
-  const versionedPath = path.endsWith(dsp2025PathSuffix) ? path : path + dsp2025PathSuffix
+  const versionedPath = path.endsWith(dsp2025PathSuffix) ? path : `${path}${dsp2025PathSuffix}`
   try {
     const url = new URL(counterPartyAddress)
     url.pathname = versionedPath

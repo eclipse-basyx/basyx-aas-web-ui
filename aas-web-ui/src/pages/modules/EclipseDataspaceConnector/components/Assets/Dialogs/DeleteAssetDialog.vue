@@ -132,6 +132,6 @@
       ? `\n\nAlready deleted Contracts:\n${deletedContractIds.join('\n')}`
       : ''
     // Without a status, the dialog shows the details as they are
-    return { success: false, details: details + deletedContracts }
+    return { success: false, details: `${details}${deletedContracts}` }
   }
 </script>

@@ -185,8 +185,8 @@ describe('EDC BFF request helpers', () => {
       'protocol': 'dataspace-protocol-http:2025-1',
       'policy': {
         '@id': 'offer-1',
-        [odrlNamespace + 'assigner']: { '@id': 'TEST_PARTICIPANT_ID' },
-        [odrlNamespace + 'target']: { '@id': 'dtr-asset' },
+        [`${odrlNamespace}assigner`]: { '@id': 'TEST_PARTICIPANT_ID' },
+        [`${odrlNamespace}target`]: { '@id': 'dtr-asset' },
       },
     })
   })
@@ -216,8 +216,8 @@ describe('EDC BFF request helpers', () => {
     )).toMatchObject({
       protocol: 'dataspace-protocol-http:2025-1',
       policy: {
-        [odrlNamespace + 'assigner']: { '@id': 'TEST_PARTICIPANT_ID' },
-        [odrlNamespace + 'target']: { '@id': 'dtr-asset' },
+        [`${odrlNamespace}assigner`]: { '@id': 'TEST_PARTICIPANT_ID' },
+        [`${odrlNamespace}target`]: { '@id': 'dtr-asset' },
       },
     })
   })
@@ -247,8 +247,8 @@ describe('EDC BFF request helpers', () => {
       '@id': 'offer-1',
       '@type': 'Offer',
       'permission': [{ action: 'use' }],
-      [odrlNamespace + 'assigner']: { '@id': 'TEST_PARTICIPANT_ID' },
-      [odrlNamespace + 'target']: { '@id': 'submodel-asset' },
+      [`${odrlNamespace}assigner`]: { '@id': 'TEST_PARTICIPANT_ID' },
+      [`${odrlNamespace}target`]: { '@id': 'submodel-asset' },
     })
   })
 
@@ -667,7 +667,7 @@ describe('EDC BFF request helpers', () => {
 
       if (urlString.endsWith('/management/v3/edrs')) {
         expect(JSON.parse(String(init?.body)).policy).toMatchObject({
-          [odrlNamespace + 'target']: { '@id': 'push-asset' },
+          [`${odrlNamespace}target`]: { '@id': 'push-asset' },
         })
         return Response.json({ '@id': 'push-negotiation-1' })
       }

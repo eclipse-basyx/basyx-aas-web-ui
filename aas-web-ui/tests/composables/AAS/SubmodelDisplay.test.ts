@@ -34,6 +34,6 @@ describe('SubmodelDisplay.ts', () => {
 
   it('sorts SMs by displayed title and version', () => {
     const sorted = sortSmsForDisplay([{ idShort: 'B' }, { idShort: 'A', administration: { version: '2' } }, { idShort: 'A', administration: { version: '1' } }])
-    expect(sorted.map(sm => sm.idShort + (sm.administration?.version ?? ''))).toEqual(['A1', 'A2', 'B'])
+    expect(sorted.map(sm => `${sm.idShort}${sm.administration?.version ?? ''}`)).toEqual(['A1', 'A2', 'B'])
   })
 })

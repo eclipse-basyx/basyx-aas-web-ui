@@ -22,7 +22,7 @@ function assetTypeQuerySpec (taxonomyType: string): CatenaXEdcQuerySpec {
         '@type': 'edc:Criterion',
         'operandLeft': `'${DCT_NAMESPACE}type'.'@id'`,
         'operator': '=',
-        'operandRight': CX_TAXO_NAMESPACE + taxonomyType,
+        'operandRight': `${CX_TAXO_NAMESPACE}${taxonomyType}`,
       },
     ],
   }

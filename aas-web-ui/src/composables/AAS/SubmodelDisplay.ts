@@ -64,8 +64,8 @@ export function useSubmodelDisplay () {
   function sortSmsForDisplay (sms: Array<any>): Array<any> {
     // Sort SMs with respect to displayed title and version
     return sms.toSorted((smA: any, smB: any) =>
-      smTitleToDisplay(smA) + '|' + smVersionToDisplay(smA)
-      > smTitleToDisplay(smB) + '|' + smVersionToDisplay(smB)
+      `${smTitleToDisplay(smA)}|${smVersionToDisplay(smA)}`
+      > `${smTitleToDisplay(smB)}|${smVersionToDisplay(smB)}`
         ? 1
         : -1,
     )

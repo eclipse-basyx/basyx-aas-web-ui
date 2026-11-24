@@ -76,7 +76,7 @@ export function useEdcDialogRoute () {
 }
 
 function stateParameter (key: string): string {
-  return dialogParameter + key.charAt(0).toUpperCase() + key.slice(1)
+  return `${dialogParameter}${key.charAt(0).toUpperCase()}${key.slice(1)}`
 }
 
 function withoutDialog (query: LocationQuery): LocationQuery {

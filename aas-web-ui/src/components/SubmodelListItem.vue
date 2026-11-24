@@ -6,7 +6,7 @@
     style="border-width: 1px"
     :style="{
       'border-color': selected
-        ? primaryColor + ' !important'
+        ? `${primaryColor} !important`
         : isDark
           ? '#686868 !important'
           : '#ABABAB !important',
