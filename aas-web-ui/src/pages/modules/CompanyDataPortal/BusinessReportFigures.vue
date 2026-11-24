@@ -122,7 +122,7 @@
                       v-model="customer.customerWebsite"
                       density="comfortable"
                       hide-details
-                      placeholder="https://example.com"
+                      :placeholder="placeholderUrls.website"
                       type="url"
                       variant="outlined"
                     />
@@ -133,7 +133,7 @@
                       v-model="customer.referenceToCustomer"
                       density="comfortable"
                       hide-details
-                      placeholder="https://aas.example.com/submodels/customer-xyz"
+                      :placeholder="placeholderUrls.customerSubmodel"
                       type="url"
                       variant="outlined"
                     />
@@ -187,6 +187,7 @@
   import FormField from './components/FormField.vue'
   import { useFormStore } from './stores/formData'
   import { createBusinessReportFiguresSMC } from './utils/businessReportFiguresSmcBuilder'
+  import { placeholderUrls } from './utils/placeholderUrls'
 
   const showForm = ref(false)
   onMounted(() => {

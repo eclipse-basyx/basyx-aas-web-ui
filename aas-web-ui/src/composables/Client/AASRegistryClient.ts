@@ -5,10 +5,8 @@ import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import * as descriptorTypes from '@/types/Descriptors'
 import { extractEndpointHref } from '@/utils/AAS/DescriptorUtils'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
+import { AAS_REGISTRY_ENDPOINT_PATH, endpointUrl, resourceUrl } from '@/utils/EndpointUrls'
 import { removeNullValues } from '@/utils/generalUtils'
-import { stripLastCharacter } from '@/utils/StringUtils'
-
-export const ASS_REGISTRY_ENDPOINT_PATH = '/shell-descriptors'
 
 export interface AssetIdFilter {
   name: string
@@ -80,15 +78,9 @@ export function useAASRegistryClient () {
       hasMore: false,
     }
 
-    let aasRegUrl = getEffectiveAasRegistryUrl()
+    const aasRegUrl = endpointUrl(getEffectiveAasRegistryUrl(), AAS_REGISTRY_ENDPOINT_PATH)
     if (aasRegUrl === '') {
       return failResponse
-    }
-    if (aasRegUrl.endsWith('/')) {
-      aasRegUrl = stripLastCharacter(aasRegUrl)
-    }
-    if (!aasRegUrl.endsWith(ASS_REGISTRY_ENDPOINT_PATH)) {
-      aasRegUrl += ASS_REGISTRY_ENDPOINT_PATH
     }
 
     const queryParams = new URLSearchParams()
@@ -179,18 +171,10 @@ export function useAASRegistryClient () {
       return failResponse
     }
 
-    let aasRegUrl = getEffectiveAasRegistryUrl(registryUrl)
-    if (aasRegUrl === '') {
+    const aasRegistryPath = resourceUrl(getEffectiveAasRegistryUrl(registryUrl), AAS_REGISTRY_ENDPOINT_PATH, aasId)
+    if (aasRegistryPath === '') {
       return failResponse
     }
-    if (aasRegUrl.endsWith('/')) {
-      aasRegUrl = stripLastCharacter(aasRegUrl)
-    }
-    if (!aasRegUrl.endsWith(ASS_REGISTRY_ENDPOINT_PATH)) {
-      aasRegUrl += ASS_REGISTRY_ENDPOINT_PATH
-    }
-
-    const aasRegistryPath = aasRegUrl + '/' + base64Encode(aasId)
     const aasRegistryContext = 'retrieving AAS Descriptor'
     const disableMessage = false
     try {
@@ -267,15 +251,9 @@ export function useAASRegistryClient () {
   async function postAasDescriptor (aasDescriptor: descriptorTypes.AASDescriptor): Promise<boolean> {
     const failResponse = false
 
-    let aasRegUrl = getEffectiveAasRegistryUrl()
+    const aasRegUrl = endpointUrl(getEffectiveAasRegistryUrl(), AAS_REGISTRY_ENDPOINT_PATH)
     if (aasRegUrl === '') {
       return failResponse
-    }
-    if (aasRegUrl.endsWith('/')) {
-      aasRegUrl = stripLastCharacter(aasRegUrl)
-    }
-    if (!aasRegUrl.endsWith(ASS_REGISTRY_ENDPOINT_PATH)) {
-      aasRegUrl += ASS_REGISTRY_ENDPOINT_PATH
     }
 
     const context = 'updating AAS Descriptor'
@@ -293,20 +271,13 @@ export function useAASRegistryClient () {
   async function putAasDescriptor (aasDescriptor: descriptorTypes.AASDescriptor): Promise<boolean> {
     const failResponse = false
 
-    let aasRegUrl = getEffectiveAasRegistryUrl()
-    if (aasRegUrl === '') {
+    const path = resourceUrl(getEffectiveAasRegistryUrl(), AAS_REGISTRY_ENDPOINT_PATH, aasDescriptor.id)
+    if (path === '') {
       return failResponse
-    }
-    if (aasRegUrl.endsWith('/')) {
-      aasRegUrl = stripLastCharacter(aasRegUrl)
-    }
-    if (!aasRegUrl.endsWith(ASS_REGISTRY_ENDPOINT_PATH)) {
-      aasRegUrl += ASS_REGISTRY_ENDPOINT_PATH
     }
 
     const context = 'updating AAS Descriptor'
     const disableMessage = false
-    const path = aasRegUrl + '/' + base64Encode(aasDescriptor.id)
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
     const body = JSON.stringify(aasDescriptor)
@@ -328,20 +299,13 @@ export function useAASRegistryClient () {
       return failResponse
     }
 
-    let aasRegUrl = getEffectiveAasRegistryUrl()
-    if (aasRegUrl === '') {
+    const path = resourceUrl(getEffectiveAasRegistryUrl(), AAS_REGISTRY_ENDPOINT_PATH, aasId)
+    if (path === '') {
       return failResponse
-    }
-    if (aasRegUrl.endsWith('/')) {
-      aasRegUrl = stripLastCharacter(aasRegUrl)
-    }
-    if (!aasRegUrl.endsWith(ASS_REGISTRY_ENDPOINT_PATH)) {
-      aasRegUrl += ASS_REGISTRY_ENDPOINT_PATH
     }
 
     const context = 'deleting AAS Descriptor'
     const disableMessage = false
-    const path = aasRegUrl + '/' + base64Encode(aasId)
     const response = await deleteRequest(path, new Headers(), context, disableMessage)
 
     return response.success

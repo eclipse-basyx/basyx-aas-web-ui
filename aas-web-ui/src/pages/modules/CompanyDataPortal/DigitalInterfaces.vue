@@ -21,7 +21,7 @@
             v-model="form.erpReference"
             density="comfortable"
             hide-details
-            placeholder="https://aas.example.com/submodels/erp-xyz"
+            :placeholder="placeholderUrls.erpSubmodel"
             type="url"
             variant="outlined"
           />
@@ -43,7 +43,7 @@
             v-model="form.emailSystemReference"
             density="comfortable"
             hide-details
-            placeholder="https://aas.example.com/submodels/email-outlook-001"
+            :placeholder="placeholderUrls.emailSubmodel"
             type="url"
             variant="outlined"
           />
@@ -155,6 +155,7 @@
   import FormField from './components/FormField.vue'
   import { useFormStore } from './stores/formData'
   import { createDigitalInterfacesSMC } from './utils/digitalInterfacesSmcBuilder'
+  import { placeholderUrls } from './utils/placeholderUrls'
 
   const showForm = ref(false)
   onMounted(() => {
