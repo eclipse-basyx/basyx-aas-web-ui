@@ -50,9 +50,24 @@ const TEST_COLUMNS = { result: 'AP', laboratory: 'AQ', reportNumber: 'AR', date:
 /** Fills of the template's input cells, light yellow: as RGB in "FCIL", as legacy palette colour on the "Cover Sheet" */
 const INPUT_FILLS = new Set(['rgb:FFFFFF99', 'indexed:43'])
 
-/** The template filled with the submodel data, as XLSX file; fails if `template` is no FCIL template of this layout */
+/** The requirement sets need more rows than the template prepares; the template itself is fine */
+export class FcilRowLimitError extends Error {
+  constructor (rows: number) {
+    super(`These requirement sets need ${rows} rows, but the FCIL template has only ${LAST_ROW - FIRST_ROW + 1} (rows ${FIRST_ROW} to ${LAST_ROW}).`)
+    this.name = 'FcilRowLimitError'
+  }
+}
+
+/**
+ * The template filled with the submodel data, as XLSX file; fails if `template` is no FCIL template of this layout,
+ * or with `FcilRowLimitError` if the rows do not fit
+ */
 export function fillFcilTemplate (template: Uint8Array, data: RailwayFireProtectionData): Uint8Array {
   const xlsx = openFcilTemplate(template)
+  const rows = fcilRows(data, readFcilCatalogue(xlsx))
+  if (FIRST_ROW + rows.length - 1 > LAST_ROW) {
+    throw new FcilRowLimitError(rows.length)
+  }
 
   const cover = worksheet(xlsx, COVER_SHEET)
   setInputCell(xlsx, cover, 'K27', data.manufacturer?.productDesignation ?? '')
@@ -64,7 +79,7 @@ export function fillFcilTemplate (template: Uint8Array, data: RailwayFireProtect
   for (let row = FIRST_ROW; row <= LAST_ROW; row++) {
     setInputCell(xlsx, fcil, `AK${row}`, null)
   }
-  for (const [index, row] of fcilRows(data, readFcilCatalogue(xlsx)).entries()) {
+  for (const [index, row] of rows.entries()) {
     for (const [column, value] of Object.entries(row)) {
       setInputCell(xlsx, fcil, `${column}${FIRST_ROW + index}`, value)
     }

@@ -13,6 +13,7 @@ import {
 } from '@/components/Plugins/Submodels/RailwayFireProtection_v1_0/utils/fcilClassification'
 import {
   fcilFileName,
+  FcilRowLimitError,
   fcilRows,
   fillFcilTemplate,
 } from '@/components/Plugins/Submodels/RailwayFireProtection_v1_0/utils/fcilExport'
@@ -291,6 +292,14 @@ describe.skipIf(!template)('fillFcilTemplate', () => {
     expect(fcil('AM11').formula).toBe('IF(ISBLANK(AK11),"",VLOOKUP(AK11,EN45545Table,3,FALSE))')
     expect(fcil('AM11').text).toBeUndefined()
     expect(fcil('AN11').text).toBeUndefined()
+  })
+
+  it('fails with a row limit error, not a template error, if the rows do not fit the template', () => {
+    const data = sampleData()
+    data.requirementsSets = Array.from({ length: 472 }, (_, index) => requirementsSet(index, `R${index}`, 'HL1', null))
+    const fill = () => fillFcilTemplate(templateBytes(), data)
+    expect(fill).toThrow(FcilRowLimitError)
+    expect(fill).toThrow('These requirement sets need 472 rows, but the FCIL template has only 471 (rows 11 to 481).')
   })
 
   it('makes Excel recalculate and rebuild the calculation chain', () => {

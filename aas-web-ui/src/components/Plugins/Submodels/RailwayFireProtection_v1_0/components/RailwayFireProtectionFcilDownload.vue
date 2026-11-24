@@ -85,7 +85,12 @@
         openDialog('')
       }
     } catch (error) {
-      openDialog(errorMessage(error))
+      if (isRowLimitError(error)) {
+        // Another template would not help
+        showRowLimitError(error)
+      } else {
+        openDialog(errorMessage(error))
+      }
     } finally {
       isGenerating.value = false
     }
@@ -96,12 +101,23 @@
     dialogError.value = ''
     try {
       const template = new Uint8Array(await file.arrayBuffer())
-      // Exporting first also checks the file, so that only a usable template is remembered
-      await exportFcil(template)
+      // Exporting first also checks the file, so that only a usable template is remembered.
+      // Too many rows is no fault of the template, which has passed the checks by then.
+      const rowLimitError = await exportFcil(template).then(() => null, (error: unknown) => {
+        if (isRowLimitError(error)) {
+          return error
+        }
+        throw error
+      })
       dialogOpen.value = false
-      if (await saveFcilTemplate(template)) {
+      const remembered = await saveFcilTemplate(template)
+      if (remembered) {
         hasTemplate.value = true
-      } else {
+      }
+      // One snackbar at a time: the export failing matters more than the template not being remembered
+      if (rowLimitError) {
+        showRowLimitError(rowLimitError)
+      } else if (!remembered) {
         navigationStore.dispatchSnackbar({
           status: true,
           timeout: 5000,
@@ -130,6 +146,21 @@
   function openDialog (error: string): void {
     dialogError.value = error
     dialogOpen.value = true
+  }
+
+  function showRowLimitError (error: unknown): void {
+    navigationStore.dispatchSnackbar({
+      status: true,
+      timeout: 10_000,
+      color: 'error',
+      btnColor: 'buttonText',
+      text: errorMessage(error),
+    })
+  }
+
+  /** By name: `FcilRowLimitError` lives in the export module, which is loaded on demand */
+  function isRowLimitError (error: unknown): boolean {
+    return error instanceof Error && error.name === 'FcilRowLimitError'
   }
 
   function errorMessage (error: unknown): string {

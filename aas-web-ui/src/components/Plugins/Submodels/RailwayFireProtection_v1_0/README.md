@@ -100,7 +100,7 @@ UNIFE grants no licence for the template, and its [terms of use](https://www.uni
 
 1. The first export opens a dialog that links to the UNIFE page. The user downloads the template there and selects it.
 2. The selected file is checked: the *Cover Sheet* must name `TGFS.06` and `Revision: 06`. The cell layout differs between revisions and languages, so other files are rejected, including the German version.
-3. The export runs in the browser. Only if it succeeds is the template remembered in the browser's IndexedDB ([`templateStorage.ts`](utils/templateStorage.ts)), so later exports download directly. *Choose another FCIL template* replaces it. Where IndexedDB is unavailable, e.g. in a private window, the template is asked for again next time.
+3. The export runs in the browser. Only if it succeeds, or fails only because the requirement sets need more rows than the template has (see [Filled cells](#filled-cells)), is the template remembered in the browser's IndexedDB ([`templateStorage.ts`](utils/templateStorage.ts)), so later exports download directly. *Choose another FCIL template* replaces it. Where IndexedDB is unavailable, e.g. in a private window, the template is asked for again next time.
 
 The template never leaves the user's browser.
 
@@ -108,7 +108,7 @@ The template never leaves the user's browser.
 
 Only the template's input cells, which it marks in light yellow, are written. [`fcilExport.ts`](utils/fcilExport.ts) checks the fill of every cell before writing it and fails otherwise. The grey cells are the template's own lookups, e.g. the requirement set (AM) and the test reference numbers, and keep their formulas.
 
-The sheet *FCIL* gets one row per requirement set, in the order of the tiles, starting in row 11. Each row has room for six test methods of six columns each (AN–AS for test method 1, AT–AY for 2, … BR–BW for 6); further tests continue in the next row.
+The sheet *FCIL* gets one row per requirement set, in the order of the tiles, starting in row 11. Each row has room for six test methods of six columns each (AN–AS for test method 1, AT–AY for 2, … BR–BW for 6); further tests continue in the next row. The template prepares rows 11 to 481, so at most 471 rows fit. If the requirement sets need more, the export writes nothing and says so instead of asking for another template.
 
 | Cell | Content |
 | --- | --- |
