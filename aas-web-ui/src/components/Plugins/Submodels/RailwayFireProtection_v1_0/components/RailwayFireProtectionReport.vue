@@ -128,17 +128,21 @@
     name: 'RailwayFireProtectionReport',
   })
 
+  // Props
   const props = defineProps<{
     report: FireReport
     /** Shown when the reference to this report had to be repaired */
     repairNote?: string
   }>()
 
+  // Composables
   const { downloadFile } = useSMEFile()
   const { determineAddress } = useContactInformation_v1_0Utils()
 
+  // Reactive data
   const showPreview = ref(false)
 
+  // Computed properties
   const contentType = computed(() => (props.report.file?.contentType ?? '').toLowerCase())
   const isPdf = computed(() => contentType.value.includes('pdf') || /\.pdf$/i.test(props.report.file?.value ?? ''))
   const isImage = computed(() => contentType.value.startsWith('image/'))

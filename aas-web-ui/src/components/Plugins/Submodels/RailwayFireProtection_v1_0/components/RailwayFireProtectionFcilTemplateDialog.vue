@@ -67,20 +67,23 @@
     name: 'RailwayFireProtectionFcilTemplateDialog',
   })
 
+  // Props
   defineProps<{
     /** Why the last template could not be used */
     error: string
     loading: boolean
   }>()
 
+  // Emits
   const emit = defineEmits<{
     select: [file: File]
   }>()
 
+  // Reactive data
   const open = defineModel<boolean>({ required: true })
-
   const file = ref<File | null>(null)
 
+  // Watchers
   watch(open, isOpen => {
     if (!isOpen) {
       file.value = null

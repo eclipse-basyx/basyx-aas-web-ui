@@ -76,11 +76,13 @@
     name: 'RailwayFireProtectionSummary',
   })
 
+  // Props
   const props = defineProps<{
     manufacturer: ManufacturerInformation | null
     material: Material | null
   }>()
 
+  // Computed properties
   const cards = computed<Card[]>(() => {
     const manufacturer = props.manufacturer
     const material = props.material
@@ -126,6 +128,7 @@
     ]
   })
 
+  // Methods
   /** Typed as `Component`: the template cannot narrow the model value to the chosen slider's type */
   function sliderComponent (value: number | [number, number]): Component {
     return Array.isArray(value) ? VRangeSlider : VSlider

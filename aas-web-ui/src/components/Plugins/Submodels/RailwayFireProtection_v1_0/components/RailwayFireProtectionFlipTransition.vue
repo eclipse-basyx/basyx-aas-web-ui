@@ -23,13 +23,16 @@
     name: 'RailwayFireProtectionFlipTransition',
   })
 
+  // Props
   const props = defineProps<{
     origin?: Element | null
   }>()
 
+  // State
   type Closing = { tile: Element | null, cleanup: () => void }
   const closing = new WeakMap<Element, Closing>()
 
+  // Methods
   function originElement (): Element | null {
     return props.origin ?? null
   }

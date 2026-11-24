@@ -94,20 +94,25 @@
     name: 'RailwayFireProtectionTile',
   })
 
+  // Props
   const props = defineProps<{
     requirementsSet: RequirementsSet
     reports: FireReport[]
   }>()
 
+  // Emits
   const emit = defineEmits<{
     open: []
   }>()
 
+  // Constants
   /** More tests than this are summarised as "+ N more tests" so that the tile stays square */
   const MAX_SHOWN_TESTS = 3
 
+  // Template refs
   const card = ref<ComponentPublicInstance | null>(null)
 
+  // Computed properties
   const meta = computed(() => hazardLevelMeta(props.requirementsSet.hazardLevel.code))
 
   const tests = computed(() => requirementsSetTests(props.requirementsSet, props.reports))
@@ -137,6 +142,7 @@
     `${props.requirementsSet.name}: ${hazardLevelText(props.requirementsSet.hazardLevel) || 'No hazard level'}. Show details`,
   )
 
+  // Methods
   function cardElement (): HTMLElement | null {
     return (card.value?.$el as HTMLElement | undefined) ?? null
   }
@@ -150,6 +156,7 @@
     return cardElement()
   }
 
+  // Exposed
   defineExpose({ focus, originElement })
 </script>
 

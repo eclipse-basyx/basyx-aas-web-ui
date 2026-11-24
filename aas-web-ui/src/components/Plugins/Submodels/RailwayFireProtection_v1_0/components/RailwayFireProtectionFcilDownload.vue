@@ -53,21 +53,26 @@
     name: 'RailwayFireProtectionFcilDownload',
   })
 
+  // Props
   const props = defineProps<{
     data: RailwayFireProtectionData
   }>()
 
+  // Stores
   const navigationStore = useNavigationStore()
 
+  // Reactive data
   const isGenerating = ref(false)
   const hasTemplate = ref(false)
   const dialogOpen = ref(false)
   const dialogError = ref('')
 
+  // Lifecycle hooks
   onMounted(async () => {
     hasTemplate.value = (await loadFcilTemplate()) !== null
   })
 
+  // Methods
   /** Exports with the remembered template; asks for one if there is none or it cannot be used */
   async function download (): Promise<void> {
     isGenerating.value = true

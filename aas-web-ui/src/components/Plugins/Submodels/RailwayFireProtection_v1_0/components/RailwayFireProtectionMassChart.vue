@@ -41,12 +41,15 @@
     name: 'RailwayFireProtectionMassChart',
   })
 
+  // Props
   const props = defineProps<{
     material: Material | null
   }>()
 
+  // Constants
   const percent = new Intl.NumberFormat('en', { style: 'percent', maximumFractionDigits: 1 })
 
+  // Computed properties
   const share = computed(() => combustibleShare(props.material))
 
   const percentText = computed(() => typeof share.value === 'number' ? percent.format(share.value) : '')

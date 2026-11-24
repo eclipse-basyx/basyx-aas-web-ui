@@ -134,14 +134,17 @@
     name: 'RailwayFireProtectionDetails',
   })
 
+  // Props
   const props = defineProps<{
     requirementsSet: RequirementsSet
     reports: FireReport[]
   }>()
 
+  // Emits
   const emit = defineEmits<{
     close: []
   }>()
 
+  // Computed properties
   const meta = computed(() => hazardLevelMeta(props.requirementsSet.hazardLevel.code))
 </script>

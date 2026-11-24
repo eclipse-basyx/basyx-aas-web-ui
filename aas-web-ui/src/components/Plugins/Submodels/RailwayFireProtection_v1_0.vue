@@ -198,6 +198,7 @@
     initializeVisualization,
   )
 
+  // Lifecycle hooks
   onMounted(initializeVisualization)
 
   // Methods
