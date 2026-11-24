@@ -1,9 +1,19 @@
 import type { CatenaXEdcQuerySpec } from '@/composables/Client/CatenaXEdcClient'
 import { CX_TAXO_NAMESPACE, DCT_NAMESPACE, EDC_NAMESPACE } from '@/pages/modules/EclipseDataspaceConnector/data/namespaces'
 
+// Values of the filter presets, `all` filters nothing
+export type AssetTypeFilterValue
+  = 'all'
+    | 'digitalTwinRegistry'
+    | 'submodelService'
+    | 'pushAsset'
+    | 'digitalProductPassport'
+    | 'assetAdministrationShell'
+    | 'submodel'
+
 export interface AssetTypeFilterPreset {
   title: string
-  value: string
+  value: AssetTypeFilterValue
   querySpec?: CatenaXEdcQuerySpec
   matches?: (asset: any) => boolean // Catalog dataset or asset of the management API
 }
@@ -112,6 +122,6 @@ export const assetTypeFilterItems: AssetTypeFilterItem[] = [
 /**
  * Returns the filter preset with the given value, skipping the dividers of the filter items.
  */
-export function assetTypeFilterPreset (value: string): AssetTypeFilterPreset | undefined {
+export function assetTypeFilterPreset (value: AssetTypeFilterValue): AssetTypeFilterPreset | undefined {
   return assetTypeFilterItems.find((item): item is AssetTypeFilterPreset => 'value' in item && item.value === value)
 }

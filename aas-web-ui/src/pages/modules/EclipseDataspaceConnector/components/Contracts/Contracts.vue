@@ -32,7 +32,7 @@
 
 <script lang="ts" setup>
   import type { CatenaXEdcContractDefinition, CatenaXEdcQuerySpec } from '@/composables/Client/CatenaXEdcClient'
-  import type { AssetTypeFilterPreset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
+  import type { AssetTypeFilterPreset, AssetTypeFilterValue } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import { DEFAULT_EDC_PROXY_ID } from '@/composables/SelectedEdcConfig'
   import CreateContractDialog from '@/pages/modules/EclipseDataspaceConnector/components/Contracts/Dialogs/CreateContractDialog.vue'
@@ -49,12 +49,24 @@
   import { assetTypeFilterItems } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
 
   // Filters by an asset type preset or by the ID of the access or usage policy of the contracts
-  interface ContractFilter {
-    type: 'all' | 'assetType' | 'accessPolicy' | 'usagePolicy'
-    value: string
+  interface AllContractsFilter {
+    type: 'all'
+    value: ''
   }
 
-  type PolicyFilterType = Exclude<ContractFilter['type'], 'all' | 'assetType'>
+  interface AssetTypeContractFilter {
+    type: 'assetType'
+    value: AssetTypeFilterValue
+  }
+
+  interface PolicyContractFilter {
+    type: 'accessPolicy' | 'usagePolicy'
+    value: string // Policy ID
+  }
+
+  type ContractFilter = AllContractsFilter | AssetTypeContractFilter | PolicyContractFilter
+
+  type PolicyFilterType = PolicyContractFilter['type']
 
   const allContractsFilter: ContractFilter = { type: 'all', value: '' }
 

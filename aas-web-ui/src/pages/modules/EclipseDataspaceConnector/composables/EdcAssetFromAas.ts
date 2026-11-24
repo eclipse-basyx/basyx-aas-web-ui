@@ -9,6 +9,7 @@ import {
   DCT_NAMESPACE,
   EDC_NAMESPACE,
 } from '@/pages/modules/EclipseDataspaceConnector/data/namespaces'
+import { ASSET_TEMPLATE_LABELS } from '@/pages/modules/EclipseDataspaceConnector/data/templatePlaceholderLabels'
 import AssetTemplateDefault from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset.json'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
 
@@ -115,14 +116,14 @@ export function useEdcAssetFromAas () {
   ): CatenaXEdcAsset {
     const endpoint = identifiable?.endpoints?.[0]
     const asset = fillTemplatePlaceholders(AssetTemplateDefault, {
-      'Asset ID': base64Encode(identifiable.id),
-      'Asset Display Name': displayName,
-      'Asset Description': descriptionToDisplay(identifiable, 'en'),
-      'Asset Endpoint': endpoint?.protocolInformation?.href ?? '',
-      'Endpoint client ID': oauth2.clientId.trim(),
-      'Endpoint client secret key': oauth2.clientSecretKey.trim(),
-      'Token endpoint': oauth2.tokenUrl.trim(),
-      'Token scope': oauth2.scope.trim(),
+      [ASSET_TEMPLATE_LABELS.assetId]: base64Encode(identifiable.id),
+      [ASSET_TEMPLATE_LABELS.displayName]: displayName,
+      [ASSET_TEMPLATE_LABELS.description]: descriptionToDisplay(identifiable, 'en'),
+      [ASSET_TEMPLATE_LABELS.endpoint]: endpoint?.protocolInformation?.href ?? '',
+      [ASSET_TEMPLATE_LABELS.clientId]: oauth2.clientId.trim(),
+      [ASSET_TEMPLATE_LABELS.clientSecretKey]: oauth2.clientSecretKey.trim(),
+      [ASSET_TEMPLATE_LABELS.tokenUrl]: oauth2.tokenUrl.trim(),
+      [ASSET_TEMPLATE_LABELS.scope]: oauth2.scope.trim(),
     }) as CatenaXEdcAsset
     // Let consumers only read the endpoint and paths below it, e.g. Submodel elements
     asset.dataAddress = {

@@ -7,7 +7,7 @@ import {
   queryAllEdcPages,
   queryEdcPage,
 } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPaging'
-import { assetTypeFilterPreset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
+import { assetTypeFilterPreset, type AssetTypeFilterValue } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
 
 export function useEdcAssetTypeQuery () {
   // Composables
@@ -17,7 +17,7 @@ export function useEdcAssetTypeQuery () {
    * Queries a page of the assets of the given asset type filter preset, e.g. `digitalTwinRegistry`, or of all assets for `all`.
    * A preset evaluated in the browser (`matches`) returns all its assets at once.
    */
-  async function queryAssetsOfTypePage (proxyId: string, assetTypeFilterValue: string, page: EdcListPage): Promise<EdcPageResult<CatenaXEdcAsset>> {
+  async function queryAssetsOfTypePage (proxyId: string, assetTypeFilterValue: AssetTypeFilterValue, page: EdcListPage): Promise<EdcPageResult<CatenaXEdcAsset>> {
     const assetTypeFilter = assetTypeFilterPreset(assetTypeFilterValue)
     if (assetTypeFilter?.matches) {
       return queryAssetsOfType(proxyId, assetTypeFilterValue, page.search)
@@ -33,7 +33,7 @@ export function useEdcAssetTypeQuery () {
   /**
    * Queries all assets of the given asset type filter preset, optionally only those whose ID contains `search`.
    */
-  async function queryAssetsOfType (proxyId: string, assetTypeFilterValue: string, search?: string): Promise<EdcPageResult<CatenaXEdcAsset>> {
+  async function queryAssetsOfType (proxyId: string, assetTypeFilterValue: AssetTypeFilterValue, search?: string): Promise<EdcPageResult<CatenaXEdcAsset>> {
     const assetTypeFilter = assetTypeFilterPreset(assetTypeFilterValue)
     const result = await queryAllEdcPages(
       querySpec => queryAssets(proxyId, { querySpec }),

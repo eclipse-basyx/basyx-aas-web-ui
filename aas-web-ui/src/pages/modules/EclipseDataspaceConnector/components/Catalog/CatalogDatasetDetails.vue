@@ -140,7 +140,7 @@
   // The selected Catalog Dataset with its use case: send data to it or fetch its data
   const props = defineProps<{
     businessPartner: CatenaXPartner | null
-    dataset: any // `{}` if none is selected
+    dataset: any // `null` if none is selected
     proxyId: string
     listLoading: boolean // The Catalog loads, no Catalog Dataset can be selected yet
     catalogRequestFailed: boolean
@@ -160,7 +160,7 @@
   const fetchedData = ref<unknown>(undefined) // Data fetched from the data plane of the Catalog Dataset
 
   // Computed properties
-  const datasetSelected = computed(() => !!props.dataset && Object.keys(props.dataset).length > 0)
+  const datasetSelected = computed(() => !!props.dataset)
   const dataFetched = computed(() => fetchedData.value !== undefined)
   const fetchedDataTypeInfo = computed(() => fetchedDataType(fetchedData.value)) // AAS or Submodel, if the fetched data is one
   const fetchedSubmodel = computed(() => {

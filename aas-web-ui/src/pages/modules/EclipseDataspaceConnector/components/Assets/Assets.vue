@@ -69,7 +69,7 @@
   import { edcAssetName } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetName'
   import { useEdcAssetTypeQuery } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetTypeQuery'
   import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
-  import { assetTypeFilterItems } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
+  import { assetTypeFilterItems, type AssetTypeFilterValue } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
 
   // Composables
   const { updateAsset } = useCatenaXEdcClient()
@@ -78,7 +78,7 @@
 
   // Data
   const resourceTab = useTemplateRef<InstanceType<typeof EdcResourceTab>>('resourceTab')
-  const selectedAssetTypeFilter = ref('all')
+  const selectedAssetTypeFilter = ref<AssetTypeFilterValue>('all')
   // The open dialog is kept in the URL, e.g. to return to it after a login
   const createAssetDialog = dialogOpen('create-asset')
   const createAssetFromTemplateDialog = dialogOpen('create-asset-from-template')

@@ -8,7 +8,7 @@ import {
   queryAllEdcPages,
   queryEdcPage,
 } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPaging'
-import { assetTypeFilterPreset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
+import { assetTypeFilterPreset, type AssetTypeFilterValue } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
 
 /**
  * Returns the datasets of a catalog, which has a single dataset as object.
@@ -52,7 +52,7 @@ export function useEdcCatalogQuery () {
   async function queryCatalogPage (
     proxyId: string,
     partner: CatenaXPartner,
-    assetTypeFilterValue: string,
+    assetTypeFilterValue: AssetTypeFilterValue,
     page: EdcListPage,
   ): Promise<EdcPageResult<any>> {
     const assetTypeFilter = assetTypeFilterPreset(assetTypeFilterValue)

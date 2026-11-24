@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { assetTypeFilterItems, assetTypeFilterPreset, isFetchAsset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
+import { assetTypeFilterItems, assetTypeFilterPreset, type AssetTypeFilterValue, isFetchAsset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
 import DigitalTwinRegistryTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_digitaltwin_registry.json'
 import SubmodelServiceTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_submodel_service.json'
 
-function preset (value: string) {
+function preset (value: AssetTypeFilterValue) {
   const assetTypeFilter = assetTypeFilterPreset(value)
   if (!assetTypeFilter) {
     throw new Error(`Missing asset type filter preset ${value}`)
@@ -25,7 +25,8 @@ describe('assetTypeFilters', () => {
   })
 
   it('skips dividers when looking up a preset', () => {
-    expect(assetTypeFilterPreset('divider')).toBeUndefined()
+    // A divider has no value, so no value of a filter item can find it
+    expect(assetTypeFilterPreset('divider' as AssetTypeFilterValue)).toBeUndefined()
   })
 
   it('filters the catalog by Catena-X taxonomy type', () => {
@@ -47,7 +48,7 @@ describe('assetTypeFilters', () => {
   it.each([
     ['Digital Twin Registry', DigitalTwinRegistryTemplate, 'digitalTwinRegistry'],
     ['Submodel Service', SubmodelServiceTemplate, 'submodelService'],
-  ])('finds assets created from the %s template by their taxonomy type', (_name, template, presetValue) => {
+  ] as const)('finds assets created from the %s template by their taxonomy type', (_name, template, presetValue) => {
     // Expands a compact IRI like `cx-taxo:Submodel` by the `@context` of the template, as the EDC does
     const context: Record<string, string> = template['@context']
     const expand = (compactIri: string) => compactIri.replace(/^([^:]+):/, (prefix, name: string) => context[name] ?? prefix)

@@ -14,7 +14,7 @@
           <div class="d-flex flex-column">
             <template v-for="(placeholder, index) in placeholders" :key="placeholder.label">
               <v-select
-                v-if="placeholder.label === 'Asset ID'"
+                v-if="placeholder.label === CONTRACT_TEMPLATE_LABELS.assetId"
                 v-model="placeholderValues[placeholder.label]"
                 :class="index > 0 ? 'mt-2': ''"
                 :hide-details="placeholder.hint == ''"
@@ -30,7 +30,7 @@
               />
 
               <v-select
-                v-else-if="placeholder.label === 'Access Policy ID' || placeholder.label === 'Usage Policy ID'"
+                v-else-if="placeholder.label === CONTRACT_TEMPLATE_LABELS.accessPolicyId || placeholder.label === CONTRACT_TEMPLATE_LABELS.usagePolicyId"
                 v-model="placeholderValues[placeholder.label]"
                 :class="index > 0 ? 'mt-2': ''"
                 :hide-details="placeholder.hint == ''"
@@ -105,6 +105,7 @@
   import { useEdcResourceOptions } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcResourceOptions'
   import { type EdcTemplate, useEdcTemplateForm } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplateForm'
   import { fillTemplatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
+  import { CONTRACT_TEMPLATE_LABELS } from '@/pages/modules/EclipseDataspaceConnector/data/templatePlaceholderLabels'
   import ContractTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_contract.json'
 
   const props = withDefaults(defineProps<{
@@ -179,14 +180,14 @@
   // Auto-generate Contract ID
   watch(
     () => [
-      placeholderValues.value['Asset ID'],
-      placeholderValues.value['Access Policy ID'],
-      placeholderValues.value['Usage Policy ID'],
+      placeholderValues.value[CONTRACT_TEMPLATE_LABELS.assetId],
+      placeholderValues.value[CONTRACT_TEMPLATE_LABELS.accessPolicyId],
+      placeholderValues.value[CONTRACT_TEMPLATE_LABELS.usagePolicyId],
     ],
     ([assetId, accessId, usageId]) => {
-      const currentContractId = placeholderValues.value['Contract ID']
+      const currentContractId = placeholderValues.value[CONTRACT_TEMPLATE_LABELS.contractId]
       if (assetId && accessId && usageId && (!currentContractId || currentContractId.trim() === '')) {
-        placeholderValues.value['Contract ID'] = `contract-${assetId}-${accessId}-${usageId}`
+        placeholderValues.value[CONTRACT_TEMPLATE_LABELS.contractId] = `contract-${assetId}-${accessId}-${usageId}`
       }
     },
   )

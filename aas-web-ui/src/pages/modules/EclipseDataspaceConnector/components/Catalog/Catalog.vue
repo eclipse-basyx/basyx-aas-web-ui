@@ -135,7 +135,7 @@
   import { type EdcVirtualScroll, useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import { isSameEdcResource } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcResourceId'
-  import { assetTypeFilterItems, isPushAsset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
+  import { assetTypeFilterItems, type AssetTypeFilterValue, isPushAsset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
   import { EDC_TAB_HEIGHT } from '@/pages/modules/EclipseDataspaceConnector/data/heights'
   import { normalizeCatenaXPartners } from '@/utils/CatenaXPartnerUtils'
 
@@ -149,8 +149,8 @@
   const listDrawer = useTemplateRef<InstanceType<typeof EdcResourceListDrawer>>('listDrawer')
 
   const selectedBusinessPartner = ref<CatenaXPartner | null>(null)
-  const selectedCatalogDataset = ref({} as any)
-  const selectedCatalogFilter = ref('all')
+  const selectedCatalogDataset = ref<any>(null) // `null` if none is selected
+  const selectedCatalogFilter = ref<AssetTypeFilterValue>('all')
   // The open dialog is kept in the URL with the selection it was opened for, e.g. to return to it after a login
   const sendDataDialog = dialogOpen('send-data', () => ({
     partner: selectedBusinessPartner.value?.id,
@@ -209,7 +209,7 @@
   })
 
   async function initialize (): Promise<void> {
-    selectedCatalogDataset.value = {}
+    selectedCatalogDataset.value = null
 
     // Without an address, no list of a previous partner stays visible
     if (!selectedBusinessPartner.value?.counterPartyAddress) {
@@ -245,15 +245,7 @@
   }
 
   function selectCatalogDataset (dataset: any): void {
-    if (isSelected(dataset)) {
-      selectedCatalogDataset.value = {}
-    } else {
-      selectedCatalogDataset.value = dataset
-
-      if (Object.keys(selectedCatalogDataset.value).length === 0) {
-        scrollToCatalogDataset(isSelected)
-      }
-    }
+    selectedCatalogDataset.value = isSelected(dataset) ? null : dataset
   }
 
   function isSelected (dataset: any): boolean {
