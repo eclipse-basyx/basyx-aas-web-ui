@@ -339,10 +339,6 @@
     void loadResources()
   })
 
-  const reloadForSearch = debounce(() => {
-    void loadResources()
-  }, 300)
-
   onMounted(() => {
     loadResources()
   })
@@ -397,6 +393,10 @@
   function searchText (): string | undefined {
     return searchQuery.value?.trim() || undefined
   }
+
+  const reloadForSearch = debounce(() => {
+    void loadResources()
+  }, 300)
 
   function openDialog (dialog: ResourceDialog, resource: any): void {
     dialog.resource = resource
