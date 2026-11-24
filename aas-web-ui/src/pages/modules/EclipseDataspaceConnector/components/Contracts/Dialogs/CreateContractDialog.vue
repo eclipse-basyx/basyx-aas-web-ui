@@ -99,6 +99,7 @@
 
 <script lang="ts" setup>
   import { type CatenaXEdcContractDefinition, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
+  import { edcAssetName } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetName'
   import { EDC_ASSET_ID_OPERAND, queryAllEdcPages } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPaging'
   import { type EdcTemplate, useEdcTemplateForm } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplateForm'
   import { fillTemplatePlaceholders, templatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
@@ -211,9 +212,7 @@
   }
 
   function getEdcAssetDisplayName (asset: any): string {
-    if (!asset) return ''
-    const props = asset.properties || {}
-    return props.displayName || props.name || props.description || asset['@id'] || ''
+    return edcAssetName(asset) || asset?.['@id'] || ''
   }
 
   function getEdcPolicyDisplayName (policy: any): string {

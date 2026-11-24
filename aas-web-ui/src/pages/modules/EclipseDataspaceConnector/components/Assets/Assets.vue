@@ -20,7 +20,7 @@
     </template>
 
     <template #item-title="{ item }">
-      {{ item?.properties?.displayName || item?.properties?.name || item?.properties?.description }}
+      {{ edcAssetName(item) }}
     </template>
 
     <template #item-subtitle="{ item }">
@@ -66,6 +66,7 @@
   import CreateAssetFromInfrastructureDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetFromInfrastructureDialog.vue'
   import DeleteAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/DeleteAssetDialog.vue'
   import EdcResourceTab from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceTab.vue'
+  import { edcAssetName } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetName'
   import { useEdcAssetTypeQuery } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetTypeQuery'
   import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
   import { assetTypeFilterItems } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
