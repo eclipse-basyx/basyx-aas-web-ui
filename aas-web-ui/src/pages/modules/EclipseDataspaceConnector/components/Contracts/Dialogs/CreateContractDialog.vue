@@ -100,10 +100,7 @@
 <script lang="ts" setup>
   import { type CatenaXEdcContractDefinition, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import { EDC_ASSET_ID_OPERAND, queryAllEdcPages } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPaging'
-  import {
-    edcRequestFailureText,
-    useEdcRequestFailureMessage,
-  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
+  import { type EdcTemplate, useEdcTemplateForm } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplateForm'
   import { fillTemplatePlaceholders, templatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
   import ContractTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_contract.json'
 
@@ -117,31 +114,45 @@
     (event: 'contract-created', contractId: string): void
   }>()
 
+  // The dialog has no template selection, its only template is always active
+  const contractTemplates: EdcTemplate<'contract'>[] = [
+    {
+      value: 'contract',
+      name: 'Contract',
+      description: 'Offers an asset under an access and a usage policy',
+      template: ContractTemplate,
+    },
+  ]
+
   // Composables
   const { createContractDefinition: createContractInEdc, queryAssets, queryPolicyDefinitions } = useCatenaXEdcClient()
-  const { showFailureMessage } = useEdcRequestFailureMessage()
+  const {
+    placeholderValues,
+    form,
+    activeTemplate,
+    resetForm,
+    createFromTemplate,
+  } = useEdcTemplateForm('Contract', contractTemplates, 'contract')
 
   // Data
   const createContractDialog = defineModel<boolean>({ required: true })
-  const form = ref<any>(null)
-  const placeholderValues = ref<Record<string, string>>({})
   const availableAssets = ref<any[]>([])
   const assetsLoading = ref(false)
   const availablePolicies = ref<any[]>([])
   const policiesLoading = ref(false)
 
   // Computed properties
-  const activeContractTemplate = computed(() => ContractTemplate)
-
-  const placeholders = computed(() => templatePlaceholders(activeContractTemplate.value).map(placeholder => ({
-    ...placeholder,
-    placeholder: placeholder.placeholder || `Enter ${placeholder.label}`,
-  })))
+  const placeholders = computed(() => activeTemplate.value
+    ? templatePlaceholders(activeTemplate.value.template).map(placeholder => ({
+      ...placeholder,
+      placeholder: placeholder.placeholder || `Enter ${placeholder.label}`,
+    }))
+    : [])
 
   // Unfilled placeholders stay visible in the preview as {{Label}}
-  const jsonContent = computed(() =>
-    JSON.stringify(fillTemplatePlaceholders(activeContractTemplate.value, placeholderValues.value, { keepUnfilled: true })),
-  )
+  const jsonContent = computed(() => activeTemplate.value
+    ? JSON.stringify(fillTemplatePlaceholders(activeTemplate.value.template, placeholderValues.value, { keepUnfilled: true }))
+    : '')
 
   // Watchers
   // Immediate, so a dialog restored from the URL loads the assets and policies
@@ -198,13 +209,6 @@
     }
   }
 
-  function resetForm (): void {
-    placeholderValues.value = {}
-    if (form.value) {
-      form.value.reset()
-    }
-  }
-
   function getEdcAssetDisplayName (asset: any): string {
     if (!asset) return ''
     const props = asset.properties || {}
@@ -226,21 +230,14 @@
       return
     }
 
-    try {
-      const finalContract = fillTemplatePlaceholders(activeContractTemplate.value, placeholderValues.value) as CatenaXEdcContractDefinition
-
-      // Create the contract via EDC API
-      const result = await createContractInEdc(props.proxyId, finalContract)
-      if (result.success) {
-        emit('contract-created', result.data['@id'])
-        createContractDialog.value = false
-        resetForm()
-      } else {
-        showFailureMessage('Failed to create Contract.', edcRequestFailureText(result, 'Contract', 'create'))
-      }
-    } catch (error_) {
-      console.error('Error creating contract:', error_)
-      showFailureMessage('Failed to create Contract.', error_ instanceof Error ? error_.message : String(error_))
+    // Create the contract via EDC API, the dialog resets when it closes
+    const contractId = await createFromTemplate(template => createContractInEdc(
+      props.proxyId,
+      fillTemplatePlaceholders(template, placeholderValues.value) as CatenaXEdcContractDefinition,
+    ))
+    if (contractId) {
+      emit('contract-created', contractId)
+      createContractDialog.value = false
     }
   }
 
