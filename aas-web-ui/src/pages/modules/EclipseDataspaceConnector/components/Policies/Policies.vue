@@ -34,7 +34,7 @@
 
     <template #dialogs="{ proxyId, onCreated }">
       <CreatePolicyDialog v-model="createPolicyDialog" :proxy-id="proxyId" @policy-created="onCreated" />
-      <CreatePolicyFromTemplateDialog v-model="createPolicyFromTemplateDialog" :proxy-id="proxyId" @policy-created="onCreated" />
+      <CreatePolicyDialog v-model="createPolicyFromTemplateDialog" from-template :proxy-id="proxyId" @policy-created="onCreated" />
     </template>
   </EdcResourceTab>
 </template>
@@ -42,7 +42,6 @@
 <script lang="ts" setup>
   import { type CatenaXEdcPolicyDefinition, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import CreatePolicyDialog from '@/pages/modules/EclipseDataspaceConnector/components/Policies/Dialogs/CreatePolicyDialog.vue'
-  import CreatePolicyFromTemplateDialog from '@/pages/modules/EclipseDataspaceConnector/components/Policies/Dialogs/CreatePolicyFromTemplateDialog.vue'
   import EdcResourceTab from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceTab.vue'
   import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
   import {

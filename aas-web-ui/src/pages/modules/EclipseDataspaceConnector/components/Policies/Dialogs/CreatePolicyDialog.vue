@@ -6,7 +6,7 @@
   >
     <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">
       <v-card-title class="bg-cardHeader d-flex align-center">
-        Create Policy
+        {{ fromTemplate ? 'Create Policy from Template' : 'Create Policy' }}
 
         <v-spacer />
 
@@ -29,53 +29,24 @@
       <v-card-text class="flex-grow-1 overflow-y-auto">
         <v-form ref="form" class="d-flex flex-column">
 
-          <!-- Policy Type Selection -->
-          <v-select
-            v-model="selectedType"
+          <!-- Template Selection, without template selection one of the policy types -->
+          <EdcTemplateSelect
+            v-model="selectedTemplate"
             :disabled="manuallyEdited"
-            :hint="selectedPolicyTypeDescription"
-            item-title="name"
-            item-value="value"
-            :items="policyTypes"
-            label="Select Policy Type"
-            persistent-hint
-            required
-            variant="outlined"
-          >
-            <template #item="{ props: itemProps, item }">
-              <v-list-item v-bind="itemProps">
-                <template #prepend>
-                  <v-icon class="mr-n5">mdi-shield-check-outline</v-icon>
-                </template>
-
-                <template #title>
-                  <span class="font-weight-bold">{{ item.name }}</span>
-                </template>
-
-                <template #subtitle>
-                  {{ item.description }}
-                </template>
-              </v-list-item>
-            </template>
-          </v-select>
+            icon="mdi-shield-check-outline"
+            :label="fromTemplate ? 'Select Policy Template' : 'Select Policy Type'"
+            show-description
+            :templates="templates"
+          />
 
           <!-- Dynamic Placeholder Fields -->
-          <div class="d-flex flex-column pt-2">
-            <v-text-field
-              v-for="(placeholder, index) in placeholders"
-              :key="placeholder.label"
-              v-model="placeholderValues[placeholder.label]"
-              :class="index > 0 ? 'mt-2': ''"
-              :disabled="manuallyEdited"
-              :hide-details="placeholder.hint == ''"
-              :hint="placeholder.hint"
-              :label="placeholder.label"
-              :persistent-hint="placeholder.hint !== ''"
-              :placeholder="placeholder.placeholder"
-              required
-              variant="outlined"
-            />
-          </div>
+          <EdcTemplatePlaceholderFields
+            v-if="activeTemplate"
+            v-model="placeholderValues"
+            class="pt-2"
+            :disabled="manuallyEdited"
+            :placeholders="placeholders"
+          />
 
           <!-- After editing the policy by hand, the fields above no longer change it -->
           <v-alert
@@ -103,6 +74,7 @@
 
           <!-- Policy, editable; only an edit by hand emits update:text, a policy rebuilt from the fields doesn't -->
           <CodeViewer
+            v-if="activeTemplate"
             class="mt-4"
             file-name="policy.json"
             height="auto"
@@ -130,7 +102,7 @@
         <v-btn
           class="text-buttonText"
           color="primary"
-          :disabled="hasUnfilledPlaceholders || !!jsonError || !jsonText.trim()"
+          :disabled="!canCreate"
           rounded="lg"
           text="Create"
           variant="flat"
@@ -143,63 +115,125 @@
 
 <script lang="ts" setup>
   import { type CatenaXEdcPolicyDefinition, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
-  import {
-    edcRequestFailureText,
-    useEdcRequestFailureMessage,
-  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
+  import EdcTemplatePlaceholderFields from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcTemplatePlaceholderFields.vue'
+  import EdcTemplateSelect from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcTemplateSelect.vue'
+  import { type EdcTemplate, useEdcTemplateForm } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplateForm'
   import { fillTemplatePlaceholders, templatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
-  import PolicyTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy.json'
-  import UsagePolicyTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage.json'
+  import AccessPolicy from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_access.json'
+  import AccessPolicyBpn from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_access_bpn.json'
+  import UsagePolicy from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage.json'
+  import UsagePolicyDtr from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage_digitaltwin_registry.json'
+  import UsagePolicyDppDbp from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage_dpp_dbp.json'
+  import UsagePolicyPcf from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage_pcf.json'
+  import UsagePolicySmService from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage_sm_service.json'
 
   const props = withDefaults(defineProps<{
     proxyId?: string
+    fromTemplate?: boolean // Lets the user choose from all templates, otherwise from the access and usage policy types
   }>(), {
     proxyId: 'default',
+    fromTemplate: false,
   })
 
   const emit = defineEmits<{
     (event: 'policy-created', policyId: string): void
   }>()
 
-  // Composables
-  const { createPolicyDefinition: createPolicyDefinitionInEdc } = useCatenaXEdcClient()
-  const { showFailureMessage } = useEdcRequestFailureMessage()
+  type PolicyTemplateValue = 'access' | 'usage' | 'usageCxPcf' | 'usageCxDppDbp' | 'usageCxDtr' | 'usageCxSmService' | 'bpn'
 
-  // Data
-  const createPolicyDialog = defineModel<boolean>({ required: true })
-  const selectedType = ref<'access' | 'usage'>('usage')
-  const form = ref<any>(null)
-  const placeholderValues = ref<Record<string, string>>({})
-  const jsonText = ref('')
-  const jsonError = ref<string | null>(null)
-  const manuallyEdited = ref(false) // The policy was edited in the editor, the fields no longer rebuild it
-
-  // Computed properties
-  const policyTypes = computed(() => [
+  // Catena-X requires the constraints of the usage policy template, e.g. UsagePurpose and FrameworkAgreement
+  const policyTypes: EdcTemplate<PolicyTemplateValue>[] = [
     {
       value: 'access',
       name: 'Access Policy',
       description: 'Determines whether a particular consumer is offered an asset or not.',
+      template: AccessPolicy,
     },
     {
       value: 'usage',
       name: 'Usage Policy',
       description: 'Determines the conditions for initiating a contract negotiation for a particular asset.',
+      template: UsagePolicy,
     },
-  ])
+  ]
 
-  const selectedPolicyTypeDescription = computed(() => {
-    return policyTypes.value.find(policyType => policyType.value === selectedType.value)?.description || ''
-  })
+  const policyTemplates: EdcTemplate<PolicyTemplateValue>[] = [
+    {
+      value: 'access',
+      name: 'Access Policy',
+      description: 'Basic policy allowing usage with unrestricted access',
+      template: AccessPolicy,
+    },
+    {
+      value: 'usage',
+      name: 'Usage Policy',
+      description: 'Policy with permissions, prohibitions, and obligations for complex usage scenarios',
+      template: UsagePolicy,
+    },
+    {
+      value: 'usageCxPcf',
+      name: 'Usage Policy for PCF Use Case (Catena-X)',
+      description: 'Policy with permissions for the PCF Use Case (Catena-X)',
+      template: UsagePolicyPcf,
+    },
+    {
+      value: 'usageCxDppDbp',
+      name: 'Usage Policy for PCF DPP/DBP Use Case (Catena-X)',
+      description: 'Policy with permissions for the DPP/DBP Use Case (Catena-X)',
+      template: UsagePolicyDppDbp,
+    },
+    {
+      value: 'usageCxDtr',
+      name: 'Usage Policy for Digital Twin Registry (Catena-X)',
+      description: 'Policy with permissions for the Digital Twin Registry usage (Catena-X)',
+      template: UsagePolicyDtr,
+    },
+    {
+      value: 'usageCxSmService',
+      name: 'Usage Policy for Submodel Service (Catena-X)',
+      description: 'Policy with permissions for the Submodel Service usage (Catena-X)',
+      template: UsagePolicySmService,
+    },
+    {
+      value: 'bpn',
+      name: 'Access BPN Policy',
+      description: 'Policy restricting access based on Business Partner Number (BPN) constraint',
+      template: AccessPolicyBpn,
+    },
+  ]
+
+  const templates = props.fromTemplate ? policyTemplates : policyTypes
+
+  // Composables
+  const { createPolicyDefinition: createPolicyDefinitionInEdc } = useCatenaXEdcClient()
+  const {
+    selectedTemplate,
+    placeholderValues,
+    form,
+    activeTemplate,
+    resetForm: resetTemplateForm,
+    createFromTemplate,
+  } = useEdcTemplateForm('Policy', templates, props.fromTemplate ? '' : 'usage')
+
+  // Data
+  const createPolicyDialog = defineModel<boolean>({ required: true })
+  const jsonText = ref('')
+  const jsonError = ref<string | null>(null)
+  const manuallyEdited = ref(false) // The policy was edited in the editor, the fields no longer rebuild it
+
+  // Computed properties
+  const placeholders = computed(() => activeTemplate.value
+    ? templatePlaceholders(activeTemplate.value.template).map(placeholder => ({
+      ...placeholder,
+      placeholder: placeholder.placeholder || placeholder.label,
+      hint: placeholder.hint || `Enter ${placeholder.label}`,
+    }))
+    : [])
 
   // Unfilled placeholders stay in the editor as {{Label}}, also after editing by hand
   const hasUnfilledPlaceholders = computed(() => /\{\{[^}]+\}\}/.test(jsonText.value))
 
-  const placeholders = computed(() => templatePlaceholders(PolicyTemplate).map(placeholder => ({
-    ...placeholder,
-    placeholder: placeholder.placeholder || placeholder.label,
-    hint: placeholder.hint || `Enter ${placeholder.label}`,
-  })))
+  const canCreate = computed(() => !!activeTemplate.value && !hasUnfilledPlaceholders.value && !jsonError.value && !!jsonText.value.trim())
 
   // Watchers
   // Immediate, so a dialog restored from the URL shows the preview
@@ -216,12 +250,7 @@
   )
 
   watch(
-    () => selectedType.value,
-    () => refreshPreviewFromFields(),
-  )
-
-  watch(
-    placeholderValues,
+    [activeTemplate, placeholderValues],
     () => refreshPreviewFromFields(),
     { deep: true },
   )
@@ -229,12 +258,9 @@
   // Methods
   function resetForm (): void {
     manuallyEdited.value = false
-    placeholderValues.value = {}
+    resetTemplateForm()
     jsonText.value = ''
     jsonError.value = null
-    if (form.value) {
-      form.value.reset()
-    }
   }
 
   // Field changes rebuild the preview only until the policy is edited by hand, so manual changes are kept
@@ -250,36 +276,12 @@
     refreshPreview()
   }
 
-  function buildPolicy (): CatenaXEdcPolicyDefinition {
-    // Unfilled placeholders stay visible in the editor as {{Label}}
-    const policy = fillTemplatePlaceholders(PolicyTemplate, placeholderValues.value, { keepUnfilled: true }) as CatenaXEdcPolicyDefinition
-
-    if (policy.policy) {
-      if (selectedType.value === 'access') {
-        (policy.policy as any).permission = [
-          {
-            action: 'access',
-            constraint: [],
-          },
-        ]
-      } else if (selectedType.value === 'usage') {
-        // Catena-X requires the constraints of the usage policy template, e.g. UsagePurpose and FrameworkAgreement
-        (policy.policy as any).permission = structuredClone(UsagePolicyTemplate.policy.permission)
-      }
-    }
-
-    return policy
-  }
-
+  // Unfilled placeholders stay visible in the editor as {{Label}}
   function refreshPreview (): void {
-    try {
-      const policy = buildPolicy()
-      jsonText.value = JSON.stringify(policy, null, 2)
-      jsonError.value = null
-    } catch (error_) {
-      jsonText.value = JSON.stringify(PolicyTemplate, null, 2)
-      jsonError.value = error_ instanceof Error ? error_.message : 'Invalid JSON'
-    }
+    jsonText.value = activeTemplate.value
+      ? JSON.stringify(fillTemplatePlaceholders(activeTemplate.value.template, placeholderValues.value, { keepUnfilled: true }), null, 2)
+      : ''
+    jsonError.value = null
   }
 
   // Called only for an edit by hand, so the fields no longer rebuild the policy
@@ -296,23 +298,16 @@
   }
 
   async function createPolicy (): Promise<void> {
-    if (jsonError.value || !jsonText.value.trim()) return
+    if (!canCreate.value) return
 
-    try {
-      const finalPolicy = JSON.parse(jsonText.value) as CatenaXEdcPolicyDefinition
-
-      // Create the policy via EDC API
-      const result = await createPolicyDefinitionInEdc(props.proxyId, finalPolicy)
-      if (result.success) {
-        emit('policy-created', result.data['@id'])
-        createPolicyDialog.value = false
-        resetForm()
-      } else {
-        showFailureMessage('Failed to create Policy.', edcRequestFailureText(result, 'Policy', 'create'))
-      }
-    } catch (error_) {
-      console.error('Error creating policy:', error_)
-      jsonError.value = error_ instanceof Error ? error_.message : 'Invalid JSON'
+    // Create the policy via EDC API, from the editor as it may be edited by hand
+    const policyId = await createFromTemplate(() => createPolicyDefinitionInEdc(
+      props.proxyId,
+      JSON.parse(jsonText.value) as CatenaXEdcPolicyDefinition,
+    ))
+    if (policyId) {
+      emit('policy-created', policyId)
+      createPolicyDialog.value = false
     }
   }
 

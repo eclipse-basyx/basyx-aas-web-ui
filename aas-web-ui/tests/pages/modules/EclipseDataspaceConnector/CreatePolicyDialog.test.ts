@@ -25,9 +25,16 @@ const codeViewerStub = {
   template: '<textarea class="code-editor" :value="text" @input="$emit(\'update:text\', $event.target.value)" />',
 }
 
-function mountDialog () {
+// Selects a template by its value, like choosing it in the list
+const templateSelectStub = {
+  props: ['modelValue', 'disabled'],
+  emits: ['update:modelValue'],
+  template: '<select class="template" :disabled="disabled" :value="modelValue" @change="$emit(\'update:modelValue\', $event.target.value)"><option value="" /><option value="bpn" /></select>',
+}
+
+function mountDialog (fromTemplate = false) {
   return mount(CreatePolicyDialog, {
-    props: { modelValue: true, proxyId: 'proxy-a' },
+    props: { modelValue: true, proxyId: 'proxy-a', fromTemplate },
     attachTo: document.body,
     global: {
       // The v-tooltip directive of the title mounts a real Vuetify tooltip
@@ -52,6 +59,7 @@ function mountDialog () {
         },
         'v-btn': { props: ['text', 'disabled'], emits: ['click'], template: '<button :disabled="disabled" @click="$emit(\'click\')">{{ text }}</button>' },
         'CodeViewer': codeViewerStub,
+        ...(fromTemplate ? { EdcTemplateSelect: templateSelectStub } : {}),
       },
     },
   })
@@ -136,6 +144,26 @@ describe('CreatePolicyDialog', () => {
       policy['@id'] = 'policy-by-hand'
     })
     expect(createButton().attributes('disabled')).toBeUndefined()
+    wrapper.unmount()
+  })
+
+  it('creates a policy from a chosen template', async () => {
+    const wrapper = mountDialog(true)
+    await flushPromises()
+    expect(wrapper.find('textarea.code-editor').exists()).toBe(false)
+
+    await wrapper.find('select.template').setValue('bpn')
+    await flushPromises()
+    await wrapper.find('input[data-label="Policy ID"]').setValue('policy-bpn')
+    await wrapper.find('input[data-label="BPN"]').setValue('BPNL000000000001')
+    await flushPromises()
+
+    await wrapper.findAll('button').find(button => button.text() === 'Create')!.trigger('click')
+    await flushPromises()
+    const policy = mocks.createPolicyDefinition.mock.calls[0]![1]
+    expect(policy['@id']).toBe('policy-bpn')
+    expect(JSON.stringify(policy)).toContain('BPNL000000000001')
+    expect(wrapper.emitted('policy-created')).toEqual([['policy-1']])
     wrapper.unmount()
   })
 })

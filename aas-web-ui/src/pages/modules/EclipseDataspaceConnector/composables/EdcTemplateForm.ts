@@ -18,13 +18,18 @@ export interface EdcTemplate<Value extends string = string> {
 /**
  * Form of a dialog creating an EDC resource, e.g. an `Asset`, from a chosen template.
  * The placeholder values are kept by label and reset when another template is chosen.
+ * A `defaultTemplate` is selected initially and after a reset, e.g. for a dialog without template selection.
  */
-export function useEdcTemplateForm<Value extends string> (resourceLabel: string, templates: EdcTemplate<Value>[]) {
+export function useEdcTemplateForm<Value extends string> (
+  resourceLabel: string,
+  templates: EdcTemplate<Value>[],
+  defaultTemplate: Value | '' = '',
+) {
   // Composables
   const { showFailureMessage } = useEdcRequestFailureMessage()
 
   // Data
-  const selectedTemplate = ref('') as Ref<Value | ''>
+  const selectedTemplate = ref(defaultTemplate) as Ref<Value | ''>
   const placeholderValues = ref<Record<string, string>>({})
   const form = ref<any>(null)
 
@@ -38,7 +43,7 @@ export function useEdcTemplateForm<Value extends string> (resourceLabel: string,
 
   // Methods
   function resetForm (): void {
-    selectedTemplate.value = ''
+    selectedTemplate.value = defaultTemplate
     placeholderValues.value = {}
     if (form.value) {
       form.value.reset()

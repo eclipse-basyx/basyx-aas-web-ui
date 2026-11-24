@@ -18,9 +18,9 @@ vi.mock('@/store/NavigationStore', () => ({
 
 const slotStub = { template: '<div><slot /></div>' }
 
-function mountDialog () {
+function mountDialog (fromTemplate = false) {
   return mount(CreateAssetDialog, {
-    props: { modelValue: true, proxyId: 'proxy-a' },
+    props: { modelValue: true, proxyId: 'proxy-a', fromTemplate },
     global: {
       stubs: {
         'v-dialog': slotStub,
@@ -43,6 +43,11 @@ function mountDialog () {
         'EdcAssetOAuth2Drawer': true,
         'EdcAssetOAuth2Fields': true,
         'EdcAssetOAuth2Button': true,
+        'EdcTemplateSelect': {
+          props: ['modelValue'],
+          emits: ['update:modelValue'],
+          template: '<select :value="modelValue" @change="$emit(\'update:modelValue\', $event.target.value)"><option value="" /><option value="default" /><option value="digitalTwinRegistry" /></select>',
+        },
       },
     },
   })
@@ -76,4 +81,25 @@ describe('CreateAssetDialog', () => {
     expect(preview).toEqual(asset)
     expect(wrapper.emitted('assets-created')).toEqual([['dtr"test']])
   })
+
+  it('does not count a mandatory field with only spaces as filled', async () => {
+    const wrapper = mountDialog()
+    await wrapper.find('input[data-label="Asset ID *"]').setValue(' '.repeat(3))
+    await wrapper.find('input[data-label="Asset Endpoint *"]').setValue('https://backend.test/api')
+
+    expect(createButton(wrapper).attributes('disabled')).toBeDefined()
+  })
+
+  it('shows the fields of a template only after it is chosen', async () => {
+    const wrapper = mountDialog(true)
+    expect(wrapper.find('input').exists()).toBe(false)
+    expect(createButton(wrapper).attributes('disabled')).toBeDefined()
+
+    await wrapper.find('select').setValue('digitalTwinRegistry')
+    expect(wrapper.find('input[data-label="Digital Twin Registry Asset ID *"]').exists()).toBe(true)
+  })
 })
+
+function createButton (wrapper: ReturnType<typeof mountDialog>) {
+  return wrapper.findAll('button').find(button => button.text() === 'Create')!
+}

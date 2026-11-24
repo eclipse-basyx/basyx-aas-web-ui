@@ -1,11 +1,13 @@
 <template>
   <v-select
     v-model="selectedTemplate"
-    hide-details
+    :hide-details="!showDescription"
+    :hint="showDescription ? selectedDescription : undefined"
     item-title="name"
     item-value="value"
     :items="templates"
     :label="label"
+    persistent-hint
     required
     variant="outlined"
   >
@@ -30,12 +32,16 @@
 <script lang="ts" setup generic="Value extends string">
   import type { EdcTemplate } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplateForm'
 
-  defineProps<{
+  const props = defineProps<{
     templates: EdcTemplate<Value>[]
     label: string
     icon: string
+    showDescription?: boolean // Below the field, the description of the selected template
   }>()
 
   // Data
   const selectedTemplate = defineModel<Value | ''>({ required: true })
+
+  // Computed properties
+  const selectedDescription = computed(() => props.templates.find(template => template.value === selectedTemplate.value)?.description ?? '')
 </script>

@@ -4,13 +4,14 @@
       v-for="(placeholder, index) in placeholders"
       :key="placeholder.label"
       :class="index > 0 ? 'mt-2': ''"
+      :disabled="disabled"
       :hide-details="placeholder.hint == ''"
       :hint="placeholder.hint"
-      :label="placeholder.label"
+      :label="placeholder.mandatory ? `${placeholder.label} *` : placeholder.label"
       :model-value="values[placeholder.label]"
       :persistent-hint="placeholder.hint !== ''"
       :placeholder="placeholder.placeholder"
-      required
+      :required="placeholder.mandatory ?? true"
       variant="outlined"
       @update:model-value="value => setValue(placeholder.label, value)"
     >
@@ -25,7 +26,8 @@
   import type { TemplatePlaceholder } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
 
   defineProps<{
-    placeholders: TemplatePlaceholder[]
+    placeholders: (TemplatePlaceholder & { mandatory?: boolean })[] // Marked with `*` if mandatory, required unless `mandatory: false`
+    disabled?: boolean
     appendAttribute?: string // Attribute of the placeholder whose field shows the append slot, e.g. `@id`
   }>()
 

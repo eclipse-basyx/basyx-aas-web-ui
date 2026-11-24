@@ -7,7 +7,7 @@
   >
     <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">
       <v-card-title class="bg-cardHeader">
-        Create Asset
+        {{ fromTemplate ? 'Create Asset from Template' : 'Create Asset' }}
       </v-card-title>
 
       <v-divider />
@@ -25,30 +25,37 @@
 
           <v-main class="d-flex flex-column">
             <v-form ref="form" class="d-flex flex-column pa-4 overflow-y-auto">
+
+              <!-- Template Selection, without it the default template is used -->
+              <template v-if="fromTemplate">
+                <EdcTemplateSelect
+                  v-model="selectedTemplate"
+                  icon="mdi-code-json"
+                  label="Select Asset Template"
+                  :templates="assetTemplates"
+                />
+
+                <!-- Full width, across the padding of the form -->
+                <v-divider v-if="activeTemplate" class="mt-4 mx-n4" />
+              </template>
+
               <!-- Dynamic Placeholder Fields, the OAuth2 ones are filled in the OAuth2 drawer -->
-              <div class="d-flex flex-column">
-                <v-text-field
-                  v-for="(placeholder, index) in fieldPlaceholders"
-                  :key="placeholder.label"
-                  v-model="placeholderValues[placeholder.label]"
-                  :class="index > 0 ? 'mt-2': ''"
-                  :hide-details="placeholder.hint == ''"
-                  :hint="placeholder.hint"
-                  :label="placeholder.mandatory ? `${placeholder.label} *` : placeholder.label"
-                  :persistent-hint="placeholder.hint !== ''"
-                  :placeholder="placeholder.placeholder"
-                  :required="placeholder.mandatory"
-                  variant="outlined"
-                >
-                  <!-- Next to the field of the Asset ID, aligned with the field above its hint -->
-                  <template v-if="placeholder.attribute === '@id'" #append>
-                    <EdcAssetOAuth2Button v-model="oauth2Drawer" :configured="hasEdcAssetOAuth2(oauth2)" />
-                  </template>
-                </v-text-field>
-              </div>
+              <EdcTemplatePlaceholderFields
+                v-if="activeTemplate"
+                v-model="placeholderValues"
+                :append-attribute="oauth2Placeholders.length > 0 ? '@id' : undefined"
+                :class="fromTemplate ? 'mt-4' : ''"
+                :placeholders="fieldPlaceholders"
+              >
+                <!-- Next to the field of the Asset ID, aligned with the field above its hint -->
+                <template #append>
+                  <EdcAssetOAuth2Button v-model="oauth2Drawer" :configured="hasEdcAssetOAuth2(oauth2)" />
+                </template>
+              </EdcTemplatePlaceholderFields>
 
               <!-- Asset Preview, fits its content, the form scrolls instead of shrinking it -->
               <JSONPreview
+                v-if="activeTemplate"
                 class="mt-4 flex-shrink-0"
                 download-file-name="asset"
                 height="auto"
@@ -74,7 +81,7 @@
         <v-btn
           class="text-buttonText"
           color="primary"
-          :disabled="!mandatoryPlaceholdersFilled"
+          :disabled="!activeTemplate || !mandatoryPlaceholdersFilled"
           rounded="lg"
           text="Create"
           variant="flat"
@@ -90,23 +97,26 @@
   import EdcAssetOAuth2Button from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Button.vue'
   import EdcAssetOAuth2Drawer from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Drawer.vue'
   import EdcAssetOAuth2Fields from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Fields.vue'
+  import EdcTemplatePlaceholderFields from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcTemplatePlaceholderFields.vue'
+  import EdcTemplateSelect from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcTemplateSelect.vue'
   import {
     createEmptyEdcAssetOAuth2,
     type EdcAssetOAuth2,
     edcAssetOAuth2PlaceholderValues,
     hasEdcAssetOAuth2,
   } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetOAuth2'
-  import {
-    edcRequestFailureText,
-    useEdcRequestFailureMessage,
-  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
+  import { type EdcTemplate, useEdcTemplateForm } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplateForm'
   import { fillTemplatePlaceholders, templatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
-  import AssetTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset.json'
+  import AssetTemplateDefault from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset.json'
+  import AssetTemplateDTRegistry from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_digitaltwin_registry.json'
+  import AssetTemplateSmService from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_submodel_service.json'
 
   const props = withDefaults(defineProps<{
     proxyId?: string
+    fromTemplate?: boolean // Lets the user choose the template, otherwise the default template is used
   }>(), {
     proxyId: 'default',
+    fromTemplate: false,
   })
 
   const emit = defineEmits<{
@@ -116,25 +126,51 @@
   // Template attributes the user must fill in before an asset can be created
   const MANDATORY_ATTRIBUTES = new Set(['@id', 'baseUrl'])
 
+  const assetTemplates: EdcTemplate<'default' | 'digitalTwinRegistry' | 'submodelService'>[] = [
+    {
+      value: 'default',
+      name: 'Default Asset',
+      description: '',
+      template: AssetTemplateDefault,
+    },
+    {
+      value: 'digitalTwinRegistry',
+      name: 'Digital Twin Registry',
+      description: 'The Digital Twin Registry enables the discovery and access of Digital Twins',
+      template: AssetTemplateDTRegistry,
+    },
+    {
+      value: 'submodelService',
+      name: 'Submodel Service',
+      description: 'The Submodel service allows to retrieve Submodels of Digital Twins',
+      template: AssetTemplateSmService,
+    },
+  ]
+
   // Composables
   const { createAsset: createAssetInEdc } = useCatenaXEdcClient()
-  const { showFailureMessage } = useEdcRequestFailureMessage()
+  const {
+    selectedTemplate,
+    placeholderValues,
+    form,
+    activeTemplate,
+    resetForm,
+    createFromTemplate,
+  } = useEdcTemplateForm('Asset', assetTemplates, props.fromTemplate ? '' : 'default')
 
   // Data
   const createAssetDialog = defineModel<boolean>({ required: true })
-  const form = ref<any>(null)
-  const placeholderValues = ref<Record<string, string>>({})
   const oauth2Drawer = ref(false)
   const oauth2 = ref<EdcAssetOAuth2>(createEmptyEdcAssetOAuth2()) // Fills the "oauth2:*" placeholders of the template
 
   // Computed properties
-  const activeAssetTemplate = computed(() => AssetTemplate)
-
   // A label used for several attributes is mandatory if one of them is
-  const placeholders = computed(() => templatePlaceholders(activeAssetTemplate.value).map(placeholder => ({
-    ...placeholder,
-    mandatory: placeholder.attributes.some(attribute => MANDATORY_ATTRIBUTES.has(attribute)),
-  })))
+  const placeholders = computed(() => activeTemplate.value
+    ? templatePlaceholders(activeTemplate.value.template).map(placeholder => ({
+      ...placeholder,
+      mandatory: placeholder.attributes.some(attribute => MANDATORY_ATTRIBUTES.has(attribute)),
+    }))
+    : [])
 
   const oauth2Placeholders = computed(() => placeholders.value.filter(p => p.attribute.startsWith('oauth2:')))
   const fieldPlaceholders = computed(() => placeholders.value.filter(p => !p.attribute.startsWith('oauth2:')))
@@ -146,7 +182,7 @@
   }))
 
   // The preview shows the asset as it is created, without the unfilled placeholders
-  const jsonContent = computed(() => JSON.stringify(buildAsset()))
+  const jsonContent = computed(() => activeTemplate.value ? JSON.stringify(buildAsset(activeTemplate.value.template)) : '')
 
   const mandatoryPlaceholdersFilled = computed(() =>
     placeholders.value
@@ -160,18 +196,26 @@
     value => {
       if (!value) {
         resetForm()
+        resetOAuth2()
+        oauth2Drawer.value = false
+      }
+    },
+  )
+
+  watch(
+    () => selectedTemplate.value,
+    () => {
+      // The placeholder values are reset by the template form
+      resetOAuth2()
+      if (oauth2Placeholders.value.length === 0) {
+        oauth2Drawer.value = false
       }
     },
   )
 
   // Methods
-  function resetForm (): void {
-    placeholderValues.value = {}
+  function resetOAuth2 (): void {
     oauth2.value = createEmptyEdcAssetOAuth2()
-    oauth2Drawer.value = false
-    if (form.value) {
-      form.value.reset()
-    }
   }
 
   async function createAsset (): Promise<void> {
@@ -180,24 +224,16 @@
       return
     }
 
-    try {
-      // Create the asset via EDC API
-      const result = await createAssetInEdc(props.proxyId, buildAsset())
-      if (result.success) {
-        emit('assets-created', result.data['@id'])
-        createAssetDialog.value = false
-        resetForm()
-      } else {
-        showFailureMessage('Failed to create Asset.', edcRequestFailureText(result, 'Asset', 'create'))
-      }
-    } catch (error_) {
-      console.error('Error creating asset:', error_)
-      showFailureMessage('Failed to create Asset.', error_ instanceof Error ? error_.message : String(error_))
+    // Create the asset via EDC API
+    const assetId = await createFromTemplate(template => createAssetInEdc(props.proxyId, buildAsset(template)))
+    if (assetId) {
+      emit('assets-created', assetId)
+      createAssetDialog.value = false
     }
   }
 
-  function buildAsset (): CatenaXEdcAsset {
-    return fillTemplatePlaceholders(activeAssetTemplate.value, filledPlaceholderValues.value) as CatenaXEdcAsset
+  function buildAsset (template: unknown): CatenaXEdcAsset {
+    return fillTemplatePlaceholders(template, filledPlaceholderValues.value) as CatenaXEdcAsset
   }
 
 </script>

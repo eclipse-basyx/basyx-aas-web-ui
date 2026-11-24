@@ -34,8 +34,9 @@
         @assets-created="assetId => onCreated(assetId, false)"
       />
 
-      <CreateAssetFromTemplateDialog
+      <CreateAssetDialog
         v-model="createAssetFromTemplateDialog"
+        from-template
         :proxy-id="proxyId"
         @assets-created="assetId => onCreated(assetId, false)"
       />
@@ -63,7 +64,6 @@
   import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import CreateAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetDialog.vue'
   import CreateAssetFromInfrastructureDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetFromInfrastructureDialog.vue'
-  import CreateAssetFromTemplateDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/CreateAssetFromTemplateDialog.vue'
   import DeleteAssetDialog from '@/pages/modules/EclipseDataspaceConnector/components/Assets/Dialogs/DeleteAssetDialog.vue'
   import EdcResourceTab from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceTab.vue'
   import { useEdcAssetTypeQuery } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetTypeQuery'

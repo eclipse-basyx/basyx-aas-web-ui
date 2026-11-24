@@ -1,106 +1,75 @@
 <template>
-  <v-dialog v-model="createAssetDialog" height="90%" max-width="1920" width="90%">
-    <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">
-      <v-card-title class="bg-cardHeader">
-        Create Asset from AAS Infrastructure
-      </v-card-title>
+  <InfrastructureDialog
+    v-model="createAssetDialog"
+    :show-empty-state="!selectedAas"
+    title="Create Asset from AAS Infrastructure"
+  >
+    <template #drawers>
+      <InfrastructureSelectionDrawers
+        v-model:aas="selectedAas"
+        v-model:aas-unavailable="aasUnavailable"
+        v-model:infrastructure-id="selectedInfrastructureId"
+        v-model:submodel-list-failed="submodelListFailed"
+        v-model:submodels="selectedSubmodels"
+      />
 
-      <v-divider />
-
-      <v-card-text class="pa-0 overflow-y-auto flex-grow-1">
-
-        <v-layout :style="{ 'height': fullHeight }">
-
-          <InfrastructureSelectionDrawers
-            v-model:aas="selectedAas"
-            v-model:aas-unavailable="aasUnavailable"
-            v-model:infrastructure-id="selectedInfrastructureId"
-            v-model:submodel-list-failed="submodelListFailed"
-            v-model:submodels="selectedSubmodels"
-          />
-
-          <EdcAssetOAuth2Drawer v-model="oauth2Drawer">
-            <EdcAssetOAuth2Fields
-              v-model="aasOAuth2"
-              subtitle="Used by the data address of the AAS asset"
-              title="Asset of AAS"
-            />
-
-            <v-divider />
-
-            <EdcAssetOAuth2Fields
-              v-model="smOAuth2"
-              subtitle="Used by the data addresses of all Submodel assets"
-              title="Assets of Submodels"
-            />
-          </EdcAssetOAuth2Drawer>
-
-          <v-main class="py-0">
-            <v-container class="ma-0 pa-0 d-flex flex-column" fluid :style="{ 'height': fullHeight }">
-
-              <!-- Offset by the drawer header, so the empty state aligns with the one of the Submodel List -->
-              <div
-                v-if="!selectedAas"
-                class="d-flex align-center justify-center"
-                :style="{ 'height': fullHeight, 'padding-top': drawerHeaderHeight }"
-              >
-                <SelectAasEmptyState
-                  :aas-unavailable="aasUnavailable"
-                  :infrastructure-selected="!!selectedInfrastructureId"
-                  text="Select an AAS to register as Asset."
-                />
-              </div>
-
-              <template v-else>
-                <!-- Preview of the selected AAS and each selected Submodel (1/3 of the height) -->
-                <JsonPreviewTabs v-model="previewTab" class="flex-1-1-0" :items="dataTabs">
-                  <template #append>
-                    <EdcAssetOAuth2Button v-model="oauth2Drawer" :configured="oauth2Configured" />
-                  </template>
-                </JsonPreviewTabs>
-
-                <v-divider />
-
-                <!-- Preview of the Asset of the AAS or Submodel selected in the tab bar above (2/3 of the height) -->
-                <JsonPreviewTabs v-model="previewTab" hide-tabs :items="edcAssetTabs" style="flex: 2 1 0" />
-              </template>
-
-            </v-container>
-          </v-main>
-
-        </v-layout>
-
-      </v-card-text>
-
-      <v-divider />
-
-      <v-card-actions>
-        <!-- The Asset of the AAS can be created without its Submodels -->
-        <span v-if="selectedAas && submodelListFailed" class="ml-2 text-warning text-body-medium">
-          Submodels could not be loaded, only AAS Asset can be created
-        </span>
-
-        <v-spacer />
-
-        <v-btn
-          rounded="lg"
-          text="Cancel"
-          @click="createAssetDialog = false"
+      <EdcAssetOAuth2Drawer v-model="oauth2Drawer">
+        <EdcAssetOAuth2Fields
+          v-model="aasOAuth2"
+          subtitle="Used by the data address of the AAS asset"
+          title="Asset of AAS"
         />
 
-        <v-btn
-          class="text-buttonText"
-          color="primary"
-          :disabled="!selectedAas"
-          :loading="creatingAssets"
-          rounded="lg"
-          text="Create"
-          variant="flat"
-          @click="createEdcAssets"
+        <v-divider />
+
+        <EdcAssetOAuth2Fields
+          v-model="smOAuth2"
+          subtitle="Used by the data addresses of all Submodel assets"
+          title="Assets of Submodels"
         />
-      </v-card-actions>
-    </v-sheet>
-  </v-dialog>
+      </EdcAssetOAuth2Drawer>
+    </template>
+
+    <template #empty-state>
+      <SelectAasEmptyState
+        :aas-unavailable="aasUnavailable"
+        :infrastructure-selected="!!selectedInfrastructureId"
+        text="Select an AAS to register as Asset."
+      />
+    </template>
+
+    <!-- Preview of the selected AAS and each selected Submodel (1/3 of the height) -->
+    <JsonPreviewTabs v-model="previewTab" class="flex-1-1-0" :items="dataTabs">
+      <template #append>
+        <EdcAssetOAuth2Button v-model="oauth2Drawer" :configured="oauth2Configured" />
+      </template>
+    </JsonPreviewTabs>
+
+    <v-divider />
+
+    <!-- Preview of the Asset of the AAS or Submodel selected in the tab bar above (2/3 of the height) -->
+    <JsonPreviewTabs v-model="previewTab" hide-tabs :items="edcAssetTabs" style="flex: 2 1 0" />
+
+    <template #status>
+      <!-- The Asset of the AAS can be created without its Submodels -->
+      <span v-if="selectedAas && submodelListFailed" class="ml-2 text-warning text-body-medium">
+        Submodels could not be loaded, only AAS Asset can be created
+      </span>
+    </template>
+
+    <template #actions>
+      <v-btn
+        class="text-buttonText"
+        color="primary"
+        :disabled="!selectedAas"
+        :loading="creatingAssets"
+        rounded="lg"
+        text="Create"
+        variant="flat"
+        @click="createEdcAssets"
+      />
+    </template>
+  </InfrastructureDialog>
 </template>
 
 <script lang="ts" setup>
@@ -111,6 +80,7 @@
   import EdcAssetOAuth2Button from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Button.vue'
   import EdcAssetOAuth2Drawer from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Drawer.vue'
   import EdcAssetOAuth2Fields from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Fields.vue'
+  import InfrastructureDialog from '@/pages/modules/EclipseDataspaceConnector/components/Shared/InfrastructureDialog.vue'
   import InfrastructureSelectionDrawers from '@/pages/modules/EclipseDataspaceConnector/components/Shared/InfrastructureSelectionDrawers.vue'
   import JsonPreviewTabs from '@/pages/modules/EclipseDataspaceConnector/components/Shared/JsonPreviewTabs.vue'
   import SelectAasEmptyState from '@/pages/modules/EclipseDataspaceConnector/components/Shared/SelectAasEmptyState.vue'
@@ -149,8 +119,6 @@
 
   // Data
   const createAssetDialog = defineModel<boolean>({ required: true })
-  const fullHeight = 'calc(90vh - 52px - 52px - 2px)' // dialog - dialog header - dialog footer - 2x divider
-  const drawerHeaderHeight = '121px' // selection field (8px + 40px) + list title bar (72px) + divider (1px)
   const selectedInfrastructureId = dialogState('infrastructure') // In the URL to return to it after a login, removed on close
   const selectedAas = ref<any>(null)
   const aasUnavailable = ref<AasUnavailableReason | null>(null) // Set by the AAS List of the selected infrastructure
