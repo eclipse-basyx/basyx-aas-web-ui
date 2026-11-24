@@ -4,6 +4,7 @@
     :error="error"
     :export-text="text"
     :file-name="`${downloadFileName || submodelElementData?.idShort || 'download'}.json`"
+    :fill="fill"
     :height="height"
     :icon="icon"
     :loading="loading"
@@ -20,12 +21,14 @@
     downloadFileName?: string
     jsonContent?: unknown
     height?: string
+    fill?: boolean // See CodeViewer
     icon?: string
     submodelElementData?: any
     title?: string
   }>(), {
     downloadFileName: '',
     height: '600px',
+    fill: false,
     icon: 'mdi-code-json',
     jsonContent: undefined,
     submodelElementData: undefined,

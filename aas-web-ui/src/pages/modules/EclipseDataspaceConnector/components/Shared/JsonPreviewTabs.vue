@@ -34,8 +34,8 @@
 
     <!-- Flat preview (no shadow, no rounded corners) filling the remaining height, attributes fall through to its v-card -->
     <JSONPreview
-      class="d-flex flex-column flex-1-1-0 json-preview-tabs__preview"
-      height="100%"
+      class="flex-1-1-0 json-preview-tabs__preview"
+      fill
       :icon="activeItem?.previewIcon"
       :json-content="activeItem?.json"
       rounded="0"
@@ -69,18 +69,6 @@
 <style scoped>
   .json-preview-tabs,
   .json-preview-tabs__preview {
-    min-height: 0;
-  }
-
-  /* Let the code editor fill the remaining height of the preview instead of a fixed height */
-  .json-preview-tabs__preview :deep(.v-card-text) {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-  }
-
-  .json-preview-tabs__preview :deep(.v-card-text > div) {
-    flex: 1 1 0;
     min-height: 0;
   }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card :class="{ 'd-flex flex-column': fill }">
     <v-card-title class="d-flex align-center flex-wrap ga-1">
       <v-icon v-if="icon" class="mr-2">{{ icon }}</v-icon>
       {{ title }}
@@ -60,7 +60,7 @@
 
     <v-divider />
 
-    <v-card-text>
+    <v-card-text :class="{ 'd-flex flex-column flex-1-1-0 code-viewer__fill': fill }">
       <v-progress-linear v-if="loading" aria-label="Loading preview" indeterminate />
       <v-alert v-else-if="error" role="alert" type="error" variant="tonal">{{ error }}</v-alert>
       <v-empty-state v-else-if="!text && readOnly" :title="emptyMessage" />
@@ -69,8 +69,9 @@
         v-else
         ref="codeEditor"
         :accessible-label="title"
+        :class="{ 'flex-1-1-0 code-viewer__fill': fill }"
         :error="invalid"
-        :height="height"
+        :height="fill ? '100%' : height"
         :language="language"
         :model-value="text"
         :options="{ wordWrap: wordWrap ? 'on' : 'off', lineNumbers: lineNumbers ? 'on' : 'off' }"
@@ -101,6 +102,7 @@
     fileName?: string
     mimeType?: string
     height?: string
+    fill?: boolean // The editor fills the height left in a flex column parent; `height` is ignored then
     loading?: boolean
     error?: string | null
     emptyMessage?: string
@@ -113,6 +115,7 @@
     title: 'JSON Preview',
     mimeType: 'application/json',
     height: '600px',
+    fill: false,
     emptyMessage: 'No content available',
     copyLabel: 'Copy to clipboard',
     downloadLabel: 'Download',
@@ -165,3 +168,10 @@
     downloadFile(props.fileName, new Blob([exportContent.value], { type: props.mimeType }))
   }
 </script>
+
+<style scoped>
+  /* Flex items keep their content height as minimum by default, so they could not shrink below the editor */
+  .code-viewer__fill {
+    min-height: 0;
+  }
+</style>
