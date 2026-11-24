@@ -209,7 +209,6 @@ function xmlPart (xlsx: XlsxPackage, path: string): Document {
   return document
 }
 
-/** Elements of the part's own namespace, e.g. `f` but not `xm:f` of an extension */
 /** Text of the `t` elements below a string item or inline string, without phonetic runs */
 function textOf (parent: Element): string {
   return elements(parent, 't')
@@ -218,6 +217,7 @@ function textOf (parent: Element): string {
     .join('')
 }
 
+/** Elements of the part's own namespace, e.g. `f` but not `xm:f` of an extension */
 function elements (parent: Document | Element, localName: string): Element[] {
   const namespace = (parent.ownerDocument ?? parent as Document).documentElement.namespaceURI
   return [...parent.getElementsByTagNameNS(namespace, localName)]
