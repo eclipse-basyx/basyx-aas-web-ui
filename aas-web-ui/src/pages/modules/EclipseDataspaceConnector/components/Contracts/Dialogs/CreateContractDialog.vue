@@ -114,6 +114,8 @@
     (event: 'contract-created', contractId: string): void
   }>()
 
+  const createContractDialog = defineModel<boolean>({ required: true })
+
   // The dialog has no template selection, its only template is always active
   const contractTemplates: EdcTemplate<'contract'>[] = [
     {
@@ -135,7 +137,6 @@
   } = useEdcTemplateForm('Contract', contractTemplates, 'contract')
 
   // Data
-  const createContractDialog = defineModel<boolean>({ required: true })
   const availableAssets = ref<any[]>([])
   const assetsLoading = ref(false)
   const availablePolicies = ref<any[]>([])

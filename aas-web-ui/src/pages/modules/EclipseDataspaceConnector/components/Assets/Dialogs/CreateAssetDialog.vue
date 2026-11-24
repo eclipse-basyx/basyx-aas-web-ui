@@ -123,6 +123,8 @@
     (event: 'assets-created', assetId: string): void
   }>()
 
+  const createAssetDialog = defineModel<boolean>({ required: true })
+
   // Template attributes the user must fill in before an asset can be created
   const MANDATORY_ATTRIBUTES = new Set(['@id', 'baseUrl'])
 
@@ -159,7 +161,6 @@
   } = useEdcTemplateForm('Asset', assetTemplates, props.fromTemplate ? '' : 'default')
 
   // Data
-  const createAssetDialog = defineModel<boolean>({ required: true })
   const oauth2Drawer = ref(false)
   const oauth2 = ref<EdcAssetOAuth2>(createEmptyEdcAssetOAuth2()) // Fills the "oauth2:*" placeholders of the template
 

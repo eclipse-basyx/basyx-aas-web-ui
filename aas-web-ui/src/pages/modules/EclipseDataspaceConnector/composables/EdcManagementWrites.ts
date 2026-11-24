@@ -1,5 +1,6 @@
 import type { MaybeRefOrGetter } from 'vue'
 import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
+import { useLoadGeneration } from '@/composables/LoadGeneration'
 
 /**
  * Whether the EDC BFF lets the given proxy create, update and delete assets, policies and contracts.
@@ -9,16 +10,17 @@ export function useEdcManagementWrites (proxyId: MaybeRefOrGetter<string>) {
   const { fetchStatus } = useCatenaXEdcClient()
 
   const managementWritesAllowed = ref(false)
-  let statusRequest = 0 // Ignores the response for a proxy that is no longer selected
+  const statusLoad = useLoadGeneration() // Ignores the response for a proxy that is no longer selected
 
   watch(() => toValue(proxyId), async id => {
-    const request = ++statusRequest
+    const generation = statusLoad.start()
     managementWritesAllowed.value = false
 
     const status = await fetchStatus(id)
-    if (request === statusRequest) {
+    if (statusLoad.isCurrent(generation)) {
       managementWritesAllowed.value = status?.managementWritesAllowed === true
     }
+    statusLoad.finish(generation)
   }, { immediate: true })
 
   return { managementWritesAllowed }

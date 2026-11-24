@@ -50,7 +50,7 @@
 
           <v-card-text
             class="pt-0 pb-0 px-2 overflow-y-auto"
-            style="height: calc(100svh - 64px - 48px - 40px - 112px - 3px)"
+            :style="{ height: EDC_FILTERED_LIST_HEIGHT }"
           >
             <div v-if="listLoading">
               <v-skeleton-loader type="list-item@6" />
@@ -168,23 +168,17 @@
 
 <script lang="ts" setup>
   import type { CatenaXPartner } from '@/types/Infrastructure'
-  import type { ComponentPublicInstance, Ref } from 'vue'
   import CatalogDatasetDetails from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/CatalogDatasetDetails.vue'
   import SendDataDialog from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/Dialogs/SendDataDialog.vue'
   import EdcResourceListItem from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceListItem.vue'
   import { useEdcCatalogQuery } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcCatalogQuery'
   import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
-  import { EDC_LIST_ITEM_HEIGHT, useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
+  import { EDC_LIST_ITEM_HEIGHT, type EdcVirtualScroll, useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import { assetTypeFilterItems, isPushAsset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
-  import { EDC_TAB_HEIGHT } from '@/pages/modules/EclipseDataspaceConnector/data/heights'
+  import { EDC_FILTERED_LIST_HEIGHT, EDC_TAB_HEIGHT } from '@/pages/modules/EclipseDataspaceConnector/data/heights'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { normalizeCatenaXPartners } from '@/utils/CatenaXPartnerUtils'
-
-  // Extend the ComponentPublicInstance type to include scrollToIndex
-  interface VirtualScrollInstance extends ComponentPublicInstance {
-    scrollToIndex: (index: number) => void
-  }
 
   // Stores
   const infrastructureStore = useInfrastructureStore()
@@ -195,7 +189,7 @@
   const { dialogOpen, dialogState } = useEdcDialogRoute()
 
   // Data
-  const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null)
+  const virtualScrollRef = ref<EdcVirtualScroll | null>(null)
 
   const selectedBusinessPartner = ref<CatenaXPartner | null>(null)
   const selectedCatalogDataset = ref({} as any)
@@ -221,6 +215,7 @@
     requestFailed: catalogRequestFailed,
     reload: reloadCatalog,
     clear: clearCatalog,
+    scrollToItem: scrollToCatalogDataset,
   } = useEdcPagedList<any>({
     virtualScrollRef,
     queryPage: page => queryCatalogPage(edcProxyId.value, selectedBusinessPartner.value!, selectedCatalogFilter.value, page),
@@ -254,7 +249,7 @@
     initialize()
   })
   onActivated(() => {
-    scrollToSelectedCatalogDataset()
+    scrollToCatalogDataset(isSelected)
   })
 
   async function initialize (): Promise<void> {
@@ -268,7 +263,7 @@
     }
 
     if (!(await reloadCatalog())) return // A newer request replaces this one
-    scrollToSelectedCatalogDataset()
+    scrollToCatalogDataset(isSelected)
     await restoreSendDataDialog()
   }
 
@@ -287,7 +282,7 @@
     }
     if (catalogDataset && isPushAsset(catalogDataset)) {
       selectedCatalogDataset.value = catalogDataset
-      scrollToSelectedCatalogDataset()
+      scrollToCatalogDataset(isSelected)
     } else {
       sendDataDialog.value = false
     }
@@ -300,7 +295,7 @@
       selectedCatalogDataset.value = dataset
 
       if (Object.keys(selectedCatalogDataset.value).length === 0) {
-        scrollToSelectedCatalogDataset()
+        scrollToCatalogDataset(isSelected)
       }
     }
   }
@@ -317,23 +312,6 @@
       return false
     }
     return selectedCatalogDataset.value['@id'] === dataset['@id']
-  }
-
-  function scrollToSelectedCatalogDataset (): void {
-    const index = catalogList.value.findIndex((item: any) => isSelected(item))
-    if (index === -1) return
-
-    const intervalId = setInterval(() => {
-      if (
-        virtualScrollRef.value
-        && virtualScrollRef.value.$el.querySelector(
-          '.v-virtual-scroll__container',
-        ).children.length > 0
-      ) {
-        virtualScrollRef.value.scrollToIndex(index)
-        clearInterval(intervalId)
-      }
-    }, 50)
   }
 
 </script>

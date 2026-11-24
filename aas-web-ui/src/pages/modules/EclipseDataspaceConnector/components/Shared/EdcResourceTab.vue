@@ -83,7 +83,7 @@
 
           <v-divider />
 
-          <v-card-text class="pt-0 pb-0 px-2 overflow-y-auto" :style="{ height: listHeight }">
+          <v-card-text class="pt-0 pb-0 px-2 overflow-y-auto" :style="{ height: slots.filter ? EDC_FILTERED_LIST_HEIGHT : EDC_LIST_HEIGHT }">
 
             <div v-if="listLoading">
               <v-skeleton-loader type="list-item@6" />
@@ -252,20 +252,16 @@
 <script lang="ts" setup>
   import type { CatenaXEdcResult } from '@/composables/Client/CatenaXEdcClient'
   import type { EdcListPage, EdcPageResult } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPaging'
+  import { useLoadGeneration } from '@/composables/LoadGeneration'
   import DeleteEdcResourceDialog from '@/pages/modules/EclipseDataspaceConnector/components/Shared/DeleteEdcResourceDialog.vue'
   import EdcResourceListItem from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceListItem.vue'
   import UpdateEdcResourceDialog from '@/pages/modules/EclipseDataspaceConnector/components/Shared/UpdateEdcResourceDialog.vue'
   import { useEdcManagementWrites } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcManagementWrites'
-  import { EDC_LIST_ITEM_HEIGHT, useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
+  import { EDC_LIST_ITEM_HEIGHT, type EdcVirtualScroll, useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
-  import { EDC_JSON_PREVIEW_HEIGHT, EDC_MAIN_HEIGHT, EDC_TAB_HEIGHT } from '@/pages/modules/EclipseDataspaceConnector/data/heights'
+  import { EDC_FILTERED_LIST_HEIGHT, EDC_JSON_PREVIEW_HEIGHT, EDC_LIST_HEIGHT, EDC_MAIN_HEIGHT, EDC_TAB_HEIGHT } from '@/pages/modules/EclipseDataspaceConnector/data/heights'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { debounce } from '@/utils/generalUtils'
-
-  // Extend the ComponentPublicInstance type to include scrollToIndex
-  interface VirtualScrollInstance extends ComponentPublicInstance {
-    scrollToIndex: (index: number) => void
-  }
 
   interface ResourceDialog {
     open: boolean
@@ -297,13 +293,13 @@
 
   // Composables
   const { showFailureMessage } = useEdcRequestFailureMessage()
+  const resourceLoad = useLoadGeneration() // A newer load sets the selection
 
   // Data
   const searchQuery = ref<string | null>('')
 
   const itemHeight = EDC_LIST_ITEM_HEIGHT
-  let loadCount = 0
-  const virtualScrollRef = ref<VirtualScrollInstance | null>(null)
+  const virtualScrollRef = ref<EdcVirtualScroll | null>(null)
   const selectedResource = ref<any>(null)
 
   const updateDialog = reactive<ResourceDialog>({ open: false, resource: {} })
@@ -312,8 +308,6 @@
   // Computed properties
   const selectedEdcConfig = computed(() => infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null)
   const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? 'default')
-  // Full height - header - tabs - footer - search (and filter) - borders
-  const listHeight = computed(() => `calc(100svh - 64px - 48px - 40px - ${slots.filter ? 112 : 64}px - 3px)`)
   // The list starts below the search (and filter), so its empty state moves up to the title height of the one on the right
   const emptyStateOffsetClass = computed(() => slots.filter ? 'mt-n9' : 'mt-n3')
   const failedEmptyStateOffsetClass = computed(() => slots.filter ? 'mt-n12' : 'mt-n6') // With icon and text, like the one on the right
@@ -322,7 +316,14 @@
   const { managementWritesAllowed } = useEdcManagementWrites(edcProxyId)
 
   // Loaded pages, sorted by ID by the EDC
-  const { items: resources, listLoading, pageLoading, requestFailed: listRequestFailed, reload } = useEdcPagedList<any>({
+  const {
+    items: resources,
+    listLoading,
+    pageLoading,
+    requestFailed: listRequestFailed,
+    reload,
+    scrollToItem: scrollToResource,
+  } = useEdcPagedList<any>({
     virtualScrollRef,
     queryPage: page => props.queryPage(edcProxyId.value, { ...page, search: searchText() }),
     onFailure: failure => showFailureMessage(`Failed to load the ${props.labelPlural}.`, edcBffFailureText(failure)),
@@ -343,7 +344,7 @@
   })
 
   onActivated(() => {
-    scrollToSelectedResource()
+    scrollToResource(isSelected)
   })
 
   /**
@@ -351,19 +352,23 @@
    * also for a resource beyond the first page, and drops deleted resources.
    */
   async function loadResources (): Promise<void> {
-    const load = ++loadCount
-    const selectedId = selectedResource.value?.['@id']
-    if (!(await reload())) return
+    const generation = resourceLoad.start()
+    try {
+      const selectedId = selectedResource.value?.['@id']
+      if (!(await reload())) return
 
-    if (listRequestFailed.value) {
-      selectedResource.value = null // A failed reload drops the previous list, like a failed first load
-      return
+      if (listRequestFailed.value) {
+        selectedResource.value = null // A failed reload drops the previous list, like a failed first load
+        return
+      }
+
+      const reloadedSelection = selectedId ? await findResource(selectedId) : null
+      if (!resourceLoad.isCurrent(generation)) return
+      selectedResource.value = reloadedSelection
+      scrollToResource(isSelected)
+    } finally {
+      resourceLoad.finish(generation)
     }
-
-    const reloadedSelection = selectedId ? await findResource(selectedId) : null
-    if (load !== loadCount) return // A newer load sets the selection
-    selectedResource.value = reloadedSelection
-    scrollToSelectedResource()
   }
 
   async function onCreated (resourceId?: string, replaceSelection = true): Promise<void> {
@@ -376,7 +381,7 @@
     const createdResource = await findResource(resourceId)
     if (createdResource) {
       selectedResource.value = createdResource
-      scrollToSelectedResource()
+      scrollToResource(isSelected)
     }
   }
 
@@ -410,21 +415,4 @@
     return !!resource?.['@id'] && resource['@id'] === selectedResource.value?.['@id']
   }
 
-  function scrollToSelectedResource (): void {
-    // Find the index of the selected item
-    const index = resources.value.findIndex(resource => isSelected(resource))
-
-    if (index !== -1) {
-      const intervalId = setInterval(() => {
-        if (
-          virtualScrollRef.value
-          && virtualScrollRef.value?.$el.querySelector('.v-virtual-scroll__container').children.length > 0
-        ) {
-          // Access the scrollable container
-          virtualScrollRef.value.scrollToIndex(index)
-          clearInterval(intervalId)
-        }
-      }, 50)
-    }
-  }
 </script>

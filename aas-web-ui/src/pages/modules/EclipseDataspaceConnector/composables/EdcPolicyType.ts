@@ -22,6 +22,7 @@ const policyTypeOfAction = new Map<string, EdcPolicyType>([
   ['access', 'Access'],
 ])
 
+// Unlike `asArray` in catenaXplorerUtils, keeps a single string, since an action may be a plain string
 function asArray (value: unknown): unknown[] {
   if (value === undefined || value === null) {
     return []

@@ -10,6 +10,10 @@ const jsonHeaderHeight = '64px + 32px'
 const actionsHeight = '44px'
 
 export const EDC_TAB_HEIGHT = `calc(${tabHeight})`
+// Tab height - one row of fields above the list (search) - border
+export const EDC_LIST_HEIGHT = `calc(${tabHeight} - 64px - 1px)`
+// Tab height - two rows of fields above the list (search or Business Partner, and filter) - border
+export const EDC_FILTERED_LIST_HEIGHT = `calc(${tabHeight} - 112px - 1px)`
 export const EDC_MAIN_HEIGHT = `calc(${mainHeight})`
 export const EDC_JSON_PREVIEW_HEIGHT = `calc(${mainHeight} - (${jsonHeaderHeight}))`
 export const EDC_JSON_PREVIEW_WITH_ACTIONS_HEIGHT = `calc(${mainHeight} - (${jsonHeaderHeight}) - ${actionsHeight})`

@@ -139,6 +139,8 @@
     (event: 'policy-created', policyId: string): void
   }>()
 
+  const createPolicyDialog = defineModel<boolean>({ required: true })
+
   type PolicyTemplateValue = 'access' | 'usage' | 'usageCxPcf' | 'usageCxDppDbp' | 'usageCxDtr' | 'usageCxSmService' | 'bpn'
 
   // Catena-X requires the constraints of the usage policy template, e.g. UsagePurpose and FrameworkAgreement
@@ -216,7 +218,6 @@
   } = useEdcTemplateForm('Policy', templates, props.fromTemplate ? '' : 'usage')
 
   // Data
-  const createPolicyDialog = defineModel<boolean>({ required: true })
   const jsonText = ref('')
   const jsonError = ref<string | null>(null)
   const manuallyEdited = ref(false) // The policy was edited in the editor, the fields no longer rebuild it
