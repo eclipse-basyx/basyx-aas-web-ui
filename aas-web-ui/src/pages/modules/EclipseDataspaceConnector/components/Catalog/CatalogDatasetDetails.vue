@@ -12,7 +12,7 @@
     <div
       v-else-if="!businessPartner || !datasetSelected"
       class="d-flex align-center justify-center"
-      :style="{ height: fullHeightMain }"
+      :style="{ height: EDC_MAIN_HEIGHT }"
     >
       <v-empty-state
         v-if="!businessPartner"
@@ -129,6 +129,13 @@
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import { isFetchAsset, isPushAsset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
   import { fetchedDataType } from '@/pages/modules/EclipseDataspaceConnector/data/fetchedDataType'
+  import {
+    EDC_JSON_PREVIEW_HEIGHT,
+    EDC_JSON_PREVIEW_WITH_ACTIONS_HALF_HEIGHT,
+    EDC_JSON_PREVIEW_WITH_ACTIONS_HEIGHT,
+    EDC_JSON_PREVIEW_WITH_TWO_ACTIONS_HALF_HEIGHT,
+    EDC_MAIN_HEIGHT,
+  } from '@/pages/modules/EclipseDataspaceConnector/data/heights'
 
   // The selected Catalog Dataset with its use case: send data to it or fetch its data
   const props = defineProps<{
@@ -148,12 +155,6 @@
   const { showFailureMessage } = useEdcRequestFailureMessage()
 
   // Data
-  const fullHeightMain = 'calc(100vh - 64px - 48px - 40px - 32px - 2px)' // Full height - header - tabs - footer - padding - border
-  const fullHeightMainJsonPreview = 'calc(100vh - 64px - 48px - 40px - 32px - 2px - 64px - 32px)' // Full height - header - tabs - footer - padding - border - JSON
-  const fullHeightMainJsonPreviewWithActions = 'calc(100vh - 64px - 48px - 40px - 32px - 2px - 64px - 32px - 44px)' // JSON preview - actions
-  const fullHeightMainJsonPreviewWithActionsHalf = 'calc((100vh - 64px - 48px - 40px - 32px - 2px - 2 * (64px + 32px) - 44px - 8px) / 2)' // Two JSON previews (with margin) below each other, the actions in between
-  const fullHeightMainJsonPreviewWithTwoActionsHalf = 'calc((100vh - 64px - 48px - 40px - 32px - 2px - 2 * (64px + 32px) - 2 * 44px - 8px) / 2)' // As above, with actions below the second JSON preview too
-
   const importSubmodelDialog = ref(false)
   const fetchingData = ref(false)
   const fetchedData = ref<unknown>(undefined) // Data fetched from the data plane of the Catalog Dataset
@@ -168,15 +169,15 @@
   })
   // Height of the Catalog Dataset and the Fetched Data, sharing the space below each other
   const jsonPreviewHalfHeight = computed(() => fetchedSubmodel.value
-    ? fullHeightMainJsonPreviewWithTwoActionsHalf
-    : fullHeightMainJsonPreviewWithActionsHalf)
+    ? EDC_JSON_PREVIEW_WITH_TWO_ACTIONS_HALF_HEIGHT
+    : EDC_JSON_PREVIEW_WITH_ACTIONS_HALF_HEIGHT)
   const catalogDatasetPreviewHeight = computed(() => {
     if (dataFetched.value) {
       return jsonPreviewHalfHeight.value
     }
     return isPushAsset(props.dataset) || isFetchAsset(props.dataset)
-      ? fullHeightMainJsonPreviewWithActions
-      : fullHeightMainJsonPreview
+      ? EDC_JSON_PREVIEW_WITH_ACTIONS_HEIGHT
+      : EDC_JSON_PREVIEW_HEIGHT
   })
 
   // Watchers

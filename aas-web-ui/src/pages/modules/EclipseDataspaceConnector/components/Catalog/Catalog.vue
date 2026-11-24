@@ -1,6 +1,6 @@
 <template>
-  <v-container class="pa-0 ma-0" fluid :style="{ height: fullHeight }">
-    <v-layout :style="{ height: fullHeight }">
+  <v-container class="pa-0 ma-0" fluid :style="{ height: EDC_TAB_HEIGHT }">
+    <v-layout :style="{ height: EDC_TAB_HEIGHT }">
 
       <v-navigation-drawer class="leftMenu" color="appNavigation" :width="336">
         <v-card color="rgba(0,0,0,0)" elevation="0">
@@ -177,6 +177,7 @@
   import { EDC_LIST_ITEM_HEIGHT, useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import { assetTypeFilterItems, isPushAsset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
+  import { EDC_TAB_HEIGHT } from '@/pages/modules/EclipseDataspaceConnector/data/heights'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { normalizeCatenaXPartners } from '@/utils/CatenaXPartnerUtils'
 
@@ -194,8 +195,6 @@
   const { dialogOpen, dialogState } = useEdcDialogRoute()
 
   // Data
-  const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Header - Tabs - Footer - Lines
-
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null)
 
   const selectedBusinessPartner = ref<CatenaXPartner | null>(null)

@@ -1,7 +1,7 @@
 <template>
-  <v-container class="pa-0 ma-0" fluid :style="{ 'height': fullHeight}">
+  <v-container class="pa-0 ma-0" fluid :style="{ 'height': EDC_TAB_HEIGHT}">
 
-    <v-layout :style="{ 'height': fullHeight}">
+    <v-layout :style="{ 'height': EDC_TAB_HEIGHT}">
       <v-navigation-drawer
         class="leftMenu"
         color="appNavigation"
@@ -170,7 +170,7 @@
             type="list-item-avatar, divider, paragraph@3"
           />
 
-          <div v-else-if="!selectedResource" class="d-flex align-center justify-center" :style="{'height': fullHeightMain}">
+          <div v-else-if="!selectedResource" class="d-flex align-center justify-center" :style="{'height': EDC_MAIN_HEIGHT}">
 
             <v-empty-state
               v-if="listRequestFailed"
@@ -198,7 +198,7 @@
           <template v-else>
             <JSONPreview
               :download-file-name="selectedResource['@id']"
-              :height="fullHeightMainJsonPreview"
+              :height="EDC_JSON_PREVIEW_HEIGHT"
               :icon="icon"
               :json-content="selectedResource"
               :title="label"
@@ -258,6 +258,7 @@
   import { useEdcManagementWrites } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcManagementWrites'
   import { EDC_LIST_ITEM_HEIGHT, useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
+  import { EDC_JSON_PREVIEW_HEIGHT, EDC_MAIN_HEIGHT, EDC_TAB_HEIGHT } from '@/pages/modules/EclipseDataspaceConnector/data/heights'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { debounce } from '@/utils/generalUtils'
 
@@ -298,10 +299,6 @@
   const { showFailureMessage } = useEdcRequestFailureMessage()
 
   // Data
-  const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Full height - header - tabs - footer - border
-  const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
-  const fullHeightMainJsonPreview = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px - 64px - 32px)') // Full height - header - tabs - footer - padding - border - JSON title - padding
-
   const searchQuery = ref<string | null>('')
 
   const itemHeight = EDC_LIST_ITEM_HEIGHT

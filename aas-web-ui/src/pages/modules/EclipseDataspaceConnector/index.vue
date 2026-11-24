@@ -30,7 +30,7 @@
     <v-divider />
 
     <!-- One router view for all tabs: a view per tab would render the current tab several times -->
-    <div :style="{ 'height': fullHeight}">
+    <div :style="{ 'height': EDC_TAB_HEIGHT}">
       <router-view />
     </div>
 
@@ -39,6 +39,7 @@
 
 <script lang="ts" setup>
   import { type LocationQueryRaw, useRoute, useRouter } from 'vue-router'
+  import { EDC_TAB_HEIGHT } from '@/pages/modules/EclipseDataspaceConnector/data/heights'
   import routes from './routes'
 
   defineOptions({
@@ -57,7 +58,6 @@
   // Data
   const initialTab = route.path.split('/').findLast(Boolean) || 'assets'
   const tabs = ref(initialTab)
-  const fullHeight = ref('calc(100vh - 64px - 48px - 40px -  2px)') // Full height - header - tabs - footer - border
 
   const tabItems = computed(() => (routes.children ?? []).map(route => ({
     id: route.path,
