@@ -1,5 +1,5 @@
 /**
- * Loads the UNIFE "Fire Certificate Inventory List" template (TGFS.06, revision 06, English) from unife.org
+ * Downloads the UNIFE "Fire Certificate Inventory List" template (TGFS.06, revision 06, English) from unife.org
  * at test time. UNIFE's terms of use do not allow redistributing it, so it is not part of this repository;
  * without network access the dependent tests are skipped.
  */
@@ -12,7 +12,7 @@ export const FCIL_TEMPLATE_URL
 let cached: Promise<Uint8Array | null> | undefined
 
 /** The template, or null if it cannot be loaded */
-export function loadFcilTemplate (timeoutMs = 15_000): Promise<Uint8Array | null> {
+export function downloadFcilTemplate (timeoutMs = 15_000): Promise<Uint8Array | null> {
   cached ??= download(
     FCIL_TEMPLATE_URL,
     'UNIFE FCIL template',

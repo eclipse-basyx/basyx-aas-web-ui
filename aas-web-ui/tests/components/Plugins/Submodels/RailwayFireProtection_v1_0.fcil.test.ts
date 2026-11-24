@@ -26,10 +26,10 @@ import {
   worksheet,
   xlsxBytes,
 } from '@/components/Plugins/Submodels/RailwayFireProtection_v1_0/utils/xlsxTemplate'
-import { loadFcilTemplate } from '../../../helpers/unifeTemplates'
+import { downloadFcilTemplate } from '../../../helpers/unifeTemplates'
 
 // UNIFE FCIL template, loaded from unife.org (not redistributable, so not in the repository); skipped when offline
-const template = await loadFcilTemplate()
+const template = await downloadFcilTemplate()
 const catalogue = template ? readFcilCatalogue(openXlsx(template.slice())) : undefined
 
 /** A fresh copy of the template */
