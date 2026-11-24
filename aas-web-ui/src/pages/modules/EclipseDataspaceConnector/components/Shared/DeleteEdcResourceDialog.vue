@@ -66,11 +66,10 @@
     (event: 'deleted'): void
   }>()
 
+  const deleteDialog = defineModel<boolean>({ required: true })
+
   // Composables
   const { showFailureMessage } = useEdcRequestFailureMessage()
-
-  // Data
-  const deleteDialog = defineModel<boolean>({ required: true })
 
   // Computed
   const resourceId = computed(() => (props.resource?.['@id'] as string | undefined) ?? '')

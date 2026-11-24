@@ -76,6 +76,8 @@
     submodel: aasTypes.Submodel | null // Fetched Submodel to import
   }>()
 
+  const importDialog = defineModel<boolean>({ required: true })
+
   // Stores
   const infrastructureStore = useInfrastructureStore()
   const navigationStore = useNavigationStore()
@@ -84,7 +86,6 @@
   const { postSubmodel } = useSMRepositoryClient()
 
   // Data
-  const importDialog = defineModel<boolean>({ required: true })
   const selectedInfrastructureId = ref<string | null>(null)
   const importing = ref(false)
 

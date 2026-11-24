@@ -63,11 +63,12 @@
     (event: 'deleted'): void
   }>()
 
+  const deleteDialog = defineModel<boolean>({ required: true })
+
   // Composables
   const { deleteAsset, queryContractDefinitions, deleteContractDefinition } = useCatenaXEdcClient()
 
   // Data
-  const deleteDialog = defineModel<boolean>({ required: true })
   const referencingContracts = ref<any[]>([])
   const referencingContractsLoading = ref(false)
   const referencingContractsFailed = ref(false)

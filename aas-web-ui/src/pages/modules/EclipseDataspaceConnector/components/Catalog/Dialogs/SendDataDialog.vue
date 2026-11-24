@@ -107,6 +107,8 @@
     proxyId: 'default',
   })
 
+  const sendDataDialog = defineModel<boolean>({ required: true })
+
   // Stores
   const navigationStore = useNavigationStore()
 
@@ -116,7 +118,6 @@
   const { dialogState } = useEdcDialogRoute()
 
   // Data
-  const sendDataDialog = defineModel<boolean>({ required: true })
   const selectedInfrastructureId = dialogState('infrastructure') // In the URL to return to it after a login, removed on close
   const selectedAas = ref<any>(null)
   const aasUnavailable = ref<AasUnavailableReason | null>(null) // Set by the AAS List of the selected infrastructure
