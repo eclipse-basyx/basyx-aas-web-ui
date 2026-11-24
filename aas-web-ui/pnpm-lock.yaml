@@ -205,8 +205,8 @@ importers:
         specifier: ^3.6.1
         version: 3.6.1(three@0.187.0)(web-ifc@0.0.80)
       '@thatopen/ui':
-        specifier: ^3.4.30
-        version: 3.4.30
+        specifier: ^3.4.31
+        version: 3.4.31
       '@thatopen/ui-obc':
         specifier: ^3.4.5
         version: 3.4.5(@thatopen/components-front@3.6.1(@thatopen/components@3.6.0(@thatopen/fragments@3.6.1(three@0.187.0)(web-ifc@0.0.80))(camera-controls@3.1.2(three@0.187.0))(three@0.187.0)(web-ifc@0.0.80))(@thatopen/fragments@3.6.1(three@0.187.0)(web-ifc@0.0.80))(three@0.187.0)(web-ifc@0.0.80))(@thatopen/components@3.6.0(@thatopen/fragments@3.6.1(three@0.187.0)(web-ifc@0.0.80))(camera-controls@3.1.2(three@0.187.0))(three@0.187.0)(web-ifc@0.0.80))(@thatopen/fragments@3.6.1(three@0.187.0)(web-ifc@0.0.80))(three@0.187.0)(web-ifc@0.0.80)
@@ -1125,8 +1125,8 @@ packages:
       three: 0.185.0
       web-ifc: '>=0.0.77'
 
-  '@thatopen/ui@3.4.30':
-    resolution: {integrity: sha512-ToWeb5Eewivg1LfnlkZH8ou/csRDahdqMPEsOisfsD43Y428XahGkSu0BNv8eX49Trk4+JHooGYoQW4Q8dKqOg==}
+  '@thatopen/ui@3.4.31':
+    resolution: {integrity: sha512-qUOnFmKKTLT7OKJxi3o2+VjN9Ovmy5hTuy5Z/HO443cUyoE0nSpuAOS5rJ27eBrY8nx+fQfvn0i70Ypngxbcug==}
 
   '@tsconfig/node24@24.0.6':
     resolution: {integrity: sha512-/SK4JuydRQLGSCq7+hbiQ8fdAVR4Suv5EcBvkIAG3zo3GbXQvGoSclz4olL12Ar4OpH8gwGYJ67P4wwQqBRxKw==}
@@ -4089,12 +4089,12 @@ snapshots:
       '@thatopen/components': 3.6.0(@thatopen/fragments@3.6.1(three@0.187.0)(web-ifc@0.0.80))(camera-controls@3.1.2(three@0.187.0))(three@0.187.0)(web-ifc@0.0.80)
       '@thatopen/components-front': 3.6.1(@thatopen/components@3.6.0(@thatopen/fragments@3.6.1(three@0.187.0)(web-ifc@0.0.80))(camera-controls@3.1.2(three@0.187.0))(three@0.187.0)(web-ifc@0.0.80))(@thatopen/fragments@3.6.1(three@0.187.0)(web-ifc@0.0.80))(three@0.187.0)(web-ifc@0.0.80)
       '@thatopen/fragments': 3.6.1(three@0.187.0)(web-ifc@0.0.80)
-      '@thatopen/ui': 3.4.30
+      '@thatopen/ui': 3.4.31
       lit: 3.3.1
       three: 0.187.0
       web-ifc: 0.0.80
 
-  '@thatopen/ui@3.4.30':
+  '@thatopen/ui@3.4.31':
     dependencies:
       '@floating-ui/dom': 1.6.3
       chart.js: 4.6.1
