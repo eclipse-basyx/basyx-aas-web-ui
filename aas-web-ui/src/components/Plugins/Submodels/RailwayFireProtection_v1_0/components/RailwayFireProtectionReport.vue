@@ -70,31 +70,29 @@
       <section>
         <div class="text-label-large mb-2">Test results</div>
 
-        <div v-if="report.tests.length > 0" class="rfp-table border rounded">
-          <v-table density="compact">
-            <thead>
-              <tr>
-                <th>Test procedure</th>
-                <th>Result</th>
-                <th>Date</th>
-                <th>Report no.</th>
-              </tr>
-            </thead>
+        <v-table v-if="report.tests.length > 0" class="border rounded" density="compact">
+          <thead>
+            <tr>
+              <th>Test procedure</th>
+              <th>Result</th>
+              <th>Date</th>
+              <th>Report no.</th>
+            </tr>
+          </thead>
 
-            <tbody>
-              <tr v-for="test in report.tests" :key="test.key">
-                <td>
-                  <div>{{ test.procedure || test.idShort }}</div>
-                  <div v-if="test.comment" class="text-body-small text-medium-emphasis">{{ test.comment }}</div>
-                </td>
+          <tbody>
+            <tr v-for="test in report.tests" :key="test.key">
+              <td>
+                <div>{{ test.procedure || test.idShort }}</div>
+                <div v-if="test.comment" class="text-body-small text-medium-emphasis">{{ test.comment }}</div>
+              </td>
 
-                <td class="font-weight-medium">{{ test.result || '–' }}</td>
-                <td class="text-no-wrap">{{ test.date || '–' }}</td>
-                <td class="text-no-wrap">{{ test.reportNumber || '–' }}</td>
-              </tr>
-            </tbody>
-          </v-table>
-        </div>
+              <td class="font-weight-medium">{{ test.result || '–' }}</td>
+              <td class="text-no-wrap">{{ test.date || '–' }}</td>
+              <td class="text-no-wrap">{{ test.reportNumber || '–' }}</td>
+            </tr>
+          </tbody>
+        </v-table>
 
         <div v-else class="text-body-medium text-medium-emphasis">No tests listed</div>
       </section>
@@ -164,9 +162,3 @@
     return rows.filter((row): row is LabRow => !!row && row.value.trim() !== '')
   })
 </script>
-
-<style scoped>
-  .rfp-table {
-    overflow-x: auto;
-  }
-</style>

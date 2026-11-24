@@ -14,7 +14,7 @@
 
     <figcaption class="d-flex flex-column ga-1 text-body-small">
       <div class="d-flex align-center ga-2">
-        <span class="rfp-mass-chart__swatch rfp-mass-chart__swatch--combustible" />
+        <span class="rfp-mass-chart__swatch bg-primary" />
         <span>Combustible</span>
         <span class="font-weight-medium ml-auto">{{ percentText }}</span>
       </div>
@@ -60,10 +60,6 @@
     width: 10px;
     height: 10px;
     border-radius: 2px;
-  }
-
-  .rfp-mass-chart__swatch--combustible {
-    background-color: rgb(var(--v-theme-primary));
   }
 
   /* Same colour as the underlay of v-progress-circular */

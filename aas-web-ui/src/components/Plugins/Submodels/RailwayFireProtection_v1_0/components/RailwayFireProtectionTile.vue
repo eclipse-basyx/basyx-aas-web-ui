@@ -45,14 +45,14 @@
         </div>
 
         <!-- Test procedures and their values -->
-        <dl v-if="tests.length > 0" class="rfp-tests">
-          <div v-for="test in shownTests" :key="test.key" class="rfp-tests__row">
-            <dt class="rfp-tests__procedure text-body-small text-medium-emphasis">
+        <dl v-if="tests.length > 0" class="d-flex flex-column ga-1 mt-4 mb-0">
+          <div v-for="test in shownTests" :key="test.key" class="d-flex align-baseline ga-2 pb-1 border-b">
+            <dt class="flex-grow-1 text-truncate text-body-small text-medium-emphasis">
               {{ test.procedure || test.idShort }}
               <v-tooltip activator="parent" location="top" open-delay="600" :text="test.procedure || test.idShort" />
             </dt>
 
-            <dd class="text-body-medium font-weight-medium text-no-wrap">{{ test.result || '–' }}</dd>
+            <dd class="ma-0 text-body-medium font-weight-medium text-no-wrap">{{ test.result || '–' }}</dd>
           </div>
         </dl>
 
@@ -173,33 +173,6 @@
 
   .rfp-tile__card {
     grid-area: 1 / 1;
-  }
-
-  .rfp-tests {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin: 16px 0 0;
-  }
-
-  .rfp-tests__row {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    padding-bottom: 4px;
-    border-bottom: thin solid rgba(var(--v-border-color), var(--v-border-opacity));
-  }
-
-  .rfp-tests__row dd {
-    margin: 0;
-  }
-
-  .rfp-tests__procedure {
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .rfp-meter {
