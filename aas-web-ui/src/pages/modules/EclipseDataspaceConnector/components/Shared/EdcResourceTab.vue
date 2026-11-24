@@ -307,7 +307,7 @@
 
   // Computed properties
   const selectedEdcConfig = computed(() => infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null)
-  const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? 'default')
+  const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() || 'default')
   // The list starts below the search (and filter), so its empty state moves up to the title height of the one on the right
   const emptyStateOffsetClass = computed(() => slots.filter ? 'mt-n9' : 'mt-n3')
   const failedEmptyStateOffsetClass = computed(() => slots.filter ? 'mt-n12' : 'mt-n6') // With icon and text, like the one on the right

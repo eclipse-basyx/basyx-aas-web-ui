@@ -204,7 +204,7 @@
 
   // Computed properties
   const selectedEdcConfig = computed(() => infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null)
-  const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? 'default')
+  const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() || 'default')
   const businessPartners = computed(() => normalizeCatenaXPartners(selectedEdcConfig.value?.partners ?? []))
 
   // Loaded pages of the catalog, in the order of the provider

@@ -315,7 +315,7 @@
   const selectedEdcConfig = computed(() => {
     return infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null
   })
-  const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? 'default')
+  const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() || 'default')
   const configuredEdcPartners = computed(() => normalizeCatenaXPartners(selectedEdcConfig.value?.partners ?? []))
   const recentEdcPartnerOptions = computed(() => {
     const mergedPartners = mergeCatenaXPartners(configuredEdcPartners.value, edcRecentPartners.value)
@@ -892,11 +892,6 @@
         return false
       }
       return true
-    }
-
-    if (edcProxyId.value === '') {
-      inlineError.value = 'The selected Catena-X infrastructure has no EDC proxy ID.'
-      return false
     }
 
     if (edcCounterPartyId.value.trim() === '' || edcCounterPartyAddress.value.trim() === '') {
