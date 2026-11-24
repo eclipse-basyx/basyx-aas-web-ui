@@ -318,29 +318,26 @@ export function usesAasEnvironment (
   return template === 'mono-repo' || template === 'mono-all'
 }
 
+interface RequiredEndpointFields {
+  aasSource: InfrastructureEndpointFieldKey[]
+  submodelImport: InfrastructureEndpointFieldKey[]
+}
+
+/** Endpoint fields per template that need a URL before an infrastructure can serve as AAS source or Submodel import target; none means it can't */
+const REQUIRED_ENDPOINT_FIELDS: Record<InfrastructureTemplate, RequiredEndpointFields> = {
+  'full': { aasSource: ['AASRepo', 'SubmodelRepo'], submodelImport: ['SubmodelRepo'] },
+  'identifiable': { aasSource: ['AASRepo'], submodelImport: [] },
+  'mono-repo': { aasSource: ['AASEnvironment'], submodelImport: ['AASEnvironment'] },
+  'mono-all': { aasSource: ['AASEnvironment'], submodelImport: ['AASEnvironment'] },
+  'catena-x': { aasSource: [], submodelImport: [] },
+}
+
 /**
  * Whether AAS and their submodels can be read from the infrastructure's repositories:
  * AAS and Submodel Repository (full), AAS Repository (identifiable) or AAS Environment (mono-repo, mono-all).
  */
 export function isAasSourceInfrastructure (infrastructure: InfrastructureConfig): boolean {
-  const hasUrl = (componentKey: BaSyxComponentKey): boolean =>
-    getActiveComponentUrlForTemplate(infrastructure, componentKey) !== ''
-
-  switch (getInfrastructureTemplate(infrastructure)) {
-    case 'full': {
-      return hasUrl('AASRepo') && hasUrl('SubmodelRepo')
-    }
-    case 'identifiable': {
-      return hasUrl('AASRepo')
-    }
-    case 'mono-repo':
-    case 'mono-all': {
-      return hasAasEnvironmentUrl(infrastructure)
-    }
-    default: {
-      return false
-    }
-  }
+  return hasEndpointFieldUrls(infrastructure, REQUIRED_ENDPOINT_FIELDS[getInfrastructureTemplate(infrastructure)].aasSource)
 }
 
 /**
@@ -348,23 +345,14 @@ export function isAasSourceInfrastructure (infrastructure: InfrastructureConfig)
  * Submodel Repository (full) or AAS Environment (mono-repo, mono-all).
  */
 export function isSubmodelImportInfrastructure (infrastructure: InfrastructureConfig): boolean {
-  switch (getInfrastructureTemplate(infrastructure)) {
-    case 'full': {
-      return getActiveComponentUrlForTemplate(infrastructure, 'SubmodelRepo') !== ''
-    }
-    case 'mono-repo':
-    case 'mono-all': {
-      return hasAasEnvironmentUrl(infrastructure)
-    }
-    default: {
-      return false
-    }
-  }
+  return hasEndpointFieldUrls(infrastructure, REQUIRED_ENDPOINT_FIELDS[getInfrastructureTemplate(infrastructure)].submodelImport)
 }
 
-function hasAasEnvironmentUrl (infrastructure: InfrastructureConfig): boolean {
-  const aasEnvironmentField = getEndpointFieldByKey(infrastructure, 'AASEnvironment')
-  return !!aasEnvironmentField && getEndpointFieldValue(infrastructure.components, aasEnvironmentField) !== ''
+function hasEndpointFieldUrls (infrastructure: InfrastructureConfig, fieldKeys: InfrastructureEndpointFieldKey[]): boolean {
+  return fieldKeys.length > 0 && fieldKeys.every(fieldKey => {
+    const field = getEndpointFieldByKey(infrastructure, fieldKey)
+    return !!field && getEndpointFieldValue(infrastructure.components, field) !== ''
+  })
 }
 
 export function getDefaultAasUploadMode (
