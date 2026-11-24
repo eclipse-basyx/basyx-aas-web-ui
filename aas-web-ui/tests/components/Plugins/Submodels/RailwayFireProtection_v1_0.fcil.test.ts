@@ -294,6 +294,17 @@ describe.skipIf(!template)('fillFcilTemplate', () => {
     expect(fcil('AN11').text).toBeUndefined()
   })
 
+  it('fills all rows the template prepares, each with six tests', () => {
+    const data = sampleData()
+    data.reports = [report(0, Array.from({ length: 6 }, (_, index) => test(`EN ${index + 1}`, String(index))))]
+    data.requirementsSets = Array.from({ length: 471 }, (_, index) =>
+      requirementsSet(index, `R${String(index).padStart(3, '0')}`, 'HL1', 0))
+    const full = readSheet(unzipSync(fillFcilTemplate(templateBytes(), data)), 'xl/worksheets/sheet3.xml')
+    expect(full('CA481').text).toMatch(/^Requirement set R470\n/)
+    expect(full('AP481').text).toBe('0')
+    expect(full('BT481').text).toBe('5')
+  })
+
   it('fails with a row limit error, not a template error, if the rows do not fit the template', () => {
     const data = sampleData()
     data.requirementsSets = Array.from({ length: 472 }, (_, index) => requirementsSet(index, `R${index}`, 'HL1', null))

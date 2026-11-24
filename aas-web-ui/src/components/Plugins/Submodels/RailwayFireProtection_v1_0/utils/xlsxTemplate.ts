@@ -231,17 +231,45 @@ function parseCellReference (reference: string): CellAddress {
   return { column: columnNumber(match[1]), row: Number(match[2]) }
 }
 
+/**
+ * The cells of a sheet by reference, collected once. Looking a cell up in the DOM instead walks the
+ * whole sheet after every change (jsdom drops its cached element lists on any change, attributes
+ * included), which made filling in the FCIL template take minutes. `cellElement` adds the cells it
+ * creates; no function of this module removes a `c` element, so the index stays complete.
+ */
+interface SheetIndex {
+  sheetData: Element | undefined
+  cells: Map<string, Element>
+}
+
+const sheetIndexes = new WeakMap<Document, SheetIndex>()
+
+function sheetIndex (sheet: Document): SheetIndex {
+  let index = sheetIndexes.get(sheet)
+  if (!index) {
+    index = { sheetData: elements(sheet, 'sheetData')[0], cells: new Map() }
+    for (const cell of elements(sheet, 'c')) {
+      index.cells.set(cell.getAttribute('r') ?? '', cell)
+    }
+    sheetIndexes.set(sheet, index)
+  }
+  return index
+}
+
 function findCell (sheet: Document, address: CellAddress): Element | undefined {
-  const name = `${columnName(address.column)}${address.row}`
-  const row = elements(sheet, 'row').find(element => Number(element.getAttribute('r')) === address.row)
-  return row ? elements(row, 'c').find(element => element.getAttribute('r') === name) : undefined
+  return sheetIndex(sheet).cells.get(`${columnName(address.column)}${address.row}`)
 }
 
 /** The `c` element of a cell, created (in row and column order) if the sheet does not have it yet */
 function cellElement (sheet: Document, reference: string): Element {
   const address = parseCellReference(reference)
+  const existing = findCell(sheet, address)
+  if (existing) {
+    return existing
+  }
+
   const namespace = sheet.documentElement.namespaceURI
-  const sheetData = elements(sheet, 'sheetData')[0]
+  const { sheetData, cells } = sheetIndex(sheet)
   if (!sheetData) {
     throw new Error('The worksheet has no cell data.')
   }
@@ -254,15 +282,12 @@ function cellElement (sheet: Document, reference: string): Element {
     sheetData.insertBefore(row, rows.find(element => Number(element.getAttribute('r')) > address.row) ?? null)
   }
 
-  const cells = elements(row, 'c')
   const name = `${columnName(address.column)}${address.row}`
-  let cell = cells.find(element => element.getAttribute('r') === name)
-  if (!cell) {
-    cell = sheet.createElementNS(namespace, 'c')
-    cell.setAttribute('r', name)
-    row.insertBefore(cell, cells.find(element =>
-      parseCellReference(element.getAttribute('r') ?? '').column > address.column) ?? null)
-  }
+  const cell = sheet.createElementNS(namespace, 'c')
+  cell.setAttribute('r', name)
+  row.insertBefore(cell, elements(row, 'c').find(element =>
+    parseCellReference(element.getAttribute('r') ?? '').column > address.column) ?? null)
+  cells.set(name, cell)
   return cell
 }
 
