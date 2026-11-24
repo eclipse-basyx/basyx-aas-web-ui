@@ -35,15 +35,15 @@ https://admin-shell.io/idta/cds/RailwayFireProtection/1
 
 The values of `HazardLevel` are defined in IDTA 02102, Table 6. The plugin reads the `valueId` first. Without a matching `valueId`, it reads the value text, ignoring case and surrounding quotes and accepting both `HL3` and `Hazard Level 3`.
 
-| Code | Meaning | Color | Sort order (problems first) |
-| --- | --- | --- | --- |
-| `NC` | Not Compliant | error | 1 |
-| `MTR` | Missing Test Results | warning | 2 |
-| `unknown` | No value or an unrecognized value | grey | 3 |
-| `AFNR` | Approved Functional Necessity Report | info | 4 |
-| `HL1`–`HL3` | Compliant: Hazard Level 1–3 | success | 5–7 |
+| Code | Meaning | Color |
+| --- | --- | --- |
+| `HL1`–`HL3` | Compliant: Hazard Level 1–3 | success |
+| `AFNR` | Approved Functional Necessity Report | info |
+| `MTR` | Missing Test Results | warning |
+| `NC` | Not Compliant | error |
+| `unknown` | No value or an unrecognized value | grey |
 
-The filter chips use the opposite order: HL3, HL2, HL1, AFNR, MTR, NC, unknown.
+The filter chips show the levels in this order: HL3, HL2, HL1, AFNR, MTR, NC, unknown.
 
 ## Submodel structure read by the parser
 

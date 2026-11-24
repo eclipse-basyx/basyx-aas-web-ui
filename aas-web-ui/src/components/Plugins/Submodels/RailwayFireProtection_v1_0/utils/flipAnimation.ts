@@ -13,10 +13,10 @@
 const PERSPECTIVE = 'perspective(2000px)'
 const STANDARD = 'cubic-bezier(0.4, 0, 0.2, 1)'
 
-export const OPEN_MS = 520
-export const CLOSE_MS = 420
+const OPEN_MS = 520
+const CLOSE_MS = 420
 
-export function prefersReducedMotion (): boolean {
+function prefersReducedMotion (): boolean {
   return typeof window !== 'undefined'
     && typeof window.matchMedia === 'function'
     && window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -31,7 +31,7 @@ type BoxMapping = { x: number, y: number, sx: number, sy: number }
 const IDENTITY: BoxMapping = { x: 0, y: 0, sx: 1, sy: 1 }
 
 /** Translation and scale that map box `from` onto box `to` (both measured without transforms) */
-export function mapBox (from: DOMRect, to: DOMRect): BoxMapping {
+function mapBox (from: DOMRect, to: DOMRect): BoxMapping {
   return {
     x: to.left + to.width / 2 - (from.left + from.width / 2),
     y: to.top + to.height / 2 - (from.top + from.height / 2),
@@ -45,7 +45,7 @@ export function mapBox (from: DOMRect, to: DOMRect): BoxMapping {
  * translation, rotation and scale separately and both faces stay on the same path. The perspective comes after the
  * translation, so both faces are projected around the card's current centre and meet exactly at 90°.
  */
-export function faceTransform (mapping: BoxMapping, degrees: number): string {
+function faceTransform (mapping: BoxMapping, degrees: number): string {
   return `translate(${mapping.x}px, ${mapping.y}px) ${PERSPECTIVE} rotateY(${degrees}deg) scale(${mapping.sx}, ${mapping.sy})`
 }
 

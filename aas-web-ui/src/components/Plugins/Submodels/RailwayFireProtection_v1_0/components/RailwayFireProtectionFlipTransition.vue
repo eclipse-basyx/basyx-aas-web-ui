@@ -25,18 +25,13 @@
 
   const props = defineProps<{
     origin?: Element | null
-    /** Passed by Vuetify's overlay when it has an activator; used if no `origin` is given */
-    target?: unknown
   }>()
 
   type Closing = { tile: Element | null, cleanup: () => void }
   const closing = new WeakMap<Element, Closing>()
 
   function originElement (): Element | null {
-    if (props.origin) {
-      return props.origin
-    }
-    return props.target instanceof Element ? props.target : null
+    return props.origin ?? null
   }
 
   function nextFrame (): Promise<void> {

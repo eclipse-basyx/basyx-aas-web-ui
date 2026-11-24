@@ -13,8 +13,6 @@ export type HazardLevelMeta = {
   icon: string
   /** Hazard level 1–3 for compliant values, otherwise 0 */
   level: number
-  /** Order for "problems first" sorting: lower values come first */
-  severity: number
 }
 
 const META: Record<HazardLevelCode, HazardLevelMeta> = {
@@ -26,7 +24,6 @@ const META: Record<HazardLevelCode, HazardLevelMeta> = {
     color: 'error',
     icon: 'mdi-shield-off-outline',
     level: 0,
-    severity: 0,
   },
   MTR: {
     code: 'MTR',
@@ -36,7 +33,6 @@ const META: Record<HazardLevelCode, HazardLevelMeta> = {
     color: 'warning',
     icon: 'mdi-progress-alert',
     level: 0,
-    severity: 1,
   },
   unknown: {
     code: 'unknown',
@@ -46,7 +42,6 @@ const META: Record<HazardLevelCode, HazardLevelMeta> = {
     color: 'grey',
     icon: 'mdi-help-circle-outline',
     level: 0,
-    severity: 2,
   },
   AFNR: {
     code: 'AFNR',
@@ -56,7 +51,6 @@ const META: Record<HazardLevelCode, HazardLevelMeta> = {
     color: 'info',
     icon: 'mdi-file-certificate-outline',
     level: 0,
-    severity: 3,
   },
   HL1: {
     code: 'HL1',
@@ -66,7 +60,6 @@ const META: Record<HazardLevelCode, HazardLevelMeta> = {
     color: 'success',
     icon: 'mdi-shield-check-outline',
     level: 1,
-    severity: 4,
   },
   HL2: {
     code: 'HL2',
@@ -76,7 +69,6 @@ const META: Record<HazardLevelCode, HazardLevelMeta> = {
     color: 'success',
     icon: 'mdi-shield-check-outline',
     level: 2,
-    severity: 5,
   },
   HL3: {
     code: 'HL3',
@@ -86,7 +78,6 @@ const META: Record<HazardLevelCode, HazardLevelMeta> = {
     color: 'success',
     icon: 'mdi-shield-check-outline',
     level: 3,
-    severity: 6,
   },
 }
 
