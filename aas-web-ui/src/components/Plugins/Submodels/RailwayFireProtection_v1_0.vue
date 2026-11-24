@@ -131,8 +131,8 @@
     HazardLevelCode,
     RailwayFireProtectionData,
     RequirementsSet,
-    SubmodelElementLike,
   } from './RailwayFireProtection_v1_0/types'
+  import type { SubmodelElementLike } from './shared/types'
   import { useRoute } from 'vue-router'
   import { useDisplay } from 'vuetify'
   import { useSMHandling } from '@/composables/AAS/SMHandling'

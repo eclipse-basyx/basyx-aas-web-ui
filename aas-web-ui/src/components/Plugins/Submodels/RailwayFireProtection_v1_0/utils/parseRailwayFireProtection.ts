@@ -1,3 +1,4 @@
+import type { SubmodelElementLike } from '../../shared/types'
 import type {
   FireReport,
   FireTest,
@@ -7,20 +8,12 @@ import type {
   RailwayFireProtectionData,
   ReportLink,
   RequirementsSet,
-  SubmodelElementLike,
 } from '../types'
+import { children, nonEmptyFile, pickLangString } from '../../shared/submodelElements'
 import { parseHazardLevel } from './hazardLevel'
-import { pickLangString, stripQuotes } from './text'
+import { stripQuotes } from './text'
 
 type Key = { type?: string, value?: string }
-
-/** Child elements of a Submodel (`submodelElements`), a collection or a list (`value`) */
-function children (parent: SubmodelElementLike | undefined | null): SubmodelElementLike[] {
-  if (Array.isArray(parent?.submodelElements)) {
-    return parent.submodelElements
-  }
-  return Array.isArray(parent?.value) ? parent.value : []
-}
 
 function semanticIdValues (element: SubmodelElementLike): string[] {
   const keys: Key[] = element?.semanticId?.keys ?? []
@@ -57,11 +50,6 @@ function textOf (element: SubmodelElementLike | undefined | null): string {
 
 function text (parent: SubmodelElementLike | undefined | null, name: string): string {
   return textOf(child(parent, name))
-}
-
-function fileElement (parent: SubmodelElementLike | undefined | null, name: string): SubmodelElementLike | null {
-  const file = child(parent, name)
-  return file && typeof file.value === 'string' && file.value.trim() !== '' ? file : null
 }
 
 function parseManufacturer (smc: SubmodelElementLike | undefined): ManufacturerInformation | null {
@@ -133,7 +121,7 @@ function parseReport (report: SubmodelElementLike, index: number): FireReport {
     index,
     idShort: report.idShort ?? '',
     reportNumbers,
-    file: fileElement(report, 'ReportFile'),
+    file: nonEmptyFile(child(report, 'ReportFile')),
     comment: text(report, 'ReportComment'),
     tests,
     lab: parseLab(child(report, 'LabInformation')),

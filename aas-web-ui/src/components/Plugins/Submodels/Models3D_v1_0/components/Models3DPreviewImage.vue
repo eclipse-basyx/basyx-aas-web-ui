@@ -14,7 +14,7 @@
 </template>
 
 <script lang="ts" setup>
-  import type { SubmodelElementLike } from '../types'
+  import type { SubmodelElementLike } from '../../shared/types'
   import { useSMEFile } from '@/composables/AAS/SubmodelElements/File'
 
   // Props

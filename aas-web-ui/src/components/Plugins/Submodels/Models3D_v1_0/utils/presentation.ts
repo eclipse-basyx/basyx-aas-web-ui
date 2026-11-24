@@ -1,5 +1,5 @@
 import type { DetailGroup, DetailRow, Model3DApplication, Model3DEntry, Model3DVersion } from '../types'
-import { pickLangString } from './parseModel3D'
+import { pickLangString } from '../../shared/submodelElements'
 
 function row (label: string, value: string | undefined, icon?: string): DetailRow | null {
   return value && value.trim() !== '' ? { label, value, icon } : null
