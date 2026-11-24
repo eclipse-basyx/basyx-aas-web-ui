@@ -155,6 +155,7 @@ RailwayFireProtection_v1_0/
 │   ├── RailwayFireProtectionMassChart.vue      Donut chart of the combustible share
 │   ├── RailwayFireProtectionTile.vue           One requirement set tile
 │   ├── RailwayFireProtectionDetails.vue        Dialog content of a requirement set
+│   ├── RailwayFireProtectionHazardBadge.vue    Hazard level badge of the tile and the dialog
 │   ├── RailwayFireProtectionReport.vue         One report with file, tests and laboratory
 │   ├── RailwayFireProtectionFlipTransition.vue Dialog transition out of the tile
 │   ├── RailwayFireProtectionFcilDownload.vue   FCIL download button

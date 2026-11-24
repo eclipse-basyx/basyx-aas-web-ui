@@ -1,4 +1,4 @@
-import type { SubmodelElementLike } from '../../shared/types'
+import type { Key, SubmodelElementLike } from '../../shared/types'
 import type {
   FireReport,
   FireTest,
@@ -9,47 +9,20 @@ import type {
   ReportLink,
   RequirementsSet,
 } from '../types'
-import { children, nonEmptyFile, pickLangString } from '../../shared/submodelElements'
+import {
+  child,
+  children,
+  text as childText,
+  keyValues,
+  nonEmptyFile,
+  textOf,
+} from '../../shared/submodelElements'
 import { parseHazardLevel } from './hazardLevel'
 import { stripQuotes } from './text'
 
-interface Key { type?: string, value?: string }
-
-function semanticIdValues (element: SubmodelElementLike): string[] {
-  const keys: Key[] = element?.semanticId?.keys ?? []
-  return keys.map(key => key.value ?? '')
-}
-
-/**
- * Looks up a child by idShort first (a numeric suffix such as `Report01` is tolerated). Only if no idShort
- * matches, the semanticId is compared (`…/cds/<Name>/1`). The idShort comes first because the IDTA 02102 v1.0
- * example uses wrong semanticIds for some elements, e.g. `LabInformation` carries the one of `ReportComment`.
- */
-function child (parent: SubmodelElementLike | undefined | null, name: string): SubmodelElementLike | undefined {
-  const elements = children(parent)
-  const byIdShort = new RegExp(String.raw`^${name}\d*$`, 'i')
-  const bySemanticId = new RegExp(String.raw`/${name}(?:/\d+){0,2}/?$`, 'i')
-
-  return elements.find(element => byIdShort.test(element?.idShort ?? ''))
-    ?? elements.find(element => semanticIdValues(element).some(value => bySemanticId.test(value)))
-}
-
-/** Display text of a Property or MultiLanguageProperty */
-function textOf (element: SubmodelElementLike | undefined | null): string {
-  if (!element) {
-    return ''
-  }
-  const value = element.value
-  if (element.modelType === 'MultiLanguageProperty' || Array.isArray(value)) {
-    return element.modelType === 'MultiLanguageProperty' && Array.isArray(value) ? stripQuotes(pickLangString(value)) : ''
-  }
-  return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
-    ? stripQuotes(String(value))
-    : ''
-}
-
+/** Text of a child without the quotes the IDTA 02102 example puts around several values */
 function text (parent: SubmodelElementLike | undefined | null, name: string): string {
-  return textOf(child(parent, name))
+  return stripQuotes(childText(parent, name))
 }
 
 function parseManufacturer (smc: SubmodelElementLike | undefined): ManufacturerInformation | null {
@@ -128,10 +101,6 @@ function parseReport (report: SubmodelElementLike, index: number): FireReport {
   }
 }
 
-function describeKeys (keys: Key[]): string {
-  return keys.map(key => key.value ?? '').join(' › ')
-}
-
 /**
  * Follows the keys of a ModelReference through the submodel. Returns the target element and the elements passed
  * on the way to it, or the key that could not be followed.
@@ -177,7 +146,14 @@ export function resolveReportLink (
 ): ReportLink {
   const key = `${index}-${reference?.idShort ?? ''}`
   const keys: Key[] = Array.isArray(reference?.value?.keys) ? reference.value.keys : []
-  const link: ReportLink = { key, status: 'unresolved', reportIndex: null, url: '', keys: describeKeys(keys), note: '' }
+  const link: ReportLink = {
+    key,
+    status: 'unresolved',
+    reportIndex: null,
+    url: '',
+    keys: keyValues(reference?.value).join(' › '),
+    note: '',
+  }
 
   if (keys.length === 0) {
     return { ...link, note: 'The reference is empty.' }
@@ -246,9 +222,6 @@ function parseRequirementsSet (
   reportElements: SubmodelElementLike[],
 ): RequirementsSet {
   const hazardLevelElement = child(set, 'HazardLevel')
-  const valueIds: string[] = Array.isArray(hazardLevelElement?.valueId?.keys)
-    ? hazardLevelElement.valueId.keys.map((key: Key) => key.value ?? '')
-    : []
   const references = children(child(set, 'ReportReferences'))
   const requirement = text(set, 'Requirement')
   const idShort = set.idShort ?? ''
@@ -259,15 +232,20 @@ function parseRequirementsSet (
     idShort,
     name: requirementSetCode(requirement) || idShort || `Set ${index + 1}`,
     requirement,
-    hazardLevel: parseHazardLevel(textOf(hazardLevelElement), valueIds),
+    hazardLevel: parseHazardLevel(textOf(hazardLevelElement), keyValues(hazardLevelElement?.valueId)),
     reportLinks: references.map((reference, i) => resolveReportLink(reference, submodel, reportElements, i)),
   }
+}
+
+/** Data of a submodel without any content, e.g. while none is selected */
+export function emptyRailwayFireProtectionData (): RailwayFireProtectionData {
+  return { manufacturer: null, material: null, requirementsSets: [], reports: [] }
 }
 
 /** Parses a RailwayFireProtection (IDTA 02102 v1.0) submodel as returned by `setData` */
 export function parseRailwayFireProtection (submodel: SubmodelElementLike | undefined | null): RailwayFireProtectionData {
   if (!submodel) {
-    return { manufacturer: null, material: null, requirementsSets: [], reports: [] }
+    return emptyRailwayFireProtectionData()
   }
 
   const certificates = child(submodel, 'FireProtectionCertificates')

@@ -7,30 +7,7 @@ import type {
   Model3DExternalFile,
   Model3DVersion,
 } from '../types'
-import { children, nonEmptyFile, pickLangString } from '../../shared/submodelElements'
-
-/**
- * Looks up a child by idShort. Instances created from the IDTA template may carry a numeric suffix
- * (e.g. `IsPrimary01`), so a trailing number is tolerated. As a fallback the last segment of the semanticId
- * (`…/<idShort>/<version>/<revision>`) is compared.
- */
-function matches (element: SubmodelElementLike, idShort: string): boolean {
-  if (new RegExp(String.raw`^${idShort}\d*$`, 'i').test(element?.idShort ?? '')) {
-    return true
-  }
-
-  const semanticIdKeys: Array<{ value?: string }> = element?.semanticId?.keys ?? []
-  return semanticIdKeys.some(key => new RegExp(String.raw`/${idShort}/\d+/\d+/?$`, 'i').test(key.value ?? ''))
-}
-
-function child (parent: SubmodelElementLike | undefined | null, idShort: string): SubmodelElementLike | undefined {
-  return children(parent).find(element => matches(element, idShort))
-}
-
-function text (parent: SubmodelElementLike | undefined | null, idShort: string): string {
-  const value = child(parent, idShort)?.value
-  return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ? String(value) : ''
-}
+import { child, children, nonEmptyFile, pickLangString, text } from '../../shared/submodelElements'
 
 function langStrings (parent: SubmodelElementLike | undefined | null, idShort: string): LangString[] {
   const value = child(parent, idShort)?.value

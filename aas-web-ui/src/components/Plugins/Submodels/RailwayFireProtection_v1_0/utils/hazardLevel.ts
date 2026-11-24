@@ -84,14 +84,8 @@ const META: Record<HazardLevelCode, HazardLevelMeta> = {
 /** Display order of the hazard level filter chips */
 export const HAZARD_LEVEL_ORDER: HazardLevelCode[] = ['HL3', 'HL2', 'HL1', 'AFNR', 'MTR', 'NC', 'unknown']
 
-const CODES_BY_VALUE_ID: Array<[RegExp, HazardLevelCode]> = [
-  [/\/HazardLevelValue\/HL1(?:\/|$)/i, 'HL1'],
-  [/\/HazardLevelValue\/HL2(?:\/|$)/i, 'HL2'],
-  [/\/HazardLevelValue\/HL3(?:\/|$)/i, 'HL3'],
-  [/\/HazardLevelValue\/AFNR(?:\/|$)/i, 'AFNR'],
-  [/\/HazardLevelValue\/MTR(?:\/|$)/i, 'MTR'],
-  [/\/HazardLevelValue\/NC(?:\/|$)/i, 'NC'],
-]
+/** A `valueId` of IDTA 02102 Table 6, e.g. `…/HazardLevelValue/HL3/1/0`; group 1 is the code */
+const VALUE_ID = /\/HazardLevelValue\/(HL[1-3]|AFNR|MTR|NC)(?:\/|$)/i
 
 /**
  * Determines the hazard level of a `HazardLevel` Property. The `valueId` (IDTA 02102 Table 6) wins;
@@ -101,9 +95,9 @@ export function parseHazardLevel (value: string, valueIds: string[] = []): Hazar
   const raw = stripQuotes(value)
 
   for (const valueId of valueIds) {
-    const match = CODES_BY_VALUE_ID.find(([pattern]) => pattern.test(valueId))
+    const match = valueId.match(VALUE_ID)
     if (match) {
-      return { code: match[1], raw }
+      return { code: match[1].toUpperCase() as HazardLevelCode, raw }
     }
   }
 
@@ -135,4 +129,9 @@ export function hazardLevelMeta (code: HazardLevelCode): HazardLevelMeta {
  */
 export function hazardLevelText (hazardLevel: HazardLevel, field: 'label' | 'status' = 'label'): string {
   return hazardLevel.code === 'unknown' ? hazardLevel.raw : META[hazardLevel.code][field]
+}
+
+/** `hazardLevelText` for display: 'No hazard level' instead of an empty value */
+export function hazardLevelDisplayText (hazardLevel: HazardLevel, field: 'label' | 'status' = 'label'): string {
+  return hazardLevelText(hazardLevel, field) || 'No hazard level'
 }

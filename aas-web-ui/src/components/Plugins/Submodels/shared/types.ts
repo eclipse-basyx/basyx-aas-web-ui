@@ -12,3 +12,9 @@ export type SubmodelElementLike = {
   contentType?: string
   value?: any
 }
+
+/** A key of a Reference, e.g. of a semanticId */
+export type Key = {
+  type?: string
+  value?: string
+}

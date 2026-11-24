@@ -15,15 +15,7 @@
 
       <template #append>
         <div class="d-flex align-center ga-2">
-          <v-chip
-            class="font-weight-bold"
-            :color="meta.color"
-            label
-            size="small"
-            variant="flat"
-          >
-            {{ meta.short }}
-          </v-chip>
+          <RailwayFireProtectionHazardBadge :code="meta.code" />
 
           <v-btn
             aria-label="Close"
@@ -51,7 +43,7 @@
 
           <div class="d-flex align-center ga-2">
             <v-icon :color="meta.color" :icon="meta.icon" size="small" />
-            <span class="text-body-large">{{ hazardLevelText(requirementsSet.hazardLevel) || 'No hazard level' }}</span>
+            <span class="text-body-large">{{ hazardLevelDisplayText(requirementsSet.hazardLevel) }}</span>
           </div>
 
           <div
@@ -127,7 +119,7 @@
 
 <script lang="ts" setup>
   import type { FireReport, RequirementsSet } from '../types'
-  import { hazardLevelMeta, hazardLevelText } from '../utils/hazardLevel'
+  import { hazardLevelDisplayText, hazardLevelMeta } from '../utils/hazardLevel'
   import { isWebLink } from '../utils/presentation'
 
   defineOptions({

@@ -145,6 +145,7 @@ declare module 'vue' {
     RailwayFireProtectionFcilDownload: typeof import('./components/Plugins/Submodels/RailwayFireProtection_v1_0/components/RailwayFireProtectionFcilDownload.vue')['default']
     RailwayFireProtectionFcilTemplateDialog: typeof import('./components/Plugins/Submodels/RailwayFireProtection_v1_0/components/RailwayFireProtectionFcilTemplateDialog.vue')['default']
     RailwayFireProtectionFlipTransition: typeof import('./components/Plugins/Submodels/RailwayFireProtection_v1_0/components/RailwayFireProtectionFlipTransition.vue')['default']
+    RailwayFireProtectionHazardBadge: typeof import('./components/Plugins/Submodels/RailwayFireProtection_v1_0/components/RailwayFireProtectionHazardBadge.vue')['default']
     RailwayFireProtectionMassChart: typeof import('./components/Plugins/Submodels/RailwayFireProtection_v1_0/components/RailwayFireProtectionMassChart.vue')['default']
     RailwayFireProtectionReport: typeof import('./components/Plugins/Submodels/RailwayFireProtection_v1_0/components/RailwayFireProtectionReport.vue')['default']
     RailwayFireProtectionSummary: typeof import('./components/Plugins/Submodels/RailwayFireProtection_v1_0/components/RailwayFireProtectionSummary.vue')['default']

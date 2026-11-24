@@ -20,15 +20,7 @@
 
       <v-card-text class="pt-0 flex-grow-1">
         <div class="d-flex flex-wrap align-center ga-2">
-          <v-chip
-            class="font-weight-bold"
-            :color="meta.color"
-            label
-            size="small"
-            variant="flat"
-          >
-            {{ meta.short }}
-          </v-chip>
+          <RailwayFireProtectionHazardBadge :code="meta.code" />
 
           <div v-if="meta.level > 0" aria-hidden="true" class="rfp-meter">
             <span
@@ -87,7 +79,7 @@
 <script lang="ts" setup>
   import type { FireReport, RequirementsSet } from '../types'
   import type { ComponentPublicInstance } from 'vue'
-  import { hazardLevelMeta, hazardLevelText } from '../utils/hazardLevel'
+  import { hazardLevelDisplayText, hazardLevelMeta } from '../utils/hazardLevel'
   import { requirementsSetTests } from '../utils/presentation'
 
   defineOptions({
@@ -121,7 +113,7 @@
 
   const hiddenTestCount = computed(() => tests.value.length - shownTests.value.length)
 
-  const statusText = computed(() => hazardLevelText(props.requirementsSet.hazardLevel, 'status') || 'No hazard level')
+  const statusText = computed(() => hazardLevelDisplayText(props.requirementsSet.hazardLevel, 'status'))
 
   const reportCountText = computed(() => {
     const count = props.requirementsSet.reportLinks.length
@@ -139,7 +131,7 @@
   )
 
   const ariaLabel = computed(() =>
-    `${props.requirementsSet.name}: ${hazardLevelText(props.requirementsSet.hazardLevel) || 'No hazard level'}. Show details`,
+    `${props.requirementsSet.name}: ${hazardLevelDisplayText(props.requirementsSet.hazardLevel)}. Show details`,
   )
 
   // Methods

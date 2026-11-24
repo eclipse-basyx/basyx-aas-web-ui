@@ -133,12 +133,15 @@
     RequirementsSet,
   } from './RailwayFireProtection_v1_0/types'
   import type { SubmodelElementLike } from './shared/types'
-  import { useRoute } from 'vue-router'
   import { useDisplay } from 'vuetify'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
+  import { useVisualizationPanelHeight } from '@/composables/useVisualizationPanelHeight'
   import RailwayFireProtectionFlipTransition from './RailwayFireProtection_v1_0/components/RailwayFireProtectionFlipTransition.vue'
   import { hazardLevelMeta } from './RailwayFireProtection_v1_0/utils/hazardLevel'
-  import { parseRailwayFireProtection } from './RailwayFireProtection_v1_0/utils/parseRailwayFireProtection'
+  import {
+    emptyRailwayFireProtectionData,
+    parseRailwayFireProtection,
+  } from './RailwayFireProtection_v1_0/utils/parseRailwayFireProtection'
   import {
     countHazardLevels,
     filterRequirementsSets,
@@ -163,11 +166,11 @@
   // Composables
   const { setData } = useSMHandling()
   const { xs } = useDisplay()
-  const route = useRoute()
+  const panelHeight = useVisualizationPanelHeight()
 
   // Reactive data
   const isLoading = ref(false)
-  const data = ref<RailwayFireProtectionData>(emptyData())
+  const data = ref<RailwayFireProtectionData>(emptyRailwayFireProtectionData())
   const selectedCodes = ref<HazardLevelCode[]>([])
   const dialogOpen = ref(false)
   const activeSet = ref<RequirementsSet | null>(null)
@@ -176,11 +179,6 @@
   let activeKey = ''
 
   // Computed properties
-  /** Height of the visualization panel below the app bars, as used by SubmodelElementVisualization */
-  const panelHeight = computed(() =>
-    route?.name === 'AASSubmodelViewer' ? 'calc(100svh - 137px)' : 'calc(100svh - 202px)',
-  )
-
   const hazardLevelCounts = computed(() => countHazardLevels(data.value.requirementsSets))
 
   const visibleSets = computed(() =>
@@ -202,17 +200,13 @@
   onMounted(initializeVisualization)
 
   // Methods
-  function emptyData (): RailwayFireProtectionData {
-    return { manufacturer: null, material: null, requirementsSets: [], reports: [] }
-  }
-
   async function initializeVisualization (): Promise<void> {
     isLoading.value = true
     dialogOpen.value = false
     selectedCodes.value = []
 
     if (!props.submodelElementData || Object.keys(props.submodelElementData).length === 0) {
-      data.value = emptyData()
+      data.value = emptyRailwayFireProtectionData()
       isLoading.value = false
       return
     }
