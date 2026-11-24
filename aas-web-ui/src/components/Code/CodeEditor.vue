@@ -34,7 +34,7 @@
     language?: 'json' | 'xml' | 'plaintext'
     readOnly?: boolean
     accessibleLabel: string
-    height?: string // CSS height, or 'auto' to fit the content height (e.g. wrapped lines) without scrolling
+    height?: string
     error?: boolean
     modelNamespace?: string
     schemas?: CodeSchema[]
@@ -66,7 +66,8 @@
   let unmounted = false
   let applyingExternalValue = false
 
-  // The border is added to the content height, so no content line is cut off
+  // height 'auto' fits the content height (e.g. wrapped lines) without scrolling;
+  // the border is added to it, so no content line is cut off
   const containerStyle = computed(() => props.height === 'auto'
     ? { height: `${contentHeight.value}px`, boxSizing: 'content-box' as const }
     : { height: props.height })
