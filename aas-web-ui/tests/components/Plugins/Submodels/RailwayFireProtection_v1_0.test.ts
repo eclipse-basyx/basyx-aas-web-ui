@@ -3,7 +3,8 @@ import { createPinia } from 'pinia'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { createVuetify } from 'vuetify'
 import RailwayFireProtection from '@/components/Plugins/Submodels/RailwayFireProtection_v1_0.vue'
-import { loadIdtaExampleSubmodel, RAILWAY_FIRE_PROTECTION_EXAMPLE_URL } from '../../../helpers/idtaExamples'
+// Official IDTA 02102 v1.0 example, source and licence in fixtures/README.md
+import officialExample from './fixtures/railway-fire-protection.idta-example.json'
 
 vi.mock('@/composables/AAS/SMHandling', () => ({
   // The real implementation additionally assigns the element paths
@@ -14,11 +15,7 @@ vi.mock('@/composables/AAS/SubmodelElements/File', () => ({
   useSMEFile: () => ({ downloadFile: vi.fn(), valueUrl: () => ({ url: '', isExternal: false }) }),
 }))
 
-// Official IDTA 02102 v1.0 example, loaded from admin-shell-io/submodel-templates (tests are skipped when offline)
-let officialExample: any = null
-
-beforeAll(async () => {
-  officialExample = await loadIdtaExampleSubmodel(RAILWAY_FIRE_PROTECTION_EXAMPLE_URL, 'RailwayFireProtection')
+beforeAll(() => {
   vi.stubGlobal('ResizeObserver', class {
     disconnect () {}
     observe () {}
@@ -77,10 +74,7 @@ describe('RailwayFireProtection_v1_0', () => {
   })
 
   describe('with the official IDTA 02102 example', () => {
-    it('shows the product summary and one tile per requirement set', async context => {
-      if (!officialExample) {
-        context.skip()
-      }
+    it('shows the product summary and one tile per requirement set', async () => {
       const wrapper = mountPlugin(withPath(officialExample))
       await flushPromises()
 
@@ -106,10 +100,7 @@ describe('RailwayFireProtection_v1_0', () => {
       expect(wrapper.find('.mdi-sort').exists()).toBe(false)
     })
 
-    it('opens the details with report, tests and laboratory when a tile is clicked', async context => {
-      if (!officialExample) {
-        context.skip()
-      }
+    it('opens the details with report, tests and laboratory when a tile is clicked', async () => {
       const wrapper = mountPlugin(withPath(officialExample))
       await flushPromises()
 

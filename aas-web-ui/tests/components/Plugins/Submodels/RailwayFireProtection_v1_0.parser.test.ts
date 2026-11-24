@@ -18,10 +18,8 @@ import {
   websiteUrl,
 } from '@/components/Plugins/Submodels/RailwayFireProtection_v1_0/utils/presentation'
 import { stripQuotes } from '@/components/Plugins/Submodels/RailwayFireProtection_v1_0/utils/text'
-import { loadIdtaExampleSubmodel, RAILWAY_FIRE_PROTECTION_EXAMPLE_URL } from '../../../helpers/idtaExamples'
-
-// Official IDTA 02102 v1.0 example, loaded from admin-shell-io/submodel-templates (skipped when offline)
-const officialExample = await loadIdtaExampleSubmodel(RAILWAY_FIRE_PROTECTION_EXAMPLE_URL, 'RailwayFireProtection')
+// Official IDTA 02102 v1.0 example, source and licence in fixtures/README.md
+import officialExample from './fixtures/railway-fire-protection.idta-example.json'
 
 const SUBMODEL_ID = 'urn:test:sm:railway-fire-protection'
 
@@ -80,7 +78,7 @@ function requirementsSet (idShort: string, index: number, hazardLevel: string): 
   }
 }
 
-describe.skipIf(!officialExample)('parseRailwayFireProtection with the official IDTA 02102 example', () => {
+describe('parseRailwayFireProtection with the official IDTA 02102 example', () => {
   const data = parseRailwayFireProtection(structuredClone(officialExample))
 
   it('parses manufacturer and material', () => {
