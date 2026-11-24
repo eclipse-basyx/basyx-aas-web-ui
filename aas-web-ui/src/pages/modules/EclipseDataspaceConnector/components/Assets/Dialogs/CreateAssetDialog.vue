@@ -93,6 +93,7 @@
   import {
     createEmptyEdcAssetOAuth2,
     type EdcAssetOAuth2,
+    edcAssetOAuth2PlaceholderValues,
     hasEdcAssetOAuth2,
   } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetOAuth2'
   import {
@@ -103,14 +104,12 @@
   import AssetTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset.json'
 
   const props = withDefaults(defineProps<{
-    modelValue: boolean
     proxyId?: string
   }>(), {
     proxyId: 'default',
   })
 
   const emit = defineEmits<{
-    (event: 'update:model-value', value: boolean): void
     (event: 'assets-created', assetId: string): void
   }>()
 
@@ -122,7 +121,7 @@
   const { showFailureMessage } = useEdcRequestFailureMessage()
 
   // Data
-  const createAssetDialog = ref(false)
+  const createAssetDialog = defineModel<boolean>({ required: true })
   const form = ref<any>(null)
   const placeholderValues = ref<Record<string, string>>({})
   const oauth2Drawer = ref(false)
@@ -140,13 +139,10 @@
   const oauth2Placeholders = computed(() => placeholders.value.filter(p => p.attribute.startsWith('oauth2:')))
   const fieldPlaceholders = computed(() => placeholders.value.filter(p => !p.attribute.startsWith('oauth2:')))
 
-  // Values of the placeholder fields and the OAuth2 drawer by label, e.g. "oauth2:clientId" → "Endpoint client ID"
+  // Values of the placeholder fields and the OAuth2 drawer by label
   const filledPlaceholderValues = computed<Record<string, string>>(() => ({
     ...placeholderValues.value,
-    ...Object.fromEntries(oauth2Placeholders.value.map(p => [
-      p.label,
-      oauth2.value[p.attribute.replace('oauth2:', '') as keyof EdcAssetOAuth2]?.trim() ?? '',
-    ])),
+    ...edcAssetOAuth2PlaceholderValues(oauth2Placeholders.value, oauth2.value),
   }))
 
   // The preview shows the asset as it is created, without the unfilled placeholders
@@ -159,22 +155,12 @@
   )
 
   // Watchers
-  // Immediate, so a dialog restored from the URL opens
-  watch(
-    () => props.modelValue,
-    value => {
-      createAssetDialog.value = value
-      if (!value) {
-        resetForm()
-      }
-    },
-    { immediate: true },
-  )
-
   watch(
     () => createAssetDialog.value,
     value => {
-      emit('update:model-value', value)
+      if (!value) {
+        resetForm()
+      }
     },
   )
 

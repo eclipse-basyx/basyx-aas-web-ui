@@ -132,17 +132,12 @@
   import { withoutRuntimeFields } from '@/utils/AAS/RuntimeFields'
 
   const props = withDefaults(defineProps<{
-    modelValue: boolean
     proxyId?: string
     businessPartner: CatenaXPartner | null
     catalogDataset: any // Catalog dataset of the push asset
   }>(), {
     proxyId: 'default',
   })
-
-  const emit = defineEmits<{
-    (event: 'update:model-value', value: boolean): void
-  }>()
 
   // Stores
   const navigationStore = useNavigationStore()
@@ -153,7 +148,7 @@
   const { dialogState } = useEdcDialogRoute()
 
   // Data
-  const sendDataDialog = ref(false)
+  const sendDataDialog = defineModel<boolean>({ required: true })
   const fullHeight = 'calc(90vh - 52px - 52px - 2px)' // dialog - dialog header - dialog footer - 2x divider
   const drawerHeaderHeight = '121px' // selection field (8px + 40px) + list title bar (72px) + divider (1px)
   const selectedInfrastructureId = dialogState('infrastructure') // In the URL to return to it after a login, removed on close
@@ -181,23 +176,6 @@
     previewIcon: 'mdi-folder',
     json: withoutRuntimeFields(selectedSubmodels.value[0]),
   }))
-
-  // Watchers
-  // Immediate, so a dialog restored from the URL opens
-  watch(
-    () => props.modelValue,
-    value => {
-      sendDataDialog.value = value
-    },
-    { immediate: true },
-  )
-
-  watch(
-    () => sendDataDialog.value,
-    value => {
-      emit('update:model-value', value)
-    },
-  )
 
   // Methods
   function createEnvironment (): unknown {

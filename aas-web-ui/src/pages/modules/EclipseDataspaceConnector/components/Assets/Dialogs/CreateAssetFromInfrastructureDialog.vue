@@ -128,14 +128,12 @@
   import { useNavigationStore } from '@/store/NavigationStore'
 
   const props = withDefaults(defineProps<{
-    modelValue: boolean
     proxyId?: string
   }>(), {
     proxyId: 'default',
   })
 
   const emit = defineEmits<{
-    (event: 'update:model-value', value: boolean): void
     (event: 'assets-created', assetId?: string): void
   }>()
 
@@ -150,7 +148,7 @@
   const { dialogState } = useEdcDialogRoute()
 
   // Data
-  const createAssetDialog = ref(false)
+  const createAssetDialog = defineModel<boolean>({ required: true })
   const fullHeight = 'calc(90vh - 52px - 52px - 2px)' // dialog - dialog header - dialog footer - 2x divider
   const drawerHeaderHeight = '121px' // selection field (8px + 40px) + list title bar (72px) + divider (1px)
   const selectedInfrastructureId = dialogState('infrastructure') // In the URL to return to it after a login, removed on close
@@ -195,16 +193,13 @@
   const oauth2Configured = computed(() => hasEdcAssetOAuth2(aasOAuth2.value) || hasEdcAssetOAuth2(smOAuth2.value))
 
   // Watchers
-  // Immediate, so a dialog restored from the URL opens
   watch(
-    () => props.modelValue,
+    () => createAssetDialog.value,
     value => {
-      createAssetDialog.value = value
       if (!value) {
         oauth2Drawer.value = false
       }
     },
-    { immediate: true },
   )
 
   watch(
@@ -226,13 +221,6 @@
       } else if (!submodels.some(submodel => submodel.id === previewTab.value)) {
         previewTab.value = 'aas'
       }
-    },
-  )
-
-  watch(
-    () => createAssetDialog.value,
-    value => {
-      emit('update:model-value', value)
     },
   )
 

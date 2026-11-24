@@ -153,14 +153,12 @@
   import UsagePolicyTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage.json'
 
   const props = withDefaults(defineProps<{
-    modelValue: boolean
     proxyId?: string
   }>(), {
     proxyId: 'default',
   })
 
   const emit = defineEmits<{
-    (event: 'update:model-value', value: boolean): void
     (event: 'policy-created', policyId: string): void
   }>()
 
@@ -169,7 +167,7 @@
   const { showFailureMessage } = useEdcRequestFailureMessage()
 
   // Data
-  const createPolicyDialog = ref(false)
+  const createPolicyDialog = defineModel<boolean>({ required: true })
   const selectedType = ref<'access' | 'usage'>('usage')
   const form = ref<any>(null)
   const placeholderValues = ref<Record<string, string>>({})
@@ -205,11 +203,10 @@
   })))
 
   // Watchers
-  // Immediate, so a dialog restored from the URL opens
+  // Immediate, so a dialog restored from the URL shows the preview
   watch(
-    () => props.modelValue,
+    () => createPolicyDialog.value,
     value => {
-      createPolicyDialog.value = value
       if (value) {
         refreshPreview()
       } else {
@@ -217,13 +214,6 @@
       }
     },
     { immediate: true },
-  )
-
-  watch(
-    () => createPolicyDialog.value,
-    value => {
-      emit('update:model-value', value)
-    },
   )
 
   watch(

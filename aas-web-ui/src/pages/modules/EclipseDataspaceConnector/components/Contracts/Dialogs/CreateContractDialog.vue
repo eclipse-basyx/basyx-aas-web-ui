@@ -108,14 +108,12 @@
   import ContractTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_contract.json'
 
   const props = withDefaults(defineProps<{
-    modelValue: boolean
     proxyId?: string
   }>(), {
     proxyId: 'default',
   })
 
   const emit = defineEmits<{
-    (event: 'update:model-value', value: boolean): void
     (event: 'contract-created', contractId: string): void
   }>()
 
@@ -124,7 +122,7 @@
   const { showFailureMessage } = useEdcRequestFailureMessage()
 
   // Data
-  const createContractDialog = ref(false)
+  const createContractDialog = defineModel<boolean>({ required: true })
   const form = ref<any>(null)
   const placeholderValues = ref<Record<string, string>>({})
   const availableAssets = ref<any[]>([])
@@ -146,11 +144,10 @@
   )
 
   // Watchers
-  // Immediate, so a dialog restored from the URL opens
+  // Immediate, so a dialog restored from the URL loads the assets and policies
   watch(
-    () => props.modelValue,
+    () => createContractDialog.value,
     value => {
-      createContractDialog.value = value
       if (value) {
         loadAssets()
         loadPolicies()
@@ -159,13 +156,6 @@
       }
     },
     { immediate: true },
-  )
-
-  watch(
-    () => createContractDialog.value,
-    value => {
-      emit('update:model-value', value)
-    },
   )
 
   // Auto-generate Contract ID

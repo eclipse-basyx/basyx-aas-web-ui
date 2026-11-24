@@ -73,12 +73,7 @@
   import { getActiveComponentUrlForTemplate, isSubmodelImportInfrastructure } from '@/utils/InfrastructureUtils'
 
   const props = defineProps<{
-    modelValue: boolean
     submodel: aasTypes.Submodel | null // Fetched Submodel to import
-  }>()
-
-  const emit = defineEmits<{
-    (event: 'update:model-value', value: boolean): void
   }>()
 
   // Stores
@@ -89,7 +84,7 @@
   const { postSubmodel } = useSMRepositoryClient()
 
   // Data
-  const importDialog = ref(false)
+  const importDialog = defineModel<boolean>({ required: true })
   const selectedInfrastructureId = ref<string | null>(null)
   const importing = ref(false)
 
@@ -103,19 +98,11 @@
 
   // Watchers
   watch(
-    () => props.modelValue,
+    () => importDialog.value,
     value => {
-      importDialog.value = value
       if (value) {
         selectedInfrastructureId.value = null
       }
-    },
-  )
-
-  watch(
-    () => importDialog.value,
-    value => {
-      emit('update:model-value', value)
     },
   )
 

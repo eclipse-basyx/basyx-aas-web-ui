@@ -11,49 +11,20 @@
         <v-form ref="form" class="d-flex flex-column">
 
           <!-- Template Selection -->
-          <v-select
+          <EdcTemplateSelect
             v-model="selectedTemplate"
-            hide-details
-            item-title="name"
-            item-value="value"
-            :items="policyTemplates"
+            icon="mdi-shield-check-outline"
             label="Select Policy Template"
-            required
-            variant="outlined"
-          >
-            <template #item="{ props: itemProps, item }">
-              <v-list-item v-bind="itemProps">
-                <template #prepend>
-                  <v-icon class="mr-n5">mdi-shield-check-outline</v-icon>
-                </template>
-
-                <template #title>
-                  <span class="font-weight-bold">{{ item.name }}</span>
-                </template>
-
-                <template #subtitle>
-                  {{ item.description }}
-                </template>
-              </v-list-item>
-            </template>
-          </v-select>
+            :templates="policyTemplates"
+          />
 
           <!-- Dynamic Placeholder Fields -->
-          <div v-if="selectedTemplate" class="d-flex flex-column mt-4">
-            <v-text-field
-              v-for="(placeholder, index) in placeholders"
-              :key="placeholder.label"
-              v-model="placeholderValues[placeholder.label]"
-              :class="index > 0 ? 'mt-2': ''"
-              :hide-details="placeholder.hint == ''"
-              :hint="placeholder.hint"
-              :label="placeholder.label"
-              :persistent-hint="placeholder.hint !== ''"
-              :placeholder="placeholder.placeholder"
-              required
-              variant="outlined"
-            />
-          </div>
+          <EdcTemplatePlaceholderFields
+            v-if="selectedTemplate"
+            v-model="placeholderValues"
+            class="mt-4"
+            :placeholders="placeholders"
+          />
 
           <!-- Policy Preview -->
           <JSONPreview
@@ -95,10 +66,9 @@
 
 <script lang="ts" setup>
   import { type CatenaXEdcPolicyDefinition, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
-  import {
-    edcRequestFailureText,
-    useEdcRequestFailureMessage,
-  } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
+  import EdcTemplatePlaceholderFields from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcTemplatePlaceholderFields.vue'
+  import EdcTemplateSelect from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcTemplateSelect.vue'
+  import { type EdcTemplate, useEdcTemplateForm } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplateForm'
   import { fillTemplatePlaceholders, templatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
   import AccessPolicy from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_access.json'
   import AccessPolicyBpn from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_access_bpn.json'
@@ -109,78 +79,79 @@
   import UsagePolicySmService from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_policy_usage_sm_service.json'
 
   const props = withDefaults(defineProps<{
-    modelValue: boolean
     proxyId?: string
   }>(), {
     proxyId: 'default',
   })
 
   const emit = defineEmits<{
-    (event: 'update:model-value', value: boolean): void
     (event: 'policy-created', policyId: string): void
   }>()
 
-  // Composables
-  const { createPolicyDefinition: createPolicyDefinitionInEdc } = useCatenaXEdcClient()
-  const { showFailureMessage } = useEdcRequestFailureMessage()
+  type PolicyTemplateValue = 'access' | 'usage' | 'usageCxPcf' | 'usageCxDppDbp' | 'usageCxDtr' | 'usageCxSmService' | 'bpn'
 
-  // Data
-  const createPolicyDialog = ref(false)
-  const selectedTemplate = ref<'access' | 'usage' | 'usageCxPcf' | 'usageCxDppDbp' | 'usageCxDtr' | 'usageCxSmService' | 'bpn' | ''>('')
-  const form = ref<any>(null)
-  const placeholderValues = ref<Record<string, string>>({})
-
-  // Computed properties
-  // Policy Templates
-  const policyTemplates = computed(() => [
+  const policyTemplates: EdcTemplate<PolicyTemplateValue>[] = [
     {
       value: 'access',
       name: 'Access Policy',
       description: 'Basic policy allowing usage with unrestricted access',
-      policy: AccessPolicy,
+      template: AccessPolicy,
     },
     {
       value: 'usage',
       name: 'Usage Policy',
       description: 'Policy with permissions, prohibitions, and obligations for complex usage scenarios',
-      policy: UsagePolicy,
+      template: UsagePolicy,
     },
     {
       value: 'usageCxPcf',
       name: 'Usage Policy for PCF Use Case (Catena-X)',
       description: 'Policy with permissions for the PCF Use Case (Catena-X)',
-      policy: UsagePolicyPcf,
+      template: UsagePolicyPcf,
     },
     {
       value: 'usageCxDppDbp',
       name: 'Usage Policy for PCF DPP/DBP Use Case (Catena-X)',
       description: 'Policy with permissions for the DPP/DBP Use Case (Catena-X)',
-      policy: UsagePolicyDppDbp,
+      template: UsagePolicyDppDbp,
     },
     {
       value: 'usageCxDtr',
       name: 'Usage Policy for Digital Twin Registry (Catena-X)',
       description: 'Policy with permissions for the Digital Twin Registry usage (Catena-X)',
-      policy: UsagePolicyDtr,
+      template: UsagePolicyDtr,
     },
     {
       value: 'usageCxSmService',
       name: 'Usage Policy for Submodel Service (Catena-X)',
       description: 'Policy with permissions for the Submodel Service usage (Catena-X)',
-      policy: UsagePolicySmService,
+      template: UsagePolicySmService,
     },
     {
       value: 'bpn',
       name: 'Access BPN Policy',
       description: 'Policy restricting access based on Business Partner Number (BPN) constraint',
-      policy: AccessPolicyBpn,
+      template: AccessPolicyBpn,
     },
-  ].filter(template => template.policy !== null))
+  ]
 
-  const selectedPolicyTemplate = computed(() => policyTemplates.value.find(t => t.value === selectedTemplate.value))
+  // Composables
+  const { createPolicyDefinition: createPolicyDefinitionInEdc } = useCatenaXEdcClient()
+  const {
+    selectedTemplate,
+    placeholderValues,
+    form,
+    activeTemplate,
+    resetForm,
+    createFromTemplate,
+  } = useEdcTemplateForm('Policy', policyTemplates)
 
-  const placeholders = computed(() => selectedPolicyTemplate.value
-    ? templatePlaceholders(selectedPolicyTemplate.value.policy).map(placeholder => ({
+  // Data
+  const createPolicyDialog = defineModel<boolean>({ required: true })
+
+  // Computed properties
+  const placeholders = computed(() => activeTemplate.value
+    ? templatePlaceholders(activeTemplate.value.template).map(placeholder => ({
       ...placeholder,
       placeholder: placeholder.placeholder || placeholder.label,
       hint: placeholder.hint || `Enter ${placeholder.label}`,
@@ -188,79 +159,40 @@
     : [])
 
   // Unfilled placeholders stay visible in the preview as {{Label}}
-  const jsonContent = computed(() => selectedPolicyTemplate.value
-    ? JSON.stringify(fillTemplatePlaceholders(selectedPolicyTemplate.value.policy, placeholderValues.value, { keepUnfilled: true }))
+  const jsonContent = computed(() => activeTemplate.value
+    ? JSON.stringify(fillTemplatePlaceholders(activeTemplate.value.template, placeholderValues.value, { keepUnfilled: true }))
     : '')
 
   // Watchers
-  // Immediate, so a dialog restored from the URL opens
   watch(
-    () => props.modelValue,
+    () => createPolicyDialog.value,
     value => {
-      createPolicyDialog.value = value
       if (!value) {
         resetForm()
       }
     },
-    { immediate: true },
-  )
-
-  watch(
-    () => createPolicyDialog.value,
-    value => {
-      emit('update:model-value', value)
-    },
-  )
-
-  watch(
-    () => selectedTemplate.value,
-    () => {
-      // Reset placeholder values when template changes
-      placeholderValues.value = {}
-    },
   )
 
   // Methods
-  function resetForm (): void {
-    selectedTemplate.value = ''
-    placeholderValues.value = {}
-    if (form.value) {
-      form.value.reset()
-    }
-  }
-
   function allPlaceholdersFilled (): boolean {
     if (!selectedTemplate.value) return false
     return placeholders.value.every(placeholder => placeholderValues.value[placeholder.label])
   }
 
   async function createPolicy (): Promise<void> {
-    if (!selectedTemplate.value || !allPlaceholdersFilled()) {
+    if (!allPlaceholdersFilled()) {
       console.warn('Template not selected or placeholders not filled')
       return
     }
 
-    const template = policyTemplates.value.find(t => t.value === selectedTemplate.value)
-    if (!template) {
-      console.warn('Template not found')
-      return
-    }
-
-    try {
-      const finalPolicy = fillTemplatePlaceholders(template.policy, placeholderValues.value) as CatenaXEdcPolicyDefinition
-
-      // Create the policy via EDC API
-      const result = await createPolicyDefinitionInEdc(props.proxyId, finalPolicy)
-      if (result.success) {
-        emit('policy-created', result.data['@id'])
-        createPolicyDialog.value = false
-        resetForm()
-      } else {
-        showFailureMessage('Failed to create Policy.', edcRequestFailureText(result, 'Policy', 'create'))
-      }
-    } catch (error_) {
-      console.error('Error creating policy:', error_)
-      showFailureMessage('Failed to create Policy.', error_ instanceof Error ? error_.message : String(error_))
+    // Create the policy via EDC API
+    const policyId = await createFromTemplate(template => createPolicyDefinitionInEdc(
+      props.proxyId,
+      fillTemplatePlaceholders(template, placeholderValues.value) as CatenaXEdcPolicyDefinition,
+    ))
+    if (policyId) {
+      emit('policy-created', policyId)
+      createPolicyDialog.value = false
     }
   }
 
