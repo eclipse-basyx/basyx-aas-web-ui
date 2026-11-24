@@ -9,11 +9,13 @@ const {
   getRequestMock,
   postRequestMock,
   dispatchSnackbarMock,
+  valueUrlMock,
 } = vi.hoisted(() => ({
   fetchCdsMock: vi.fn(),
   getRequestMock: vi.fn(),
   postRequestMock: vi.fn(),
   dispatchSnackbarMock: vi.fn(),
+  valueUrlMock: vi.fn(),
 }))
 
 vi.mock('@/composables/AAS/ConceptDescriptionHandling', () => ({
@@ -24,7 +26,7 @@ vi.mock('@/composables/AAS/ConceptDescriptionHandling', () => ({
 
 vi.mock('@/composables/AAS/SubmodelElements/File', () => ({
   useSMEFile: () => ({
-    valueUrl: () => ({ url: '/attachment.csv' }),
+    valueUrl: valueUrlMock,
   }),
 }))
 
@@ -102,10 +104,12 @@ describe('TimeSeries_v1_1.vue fetch behavior', () => {
     getRequestMock.mockReset()
     postRequestMock.mockReset()
     dispatchSnackbarMock.mockReset()
+    valueUrlMock.mockReset()
 
     fetchCdsMock.mockResolvedValue(undefined)
     getRequestMock.mockResolvedValue({ success: true, data: '' })
     postRequestMock.mockResolvedValue({ success: true, data: '' })
+    valueUrlMock.mockReturnValue({ url: '/attachment.csv' })
   })
 
   afterEach(() => {
@@ -418,6 +422,36 @@ describe('TimeSeries_v1_1.vue fetch behavior', () => {
     expect(getRequestMock.mock.calls[0][0]).toBe('/submodels/time-series/submodel-elements/Segments.ExternalSegment.Data/attachment')
   })
 
+  it('requests the attachment of the IDTA File element of an ExternalSegment', async () => {
+    const wrapper = createWrapper()
+    const vm = wrapper.vm as any
+
+    vm.selectedSegment = {
+      idShort: 'Profile',
+      value: [
+        {
+          idShort: 'File',
+          modelType: 'File',
+          contentType: 'text/csv',
+          semanticId: { type: 'ExternalReference', keys: [{ type: 'GlobalReference', value: 'https://admin-shell.io/idta/TimeSeries/File/1/1' }] },
+          value: '/profile.csv',
+        },
+      ],
+    }
+    vm.timeVariable = { idShort: 'time' }
+    vm.yVariables = [{ idShort: 'AirQuality' }]
+
+    valueUrlMock.mockReturnValue({ url: '' })
+    getRequestMock.mockResolvedValue({ success: false })
+
+    vm.fetchExternalData()
+    await Promise.resolve()
+
+    expect(dispatchSnackbarMock).not.toHaveBeenCalled()
+    expect(getRequestMock).toHaveBeenCalledTimes(1)
+    expect(getRequestMock.mock.calls[0][0]).toBe('/submodels/time-series/submodel-elements/Segments.Profile.File/attachment')
+  })
+
   it('warns when redirected response is not CSV or plain text', async () => {
     const wrapper = createWrapper()
     const vm = wrapper.vm as any
@@ -463,7 +497,7 @@ describe('TimeSeries_v1_1.vue fetch behavior', () => {
 
     expect(getRequestMock).not.toHaveBeenCalled()
     expect(dispatchSnackbarMock).toHaveBeenCalledTimes(1)
-    expect(dispatchSnackbarMock.mock.calls[0][0].text).toContain('No valid file path available for ExternalSegment Data')
+    expect(dispatchSnackbarMock.mock.calls[0][0].text).toContain('No File or Blob with a valid path available in the ExternalSegment')
   })
 
   it('does not replace request-handler details when an external request fails', async () => {

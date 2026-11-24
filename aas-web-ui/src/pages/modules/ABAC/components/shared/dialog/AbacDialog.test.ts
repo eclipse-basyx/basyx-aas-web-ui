@@ -62,6 +62,7 @@ describe('dialog editor mode changes', () => {
       props: { modelValue: true, editorMode: 'json', messages: { title: 'Edit', cancel: 'Cancel', submit: 'Save' } },
       slots: { form: '<input aria-label="Form" />', json: '<textarea aria-label="JSON" />' },
       global: { renderStubDefaultSlot: true },
+      attachTo: document.body,
     })
     try {
       await flushPromises()

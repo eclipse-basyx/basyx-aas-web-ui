@@ -1,5 +1,5 @@
 # Build Stage
-FROM --platform=$BUILDPLATFORM node:24-slim AS build-stage
+FROM --platform=$BUILDPLATFORM node:24.22.3-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54 AS build-stage
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 ARG NODE_OPTIONS=--max-old-space-size=8192
@@ -28,7 +28,7 @@ RUN pnpm build
 RUN pnpm bff:build
 
 # Catena-X EDC BFF Stage
-FROM node:24-slim AS edc-bff-stage
+FROM node:24.22.3-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54 AS edc-bff-stage
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 WORKDIR /usr/src/app
@@ -39,7 +39,7 @@ EXPOSE 3001
 CMD ["node", "/usr/src/app/dist-bff/edc-bff/server.js"]
 
 # Production Stage
-FROM nginx:mainline-alpine-slim AS production-stage
+FROM nginx:1.31.9-alpine-slim@sha256:5bfced78d24d644270bedb0a9968697042e38d5c03fb6354603df025279c1cbe AS production-stage
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 # Set working directory

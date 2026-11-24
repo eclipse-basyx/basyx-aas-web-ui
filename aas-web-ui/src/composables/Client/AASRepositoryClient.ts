@@ -6,8 +6,8 @@ import { appendQueryParams, normalizeLimit, type PaginationPageOptions, type Pag
 import { useIDUtils } from '@/composables/IDUtils'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
-import { AAS_REPOSITORY_ENDPOINT_PATH, aasEndpointUrl, shellsUrl } from '@/utils/AAS/AasRepositoryUrls'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
+import { AAS_REPOSITORY_ENDPOINT_PATH, endpointUrl, resourceUrl } from '@/utils/EndpointUrls'
 import { downloadFile } from '@/utils/generalUtils'
 import { getActiveComponentUrlForTemplate } from '@/utils/InfrastructureUtils'
 import { stripLastCharacter } from '@/utils/StringUtils'
@@ -74,7 +74,7 @@ export function useAASRepositoryClient () {
    * @returns {string} The '/shells' endpoint, or an empty string if no AAS Repository is configured.
    */
   function getShellsUrl (infrastructure?: InfrastructureConfig): string {
-    return shellsUrl(aasRepositoryUrlOf(infrastructure))
+    return endpointUrl(aasRepositoryUrlOf(infrastructure), AAS_REPOSITORY_ENDPOINT_PATH)
   }
 
   // URL of the AAS Repository of the given infrastructure, or the one of the selected infrastructure from the store
@@ -427,7 +427,7 @@ export function useAASRepositoryClient () {
    * @returns {string} The AAS endpoint.
    */
   function getAasEndpointById (aasId: string, infrastructure?: InfrastructureConfig): string {
-    return aasEndpointUrl(aasRepositoryUrlOf(infrastructure), aasId)
+    return resourceUrl(aasRepositoryUrlOf(infrastructure), AAS_REPOSITORY_ENDPOINT_PATH, aasId)
   }
 
   /**
@@ -530,8 +530,8 @@ export function useAASRepositoryClient () {
   async function postAas (aas: aasTypes.AssetAdministrationShell, suppressRequestErrorMessage = false): Promise<boolean> {
     const failResponse = false
 
-    const aasRepoUrl = getShellsUrl()
-    if (aasRepoUrl === '') {
+    const path = endpointUrl(aasRepositoryUrl.value, AAS_REPOSITORY_ENDPOINT_PATH)
+    if (path === '') {
       return failResponse
     }
 
@@ -541,7 +541,6 @@ export function useAASRepositoryClient () {
 
     const context = 'creating AAS'
     const disableMessage = suppressRequestErrorMessage
-    const path = aasRepoUrl
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
     const body = JSON.stringify(jsonAas)
@@ -553,8 +552,8 @@ export function useAASRepositoryClient () {
   async function putAas (aas: aasTypes.AssetAdministrationShell, suppressRequestErrorMessage = false): Promise<boolean> {
     const failResponse = false
 
-    const aasRepoUrl = getShellsUrl()
-    if (aasRepoUrl === '') {
+    const path = resourceUrl(aasRepositoryUrl.value, AAS_REPOSITORY_ENDPOINT_PATH, aas.id)
+    if (path === '') {
       return failResponse
     }
 
@@ -563,7 +562,6 @@ export function useAASRepositoryClient () {
 
     const context = 'updating AAS'
     const disableMessage = suppressRequestErrorMessage
-    const path = aasRepoUrl + '/' + base64Encode(aas.id)
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
     const body = JSON.stringify(jsonAas)
@@ -585,8 +583,8 @@ export function useAASRepositoryClient () {
       return failResponse
     }
 
-    const aasRepoUrl = getShellsUrl()
-    if (aasRepoUrl === '') {
+    const aasEndpoint = resourceUrl(aasRepositoryUrl.value, AAS_REPOSITORY_ENDPOINT_PATH, aasId)
+    if (aasEndpoint === '') {
       return failResponse
     }
 
@@ -597,7 +595,7 @@ export function useAASRepositoryClient () {
 
     const context = 'uploading thumbnail'
     const disableMessage = suppressRequestErrorMessage
-    const path = aasRepoUrl + '/' + base64Encode(aasId) + '/asset-information/thumbnail'
+    const path = aasEndpoint + '/asset-information/thumbnail'
     const headers = new Headers()
     const body = formData
 

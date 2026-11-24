@@ -25,3 +25,24 @@ updates:
           - "*"
     cooldown:
       default-days: 1
+  - package-ecosystem: "docker"
+    directories:
+      - "/aas-web-ui"
+      - "/examples/TimeSeriesData/mqtt-publisher"
+      - "/examples/CombinedExample/Infrastructure1/mqtt-publisher"
+      - "/examples/CombinedExample/Infrastructure2/mqtt-client"
+      - "/examples/CombinedExample/Infrastructure2/nodered"
+    schedule:
+      interval: "weekly"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    ignore:
+      # Node major is coupled to the `nodejs~<major>` apk package in the production stage
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
+    groups:
+      docker-base-images:
+        patterns:
+          - "*"
+    cooldown:
+      default-days: 1

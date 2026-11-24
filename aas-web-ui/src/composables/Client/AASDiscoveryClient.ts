@@ -1,9 +1,7 @@
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
 import { base64Encode } from '@/utils/EncodeDecodeUtils'
-import { stripLastCharacter } from '@/utils/StringUtils'
-
-export const ASS_DISCOVERY_ENDPOINT_PATH = '/lookup/shells'
+import { AAS_DISCOVERY_ENDPOINT_PATH, endpointUrl, resourceUrl } from '@/utils/EndpointUrls'
 
 export function useAASDiscoveryClient () {
   // Stores
@@ -42,15 +40,9 @@ export function useAASDiscoveryClient () {
       return failResponse
     }
 
-    let aasDiscUrl = endpoint || aasDiscoveryUrl.value.trim()
+    const aasDiscUrl = endpointUrl(endpoint || aasDiscoveryUrl.value, AAS_DISCOVERY_ENDPOINT_PATH)
     if (aasDiscUrl === '') {
       return failResponse
-    }
-    if (aasDiscUrl.endsWith('/')) {
-      aasDiscUrl = stripLastCharacter(aasDiscUrl)
-    }
-    if (!aasDiscUrl.endsWith(ASS_DISCOVERY_ENDPOINT_PATH)) {
-      aasDiscUrl += ASS_DISCOVERY_ENDPOINT_PATH
     }
 
     const assetIdObject = JSON.stringify({ name: 'globalAssetId', value: globalAssetId })
@@ -75,21 +67,6 @@ export function useAASDiscoveryClient () {
     }
 
     return failResponse
-  }
-
-  function resolveDiscoveryBaseUrl (endpoint?: string): string {
-    let aasDiscUrl = endpoint ? endpoint.trim() : aasDiscoveryUrl.value.trim()
-    if (aasDiscUrl === '') {
-      return ''
-    }
-    if (aasDiscUrl.endsWith('/')) {
-      aasDiscUrl = stripLastCharacter(aasDiscUrl)
-    }
-    if (!aasDiscUrl.endsWith(ASS_DISCOVERY_ENDPOINT_PATH)) {
-      aasDiscUrl += ASS_DISCOVERY_ENDPOINT_PATH
-    }
-
-    return aasDiscUrl
   }
 
   function createAssetLinksFromAssetInformation (
@@ -132,12 +109,11 @@ export function useAASDiscoveryClient () {
       return failResponse
     }
 
-    const discoveryBaseUrl = resolveDiscoveryBaseUrl(endpoint)
-    if (discoveryBaseUrl === '') {
+    const path = resourceUrl(endpoint || aasDiscoveryUrl.value, AAS_DISCOVERY_ENDPOINT_PATH, aasId)
+    if (path === '') {
       return failResponse
     }
 
-    const path = `${discoveryBaseUrl}/${base64Encode(aasId)}`
     const context = 'updating AAS discovery asset links'
     const disableMessage = false
     const headers = new Headers()
@@ -161,12 +137,11 @@ export function useAASDiscoveryClient () {
       return failResponse
     }
 
-    const discoveryBaseUrl = resolveDiscoveryBaseUrl(endpoint)
-    if (discoveryBaseUrl === '') {
+    const path = resourceUrl(endpoint || aasDiscoveryUrl.value, AAS_DISCOVERY_ENDPOINT_PATH, aasId)
+    if (path === '') {
       return failResponse
     }
 
-    const path = `${discoveryBaseUrl}/${base64Encode(aasId)}`
     const context = 'deleting AAS discovery asset links'
     const disableMessage = false
     const response = await deleteRequest(path, new Headers(), context, disableMessage)

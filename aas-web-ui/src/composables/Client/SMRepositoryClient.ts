@@ -5,12 +5,8 @@ import { useIDUtils } from '@/composables/IDUtils'
 import { useRequestHandling } from '@/composables/RequestHandling'
 import { useAASStore } from '@/store/AASDataStore'
 import { useInfrastructureStore } from '@/store/InfrastructureStore'
-import { aasEndpointUrl } from '@/utils/AAS/AasRepositoryUrls'
-import { base64Encode } from '@/utils/EncodeDecodeUtils'
+import { AAS_REPOSITORY_ENDPOINT_PATH, endpointUrl, resourceUrl, SUBMODEL_REPOSITORY_ENDPOINT_PATH } from '@/utils/EndpointUrls'
 import { getActiveComponentUrlForTemplate, usesSubmodelSuperpath } from '@/utils/InfrastructureUtils'
-import { stripLastCharacter } from '@/utils/StringUtils'
-
-export const SUBMODEL_REPOSITORY_ENDPOINT_PATH = '/submodels'
 
 export function useSMRepositoryClient () {
   // Stores
@@ -40,7 +36,7 @@ export function useSMRepositoryClient () {
   // Endpoint of an AAS in the AAS Repository of the given or the selected infrastructure, for the Submodel superpath
   function getAasEndpointById (aasId: string, infrastructure?: InfrastructureConfig): string {
     const aasRepoUrl = infrastructure ? getActiveComponentUrlForTemplate(infrastructure, 'AASRepo') : aasRepositoryUrl.value
-    return aasEndpointUrl(aasRepoUrl, aasId)
+    return resourceUrl(aasRepoUrl, AAS_REPOSITORY_ENDPOINT_PATH, aasId)
   }
 
   function shouldUseAasSuperpath (infrastructure?: InfrastructureConfig): boolean {
@@ -54,19 +50,12 @@ export function useSMRepositoryClient () {
    * @returns {string} The '/submodels' endpoint, or an empty string if no Submodel Repository is configured.
    */
   function getSubmodelsUrl (infrastructure?: InfrastructureConfig): string {
-    let smRepoUrl = infrastructure
-      ? getActiveComponentUrlForTemplate(infrastructure, 'SubmodelRepo')
-      : submodelRepoUrl.value.trim()
-    if (smRepoUrl === '') {
-      return ''
-    }
-    if (smRepoUrl.endsWith('/')) {
-      smRepoUrl = stripLastCharacter(smRepoUrl)
-    }
-    if (!smRepoUrl.endsWith(SUBMODEL_REPOSITORY_ENDPOINT_PATH)) {
-      smRepoUrl += SUBMODEL_REPOSITORY_ENDPOINT_PATH
-    }
-    return smRepoUrl
+    return endpointUrl(submodelRepositoryUrlOf(infrastructure), SUBMODEL_REPOSITORY_ENDPOINT_PATH)
+  }
+
+  // URL of the Submodel Repository of the given infrastructure, or the one of the selected infrastructure from the store
+  function submodelRepositoryUrlOf (infrastructure?: InfrastructureConfig): string {
+    return infrastructure ? getActiveComponentUrlForTemplate(infrastructure, 'SubmodelRepo') : submodelRepoUrl.value
   }
 
   function getAasEndpointForSubmodel (aasId?: string, infrastructure?: InfrastructureConfig): string {
@@ -112,8 +101,7 @@ export function useSMRepositoryClient () {
       return failResponse
     }
 
-    const normalizedAasEndpoint = aasEndpoint.endsWith('/') ? stripLastCharacter(aasEndpoint) : aasEndpoint
-    return normalizedAasEndpoint + SUBMODEL_REPOSITORY_ENDPOINT_PATH + '/' + base64Encode(smId)
+    return resourceUrl(aasEndpoint, SUBMODEL_REPOSITORY_ENDPOINT_PATH, smId)
   }
 
   /**
@@ -126,12 +114,10 @@ export function useSMRepositoryClient () {
   async function fetchSmList (): Promise<Array<any>> {
     const failResponse = [] as Array<any>
 
-    const smRepoUrl = getSubmodelsUrl()
-    if (smRepoUrl === '') {
+    const smRepoPath = getSubmodelsUrl()
+    if (smRepoPath === '') {
       return failResponse
     }
-
-    const smRepoPath = smRepoUrl
     const smRepoContext = 'retrieving all SMs'
     const disableMessage = false
     try {
@@ -461,14 +447,7 @@ export function useSMRepositoryClient () {
       return getSuperpathSmEndpointById(smId, aasId, infrastructure)
     }
 
-    const smRepoUrl = getSubmodelsUrl(infrastructure)
-    if (smRepoUrl === '') {
-      return failResponse
-    }
-
-    const smEndpoint = smRepoUrl + '/' + base64Encode(smId)
-
-    return smEndpoint || failResponse
+    return resourceUrl(submodelRepositoryUrlOf(infrastructure), SUBMODEL_REPOSITORY_ENDPOINT_PATH, smId)
   }
 
   /**
@@ -500,8 +479,8 @@ export function useSMRepositoryClient () {
       return response.success
     }
 
-    const smRepoUrl = getSubmodelsUrl(infrastructure)
-    if (smRepoUrl === '') {
+    const path = getSubmodelsUrl(infrastructure)
+    if (path === '') {
       return failResponse
     }
 
@@ -511,7 +490,6 @@ export function useSMRepositoryClient () {
 
     const context = 'creating Submodel'
     const disableMessage = suppressRequestErrorMessage
-    const path = smRepoUrl
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
     const body = JSON.stringify(jsonSubmodel)
@@ -537,22 +515,12 @@ export function useSMRepositoryClient () {
       )
     }
 
-    let smRepoUrl = submodelRepoUrl.value.trim()
-    if (smRepoUrl === '') {
+    const path = resourceUrl(submodelRepoUrl.value, SUBMODEL_REPOSITORY_ENDPOINT_PATH, submodel.id)
+    if (path === '') {
       return false
     }
-    if (smRepoUrl.endsWith('/')) {
-      smRepoUrl = stripLastCharacter(smRepoUrl)
-    }
-    if (!smRepoUrl.endsWith(SUBMODEL_REPOSITORY_ENDPOINT_PATH)) {
-      smRepoUrl += SUBMODEL_REPOSITORY_ENDPOINT_PATH
-    }
 
-    return putSubmodelAtPath(
-      submodel,
-      smRepoUrl + '/' + base64Encode(submodel.id),
-      suppressRequestErrorMessage,
-    )
+    return putSubmodelAtPath(submodel, path, suppressRequestErrorMessage)
   }
 
   async function putSubmodelAtPath (
@@ -675,15 +643,9 @@ export function useSMRepositoryClient () {
       return ensureWriteSuccess(response)
     }
 
-    let smRepoUrl = submodelRepoUrl.value.trim()
-    if (smRepoUrl === '') {
+    const smEndpoint = resourceUrl(submodelRepoUrl.value, SUBMODEL_REPOSITORY_ENDPOINT_PATH, submodelId)
+    if (smEndpoint === '') {
       return failResponse
-    }
-    if (smRepoUrl.endsWith('/')) {
-      smRepoUrl = stripLastCharacter(smRepoUrl)
-    }
-    if (!smRepoUrl.endsWith(SUBMODEL_REPOSITORY_ENDPOINT_PATH)) {
-      smRepoUrl += SUBMODEL_REPOSITORY_ENDPOINT_PATH
     }
 
     // Convert SME to JSON
@@ -692,8 +654,7 @@ export function useSMRepositoryClient () {
 
     const context = 'creating Submodel Element'
     const disableMessage = suppressRequestErrorMessage
-    const path
-      = smRepoUrl + '/' + base64Encode(submodelId) + '/submodel-elements' + (idShortPath ? '/' + idShortPath : '')
+    const path = smEndpoint + '/submodel-elements' + (idShortPath ? '/' + idShortPath : '')
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
     const body = JSON.stringify(jsonSubmodelElement)

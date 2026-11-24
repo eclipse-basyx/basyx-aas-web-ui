@@ -1,21 +1,23 @@
 import type { BaSyxComponent, BaSyxComponentKey, ComponentConnectionResult, ComponentConnectionState, ServiceDescription } from '@/types/BaSyx'
 import type { InfrastructureConfig } from '@/types/Infrastructure'
 import { defineStore } from 'pinia'
-import { ASS_DISCOVERY_ENDPOINT_PATH } from '@/composables/Client/AASDiscoveryClient'
-import { ASS_REGISTRY_ENDPOINT_PATH } from '@/composables/Client/AASRegistryClient'
-import { CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH } from '@/composables/Client/CDRepositoryClient'
 import { COMPANY_LOOKUP_ENDPOINT_PATHS } from '@/composables/Client/CompanyLookup/constants/api'
-import { SUBMODEL_REGISTRY_ENDPOINT_PATH } from '@/composables/Client/SMRegistryClient'
-import { SUBMODEL_REPOSITORY_ENDPOINT_PATH } from '@/composables/Client/SMRepositoryClient'
 import { watchFeatureControlClaims } from '@/composables/FeatureControl'
 import { useInfrastructureAuth } from '@/composables/Infrastructure/useInfrastructureAuth'
 import { useInfrastructureStorage } from '@/composables/Infrastructure/useInfrastructureStorage'
 import { type RequestSecurityContext, useRequestHandling } from '@/composables/RequestHandling'
 import { useEnvStore } from '@/store/EnvironmentStore'
 import { useNavigationStore } from '@/store/NavigationStore'
-import { AAS_REPOSITORY_ENDPOINT_PATH } from '@/utils/AAS/AasRepositoryUrls'
 import { getFallbackConnectionFailure, isValidConnectionResponse, isValidServiceDescription } from '@/utils/ComponentConnectionUtils'
 import { isValidCustomHeader } from '@/utils/CustomHeaderUtils'
+import {
+  AAS_DISCOVERY_ENDPOINT_PATH,
+  AAS_REGISTRY_ENDPOINT_PATH,
+  AAS_REPOSITORY_ENDPOINT_PATH,
+  CONCEPT_DESCRIPTION_REPOSITORY_ENDPOINT_PATH,
+  SUBMODEL_REGISTRY_ENDPOINT_PATH,
+  SUBMODEL_REPOSITORY_ENDPOINT_PATH,
+} from '@/utils/EndpointUrls'
 import { getActiveComponentKeys, isComponentActiveForTemplate } from '@/utils/InfrastructureUtils'
 import { hasResourceAccessProfile } from '@/utils/ResourceAccessProfile'
 import { normalizeEndpointUrl } from '@/utils/url'
@@ -79,7 +81,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       description: ref(null),
       connect: () => connectComponent('AASDiscovery'),
       label: 'AAS Discovery URL',
-      pathCheck: ASS_DISCOVERY_ENDPOINT_PATH,
+      pathCheck: AAS_DISCOVERY_ENDPOINT_PATH,
       additionalParams: '?limit=1',
     },
     AASRegistry: {
@@ -89,7 +91,7 @@ export const useInfrastructureStore = defineStore('infrastructureStore', () => {
       description: ref(null),
       connect: () => connectComponent('AASRegistry'),
       label: 'AAS Registry URL',
-      pathCheck: ASS_REGISTRY_ENDPOINT_PATH,
+      pathCheck: AAS_REGISTRY_ENDPOINT_PATH,
       additionalParams: '?limit=1',
     },
     SubmodelRegistry: {
