@@ -40,13 +40,13 @@
 
     <v-card-text class="d-flex flex-column ga-5">
       <!-- Requirement and hazard level -->
-      <div class="rfp-details__facts">
-        <section>
+      <v-row density="comfortable">
+        <v-col cols="12" sm="7" tag="section">
           <div class="text-label-large mb-1">Requirement</div>
           <div class="text-body-large">{{ requirementsSet.requirement || 'No requirement description' }}</div>
-        </section>
+        </v-col>
 
-        <section>
+        <v-col cols="12" sm="5" tag="section">
           <div class="text-label-large mb-1">Hazard level</div>
 
           <div class="d-flex align-center ga-2">
@@ -60,8 +60,8 @@
           >
             Value in submodel: {{ requirementsSet.hazardLevel.raw }}
           </div>
-        </section>
-      </div>
+        </v-col>
+      </v-row>
 
       <!-- Reports -->
       <section>
@@ -148,17 +148,3 @@
     return /^https?:\/\//i.test(url)
   }
 </script>
-
-<style scoped>
-  .rfp-details__facts {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
-  }
-
-  @media (min-width: 720px) {
-    .rfp-details__facts {
-      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-    }
-  }
-</style>

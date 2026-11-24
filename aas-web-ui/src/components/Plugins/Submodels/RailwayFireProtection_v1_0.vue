@@ -14,7 +14,7 @@
       </v-row>
 
       <v-card class="flex-grow-1">
-        <v-card-text class="rfp-grid">
+        <v-card-text class="rfp-grid ga-4">
           <v-skeleton-loader v-for="n in 3" :key="n" class="rfp-grid__placeholder border rounded" type="article" />
         </v-card-text>
       </v-card>
@@ -72,7 +72,7 @@
             </v-btn>
           </div>
 
-          <div v-if="visibleSets.length > 0" class="rfp-grid">
+          <div v-if="visibleSets.length > 0" class="rfp-grid ga-4">
             <RailwayFireProtectionTile
               v-for="set in visibleSets"
               :key="set.key"
@@ -255,10 +255,13 @@
 </script>
 
 <style scoped>
+  /*
+   * A CSS grid instead of v-row/v-col: the number of tile columns has to follow the width of the visualization
+   * panel, which the user can resize next to the tree view, while v-col breakpoints follow the viewport width.
+   */
   .rfp-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 16px;
   }
 
   .rfp-grid__placeholder {

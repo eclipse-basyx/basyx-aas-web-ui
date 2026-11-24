@@ -5,9 +5,9 @@
       aria-haspopup="dialog"
       :aria-label="ariaLabel"
       border
-      class="rfp-tile__card d-flex flex-column"
-      :class="`rfp-tile__card--${meta.color}`"
+      class="rfp-tile__card d-flex flex-column border-t-lg"
       hover
+      :style="{ borderTopColor: `rgb(var(--v-theme-${meta.color}))` }"
       @click="emit('open')"
     >
       <v-card-item class="pb-2">
@@ -178,15 +178,6 @@
   .rfp-tile__card {
     grid-area: 1 / 1;
   }
-
-  .rfp-tile__card {
-    border-top-width: 4px !important;
-  }
-
-  .rfp-tile__card--success { border-top-color: rgb(var(--v-theme-success)) !important; }
-  .rfp-tile__card--info { border-top-color: rgb(var(--v-theme-info)) !important; }
-  .rfp-tile__card--warning { border-top-color: rgb(var(--v-theme-warning)) !important; }
-  .rfp-tile__card--error { border-top-color: rgb(var(--v-theme-error)) !important; }
 
   .rfp-tests {
     display: flex;
