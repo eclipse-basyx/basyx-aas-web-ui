@@ -73,112 +73,30 @@
                   :items="catalogList"
                 >
                   <template #default="{ item }">
-                    <v-list-item
+                    <EdcResourceListItem
                       :key="item['@id']"
-                      :active="isSelected(item)"
-                      base-color="listItem"
-                      :border="isSelected(item) ? 'primary' : 'listItem thin'"
-                      class="mt-2 mx-0"
-                      color="primarySurface"
-                      style="
-                        border-top: solid;
-                        border-right: solid;
-                        border-bottom: solid;
-                        border-width: 1px;
-                      "
-                      :style="{
-                        'border-color': isSelected(item)
-                          ? primaryColor + ' !important'
-                          : isDark
-                            ? '#686868 !important'
-                            : '#ABABAB !important',
-                      }"
-                      variant="tonal"
-                      @click="selectCatalogDataset(item)"
+                      icon="mdi-code-json"
+                      label="Catalog Dataset"
+                      :resource="item"
+                      :selected="isSelected(item)"
+                      @select="selectCatalogDataset(item)"
                     >
-                      <template #prepend>
-                        <v-btn
-                          class="ml-n1"
-                          color="primary"
-                          icon="mdi-code-json"
-                          rel="noopener noreferrer"
-                          size="x-small"
-                          style="z-index: 9000"
-                          target="_blank"
-                          variant="plain"
-                          @click.stop
-                        />
+                      <template #title>{{ item.name || item.description }}</template>
+
+                      <template #subtitle>{{ item['@id'] }}</template>
+
+                      <template #tooltip>
+                        <div v-if="item.name" class="text-body-small mt-1">
+                          <span class="font-weight-bold">{{ 'Name: ' }}</span>
+                          {{ item.name }}
+                        </div>
+
+                        <div v-if="item.description" class="text-body-small mt-1">
+                          <span class="font-weight-bold">{{ 'Description: ' }}</span>
+                          {{ item.description }}
+                        </div>
                       </template>
-
-                      <v-tooltip
-                        activator="parent"
-                        open-delay="600"
-                        transition="slide-x-transition"
-                      >
-                        <div v-if="item['@id']" class="text-body-small">
-                          <span class="font-weight-bold">{{ "ID: " }}</span>
-                          {{ item["@id"] }}
-                        </div>
-
-                        <div v-if="item?.createdAt" class="text-body-small mt-1">
-                          <span class="font-weight-bold">{{ "Created: " }}</span>
-                          {{ new Date(item.createdAt).toISOString() }}
-                        </div>
-
-                        <div v-if="item?.name" class="text-body-small mt-1">
-                          <span class="font-weight-bold">{{ "Name: " }}</span>
-                          {{ item?.name }}
-                        </div>
-
-                        <div v-if="item?.description" class="text-body-small mt-1">
-                          <span class="font-weight-bold">{{ "Description: " }}</span>
-                          {{ item?.description }}
-                        </div>
-                      </v-tooltip>
-
-                      <v-list-item-title class="text-primary">
-                        {{ item?.name || item?.description }}
-                      </v-list-item-title>
-
-                      <v-list-item-subtitle class="text-listItemText">
-                        {{ item["@id"] }}
-                      </v-list-item-subtitle>
-
-                      <template #append>
-                        <v-menu>
-                          <template #activator="{ props }">
-                            <v-btn
-                              color="listItemText"
-                              icon
-                              size="x-small"
-                              variant="plain"
-                              v-bind="props"
-                              @click.prevent
-                            >
-                              <v-icon size="x-small">mdi-dots-vertical</v-icon>
-                            </v-btn>
-                          </template>
-
-                          <v-sheet border>
-                            <v-list class="py-0" density="compact" slim>
-                              <v-divider />
-
-                              <v-list-item
-                                @click.stop="
-                                  copyToClipboard(item['@id'], 'CatalogDatasetId', copyIconAsRef)
-                                "
-                              >
-                                <template #prepend>
-                                  <v-icon size="x-small">{{ copyIcon }}</v-icon>
-                                </template>
-
-                                <v-list-item-subtitle class="pr-2">Copy Catalog Dataset ID</v-list-item-subtitle>
-                              </v-list-item>
-                            </v-list>
-                          </v-sheet>
-                        </v-menu>
-                      </template>
-                    </v-list-item>
+                    </EdcResourceListItem>
                   </template>
                 </v-virtual-scroll>
 
@@ -228,148 +146,23 @@
       </v-navigation-drawer>
 
       <v-main>
-        <v-container fluid>
+        <CatalogDatasetDetails
+          :business-partner="selectedBusinessPartner"
+          :catalog-request-failed="catalogRequestFailed"
+          :dataset="selectedCatalogDataset"
+          :list-loading="listLoading"
+          :proxy-id="edcProxyId"
+          @send-data="sendDataDialog = true"
+        />
 
-          <!-- Placeholder of the Catalog Dataset while the Catalog loads -->
-          <v-skeleton-loader
-            v-if="listLoading"
-            class="border rounded-lg"
-            type="list-item-avatar, divider, paragraph@3"
-          />
-
-          <!-- Empty states when nothing is selected yet -->
-          <div
-            v-else-if="
-              !selectedBusinessPartner
-                || Object.keys(selectedBusinessPartner).length === 0
-                || !selectedCatalogDataset
-                || Object.keys(selectedCatalogDataset).length === 0
-            "
-            class="d-flex align-center justify-center"
-            :style="{ height: fullHeightMain }"
-          >
-            <v-empty-state
-              v-if="
-                !selectedBusinessPartner
-                  || Object.keys(selectedBusinessPartner).length === 0
-              "
-              icon="mdi-gesture-tap"
-              text="Please select a Business Partner to load its Catalog"
-              title="Select Business Partner"
-            >
-              <template #media>
-                <v-icon size="64" />
-              </template>
-            </v-empty-state>
-
-            <v-empty-state
-              v-else-if="catalogRequestFailed"
-              icon="mdi-database-alert-outline"
-              text="No Catalog Dataset can be selected, as the Catalog of the selected Business Partner could not be requested"
-              title="Catalog Not Available"
-            >
-              <template #media>
-                <v-icon size="64" />
-              </template>
-            </v-empty-state>
-
-            <v-empty-state
-              v-else-if="
-                !selectedCatalogDataset
-                  || Object.keys(selectedCatalogDataset).length === 0
-              "
-              icon="mdi-gesture-tap"
-              text="Please select a Catalog Dataset"
-              title="Select Catalog Dataset"
-            >
-              <template #media>
-                <v-icon size="64" />
-              </template>
-            </v-empty-state>
-          </div>
-
-          <template v-else>
-            <JSONPreview
-              :height="catalogDatasetPreviewHeight"
-              icon="mdi-database-outline"
-              :json-content="selectedCatalogDataset"
-              title="Catalog Dataset"
-            />
-
-            <!-- Use case: Push Data -->
-            <div v-if="isPushAsset(selectedCatalogDataset)" class="d-flex mt-2">
-              <v-spacer />
-
-              <v-btn
-                class="text-buttonText"
-                color="primary"
-                prepend-icon="mdi-upload"
-                rounded="lg"
-                text="Send Data"
-                variant="flat"
-                @click="sendDataDialog = true"
-              />
-            </div>
-
-            <!-- Use case: Fetch Data -->
-            <template v-else-if="isFetchAsset(selectedCatalogDataset)">
-              <div class="d-flex mt-2">
-                <v-spacer />
-
-                <!-- Readonly instead of disabled, as disabled would drop the success color -->
-                <v-btn
-                  class="text-buttonText"
-                  :color="dataFetched ? 'success' : 'primary'"
-                  :loading="fetchingData"
-                  :prepend-icon="dataFetched ? 'mdi-check' : 'mdi-download'"
-                  :readonly="dataFetched"
-                  rounded="lg"
-                  :text="dataFetched ? 'Data Fetched' : 'Fetch Data'"
-                  variant="flat"
-                  @click="fetchCatalogDatasetData()"
-                />
-              </div>
-
-              <!-- Shares the height with the Catalog Dataset -->
-              <JSONPreview
-                v-if="dataFetched"
-                class="mt-2"
-                :download-file-name="selectedCatalogDataset['@id']"
-                :height="jsonPreviewHalfHeight"
-                :icon="fetchedDataTypeInfo?.icon ?? 'mdi-download'"
-                :json-content="fetchedData"
-                :title="fetchedDataTypeInfo ? `Fetched ${fetchedDataTypeInfo.title}` : 'Fetched Data'"
-              />
-
-              <div v-if="fetchedSubmodel" class="d-flex mt-2">
-                <v-spacer />
-
-                <v-btn
-                  class="text-buttonText"
-                  color="primary"
-                  prepend-icon="mdi-import"
-                  rounded="lg"
-                  text="Import Submodel"
-                  variant="flat"
-                  @click="importSubmodelDialog = true"
-                />
-              </div>
-            </template>
-
-          </template>
-
-          <!-- Opens once the Catalog Dataset is selected, which a dialog restored from the URL has to wait for -->
-          <SendDataDialog
-            :business-partner="selectedBusinessPartner"
-            :catalog-dataset="selectedCatalogDataset"
-            :model-value="sendDataDialog && isPushAsset(selectedCatalogDataset)"
-            :proxy-id="edcProxyId"
-            @update:model-value="sendDataDialog = $event"
-          />
-
-          <ImportSubmodelDialog v-model="importSubmodelDialog" :submodel="fetchedSubmodel" />
-
-        </v-container>
+        <!-- Opens once the Catalog Dataset is selected, which a dialog restored from the URL has to wait for -->
+        <SendDataDialog
+          :business-partner="selectedBusinessPartner"
+          :catalog-dataset="selectedCatalogDataset"
+          :model-value="sendDataDialog && isPushAsset(selectedCatalogDataset)"
+          :proxy-id="edcProxyId"
+          @update:model-value="sendDataDialog = $event"
+        />
       </v-main>
 
     </v-layout>
@@ -379,22 +172,14 @@
 <script lang="ts" setup>
   import type { CatenaXPartner } from '@/types/Infrastructure'
   import type { ComponentPublicInstance, Ref } from 'vue'
-  import { types as aasTypes } from '@aas-core-works/aas-core3.1-typescript'
-  import { useTheme } from 'vuetify'
-  import { useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
-  import { useClipboardUtil } from '@/composables/ClipboardUtil'
-  import ImportSubmodelDialog from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/Dialogs/ImportSubmodelDialog.vue'
+  import CatalogDatasetDetails from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/CatalogDatasetDetails.vue'
   import SendDataDialog from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/Dialogs/SendDataDialog.vue'
+  import EdcResourceListItem from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceListItem.vue'
   import { useEdcCatalogQuery } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcCatalogQuery'
   import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
   import { useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
-  import {
-    assetTypeFilterItems,
-    isFetchAsset,
-    isPushAsset,
-  } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
-  import { fetchedDataType } from '@/pages/modules/EclipseDataspaceConnector/data/fetchedDataType'
+  import { assetTypeFilterItems, isPushAsset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { normalizeCatenaXPartners } from '@/utils/CatenaXPartnerUtils'
 
@@ -407,23 +192,12 @@
   const infrastructureStore = useInfrastructureStore()
 
   // Composables
-  const { fetchData } = useCatenaXEdcClient()
   const { queryCatalogPage, findCatalogDataset } = useEdcCatalogQuery()
   const { showFailureMessage } = useEdcRequestFailureMessage()
   const { dialogOpen, dialogState } = useEdcDialogRoute()
 
-  const { copyToClipboard } = useClipboardUtil()
-
-  // Vuetify
-  const theme = useTheme()
-
   // Data
   const fullHeight = ref('calc(100vh - 64px - 48px - 40px - 2px)') // Header - Tabs - Footer - Lines
-  const fullHeightMain = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px)') // Full height - header - tabs - footer - padding - border
-  const fullHeightMainJsonPreview = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px - 64px - 32px)') // Full height - header - tabs - footer - padding - border - JSON
-  const fullHeightMainJsonPreviewWithActions = ref('calc(100vh - 64px - 48px - 40px - 32px - 2px - 64px - 32px - 44px)') // JSON preview - actions
-  const fullHeightMainJsonPreviewWithActionsHalf = ref('calc((100vh - 64px - 48px - 40px - 32px - 2px - 2 * (64px + 32px) - 44px - 8px) / 2)') // Two JSON previews (with margin) below each other, the actions in between
-  const fullHeightMainJsonPreviewWithTwoActionsHalf = ref('calc((100vh - 64px - 48px - 40px - 32px - 2px - 2 * (64px + 32px) - 2 * 44px - 8px) / 2)') // As above, with actions below the second JSON preview too
 
   const virtualScrollRef: Ref<VirtualScrollInstance | null> = ref(null)
 
@@ -437,37 +211,11 @@
   }))
   const sendDataPartnerId = dialogState('partner')
   const sendDataDatasetId = dialogState('dataset')
-  const importSubmodelDialog = ref(false)
-  const fetchingData = ref(false)
-  const fetchedData = ref<unknown>(undefined) // Data fetched from the data plane of the selected catalog dataset
-
-  const copyIcon = ref<string>('mdi-clipboard-file-outline')
 
   // Computed properties
-  const primaryColor = computed(() => theme.current.value.colors.primary)
-  const isDark = computed(() => theme.current.value.dark)
-  const copyIconAsRef = computed(() => copyIcon)
   const selectedEdcConfig = computed(() => infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null)
   const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? 'default')
   const businessPartners = computed(() => normalizeCatenaXPartners(selectedEdcConfig.value?.partners ?? []))
-  const dataFetched = computed(() => fetchedData.value !== undefined)
-  const fetchedDataTypeInfo = computed(() => fetchedDataType(fetchedData.value)) // AAS or Submodel, if the fetched data is one
-  const fetchedSubmodel = computed(() => {
-    const instance = fetchedDataTypeInfo.value?.instance
-    return instance instanceof aasTypes.Submodel ? instance : null
-  })
-  // Height of the Catalog Dataset and the Fetched Data, sharing the space below each other
-  const jsonPreviewHalfHeight = computed(() => fetchedSubmodel.value
-    ? fullHeightMainJsonPreviewWithTwoActionsHalf.value
-    : fullHeightMainJsonPreviewWithActionsHalf.value)
-  const catalogDatasetPreviewHeight = computed(() => {
-    if (dataFetched.value) {
-      return jsonPreviewHalfHeight.value
-    }
-    return isPushAsset(selectedCatalogDataset.value) || isFetchAsset(selectedCatalogDataset.value)
-      ? fullHeightMainJsonPreviewWithActions.value
-      : fullHeightMainJsonPreview.value
-  })
 
   // Loaded pages of the catalog, in the order of the provider
   const {
@@ -505,10 +253,6 @@
       initialize()
     },
   )
-
-  watch(selectedCatalogDataset, () => {
-    fetchedData.value = undefined
-  })
 
   onMounted(() => {
     initialize()
@@ -577,31 +321,6 @@
       return false
     }
     return selectedCatalogDataset.value['@id'] === policy['@id']
-  }
-
-  async function fetchCatalogDatasetData (): Promise<void> {
-    const businessPartner = selectedBusinessPartner.value
-    const catalogDataset = selectedCatalogDataset.value
-    if (!businessPartner || !catalogDataset?.['@id']) return
-
-    fetchingData.value = true
-    // The BFF negotiates the asset and fetches the data from the data plane given by the EDR
-    const result = await fetchData(edcProxyId.value, {
-      counterPartyId: businessPartner.counterPartyId,
-      counterPartyAddress: businessPartner.counterPartyAddress,
-      assetId: catalogDataset['@id'],
-    })
-    fetchingData.value = false
-
-    // Ignore the result if another catalog dataset was selected in the meantime
-    if (catalogDataset !== selectedCatalogDataset.value) return
-
-    if (!result.success) {
-      showFailureMessage('Failed to fetch the data.', edcBffFailureText(result))
-      return
-    }
-
-    fetchedData.value = result.data.data
   }
 
   function scrollToSelectedCatalogDataset (): void {

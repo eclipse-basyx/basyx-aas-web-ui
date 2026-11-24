@@ -37,10 +37,10 @@ vi.mock('@/store/NavigationStore', () => ({
   useNavigationStore: () => ({ getSnackbar: { status: false }, dispatchSnackbar: mocks.dispatchSnackbar }),
 }))
 
-vi.mock('vuetify', async importOriginal => ({
-  ...(await importOriginal<typeof Vuetify>()),
-  useTheme: () => ({ current: { value: { colors: { primary: '#1976d2' }, dark: false } } }),
-}))
+vi.mock('vuetify', async importOriginal => {
+  const current = { value: { colors: { primary: '#1976d2' }, dark: false } }
+  return { ...(await importOriginal<typeof Vuetify>()), useTheme: () => ({ current, global: { current } }) }
+})
 
 const partnerA: CatenaXPartner = { id: 'partner-a', name: 'Partner A', counterPartyId: 'BPNL-A', counterPartyAddress: 'https://a.test/api/v1/dsp' }
 const partnerB: CatenaXPartner = { id: 'partner-b', name: 'Partner B', counterPartyId: 'BPNL-B', counterPartyAddress: 'https://b.test/api/v1/dsp' }

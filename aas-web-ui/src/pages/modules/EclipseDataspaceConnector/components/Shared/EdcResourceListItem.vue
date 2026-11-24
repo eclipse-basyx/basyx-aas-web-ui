@@ -136,6 +136,6 @@
   })
 
   function copyId (): void {
-    copyToClipboard(props.resource['@id'], `${props.label}Id`, copyIcon)
+    copyToClipboard(props.resource['@id'], `${props.label} ID`, copyIcon)
   }
 </script>
