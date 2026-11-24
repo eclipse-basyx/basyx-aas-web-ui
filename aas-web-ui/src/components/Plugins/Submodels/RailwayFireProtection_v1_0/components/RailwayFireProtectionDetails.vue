@@ -51,7 +51,7 @@
 
           <div class="d-flex align-center ga-2">
             <v-icon :color="meta.color" :icon="meta.icon" size="small" />
-            <span class="text-body-large">{{ meta.code === 'unknown' ? (requirementsSet.hazardLevel.raw || 'No hazard level') : meta.label }}</span>
+            <span class="text-body-large">{{ hazardLevelText(requirementsSet.hazardLevel) || 'No hazard level' }}</span>
           </div>
 
           <div
@@ -127,7 +127,7 @@
 
 <script lang="ts" setup>
   import type { FireReport, RequirementsSet } from '../types'
-  import { hazardLevelMeta } from '../utils/hazardLevel'
+  import { hazardLevelMeta, hazardLevelText } from '../utils/hazardLevel'
 
   defineOptions({
     name: 'RailwayFireProtectionDetails',

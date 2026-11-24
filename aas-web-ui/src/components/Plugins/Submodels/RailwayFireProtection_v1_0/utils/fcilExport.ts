@@ -1,6 +1,6 @@
-import type { FireReport, FireTest, HazardLevel, RailwayFireProtectionData } from '../types'
+import type { FireReport, FireTest, RailwayFireProtectionData } from '../types'
 import { type FcilCatalogue, productCategoryCandidates, readFcilCatalogue } from './fcilClassification'
-import { hazardLevelMeta } from './hazardLevel'
+import { hazardLevelMeta, hazardLevelText } from './hazardLevel'
 import { characteristicsLabel, parseDecimal, requirementsSetReports, sortRequirementsSets } from './presentation'
 import {
   cellFill,
@@ -110,7 +110,8 @@ export function fcilRows (data: RailwayFireProtectionData, catalogue: FcilCatalo
         ...product,
         ...(index === 0 && categories?.length === 1 ? { AK: categories[0] } : {}),
         ...testColumns(chunk),
-        BY: hazardLevelValue(set.hazardLevel),
+        // The IDTA 02102 value, which is also an entry of the template's list; an unknown value as stored
+        BY: hazardLevelText(set.hazardLevel),
         CA: remarks.join('\n'),
       }
     })
@@ -191,11 +192,6 @@ function setInputCell (xlsx: XlsxPackage, sheet: Document, reference: string, va
     throw new Error(`Cell ${reference} is no input cell of the FCIL template.`)
   }
   setCell(sheet, reference, value)
-}
-
-/** The IDTA 02102 value, which is also an entry of the template's list; an unknown value as stored */
-function hazardLevelValue (hazardLevel: HazardLevel): string {
-  return hazardLevel.code === 'unknown' ? hazardLevel.raw : hazardLevelMeta(hazardLevel.code).label
 }
 
 /** The template asks for dd/mm/yyyy; other values are kept as they are */

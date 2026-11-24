@@ -137,3 +137,11 @@ export function parseHazardLevel (value: string, valueIds: string[] = []): Hazar
 export function hazardLevelMeta (code: HazardLevelCode): HazardLevelMeta {
   return META[code]
 }
+
+/**
+ * Text of a hazard level: the `label` (or another text field) of a recognised level, otherwise the value
+ * as stored in the submodel, which may be empty.
+ */
+export function hazardLevelText (hazardLevel: HazardLevel, field: 'label' | 'status' = 'label'): string {
+  return hazardLevel.code === 'unknown' ? hazardLevel.raw : META[hazardLevel.code][field]
+}

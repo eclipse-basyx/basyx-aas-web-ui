@@ -87,7 +87,7 @@
 <script lang="ts" setup>
   import type { FireReport, RequirementsSet } from '../types'
   import type { ComponentPublicInstance } from 'vue'
-  import { hazardLevelMeta } from '../utils/hazardLevel'
+  import { hazardLevelMeta, hazardLevelText } from '../utils/hazardLevel'
   import { requirementsSetTests } from '../utils/presentation'
 
   defineOptions({
@@ -116,12 +116,7 @@
 
   const hiddenTestCount = computed(() => tests.value.length - shownTests.value.length)
 
-  const statusText = computed(() => {
-    if (meta.value.code === 'unknown') {
-      return props.requirementsSet.hazardLevel.raw || 'No hazard level'
-    }
-    return meta.value.status
-  })
+  const statusText = computed(() => hazardLevelText(props.requirementsSet.hazardLevel, 'status') || 'No hazard level')
 
   const reportCountText = computed(() => {
     const count = props.requirementsSet.reportLinks.length
@@ -139,7 +134,7 @@
   )
 
   const ariaLabel = computed(() =>
-    `${props.requirementsSet.name}: ${props.requirementsSet.hazardLevel.raw || meta.value.label}. Show details`,
+    `${props.requirementsSet.name}: ${hazardLevelText(props.requirementsSet.hazardLevel) || 'No hazard level'}. Show details`,
   )
 
   function cardElement (): HTMLElement | null {
