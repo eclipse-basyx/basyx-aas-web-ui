@@ -858,12 +858,17 @@ describe('EDC BFF request helpers', () => {
   })
 
   it('does not follow redirects of the data plane', async () => {
-    const dataPlane = vi.fn(async () => new Response(null, { status: 302, headers: { Location: 'https://internal.test' } }))
+    const dataPlane = vi.fn(async () => new Response(null, { status: 302, headers: { Location: 'https://internal.test/secret?token=1' } }))
     const fetchMock = createDataPlaneFetchMock('https://data-plane.test/api/public', dataPlane)
 
-    await expect(fetchData(createProxyConfig(), dataRequest, { fetchFn: fetchMock as typeof fetch, pollingIntervalMs: 0 }))
-      .rejects
-      .toThrow('Data plane fetch failed (302)')
+    const request = fetchData(createProxyConfig(), dataRequest, { fetchFn: fetchMock as typeof fetch, pollingIntervalMs: 0 })
+    await expect(request).rejects.toMatchObject({
+      status: 502,
+      code: 'DATA_PLANE_REDIRECT_REFUSED',
+      message: 'Data plane redirect was not followed (302)',
+      details: expect.stringContaining('redirected to https://internal.test.'),
+    })
+    await expect(request).rejects.not.toMatchObject({ details: expect.stringContaining('token') })
     expect(dataPlane).toHaveBeenCalledWith(expect.objectContaining({ redirect: 'manual' }))
   })
 

@@ -113,6 +113,16 @@ describe('EDC BFF asset secrets', () => {
     }))
   })
 
+  it('does not reuse the stored secrets for a renamed secret', () => {
+    const redactedAsset = redactAssetSecrets(storedAsset) as typeof storedAsset
+    const { authCode, ...dataAddress } = redactedAsset.dataAddress
+    const updatedAsset = { ...redactedAsset, dataAddress: { ...dataAddress, 'header:x-api-key': authCode } }
+
+    expect(() => restoreAssetSecrets(updatedAsset, storedAsset)).toThrow(expect.objectContaining({
+      details: expect.stringContaining('The data address changed'),
+    }))
+  })
+
   it('refuses a placeholder without a stored secret', () => {
     const updatedAsset = redactAssetSecrets(storedAsset) as typeof storedAsset
     const withoutStoredToken = {

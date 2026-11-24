@@ -986,6 +986,17 @@ async function requestDataPlane (
 
   try {
     const response = await fetchFn(url, { ...init, redirect: 'manual', signal: controller.signal })
+    if (response.status >= 300 && response.status < 400) {
+      throw Object.assign(
+        createHttpError(
+          `Data plane redirect was not followed (${response.status})`,
+          502,
+          `The data plane ${describeOrigin(url)} redirected to ${describeRedirectOrigin(url, response)}. `
+          + 'Redirects of a data plane are not followed, as they could lead past the data plane allowlist.',
+        ),
+        { code: 'DATA_PLANE_REDIRECT_REFUSED' },
+      )
+    }
     return { response, data: await parseResponseBody(response) }
   } finally {
     clearTimeout(timeout)
@@ -998,6 +1009,19 @@ function describeOrigin (url: string): string {
     return new URL(url).origin
   } catch {
     return 'address'
+  }
+}
+
+// The origin of the `Location` header, which may be relative to the requested URL
+function describeRedirectOrigin (url: string, response: Response): string {
+  const location = response.headers.get('Location')
+  if (!location) {
+    return 'another address'
+  }
+  try {
+    return new URL(location, url).origin
+  } catch {
+    return 'another address'
   }
 }
 

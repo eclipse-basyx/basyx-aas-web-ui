@@ -61,7 +61,8 @@ export function assertNoSecretPlaceholders (asset: unknown): void {
 
 /**
  * Puts the stored secrets back in place of the placeholders of an updated asset.
- * In the data address only while it is otherwise unchanged: a new target, e.g. another `baseUrl`, would receive the stored secret.
+ * In the data address only while it is otherwise unchanged, including the names of its secrets: a new target, e.g. another `baseUrl`,
+ * would receive the stored secret.
  * In the private properties at the same path, as the EDC sends them nowhere.
  */
 export function restoreAssetSecrets (updatedAsset: JsonObject, storedAsset: unknown): JsonObject {
@@ -89,7 +90,7 @@ function restoreDataAddressSecrets (updatedAsset: JsonObject, storedAsset: JsonO
   const storedDataAddressKey = findObjectKey(storedAsset, 'dataAddress')
   const storedDataAddress = storedDataAddressKey ? storedAsset[storedDataAddressKey] as JsonObject : {}
 
-  if (!hasSameNonSecretProperties(updatedDataAddress, storedDataAddress)) {
+  if (!differsOnlyInSecretValues(updatedDataAddress, storedDataAddress)) {
     throw createRedactedSecretError(
       `The data address changed, so the stored secrets are not reused. Replace "${redactedSecretValue}" in ${formatKeys(placeholderKeys)} with the secret value.`,
     )
@@ -198,13 +199,13 @@ function getNestedPlaceholderPaths (value: unknown, path: string): string[] {
   return Object.entries(value).flatMap(([key, item]) => getNestedPlaceholderPaths(item, `${path}.${localName(key)}`))
 }
 
-function hasSameNonSecretProperties (dataAddressA: JsonObject, dataAddressB: JsonObject): boolean {
-  const nonSecretProperties = (dataAddress: JsonObject): string[] => Object.entries(dataAddress)
-    .filter(([key]) => !isSecretKey(key))
-    .map(([key, value]) => `${localName(key)}=${JSON.stringify(value)}`)
+// The values of the secrets may differ, but not their names: a renamed, added or removed secret changes the data address too
+function differsOnlyInSecretValues (dataAddressA: JsonObject, dataAddressB: JsonObject): boolean {
+  const propertiesWithoutSecretValues = (dataAddress: JsonObject): string[] => Object.entries(dataAddress)
+    .map(([key, value]) => isSecretKey(key) ? localName(key) : `${localName(key)}=${JSON.stringify(value)}`)
     .toSorted()
 
-  return JSON.stringify(nonSecretProperties(dataAddressA)) === JSON.stringify(nonSecretProperties(dataAddressB))
+  return JSON.stringify(propertiesWithoutSecretValues(dataAddressA)) === JSON.stringify(propertiesWithoutSecretValues(dataAddressB))
 }
 
 function isStoredSecret (value: unknown): boolean {
