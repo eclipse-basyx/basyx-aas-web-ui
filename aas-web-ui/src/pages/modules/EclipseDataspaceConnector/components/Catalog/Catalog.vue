@@ -134,6 +134,7 @@
   import { useEdcDialogRoute } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcDialogRoute'
   import { type EdcVirtualScroll, useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
+  import { isSameEdcResource } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcResourceId'
   import { assetTypeFilterItems, isPushAsset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
   import { EDC_TAB_HEIGHT } from '@/pages/modules/EclipseDataspaceConnector/data/heights'
   import { normalizeCatenaXPartners } from '@/utils/CatenaXPartnerUtils'
@@ -256,17 +257,7 @@
   }
 
   function isSelected (dataset: any): boolean {
-    if (
-      !selectedCatalogDataset.value
-      || Object.keys(selectedCatalogDataset.value).length === 0
-      || !selectedCatalogDataset.value['@id']
-      || !dataset
-      || Object.keys(dataset).length === 0
-      || !dataset['@id']
-    ) {
-      return false
-    }
-    return selectedCatalogDataset.value['@id'] === dataset['@id']
+    return isSameEdcResource(dataset, selectedCatalogDataset.value)
   }
 
 </script>

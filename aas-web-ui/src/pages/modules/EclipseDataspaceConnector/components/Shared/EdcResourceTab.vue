@@ -207,6 +207,7 @@
   import { useEdcManagementWrites } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcManagementWrites'
   import { type EdcVirtualScroll, useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
+  import { isSameEdcResource } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcResourceId'
   import { EDC_JSON_PREVIEW_HEIGHT, EDC_MAIN_HEIGHT, EDC_TAB_HEIGHT } from '@/pages/modules/EclipseDataspaceConnector/data/heights'
   import { debounce } from '@/utils/generalUtils'
   import { withIndefiniteArticle } from '@/utils/StringUtils'
@@ -357,7 +358,7 @@
   }
 
   function isSelected (resource: any): boolean {
-    return !!resource?.['@id'] && resource['@id'] === selectedResource.value?.['@id']
+    return isSameEdcResource(resource, selectedResource.value)
   }
 
 </script>
