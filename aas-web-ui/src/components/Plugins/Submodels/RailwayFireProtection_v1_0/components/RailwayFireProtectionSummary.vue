@@ -38,8 +38,8 @@
                             readonly
                             thumb-label="always"
                           >
-                            <template #prepend><span class="rfp-summary__bound">0</span></template>
-                            <template #append><span class="rfp-summary__bound">100</span></template>
+                            <template #prepend><span class="text-body-small text-medium-emphasis">0</span></template>
+                            <template #append><span class="text-body-small text-medium-emphasis">100</span></template>
                           </v-range-slider>
 
                           <v-slider
@@ -54,8 +54,8 @@
                             readonly
                             thumb-label="always"
                           >
-                            <template #prepend><span class="rfp-summary__bound">0</span></template>
-                            <template #append><span class="rfp-summary__bound">100</span></template>
+                            <template #prepend><span class="text-body-small text-medium-emphasis">0</span></template>
+                            <template #append><span class="text-body-small text-medium-emphasis">100</span></template>
                           </v-slider>
                         </div>
 
@@ -177,11 +177,6 @@
   .rfp-summary__slider-row :deep(.v-slider-thumb),
   .rfp-summary__slider-row :deep(.v-slider-track) {
     cursor: default;
-  }
-
-  .rfp-summary__bound {
-    font-size: 0.75rem;
-    color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
   }
 
   .rfp-summary__label {
