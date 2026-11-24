@@ -2,7 +2,7 @@
   <!-- Widened by the OAuth2 drawer, so the form keeps its width -->
   <v-dialog
     v-model="createAssetDialog"
-    style="min-height: 190px; max-height:90%"
+    max-height="90%"
     :width="oauth2Drawer ? '1136px' : '800px'"
   >
     <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">

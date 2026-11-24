@@ -52,10 +52,10 @@
               <template v-else>
                 <!-- Preview of the AAS Environment to send, empty if no Submodel is selected -->
                 <JsonPreviewTabs
+                  class="flex-1-1-0"
                   hide-tabs
                   :items="[environmentTab]"
                   :model-value="environmentTab.value"
-                  style="flex: 1 1 0"
                 />
 
                 <!-- Preview of the single selected Submodel, sharing the height with the AAS Environment -->
@@ -63,10 +63,10 @@
                   <v-divider />
 
                   <JsonPreviewTabs
+                    class="flex-1-1-0"
                     hide-tabs
                     :items="[submodelTab]"
                     :model-value="submodelTab.value"
-                    style="flex: 1 1 0"
                   />
                 </template>
               </template>

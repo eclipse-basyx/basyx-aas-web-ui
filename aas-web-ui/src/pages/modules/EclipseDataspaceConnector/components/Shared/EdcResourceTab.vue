@@ -83,7 +83,7 @@
 
           <v-divider />
 
-          <v-card-text class="pt-0 pb-0 px-2" style="overflow-y: auto" :style="{ height: listHeight }">
+          <v-card-text class="pt-0 pb-0 px-2 overflow-y-auto" :style="{ height: listHeight }">
 
             <div v-if="listLoading">
               <v-skeleton-loader type="list-item@6" />

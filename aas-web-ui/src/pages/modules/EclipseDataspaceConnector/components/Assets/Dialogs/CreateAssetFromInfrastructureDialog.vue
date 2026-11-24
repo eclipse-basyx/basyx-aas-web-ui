@@ -53,7 +53,7 @@
 
               <template v-else>
                 <!-- Preview of the selected AAS and each selected Submodel (1/3 of the height) -->
-                <JsonPreviewTabs v-model="previewTab" :items="dataTabs" style="flex: 1 1 0">
+                <JsonPreviewTabs v-model="previewTab" class="flex-1-1-0" :items="dataTabs">
                   <template #append>
                     <EdcAssetOAuth2Button v-model="oauth2Drawer" :configured="oauth2Configured" />
                   </template>

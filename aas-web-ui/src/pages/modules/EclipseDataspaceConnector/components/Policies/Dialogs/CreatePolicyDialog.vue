@@ -1,8 +1,7 @@
 <template>
   <v-dialog
-    v-model="createPolicyDialog
-    "
-    style="min-height: 190px; max-height:90%"
+    v-model="createPolicyDialog"
+    max-height="90%"
     width="800px"
   >
     <v-sheet border class="d-flex flex-column" height="100%" rounded="lg">

@@ -1,5 +1,5 @@
 <template>
-  <v-container class="pa-0 ma-0" fluid style="height: 100%">
+  <v-container class="pa-0 ma-0 h-100" fluid>
 
     <div class="d-flex align-center">
       <div class="pl-4 d-flex align-center">
