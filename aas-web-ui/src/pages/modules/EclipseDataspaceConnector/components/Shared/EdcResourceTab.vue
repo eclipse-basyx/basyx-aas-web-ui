@@ -253,6 +253,7 @@
   import type { CatenaXEdcResult } from '@/composables/Client/CatenaXEdcClient'
   import type { EdcListPage, EdcPageResult } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPaging'
   import { useLoadGeneration } from '@/composables/LoadGeneration'
+  import { useSelectedEdcConfig } from '@/composables/SelectedEdcConfig'
   import DeleteEdcResourceDialog from '@/pages/modules/EclipseDataspaceConnector/components/Shared/DeleteEdcResourceDialog.vue'
   import EdcResourceListItem from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceListItem.vue'
   import UpdateEdcResourceDialog from '@/pages/modules/EclipseDataspaceConnector/components/Shared/UpdateEdcResourceDialog.vue'
@@ -260,7 +261,6 @@
   import { EDC_LIST_ITEM_HEIGHT, type EdcVirtualScroll, useEdcPagedList } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPagedList'
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import { EDC_FILTERED_LIST_HEIGHT, EDC_JSON_PREVIEW_HEIGHT, EDC_LIST_HEIGHT, EDC_MAIN_HEIGHT, EDC_TAB_HEIGHT } from '@/pages/modules/EclipseDataspaceConnector/data/heights'
-  import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { debounce } from '@/utils/generalUtils'
 
   interface ResourceDialog {
@@ -288,10 +288,8 @@
 
   const slots = useSlots()
 
-  // Stores
-  const infrastructureStore = useInfrastructureStore()
-
   // Composables
+  const { edcProxyId } = useSelectedEdcConfig()
   const { showFailureMessage } = useEdcRequestFailureMessage()
   const resourceLoad = useLoadGeneration() // A newer load sets the selection
 
@@ -306,8 +304,6 @@
   const deleteDialog = reactive<ResourceDialog>({ open: false, resource: {} })
 
   // Computed properties
-  const selectedEdcConfig = computed(() => infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null)
-  const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() || 'default')
   // The list starts below the search (and filter), so its empty state moves up to the title height of the one on the right
   const emptyStateOffsetClass = computed(() => slots.filter ? 'mt-n9' : 'mt-n3')
   const failedEmptyStateOffsetClass = computed(() => slots.filter ? 'mt-n12' : 'mt-n6') // With icon and text, like the one on the right

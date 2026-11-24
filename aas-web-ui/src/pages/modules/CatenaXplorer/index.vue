@@ -185,6 +185,7 @@
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { useIDUtils } from '@/composables/IDUtils'
+  import { useSelectedEdcConfig } from '@/composables/SelectedEdcConfig'
   import {
     forgetRecentCatenaXPartner,
     getRecentCatenaXPartners,
@@ -257,6 +258,7 @@
   } = useSMRepositoryClient()
   const { copyToClipboard } = useClipboardUtil()
   const { generateIri } = useIDUtils()
+  const { selectedEdcConfig, edcProxyId } = useSelectedEdcConfig()
 
   const descriptors = ref<any[]>([])
   const activeAssetIds = ref<AssetIdFilter[] | undefined>(undefined)
@@ -312,10 +314,6 @@
     return descriptors.value.find(descriptor => descriptor?.id === descriptorId)
       ?? (selectedDescriptorFallback.value?.id === descriptorId ? selectedDescriptorFallback.value : null)
   })
-  const selectedEdcConfig = computed(() => {
-    return infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null
-  })
-  const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() || 'default')
   const configuredEdcPartners = computed(() => normalizeCatenaXPartners(selectedEdcConfig.value?.partners ?? []))
   const recentEdcPartnerOptions = computed(() => {
     const mergedPartners = mergeCatenaXPartners(configuredEdcPartners.value, edcRecentPartners.value)

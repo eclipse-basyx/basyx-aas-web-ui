@@ -168,6 +168,7 @@
 
 <script lang="ts" setup>
   import type { CatenaXPartner } from '@/types/Infrastructure'
+  import { useSelectedEdcConfig } from '@/composables/SelectedEdcConfig'
   import CatalogDatasetDetails from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/CatalogDatasetDetails.vue'
   import SendDataDialog from '@/pages/modules/EclipseDataspaceConnector/components/Catalog/Dialogs/SendDataDialog.vue'
   import EdcResourceListItem from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcResourceListItem.vue'
@@ -177,13 +178,10 @@
   import { edcBffFailureText, useEdcRequestFailureMessage } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcRequestFailure'
   import { assetTypeFilterItems, isPushAsset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
   import { EDC_FILTERED_LIST_HEIGHT, EDC_TAB_HEIGHT } from '@/pages/modules/EclipseDataspaceConnector/data/heights'
-  import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { normalizeCatenaXPartners } from '@/utils/CatenaXPartnerUtils'
 
-  // Stores
-  const infrastructureStore = useInfrastructureStore()
-
   // Composables
+  const { selectedEdcConfig, edcProxyId } = useSelectedEdcConfig()
   const { queryCatalogPage, findCatalogDataset } = useEdcCatalogQuery()
   const { showFailureMessage } = useEdcRequestFailureMessage()
   const { dialogOpen, dialogState } = useEdcDialogRoute()
@@ -203,8 +201,6 @@
   const sendDataDatasetId = dialogState('dataset')
 
   // Computed properties
-  const selectedEdcConfig = computed(() => infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null)
-  const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() || 'default')
   const businessPartners = computed(() => normalizeCatenaXPartners(selectedEdcConfig.value?.partners ?? []))
 
   // Loaded pages of the catalog, in the order of the provider
