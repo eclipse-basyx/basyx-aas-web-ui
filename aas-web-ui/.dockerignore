@@ -1,3 +1,7 @@
 node_modules
 dist
 dist-bff
+# pnpm install in the image copies these from web-ifc and @thatopen/fragments (scripts/postinstall.mjs).
+# Keep the committed copies out of the context so that COPY . . does not replace them.
+public/wasm
+public/worker.mjs
