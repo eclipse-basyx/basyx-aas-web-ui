@@ -67,6 +67,7 @@
   import { VSlider } from 'vuetify/components/VSlider'
   import { characteristicsLabel, parseDecimal, withUnit } from '../utils/presentation'
 
+  // Types
   /** `slider`: numeric index 0–100 (one value or a range), shown as a read-only slider instead of `value` */
   interface Row { label: string, value: string, slider?: number | [number, number] }
   /** `chart`: show the combustible share of the masses next to the table */

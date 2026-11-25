@@ -122,6 +122,7 @@
   import { useContactInformation_v1_0Utils } from '@/composables/AAS/SubmodelTemplates/ContactInformation_v1_0Utils'
   import { fileName, reportTitle, websiteUrl } from '../utils/presentation'
 
+  // Types
   interface LabRow { label: string, value: string, icon: string, href?: string }
 
   defineOptions({

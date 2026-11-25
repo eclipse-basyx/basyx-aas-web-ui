@@ -148,6 +148,12 @@
     sortRequirementsSets,
   } from './RailwayFireProtection_v1_0/utils/presentation'
 
+  // Types
+  interface TileHandle {
+    focus: () => void
+    cardElement: () => HTMLElement | null
+  }
+
   defineOptions({
     name: 'RailwayFireProtection',
     semanticId: 'https://admin-shell.io/idta/cds/RailwayFireProtection/1',
@@ -157,11 +163,6 @@
   const props = defineProps<{
     submodelElementData?: SubmodelElementLike
   }>()
-
-  interface TileHandle {
-    focus: () => void
-    cardElement: () => HTMLElement | null
-  }
 
   // Composables
   const { setData } = useSMHandling()

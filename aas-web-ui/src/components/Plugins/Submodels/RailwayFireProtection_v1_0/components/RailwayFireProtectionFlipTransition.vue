@@ -15,6 +15,9 @@
 <script lang="ts" setup>
   import { flipClose, flipOpen, showTile } from '../utils/flipAnimation'
 
+  // Types
+  interface Closing { tile: Element | null, cleanup: () => void }
+
   /**
    * Dialog transition for `v-dialog` (`:transition="{ component, origin }"`): the dialog flips out of the
    * `origin` element (the card of the clicked tile) and back into it, see `utils/flipAnimation.ts`.
@@ -29,7 +32,6 @@
   }>()
 
   // State
-  interface Closing { tile: Element | null, cleanup: () => void }
   const closing = new WeakMap<Element, Closing>()
 
   // Methods
