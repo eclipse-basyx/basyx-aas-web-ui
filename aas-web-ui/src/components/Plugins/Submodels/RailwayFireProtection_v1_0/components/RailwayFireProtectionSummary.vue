@@ -25,7 +25,8 @@
 
                       <td class="text-body-small text-break py-3">
                         <!-- Index 0–100 as a read-only slider (one value or a range), values on the thumbs -->
-                        <div v-if="row.slider !== undefined" class="rfp-summary__slider-row">
+                        <!-- pt-8: room above the slider for the value labels on the thumbs -->
+                        <div v-if="row.slider !== undefined" class="rfp-summary__slider-row pt-8">
                           <component
                             :is="sliderComponent(row.slider)"
                             :aria-label="row.label"
@@ -167,10 +168,8 @@
     flex: 1 1 240px;
   }
 
-  /* Room above the slider for the value labels on the thumbs */
   .rfp-summary__slider-row {
     min-width: 160px;
-    padding-top: 32px;
   }
 
   /* Read-only: shown in the primary color, but not movable */

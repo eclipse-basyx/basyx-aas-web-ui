@@ -22,11 +22,11 @@
         <div class="d-flex flex-wrap align-center ga-2">
           <RailwayFireProtectionHazardBadge :code="meta.code" />
 
-          <div v-if="meta.level > 0" aria-hidden="true" class="rfp-meter">
+          <div v-if="meta.level > 0" aria-hidden="true" class="rfp-meter d-inline-flex">
             <span
               v-for="segment in 3"
               :key="segment"
-              class="rfp-meter__segment"
+              class="rfp-meter__segment rounded-sm"
               :class="segment <= meta.level ? `bg-${meta.color}` : 'rfp-meter__segment--empty'"
             />
 
@@ -171,14 +171,12 @@
   }
 
   .rfp-meter {
-    display: inline-flex;
     gap: 3px;
   }
 
   .rfp-meter__segment {
     width: 14px;
     height: 8px;
-    border-radius: 2px;
   }
 
   .rfp-meter__segment--empty {

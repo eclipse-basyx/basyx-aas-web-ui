@@ -14,13 +14,13 @@
 
     <figcaption class="d-flex flex-column ga-1 text-body-small">
       <div class="d-flex align-center ga-2">
-        <span class="rfp-mass-chart__swatch bg-primary" />
+        <span class="rfp-mass-chart__swatch d-inline-block rounded-sm bg-primary" />
         <span>Combustible</span>
         <span class="font-weight-medium ml-auto">{{ percentText }}</span>
       </div>
 
       <div class="d-flex align-center ga-2">
-        <span class="rfp-mass-chart__swatch rfp-mass-chart__swatch--rest" />
+        <span class="rfp-mass-chart__swatch rfp-mass-chart__swatch--rest d-inline-block rounded-sm" />
         <span>Non-combustible</span>
         <span class="font-weight-medium ml-auto">{{ restPercentText }}</span>
       </div>
@@ -59,10 +59,8 @@
 
 <style scoped>
   .rfp-mass-chart__swatch {
-    display: inline-block;
     width: 10px;
     height: 10px;
-    border-radius: 2px;
   }
 
   /* Same colour as the underlay of v-progress-circular */
