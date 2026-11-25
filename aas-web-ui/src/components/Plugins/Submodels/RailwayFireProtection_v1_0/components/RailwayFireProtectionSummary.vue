@@ -145,7 +145,7 @@
 
   /**
    * The MaterialCharacteristics range as numbers within 0–100, collapsed to one value if both bounds are equal;
-   * null if a bound is missing or not a number
+   * a single usable bound stands for both; null if neither bound is a number
    */
   function indexRange (material: Material | null): number | [number, number] | null {
     const min = parseDecimal(material?.characteristics?.min ?? '')
