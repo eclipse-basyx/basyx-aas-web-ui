@@ -17,12 +17,14 @@ import {
   fcilRows,
   fillFcilTemplate,
 } from '@/components/Plugins/Submodels/RailwayFireProtection_v1_0/utils/fcilExport'
+import { HAZARD_LEVEL_ORDER, hazardLevelMeta } from '@/components/Plugins/Submodels/RailwayFireProtection_v1_0/utils/hazardLevel'
 import {
   cellFill,
   columnName,
   columnNumber,
   openXlsx,
   setCell,
+  sheetTexts,
   shiftFormula,
   worksheet,
   xlsxBytes,
@@ -236,9 +238,22 @@ describe.skipIf(!catalogue)('fcilRows', () => {
     })
   })
 
-  it('keeps a requirement set without tests and an unknown hazard level as stored', () => {
-    expect(rows[5]).toMatchObject({ BY: 'something else', CA: 'Requirement set R26' })
+  it('keeps a requirement set without tests, with an unknown hazard level under remarks instead of in the list column', () => {
+    expect(rows[5]).toMatchObject({
+      BY: '',
+      CA: 'Requirement set R26\nHazard level (column BY), not an IDTA 02102 value: something else',
+    })
     expect(rows[5]!.AP).toBeUndefined()
+  })
+
+  it('writes in BY only entries of the template\'s list "Hazard Level Met"', () => {
+    const xlsx = openXlsx(templateBytes())
+    // Data validation of BY11:BY481: the list HazardLevelCompliance, i.e. Classifications!H14:H19
+    const classifications = sheetTexts(xlsx, worksheet(xlsx, 'Classifications'))
+    const entries = Array.from({ length: 6 }, (_, index) => classifications.get(`H${14 + index}`))
+    const labels = HAZARD_LEVEL_ORDER.filter(code => code !== 'unknown').map(code => hazardLevelMeta(code).label)
+    expect(entries.toSorted()).toEqual(labels.toSorted())
+    expect(rows.map(row => row.BY).filter(value => value !== '' && !entries.includes(String(value)))).toEqual([])
   })
 
   it('says why the product category is missing if no test procedure names a known test method', () => {

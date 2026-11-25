@@ -1,6 +1,6 @@
-import type { FireReport, FireTest, RailwayFireProtectionData } from '../types'
+import type { FireReport, FireTest, HazardLevel, RailwayFireProtectionData } from '../types'
 import { type FcilCatalogue, productCategoryCandidates, readFcilCatalogue } from './fcilClassification'
-import { hazardLevelMeta, hazardLevelText } from './hazardLevel'
+import { hazardLevelMeta } from './hazardLevel'
 import { characteristicsLabel, parseDecimal, requirementsSetReports, sortRequirementsSets } from './presentation'
 import {
   cellFill,
@@ -22,7 +22,8 @@ import {
  * the application (UNIFE's terms of use do not allow redistributing it); the user selects a downloaded copy.
  *
  * The sheet "FCIL" gets one row per requirement set, with up to six tests; further tests continue in
- * the next row. The hazard level values of IDTA 02102 are the ones the template offers in "Hazard Level Met".
+ * the next row. The hazard level values of IDTA 02102 are the ones the template offers in "Hazard Level Met";
+ * an unknown value stays out of that list column and goes to "Comments / Remarks".
  *
  * Only the input cells of the template (yellow) are filled in. The grey columns, such as the requirement
  * set and the test reference numbers, are looked up by the template from the product category; until
@@ -119,14 +120,16 @@ export function fcilRows (data: RailwayFireProtectionData, catalogue: FcilCatalo
           ? `Requirement set ${set.name}`
           : `Requirement set ${set.name}, tests ${first}–${first + chunk.length - 1}, continued from the row above`,
         ...chunk.map(({ test }, position) => `Test method ${position + 1}: ${test.procedure}`),
-        ...(index === 0 ? [...categoryRemarks(categories, tests.length > 0), ...reportRemarks] : []),
+        ...(index === 0
+          ? [...categoryRemarks(categories, tests.length > 0), ...hazardLevelRemarks(set.hazardLevel), ...reportRemarks]
+          : []),
       ]
       return {
         ...product,
         ...(index === 0 && categories?.length === 1 ? { AK: categories[0] } : {}),
         ...testColumns(chunk),
-        // The IDTA 02102 value, which is also an entry of the template's list; an unknown value as stored
-        BY: hazardLevelText(set.hazardLevel),
+        // The IDTA 02102 value, which is also an entry of the template's list; the list allows no other value
+        BY: set.hazardLevel.code === 'unknown' ? '' : hazardLevelMeta(set.hazardLevel.code).label,
         CA: remarks.join('\n'),
       }
     })
@@ -202,6 +205,11 @@ function categoryRemarks (categories: string[] | null, tested: boolean): string[
     return ['Product category (column AK): none of the template fits these tests']
   }
   return [`Product category (column AK), candidates by the tests: ${categories.map(name => name.trim()).join('; ')}`]
+}
+
+/** The stored value of a hazard level that is no IDTA 02102 value, and so no entry of the template's list in BY */
+function hazardLevelRemarks ({ code, raw }: HazardLevel): string[] {
+  return code === 'unknown' && raw.trim() ? [`Hazard level (column BY), not an IDTA 02102 value: ${raw.trim()}`] : []
 }
 
 /** Fills in a cell, or fails if it is no input cell (yellow) of the template */

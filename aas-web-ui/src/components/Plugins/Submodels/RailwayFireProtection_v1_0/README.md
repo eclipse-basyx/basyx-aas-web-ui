@@ -123,8 +123,8 @@ The sheet *FCIL* gets one row per requirement set, in the order of the tiles, st
 | AJ (Material tested) | `TestedMaterialCombinationDescription` |
 | AK (Product category) | Only if the tests leave exactly one, see below |
 | AP–AS per test method (result, laboratory, report number, date) | `TestResult`, `LabName` of the report, `TestReportNumber` (otherwise the report's numbers), `TestDate` as dd/mm/yyyy |
-| BY (Hazard Level Met) | `HazardLevel`, as the IDTA 02102 label; these are also the entries of the template's list |
-| CA (Comments / Remarks) | The requirement set, the test procedures by test method, the product category candidates or why there are none, `ReportComment` and links to external reports |
+| BY (Hazard Level Met) | `HazardLevel`, as the IDTA 02102 label; these are also the entries of the template's list. An unknown value stays empty here, because the list allows no other value, and goes to CA |
+| CA (Comments / Remarks) | The requirement set, the test procedures by test method, the product category candidates or why there are none, an unknown `HazardLevel` as stored, `ReportComment` and links to external reports |
 
 Also cleared: the sample product categories the template ships in AK, and the vehicle's hazard level in O6, which the customer chooses.
 
