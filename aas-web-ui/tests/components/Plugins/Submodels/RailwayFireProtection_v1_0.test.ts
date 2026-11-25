@@ -1,4 +1,4 @@
-import { flushPromises, mount } from '@vue/test-utils'
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { createVuetify } from 'vuetify'
@@ -31,7 +31,7 @@ beforeAll(() => {
   })
 })
 
-const mounted: Array<{ unmount: () => void }> = []
+const mounted: VueWrapper[] = []
 
 afterEach(() => {
   for (const wrapper of mounted.splice(0)) {

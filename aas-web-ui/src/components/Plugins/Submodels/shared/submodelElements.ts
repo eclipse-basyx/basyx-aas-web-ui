@@ -1,4 +1,4 @@
-import type { Key, LangString, SubmodelElementLike } from './types'
+import type { LangString, ReferenceLike, SubmodelElementLike } from './types'
 
 /** Child elements of a Submodel (`submodelElements`), a collection or a list (`value`) */
 export function children (parent: SubmodelElementLike | undefined | null): SubmodelElementLike[] {
@@ -9,7 +9,7 @@ export function children (parent: SubmodelElementLike | undefined | null): Submo
 }
 
 /** Values of the keys of a Reference, e.g. a semanticId or valueId */
-export function keyValues (reference: { keys?: Key[] } | undefined | null): string[] {
+export function keyValues (reference: ReferenceLike | undefined | null): string[] {
   return Array.isArray(reference?.keys) ? reference.keys.map(key => key.value ?? '') : []
 }
 

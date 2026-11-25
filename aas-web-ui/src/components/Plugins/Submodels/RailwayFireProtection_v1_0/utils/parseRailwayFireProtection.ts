@@ -101,6 +101,18 @@ function parseReport (report: SubmodelElementLike, index: number): FireReport {
   }
 }
 
+/** Outcome of following the keys of a ModelReference through the submodel */
+interface FollowedKeys {
+  /** The element the keys lead to, or null if a key could not be followed */
+  target: SubmodelElementLike | null
+  /** The elements passed on the way, the target included */
+  path: SubmodelElementLike[]
+  /** The key that could not be followed, otherwise empty */
+  failedKey: string
+  /** idShort of the element the failed key was looked up in, otherwise empty */
+  parentName: string
+}
+
 /**
  * Follows the keys of a ModelReference through the submodel. Returns the target element and the elements passed
  * on the way to it, or the key that could not be followed.
@@ -108,7 +120,7 @@ function parseReport (report: SubmodelElementLike, index: number): FireReport {
 function followKeys (
   keys: Key[],
   submodel: SubmodelElementLike,
-): { target: SubmodelElementLike | null, path: SubmodelElementLike[], failedKey: string, parentName: string } {
+): FollowedKeys {
   let node: SubmodelElementLike | undefined = submodel
   const path: SubmodelElementLike[] = []
 

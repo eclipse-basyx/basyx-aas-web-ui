@@ -20,11 +20,17 @@ export interface ManufacturerInformation {
   articleNumber: string
 }
 
+/** Lower and upper bound of a range, as stored in the submodel */
+export interface ValueRange {
+  min: string
+  max: string
+}
+
 export interface Material {
   name: string
   manufacturer: string
   /** MaterialCharacteristics: normalized index (0–100) according to EN 45545-2 */
-  characteristics: { min: string, max: string } | null
+  characteristics: ValueRange | null
   totalMassPerUnit: string
   combustibleMassPerUnit: string
   massUnit: string

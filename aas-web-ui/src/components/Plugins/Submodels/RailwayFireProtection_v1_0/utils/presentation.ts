@@ -32,8 +32,13 @@ export function filterRequirementsSets (sets: RequirementsSet[], codes: HazardLe
   return codes.length === 0 ? sets : sets.filter(set => codes.includes(set.hazardLevel.code))
 }
 
+export interface HazardLevelCount {
+  code: HazardLevelCode
+  count: number
+}
+
 /** Number of requirement sets per hazard level, in chip display order, without levels that do not occur */
-export function countHazardLevels (sets: RequirementsSet[]): Array<{ code: HazardLevelCode, count: number }> {
+export function countHazardLevels (sets: RequirementsSet[]): HazardLevelCount[] {
   return HAZARD_LEVEL_ORDER
     .map(code => ({ code, count: sets.filter(set => set.hazardLevel.code === code).length }))
     .filter(entry => entry.count > 0)

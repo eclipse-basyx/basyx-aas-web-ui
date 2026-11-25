@@ -1,10 +1,10 @@
-export type LangString = {
+export interface LangString {
   language?: string
   text?: string
 }
 
 /** A Submodel or SubmodelElement as returned by `setData`, i.e. including its `path` */
-export type SubmodelElementLike = {
+export interface SubmodelElementLike {
   [key: string]: any
   idShort?: string
   path?: string
@@ -14,7 +14,12 @@ export type SubmodelElementLike = {
 }
 
 /** A key of a Reference, e.g. of a semanticId */
-export type Key = {
+export interface Key {
   type?: string
   value?: string
+}
+
+/** A Reference, e.g. a semanticId or valueId */
+export interface ReferenceLike {
+  keys?: Key[]
 }

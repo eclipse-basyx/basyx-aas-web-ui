@@ -17,11 +17,18 @@ export interface MethodRequirements {
   optional: string[]
 }
 
+/** Entry of the product category list (column AK) */
+export interface ProductCategory {
+  name: string
+  /** Requirement set the template assigns to the category, e.g. "R1" */
+  requirementSet: string
+}
+
 export interface FcilCatalogue {
   /** Requirement set → hazard level (1–3) → test methods */
   requirementSets: Map<string, Map<number, MethodRequirements>>
   /** Entries of the product category list (column AK), with their requirement set */
-  productCategories: Array<{ name: string, requirementSet: string }>
+  productCategories: ProductCategory[]
 }
 
 /**
