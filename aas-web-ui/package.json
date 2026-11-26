@@ -63,7 +63,7 @@
     "leaflet": "^1.9.4",
     "md5": "^2.3.0",
     "mime": "^4.1.2",
-    "monaco-editor": "^0.57.0",
+    "monaco-editor": "^0.58.0",
     "pinia": "^4.1.0",
     "qrcode": "^1.5.4",
     "three": "^0.187.0",
