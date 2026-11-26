@@ -107,7 +107,7 @@ export const assetTypeFilterItems: AssetTypeFilterItem[] = [
   { title: 'All', value: 'all' },
   { type: 'divider' },
   { title: 'Digital Twin Registry', value: 'digitalTwinRegistry', querySpec: assetTypeQuerySpec('DigitalTwinRegistry') },
-  { title: 'Submodel Service', value: 'submodelService', querySpec: assetTypeQuerySpec('Submodel') },
+  { title: 'Submodel Service', value: 'submodelService', querySpec: assetTypeQuerySpec('SubmodelBundle') },
   { title: 'Push Asset', value: 'pushAsset', matches: isPushAsset },
   { type: 'divider' },
   { title: 'Digital Product Passport', value: 'digitalProductPassport', matches: textMatcher('DPP', 'Digital Product Passport') },

@@ -41,7 +41,7 @@ describe('assetTypeFilters', () => {
       },
     ])
     expect(preset('submodelService').querySpec?.filterExpression).toEqual([
-      expect.objectContaining({ operandRight: 'https://w3id.org/catenax/taxonomy#Submodel' }),
+      expect.objectContaining({ operandRight: 'https://w3id.org/catenax/taxonomy#SubmodelBundle' }),
     ])
   })
 
