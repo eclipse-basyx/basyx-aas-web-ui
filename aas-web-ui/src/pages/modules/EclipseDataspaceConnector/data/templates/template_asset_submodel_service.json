@@ -17,7 +17,7 @@
     "name": "Submodel Service",
     "description": "The Submodel service allows to retrieve Submodels of Digital Twins",
     "dct:type": {
-      "@id": "cx-taxo:Submodel"
+      "@id": "cx-taxo:SubmodelBundle"
     },
     "cx-common:version": "3.0"
   },
@@ -26,10 +26,10 @@
     "@type": "DataAddress",
     "type": "HttpData",
     "baseUrl": "{{Submodel Service Endpoint||}}",
-    "proxyBody": "true",
-    "proxyMethod": "true",
+    "proxyBody": "false",
+    "proxyMethod": "false",
     "proxyPath": "true",
-    "proxyQueryParams": "true",
+    "proxyQueryParams": "false",
     "oauth2:clientId": "{{Submodel Service client ID||}}",
     "oauth2:clientSecretKey": "{{Submodel Service client secret key||}}",
     "oauth2:tokenUrl": "{{Submodel Service token endpoint||}}",
