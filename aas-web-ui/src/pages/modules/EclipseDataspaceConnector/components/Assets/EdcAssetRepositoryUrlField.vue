@@ -6,7 +6,8 @@
       <div class="text-body-small text-medium-emphasis">{{ subtitle }}</div>
     </div>
 
-    <!-- A repository of the infrastructures or a free URL; clearing sets null, the URL stays a string -->
+    <!-- A repository of the infrastructures or a free URL; clearing sets null, the URL stays a string.
+         An empty URL is passed as null, since the combobox takes '' as a value and hides the placeholder. -->
     <v-combobox
       clearable
       density="compact"
@@ -16,7 +17,7 @@
       item-value="value"
       :items="options"
       label="Repository URL"
-      :model-value="repositoryUrl"
+      :model-value="repositoryUrl || null"
       persistent-placeholder
       :placeholder="placeholder"
       :return-object="false"
