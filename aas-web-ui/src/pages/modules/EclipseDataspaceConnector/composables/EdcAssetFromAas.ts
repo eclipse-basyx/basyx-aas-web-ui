@@ -2,6 +2,7 @@ import type { CatenaXEdcAsset } from '@/composables/Client/CatenaXEdcClient'
 import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
 import { useSubmodelDisplay } from '@/composables/AAS/SubmodelDisplay'
 import { createEmptyEdcAssetOAuth2, type EdcAssetOAuth2 } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetOAuth2'
+import { replaceEdcAssetRepositoryUrl } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetRepositoryUrl'
 import { fillTemplatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
 import {
   CX_COMMON_NAMESPACE,
@@ -108,18 +109,20 @@ export function useEdcAssetFromAas () {
    * The `@context` declares the EDC and Catena-X prefixes, the AAS attributes of the Identifiable are added as properties,
    * in the `aas-*` namespace version matching the interface version of the endpoint.
    * The Asset ID is the base64-encoded id of the Identifiable alone, so a Submodel shared by several AAS gets one Asset.
+   * A given repository URL replaces the one the endpoint starts with, e.g. for a data plane reaching it under another address.
    */
   function createEdcAsset (
     identifiable: any,
     displayName: string,
     oauth2: EdcAssetOAuth2 = createEmptyEdcAssetOAuth2(),
+    repositoryUrl = '',
   ): CatenaXEdcAsset {
     const endpoint = identifiable?.endpoints?.[0]
     const asset = fillTemplatePlaceholders(AssetTemplateDefault, {
       [ASSET_TEMPLATE_LABELS.assetId]: base64Encode(identifiable.id),
       [ASSET_TEMPLATE_LABELS.displayName]: displayName,
       [ASSET_TEMPLATE_LABELS.description]: descriptionToDisplay(identifiable, 'en'),
-      [ASSET_TEMPLATE_LABELS.endpoint]: endpoint?.protocolInformation?.href ?? '',
+      [ASSET_TEMPLATE_LABELS.endpoint]: replaceEdcAssetRepositoryUrl(endpoint?.protocolInformation?.href ?? '', repositoryUrl),
       [ASSET_TEMPLATE_LABELS.clientId]: oauth2.clientId.trim(),
       [ASSET_TEMPLATE_LABELS.clientSecretKey]: oauth2.clientSecretKey.trim(),
       [ASSET_TEMPLATE_LABELS.tokenUrl]: oauth2.tokenUrl.trim(),
@@ -152,8 +155,8 @@ export function useEdcAssetFromAas () {
   /**
    * Creates the Asset of an AAS, pointing to the AAS endpoint.
    */
-  function createAasEdcAsset (aas: any, oauth2?: EdcAssetOAuth2): CatenaXEdcAsset {
-    return createEdcAsset(aas, nameToDisplay(aas, 'en'), oauth2)
+  function createAasEdcAsset (aas: any, oauth2?: EdcAssetOAuth2, repositoryUrl?: string): CatenaXEdcAsset {
+    return createEdcAsset(aas, nameToDisplay(aas, 'en'), oauth2, repositoryUrl)
   }
 
   /**
@@ -161,8 +164,8 @@ export function useEdcAssetFromAas () {
    * As required by Catena-X (CX-0002) for a single Submodel registered as Dataset, the asset is typed as
    * `cx-taxo:Submodel` (`dct:type`) and carries the AAS specification version of the endpoint (`cx-common:version`).
    */
-  function createSmEdcAsset (aas: any, sm: any, oauth2?: EdcAssetOAuth2): CatenaXEdcAsset {
-    const asset = createEdcAsset(sm, `${nameToDisplay(aas, 'en')} - SM ${smTitleToDisplay(sm)}`, oauth2)
+  function createSmEdcAsset (aas: any, sm: any, oauth2?: EdcAssetOAuth2, repositoryUrl?: string): CatenaXEdcAsset {
+    const asset = createEdcAsset(sm, `${nameToDisplay(aas, 'en')} - SM ${smTitleToDisplay(sm)}`, oauth2, repositoryUrl)
     addEdcAssetProperty(asset, 'dct', DCT_NAMESPACE, 'type', { '@id': `${CX_TAXO_NAMESPACE}Submodel` })
     addEdcAssetProperty(asset, 'cx-common', CX_COMMON_NAMESPACE, 'version', aasSpecVersion(sm?.endpoints?.[0]?.interface))
     return asset

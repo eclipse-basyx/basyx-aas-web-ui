@@ -212,4 +212,22 @@ describe('EdcAssetFromAas.ts', () => {
     })
     expect(createSmEdcAsset(aas, sm, smOAuth2).dataAddress).toEqual({ 'type': 'HttpData', 'oauth2:clientId': 'sm-client', ...dataAddressSettings })
   })
+
+  it('replaces the start of the baseUrl by the given repository URL', () => {
+    const { createAasEdcAsset, createSmEdcAsset } = useEdcAssetFromAas()
+    const aas = {
+      id: 'urn:aas',
+      idShort: 'Pump',
+      endpoints: [{ protocolInformation: { href: 'https://repo.test/shells/dXJuOmFhcw' }, interface: 'AAS-3.0' }],
+    }
+    const sm = {
+      id: 'urn:sm',
+      idShort: 'Nameplate',
+      endpoints: [{ protocolInformation: { href: 'https://repo.test/api/submodels/dXJuOnNt' }, interface: 'SUBMODEL-3.0' }],
+    }
+
+    expect(createAasEdcAsset(aas, undefined, 'https://repo.intern:8081/').dataAddress?.baseUrl).toBe('https://repo.intern:8081/shells/dXJuOmFhcw')
+    expect(createSmEdcAsset(aas, sm, undefined, 'https://repo.intern:8081').dataAddress?.baseUrl).toBe('https://repo.intern:8081/submodels/dXJuOnNt')
+    expect(createSmEdcAsset(aas, sm, undefined, ' ').dataAddress?.baseUrl).toBe('https://repo.test/api/submodels/dXJuOnNt')
+  })
 })

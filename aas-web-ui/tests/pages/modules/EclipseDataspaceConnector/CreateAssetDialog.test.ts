@@ -40,9 +40,9 @@ function mountDialog (fromTemplate = false) {
         },
         'v-btn': { props: ['text', 'disabled'], emits: ['click'], template: '<button :disabled="disabled" @click="$emit(\'click\')">{{ text }}</button>' },
         'JSONPreview': { props: ['jsonContent'], template: '<pre class="preview">{{ jsonContent }}</pre>' },
-        'EdcAssetOAuth2Drawer': true,
+        'EdcAssetSettingsDrawer': true,
         'EdcAssetOAuth2Fields': true,
-        'EdcAssetOAuth2Button': true,
+        'EdcAssetSettingsButton': true,
         'EdcTemplateSelect': {
           props: ['modelValue'],
           emits: ['update:modelValue'],

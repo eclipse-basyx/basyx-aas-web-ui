@@ -15,13 +15,13 @@
       <!-- Only the form scrolls, the OAuth2 drawer keeps the visible height -->
       <v-card-text class="pa-0 flex-grow-1 d-flex flex-column overflow-hidden">
         <v-layout class="overflow-hidden">
-          <EdcAssetOAuth2Drawer v-model="oauth2Drawer">
+          <EdcAssetSettingsDrawer v-model="oauth2Drawer">
             <EdcAssetOAuth2Fields
               v-model="oauth2"
               subtitle="Used by the data address of the Asset"
               title="Asset"
             />
-          </EdcAssetOAuth2Drawer>
+          </EdcAssetSettingsDrawer>
 
           <v-main class="d-flex flex-column">
             <v-form ref="form" class="d-flex flex-column pa-4 overflow-y-auto">
@@ -49,7 +49,7 @@
               >
                 <!-- Next to the field of the Asset ID, aligned with the field above its hint -->
                 <template #append>
-                  <EdcAssetOAuth2Button v-model="oauth2Drawer" :configured="hasEdcAssetOAuth2(oauth2)" />
+                  <EdcAssetSettingsButton v-model="oauth2Drawer" :configured="hasEdcAssetOAuth2(oauth2)" />
                 </template>
               </EdcTemplatePlaceholderFields>
 
@@ -95,9 +95,9 @@
 <script lang="ts" setup>
   import { type CatenaXEdcAsset, useCatenaXEdcClient } from '@/composables/Client/CatenaXEdcClient'
   import { DEFAULT_EDC_PROXY_ID } from '@/composables/SelectedEdcConfig'
-  import EdcAssetOAuth2Button from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Button.vue'
-  import EdcAssetOAuth2Drawer from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Drawer.vue'
   import EdcAssetOAuth2Fields from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetOAuth2Fields.vue'
+  import EdcAssetSettingsButton from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetSettingsButton.vue'
+  import EdcAssetSettingsDrawer from '@/pages/modules/EclipseDataspaceConnector/components/Assets/EdcAssetSettingsDrawer.vue'
   import EdcTemplatePlaceholderFields from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcTemplatePlaceholderFields.vue'
   import EdcTemplateSelect from '@/pages/modules/EclipseDataspaceConnector/components/Shared/EdcTemplateSelect.vue'
   import {
