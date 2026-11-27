@@ -914,6 +914,8 @@ async function requestEdrData (
   }, fetchFn)
 
   if (!response.ok) {
+    // The body is left out on purpose: it comes from the provider's backend and can hold internal details
+    // (e.g. stack traces or host names) the consumer shouldn't see. The provider finds the cause in its data plane log.
     throw createHttpError(`${failureMessage} (${response.status})`, 502)
   }
 
