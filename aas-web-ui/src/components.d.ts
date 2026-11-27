@@ -112,8 +112,6 @@ declare module 'vue' {
     Models3D_v1_0: typeof import('./components/Plugins/Submodels/Models3D_v1_0.vue')['default']
     Models3DDefinitionList: typeof import('./components/Plugins/Submodels/Models3D_v1_0/components/Models3DDefinitionList.vue')['default']
     Models3DDetails: typeof import('./components/Plugins/Submodels/Models3D_v1_0/components/Models3DDetails.vue')['default']
-    Models3DFieldGrid: typeof import('./components/Plugins/Submodels/Models3D_v1_0/components/Models3DFieldGrid.vue')['default']
-    Models3DModelList: typeof import('./components/Plugins/Submodels/Models3D_v1_0/components/Models3DModelList.vue')['default']
     Models3DModelSwitcher: typeof import('./components/Plugins/Submodels/Models3D_v1_0/components/Models3DModelSwitcher.vue')['default']
     Models3DPreviewImage: typeof import('./components/Plugins/Submodels/Models3D_v1_0/components/Models3DPreviewImage.vue')['default']
     Models3DSummary: typeof import('./components/Plugins/Submodels/Models3D_v1_0/components/Models3DSummary.vue')['default']
