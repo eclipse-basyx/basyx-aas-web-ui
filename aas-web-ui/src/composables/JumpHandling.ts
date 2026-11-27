@@ -28,13 +28,28 @@ export function useJumpHandling () {
     })
   }
 
-  function jumpIfSubmodelDescriptorMatches (aasDescriptors: any[], smId: string, targetPath: string): boolean {
+  async function getDescriptorEndpoint (aasDescriptor: any): Promise<string> {
+    if (typeof aasDescriptor?.path === 'string' && aasDescriptor.path.trim() !== '') {
+      return aasDescriptor.path.trim()
+    }
+
+    if (typeof aasDescriptor?.id === 'string' && aasDescriptor.id.trim() !== '') {
+      const resolvedEndpoint = await getAasEndpointById(aasDescriptor.id)
+      if (resolvedEndpoint.trim() !== '') {
+        return resolvedEndpoint.trim()
+      }
+    }
+
+    return extractEndpointHref(aasDescriptor, 'AAS-3.0')
+  }
+
+  async function jumpIfSubmodelDescriptorMatches (aasDescriptors: any[], smId: string, targetPath: string): Promise<boolean> {
     for (const aasDescriptor of aasDescriptors) {
       const smDescriptors = aasDescriptor.submodelDescriptors
       if (smDescriptors && Array.isArray(smDescriptors) && smDescriptors.length > 0) {
         for (const smDescriptor of smDescriptors) {
           if (smDescriptor && Object.keys(smDescriptor).length > 0 && smId === smDescriptor.id) {
-            jumpToAas(extractEndpointHref(aasDescriptor, 'AAS-3.0'), targetPath)
+            jumpToAas(await getDescriptorEndpoint(aasDescriptor), targetPath)
             return true
           }
         }
@@ -68,7 +83,7 @@ export function useJumpHandling () {
 
   async function jumpIfFetchedAasMatches (aasDescriptors: any[], smId: string, targetPath: string): Promise<boolean> {
     for (const aasDescriptor of aasDescriptors) {
-      const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0')
+      const aasEndpoint = await getDescriptorEndpoint(aasDescriptor)
       const aas = await fetchAas(aasEndpoint)
       const submodelRefs = aas.submodels
       if (
@@ -111,7 +126,7 @@ export function useJumpHandling () {
     const smId = sm.id
     const aasDescriptors = await fetchAasDescriptorList()
     const hasAasDescriptors = aasDescriptors && Array.isArray(aasDescriptors) && aasDescriptors.length > 0
-    if (hasAasDescriptors && jumpIfSubmodelDescriptorMatches(aasDescriptors, smId, targetPath)) {
+    if (hasAasDescriptors && await jumpIfSubmodelDescriptorMatches(aasDescriptors, smId, targetPath)) {
       return
     }
 
@@ -188,7 +203,7 @@ export function useJumpHandling () {
       return
     }
 
-    const aasEndpoint = extractEndpointHref(aasDescriptor, 'AAS-3.0')
+    const aasEndpoint = await getDescriptorEndpoint(aasDescriptor)
 
     jumpToAas(aasEndpoint)
   }
