@@ -1,4 +1,4 @@
-import type { EdcProxyConfig } from '../../../server/edc-bff/types'
+import type { EdcCatalogRequest, EdcProxyConfig } from '../../../server/edc-bff/types'
 import { describe, expect, it, vi } from 'vitest'
 import {
   buildCatalogRequestBody,
@@ -8,11 +8,15 @@ import {
   buildEdrContractRequestBody,
   extractDigitalTwinRegistryOffer,
   extractSubmodelOffer,
+  fetchData,
   fetchDtrShellDescriptors,
   fetchSubmodel,
-  forwardJsonToEdc,
+  forwardToEdc,
   parseSubprotocolBody,
+  pushData,
 } from '../../../server/edc-bff/edcRequests'
+
+const odrlNamespace = 'http' + '://www.w3.org/ns/odrl/2/'
 
 function createProxyConfig (): EdcProxyConfig {
   return {
@@ -21,7 +25,9 @@ function createProxyConfig (): EdcProxyConfig {
     apiKey: 'TEST_API_KEY',
     apiKeyHeader: 'X-Api-Key',
     allowedCounterPartyAddresses: ['https://counterparty-dsp.test/api/v1/dsp'],
+    allowedDataPlaneAddresses: ['https://counterparty-data.test', 'https://fresh-data-plane.test', 'https://data-plane.test'],
     allowInsecureCounterPartyAddresses: false,
+    allowManagementWrites: false,
     requestTimeoutMs: 30_000,
     edrPollingAttempts: 30,
     edrPollingIntervalMs: 2000,
@@ -62,11 +68,78 @@ describe('EDC BFF request helpers', () => {
       counterPartyId: 'TEST_COUNTERPARTY_ID',
       counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp/2025-1',
     })).toMatchObject({
+      '@context': { '@vocab': 'https://w3id.org/edc/v0.0.1/ns/' },
       '@type': 'CatalogRequest',
       'counterPartyId': 'TEST_COUNTERPARTY_ID',
       'counterPartyAddress': 'https://counterparty-dsp.test/api/v1/dsp/2025-1',
       'protocol': 'dataspace-protocol-http:2025-1',
     })
+  })
+
+  it('builds a catalog request for the dataset of an asset ID', () => {
+    const proxy = createProxyConfig()
+
+    expect(buildCatalogRequestBody(proxy, {
+      counterPartyId: 'TEST_COUNTERPARTY_ID',
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp/2025-1',
+      assetId: ' asset-1 ',
+      querySpec: { '@type': 'QuerySpec', 'limit': 10 },
+    }).querySpec).toEqual({
+      '@type': 'QuerySpec',
+      'offset': 0,
+      'limit': 1,
+      'filterExpression': [
+        { '@type': 'Criterion', 'operandLeft': 'https://w3id.org/edc/v0.0.1/ns/id', 'operator': '=', 'operandRight': 'asset-1' },
+      ],
+    })
+  })
+
+  it('adds the DSP 2025-1 version path to the counterparty address only once', () => {
+    const proxy = createProxyConfig()
+    const addressFor = (counterPartyAddress: string) =>
+      buildCatalogRequestBody(proxy, { counterPartyId: 'TEST_COUNTERPARTY_ID', counterPartyAddress })
+        .counterPartyAddress
+
+    expect(addressFor('https://counterparty-dsp.test/api/v1/dsp')).toBe('https://counterparty-dsp.test/api/v1/dsp/2025-1')
+    expect(addressFor('https://counterparty-dsp.test/api/v1/dsp/')).toBe('https://counterparty-dsp.test/api/v1/dsp/2025-1')
+    expect(addressFor('https://counterparty-dsp.test/api/v1/dsp/2025-1')).toBe('https://counterparty-dsp.test/api/v1/dsp/2025-1')
+  })
+
+  it('adds the DSP 2025-1 version path before the query and fragment of the counterparty address', () => {
+    const proxy = createProxyConfig()
+    const requestFor = (counterPartyAddress: string) =>
+      buildCatalogRequestBody(proxy, { counterPartyId: 'TEST_COUNTERPARTY_ID', counterPartyAddress })
+
+    expect(requestFor('https://counterparty-dsp.test/api/v1/dsp?tenant=a').counterPartyAddress)
+      .toBe('https://counterparty-dsp.test/api/v1/dsp/2025-1?tenant=a')
+    expect(requestFor('https://counterparty-dsp.test/api/v1/dsp/?tenant=a#part').counterPartyAddress)
+      .toBe('https://counterparty-dsp.test/api/v1/dsp/2025-1?tenant=a#part')
+    expect(requestFor('https://counterparty-dsp.test/api/v1/dsp/2025-1?tenant=a')).toMatchObject({
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp/2025-1?tenant=a',
+      protocol: 'dataspace-protocol-http:2025-1',
+    })
+  })
+
+  it('sends DSP 2025-1 to a versioned address even when DSP 0.8 is requested', () => {
+    const proxy = createProxyConfig()
+    const offer = { assetId: 'asset-1', participantId: 'TEST_PARTICIPANT_ID', policy: { '@id': 'offer-1' } }
+
+    for (const counterPartyAddress of [
+      'https://counterparty-dsp.test/api/v1/dsp',
+      'https://counterparty-dsp.test/api/v1/dsp/2025-1/',
+    ]) {
+      // An API client may still send the protocol field, which the BFF doesn't read
+      const request = { counterPartyId: 'TEST_COUNTERPARTY_ID', counterPartyAddress, protocol: 'dataspace-protocol-http' } as EdcCatalogRequest
+
+      expect(buildCatalogRequestBody(proxy, request)).toMatchObject({
+        counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp/2025-1',
+        protocol: 'dataspace-protocol-http:2025-1',
+      })
+      expect(buildEdrContractRequestBody(request, offer)).toMatchObject({
+        counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp/2025-1',
+        protocol: 'dataspace-protocol-http:2025-1',
+      })
+    }
   })
 
   it('forwards JSON to the configured management URL with the server-side API key', async () => {
@@ -76,8 +149,9 @@ describe('EDC BFF request helpers', () => {
     }))
     const proxy = createProxyConfig()
 
-    const result = await forwardJsonToEdc(
+    const result = await forwardToEdc(
       proxy,
+      'POST',
       '/v3/catalog/request',
       { request: true },
       fetchMock,
@@ -116,7 +190,6 @@ describe('EDC BFF request helpers', () => {
     const offer = extractDigitalTwinRegistryOffer(catalog)
     const body = buildEdrContractRequestBody({
       counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
-      protocol: 'dataspace-protocol-http',
     }, offer)
 
     expect(buildDigitalTwinRegistryQuerySpec().filterExpression).toHaveLength(1)
@@ -126,12 +199,12 @@ describe('EDC BFF request helpers', () => {
     })
     expect(body).toMatchObject({
       '@type': 'ContractRequest',
-      'counterPartyAddress': 'https://counterparty-dsp.test/api/v1/dsp',
-      'protocol': 'dataspace-protocol-http',
+      'counterPartyAddress': 'https://counterparty-dsp.test/api/v1/dsp/2025-1',
+      'protocol': 'dataspace-protocol-http:2025-1',
       'policy': {
         '@id': 'offer-1',
-        'odrl:assigner': { '@id': 'TEST_PARTICIPANT_ID' },
-        'odrl:target': { '@id': 'dtr-asset' },
+        [`${odrlNamespace}assigner`]: { '@id': 'TEST_PARTICIPANT_ID' },
+        [`${odrlNamespace}target`]: { '@id': 'dtr-asset' },
       },
     })
   })
@@ -154,6 +227,46 @@ describe('EDC BFF request helpers', () => {
       assetId: 'dtr-asset',
       participantId: 'TEST_PARTICIPANT_ID',
       policy: { '@id': 'offer-1' },
+    })
+    expect(buildEdrContractRequestBody(
+      { counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp' },
+      extractDigitalTwinRegistryOffer(catalog),
+    )).toMatchObject({
+      protocol: 'dataspace-protocol-http:2025-1',
+      policy: {
+        [`${odrlNamespace}assigner`]: { '@id': 'TEST_PARTICIPANT_ID' },
+        [`${odrlNamespace}target`]: { '@id': 'dtr-asset' },
+      },
+    })
+  })
+
+  it('keeps the DSP 2025-1 catalog context on the first offered policy', () => {
+    const catalogContext = [
+      'https://w3id.org/catenax/2025/9/policy/context.jsonld',
+      'https://w3id.org/dspace/2025/1/context.jsonld',
+    ]
+    const catalog = {
+      '@context': catalogContext,
+      'participantId': 'TEST_PARTICIPANT_ID',
+      'dataset': [{
+        '@id': 'submodel-asset',
+        'hasPolicy': [
+          { '@id': 'offer-1', '@type': 'Offer', 'permission': [{ action: 'use' }] },
+          { '@id': 'offer-2', '@type': 'Offer' },
+        ],
+      }],
+    }
+
+    expect(buildEdrContractRequestBody(
+      { counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp/2025-1' },
+      extractSubmodelOffer(catalog, 'submodel-asset'),
+    ).policy).toEqual({
+      '@context': [null, ...catalogContext, 'https://w3id.org/dspace/2025/1/odrl-profile.jsonld'],
+      '@id': 'offer-1',
+      '@type': 'Offer',
+      'permission': [{ action: 'use' }],
+      [`${odrlNamespace}assigner`]: { '@id': 'TEST_PARTICIPANT_ID' },
+      [`${odrlNamespace}target`]: { '@id': 'submodel-asset' },
     })
   })
 
@@ -212,7 +325,6 @@ describe('EDC BFF request helpers', () => {
     const result = await fetchDtrShellDescriptors(proxy, {
       counterPartyId: 'TEST_PARTICIPANT_ID',
       counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
-      protocol: 'dataspace-protocol-http',
       limit: 50,
     }, {
       fetchFn: fetchMock as typeof fetch,
@@ -339,7 +451,6 @@ describe('EDC BFF request helpers', () => {
     const result = await fetchSubmodel(proxy, {
       counterPartyId: 'TEST_PARTICIPANT_ID',
       counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
-      protocol: 'dataspace-protocol-http',
       submodelDescriptor: {
         endpoints: [{
           protocolInformation: {
@@ -459,7 +570,7 @@ describe('EDC BFF request helpers', () => {
       subprotocolBody: 'id=submodel-asset;dspEndpoint=https://counterparty-dsp.test/api/v1/dsp',
     }, {
       fetchFn: emptyCatalogFetch as typeof fetch,
-    })).rejects.toThrow('EDC catalog did not contain the requested Submodel dataset')
+    })).rejects.toThrow('Catalog did not contain the requested Submodel dataset')
 
     const timeoutFetch = vi.fn(async (url: string | URL | Request) => {
       const urlString = String(url)
@@ -493,6 +604,38 @@ describe('EDC BFF request helpers', () => {
     })).rejects.toThrow('EDC EDR was not available before polling timed out')
   })
 
+  it('keeps the distinct messages of a refused contract negotiation as error details', async () => {
+    const proxy = createProxyConfig()
+    const fetchMock = vi.fn(async (url: string | URL | Request) => {
+      if (String(url).endsWith('/management/v3/catalog/request')) {
+        return Response.json({
+          'dspace:participantId': 'TEST_PARTICIPANT_ID',
+          'dcat:dataset': {
+            '@id': 'submodel-asset',
+            'odrl:hasPolicy': { '@id': 'offer-submodel', '@type': 'odrl:Offer' },
+          },
+        })
+      }
+      return Response.json([
+        { message: 'policy/@type was expected to be odrl:Offer', type: 'ValidationFailure' },
+        { message: 'policy/assigner is mandatory but missing', type: 'ValidationFailure' },
+        { message: 'policy/@type was expected to be odrl:Offer', type: 'ValidationFailure' },
+      ], { status: 400 })
+    })
+
+    await expect(fetchSubmodel(proxy, {
+      counterPartyId: 'TEST_PARTICIPANT_ID',
+      href: 'https://data-plane.test/submodel',
+      subprotocolBody: 'id=submodel-asset;dspEndpoint=https://counterparty-dsp.test/api/v1/dsp',
+    }, {
+      fetchFn: fetchMock as typeof fetch,
+    })).rejects.toMatchObject({
+      message: 'Contract negotiation failed (400)',
+      status: 502,
+      details: 'policy/@type was expected to be odrl:Offer; policy/assigner is mandatory but missing',
+    })
+  })
+
   it('rejects Submodel dataaddress responses without authorization', async () => {
     const proxy = createProxyConfig()
     const fetchMock = vi.fn(async (url: string | URL | Request) => {
@@ -512,5 +655,247 @@ describe('EDC BFF request helpers', () => {
     }, {
       fetchFn: fetchMock as typeof fetch,
     })).rejects.toThrow('EDC dataaddress did not include authorization')
+  })
+
+  it('negotiates the push asset and posts the data to the provider data plane', async () => {
+    const proxy = createProxyConfig()
+    const submodel = { id: 'urn:example:submodel:1', idShort: 'TechnicalData', submodelElements: [] }
+    const fetchMock = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const urlString = String(url)
+
+      if (urlString.endsWith('/management/v3/catalog/request')) {
+        expect(JSON.parse(String(init?.body))).toMatchObject({
+          counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp/2025-1',
+          querySpec: {
+            filterExpression: [{
+              operandLeft: 'https://w3id.org/edc/v0.0.1/ns/id',
+              operator: '=',
+              operandRight: 'push-asset',
+            }],
+          },
+        })
+        return Response.json({
+          'dspace:participantId': 'TEST_PARTICIPANT_ID',
+          'dcat:dataset': {
+            '@id': 'push-asset',
+            'odrl:hasPolicy': { '@id': 'offer-push', '@type': 'odrl:Offer' },
+          },
+        })
+      }
+
+      if (urlString.endsWith('/management/v3/edrs')) {
+        expect(JSON.parse(String(init?.body)).policy).toMatchObject({
+          [`${odrlNamespace}target`]: { '@id': 'push-asset' },
+        })
+        return Response.json({ '@id': 'push-negotiation-1' })
+      }
+
+      if (urlString.endsWith('/management/v3/edrs/request')) {
+        return Response.json([{ transferProcessId: 'push-transfer-1', agreementId: 'push-agreement-1' }])
+      }
+
+      if (urlString.endsWith('/management/v3/edrs/push-transfer-1/dataaddress?auto_refresh=true')) {
+        return Response.json({
+          endpoint: 'https://data-plane.test/api/public',
+          authorization: 'TEST_PUSH_AUTHORIZATION',
+        })
+      }
+
+      if (urlString === 'https://data-plane.test/api/public') {
+        expect(init).toMatchObject({
+          method: 'POST',
+          headers: { 'Authorization': 'TEST_PUSH_AUTHORIZATION', 'Content-Type': 'application/json' },
+        })
+        expect(JSON.parse(String(init?.body))).toEqual(submodel)
+        return Response.json({ received: true }, { status: 201 })
+      }
+
+      return Response.json({ error: 'unexpected request' }, { status: 500 })
+    })
+
+    const result = await pushData(proxy, {
+      counterPartyId: 'TEST_PARTICIPANT_ID',
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+      assetId: 'push-asset',
+      data: submodel,
+    }, {
+      fetchFn: fetchMock as typeof fetch,
+      pollingIntervalMs: 0,
+    })
+
+    expect(result.status).toBe(201)
+    expect(result.data).toEqual({ received: true })
+    expect(result.metadata).toMatchObject({
+      assetId: 'push-asset',
+      providerId: 'TEST_PARTICIPANT_ID',
+      agreementId: 'push-agreement-1',
+      contractNegotiationId: 'push-negotiation-1',
+      transferProcessId: 'push-transfer-1',
+    })
+  })
+
+  it('rejects data pushes without asset ID or data and reports failures of the data plane', async () => {
+    const proxy = createProxyConfig()
+    const request = {
+      counterPartyId: 'TEST_PARTICIPANT_ID',
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+      assetId: 'push-asset',
+      data: { id: 'urn:example:aas:1' },
+    }
+
+    await expect(pushData(proxy, { ...request, assetId: ' ' })).rejects.toThrow('assetId is required for EDC data push')
+    await expect(pushData(proxy, { ...request, data: undefined })).rejects.toThrow('data is required for EDC data push')
+
+    const fetchMock = vi.fn(async (url: string | URL | Request) => {
+      const urlString = String(url)
+      if (urlString.endsWith('/management/v3/edrs/push-transfer-1/dataaddress?auto_refresh=true')) {
+        return Response.json({ endpoint: 'https://data-plane.test/api/public', authorization: 'TEST_PUSH_AUTHORIZATION' })
+      }
+      if (urlString.endsWith('/management/v3/catalog/request')) {
+        return Response.json({
+          'dspace:participantId': 'TEST_PARTICIPANT_ID',
+          'dcat:dataset': { '@id': 'push-asset', 'odrl:hasPolicy': { '@id': 'offer-push' } },
+        })
+      }
+      if (urlString.endsWith('/management/v3/edrs')) {
+        return Response.json({ '@id': 'push-negotiation-1' })
+      }
+      if (urlString.endsWith('/management/v3/edrs/request')) {
+        return Response.json([{ transferProcessId: 'push-transfer-1' }])
+      }
+      return Response.json({ error: 'rejected' }, { status: 400 })
+    })
+
+    await expect(pushData(proxy, request, {
+      fetchFn: fetchMock as typeof fetch,
+      pollingIntervalMs: 0,
+    })).rejects.toThrow('Data plane push failed (400)')
+  })
+
+  it('negotiates the asset and fetches the data from the provider data plane', async () => {
+    const proxy = createProxyConfig()
+    const fetchMock = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const urlString = String(url)
+
+      if (urlString.endsWith('/management/v3/catalog/request')) {
+        expect(JSON.parse(String(init?.body))).toMatchObject({
+          querySpec: { filterExpression: [{ operandRight: 'data-asset' }] },
+        })
+        return Response.json({
+          'dspace:participantId': 'TEST_PARTICIPANT_ID',
+          'dcat:dataset': { '@id': 'data-asset', 'odrl:hasPolicy': { '@id': 'offer-data' } },
+        })
+      }
+      if (urlString.endsWith('/management/v3/edrs')) {
+        return Response.json({ '@id': 'data-negotiation-1' })
+      }
+      if (urlString.endsWith('/management/v3/edrs/request')) {
+        return Response.json([{ transferProcessId: 'data-transfer-1' }])
+      }
+      if (urlString.endsWith('/management/v3/edrs/data-transfer-1/dataaddress?auto_refresh=true')) {
+        return Response.json({ endpoint: 'https://data-plane.test/api/public', authorization: 'TEST_DATA_AUTHORIZATION' })
+      }
+      if (urlString === 'https://data-plane.test/api/public') {
+        expect(init).toMatchObject({ method: 'GET', headers: { Authorization: 'TEST_DATA_AUTHORIZATION' } })
+        return Response.json({ temperature: 42 })
+      }
+
+      return Response.json({ error: 'unexpected request' }, { status: 500 })
+    })
+    const request = {
+      counterPartyId: 'TEST_PARTICIPANT_ID',
+      counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+      assetId: 'data-asset',
+    }
+
+    const result = await fetchData(proxy, request, { fetchFn: fetchMock as typeof fetch, pollingIntervalMs: 0 })
+
+    expect(result.data).toEqual({ temperature: 42 })
+    expect(result.metadata).toMatchObject({
+      assetId: 'data-asset',
+      contractNegotiationId: 'data-negotiation-1',
+      transferProcessId: 'data-transfer-1',
+    })
+    await expect(fetchData(proxy, { ...request, assetId: ' ' })).rejects.toThrow('assetId is required for EDC data fetch')
+  })
+
+  /** Answers the negotiation of `data-asset` with an EDR for the given data plane endpoint. */
+  function createDataPlaneFetchMock (endpoint: string, dataPlane: (init?: RequestInit) => Promise<Response>) {
+    return vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const urlString = String(url)
+      if (urlString.endsWith('/management/v3/catalog/request')) {
+        return Response.json({
+          'dspace:participantId': 'TEST_PARTICIPANT_ID',
+          'dcat:dataset': { '@id': 'data-asset', 'odrl:hasPolicy': { '@id': 'offer-data' } },
+        })
+      }
+      if (urlString.endsWith('/management/v3/edrs')) {
+        return Response.json({ '@id': 'data-negotiation-1' })
+      }
+      if (urlString.endsWith('/management/v3/edrs/request')) {
+        return Response.json([{ transferProcessId: 'data-transfer-1' }])
+      }
+      if (urlString.endsWith('/management/v3/edrs/data-transfer-1/dataaddress?auto_refresh=true')) {
+        return Response.json({ endpoint, authorization: 'TEST_DATA_AUTHORIZATION' })
+      }
+      if (urlString.startsWith(endpoint)) {
+        return dataPlane(init)
+      }
+      return Response.json({ error: 'unexpected request' }, { status: 500 })
+    })
+  }
+
+  const dataRequest = {
+    counterPartyId: 'TEST_PARTICIPANT_ID',
+    counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+    assetId: 'data-asset',
+  }
+
+  it('refuses data plane endpoints of an EDR outside the data plane allowlist', async () => {
+    const metadataServiceAddress = 'http' + '://169.254.169.254/latest/meta-data'
+    const dataPlane = vi.fn(async () => Response.json({ secret: 'INTERNAL' }))
+    const fetchMock = createDataPlaneFetchMock(metadataServiceAddress, dataPlane)
+
+    await expect(fetchData(createProxyConfig(), dataRequest, { fetchFn: fetchMock as typeof fetch, pollingIntervalMs: 0 }))
+      .rejects
+      .toMatchObject({
+        status: 403,
+        code: 'DATA_PLANE_ADDRESS_NOT_ALLOWED',
+        details: expect.stringContaining('169.254.169.254'),
+      })
+    await expect(pushData(
+      createProxyConfig(),
+      { ...dataRequest, data: { id: 'submodel' } },
+      { fetchFn: fetchMock as typeof fetch, pollingIntervalMs: 0 },
+    )).rejects.toMatchObject({ status: 403 })
+    expect(dataPlane).not.toHaveBeenCalled()
+  })
+
+  it('does not follow redirects of the data plane', async () => {
+    const dataPlane = vi.fn(async () => new Response(null, { status: 302, headers: { Location: 'https://internal.test/secret?token=1' } }))
+    const fetchMock = createDataPlaneFetchMock('https://data-plane.test/api/public', dataPlane)
+
+    const request = fetchData(createProxyConfig(), dataRequest, { fetchFn: fetchMock as typeof fetch, pollingIntervalMs: 0 })
+    await expect(request).rejects.toMatchObject({
+      status: 502,
+      code: 'DATA_PLANE_REDIRECT_REFUSED',
+      message: 'Data plane redirect was not followed (302)',
+      details: expect.stringContaining('redirected to https://internal.test.'),
+    })
+    await expect(request).rejects.not.toMatchObject({ details: expect.stringContaining('token') })
+    expect(dataPlane).toHaveBeenCalledWith(expect.objectContaining({ redirect: 'manual' }))
+  })
+
+  it('ends data plane requests after the request timeout', async () => {
+    const dataPlane = vi.fn((init?: RequestInit) => new Promise<Response>((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })))
+    }))
+    const fetchMock = createDataPlaneFetchMock('https://data-plane.test/api/public', dataPlane)
+
+    await expect(fetchData(
+      { ...createProxyConfig(), requestTimeoutMs: 10 },
+      dataRequest,
+      { fetchFn: fetchMock as typeof fetch, pollingIntervalMs: 0 },
+    )).rejects.toMatchObject({ name: 'AbortError' })
   })
 })

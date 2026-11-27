@@ -174,7 +174,7 @@
 
 <script lang="ts" setup>
   import type { AasListPageResult, AssetIdFilter } from '@/composables/Client/AASRegistryClient'
-  import type { CatenaXEdcDtrMetadata } from '@/composables/Client/CatenaXEdcClient'
+  import type { CatenaXEdcTransferMetadata } from '@/composables/Client/CatenaXEdcClient'
   import type { EdcSubmodelViewState } from '@/pages/modules/CatenaXplorer/catenaXplorerUtils'
   import type { CatenaXPartner, InfrastructureConfig } from '@/types/Infrastructure'
   import { useRoute, useRouter } from 'vue-router'
@@ -185,6 +185,7 @@
   import { useSMRepositoryClient } from '@/composables/Client/SMRepositoryClient'
   import { useClipboardUtil } from '@/composables/ClipboardUtil'
   import { useIDUtils } from '@/composables/IDUtils'
+  import { useSelectedEdcConfig } from '@/composables/SelectedEdcConfig'
   import {
     forgetRecentCatenaXPartner,
     getRecentCatenaXPartners,
@@ -257,6 +258,7 @@
   } = useSMRepositoryClient()
   const { copyToClipboard } = useClipboardUtil()
   const { generateIri } = useIDUtils()
+  const { selectedEdcConfig, edcProxyId } = useSelectedEdcConfig()
 
   const descriptors = ref<any[]>([])
   const activeAssetIds = ref<AssetIdFilter[] | undefined>(undefined)
@@ -290,7 +292,6 @@
   const selectedEdcPartnerId = ref('')
   const edcCounterPartyId = ref('')
   const edcCounterPartyAddress = ref('')
-  const edcProtocol = ref('dataspace-protocol-http')
   const runtimePartnerLoaded = ref(false)
   const edcPartnerReady = ref(false)
   const savePartnerDialog = ref(false)
@@ -313,10 +314,6 @@
     return descriptors.value.find(descriptor => descriptor?.id === descriptorId)
       ?? (selectedDescriptorFallback.value?.id === descriptorId ? selectedDescriptorFallback.value : null)
   })
-  const selectedEdcConfig = computed(() => {
-    return infrastructureStore.getSelectedInfrastructure?.catenaX?.edc ?? null
-  })
-  const edcProxyId = computed(() => selectedEdcConfig.value?.proxyId?.trim() ?? '')
   const configuredEdcPartners = computed(() => normalizeCatenaXPartners(selectedEdcConfig.value?.partners ?? []))
   const recentEdcPartnerOptions = computed(() => {
     const mergedPartners = mergeCatenaXPartners(configuredEdcPartners.value, edcRecentPartners.value)
@@ -360,7 +357,6 @@
       getEdcDtrDescriptorsEndpointUrl(),
       edcCounterPartyId.value,
       edcCounterPartyAddress.value,
-      edcProtocol.value,
       assetIdName.value,
       assetIdValue.value,
       getEdcTransferProcessId(edcDtrAssetKey, edcCounterPartyAddress.value),
@@ -419,7 +415,6 @@
   watch(
     () => [
       edcProxyId.value,
-      edcProtocol.value,
       isEdcAccessMode.value,
     ],
     () => {
@@ -897,11 +892,6 @@
       return true
     }
 
-    if (edcProxyId.value === '') {
-      inlineError.value = 'The selected Catena-X infrastructure has no EDC proxy ID.'
-      return false
-    }
-
     if (edcCounterPartyId.value.trim() === '' || edcCounterPartyAddress.value.trim() === '') {
       inlineError.value = 'Enter an EDC counterparty ID and DSP address.'
       return false
@@ -913,7 +903,6 @@
   function buildEdcDescriptorRequest (): {
     counterPartyId: string
     counterPartyAddress: string
-    protocol: string
   } | null {
     if (!isDescriptorSourceConfigured()) {
       return null
@@ -922,7 +911,6 @@
     return {
       counterPartyId: edcCounterPartyId.value.trim(),
       counterPartyAddress: edcCounterPartyAddress.value.trim(),
-      protocol: edcProtocol.value.trim(),
     }
   }
 
@@ -932,7 +920,7 @@
 
   function rememberEdcTransferProcessId (
     assetId: string,
-    metadata: CatenaXEdcDtrMetadata,
+    metadata: CatenaXEdcTransferMetadata,
     counterPartyAddress: string,
   ): void {
     const transferProcessId = metadata.transferProcessId?.trim()
@@ -951,7 +939,6 @@
       edcProxyId.value,
       edcCounterPartyId.value.trim(),
       counterPartyAddress.trim(),
-      edcProtocol.value.trim(),
       assetId.trim(),
     ])
   }

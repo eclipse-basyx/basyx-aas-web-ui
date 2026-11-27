@@ -3,9 +3,128 @@ import type { Server } from 'node:http'
 import { createServer as createHttpServer } from 'node:http'
 import { afterEach, describe, expect, it } from 'vitest'
 import { createEdcBffServer } from '../../../server/edc-bff/server'
+import { createJwt, createTestKeyPair } from '../../helpers/jwt'
 
 let server: Server | null = null
 let upstreamServer: Server | null = null
+
+interface UpstreamRequestRecord {
+  apiKey?: string | string[]
+  body?: unknown
+  method?: string
+  url?: string
+}
+
+/** Records every upstream call; `respond` returning undefined replies with 204. */
+async function startUpstreamServer (
+  respond: (record: UpstreamRequestRecord) => unknown,
+): Promise<{ port: number, requests: UpstreamRequestRecord[] }> {
+  const requests: UpstreamRequestRecord[] = []
+  upstreamServer = createHttpServer((request, response) => {
+    const chunks: Buffer[] = []
+    request.on('data', chunk => {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+    })
+    request.on('end', () => {
+      const rawBody = Buffer.concat(chunks).toString('utf8')
+      const record: UpstreamRequestRecord = {
+        apiKey: request.headers['x-api-key'],
+        body: rawBody ? JSON.parse(rawBody) : undefined,
+        method: request.method,
+        url: request.url,
+      }
+      requests.push(record)
+
+      const payload = respond(record)
+      if (payload === undefined) {
+        response.statusCode = 204
+        response.end()
+        return
+      }
+
+      response.setHeader('Content-Type', 'application/json')
+      response.end(JSON.stringify(payload))
+    })
+  })
+  await new Promise<void>(resolve => upstreamServer?.listen(0, resolve))
+  const address = upstreamServer.address()
+
+  return {
+    port: typeof address === 'object' && address ? address.port : 0,
+    requests,
+  }
+}
+
+async function startBffServer (
+  upstreamPort: number,
+  allowedCounterPartyAddresses: string[] = [],
+  { allowManagementWrites = false, auth = { mode: 'none', requiredRoles: [] }, allowedDataPlaneAddresses = [] }: {
+    allowManagementWrites?: boolean
+    auth?: EdcBffRuntimeConfig['auth']
+    allowedDataPlaneAddresses?: string[]
+  } = {},
+): Promise<string> {
+  const config: EdcBffRuntimeConfig = {
+    port: 0,
+    auth,
+    proxies: new Map([
+      ['default', {
+        id: 'default',
+        managementUrl: `http://127.0.0.1:${upstreamPort}/management`,
+        apiKey: 'TEST_API_KEY',
+        apiKeyHeader: 'X-Api-Key',
+        allowedCounterPartyAddresses,
+        allowedDataPlaneAddresses,
+        // The mock data plane listens on http://127.0.0.1
+        allowInsecureCounterPartyAddresses: allowedDataPlaneAddresses.length > 0,
+        allowManagementWrites,
+        requestTimeoutMs: 30_000,
+        edrPollingAttempts: 30,
+        edrPollingIntervalMs: 2000,
+      }],
+    ]),
+  }
+
+  server = createEdcBffServer(config)
+  await new Promise<void>(resolve => server?.listen(0, resolve))
+  const address = server.address()
+  const port = typeof address === 'object' && address ? address.port : 0
+
+  return `http://127.0.0.1:${port}/api/catena-x/edc/default`
+}
+
+const crudResources = [
+  {
+    resource: 'assets',
+    updateUrl: '/management/v3/assets',
+    id: 'urn:asset:1',
+    entity: {
+      '@id': 'urn:asset:1',
+      'properties': { key: 'value' },
+      'dataAddress': { type: 'HttpData', baseUrl: 'https://provider.test/data' },
+    },
+  },
+  {
+    resource: 'contractdefinitions',
+    updateUrl: '/management/v3/contractdefinitions',
+    id: 'urn:contract:1',
+    entity: {
+      '@id': 'urn:contract:1',
+      'accessPolicyId': 'access-1',
+      'contractPolicyId': 'usage-1',
+      'assetsSelector': [],
+    },
+  },
+  {
+    resource: 'policydefinitions',
+    updateUrl: '/management/v3/policydefinitions/urn%3Apolicy%3A1',
+    id: 'urn:policy:1',
+    entity: {
+      '@id': 'urn:policy:1',
+      'policy': { '@type': 'Set', 'permission': [] },
+    },
+  },
+]
 
 describe('EDC BFF server', () => {
   afterEach(async () => {
@@ -34,7 +153,9 @@ describe('EDC BFF server', () => {
           apiKey: 'TEST_API_KEY',
           apiKeyHeader: 'X-Api-Key',
           allowedCounterPartyAddresses: [],
+          allowedDataPlaneAddresses: [],
           allowInsecureCounterPartyAddresses: false,
+          allowManagementWrites: false,
           requestTimeoutMs: 30_000,
           edrPollingAttempts: 30,
           edrPollingIntervalMs: 2000,
@@ -76,7 +197,9 @@ describe('EDC BFF server', () => {
           apiKey: 'TEST_API_KEY',
           apiKeyHeader: 'X-Api-Key',
           allowedCounterPartyAddresses: [],
+          allowedDataPlaneAddresses: [],
           allowInsecureCounterPartyAddresses: false,
+          allowManagementWrites: false,
           requestTimeoutMs: 30_000,
           edrPollingAttempts: 30,
           edrPollingIntervalMs: 2000,
@@ -106,6 +229,359 @@ describe('EDC BFF server', () => {
     })
     expect(JSON.stringify(payload)).not.toContain('TEST_API_KEY')
     expect(JSON.stringify(payload)).not.toContain('consumer-edc.test')
+  })
+
+  it('queries assets through the configured EDC management API', async () => {
+    let upstreamRequest: {
+      apiKey?: string | string[]
+      body?: unknown
+      method?: string
+      url?: string
+    } = {}
+    upstreamServer = createHttpServer((request, response) => {
+      const chunks: Buffer[] = []
+      request.on('data', chunk => {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+      })
+      request.on('end', () => {
+        upstreamRequest = {
+          apiKey: request.headers['x-api-key'],
+          body: JSON.parse(Buffer.concat(chunks).toString('utf8')),
+          method: request.method,
+          url: request.url,
+        }
+
+        response.setHeader('Content-Type', 'application/json')
+        response.end(JSON.stringify([{ '@id': 'asset-1' }]))
+      })
+    })
+    await new Promise<void>(resolve => upstreamServer?.listen(0, resolve))
+    const upstreamAddress = upstreamServer.address()
+    const upstreamPort = typeof upstreamAddress === 'object' && upstreamAddress ? upstreamAddress.port : 0
+    const config: EdcBffRuntimeConfig = {
+      port: 0,
+      auth: { mode: 'none', requiredRoles: [] },
+      proxies: new Map([
+        ['default', {
+          id: 'default',
+          managementUrl: `http://127.0.0.1:${upstreamPort}/management`,
+          apiKey: 'TEST_API_KEY',
+          apiKeyHeader: 'X-Api-Key',
+          allowedCounterPartyAddresses: [],
+          allowedDataPlaneAddresses: [],
+          allowInsecureCounterPartyAddresses: false,
+          allowManagementWrites: false,
+          requestTimeoutMs: 30_000,
+          edrPollingAttempts: 30,
+          edrPollingIntervalMs: 2000,
+        }],
+      ]),
+    }
+
+    server = createEdcBffServer(config)
+    await new Promise<void>(resolve => server?.listen(0, resolve))
+    const address = server.address()
+    const port = typeof address === 'object' && address ? address.port : 0
+    const response = await fetch(`http://127.0.0.1:${port}/api/catena-x/edc/default/assets/request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    })
+
+    expect(response.status).toBe(200)
+    await expect(response.json()).resolves.toEqual([{ '@id': 'asset-1' }])
+    expect(upstreamRequest).toMatchObject({
+      apiKey: 'TEST_API_KEY',
+      body: {
+        '@type': 'QuerySpec',
+        'offset': 0,
+        'sortOrder': 'ASC',
+        'sortField': 'id',
+      },
+      method: 'POST',
+      url: '/management/v3/assets/request',
+    })
+  })
+
+  it.each(crudResources)(
+    'queries, creates, updates and deletes $resource through the configured EDC management API',
+    async ({ resource, updateUrl, id, entity }) => {
+      const encodedId = encodeURIComponent(id)
+      const upstream = await startUpstreamServer(record => {
+        if (record.url?.endsWith(`/${resource}/request`)) {
+          return [{ '@id': id }]
+        }
+        if (record.method === 'POST') {
+          return { '@id': id, 'createdAt': 1 }
+        }
+        return undefined
+      })
+      const baseUrl = await startBffServer(upstream.port, [], { allowManagementWrites: true })
+
+      const queryResponse = await fetch(`${baseUrl}/${resource}/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      })
+      const createResponse = await fetch(`${baseUrl}/${resource}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entity),
+      })
+      const updateResponse = await fetch(`${baseUrl}/${resource}/${encodedId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entity),
+      })
+      const deleteResponse = await fetch(`${baseUrl}/${resource}/${encodedId}`, {
+        method: 'DELETE',
+      })
+
+      await expect(queryResponse.json()).resolves.toEqual([{ '@id': id }])
+      await expect(createResponse.json()).resolves.toEqual({ '@id': id, 'createdAt': 1 })
+      expect(updateResponse.status).toBe(204)
+      expect(deleteResponse.status).toBe(204)
+      expect(upstream.requests).toMatchObject([
+        {
+          apiKey: 'TEST_API_KEY',
+          body: {
+            '@type': 'QuerySpec',
+            'offset': 0,
+            'sortOrder': 'ASC',
+            'sortField': 'id',
+          },
+          method: 'POST',
+          url: `/management/v3/${resource}/request`,
+        },
+        {
+          apiKey: 'TEST_API_KEY',
+          body: entity,
+          method: 'POST',
+          url: `/management/v3/${resource}`,
+        },
+        {
+          apiKey: 'TEST_API_KEY',
+          body: entity,
+          method: 'PUT',
+          url: updateUrl,
+        },
+        {
+          apiKey: 'TEST_API_KEY',
+          method: 'DELETE',
+          url: `/management/v3/${resource}/${encodedId}`,
+        },
+      ])
+    },
+  )
+
+  it.each(crudResources)(
+    'rejects creating, updating and deleting $resource unless management writes are allowed',
+    async ({ resource, id, entity }) => {
+      const encodedId = encodeURIComponent(id)
+      const upstream = await startUpstreamServer(() => [{ '@id': id }])
+      const baseUrl = await startBffServer(upstream.port)
+
+      const queryResponse = await fetch(`${baseUrl}/${resource}/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      })
+      const writeResponses = await Promise.all([
+        fetch(`${baseUrl}/${resource}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(entity),
+        }),
+        fetch(`${baseUrl}/${resource}/${encodedId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(entity),
+        }),
+        fetch(`${baseUrl}/${resource}/${encodedId}`, { method: 'DELETE' }),
+      ])
+
+      expect(queryResponse.status).toBe(200)
+      for (const writeResponse of writeResponses) {
+        expect(writeResponse.status).toBe(403)
+        await expect(writeResponse.json()).resolves.toMatchObject({
+          code: 'EDC_MANAGEMENT_WRITES_DISABLED',
+          status: 403,
+        })
+      }
+      expect(upstream.requests).toMatchObject([
+        { method: 'POST', url: `/management/v3/${resource}/request` },
+      ])
+    },
+  )
+
+  it('redacts asset secrets in query results and restores them on update', async () => {
+    const storedAsset = {
+      '@id': 'asset-1',
+      'dataAddress': { type: 'HttpData', baseUrl: 'https://dtr.internal/api/v3', authKey: 'x-api-key', authCode: 'STORED_API_KEY' },
+      'privateProperties': { backend: { apiKey: 'STORED_PRIVATE_KEY' } },
+    }
+    const upstream = await startUpstreamServer(record => {
+      if (record.url === '/management/v3/assets/request' || record.method === 'GET') {
+        return record.method === 'GET' ? storedAsset : [storedAsset]
+      }
+      return undefined
+    })
+    const baseUrl = await startBffServer(upstream.port, [], { allowManagementWrites: true })
+
+    const queryResponse = await fetch(`${baseUrl}/assets/request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    })
+    const [queriedAsset] = await queryResponse.json()
+    const updateResponse = await fetch(`${baseUrl}/assets/asset-1`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(queriedAsset),
+    })
+    const redirectResponse = await fetch(`${baseUrl}/assets/asset-1`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...queriedAsset, dataAddress: { ...queriedAsset.dataAddress, baseUrl: 'https://attacker.test' } }),
+    })
+    const createResponse = await fetch(`${baseUrl}/assets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...queriedAsset, '@id': 'asset-2' }),
+    })
+
+    expect(queriedAsset.dataAddress).toEqual({ ...storedAsset.dataAddress, authCode: '<redacted>' })
+    expect(queriedAsset.privateProperties).toEqual({ backend: { apiKey: '<redacted>' } })
+    expect(updateResponse.status).toBe(204)
+    expect(redirectResponse.status).toBe(400)
+    await expect(redirectResponse.json()).resolves.toMatchObject({ code: 'EDC_REDACTED_SECRET' })
+    expect(createResponse.status).toBe(400)
+    expect(upstream.requests).toMatchObject([
+      { method: 'POST', url: '/management/v3/assets/request' },
+      { method: 'GET', url: '/management/v3/assets/asset-1' },
+      { method: 'PUT', url: '/management/v3/assets', body: storedAsset },
+      { method: 'GET', url: '/management/v3/assets/asset-1' },
+    ])
+  })
+
+  it.each(crudResources)(
+    'rejects updating $resource when the @id in the body is missing or differs from the path',
+    async ({ resource, id, entity }) => {
+      const upstream = await startUpstreamServer(() => undefined)
+      const baseUrl = await startBffServer(upstream.port, [], { allowManagementWrites: true })
+      const update = (body: unknown) => fetch(`${baseUrl}/${resource}/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const { '@id': _id, ...entityWithoutId } = entity
+
+      const mismatchResponse = await update({ ...entity, '@id': 'other-id' })
+      const missingResponse = await update(entityWithoutId)
+
+      expect(mismatchResponse.status).toBe(400)
+      await expect(mismatchResponse.json()).resolves.toMatchObject({ code: 'EDC_ID_MISMATCH' })
+      expect(missingResponse.status).toBe(400)
+      await expect(missingResponse.json()).resolves.toMatchObject({ code: 'EDC_ID_MISSING' })
+      expect(upstream.requests).toHaveLength(0)
+    },
+  )
+
+  it.each(crudResources)(
+    'refuses IDs with "/" of $resource, which the EDC cannot address in the path',
+    async ({ resource, entity }) => {
+      const upstream = await startUpstreamServer(() => undefined)
+      const baseUrl = await startBffServer(upstream.port, [], { allowManagementWrites: true })
+      const slashId = 'urn/with/slash'
+      const send = (method: string, path: string, body?: unknown) => fetch(`${baseUrl}/${path}`, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      })
+
+      const responses = await Promise.all([
+        send('POST', resource, { ...entity, '@id': slashId }),
+        send('DELETE', `${resource}/${encodeURIComponent(slashId)}`),
+      ])
+
+      for (const response of responses) {
+        expect(response.status).toBe(400)
+        await expect(response.json()).resolves.toMatchObject({
+          code: 'EDC_ID_NOT_ADDRESSABLE',
+          details: expect.stringContaining(slashId),
+        })
+      }
+      expect(upstream.requests).toHaveLength(0)
+    },
+  )
+
+  it('refuses a policy update by an ID with "/", but updates assets with it by the body', async () => {
+    const upstream = await startUpstreamServer(() => undefined)
+    const baseUrl = await startBffServer(upstream.port, [], { allowManagementWrites: true })
+    const slashId = 'urn/with/slash'
+    const update = (resource: string, body: unknown) => fetch(`${baseUrl}/${resource}/${encodeURIComponent(slashId)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+
+    const policyResponse = await update('policydefinitions', { '@id': slashId, 'policy': {} })
+    const assetResponse = await update('assets', { '@id': slashId, 'dataAddress': { type: 'HttpData', baseUrl: 'https://provider.test' } })
+
+    expect(policyResponse.status).toBe(400)
+    await expect(policyResponse.json()).resolves.toMatchObject({ code: 'EDC_ID_NOT_ADDRESSABLE' })
+    expect(assetResponse.status).toBe(204)
+    expect(upstream.requests).toMatchObject([{ method: 'PUT', url: '/management/v3/assets', body: { '@id': slashId } }])
+  })
+
+  it('refuses an invalid percent-encoding in the path with 400', async () => {
+    const upstream = await startUpstreamServer(() => undefined)
+    const baseUrl = await startBffServer(upstream.port, [], { allowManagementWrites: true })
+
+    const deleteResponse = await fetch(`${baseUrl}/assets/abc%E0`, { method: 'DELETE' })
+    const proxyResponse = await fetch(`${baseUrl.replace(/\/default$/, '/%E0')}/status`)
+
+    for (const response of [deleteResponse, proxyResponse]) {
+      expect(response.status).toBe(400)
+      await expect(response.json()).resolves.toMatchObject({ code: 'INVALID_PATH_ENCODING' })
+    }
+    expect(upstream.requests).toHaveLength(0)
+  })
+
+  it('rejects management writes without a bearer token in JWT auth mode', async () => {
+    const upstream = await startUpstreamServer(() => undefined)
+    const baseUrl = await startBffServer(upstream.port, [], {
+      allowManagementWrites: true,
+      auth: { mode: 'jwt', jwksUrl: 'https://identity.test/certs', requiredRoles: ['edc-admin'] },
+    })
+
+    const deleteResponse = await fetch(`${baseUrl}/assets/asset-1`, { method: 'DELETE' })
+
+    expect(deleteResponse.status).toBe(401)
+    expect(upstream.requests).toHaveLength(0)
+  })
+
+  it('rejects management writes with a token without the required role in JWT auth mode', async () => {
+    const signingKey = await createTestKeyPair('kid-1')
+    const upstream = await startUpstreamServer(record => record.url === '/certs' ? { keys: [signingKey.jwk] } : undefined)
+    const baseUrl = await startBffServer(upstream.port, [], {
+      allowManagementWrites: true,
+      auth: { mode: 'jwt', jwksUrl: `http://127.0.0.1:${upstream.port}/certs`, requiredRoles: ['edc-admin'] },
+    })
+    const deleteAsset = async (claims: Record<string, unknown>) => fetch(`${baseUrl}/assets/asset-1`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${await createJwt(signingKey, claims)}` },
+    })
+
+    const withoutRoleResponse = await deleteAsset({ realm_access: { roles: ['edc-viewer'] } })
+    const withRoleResponse = await deleteAsset({ realm_access: { roles: ['edc-admin'] } })
+
+    expect(withoutRoleResponse.status).toBe(403)
+    await expect(withoutRoleResponse.json()).resolves.toMatchObject({ error: 'JWT role missing' })
+    expect(withRoleResponse.status).toBe(204)
+    expect(upstream.requests.filter(request => request.url !== '/certs')).toMatchObject([
+      { method: 'DELETE', url: '/management/v3/assets/asset-1' },
+    ])
   })
 
   it('serves DTR descriptor pages through the EDC flow without exposing secrets', async () => {
@@ -176,7 +652,9 @@ describe('EDC BFF server', () => {
           apiKey: 'TEST_API_KEY',
           apiKeyHeader: 'X-Api-Key',
           allowedCounterPartyAddresses: ['https://counterparty-dsp.test/api/v1/dsp'],
-          allowInsecureCounterPartyAddresses: false,
+          allowedDataPlaneAddresses: [`http://127.0.0.1:${upstreamPort}`],
+          allowInsecureCounterPartyAddresses: true, // The mock data plane listens on http://127.0.0.1
+          allowManagementWrites: false,
           requestTimeoutMs: 30_000,
           edrPollingAttempts: 30,
           edrPollingIntervalMs: 2000,
@@ -195,7 +673,6 @@ describe('EDC BFF server', () => {
       body: JSON.stringify({
         counterPartyId: 'TEST_PARTICIPANT_ID',
         counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
-        protocol: 'dataspace-protocol-http',
         limit: 10,
       }),
     })
@@ -286,7 +763,9 @@ describe('EDC BFF server', () => {
           apiKey: 'TEST_API_KEY',
           apiKeyHeader: 'X-Api-Key',
           allowedCounterPartyAddresses: ['https://counterparty-dsp.test/api/v1/dsp'],
-          allowInsecureCounterPartyAddresses: false,
+          allowedDataPlaneAddresses: [`http://127.0.0.1:${upstreamPort}`],
+          allowInsecureCounterPartyAddresses: true, // The mock data plane listens on http://127.0.0.1
+          allowManagementWrites: false,
           requestTimeoutMs: 30_000,
           edrPollingAttempts: 30,
           edrPollingIntervalMs: 2000,
@@ -304,7 +783,6 @@ describe('EDC BFF server', () => {
       body: JSON.stringify({
         counterPartyId: 'TEST_PARTICIPANT_ID',
         counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
-        protocol: 'dataspace-protocol-http',
         submodelDescriptor: {
           endpoints: [{
             protocolInformation: {
@@ -334,5 +812,94 @@ describe('EDC BFF server', () => {
     })
     expect(JSON.stringify(payload)).not.toContain('TEST_API_KEY')
     expect(JSON.stringify(payload)).not.toContain('TEST_SUBMODEL_AUTHORIZATION')
+  })
+
+  it('returns the messages of a refused EDC request as error details', async () => {
+    upstreamServer = createHttpServer((_request, response) => {
+      response.statusCode = 502
+      response.setHeader('Content-Type', 'application/json')
+      response.end(JSON.stringify([{
+        message: 'Counter-party returned 400 for the catalog request',
+        type: 'BadGateway',
+        path: null,
+        invalidValue: null,
+      }]))
+    })
+    await new Promise<void>(resolve => upstreamServer?.listen(0, resolve))
+    const upstreamAddress = upstreamServer.address()
+    const upstreamPort = typeof upstreamAddress === 'object' && upstreamAddress ? upstreamAddress.port : 0
+    const baseUrl = await startBffServer(upstreamPort, ['https://counterparty-dsp.test/api/v1/dsp'])
+
+    const response = await fetch(`${baseUrl}/submodels/fetch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        counterPartyId: 'TEST_PARTICIPANT_ID',
+        href: 'https://data-plane.test/submodel',
+        subprotocolBody: 'id=submodel-asset;dspEndpoint=https://counterparty-dsp.test/api/v1/dsp',
+      }),
+    })
+    const payload = await response.json()
+
+    expect(response.status).toBe(502)
+    expect(payload).toMatchObject({
+      error: 'Catalog request failed (502)',
+      code: 'CATALOG_REQUEST_FAILED',
+      details: 'Counter-party returned 400 for the catalog request',
+    })
+  })
+
+  it('pushes data larger than the limit of other requests through the data plane', async () => {
+    let upstreamPort = 0
+    const upstream = await startUpstreamServer(({ url }) => {
+      switch (url) {
+        case '/management/v3/catalog/request': {
+          return {
+            'dspace:participantId': 'TEST_PARTICIPANT_ID',
+            'dcat:dataset': { '@id': 'push-asset', 'odrl:hasPolicy': { '@id': 'offer-push' } },
+          }
+        }
+        case '/management/v3/edrs': {
+          return { '@id': 'push-negotiation-1' }
+        }
+        case '/management/v3/edrs/request': {
+          return [{ transferProcessId: 'push-transfer-1' }]
+        }
+        case '/management/v3/edrs/push-transfer-1/dataaddress?auto_refresh=true': {
+          return { endpoint: `http://127.0.0.1:${upstreamPort}/api/public`, authorization: 'TEST_PUSH_AUTHORIZATION' }
+        }
+        case '/api/public': {
+          return { received: true }
+        }
+        default: {
+          return { error: 'unexpected request' }
+        }
+      }
+    })
+    upstreamPort = upstream.port
+    const baseUrl = await startBffServer(upstream.port, ['https://counterparty-dsp.test/api/v1/dsp'], {
+      allowedDataPlaneAddresses: [`http://127.0.0.1:${upstreamPort}`],
+    })
+    const data = { id: 'urn:example:submodel:1', description: 'x'.repeat(100 * 1024) }
+
+    const response = await fetch(`${baseUrl}/data/push`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        counterPartyId: 'TEST_PARTICIPANT_ID',
+        counterPartyAddress: 'https://counterparty-dsp.test/api/v1/dsp',
+        assetId: 'push-asset',
+        data,
+      }),
+    })
+    const payload = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(payload).toMatchObject({
+      data: { received: true },
+      edc: { assetId: 'push-asset', transferProcessId: 'push-transfer-1' },
+    })
+    expect(upstream.requests.find(request => request.url === '/api/public')?.body).toEqual(data)
+    expect(JSON.stringify(payload)).not.toContain('TEST_PUSH_AUTHORIZATION')
   })
 })

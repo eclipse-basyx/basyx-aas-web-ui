@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   startAuthorizationTransaction,
   startLogoutTransaction,
@@ -102,6 +102,15 @@ vi.mock('@/composables/Auth/OAuth2Auth', () => ({
 }))
 
 describe('OAuth2 callback routing', () => {
+  // createAppRouter() loads every module page; preload them once so the first test does not pay for the cold imports.
+  beforeAll(async () => {
+    const modulePageLoaders = {
+      ...import.meta.glob('@/pages/modules/*.vue'),
+      ...import.meta.glob('@/pages/modules/*/index.vue'),
+    }
+    await Promise.all(Object.values(modulePageLoaders).map(loadModulePage => loadModulePage()))
+  }, 120_000)
+
   beforeEach(() => {
     vi.clearAllMocks()
     sessionStorage.clear()

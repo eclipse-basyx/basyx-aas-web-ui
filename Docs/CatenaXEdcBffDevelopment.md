@@ -48,9 +48,13 @@ CX_EDC_BFF_AUTH_MODE=none \
 CX_EDC_DEFAULT_MANAGEMENT_URL=http://localhost:8182/management \
 CX_EDC_DEFAULT_API_KEY=<EDC_MANAGEMENT_API_KEY> \
 CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES='*' \
+CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES='*' \
 CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES=true \
+CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES=true \
 pnpm bff:start
 ```
+
+`CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES=true` lets the Eclipse Dataspace Connector module create, update and delete assets, policies and contracts. Leave it out for a read-only BFF, e.g. for the CatenaXplorer alone.
 
 For watch mode, build and run the BFF together with:
 
@@ -87,14 +91,18 @@ For a real connector, replace:
 - `CX_EDC_DEFAULT_MANAGEMENT_URL` with your own consumer EDC Management API URL.
 - `CX_EDC_DEFAULT_API_KEY` with the local Management API key.
 - `CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES` with explicit provider DSP endpoint prefixes.
+- `CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES` with explicit provider data plane endpoint prefixes.
 
-Example allowlist:
+Example allowlists:
 
 ```bash
 CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES='https://counterparty-dsp.test/api/v1/dsp,https://other-counterparty-dsp.test/api/v1/dsp'
+CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES='https://counterparty-dataplane.test/api/public,https://other-counterparty-dataplane.test/api/public'
 ```
 
-The wildcard is convenient for local testing, but avoid it for shared or production-like environments.
+The data plane allowlist is separate because the provider names its data plane in the EDR, usually on another host or path than its DSP endpoint. Without it, the BFF reaches no data plane: loading DTR descriptors, Submodels and data, and sending data, fail with `403 DATA_PLANE_ADDRESS_NOT_ALLOWED`. The error names the refused origin. Redirects of a data plane are not followed: they fail with `502 DATA_PLANE_REDIRECT_REFUSED`, which names the origin of the data plane and of the redirect target.
+
+The wildcards are convenient for local testing, but avoid them for shared or production-like environments.
 
 If port `3001` is already in use, either stop the existing process or choose another BFF port.
 
@@ -118,6 +126,7 @@ CX_EDC_BFF_AUTH_MODE=none \
 CX_EDC_DEFAULT_MANAGEMENT_URL=http://localhost:8182/management \
 CX_EDC_DEFAULT_API_KEY=<EDC_MANAGEMENT_API_KEY> \
 CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES='*' \
+CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES='*' \
 CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES=true \
 pnpm bff:start
 ```
@@ -202,6 +211,7 @@ Then use the BFF command from step 2 with:
 ```bash
 CX_EDC_DEFAULT_MANAGEMENT_URL=http://localhost:8182/management
 CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES='*'
+CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES='*'
 CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES=true
 ```
 
@@ -222,7 +232,9 @@ CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES=true
 | `CX_EDC_DEFAULT_DSP_ENDPOINT` | Optional own DSP endpoint metadata. |
 | `CX_EDC_DEFAULT_DATA_PLANE_PROXY_URL` | Optional data plane proxy metadata for later phases. |
 | `CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES` | Comma-separated provider DSP endpoint prefixes or `*`. |
-| `CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES` | Allows `http://` counterparty addresses for local testing. |
+| `CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES` | Comma-separated provider data plane endpoint prefixes or `*`. No default: without it, no data plane is reached. |
+| `CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES` | Allows `http://` counterparty and data plane addresses for local testing. |
+| `CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES` | Set to `true` to allow creating, updating and deleting assets, policies and contracts through the default proxy. Default `false`, in every auth mode. |
 | `CX_EDC_REQUEST_TIMEOUT_MS` | Upstream EDC request timeout, default `30000`. |
 | `CX_EDC_EDR_POLLING_ATTEMPTS` | EDR polling attempts, default `30`. |
 | `CX_EDC_EDR_POLLING_INTERVAL_MS` | Delay between EDR polling attempts in milliseconds, default `2000`. |
@@ -236,7 +248,9 @@ For multiple proxy IDs, use `CX_EDC_PROXY_CONFIG_JSON` or `CX_EDC_PROXY_CONFIG_F
     "default": {
       "managementUrl": "http://localhost:8182/management",
       "apiKey": "<EDC_MANAGEMENT_API_KEY>",
-      "allowedCounterPartyAddresses": ["https://counterparty-dsp.test/api/v1/dsp"]
+      "allowedCounterPartyAddresses": ["https://counterparty-dsp.test/api/v1/dsp"],
+      "allowedDataPlaneAddresses": ["https://counterparty-dataplane.test/api/public"],
+      "allowManagementWrites": true
     },
     "partner-test": {
       "managementUrl": "https://consumer-test.example/management",
@@ -247,4 +261,48 @@ For multiple proxy IDs, use `CX_EDC_PROXY_CONFIG_JSON` or `CX_EDC_PROXY_CONFIG_F
 }
 ```
 
-The infrastructure `catenaX.edc.proxyId` selects one of these server-side proxy entries.
+The infrastructure `catenaX.edc.proxyId` selects one of these server-side proxy entries. The `CX_EDC_DEFAULT_*` variables that are set override the matching fields of the `default` entry, e.g. `CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES`; without a `default` entry they create one only together with `CX_EDC_DEFAULT_MANAGEMENT_URL` or `CX_EDC_DEFAULT_API_KEY`.
+
+### Management writes
+
+Reading the catalog, the DTR and Submodels works with every configured proxy. Creating, updating and deleting assets, policies and contracts is disabled by default, in every auth mode, because the BFF sends these requests with its own Management API key. Requests are refused with `403 EDC_MANAGEMENT_WRITES_DISABLED` until `allowManagementWrites` is `true` for the proxy (`CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES` for the default proxy). With `CX_EDC_BFF_AUTH_MODE=jwt`, every user with a valid token (and one of `CX_EDC_BFF_REQUIRED_ROLES`, if set) can then write. To keep browsing users read-only, give them a separate proxy without the flag. The Eclipse Dataspace Connector module reads `managementWritesAllowed` from the proxy status and offers create, edit and delete only when writes are allowed.
+
+Resource IDs containing `/` are refused with `400 EDC_ID_NOT_ADDRESSABLE`, also when creating a resource: Jetty in the EDC refuses an encoded `/` (`%2F`) in the request path, so such a resource could not be deleted (or, for a policy, updated) through the Management API.
+
+### Secrets in assets
+
+Asset queries never return the secrets of a data address, e.g. `authCode`, `oauth2:clientSecret` or the values of `header:*` properties, nor secret-like values in the private properties of an asset, also nested ones (e.g. `apiKey`, `password`, `token`). The BFF replaces them with `<redacted>`. Names of secrets in the EDC vault, such as `secretName` or `oauth2:clientSecretKey`, and URLs stay visible.
+
+When an asset is updated with `<redacted>` still in place, the BFF takes the stored secret from the EDC. In the data address it does so only while the rest of the data address is unchanged: a new `baseUrl`, any other changed property or a renamed, added or removed secret needs the secret to be entered again, so a stored secret never goes to a new target. In the private properties, which the EDC sends nowhere, it takes the stored secret at the same path. A placeholder the BFF can't resolve, also in a new asset, is refused with `400 EDC_REDACTED_SECRET`.
+
+## 6. Supported Tractus-X EDC Versions
+
+The BFF works with Tractus-X EDC **0.12.x and 0.13.x**. This was checked against the OpenAPI specs and the release
+branches of [tractusx-edc](https://github.com/eclipse-tractusx/tractusx-edc).
+
+| Endpoint used by the BFF | Available in |
+| --- | --- |
+| `/v3/assets`, `/v3/policydefinitions`, `/v3/contractdefinitions` | 0.8.0–0.13.0, deprecated in 0.13.0 |
+| `/v3/catalog/request` | 0.8.0–0.13.0, deprecated in 0.13.0 |
+| `/v3/edrs`, `/v3/edrs/request`, `/v3/edrs/{id}/dataaddress` | 0.8.0–0.13.0 |
+| `/v4alpha/connectordiscovery/dspversionparams` | from 0.11.0, deprecated in 0.13.0 |
+| `/v4alpha/connectordiscovery/connectors` | from 0.12.0, deprecated in 0.13.0 |
+
+Older versions miss parts of the connector discovery, and versions before 0.11 do not support DSP 2025-1 or the
+Catena-X 2025/9 policy context the policy templates use.
+
+**Partner connectors** have to support DSP 2025-1 as well, i.e. tractusx-edc 0.11 or later (0.12.3 or later is
+recommended, as it fixes a security issue). The BFF sends all catalog and contract requests with
+`dataspace-protocol-http:2025-1` and adds the version path `/2025-1` to the path of a partner's DSP address, e.g.
+`https://partner.test/api/v1/dsp?tenant=a` becomes `https://partner.test/api/v1/dsp/2025-1?tenant=a`. Partners that
+only speak DSP 0.8 can't be reached. Between 0.12.x and 0.13.0 the request bodies of all endpoints
+above are the same, and the policy validation for `/v3/policydefinitions` is unchanged.
+
+0.13.0 also serves the connector discovery under `/v3/connectordiscovery` and marks `/v4alpha` as deprecated, to be
+removed in a future release. `/v4alpha` still works on 0.13.0 and on the tractusx-edc `main` branch (0.14.0-SNAPSHOT),
+so the BFF keeps using it.
+
+The BFF therefore has no setting for the EDC version. A per-proxy version setting was tried and dropped, because it had
+no effect yet. Add one when a supported version needs different paths or request bodies (for example once `/v4alpha`
+is removed), or when the UI needs the version (for example for version-specific policy templates). Accept unknown
+versions with a warning then, instead of refusing to start, so that an EDC upgrade does not stop the BFF.

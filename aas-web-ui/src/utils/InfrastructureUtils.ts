@@ -318,6 +318,43 @@ export function usesAasEnvironment (
   return template === 'mono-repo' || template === 'mono-all'
 }
 
+interface RequiredEndpointFields {
+  aasSource: InfrastructureEndpointFieldKey[]
+  submodelImport: InfrastructureEndpointFieldKey[]
+}
+
+/** Endpoint fields per template that need a URL before an infrastructure can serve as AAS source or Submodel import target; none means it can't */
+const REQUIRED_ENDPOINT_FIELDS: Record<InfrastructureTemplate, RequiredEndpointFields> = {
+  'full': { aasSource: ['AASRepo', 'SubmodelRepo'], submodelImport: ['SubmodelRepo'] },
+  'identifiable': { aasSource: ['AASRepo'], submodelImport: [] },
+  'mono-repo': { aasSource: ['AASEnvironment'], submodelImport: ['AASEnvironment'] },
+  'mono-all': { aasSource: ['AASEnvironment'], submodelImport: ['AASEnvironment'] },
+  'catena-x': { aasSource: [], submodelImport: [] },
+}
+
+/**
+ * Whether AAS and their submodels can be read from the infrastructure's repositories:
+ * AAS and Submodel Repository (full), AAS Repository (identifiable) or AAS Environment (mono-repo, mono-all).
+ */
+export function isAasSourceInfrastructure (infrastructure: InfrastructureConfig): boolean {
+  return hasEndpointFieldUrls(infrastructure, REQUIRED_ENDPOINT_FIELDS[getInfrastructureTemplate(infrastructure)].aasSource)
+}
+
+/**
+ * Whether a Submodel can be posted to the infrastructure's Submodel Repository:
+ * Submodel Repository (full) or AAS Environment (mono-repo, mono-all).
+ */
+export function isSubmodelImportInfrastructure (infrastructure: InfrastructureConfig): boolean {
+  return hasEndpointFieldUrls(infrastructure, REQUIRED_ENDPOINT_FIELDS[getInfrastructureTemplate(infrastructure)].submodelImport)
+}
+
+function hasEndpointFieldUrls (infrastructure: InfrastructureConfig, fieldKeys: InfrastructureEndpointFieldKey[]): boolean {
+  return fieldKeys.length > 0 && fieldKeys.every(fieldKey => {
+    const field = getEndpointFieldByKey(infrastructure, fieldKey)
+    return !!field && getEndpointFieldValue(infrastructure.components, field) !== ''
+  })
+}
+
 export function getDefaultAasUploadMode (
   templateOrInfra?: InfrastructureTemplate | Pick<InfrastructureConfig, 'template'> | null,
 ): InfrastructureAasUploadMode {
@@ -333,6 +370,13 @@ export function getInfrastructureSummary (infra: InfrastructureConfig): string {
     field => getEndpointFieldValue(infra.components, field).trim() !== '',
   ).length
   return `${configuredCount} of ${endpointFields.length} endpoints configured`
+}
+
+/**
+ * Checks whether an infrastructure is secured by OAuth2 and has no access token, e.g. before the user logged in
+ */
+export function isLoggedOutOfOAuth2 (infra: InfrastructureConfig | null | undefined): boolean {
+  return infra?.auth?.securityType === 'OAuth2' && !infra.token?.accessToken
 }
 
 /**

@@ -424,6 +424,20 @@ export function extractVersionRevision (semanticId: string): { version: string, 
 }
 
 /**
+ * Joins a version and its revision for display, e.g. `2` and `1` to `2.1`.
+ *
+ * @param {string | null} [version] - The version, e.g. from `administration` or `extractVersionRevision()`.
+ * @param {string | null} [revision] - The revision, if any.
+ * @returns {string} The version followed by `.<revision>`, or an empty string without a version.
+ */
+export function versionRevisionToDisplay (version?: string | null, revision?: string | null): string {
+  if (!version) {
+    return ''
+  }
+  return revision ? `${version}.${revision}` : version
+}
+
+/**
  * Retrieves the value of the first key in the `semanticId` of a given element.
  *
  * @param {Record<string, unknown>} element - The element containing the `semanticId`.

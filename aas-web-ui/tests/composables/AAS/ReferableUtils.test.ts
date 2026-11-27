@@ -5,7 +5,7 @@ import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
 const pinia = createPinia()
 setActivePinia(pinia) // Activate Pinia for the test environment
 
-const { checkIdShort, descriptionToDisplay, nameToDisplay } = useReferableUtils()
+const { checkIdShort, descriptionToDisplay, nameToDisplay, referableMatchesSearch } = useReferableUtils()
 
 describe('ReferableUtils.ts; Tests for \'nameToDisplay()\'', () => {
   // Define test data for nameToDisplay()
@@ -1166,4 +1166,26 @@ describe('ReferableUtils.ts; Tests for \'checkIdShort()\'', () => {
       expect(checkIdShort(referable, idShort, startsWith, strict)).toStrictEqual(result)
     })
   }
+})
+
+describe('ReferableUtils.ts; Tests for \'referableMatchesSearch()\'', () => {
+  const submodel = {
+    id: 'https://example.com/ids/sm/Nameplate',
+    idShort: 'DigitalNameplate',
+    displayName: [{ language: 'en', text: 'Type Plate' }],
+    description: [{ language: 'en', text: 'Manufacturer data' }],
+  }
+
+  it('finds the search text in the ID, idShort, display name or description, ignoring case and whitespace', () => {
+    expect(referableMatchesSearch(submodel, 'ids/sm')).toBe(true)
+    expect(referableMatchesSearch(submodel, 'digitalname')).toBe(true)
+    expect(referableMatchesSearch(submodel, ' TYPE PLATE ')).toBe(true)
+    expect(referableMatchesSearch(submodel, 'manufacturer')).toBe(true)
+    expect(referableMatchesSearch(submodel, 'Battery')).toBe(false)
+  })
+
+  it('matches every Referable for an empty search, also one without ID or idShort', () => {
+    expect(referableMatchesSearch({}, '  ')).toBe(true)
+    expect(referableMatchesSearch({}, 'foo')).toBe(false)
+  })
 })

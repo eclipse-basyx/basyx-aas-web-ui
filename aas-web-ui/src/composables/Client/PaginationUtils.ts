@@ -8,6 +8,7 @@ export interface PaginationPageResult<T> {
   nextCursor?: string
   hasMore: boolean
   pagingMetadata?: Record<string, any>
+  failure?: { status?: number } // Set when the request failed, to tell it apart from an empty page
 }
 
 export function normalizeLimit (limit?: number): number | undefined {

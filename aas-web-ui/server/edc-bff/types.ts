@@ -9,7 +9,9 @@ export interface EdcProxyConfig {
   dspEndpoint?: string
   dataPlaneProxyUrl?: string
   allowedCounterPartyAddresses: string[]
+  allowedDataPlaneAddresses: string[]
   allowInsecureCounterPartyAddresses: boolean
+  allowManagementWrites: boolean
   requestTimeoutMs: number
   edrPollingAttempts: number
   edrPollingIntervalMs: number
@@ -24,7 +26,9 @@ export interface RedactedEdcProxyConfig {
   dspEndpointConfigured: boolean
   dataPlaneProxyUrlConfigured: boolean
   allowedCounterPartyAddressCount: number
+  allowedDataPlaneAddressCount: number
   allowInsecureCounterPartyAddresses: boolean
+  managementWritesAllowed: boolean
 }
 
 export interface EdcBffAuthConfig {
@@ -50,14 +54,27 @@ export interface EdcDiscoveryRequest {
 export interface EdcCatalogRequest {
   counterPartyId?: string
   counterPartyAddress?: string
-  protocol?: string
-  querySpec?: Record<string, unknown>
+  querySpec?: EdcQuerySpec
+  assetId?: string // Requests only the dataset of this asset, instead of the `querySpec`
+}
+
+export interface EdcQuerySpec extends Record<string, unknown> {
+  '@context'?: string | Record<string, unknown> | Array<string | Record<string, unknown>>
+  '@type'?: string
+  'offset'?: number
+  'limit'?: number
+  'sortField'?: string
+  'sortOrder'?: 'ASC' | 'DESC'
+  'filterExpression'?: Record<string, unknown> | Array<Record<string, unknown>>
+}
+
+export interface EdcQuerySpecRequest {
+  querySpec?: EdcQuerySpec
 }
 
 export interface EdcDtrDescriptorRequest {
   counterPartyId?: string
   counterPartyAddress?: string
-  protocol?: string
   transferProcessId?: string
   assetIds?: Array<{ name?: string, value?: string }>
   cursor?: string
@@ -67,15 +84,23 @@ export interface EdcDtrDescriptorRequest {
 export interface EdcDtrDescriptorByIdRequest {
   counterPartyId?: string
   counterPartyAddress?: string
-  protocol?: string
   transferProcessId?: string
   descriptorId?: string
+}
+
+export interface EdcDataFetchRequest {
+  counterPartyId?: string
+  counterPartyAddress?: string
+  assetId?: string
+}
+
+export interface EdcDataPushRequest extends EdcDataFetchRequest {
+  data?: unknown
 }
 
 export interface EdcSubmodelFetchRequest {
   counterPartyId?: string
   counterPartyAddress?: string
-  protocol?: string
   transferProcessId?: string
   submodelDescriptor?: unknown
   href?: string

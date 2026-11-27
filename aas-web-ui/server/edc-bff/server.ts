@@ -1,26 +1,34 @@
+import type { EdcTransferResult } from './edcRequests.js'
 import type {
   EdcBffRuntimeConfig,
   EdcCatalogRequest,
   EdcDiscoveryRequest,
-  EdcDtrDescriptorByIdRequest,
-  EdcDtrDescriptorRequest,
   EdcProxyConfig,
-  EdcSubmodelFetchRequest,
+  EdcQuerySpecRequest,
 } from './types.js'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
 import { pathToFileURL } from 'node:url'
+import {
+  assertNoSecretPlaceholders,
+  hasSecretPlaceholders,
+  redactAssetSecrets,
+  restoreAssetSecrets,
+} from './assetSecrets.js'
 import { authorizeRequest, createAuthError } from './auth.js'
 import { loadRuntimeConfig, redactProxyConfig } from './config.js'
 import {
   buildCatalogRequestBody,
   buildConnectorDiscoveryRequestBody,
   buildDspVersionParamsRequestBody,
-  createHttpError,
+  buildQuerySpecRequestBody,
+  fetchData,
   fetchDtrShellDescriptorById,
   fetchDtrShellDescriptors,
   fetchSubmodel,
-  forwardJsonToEdc,
+  forwardToEdc,
+  pushData,
 } from './edcRequests.js'
+import { createHttpError } from './httpErrors.js'
 
 const proxyUrls = getProxyUrls()
 if (proxyUrls.length > 0) {
@@ -84,6 +92,19 @@ function redactCredentials (url: string): string {
 
 const apiBasePath = '/api/catena-x/edc'
 const maxBodyBytes = 64 * 1024
+const maxPushBodyBytes = 16 * 1024 * 1024 // Pushed AAS or Submodels may be large
+/**
+ * How the BFF handles each EDC management resource:
+ * - `hasSecrets`: the asset keeps secrets in its data address and private properties, see `assetSecrets.ts`
+ * - `updatesByPathId`: the EDC updates policies by the ID in the path, assets and contracts by the `@id` in the body
+ */
+const managementResources = {
+  assets: { hasSecrets: true, updatesByPathId: false },
+  contractdefinitions: { hasSecrets: false, updatesByPathId: false },
+  policydefinitions: { hasSecrets: false, updatesByPathId: true },
+} as const
+
+type EdcManagementResource = keyof typeof managementResources
 
 export function createEdcBffServer (config: EdcBffRuntimeConfig) {
   return createServer(async (request, response) => {
@@ -149,22 +170,97 @@ async function handleRequest (
     return
   }
 
+  for (const resource of Object.keys(managementResources) as EdcManagementResource[]) {
+    if (await handleManagementResourceRoute(request, response, proxy, route.action, resource)) {
+      return
+    }
+  }
+
   if (route.action === 'dtr/shell-descriptors' && request.method === 'POST') {
-    await handleDtrShellDescriptorsRequest(request, response, proxy)
+    await handleTransferRequest(request, response, proxy, fetchDtrShellDescriptors)
     return
   }
 
   if (route.action === 'dtr/shell-descriptors/by-id' && request.method === 'POST') {
-    await handleDtrShellDescriptorByIdRequest(request, response, proxy)
+    await handleTransferRequest(request, response, proxy, fetchDtrShellDescriptorById)
     return
   }
 
   if (route.action === 'submodels/fetch' && request.method === 'POST') {
-    await handleSubmodelFetchRequest(request, response, proxy)
+    await handleTransferRequest(request, response, proxy, fetchSubmodel)
+    return
+  }
+
+  if (route.action === 'data/fetch' && request.method === 'POST') {
+    await handleTransferRequest(request, response, proxy, fetchData)
+    return
+  }
+
+  if (route.action === 'data/push' && request.method === 'POST') {
+    await handleTransferRequest(request, response, proxy, pushData, maxPushBodyBytes)
     return
   }
 
   throw createHttpError('Route not found', 404)
+}
+
+async function handleManagementResourceRoute (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+  action: string,
+  resource: EdcManagementResource,
+): Promise<boolean> {
+  const { hasSecrets } = managementResources[resource]
+  if (request.method === 'POST') {
+    if (action === `${resource}/request`) {
+      await handleQuerySpecRequest(request, response, proxy, `/v3/${resource}/request`, hasSecrets)
+      return true
+    }
+    if (action === resource) {
+      assertManagementWritesAllowed(proxy)
+      const prepareBody = async (body: Record<string, unknown>) => {
+        if (typeof body['@id'] === 'string') {
+          assertIdAddressable(body['@id'], 'It could not be updated or deleted later.')
+        }
+        if (hasSecrets) {
+          assertNoSecretPlaceholders(body)
+        }
+        return body
+      }
+      await handleManagementWriteRequest(request, response, proxy, `/v3/${resource}`, 'POST', prepareBody)
+      return true
+    }
+  }
+
+  if (!action.startsWith(`${resource}/`)) {
+    return false
+  }
+
+  if (request.method === 'PUT') {
+    assertManagementWritesAllowed(proxy)
+    await handleUpdateRequest(request, response, proxy, action, resource)
+    return true
+  }
+  if (request.method === 'DELETE') {
+    assertManagementWritesAllowed(proxy)
+    await handleDeleteRequest(response, proxy, action, resource)
+    return true
+  }
+
+  return false
+}
+
+/** Writes use the server's Management API key, so they need an explicit opt-in per proxy, also in auth mode `none`. */
+function assertManagementWritesAllowed (proxy: EdcProxyConfig): void {
+  if (!proxy.allowManagementWrites) {
+    throw createHttpError(
+      'EDC management writes are disabled for this proxy',
+      403,
+      `Set allowManagementWrites to true for the EDC proxy "${proxy.id}" to create, update or delete assets, policies and contracts.`,
+      'EDC_MANAGEMENT_WRITES_DISABLED',
+    )
+  }
 }
 
 async function handleDiscoveryRequest (
@@ -177,8 +273,9 @@ async function handleDiscoveryRequest (
   const mode = body.mode ?? (body.counterPartyAddress ? 'dspversionparams' : 'connectors')
 
   if (mode === 'connectors') {
-    const edcResponse = await forwardJsonToEdc(
+    const edcResponse = await forwardToEdc(
       proxy,
+      'POST',
       '/v4alpha/connectordiscovery/connectors',
       buildConnectorDiscoveryRequestBody(body),
     )
@@ -187,8 +284,9 @@ async function handleDiscoveryRequest (
   }
 
   if (mode === 'dspversionparams') {
-    const edcResponse = await forwardJsonToEdc(
+    const edcResponse = await forwardToEdc(
       proxy,
+      'POST',
       '/v4alpha/connectordiscovery/dspversionparams',
       buildDspVersionParamsRequestBody(proxy, body),
     )
@@ -206,50 +304,168 @@ async function handleCatalogRequest (
 ): Promise<void> {
   assertProxyConfigured(proxy)
   const body = await readJsonBody<EdcCatalogRequest>(request)
-  const edcResponse = await forwardJsonToEdc(
+  const edcResponse = await forwardToEdc(
     proxy,
+    'POST',
     '/v3/catalog/request',
     buildCatalogRequestBody(proxy, body),
   )
   writeJsonResponse(response, edcResponse.status, edcResponse.data)
 }
 
-async function handleDtrShellDescriptorsRequest (
+async function handleQuerySpecRequest (
   request: IncomingMessage,
   response: ServerResponse,
   proxy: EdcProxyConfig,
+  path: string,
+  redactSecrets = false, // Secrets in the data addresses and private properties of assets, see `assetSecrets.ts`
 ): Promise<void> {
   assertProxyConfigured(proxy)
-  const body = await readJsonBody<EdcDtrDescriptorRequest>(request)
-  const result = await fetchDtrShellDescriptors(proxy, body)
-  writeJsonResponse(response, 200, {
-    data: result.data,
-    edc: result.metadata,
-  })
+  const body = await readJsonBody<EdcQuerySpecRequest>(request)
+  const edcResponse = await forwardToEdc(proxy, 'POST', path, buildQuerySpecRequestBody(body))
+  writeJsonResponse(response, edcResponse.status, redactSecrets ? redactAssetSecrets(edcResponse.data) : edcResponse.data)
 }
 
-async function handleDtrShellDescriptorByIdRequest (
+/** Forwards the JSON body of a create (POST) or update (PUT) to the EDC Management API and answers with its response */
+async function handleManagementWriteRequest (
   request: IncomingMessage,
   response: ServerResponse,
   proxy: EdcProxyConfig,
+  path: string,
+  method: 'POST' | 'PUT',
+  prepareBody?: (body: Record<string, unknown>) => Promise<Record<string, unknown>>,
 ): Promise<void> {
   assertProxyConfigured(proxy)
-  const body = await readJsonBody<EdcDtrDescriptorByIdRequest>(request)
-  const result = await fetchDtrShellDescriptorById(proxy, body)
-  writeJsonResponse(response, 200, {
-    data: result.data,
-    edc: result.metadata,
-  })
+  const body = await readJsonBody<Record<string, unknown>>(request)
+  const edcResponse = await forwardToEdc(proxy, method, path, prepareBody ? await prepareBody(body) : body)
+  writeJsonResponse(response, edcResponse.status, edcResponse.data)
 }
 
-async function handleSubmodelFetchRequest (
+/** Puts the stored secrets of the asset back in place of the placeholders of the query response. */
+async function restoreStoredAssetSecrets (
+  proxy: EdcProxyConfig,
+  asset: Record<string, unknown>,
+  assetId: string,
+): Promise<Record<string, unknown>> {
+  if (!hasSecretPlaceholders(asset)) {
+    return asset
+  }
+
+  assertIdAddressable(assetId, 'The stored secrets cannot be loaded, so enter them again instead of "<redacted>".')
+  const storedAsset = await forwardToEdc(proxy, 'GET', `/v3/assets/${encodeURIComponent(assetId)}`)
+  return restoreAssetSecrets(asset, storedAsset.status === 200 ? storedAsset.data : undefined)
+}
+
+async function handleUpdateRequest (
   request: IncomingMessage,
   response: ServerResponse,
   proxy: EdcProxyConfig,
+  action: string,
+  resource: EdcManagementResource,
+): Promise<void> {
+  const resourceId = getResourceIdFromPath(action, resource)
+  const { hasSecrets, updatesByPathId } = managementResources[resource]
+  if (updatesByPathId) {
+    assertIdAddressable(resourceId)
+  }
+  const path = updatesByPathId
+    ? `/v3/${resource}/${encodeURIComponent(resourceId)}`
+    : `/v3/${resource}`
+  const prepareBody = async (body: Record<string, unknown>) => {
+    assertBodyIdMatchesPath(body, resourceId)
+    return hasSecrets ? restoreStoredAssetSecrets(proxy, body, resourceId) : body
+  }
+  await handleManagementWriteRequest(request, response, proxy, path, 'PUT', prepareBody)
+}
+
+/** Reads the resource ID of a route such as `assets/<id>`, refusing a missing one with 400. */
+function getResourceIdFromPath (action: string, resource: EdcManagementResource): string {
+  const resourceId = decodePathSegment(action.slice(resource.length + 1)).trim()
+  if (!resourceId) {
+    throw createHttpError(`Missing EDC ${resource} ID`, 400)
+  }
+  return resourceId
+}
+
+/**
+ * Decodes a part of the request path, refusing an invalid percent-encoding such as `abc%E0` with 400.
+ */
+function decodePathSegment (segment: string): string {
+  try {
+    return decodeURIComponent(segment)
+  } catch {
+    throw createHttpError('Invalid percent-encoding in the request path', 400, undefined, 'INVALID_PATH_ENCODING')
+  }
+}
+
+/**
+ * Jetty in the EDC refuses an encoded "/" (`%2F`) in the path ("Ambiguous URI path separator"),
+ * so a resource whose ID contains "/" cannot be read, updated by path or deleted through the Management API.
+ */
+function assertIdAddressable (resourceId: string, consequence = 'The EDC does not accept it in the request path.'): void {
+  if (resourceId.includes('/')) {
+    throw createHttpError(
+      'EDC resource ID contains "/"',
+      400,
+      `The ID "${resourceId}" contains "/". ${consequence}`,
+      'EDC_ID_NOT_ADDRESSABLE',
+    )
+  }
+}
+
+/**
+ * The EDC updates assets and contract definitions by the `@id` in the body, not by the ID in the path,
+ * so both have to name the same resource.
+ */
+function assertBodyIdMatchesPath (body: Record<string, unknown>, pathId: string): void {
+  const bodyId = body['@id']
+  if (typeof bodyId !== 'string' || bodyId === '') {
+    throw createHttpError(
+      'Missing @id in the EDC resource',
+      400,
+      `The body has to contain "@id": "${pathId}".`,
+      'EDC_ID_MISSING',
+    )
+  }
+  if (bodyId !== pathId) {
+    throw createHttpError(
+      '@id differs from the ID in the path',
+      400,
+      `The body names "${bodyId}", the path "${pathId}". An update cannot change the ID.`,
+      'EDC_ID_MISMATCH',
+    )
+  }
+}
+
+async function handleDeleteRequest (
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+  action: string,
+  resource: EdcManagementResource,
 ): Promise<void> {
   assertProxyConfigured(proxy)
-  const body = await readJsonBody<EdcSubmodelFetchRequest>(request)
-  const result = await fetchSubmodel(proxy, body)
+  const resourceId = getResourceIdFromPath(action, resource)
+  assertIdAddressable(resourceId)
+
+  const edcResponse = await forwardToEdc(
+    proxy,
+    'DELETE',
+    `/v3/${resource}/${encodeURIComponent(resourceId)}`,
+  )
+  writeJsonResponse(response, edcResponse.status, edcResponse.data)
+}
+
+/** Runs a data transfer, e.g. fetching a Submodel, with the JSON body of a POST and answers with its data and EDC metadata */
+async function handleTransferRequest<TBody> (
+  request: IncomingMessage,
+  response: ServerResponse,
+  proxy: EdcProxyConfig,
+  runEdcRequest: (proxy: EdcProxyConfig, body: TBody) => Promise<EdcTransferResult>,
+  maxBytes = maxBodyBytes,
+): Promise<void> {
+  assertProxyConfigured(proxy)
+  const body = await readJsonBody<TBody>(request, maxBytes)
+  const result = await runEdcRequest(proxy, body)
   writeJsonResponse(response, 200, {
     data: result.data,
     edc: result.metadata,
@@ -263,7 +479,7 @@ function parseRoute (request: IncomingMessage): { proxyId: string, action: strin
   }
 
   const routeParts = url.pathname.slice(apiBasePath.length + 1).split('/').filter(Boolean)
-  const proxyId = decodeURIComponent(routeParts[0] ?? '')
+  const proxyId = decodePathSegment(routeParts[0] ?? '')
   if (!proxyId) {
     throw createHttpError('Missing EDC proxy ID', 400)
   }
@@ -280,14 +496,14 @@ function assertProxyConfigured (proxy: EdcProxyConfig): void {
   }
 }
 
-async function readJsonBody<T> (request: IncomingMessage): Promise<T> {
+async function readJsonBody<T> (request: IncomingMessage, maxBytes = maxBodyBytes): Promise<T> {
   const chunks: Buffer[] = []
   let totalBytes = 0
 
   for await (const chunk of request) {
     const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
     totalBytes += buffer.length
-    if (totalBytes > maxBodyBytes) {
+    if (totalBytes > maxBytes) {
       throw createHttpError('Request body is too large', 413)
     }
     chunks.push(buffer)
@@ -304,10 +520,12 @@ async function readJsonBody<T> (request: IncomingMessage): Promise<T> {
 function handleError (response: ServerResponse, request: IncomingMessage, error: unknown): void {
   const status = getErrorStatus(error)
   const message = getErrorMessage(error)
+  const details = (error as { details?: unknown }).details
   writeJsonResponse(response, status, {
     error: message,
     status,
     code: getErrorCode(error, message, status),
+    ...(typeof details === 'string' && details !== '' ? { details } : {}),
     method: request.method ?? 'UNKNOWN',
     path: getRequestPath(request),
   })

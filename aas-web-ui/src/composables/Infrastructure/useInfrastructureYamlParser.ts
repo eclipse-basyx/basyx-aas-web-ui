@@ -308,16 +308,19 @@ export function useInfrastructureYamlParser (): {
       }
     }
 
+    // `components` is optional in YAML (e.g. pure Catena-X EDC configs only need `catenaX`).
+    const yamlComponents = yamlConfig.components ?? {}
+
     // Map YAML component configurations to internal structure
     for (const [yamlKey, internalKey] of Object.entries(componentKeyMap)) {
-      const yamlComponent = yamlConfig.components[yamlKey as keyof typeof yamlConfig.components]
+      const yamlComponent = yamlComponents[yamlKey as keyof typeof yamlComponents]
       applyYamlComponentToKeys(yamlComponent, [internalKey])
     }
 
     // Map grouped endpoint configurations for templates such as mono-repo and Catena-X.
     for (const endpointField of getEndpointFieldsForTemplate(template)) {
-      const yamlComponent = yamlConfig.components[
-        endpointField.yamlKey as keyof typeof yamlConfig.components
+      const yamlComponent = yamlComponents[
+        endpointField.yamlKey as keyof typeof yamlComponents
       ]
       applyYamlComponentToKeys(yamlComponent, endpointField.componentKeys)
     }

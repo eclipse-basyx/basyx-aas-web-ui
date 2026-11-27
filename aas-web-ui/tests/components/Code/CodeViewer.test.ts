@@ -5,7 +5,7 @@ import CodeViewer from '@/components/Code/CodeViewer.vue'
 import { hotkeyStub } from '../../helpers/vuetifyStubs'
 
 const editor = defineComponent({
-  props: { modelValue: String, readOnly: Boolean, options: Object },
+  props: { modelValue: String, readOnly: Boolean, error: Boolean, height: String, options: Object },
   setup (_props, { expose }) {
     expose({ find: vi.fn() })
   },
@@ -60,12 +60,45 @@ describe('CodeViewer controls', () => {
     wrapper.unmount()
   })
 
+  it('lets an editable text be edited, also when it is empty', async () => {
+    const wrapper = mount(CodeViewer, { props: { text: '', readOnly: false, invalid: true }, global: { stubs } })
+    const code = wrapper.getComponent(editor)
+    expect(code.props('readOnly')).toBe(false)
+    expect(code.props('error')).toBe(true)
+    expect(wrapper.find('button[aria-label="Copy to clipboard"]').exists()).toBe(true)
+
+    code.vm.$emit('update:modelValue', '{"a":1}')
+    expect(wrapper.emitted('update:text')).toEqual([['{"a":1}']])
+    wrapper.unmount()
+  })
+
   it('reports clipboard failures', async () => {
     vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockRejectedValue(new Error('denied')) } })
     const wrapper = mount(CodeViewer, { props: { text: '{}' }, global: { stubs } })
     await wrapper.get('button[aria-label="Copy to clipboard"]').trigger('click')
     await flushPromises()
     expect(wrapper.get('[role="alert"]').text()).toContain('Unable to copy')
+    wrapper.unmount()
+  })
+
+  it('passes the fixed height to the editor unless it fills its parent', () => {
+    const wrapper = mount(CodeViewer, { props: { text: '{}', height: '300px' }, global: { stubs } })
+    const code = wrapper.getComponent(editor)
+    expect(code.props('height')).toBe('300px')
+    expect(code.classes()).not.toContain('flex-1-1-0')
+    wrapper.unmount()
+  })
+
+  it('lets only the editor grow when it fills its parent', async () => {
+    vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockRejectedValue(new Error('denied')) } })
+    const wrapper = mount(CodeViewer, { props: { text: '{}', height: '300px', fill: true }, global: { stubs } })
+    await wrapper.get('button[aria-label="Copy to clipboard"]').trigger('click')
+    await flushPromises()
+
+    const code = wrapper.getComponent(editor)
+    expect(code.props('height')).toBe('100%')
+    expect(code.classes()).toContain('flex-1-1-0')
+    expect(wrapper.get('[role="alert"]').classes()).not.toContain('flex-1-1-0')
     wrapper.unmount()
   })
 })

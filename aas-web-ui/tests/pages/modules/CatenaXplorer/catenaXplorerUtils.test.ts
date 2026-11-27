@@ -64,14 +64,13 @@ describe('catenaXplorerUtils.ts', () => {
       'https://ui.example/api/catena-x/edc/default/dtr/shell-descriptors',
       'BPNL0001',
       'https://partner.example/api/v1/dsp',
-      'dataspace-protocol-http',
       'manufacturerPartId',
       'PART-001',
       'transfer-123',
     )).toBe(
       'curl -X POST \'https://ui.example/api/catena-x/edc/default/dtr/shell-descriptors\' \\\n'
       + '  -H \'Content-Type: application/json\' \\\n'
-      + '  --data-raw \'{"counterPartyId":"BPNL0001","counterPartyAddress":"https://partner.example/api/v1/dsp","protocol":"dataspace-protocol-http","limit":100,"assetIds":[{"name":"manufacturerPartId","value":"PART-001"}],"transferProcessId":"transfer-123"}\'',
+      + '  --data-raw \'{"counterPartyId":"BPNL0001","counterPartyAddress":"https://partner.example/api/v1/dsp","limit":100,"assetIds":[{"name":"manufacturerPartId","value":"PART-001"}],"transferProcessId":"transfer-123"}\'',
     )
   })
 
@@ -87,7 +86,6 @@ describe('catenaXplorerUtils.ts', () => {
       'https://ui.example/api/catena-x/edc/default/dtr/shell-descriptors',
       'BPNL0001',
       'https://partner.example/dsp',
-      'dataspace-protocol-http',
       'manufacturerPartId',
       'PART-001',
       undefined,

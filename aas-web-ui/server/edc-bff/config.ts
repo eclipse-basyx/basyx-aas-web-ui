@@ -19,7 +19,9 @@ interface RawProxyConfig {
   dspEndpoint?: unknown
   dataPlaneProxyUrl?: unknown
   allowedCounterPartyAddresses?: unknown
+  allowedDataPlaneAddresses?: unknown
   allowInsecureCounterPartyAddresses?: unknown
+  allowManagementWrites?: unknown
   requestTimeoutMs?: unknown
   edrPollingAttempts?: unknown
   edrPollingIntervalMs?: unknown
@@ -80,10 +82,12 @@ export function loadProxyConfigMap (
     rawProxies.set(id, rawProxy)
   }
 
+  // The CX_EDC_DEFAULT_* variables override the default proxy of the JSON config, or create it with a Management URL or API key
   const shorthandProxy = readShorthandProxyConfig(env)
-  if (shorthandProxy) {
+  const configuredDefaultProxy = rawProxies.get(defaultProxyId)
+  if (configuredDefaultProxy || shorthandProxy.managementUrl || shorthandProxy.apiKey) {
     rawProxies.set(defaultProxyId, {
-      ...rawProxies.get(defaultProxyId),
+      ...configuredDefaultProxy,
       ...shorthandProxy,
     })
   }
@@ -109,25 +113,39 @@ export function redactProxyConfig (proxy: EdcProxyConfig | undefined, id: string
     dspEndpointConfigured: Boolean(proxy?.dspEndpoint),
     dataPlaneProxyUrlConfigured: Boolean(proxy?.dataPlaneProxyUrl),
     allowedCounterPartyAddressCount: proxy?.allowedCounterPartyAddresses.length ?? 0,
+    allowedDataPlaneAddressCount: proxy?.allowedDataPlaneAddresses.length ?? 0,
     allowInsecureCounterPartyAddresses: proxy?.allowInsecureCounterPartyAddresses ?? false,
+    managementWritesAllowed: proxy?.allowManagementWrites ?? false,
   }
 }
 
 export function isCounterPartyAddressAllowed (proxy: EdcProxyConfig, address: string): boolean {
+  return isAddressAllowed(address, proxy.allowedCounterPartyAddresses, proxy.allowInsecureCounterPartyAddresses)
+}
+
+/**
+ * Whether the BFF may call the data plane endpoint of an EDR. The provider chooses this endpoint,
+ * so it needs an allowlist of its own: the DSP allowlist doesn't cover it.
+ */
+export function isDataPlaneAddressAllowed (proxy: EdcProxyConfig, address: string): boolean {
+  return isAddressAllowed(address, proxy.allowedDataPlaneAddresses, proxy.allowInsecureCounterPartyAddresses)
+}
+
+function isAddressAllowed (address: string, allowedAddresses: string[], allowInsecure: boolean): boolean {
   const normalizedAddress = normalizeUrl(address)
   if (!normalizedAddress) {
     return false
   }
 
-  if (normalizedAddress.protocol !== 'https:' && !proxy.allowInsecureCounterPartyAddresses) {
+  if (normalizedAddress.protocol !== 'https:' && !(allowInsecure && normalizedAddress.protocol === 'http:')) {
     return false
   }
 
-  if (proxy.allowedCounterPartyAddresses.includes('*')) {
+  if (allowedAddresses.includes('*')) {
     return true
   }
 
-  return proxy.allowedCounterPartyAddresses.some(allowedAddress => {
+  return allowedAddresses.some(allowedAddress => {
     const normalizedAllowedAddress = normalizeUrl(allowedAddress)
     if (!normalizedAllowedAddress) {
       return false
@@ -178,22 +196,19 @@ function normalizeProxyDocument (document: unknown): Array<[string, RawProxyConf
   return Object.entries(proxies as Record<string, RawProxyConfig>)
 }
 
-function readShorthandProxyConfig (env: Env): RawProxyConfig | undefined {
-  if (
-    !trimToUndefined(env.CX_EDC_DEFAULT_MANAGEMENT_URL)
-    && !trimToUndefined(env.CX_EDC_DEFAULT_API_KEY)
-  ) {
-    return undefined
-  }
-
-  return {
+// Only the variables that are set: an unset or blank one, e.g. from `${VAR:-}` in Docker Compose, keeps the value of the JSON config
+function readShorthandProxyConfig (env: Env): RawProxyConfig {
+  const shorthandProxy: RawProxyConfig = {
     managementUrl: env.CX_EDC_DEFAULT_MANAGEMENT_URL,
     apiKey: env.CX_EDC_DEFAULT_API_KEY,
     apiKeyHeader: env.CX_EDC_DEFAULT_API_KEY_HEADER,
     participantId: env.CX_EDC_DEFAULT_PARTICIPANT_ID,
     dspEndpoint: env.CX_EDC_DEFAULT_DSP_ENDPOINT,
     dataPlaneProxyUrl: env.CX_EDC_DEFAULT_DATA_PLANE_PROXY_URL,
+    allowManagementWrites: env.CX_EDC_DEFAULT_ALLOW_MANAGEMENT_WRITES,
   }
+
+  return Object.fromEntries(Object.entries(shorthandProxy).filter(([, value]) => trimToUndefined(value) !== undefined))
 }
 
 function normalizeProxyConfig (
@@ -218,9 +233,16 @@ function normalizeProxyConfig (
       ...splitCsv(env.CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES),
       ...normalizeStringList(rawProxy.allowedCounterPartyAddresses),
     ]),
+    // No fallback to the DSP allowlist: data planes usually run on other hosts or paths than the DSP endpoint
+    allowedDataPlaneAddresses: uniqueValues([
+      ...splitCsv(env.CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES),
+      ...normalizeStringList(rawProxy.allowedDataPlaneAddresses),
+    ]),
     allowInsecureCounterPartyAddresses:
       parseBoolean(rawProxy.allowInsecureCounterPartyAddresses)
       || parseBoolean(env.CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES),
+    // Creating, updating and deleting assets, policies and contracts is opt-in per proxy, in every auth mode
+    allowManagementWrites: parseBoolean(rawProxy.allowManagementWrites),
     requestTimeoutMs: parseInteger(
       rawProxy.requestTimeoutMs ?? env.CX_EDC_REQUEST_TIMEOUT_MS,
       defaultRequestTimeoutMs,

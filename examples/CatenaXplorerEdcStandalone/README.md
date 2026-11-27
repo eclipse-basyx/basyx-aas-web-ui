@@ -99,6 +99,7 @@ Consumer EDC:
 Partner allowlist:
 
 - `CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES`: comma-separated HTTPS provider DSP endpoint prefixes.
+- `CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES`: comma-separated HTTPS provider data plane endpoint prefixes. The provider names its data plane in the EDR, usually on another host than its DSP endpoint. Without a matching prefix, loading descriptors and Submodels fails.
 - `CX_EDC_ALLOW_INSECURE_COUNTER_PARTY_ADDRESSES`: keep `false` except for local test systems.
 
 EDR polling:
@@ -220,6 +221,7 @@ Allowlist error:
 
 - The requested provider DSP endpoint is not allowed.
 - Add the exact provider DSP endpoint prefix to `CX_EDC_ALLOWED_COUNTER_PARTY_ADDRESSES`.
+- For `DATA_PLANE_ADDRESS_NOT_ALLOWED`, add the data plane origin named in the error to `CX_EDC_ALLOWED_DATA_PLANE_ADDRESSES`.
 
 EDR polling timeout:
 

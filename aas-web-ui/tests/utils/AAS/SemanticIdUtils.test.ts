@@ -3,6 +3,7 @@ import {
   checkSemanticId,
   getEquivalentEclassSemanticIds,
   getEquivalentIriSemanticIds,
+  versionRevisionToDisplay,
 } from '@/utils/AAS/SemanticIdUtils'
 
 describe('SemanticIdUtils.ts; Tests for checkSemanticId()', () => {
@@ -640,4 +641,22 @@ describe('SemanticIdUtils.ts; Tests for getEquivalentIriSemanticIds()', () => {
       },
     )
   }
+})
+
+describe('SemanticIdUtils.ts; Tests for versionRevisionToDisplay()', () => {
+  it('joins version and revision with a dot', () => {
+    expect(versionRevisionToDisplay('2', '1')).toBe('2.1')
+  })
+
+  it('returns the version alone without a revision', () => {
+    expect(versionRevisionToDisplay('2', '')).toBe('2')
+    expect(versionRevisionToDisplay('2', null)).toBe('2')
+    expect(versionRevisionToDisplay('2')).toBe('2')
+  })
+
+  it('returns an empty string without a version', () => {
+    expect(versionRevisionToDisplay('', '1')).toBe('')
+    expect(versionRevisionToDisplay(null, '1')).toBe('')
+    expect(versionRevisionToDisplay()).toBe('')
+  })
 })

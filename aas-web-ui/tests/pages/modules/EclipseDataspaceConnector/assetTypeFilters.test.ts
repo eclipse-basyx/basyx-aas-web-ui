@@ -1,0 +1,174 @@
+import { describe, expect, it } from 'vitest'
+import { assetTypeFilterItems, assetTypeFilterPreset, type AssetTypeFilterValue, isFetchAsset } from '@/pages/modules/EclipseDataspaceConnector/data/assetTypeFilters'
+import DigitalTwinRegistryTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_digitaltwin_registry.json'
+import SubmodelServiceTemplate from '@/pages/modules/EclipseDataspaceConnector/data/templates/template_asset_submodel_service.json'
+
+function preset (value: AssetTypeFilterValue) {
+  const assetTypeFilter = assetTypeFilterPreset(value)
+  if (!assetTypeFilter) {
+    throw new Error(`Missing asset type filter preset ${value}`)
+  }
+  return assetTypeFilter
+}
+
+describe('assetTypeFilters', () => {
+  it('requests the full catalog by default', () => {
+    expect(assetTypeFilterItems[0]).toEqual({ title: 'All', value: 'all' })
+  })
+
+  it('separates the preset groups by dividers', () => {
+    const titles = assetTypeFilterItems.map(item => 'title' in item ? item.title : '---')
+
+    expect(titles.slice(0, 2)).toEqual(['All', '---'])
+    expect(titles.slice(titles.indexOf('Push Asset'), titles.indexOf('Push Asset') + 2)).toEqual(['Push Asset', '---'])
+    expect(titles.filter(title => title === '---')).toHaveLength(2)
+  })
+
+  it('skips dividers when looking up a preset', () => {
+    // A divider has no value, so no value of a filter item can find it
+    expect(assetTypeFilterPreset('divider' as AssetTypeFilterValue)).toBeUndefined()
+  })
+
+  it('filters the catalog by Catena-X taxonomy type', () => {
+    expect(preset('digitalTwinRegistry').querySpec?.filterExpression).toEqual([
+      {
+        '@context': { edc: 'https://w3id.org/edc/v0.0.1/ns/' },
+        '@type': 'edc:Criterion',
+        // eslint-disable-next-line unicorn/prefer-https -- The Dublin Core namespace is an exact identifier required by CX-0002.
+        'operandLeft': '\'http://purl.org/dc/terms/type\'.\'@id\'',
+        'operator': '=',
+        'operandRight': 'https://w3id.org/catenax/taxonomy#DigitalTwinRegistry',
+      },
+    ])
+    expect(preset('submodelService').querySpec?.filterExpression).toEqual([
+      expect.objectContaining({ operandRight: 'https://w3id.org/catenax/taxonomy#SubmodelBundle' }),
+    ])
+  })
+
+  it.each([
+    ['Digital Twin Registry', DigitalTwinRegistryTemplate, 'digitalTwinRegistry'],
+    ['Submodel Service', SubmodelServiceTemplate, 'submodelService'],
+  ] as const)('finds assets created from the %s template by their taxonomy type', (_name, template, presetValue) => {
+    // Expands a compact IRI like `cx-taxo:Submodel` by the `@context` of the template, as the EDC does
+    const context: Record<string, string> = template['@context']
+    const expand = (compactIri: string) => compactIri.replace(/^([^:]+):/, (prefix, name: string) => context[name] ?? prefix)
+    const [criterion] = preset(presetValue).querySpec!.filterExpression as Array<{ operandLeft: string, operandRight: string }>
+    const typeProperty = Object.entries(template.properties).find(([key]) => `'${expand(key)}'.'@id'` === criterion!.operandLeft)
+
+    expect(typeProperty).toBeDefined()
+    expect(expand((typeProperty![1] as { '@id': string })['@id'])).toBe(criterion!.operandRight)
+  })
+
+  it('matches push assets by ID, display name or description', () => {
+    const { matches, querySpec } = preset('pushAsset')
+
+    expect(querySpec).toBeUndefined()
+    expect(matches?.({ '@id': 'asset-PUSH-1' })).toBe(true)
+    expect(matches?.({ '@id': 'asset-1', 'displayName': 'Push data' })).toBe(true)
+    expect(matches?.({ '@id': 'asset-1', 'edc:description': 'Data to push' })).toBe(true)
+    expect(matches?.({
+      '@id': 'asset-1',
+      'aas-referables:displayName': [{ 'aas-langstrings:language': 'en', 'aas-langstrings:text': 'Push' }],
+    })).toBe(true)
+    expect(matches?.({ '@id': 'asset-1', 'name': 'Push', 'displayName': 'Pull' })).toBe(false)
+  })
+
+  it('matches assets of the management API by the texts in their properties', () => {
+    const { matches } = preset('digitalProductPassport')
+
+    expect(matches?.({ '@id': 'asset-1', 'properties': { displayName: 'HARTING DPP TIAP5N' } })).toBe(true)
+    expect(matches?.({ '@id': 'asset-1', 'properties': { description: 'Digital Product Passport' } })).toBe(true)
+    expect(matches?.({ '@id': 'asset-1', 'properties': { name: 'DPP', description: 'Nameplate' } })).toBe(false)
+  })
+
+  it('matches Asset Administration Shell assets by AAS or its full name', () => {
+    const { matches } = preset('assetAdministrationShell')
+
+    expect(matches?.({ '@id': 'aas-asset-1' })).toBe(true)
+    expect(matches?.({ '@id': 'asset-1', 'description': 'An Asset Administration Shell' })).toBe(true)
+    expect(matches?.({
+      '@id': 'asset-1',
+      'aas-referables:displayName': [{
+        '@type': 'https://admin-shell.io/aas/3/0/LangStringNameType',
+        'aas-langstrings:language': 'en',
+        'aas-langstrings:text': 'Motor',
+      }],
+    })).toBe(false)
+  })
+
+  it('excludes Submodel assets from Asset Administration Shell assets', () => {
+    const { matches } = preset('assetAdministrationShell')
+
+    expect(matches?.({ '@id': 'aas-sm-1' })).toBe(false)
+    expect(matches?.({ '@id': 'aas-asset-1', 'description': 'Submodel of an AAS' })).toBe(false)
+  })
+
+  it('matches Digital Product Passport assets by DPP or its full name', () => {
+    const { matches } = preset('digitalProductPassport')
+
+    expect(matches?.({ '@id': 'dpp-battery-1' })).toBe(true)
+    expect(matches?.({ '@id': 'asset-1', 'displayName': 'Digital Product Passport of a battery' })).toBe(true)
+    expect(matches?.({ '@id': 'asset-1', 'description': 'Product carbon footprint' })).toBe(false)
+  })
+
+  it('excludes service assets from Asset Administration Shell and Submodel assets', () => {
+    expect(preset('assetAdministrationShell').matches?.({ '@id': 'asset-1', 'displayName': 'AAS Service' })).toBe(false)
+    expect(preset('submodel').matches?.({
+      '@id': 'asset-2',
+      'name': 'Submodel Service',
+      'description': 'The Submodel service allows to retrieve Submodels of Digital Twins',
+    })).toBe(false)
+  })
+
+  it('matches Submodel assets by SM as a whole word or Submodel', () => {
+    const { matches } = preset('submodel')
+
+    expect(matches?.({ '@id': 'sm-1' })).toBe(true)
+    expect(matches?.({ '@id': 'aas_SM' })).toBe(true)
+    expect(matches?.({ '@id': 'asset-1', 'displayName': 'Nameplate submodel' })).toBe(true)
+    expect(matches?.({ '@id': 'small-asset', 'description': 'Smart transmission data' })).toBe(false)
+  })
+
+  it('fetches the data of all assets except push assets, services and Digital Twin Registries', () => {
+    expect(isFetchAsset({ '@id': 'aas-sm-1', 'dct:type': { '@id': 'https://w3id.org/catenax/taxonomy#Submodel' } })).toBe(true)
+    expect(isFetchAsset({ '@id': 'dpp-battery-1' })).toBe(true)
+    expect(isFetchAsset({ '@id': 'asset-PUSH-1' })).toBe(false)
+    expect(isFetchAsset({ '@id': 'asset-1', 'description': 'The Submodel service allows to retrieve Submodels' })).toBe(false)
+    expect(isFetchAsset({ '@id': 'asset-1', 'displayName': 'AAS Service' })).toBe(false)
+    expect(isFetchAsset({ '@id': 'asset-1', 'dct:type': { '@id': 'https://w3id.org/catenax/taxonomy#DigitalTwinRegistry' } })).toBe(false)
+    expect(isFetchAsset({ '@id': 'asset-1', 'properties': { 'dct:type': { '@id': 'cx-taxo:DigitalTwinRegistry' } } })).toBe(false)
+    expect(isFetchAsset({ '@id': 'my-dt-registry' })).toBe(false)
+    expect(isFetchAsset({ '@id': 'asset-1', 'description': 'Digital Twin Registry of the supplier' })).toBe(false)
+  })
+
+  it.each([
+    'Submodel Service',
+    'AAS Service',
+    'Submodel Repository',
+    'Submodel Repo',
+    'SM Repo',
+    'AAS Repo',
+    'AAS Repository',
+    'aas-repo',
+    'sm-repo',
+    'aas-env',
+    'AAS Environment',
+    'aas-environment',
+  ])('treats an asset named %s as a service', name => {
+    expect(isFetchAsset({ '@id': 'asset-1', 'displayName': name })).toBe(false)
+    expect(isFetchAsset({ '@id': `my-${name.toLowerCase().replaceAll(' ', '-')}-1` })).toBe(false)
+  })
+
+  it('treats an asset of the type SubmodelBundle as a service, whatever its name', () => {
+    expect(isFetchAsset({ '@id': 'asset-1', 'properties': { 'dct:type': { '@id': 'cx-taxo:SubmodelBundle' } } })).toBe(false)
+    expect(isFetchAsset({ '@id': 'asset-1', 'dct:type': { '@id': 'https://w3id.org/catenax/taxonomy#SubmodelBundle' } })).toBe(false)
+  })
+
+  it('fetches the data of an asset that only mentions a service', () => {
+    expect(isFetchAsset({ '@id': 'asset-1', 'description': 'battery service data' })).toBe(true)
+    expect(isFetchAsset({ '@id': 'customer-service-report' })).toBe(true)
+    expect(isFetchAsset({ '@id': 'asset-1', 'displayName': 'Serviceable parts' })).toBe(true)
+    expect(isFetchAsset({ '@id': 'asset-1', 'displayName': 'Repository of the SM templates' })).toBe(true)
+    expect(preset('submodel').matches?.({ '@id': 'asset-1', 'description': 'Submodel of the battery service data' })).toBe(true)
+  })
+})

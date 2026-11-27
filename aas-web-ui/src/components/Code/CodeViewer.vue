@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card :class="{ 'd-flex flex-column': fill }">
     <v-card-title class="d-flex align-center flex-wrap ga-1">
       <v-icon v-if="icon" class="mr-2">{{ icon }}</v-icon>
       {{ title }}
@@ -60,20 +60,23 @@
 
     <v-divider />
 
-    <v-card-text>
+    <v-card-text :class="{ 'd-flex flex-column flex-1-1-0 code-viewer__fill': fill }">
       <v-progress-linear v-if="loading" aria-label="Loading preview" indeterminate />
       <v-alert v-else-if="error" role="alert" type="error" variant="tonal">{{ error }}</v-alert>
-      <v-empty-state v-else-if="!text" :title="emptyMessage" />
+      <v-empty-state v-else-if="!text && readOnly" :title="emptyMessage" />
 
       <CodeEditor
         v-else
         ref="codeEditor"
         :accessible-label="title"
-        :height="height"
+        :class="{ 'flex-1-1-0 code-viewer__fill': fill }"
+        :error="invalid"
+        :height="fill ? '100%' : height"
         :language="language"
         :model-value="text"
         :options="{ wordWrap: wordWrap ? 'on' : 'off', lineNumbers: lineNumbers ? 'on' : 'off' }"
-        read-only
+        :read-only="readOnly"
+        @update:model-value="emit('update:text', $event)"
       />
 
       <v-alert
@@ -99,20 +102,30 @@
     fileName?: string
     mimeType?: string
     height?: string
+    fill?: boolean // The editor fills the height left in a flex column parent; `height` is ignored then
     loading?: boolean
     error?: string | null
     emptyMessage?: string
     copyLabel?: string
     downloadLabel?: string
+    readOnly?: boolean // false: the text can be edited, each edit by hand emits `update:text`
+    invalid?: boolean // Marks the editor as invalid, e.g. an edited text that is no valid JSON
   }>(), {
     language: 'json',
     title: 'JSON Preview',
     mimeType: 'application/json',
     height: '600px',
+    fill: false,
     emptyMessage: 'No content available',
     copyLabel: 'Copy to clipboard',
     downloadLabel: 'Download',
+    readOnly: true,
+    invalid: false,
   })
+
+  const emit = defineEmits<{
+    'update:text': [value: string]
+  }>()
 
   const codeEditor = ref<{ find: () => void }>()
   const wordWrap = ref(true)
@@ -122,7 +135,7 @@
   let copyTimer: ReturnType<typeof setTimeout> | undefined
   let copyRevision = 0
 
-  const hasContent = computed(() => !props.loading && !props.error && !!props.text)
+  const hasContent = computed(() => !props.loading && !props.error && (!!props.text || !props.readOnly))
   const exportContent = computed(() => props.exportText ?? props.text)
 
   watch(exportContent, resetCopy)
@@ -155,3 +168,10 @@
     downloadFile(props.fileName, new Blob([exportContent.value], { type: props.mimeType }))
   }
 </script>
+
+<style scoped>
+  /* Flex items keep their content height as minimum by default, so they could not shrink below the editor */
+  .code-viewer__fill {
+    min-height: 0;
+  }
+</style>
