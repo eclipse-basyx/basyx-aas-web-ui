@@ -1,4 +1,4 @@
-name: Sync pnpm packageManager version
+name: Sync Dependabot npm branches
 
 on:
   push:
@@ -6,12 +6,15 @@ on:
       - "dependabot/npm_and_yarn/**"
     paths:
       - "aas-web-ui/package.json"
+      - "aas-web-ui/pnpm-lock.yaml"
 
 permissions:
   contents: write
 
 jobs:
-  sync-pnpm-version:
+  # Both syncs run in one job so that a single push updates the Dependabot branch.
+  # Two workflows pushing to the same branch would race and one push would be rejected.
+  sync-dependabot-branch:
     runs-on: ubuntu-latest
     # Only run when the push is made by Dependabot
     if: github.actor == 'dependabot[bot]'
@@ -95,5 +98,32 @@ jobs:
             echo "No pnpm sync changes to commit."
           else
             git commit -m "chore: sync packageManager to pnpm ${TARGET}"
+          fi
+
+      # public/wasm and public/worker.mjs are committed copies of files from web-ifc and
+      # @thatopen/fragments. scripts/postinstall.mjs refreshes them locally, but Dependabot
+      # never runs it, so a bump of either package would leave them outdated.
+      - name: Refresh files copied from dependencies
+        working-directory: aas-web-ui
+        run: |
+          # Skip dependency lifecycle scripts in this job, which can push to the repository,
+          # and run only the project's own copy script.
+          pnpm install --frozen-lockfile --ignore-scripts
+          node ./scripts/postinstall.mjs
+
+      - name: Commit refreshed files
+        run: |
+          git add aas-web-ui/public/wasm aas-web-ui/public/worker.mjs
+          if git diff --staged --quiet; then
+            echo "Files copied from dependencies are up to date."
+          else
+            git commit -m "chore: update files copied from web-ifc and @thatopen/fragments"
+          fi
+
+      - name: Push sync commits
+        run: |
+          if [ "$(git rev-list --count "origin/${GITHUB_REF_NAME}..HEAD")" -eq 0 ]; then
+            echo "Nothing to push."
+          else
             git push
           fi

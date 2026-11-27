@@ -54,6 +54,20 @@ jobs:
           cd aas-web-ui
           pnpm install --frozen-lockfile
 
+      # public/wasm and public/worker.mjs are committed copies that scripts/postinstall.mjs
+      # refreshes from web-ifc and @thatopen/fragments. Fail if they do not match the installed versions.
+      # The hint names pnpm run postinstall, not pnpm install: pnpm add does not run the script,
+      # and a later pnpm install skips it when node_modules is already up to date.
+      - name: Check files copied from dependencies
+        working-directory: aas-web-ui
+        run: |
+          CHANGES="$(git status --porcelain -- public/wasm public/worker.mjs)"
+          if [ -n "$CHANGES" ]; then
+            echo "$CHANGES"
+            echo "::error::public/wasm or public/worker.mjs does not match the installed dependencies. Run pnpm run postinstall in aas-web-ui and commit the changes."
+            exit 1
+          fi
+
       - name: Build (with lint/tests/type-check)
         run: |
           cd aas-web-ui

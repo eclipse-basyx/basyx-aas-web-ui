@@ -1,6 +1,4 @@
 import { execSync } from 'node:child_process'
-import { copyFileSync, existsSync, mkdirSync } from 'node:fs'
-import { join } from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
 // Uncomment the line below to enable HTTPS on the dev server.
 // Requires the BaSyx infrastructure to also serve over HTTPS to avoid mixed content errors.
@@ -12,31 +10,6 @@ import Components from 'unplugin-vue-components/vite'
 import { defineConfig, loadEnv } from 'vite'
 import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 import { vueAutoImportPreset } from './config/auto-imports.js'
-
-function copyWebIfcWasmPlugin () {
-  return {
-    name: 'copy-web-ifc-wasm',
-    buildStart () {
-      const sourceDir = 'node_modules/web-ifc'
-      const targetDir = 'public/wasm'
-
-      if (!existsSync(targetDir)) {
-        mkdirSync(targetDir, { recursive: true })
-      }
-
-      const wasmFiles = ['web-ifc.wasm', 'web-ifc-mt.wasm', 'web-ifc-node.wasm']
-
-      for (const file of wasmFiles) {
-        const sourcePath = join(sourceDir, file)
-        const targetPath = join(targetDir, file)
-
-        if (existsSync(sourcePath)) {
-          copyFileSync(sourcePath, targetPath)
-        }
-      }
-    },
-  }
-}
 
 function getCommitSha (): string {
   try {
@@ -58,7 +31,6 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       // basicSsl(), // Uncomment to enable HTTPS — requires BaSyx infrastructure to also support HTTPS
-      copyWebIfcWasmPlugin(),
       AutoImport({
         imports: [vueAutoImportPreset],
         dts: 'src/auto-imports.d.ts',

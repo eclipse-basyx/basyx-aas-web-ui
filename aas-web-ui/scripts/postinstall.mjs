@@ -1,4 +1,4 @@
-import { copyFile, mkdir, readdir } from 'node:fs/promises'
+import { copyFile, mkdir, readdir, rm } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -12,6 +12,8 @@ const wasmSourceDir = join(projectRoot, 'node_modules', 'web-ifc')
 const wasmTargetDir = join(projectRoot, 'public', 'wasm')
 
 await mkdir(dirname(workerTarget), { recursive: true })
+// Start from an empty folder so .wasm files that web-ifc no longer ships do not linger.
+await rm(wasmTargetDir, { recursive: true, force: true })
 await mkdir(wasmTargetDir, { recursive: true })
 
 await copyFile(workerSource, workerTarget)
