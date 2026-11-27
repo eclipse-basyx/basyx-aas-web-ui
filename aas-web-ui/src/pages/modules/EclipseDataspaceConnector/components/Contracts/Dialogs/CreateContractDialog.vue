@@ -156,6 +156,10 @@
     getEdcPolicyDisplayName,
   )
 
+  // Data
+  // The Contract ID the dialog generated last, to tell it from an ID the user typed
+  let generatedContractId = ''
+
   // Computed properties
   // Unfilled placeholders stay visible in the preview as {{Label}}
   const jsonContent = computed(() => activeTemplate.value
@@ -172,12 +176,14 @@
         loadPolicies()
       } else {
         resetForm()
+        generatedContractId = ''
       }
     },
     { immediate: true },
   )
 
-  // Auto-generate Contract ID
+  // Generate the Contract ID from the asset and the policies, and again when one of them changes.
+  // An ID the user typed is kept; once the field is cleared, the next change generates the ID again.
   watch(
     () => [
       placeholderValues.value[CONTRACT_TEMPLATE_LABELS.assetId],
@@ -185,9 +191,11 @@
       placeholderValues.value[CONTRACT_TEMPLATE_LABELS.usagePolicyId],
     ],
     ([assetId, accessId, usageId]) => {
-      const currentContractId = placeholderValues.value[CONTRACT_TEMPLATE_LABELS.contractId]
-      if (assetId && accessId && usageId && (!currentContractId || currentContractId.trim() === '')) {
-        placeholderValues.value[CONTRACT_TEMPLATE_LABELS.contractId] = `contract-${assetId}-${accessId}-${usageId}`
+      const currentContractId = placeholderValues.value[CONTRACT_TEMPLATE_LABELS.contractId] ?? ''
+      const typedByUser = currentContractId.trim() !== '' && currentContractId !== generatedContractId
+      if (assetId && accessId && usageId && !typedByUser) {
+        generatedContractId = `contract-${assetId}-${accessId}-${usageId}`
+        placeholderValues.value[CONTRACT_TEMPLATE_LABELS.contractId] = generatedContractId
       }
     },
   )
