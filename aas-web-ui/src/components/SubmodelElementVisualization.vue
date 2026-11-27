@@ -90,9 +90,7 @@
             v-else
             class="pa-0 ma-0 d-flex justify-center align-center"
             fluid
-            :style="
-              aasSubmodelViewerMode ? 'height: calc(100svh - 137px)' : 'height: calc(100svh - 202px)'
-            "
+            :style="{ height: panelHeight }"
           >
             <v-empty-state class="text-divider" title="No available visualization" />
           </v-container>
@@ -105,6 +103,7 @@
 <script lang="ts" setup>
   import type { RouteRecordNameGeneric } from 'vue-router'
   import { useRoute } from 'vue-router'
+  import { useVisualizationPanelHeight } from '@/composables/useVisualizationPanelHeight'
   import { useAASStore } from '@/store/AASDataStore'
   import { useInfrastructureStore } from '@/store/InfrastructureStore'
   import { useNavigationStore } from '@/store/NavigationStore'
@@ -112,6 +111,7 @@
 
   // Vue Router
   const route = useRoute()
+  const panelHeight = useVisualizationPanelHeight()
 
   // Stores
   const navigationStore = useNavigationStore()
@@ -170,7 +170,6 @@
     })
   })
   const visualizationMode = computed(() => routesToVisualization.has(route.name as RouteRecordNameGeneric))
-  const aasSubmodelViewerMode = computed(() => route.name === 'AASSubmodelViewer')
   const operationOwned = computed(() => submodelElementData.value?.persistence?.kind === 'operation')
 
   // Watchers

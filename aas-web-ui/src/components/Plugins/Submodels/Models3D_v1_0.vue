@@ -73,7 +73,8 @@
 </template>
 
 <script lang="ts" setup>
-  import type { Model3DEntry, SubmodelElementLike } from './Models3D_v1_0/types'
+  import type { Model3DEntry } from './Models3D_v1_0/types'
+  import type { SubmodelElementLike } from './shared/types'
   import { useReferableUtils } from '@/composables/AAS/ReferableUtils'
   import { useSMHandling } from '@/composables/AAS/SMHandling'
   import { latestVersion, parseModels3D, versionTitle } from './Models3D_v1_0/utils/parseModel3D'

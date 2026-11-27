@@ -1,44 +1,13 @@
+import type { LangString, SubmodelElementLike } from '../../shared/types'
 import type {
-  LangString,
   Model3DApplication,
   Model3DBoundingBox,
   Model3DClassification,
   Model3DEntry,
   Model3DExternalFile,
   Model3DVersion,
-  SubmodelElementLike,
 } from '../types'
-
-/**
- * Looks up a child by idShort. Instances created from the IDTA template may carry a numeric suffix
- * (e.g. `IsPrimary01`), so a trailing number is tolerated. As a fallback the last segment of the semanticId
- * (`…/<idShort>/<version>/<revision>`) is compared.
- */
-function matches (element: SubmodelElementLike, idShort: string): boolean {
-  if (new RegExp(String.raw`^${idShort}\d*$`, 'i').test(element?.idShort ?? '')) {
-    return true
-  }
-
-  const semanticIdKeys: Array<{ value?: string }> = element?.semanticId?.keys ?? []
-  return semanticIdKeys.some(key => new RegExp(String.raw`/${idShort}/\d+/\d+/?$`, 'i').test(key.value ?? ''))
-}
-
-/** Child elements of a Submodel (`submodelElements`), a collection or a list (`value`) */
-function children (parent: SubmodelElementLike | undefined | null): SubmodelElementLike[] {
-  if (Array.isArray(parent?.submodelElements)) {
-    return parent.submodelElements
-  }
-  return Array.isArray(parent?.value) ? parent.value : []
-}
-
-function child (parent: SubmodelElementLike | undefined | null, idShort: string): SubmodelElementLike | undefined {
-  return children(parent).find(element => matches(element, idShort))
-}
-
-function text (parent: SubmodelElementLike | undefined | null, idShort: string): string {
-  const value = child(parent, idShort)?.value
-  return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ? String(value) : ''
-}
+import { child, children, nonEmptyFile, pickLangString, text } from '../../shared/submodelElements'
 
 function langStrings (parent: SubmodelElementLike | undefined | null, idShort: string): LangString[] {
   const value = child(parent, idShort)?.value
@@ -50,11 +19,6 @@ function textList (parent: SubmodelElementLike | undefined | null, idShort: stri
   return children(child(parent, idShort))
     .map(element => element.value)
     .filter((value): value is string => typeof value === 'string' && value.trim() !== '')
-}
-
-function fileElement (parent: SubmodelElementLike | undefined | null, idShort: string): SubmodelElementLike | null {
-  const file = child(parent, idShort)
-  return file && typeof file.value === 'string' && file.value.trim() !== '' ? file : null
 }
 
 function parseApplication (application: SubmodelElementLike | undefined): Model3DApplication | null {
@@ -97,8 +61,8 @@ function parseVersion (fileVersion: SubmodelElementLike, key: string): Model3DVe
       version: text(format, 'FormatVersion'),
       qualifier: text(format, 'FormatQualifier'),
     },
-    previewFile: fileElement(fileVersion, 'PreviewFile'),
-    digitalFile: fileElement(fileVersion, 'DigitalFile'),
+    previewFile: nonEmptyFile(child(fileVersion, 'PreviewFile')),
+    digitalFile: nonEmptyFile(child(fileVersion, 'DigitalFile')),
     externalFiles: children(child(fileVersion, 'ExternalFile'))
       .map(element => parseExternalFile(element))
       .filter(externalFile => externalFile.url !== ''),
@@ -178,12 +142,6 @@ export function latestVersion (versions: Model3DVersion[]): Model3DVersion | und
     (latest, version) => (!latest || version.setDate >= latest.setDate ? version : latest),
     undefined,
   )
-}
-
-/** Picks the text of the preferred language, falling back to the first entry */
-export function pickLangString (values: LangString[], language = 'en'): string {
-  const entry = values.find(value => value.language?.toLowerCase() === language) ?? values[0]
-  return entry?.text ?? ''
 }
 
 export function versionTitle (version: Model3DVersion | undefined, model: Model3DEntry, index: number): string {
