@@ -140,4 +140,35 @@ describe('assetTypeFilters', () => {
     expect(isFetchAsset({ '@id': 'my-dt-registry' })).toBe(false)
     expect(isFetchAsset({ '@id': 'asset-1', 'description': 'Digital Twin Registry of the supplier' })).toBe(false)
   })
+
+  it.each([
+    'Submodel Service',
+    'AAS Service',
+    'Submodel Repository',
+    'Submodel Repo',
+    'SM Repo',
+    'AAS Repo',
+    'AAS Repository',
+    'aas-repo',
+    'sm-repo',
+    'aas-env',
+    'AAS Environment',
+    'aas-environment',
+  ])('treats an asset named %s as a service', name => {
+    expect(isFetchAsset({ '@id': 'asset-1', 'displayName': name })).toBe(false)
+    expect(isFetchAsset({ '@id': `my-${name.toLowerCase().replaceAll(' ', '-')}-1` })).toBe(false)
+  })
+
+  it('treats an asset of the type SubmodelBundle as a service, whatever its name', () => {
+    expect(isFetchAsset({ '@id': 'asset-1', 'properties': { 'dct:type': { '@id': 'cx-taxo:SubmodelBundle' } } })).toBe(false)
+    expect(isFetchAsset({ '@id': 'asset-1', 'dct:type': { '@id': 'https://w3id.org/catenax/taxonomy#SubmodelBundle' } })).toBe(false)
+  })
+
+  it('fetches the data of an asset that only mentions a service', () => {
+    expect(isFetchAsset({ '@id': 'asset-1', 'description': 'battery service data' })).toBe(true)
+    expect(isFetchAsset({ '@id': 'customer-service-report' })).toBe(true)
+    expect(isFetchAsset({ '@id': 'asset-1', 'displayName': 'Serviceable parts' })).toBe(true)
+    expect(isFetchAsset({ '@id': 'asset-1', 'displayName': 'Repository of the SM templates' })).toBe(true)
+    expect(preset('submodel').matches?.({ '@id': 'asset-1', 'description': 'Submodel of the battery service data' })).toBe(true)
+  })
 })

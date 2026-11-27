@@ -90,8 +90,14 @@ function taxonomyTypeMatcher (taxonomyType: string): (asset: any) => boolean {
     .some(id => typeof id === 'string' && id.split(/[#:]/).pop() === taxonomyType)
 }
 
-// Service assets (e.g. AAS Service, Submodel Service) give access to many AAS or Submodels, not to a single one
-const isService = textMatcher('Service')
+// Service assets (e.g. AAS Service, Submodel Repository) give access to many AAS or Submodels, not to a single one.
+// Besides the type of the Submodel Service template, the full name of a service is matched, e.g. `sm-repo` or
+// `AAS Repository`, so a data asset described as "battery service data" is no service.
+const hasSubmodelBundleType = taxonomyTypeMatcher('SubmodelBundle')
+const hasServiceName = textMatcher(/(^|[^a-z0-9])((submodel|sm|aas)[ -]?(service|repo|repository)|aas[ -]?env(ironment)?)([^a-z0-9]|$)/i)
+function isService (asset: any): boolean {
+  return hasSubmodelBundleType(asset) || hasServiceName(asset)
+}
 const isSubmodel = textMatcher(wordPattern('SM'), 'Submodel')
 const isAssetAdministrationShell = textMatcher('AAS', 'Asset Administration Shell')
 const hasDigitalTwinRegistryType = taxonomyTypeMatcher('DigitalTwinRegistry')
