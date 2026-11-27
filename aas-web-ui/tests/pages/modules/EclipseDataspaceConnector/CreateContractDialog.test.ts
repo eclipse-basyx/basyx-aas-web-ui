@@ -7,6 +7,7 @@ import { formStub } from '../../../helpers/vuetifyStubs'
 const mocks = vi.hoisted(() => ({
   createContractDefinition: vi.fn(),
   dispatchSnackbar: vi.fn(),
+  options: {} as Record<string, unknown[]>,
 }))
 
 vi.mock('@/composables/Client/CatenaXEdcClient', () => ({
@@ -17,9 +18,9 @@ vi.mock('@/composables/Client/CatenaXEdcClient', () => ({
   }),
 }))
 
-// The selects are stubbed and get their values directly, so no assets or policies need to be loaded
+// The assets and policies a test offers, by the resource label of the dialog, e.g. `policies`
 vi.mock('@/pages/modules/EclipseDataspaceConnector/composables/EdcResourceOptions', () => ({
-  useEdcResourceOptions: () => ({ options: ref([]), loading: ref(false), load: vi.fn() }),
+  useEdcResourceOptions: (resourceLabel: string) => ({ options: ref(mocks.options[resourceLabel] ?? []), loading: ref(false), load: vi.fn() }),
 }))
 
 vi.mock('@/store/NavigationStore', () => ({
@@ -32,6 +33,8 @@ const fieldStub = {
   emits: ['update:modelValue'],
   template: '<input :data-label="label" :value="modelValue" @input="$emit(\'update:modelValue\', $event.target.value)">',
 }
+// Like the field, and offers its items and their titles to the test
+const selectStub = { ...fieldStub, props: [...fieldStub.props, 'items', 'itemTitle'] }
 
 function mountDialog () {
   return mount(CreateContractDialog, {
@@ -46,7 +49,7 @@ function mountDialog () {
         'v-form': formStub,
         'v-divider': true,
         'v-spacer': true,
-        'v-select': fieldStub,
+        'v-select': selectStub,
         'v-text-field': fieldStub,
         'v-btn': { props: ['text', 'disabled'], emits: ['click'], template: '<button :disabled="disabled" @click="$emit(\'click\')">{{ text }}</button>' },
         'JSONPreview': true,
@@ -68,6 +71,15 @@ async function selectAll (wrapper: Wrapper, assetId: string, accessPolicyId: str
   await setField(wrapper, 'Usage Policy ID', usagePolicyId)
 }
 
+function selectItems (wrapper: Wrapper, label: string): string[] {
+  const select = wrapper.findAllComponents(selectStub).find(component => component.props('label') === label)!
+  return select.props('items').map((item: unknown) => select.props('itemTitle')(item))
+}
+
+function policy (id: string, actions: string[]) {
+  return { '@id': id, 'policy': { permission: actions.map(action => ({ action })) } }
+}
+
 function contractId (wrapper: Wrapper): string {
   return (wrapper.find('input[data-label="Contract ID"]').element as HTMLInputElement).value
 }
@@ -75,6 +87,39 @@ function contractId (wrapper: Wrapper): string {
 describe('CreateContractDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.options = {}
+  })
+
+  it('offers each policy select only policies of its type, and policies of unknown type in both', async () => {
+    mocks.options = {
+      policies: [
+        policy('access-policy', ['odrl:access']),
+        policy('usage-policy', ['odrl:use']),
+        policy('mixed-policy', ['odrl:access', 'odrl:use']),
+        policy('unknown-policy', []),
+      ],
+    }
+    const wrapper = mountDialog()
+    await flushPromises()
+
+    expect(selectItems(wrapper, 'Access Policy ID')).toEqual(['access-policy', 'mixed-policy', 'unknown-policy'])
+    expect(selectItems(wrapper, 'Usage Policy ID')).toEqual(['usage-policy', 'mixed-policy', 'unknown-policy'])
+    wrapper.unmount()
+  })
+
+  it('names each asset with its ID, so assets of the same template can be told apart', async () => {
+    mocks.options = {
+      assets: [
+        { '@id': 'asset-1', 'properties': { name: 'Submodel Service' } },
+        { '@id': 'asset-2', 'properties': { name: 'Submodel Service' } },
+        { '@id': 'asset-3', 'properties': {} },
+      ],
+    }
+    const wrapper = mountDialog()
+    await flushPromises()
+
+    expect(selectItems(wrapper, 'Asset ID')).toEqual(['Submodel Service (asset-1)', 'Submodel Service (asset-2)', 'asset-3'])
+    wrapper.unmount()
   })
 
   it('generates the Contract ID again when the asset changes', async () => {

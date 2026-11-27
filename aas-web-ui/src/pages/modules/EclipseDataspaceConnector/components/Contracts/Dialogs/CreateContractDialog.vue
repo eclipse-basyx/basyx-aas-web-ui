@@ -37,7 +37,7 @@
                 :hint="placeholder.hint"
                 :item-title="getEdcPolicyDisplayName"
                 item-value="@id"
-                :items="availablePolicies"
+                :items="placeholder.label === CONTRACT_TEMPLATE_LABELS.accessPolicyId ? accessPolicies : usagePolicies"
                 :label="placeholder.label"
                 :loading="policiesLoading"
                 :persistent-hint="placeholder.hint !== ''"
@@ -102,6 +102,7 @@
   import { DEFAULT_EDC_PROXY_ID } from '@/composables/SelectedEdcConfig'
   import { edcAssetName } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcAssetName'
   import { EDC_ASSET_ID_OPERAND } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPaging'
+  import { type EdcPolicyType, edcPolicyTypes } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcPolicyType'
   import { useEdcResourceOptions } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcResourceOptions'
   import { type EdcTemplate, useEdcTemplateForm } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplateForm'
   import { fillTemplatePlaceholders } from '@/pages/modules/EclipseDataspaceConnector/composables/EdcTemplatePlaceholders'
@@ -166,6 +167,10 @@
     ? JSON.stringify(fillTemplatePlaceholders(activeTemplate.value.template, placeholderValues.value, { keepUnfilled: true }))
     : '')
 
+  // Each policy select offers only policies of its type, so a usage policy can't become the access policy
+  const accessPolicies = computed(() => policiesOfType('Access'))
+  const usagePolicies = computed(() => policiesOfType('Usage'))
+
   // Watchers
   // Immediate, so a dialog restored from the URL loads the assets and policies
   watch(
@@ -201,8 +206,20 @@
   )
 
   // Methods
+  // With its ID, since assets from the same template share their name, e.g. "Submodel Service"
   function getEdcAssetDisplayName (asset: any): string {
-    return edcAssetName(asset) || asset?.['@id'] || ''
+    const id = asset?.['@id'] || ''
+    const name = edcAssetName(asset)
+    if (!name || name === id) return id
+    return id ? `${name} (${id})` : name
+  }
+
+  // A policy of unknown type, e.g. without a known action, stays in both selects
+  function policiesOfType (type: EdcPolicyType): typeof availablePolicies.value {
+    return availablePolicies.value.filter(policy => {
+      const types = edcPolicyTypes(policy)
+      return types.length === 0 || types.includes(type)
+    })
   }
 
   function getEdcPolicyDisplayName (policy: any): string {
