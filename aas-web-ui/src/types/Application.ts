@@ -82,4 +82,5 @@ export interface ModuleNavigationRoute {
   path: string
   name?: string | symbol
   meta?: ModuleNavigationRouteMeta
+  children?: Array<ModuleNavigationRoute>
 }

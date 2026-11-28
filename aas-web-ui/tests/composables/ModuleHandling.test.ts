@@ -6,6 +6,7 @@ function createModuleRoute (route: {
   path: string
   name: string
   meta: ModuleNavigationRoute['meta']
+  children?: ModuleNavigationRoute['children']
 }): ModuleNavigationRoute {
   return route
 }
@@ -14,7 +15,9 @@ const mockState = {
   route: reactive({
     path: '/aaseditor',
     name: 'AASEditor',
+    query: {} as Record<string, string>,
   }),
+  urlQuery: ref<Record<string, string>>({}),
   isMobile: ref(false),
   moduleRoutes: ref<Array<ModuleNavigationRoute>>([]),
   selectedAas: ref<Record<string, unknown> | null>(null),
@@ -41,6 +44,9 @@ async function importUseModuleHandling () {
       },
       get getModuleRoutes () {
         return mockState.moduleRoutes.value
+      },
+      get getUrlQuery () {
+        return mockState.urlQuery.value
       },
     }),
   }))
@@ -83,6 +89,8 @@ describe('ModuleHandling.ts', () => {
 
     mockState.route.path = '/aaseditor'
     mockState.route.name = 'AASEditor'
+    mockState.route.query = {}
+    mockState.urlQuery.value = {}
     mockState.isMobile.value = false
     mockState.selectedAas.value = null
     mockState.selectedNode.value = null
@@ -407,5 +415,271 @@ describe('ModuleHandling.ts', () => {
     mockState.isMobile.value = false
     await nextTick()
     expect(filteredRoutes.value).toHaveLength(1)
+  })
+  describe('isModuleAvailable / isModuleVisible', () => {
+    it('returns false for both checks when the module does not exist', async () => {
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { isModuleAvailable, isModuleVisible } = useModuleHandling()
+
+      expect(isModuleAvailable('UnknownModule')).toBe(false)
+      expect(isModuleVisible('UnknownModule')).toBe(false)
+    })
+
+    it('returns true for both checks when the module has no restrictions', async () => {
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { isModuleAvailable, isModuleVisible } = useModuleHandling()
+
+      expect(isModuleAvailable('TestModule')).toBe(true)
+      expect(isModuleVisible('TestModule')).toBe(true)
+    })
+
+    it('treats a hidden module as available but not visible', async () => {
+      mockState.moduleRoutes.value = [
+        createModuleRoute({
+          path: '/modules/hidden',
+          name: 'HiddenModule',
+          meta: {
+            isDesktopModule: true,
+            isMobileModule: true,
+            isVisibleModule: false,
+          },
+        }),
+      ]
+
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { isModuleAvailable, isModuleVisible } = useModuleHandling()
+
+      expect(isModuleAvailable('HiddenModule')).toBe(true)
+      expect(isModuleVisible('HiddenModule')).toBe(false)
+    })
+
+    it('treats a module restricted by visibleOnRoutes as available but not visible on other routes', async () => {
+      mockState.moduleRoutes.value = [
+        createModuleRoute({
+          path: '/modules/restricted',
+          name: 'RestrictedModule',
+          meta: {
+            isDesktopModule: true,
+            isMobileModule: true,
+            isVisibleModule: true,
+            visibleOnRoutes: ['SMEditor'],
+          },
+        }),
+      ]
+
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { isModuleAvailable, isModuleVisible } = useModuleHandling()
+
+      expect(isModuleAvailable('RestrictedModule')).toBe(true)
+      expect(isModuleVisible('RestrictedModule')).toBe(false)
+    })
+
+    it.each([
+      ['device', { isMobileModule: true, isDesktopModule: false }],
+      ['infrastructure template', { supportedInfrastructureTemplates: ['catena-x'] }],
+      ['selected AAS', { isOnlyVisibleWithSelectedAas: true }],
+      ['selected node', { isOnlyVisibleWithSelectedNode: true }],
+      ['env variable', { needsEnvVariables: ['ENV_VARIABLE_NAME'] }],
+      ['infrastructure endpoint', { needsInfrastructureEndpoints: ['AASRepo'] }],
+      ['authentication', { needsAuthentication: true }],
+    ])('returns false for both checks when the %s requirement is not met', async (_requirement, meta) => {
+      mockState.moduleRoutes.value = [
+        createModuleRoute({
+          path: '/modules/target',
+          name: 'TargetModule',
+          meta: {
+            isDesktopModule: true,
+            isMobileModule: true,
+            isVisibleModule: true,
+            ...meta,
+          } as ModuleNavigationRoute['meta'],
+        }),
+      ]
+
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { isModuleAvailable, isModuleVisible } = useModuleHandling()
+
+      expect(isModuleAvailable('TargetModule')).toBe(false)
+      expect(isModuleVisible('TargetModule')).toBe(false)
+    })
+
+    it('reacts to store changes when wrapped in computed by callers', async () => {
+      mockState.moduleRoutes.value = [
+        createModuleRoute({
+          path: '/modules/target',
+          name: 'TargetModule',
+          meta: {
+            isDesktopModule: true,
+            isMobileModule: true,
+            isVisibleModule: true,
+            isOnlyVisibleWithSelectedAas: true,
+          },
+        }),
+      ]
+
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { isModuleAvailable } = useModuleHandling()
+      const canLinkToTargetModule = computed(() => isModuleAvailable('TargetModule'))
+
+      expect(canLinkToTargetModule.value).toBe(false)
+
+      mockState.selectedAas.value = { id: 'aas-1' }
+      await nextTick()
+      expect(canLinkToTargetModule.value).toBe(true)
+    })
+  })
+  describe('child routes', () => {
+    beforeEach(() => {
+      mockState.moduleRoutes.value = [
+        createModuleRoute({
+          path: '/modules/parent',
+          name: 'Parent',
+          meta: {
+            isDesktopModule: true,
+            isMobileModule: true,
+            isVisibleModule: true,
+          },
+          children: [
+            {
+              path: 'child',
+              name: 'Parent__Child',
+              meta: {
+                isDesktopModule: true,
+                isMobileModule: true,
+                isVisibleModule: true,
+                needsAuthentication: true,
+              },
+            },
+          ],
+        }),
+      ]
+    })
+
+    it('finds a child route by its prefixed name and checks its own requirements', async () => {
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { isModuleAvailable, isModuleVisible } = useModuleHandling()
+
+      expect(isModuleAvailable('Parent__Child')).toBe(false)
+      expect(isModuleVisible('Parent__Child')).toBe(false)
+
+      mockState.hasAuthenticationCredentials.value = true
+
+      expect(isModuleAvailable('Parent__Child')).toBe(true)
+      expect(isModuleVisible('Parent__Child')).toBe(true)
+    })
+
+    it('builds the full path of a child route', async () => {
+      mockState.hasAuthenticationCredentials.value = true
+
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { getModuleRouteLocation } = useModuleHandling()
+
+      expect(getModuleRouteLocation('Parent__Child')).toEqual({ path: '/modules/parent/child' })
+    })
+
+    it('does not find a child route by its unprefixed name', async () => {
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { isModuleAvailable } = useModuleHandling()
+
+      expect(isModuleAvailable('Child')).toBe(false)
+    })
+  })
+
+  describe('getModuleRouteLocation', () => {
+    it('returns undefined when the module does not exist', async () => {
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { getModuleRouteLocation } = useModuleHandling()
+
+      expect(getModuleRouteLocation('UnknownModule')).toBeUndefined()
+    })
+
+    it('returns undefined when the module is not available', async () => {
+      mockState.moduleRoutes.value = [
+        createModuleRoute({
+          path: '/modules/needs-auth',
+          name: 'NeedsAuthModule',
+          meta: {
+            isDesktopModule: true,
+            isMobileModule: true,
+            isVisibleModule: true,
+            needsAuthentication: true,
+          },
+        }),
+      ]
+
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { getModuleRouteLocation } = useModuleHandling()
+
+      expect(getModuleRouteLocation('NeedsAuthModule')).toBeUndefined()
+    })
+
+    it('returns the path without query for modules without preserveRouteQuery', async () => {
+      mockState.route.query = { aas: 'https://example.com/shells/current' }
+
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { getModuleRouteLocation } = useModuleHandling()
+
+      expect(getModuleRouteLocation('TestModule')).toEqual({ path: '/modules/test-module' })
+    })
+
+    it('adds the remembered aas, path and ignorePreConfAuth for modules with preserveRouteQuery', async () => {
+      mockState.selectedAas.value = { id: 'aas-1' }
+      mockState.urlQuery.value = {
+        aas: 'https://example.com/shells/remembered',
+        path: 'https://example.com/submodels/sm/submodel-elements/prop',
+        ignorePreConfAuth: 'true',
+        aasSearch: 'pump',
+      }
+      mockState.moduleRoutes.value = [
+        createModuleRoute({
+          path: '/modules/with-aas',
+          name: 'WithAasModule',
+          meta: {
+            isDesktopModule: true,
+            isMobileModule: true,
+            isVisibleModule: true,
+            isOnlyVisibleWithSelectedAas: true,
+            preserveRouteQuery: true,
+          },
+        }),
+      ]
+
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { getModuleRouteLocation } = useModuleHandling()
+
+      expect(getModuleRouteLocation('WithAasModule')).toEqual({
+        path: '/modules/with-aas',
+        query: {
+          aas: 'https://example.com/shells/remembered',
+          path: 'https://example.com/submodels/sm/submodel-elements/prop',
+          ignorePreConfAuth: 'true',
+        },
+      })
+    })
+
+    it('prefers the current URL query over the remembered one', async () => {
+      mockState.route.query = { aas: 'https://example.com/shells/current', view: 'table' }
+      mockState.urlQuery.value = { aas: 'https://example.com/shells/remembered' }
+      mockState.moduleRoutes.value = [
+        createModuleRoute({
+          path: '/modules/preserve',
+          name: 'PreserveModule',
+          meta: {
+            isDesktopModule: true,
+            isMobileModule: true,
+            isVisibleModule: true,
+            preserveRouteQuery: true,
+          },
+        }),
+      ]
+
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { getModuleRouteLocation } = useModuleHandling()
+
+      expect(getModuleRouteLocation('PreserveModule')).toEqual({
+        path: '/modules/preserve',
+        query: { aas: 'https://example.com/shells/current', view: 'table' },
+      })
+    })
   })
 })
