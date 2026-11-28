@@ -45,7 +45,8 @@ const catenaXplorerLink = computed(() => getModuleRouteLocation('CatenaXplorer')
 <v-btn v-if="catenaXplorerLink" :to="catenaXplorerLink">Open CatenaXplorer</v-btn>
 ```
 
-The [Module Check](ModuleCheck.vue) module lists the availability and visibility of all `Test*` modules.
+The [Module Check](ModuleCheck.vue) module lists the availability and visibility of all `Test*` modules and their
+child routes; [TestChildRoutes](TestChildRoutes/routes.ts) shows a child route with its own requirements.
 
 ## Optional Nested Module Routes
 

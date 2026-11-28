@@ -35,6 +35,7 @@ const stubs = {
   VCardText: { template: '<div><slot /></div>' },
   VTable: { template: '<table><slot /></table>' },
   VChip: { template: '<span class="chip"><slot /></span>' },
+  VIcon: { template: '<i class="icon" />' },
   VBtn: { props: ['to'], template: '<a class="link" :data-to="to.path" :data-aas="to.query.aas"><slot /></a>' },
   VEmptyState: { props: ['title'], template: '<div class="empty-state">{{ title }}</div>' },
 }
@@ -90,6 +91,35 @@ describe('ModuleCheck', () => {
 
     expect(links.map(link => link.attributes('data-to'))).toEqual(['/modules/test', '/modules/testinvisible'])
     expect(links.map(link => link.attributes('data-aas'))).toEqual(['remembered-aas', 'remembered-aas'])
+  })
+
+  it('lists child routes indented below their module, in manifest order', () => {
+    mockState.moduleRoutes = [
+      {
+        path: '/modules/testchildroutes',
+        name: 'TestChildRoutes',
+        meta: { title: 'TestChildRoutes' },
+        children: [
+          { path: 'inherited', name: 'TestChildRoutes__Inherited', meta: { title: 'Inherited Requirements' } },
+          { path: 'full-only', name: 'TestChildRoutes__FullOnly', meta: { title: 'Only Full Infrastructure' } },
+        ],
+      },
+      { path: '/modules/test', name: 'Test', meta: { title: 'TestTitle' } },
+    ]
+    mockState.availableModules = ['Test', 'TestChildRoutes', 'TestChildRoutes__Inherited']
+
+    const rows = mountModuleCheck().findAll('tbody tr')
+    const firstCells = rows.map(row => row.find('td'))
+
+    expect(firstCells.map(cell => cell.find('.text-caption').exists() ? cell.find('.text-caption').text() : cell.text()))
+      .toEqual(['Test', 'TestChildRoutes', 'TestChildRoutes__Inherited', 'TestChildRoutes__FullOnly'])
+    expect(firstCells.map(cell => cell.classes('ps-10'))).toEqual([false, false, true, true])
+    expect(firstCells.map(cell => cell.find('.icon').exists())).toEqual([false, false, true, true])
+    expect(mountModuleCheck().findAll('.link').map(link => link.attributes('data-to'))).toEqual([
+      '/modules/test',
+      '/modules/testchildroutes',
+      '/modules/testchildroutes__inherited',
+    ])
   })
 
   it('shows an empty state when there are no Test* modules', () => {

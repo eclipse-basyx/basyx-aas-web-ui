@@ -2,7 +2,7 @@
   <v-container class="pa-md-8">
     <v-card border rounded="lg">
       <v-card-title class="text-h5">Module Check</v-card-title>
-      <v-card-subtitle>Availability and visibility of all Test* modules</v-card-subtitle>
+      <v-card-subtitle>Availability and visibility of all Test* modules and their child routes</v-card-subtitle>
 
       <v-card-text>
         <template v-if="moduleChecks.length > 0">
@@ -18,8 +18,16 @@
 
             <tbody>
               <tr v-for="moduleCheck in moduleChecks" :key="moduleCheck.name">
-                <td>
-                  <div>{{ moduleCheck.title }}</div>
+                <td :class="{ 'ps-10': moduleCheck.isChildRoute }">
+                  <div>
+                    <v-icon
+                      v-if="moduleCheck.isChildRoute"
+                      class="me-1"
+                      icon="mdi-subdirectory-arrow-right"
+                      size="small"
+                    />
+                    {{ moduleCheck.title }}
+                  </div>
 
                   <div v-if="moduleCheck.title !== moduleCheck.name" class="text-caption text-medium-emphasis">
                     {{ moduleCheck.name }}
@@ -65,6 +73,7 @@
           <div class="mt-4 text-label-small font-weight-regular font-italic text-medium-emphasis">
             <div><strong>Available</strong>: the module can be opened in the current state. Only available modules are linked.</div>
             <div><strong>Visible</strong>: the module is also listed in the module navigation on this page.</div>
+            <div><strong>Child routes</strong> are indented below their module and checked by their route name.</div>
           </div>
         </template>
 
@@ -101,15 +110,22 @@
   // Computed Properties
   const moduleChecks = computed(() => navigationStore.getModuleRoutes
     .filter((moduleRoute: ModuleNavigationRoute) => moduleRoute.name?.toString().startsWith(checkedModuleNamePrefix))
-    .map((moduleRoute: ModuleNavigationRoute) => {
-      const name = moduleRoute.name!.toString()
-      return {
-        name,
-        title: moduleRoute.meta?.title?.toString() || name,
-        isAvailable: isModuleAvailable(name),
-        isVisible: isModuleVisible(name),
-        routeLocation: getModuleRouteLocation(name),
-      }
-    })
-    .toSorted((moduleCheckA, moduleCheckB) => moduleCheckA.name.localeCompare(moduleCheckB.name)))
+    .toSorted((moduleRouteA, moduleRouteB) => moduleRouteA.name!.toString().localeCompare(moduleRouteB.name!.toString()))
+    .flatMap((moduleRoute: ModuleNavigationRoute) => [
+      checkModuleRoute(moduleRoute, false),
+      ...(moduleRoute.children ?? []).map(childRoute => checkModuleRoute(childRoute, true)),
+    ]))
+
+  // Methods
+  function checkModuleRoute (moduleRoute: ModuleNavigationRoute, isChildRoute: boolean) {
+    const name = moduleRoute.name!.toString()
+    return {
+      name,
+      title: moduleRoute.meta?.title?.toString() || name,
+      isChildRoute,
+      isAvailable: isModuleAvailable(name),
+      isVisible: isModuleVisible(name),
+      routeLocation: getModuleRouteLocation(name),
+    }
+  }
 </script>
