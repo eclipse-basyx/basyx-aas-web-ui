@@ -408,4 +408,116 @@ describe('ModuleHandling.ts', () => {
     await nextTick()
     expect(filteredRoutes.value).toHaveLength(1)
   })
+  describe('isModuleAvailable / isModuleVisible', () => {
+    it('returns false for both checks when the module does not exist', async () => {
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { isModuleAvailable, isModuleVisible } = useModuleHandling()
+
+      expect(isModuleAvailable('UnknownModule')).toBe(false)
+      expect(isModuleVisible('UnknownModule')).toBe(false)
+    })
+
+    it('returns true for both checks when the module has no restrictions', async () => {
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { isModuleAvailable, isModuleVisible } = useModuleHandling()
+
+      expect(isModuleAvailable('TestModule')).toBe(true)
+      expect(isModuleVisible('TestModule')).toBe(true)
+    })
+
+    it('treats a hidden module as available but not visible', async () => {
+      mockState.moduleRoutes.value = [
+        createModuleRoute({
+          path: '/modules/hidden',
+          name: 'HiddenModule',
+          meta: {
+            isDesktopModule: true,
+            isMobileModule: true,
+            isVisibleModule: false,
+          },
+        }),
+      ]
+
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { isModuleAvailable, isModuleVisible } = useModuleHandling()
+
+      expect(isModuleAvailable('HiddenModule')).toBe(true)
+      expect(isModuleVisible('HiddenModule')).toBe(false)
+    })
+
+    it('treats a module restricted by visibleOnRoutes as available but not visible on other routes', async () => {
+      mockState.moduleRoutes.value = [
+        createModuleRoute({
+          path: '/modules/restricted',
+          name: 'RestrictedModule',
+          meta: {
+            isDesktopModule: true,
+            isMobileModule: true,
+            isVisibleModule: true,
+            visibleOnRoutes: ['SMEditor'],
+          },
+        }),
+      ]
+
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { isModuleAvailable, isModuleVisible } = useModuleHandling()
+
+      expect(isModuleAvailable('RestrictedModule')).toBe(true)
+      expect(isModuleVisible('RestrictedModule')).toBe(false)
+    })
+
+    it.each([
+      ['device', { isMobileModule: true, isDesktopModule: false }],
+      ['infrastructure template', { supportedInfrastructureTemplates: ['catena-x'] }],
+      ['selected AAS', { isOnlyVisibleWithSelectedAas: true }],
+      ['selected node', { isOnlyVisibleWithSelectedNode: true }],
+      ['env variable', { needsEnvVariables: ['ENV_VARIABLE_NAME'] }],
+      ['infrastructure endpoint', { needsInfrastructureEndpoints: ['AASRepo'] }],
+      ['authentication', { needsAuthentication: true }],
+    ])('returns false for both checks when the %s requirement is not met', async (_requirement, meta) => {
+      mockState.moduleRoutes.value = [
+        createModuleRoute({
+          path: '/modules/target',
+          name: 'TargetModule',
+          meta: {
+            isDesktopModule: true,
+            isMobileModule: true,
+            isVisibleModule: true,
+            ...meta,
+          } as ModuleNavigationRoute['meta'],
+        }),
+      ]
+
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { isModuleAvailable, isModuleVisible } = useModuleHandling()
+
+      expect(isModuleAvailable('TargetModule')).toBe(false)
+      expect(isModuleVisible('TargetModule')).toBe(false)
+    })
+
+    it('reacts to store changes when wrapped in computed by callers', async () => {
+      mockState.moduleRoutes.value = [
+        createModuleRoute({
+          path: '/modules/target',
+          name: 'TargetModule',
+          meta: {
+            isDesktopModule: true,
+            isMobileModule: true,
+            isVisibleModule: true,
+            isOnlyVisibleWithSelectedAas: true,
+          },
+        }),
+      ]
+
+      const { useModuleHandling } = await importUseModuleHandling()
+      const { isModuleAvailable } = useModuleHandling()
+      const canLinkToTargetModule = computed(() => isModuleAvailable('TargetModule'))
+
+      expect(canLinkToTargetModule.value).toBe(false)
+
+      mockState.selectedAas.value = { id: 'aas-1' }
+      await nextTick()
+      expect(canLinkToTargetModule.value).toBe(true)
+    })
+  })
 })

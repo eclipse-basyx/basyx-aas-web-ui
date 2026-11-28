@@ -10,6 +10,8 @@ import { supportsInfrastructureTemplate } from '@/utils/InfrastructureUtils'
 interface ModuleHandling {
   determineFilteredAndOrderedModuleRoutes: () => ModuleNavigationRoute[]
   isActiveModuleRoute: (routePath: string) => boolean
+  isModuleAvailable: (moduleName: string) => boolean
+  isModuleVisible: (moduleName: string) => boolean
 }
 
 export function useModuleHandling (): ModuleHandling {
@@ -85,41 +87,40 @@ export function useModuleHandling (): ModuleHandling {
     return true
   }
 
+  function matchesResourceAccessRequirement (moduleRoute: ModuleNavigationRoute): boolean {
+    if (!moduleRoute.path.toLowerCase().endsWith('/resourceaccess')) {
+      return true
+    }
+    return ['AASRepo', 'SubmodelRepo', 'AASRegistry', 'SubmodelRegistry', 'AASDiscovery', 'ConceptDescriptionRepo']
+      .some(key => infrastructureStore.supportsResourceAccess?.(key as BaSyxComponentKey))
+  }
+
+  // A module is available if it can be opened in the current state (device, infrastructure,
+  // selection, environment, authentication). Navigation-only options (isVisibleModule,
+  // visibleOnRoutes) are ignored: hidden modules can still be opened via their route.
+  function isModuleRouteAvailable (moduleRoute: ModuleNavigationRoute): boolean {
+    return matchesMobileVisibility(moduleRoute)
+      && supportsInfrastructureTemplate(
+        moduleRoute?.meta?.supportedInfrastructureTemplates,
+        selectedInfrastructure.value,
+      )
+      && matchesSelectedAasRequirement(moduleRoute)
+      && matchesSelectedNodeRequirement(moduleRoute)
+      && matchesNeedsEnvVariablesRequirement(moduleRoute)
+      && matchesNeedsInfrastructureEndpoints(moduleRoute)
+      && matchesResourceAccessRequirement(moduleRoute)
+      && matchesNeedsAuthentication(moduleRoute)
+  }
+
+  // A module is visible if it is available and listed in the module navigation for the current route.
   function isModuleRouteVisible (
     moduleRoute: ModuleNavigationRoute,
     currentRouteName: string | undefined,
   ): boolean {
-    if (!matchesMobileVisibility(moduleRoute)) {
-      return false
-    }
-    if (
-      !supportsInfrastructureTemplate(
-        moduleRoute?.meta?.supportedInfrastructureTemplates,
-        selectedInfrastructure.value,
-      )
-    ) {
-      return false
-    }
-    if (!matchesSelectedAasRequirement(moduleRoute)) {
-      return false
-    }
-    if (!matchesSelectedNodeRequirement(moduleRoute)) {
+    if (!isModuleRouteAvailable(moduleRoute)) {
       return false
     }
     if (!matchesVisibleOnRoutesRequirement(moduleRoute, currentRouteName)) {
-      return false
-    }
-    if (!matchesNeedsEnvVariablesRequirement(moduleRoute)) {
-      return false
-    }
-    if (!matchesNeedsInfrastructureEndpoints(moduleRoute)) {
-      return false
-    }
-    if (moduleRoute.path.toLowerCase().endsWith('/resourceaccess')
-      && !['AASRepo', 'SubmodelRepo', 'AASRegistry', 'SubmodelRegistry', 'AASDiscovery', 'ConceptDescriptionRepo'].some(key => infrastructureStore.supportsResourceAccess?.(key as BaSyxComponentKey))) {
-      return false
-    }
-    if (!matchesNeedsAuthentication(moduleRoute)) {
       return false
     }
     return (
@@ -128,8 +129,41 @@ export function useModuleHandling (): ModuleHandling {
     )
   }
 
+  function getCurrentRouteName (): string | undefined {
+    return typeof route.name === 'string' ? route.name : undefined
+  }
+
+  function findModuleRoute (moduleName: string): ModuleNavigationRoute | undefined {
+    return moduleRoutes.value.find((moduleRoute: ModuleNavigationRoute) => moduleRoute.name === moduleName)
+  }
+
+  /**
+   * Checks whether a module can be opened in the current state, e.g. before linking to it from another module.
+   * Unlike {@link isModuleVisible}, hidden modules (isVisibleModule: false) and modules restricted by
+   * visibleOnRoutes count as available, because their route can still be opened.
+   *
+   * @param moduleName - Name of the module, i.e. its file or folder name in `src/pages/modules`
+   * @returns true if the module exists and all its requirements are met
+   */
+  function isModuleAvailable (moduleName: string): boolean {
+    const moduleRoute = findModuleRoute(moduleName)
+    return !!moduleRoute && isModuleRouteAvailable(moduleRoute)
+  }
+
+  /**
+   * Checks whether a module is currently listed in the module navigation.
+   * A visible module is always available (see {@link isModuleAvailable}).
+   *
+   * @param moduleName - Name of the module, i.e. its file or folder name in `src/pages/modules`
+   * @returns true if the module exists, is available and is shown in the navigation for the current route
+   */
+  function isModuleVisible (moduleName: string): boolean {
+    const moduleRoute = findModuleRoute(moduleName)
+    return !!moduleRoute && isModuleRouteVisible(moduleRoute, getCurrentRouteName())
+  }
+
   function determineFilteredAndOrderedModuleRoutes () {
-    const currentRouteName = typeof route.name === 'string' ? route.name : undefined
+    const currentRouteName = getCurrentRouteName()
     const filteredModuleRoutes = moduleRoutes.value.filter(
       (moduleRoute: ModuleNavigationRoute) => isModuleRouteVisible(moduleRoute, currentRouteName),
     )
@@ -147,5 +181,5 @@ export function useModuleHandling (): ModuleHandling {
     return route.path === routePath || route.path.startsWith(`${routePath}/`)
   }
 
-  return { determineFilteredAndOrderedModuleRoutes, isActiveModuleRoute }
+  return { determineFilteredAndOrderedModuleRoutes, isActiveModuleRoute, isModuleAvailable, isModuleVisible }
 }

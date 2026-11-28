@@ -19,6 +19,25 @@ defineOptions({
 });
 ```
 
+## Linking to Other Modules
+
+Before a module offers a link to another module, it can check that module with `useModuleHandling()`:
+
+- `isModuleAvailable(moduleName)`: the module exists and can be opened in the current state
+  (device, infrastructure template, selected AAS or node, env variables, infrastructure endpoints, authentication).
+  Hidden modules (`isVisibleModule: false`) and modules restricted by `visibleOnRoutes` still count as available,
+  because their route can be opened.
+- `isModuleVisible(moduleName)`: the module is available and listed in the module navigation on the current route.
+
+`moduleName` is the module's file or folder name in this directory. Wrap the check in `computed` to keep it up to date:
+
+```ts
+const { isModuleAvailable } = useModuleHandling();
+const canLinkToCatenaXplorer = computed(() => isModuleAvailable('CatenaXplorer'));
+```
+
+The [Module Check](ModuleCheck.vue) module lists the availability and visibility of all `Test*` modules.
+
 ## Optional Nested Module Routes
 
 Recommended structure for modules with nested routes:
