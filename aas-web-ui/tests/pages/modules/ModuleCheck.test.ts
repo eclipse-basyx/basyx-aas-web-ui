@@ -21,6 +21,9 @@ vi.mock('@/composables/ModuleHandling', () => ({
   useModuleHandling: () => ({
     isModuleAvailable: (moduleName: string) => mockState.availableModules.includes(moduleName),
     isModuleVisible: (moduleName: string) => mockState.visibleModules.includes(moduleName),
+    getModuleRouteLocation: (moduleName: string) => mockState.availableModules.includes(moduleName)
+      ? { path: `/modules/${moduleName.toLowerCase()}`, query: { aas: 'remembered-aas' } }
+      : undefined,
   }),
 }))
 
@@ -32,7 +35,7 @@ const stubs = {
   VCardText: { template: '<div><slot /></div>' },
   VTable: { template: '<table><slot /></table>' },
   VChip: { template: '<span class="chip"><slot /></span>' },
-  VBtn: { props: ['to'], template: '<a class="link" :data-to="to.name"><slot /></a>' },
+  VBtn: { props: ['to'], template: '<a class="link" :data-to="to.path" :data-aas="to.query.aas"><slot /></a>' },
   VEmptyState: { props: ['title'], template: '<div class="empty-state">{{ title }}</div>' },
 }
 
@@ -82,10 +85,11 @@ describe('ModuleCheck', () => {
     ])
   })
 
-  it('links only available modules', () => {
+  it('links only available modules, using their route location', () => {
     const links = mountModuleCheck().findAll('.link')
 
-    expect(links.map(link => link.attributes('data-to'))).toEqual(['Test', 'TestInvisible'])
+    expect(links.map(link => link.attributes('data-to'))).toEqual(['/modules/test', '/modules/testinvisible'])
+    expect(links.map(link => link.attributes('data-aas'))).toEqual(['remembered-aas', 'remembered-aas'])
   })
 
   it('shows an empty state when there are no Test* modules', () => {

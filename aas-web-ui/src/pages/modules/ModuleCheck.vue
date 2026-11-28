@@ -50,11 +50,11 @@
 
                 <td class="text-right">
                   <v-btn
-                    v-if="moduleCheck.isAvailable"
+                    v-if="moduleCheck.routeLocation"
                     append-icon="mdi-arrow-right"
                     color="primary"
                     size="small"
-                    :to="{ name: moduleCheck.name }"
+                    :to="moduleCheck.routeLocation"
                     variant="tonal"
                   >Open</v-btn>
                 </td>
@@ -96,7 +96,7 @@
   const navigationStore = useNavigationStore()
 
   // Composables
-  const { isModuleAvailable, isModuleVisible } = useModuleHandling()
+  const { isModuleAvailable, isModuleVisible, getModuleRouteLocation } = useModuleHandling()
 
   // Computed Properties
   const moduleChecks = computed(() => navigationStore.getModuleRoutes
@@ -108,6 +108,7 @@
         title: moduleRoute.meta?.title?.toString() || name,
         isAvailable: isModuleAvailable(name),
         isVisible: isModuleVisible(name),
+        routeLocation: getModuleRouteLocation(name),
       }
     })
     .toSorted((moduleCheckA, moduleCheckB) => moduleCheckA.name.localeCompare(moduleCheckB.name)))
